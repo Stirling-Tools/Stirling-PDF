@@ -2,6 +2,13 @@
 
 Thank you for your interest in contributing to Stirling-PDF! There are many ways to contribute other than writing code. For example, reporting bugs, creating suggestions, and adding or modifying translations.
 
+## License
+
+By contributing to this project, you agree that your contributions will be licensed under the project [license](LICENSE), which follows an open-core model. 
+The codebase is a mix of MIT and source-available code, so your contribution is licensed according to the directory it is committed to.
+
+PRs are welcome in any directory by any user, just be aware of which license applies to the code you change.
+
 ## Issue Guidelines
 
 Issues can be used to report bugs, request features, or ask questions. If you have a question, you could also ask us in our [Discord](https://discord.gg/FJUSXUSYec).
@@ -65,7 +72,3 @@ For technical guides, setup instructions, and development resources:
 For configuration and usage guides, see:
 - [Database Guide](DATABASE.md) - Database setup and configuration
 - [OCR Guide](HowToUseOCR.md) - OCR setup and configuration
-
-## License
-
-By contributing to this project, you agree that your contributions will be licensed under the [MIT License](LICENSE).
