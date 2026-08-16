@@ -61,7 +61,41 @@
 
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder" />
-      <Directory Id="CommonAppDataFolder" />
+      <!--
+        The machine-wide OCR runtime, created here so its permissions can be set.
+
+        The write grant lands on tessdata and nowhere else. The application runs
+        without elevation, so adding a language later has to work for an ordinary
+        user - but that is a reason to make the *data* directory writable, not the
+        one holding tesseract.exe and its DLLs. Granting the parent would let any
+        user drop a DLL next to an executable that later runs, which is a far
+        worse trade than asking for elevation.
+      -->
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="OcrSharedDataDir" Name="Stirling-PDF">
+          <Directory Id="OcrRuntimeDir" Name="tesseract">
+            <Directory Id="OcrTessdataDir" Name="tessdata">
+              <!--
+                Explicit GUID, not "*". A component whose KeyPath is a directory -
+                which is what a bare CreateFolder produces - cannot have one
+                generated (LGHT0230). It must also stay fixed across releases, or
+                every upgrade would treat this as a different component and the
+                permissions would be reapplied from scratch.
+              -->
+              <Component Id="OcrTessdataPermissionsComponent"
+                         Guid="B5239160-4A05-4BB6-A7DD-0FA44CEB7BE9">
+                <CreateFolder>
+                  <util:PermissionEx User="Users"
+                                     GenericRead="yes"
+                                     GenericWrite="yes"
+                                     GenericExecute="yes"
+                                     Delete="yes" />
+                </CreateFolder>
+              </Component>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
     </DirectoryRef>
 
     <DirectoryRef Id="INSTALLDIR">
@@ -97,6 +131,7 @@
       <ComponentRef Id="ThumbnailHandlerClsidComponent" />
       <ComponentRef Id="ThumbnailHandlerShellexComponent" />
       <ComponentRef Id="OcrRuntimeCleanupComponent" />
+      <ComponentRef Id="OcrTessdataPermissionsComponent" />
     </ComponentGroup>
 
     <!--

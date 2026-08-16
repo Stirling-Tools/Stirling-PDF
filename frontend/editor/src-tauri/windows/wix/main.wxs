@@ -210,11 +210,29 @@
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
             </Dialog>
 
+            <!--
+              The two Order values differ on purpose, so please do not "tidy" them
+              to match.
+
+              Control events run in ascending Order and the last NewDialog whose
+              condition holds is the one taken - which is why the license skip
+              above works at Order 2 against WixUI's Order 1. WixUI_InstallDir
+              publishes InstallDirDlg/Next -> VerifyReadyDlg at Order 4, so this
+              has to be higher than that or the page is simply never shown. On
+              VerifyReadyDlg/Back the highest built-in is Order 2, so 3 wins there.
+              Both numbers were read out of the built MSI's ControlEvent table
+              rather than guessed.
+
+              The condition is copied from the publish this overrides, and is not
+              optional: with a plain "1" an invalid install path would advance to
+              this page anyway, stepping straight over the validation that
+              InvalidDirDlg exists to enforce.
+            -->
             <Publish Dialog="InstallDirDlg"
                      Control="Next"
                      Event="NewDialog"
                      Value="OcrOptionsDlg"
-                     Order="3">1</Publish>
+                     Order="5"><![CDATA[WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"]]></Publish>
             <Publish Dialog="VerifyReadyDlg"
                      Control="Back"
                      Event="NewDialog"
