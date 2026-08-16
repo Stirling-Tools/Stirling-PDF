@@ -98,6 +98,24 @@ public class OcrRuntimeService {
     private final AtomicReference<CachedManifest> manifestCache = new AtomicReference<>();
 
     /**
+     * One client for the life of the service, deliberately never closed.
+     *
+     * <p>It used to be built per call inside a try-with-resources, which deadlocks: since Java 21
+     * {@link HttpClient} is {@link AutoCloseable} and {@code close()} blocks until every exchange
+     * has finished, so closing it while handing the response body back to the caller means the body
+     * cannot be read until {@code close()} returns and {@code close()} cannot return until the body
+     * is read. The status endpoint simply never answered.
+     *
+     * <p>No test caught it because every test serves its artefacts over {@code file:} URLs, which
+     * return before this client is ever touched - the logic was covered and the transport was not.
+     */
+    private final HttpClient httpClient =
+            HttpClient.newBuilder()
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .followRedirects(HttpClient.Redirect.NEVER)
+                    .build();
+
+    /**
      * @param what artefact being fetched, empty when nothing is running
      * @param bytesDone bytes written so far
      * @param bytesTotal expected total, 0 when unknown
@@ -552,15 +570,11 @@ public class OcrRuntimeService {
      * guard re-applied to every hop - GitHub release assets need exactly one, so simply refusing
      * them is not an option.
      */
-    private InputStream open(URI uri) throws IOException {
+    InputStream open(URI uri) throws IOException {
         if ("file".equalsIgnoreCase(uri.getScheme())) {
             return Files.newInputStream(Path.of(uri));
         }
-        try (HttpClient client =
-                HttpClient.newBuilder()
-                        .connectTimeout(CONNECT_TIMEOUT)
-                        .followRedirects(HttpClient.Redirect.NEVER)
-                        .build()) {
+        try {
             URI current = uri;
             for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
                 requireReachableFromServer(current);
@@ -571,7 +585,7 @@ public class OcrRuntimeService {
                                 .GET()
                                 .build();
                 HttpResponse<InputStream> response =
-                        client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                        httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
                 URI next = redirectTarget(response, current);
                 if (next != null) {
@@ -583,6 +597,8 @@ public class OcrRuntimeService {
                     response.body().close();
                     throw new IOException("HTTP " + response.statusCode() + " fetching " + current);
                 }
+                // Handed back open on purpose. The caller owns it and closes it; the client
+                // behind it is shared and outlives this call.
                 return response.body();
             }
             throw new IOException("Too many redirects fetching " + uri);

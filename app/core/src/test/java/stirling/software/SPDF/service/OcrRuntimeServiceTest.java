@@ -3,7 +3,10 @@ package stirling.software.SPDF.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.sun.net.httpserver.HttpServer;
 
 import stirling.software.SPDF.model.ocr.OcrManifest;
 import stirling.software.SPDF.model.ocr.OcrManifest.OcrArtifact;
@@ -53,6 +59,99 @@ class OcrRuntimeServiceTest {
 
     private static String fileUrl(Path path) {
         return path.toUri().toString();
+    }
+
+    /**
+     * Exercises the HTTP transport, which every other test here skips.
+     *
+     * <p>That gap let a deadlock reach a real installer: the client was built per call inside a
+     * try-with-resources and the response body handed back from inside it, so {@code close()} -
+     * which since Java 21 blocks until every exchange finishes - waited for a body that could not
+     * be read until it returned. The status endpoint never answered. Serving artefacts over {@code
+     * file:} URLs, as the rest of these tests do, returns before the client is ever reached, so the
+     * logic was covered and the transport was not.
+     *
+     * <p>The timeout is the assertion: with that bug the call hangs rather than fails.
+     */
+    @Nested
+    @DisplayName("HTTP transport")
+    class Transport {
+
+        /**
+         * The body has to be too big to sit in a socket buffer, or this passes for the wrong
+         * reason. A few bytes arrive complete before anything gets a chance to wait on them, so a
+         * tiny response hides the very bug this exists to catch. The real catalogue is ~57 KB and
+         * the engine is 37 MB; 2 MB is enough to behave like them.
+         */
+        @Test
+        @Timeout(20)
+        @DisplayName("a large response body can actually be read back")
+        void readsAResponseBody() throws Exception {
+            byte[] payload = new byte[2 * 1024 * 1024];
+            java.util.Arrays.fill(payload, (byte) 'x');
+
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext(
+                    "/manifest",
+                    exchange -> {
+                        exchange.sendResponseHeaders(200, payload.length);
+                        try (OutputStream out = exchange.getResponseBody()) {
+                            out.write(payload);
+                        }
+                    });
+            server.start();
+            try {
+                OcrRuntimeService svc = new OcrRuntimeService(new ApplicationProperties());
+                URI uri =
+                        URI.create(
+                                "http://127.0.0.1:" + server.getAddress().getPort() + "/manifest");
+
+                byte[] body;
+                try (InputStream in = svc.open(uri)) {
+                    body = in.readAllBytes();
+                }
+
+                assertEquals(payload.length, body.length);
+            } finally {
+                server.stop(0);
+            }
+        }
+
+        @Test
+        @Timeout(20)
+        @DisplayName("redirects are followed, which is how a release asset is served")
+        void followsRedirects() throws Exception {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            int port = server.getAddress().getPort();
+            server.createContext(
+                    "/start",
+                    exchange -> {
+                        exchange.getResponseHeaders()
+                                .add("Location", "http://127.0.0.1:" + port + "/end");
+                        exchange.sendResponseHeaders(302, -1);
+                        exchange.close();
+                    });
+            server.createContext(
+                    "/end",
+                    exchange -> {
+                        byte[] body = "arrived".getBytes(StandardCharsets.UTF_8);
+                        exchange.sendResponseHeaders(200, body.length);
+                        try (var out = exchange.getResponseBody()) {
+                            out.write(body);
+                        }
+                    });
+            server.start();
+            try {
+                OcrRuntimeService svc = new OcrRuntimeService(new ApplicationProperties());
+                String body;
+                try (InputStream in = svc.open(URI.create("http://127.0.0.1:" + port + "/start"))) {
+                    body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                }
+                assertEquals("arrived", body);
+            } finally {
+                server.stop(0);
+            }
+        }
     }
 
     @Nested
