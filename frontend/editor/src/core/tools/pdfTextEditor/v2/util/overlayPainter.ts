@@ -100,17 +100,23 @@ function isBr(node: Node): boolean {
   return node instanceof HTMLElement && node.tagName === "BR";
 }
 
-/** Lines held by one painted line block. A block the browser emptied keeps a
- * filler <br>, and innerText reports that as a newline of its own - which used
- * to insert a phantom line and shove every line below it down the page. */
+/**
+ * Lines held by one painted line block.
+ *
+ * innerText is the only reader that agrees with layout about where a block
+ * breaks - Firefox puts a manual break INSIDE the token span it split, which no
+ * child walk sees. The single case it gets wrong is a block the browser
+ * emptied, which keeps a filler <br> that innerText reports as a newline of its
+ * own; that inserted a phantom line and shoved every line below it down the
+ * page. So: special-case that one shape, and trust innerText for the rest.
+ */
 function blockLines(element: HTMLElement): string[] {
-  const out: string[] = [""];
-  for (const child of element.childNodes) {
-    if (isBr(child)) out.push("");
-    else out[out.length - 1] += child.textContent ?? "";
-  }
-  if (out.length > 1 && out[out.length - 1] === "") out.pop();
-  return out;
+  const kids = element.childNodes;
+  if (kids.length === 1 && isBr(kids[0])) return [""];
+  // textContent is the jsdom fallback: innerText needs layout, so unit tests
+  // exercise structure while the browser suites cover the layout-driven cases.
+  const text = element.innerText ?? element.textContent ?? "";
+  return text.split("\n");
 }
 
 /**
