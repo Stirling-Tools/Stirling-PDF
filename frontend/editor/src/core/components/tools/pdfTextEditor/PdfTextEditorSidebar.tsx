@@ -132,15 +132,11 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
         <ScrollArea style={{ flex: 1 }} offsetScrollbars>
           <Stack gap="md">
             <Stack gap="xs" pl="md" pr={0} pt="md">
-              {/* Title row with ALPHA badge and info tooltip */}
               <Flex align="center" justify="space-between">
                 <Flex align="center" gap="xs">
                   <Text fw={600} size="sm">
                     {t("pdfTextEditor.title", "PDF Text Editor")}
                   </Text>
-                  <Badge size="xs" variant="light" color="orange">
-                    {t("toolPanel.alpha", "Alpha")}
-                  </Badge>
                 </Flex>
                 <Tooltip
                   sidebarTooltip={true}

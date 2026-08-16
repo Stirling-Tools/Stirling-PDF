@@ -110,7 +110,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
-        versionStatus: "alpha",
       },
       multiTool: {
         icon: (
