@@ -125,7 +125,7 @@ jobs:
             const changedFiles = files
               .filter(file =>
                 file.status !== "removed" &&
-                /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
+                /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
               )
               .map(file => file.filename);
 
