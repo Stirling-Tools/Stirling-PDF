@@ -121,7 +121,9 @@
       interface and without elevation.
 
       Impersonate="no" so it can write to CommonAppDataFolder on a per-machine
-      install; Win64="yes" because the package is x64.
+      install. No Win64 attribute: WiX only accepts that on script actions
+      (CNDL0037), and a native DLL action takes its bitness from the package,
+      which candle builds with -arch x64.
     -->
     <CustomAction
       Id="InstallOcrRuntime"
@@ -130,7 +132,6 @@
       Execute="deferred"
       Impersonate="no"
       Return="ignore"
-      Win64="yes"
     />
 
     <!--
