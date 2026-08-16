@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   Stack,
   Text,
@@ -25,6 +26,11 @@ const RemoveBlanksSettings = ({
   disabled = false,
 }: RemoveBlanksSettingsProps) => {
   const { t } = useTranslation();
+  const whitePercentLabelId = useId();
+  const whitePercentLabel = t(
+    "removeBlanks.whitePercent.label",
+    "White Percent",
+  );
 
   return (
     <Stack gap="lg" mt="md">
@@ -46,11 +52,12 @@ const RemoveBlanksSettings = ({
       </Stack>
 
       <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          {t("removeBlanks.whitePercent.label", "White Percent")}
+        <Text id={whitePercentLabelId} size="sm" fw={500}>
+          {whitePercentLabel}
         </Text>
         <Group align="center">
           <NumberInput
+            aria-labelledby={whitePercentLabelId}
             value={parameters.whitePercent}
             onChange={(v) =>
               onParameterChange("whitePercent", typeof v === "number" ? v : 0.1)
@@ -71,6 +78,8 @@ const RemoveBlanksSettings = ({
             step={0.1}
             style={{ flex: 1 }}
             disabled={disabled}
+            // The thumb is a div, so the heading above cannot name it.
+            thumbLabel={whitePercentLabel}
           />
         </Group>
       </Stack>

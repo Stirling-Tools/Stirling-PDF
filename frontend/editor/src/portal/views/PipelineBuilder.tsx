@@ -16,7 +16,6 @@ import {
   Spinner,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
   deserializeToolStep,
   getExecutableTools,
@@ -24,6 +23,7 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   stepRequiresUpload,
+  updateWorkingStepParams,
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
@@ -67,7 +67,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { PipelineHeader } from "@portal/components/pipelines/PipelineHeader";
+import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
+import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
+import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
 import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
 import {
@@ -78,7 +80,10 @@ import {
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import {
+  PipelineStepSettings,
+  type ParamsUpdate,
+} from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import { BrandMark } from "@portal/components/BrandMarks";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
@@ -255,10 +260,19 @@ export function PipelineBuilder() {
   const [inputAsked, setInputAsked] = useState(false);
   const [outputAsked, setOutputAsked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Which create action is in flight, so only the button that was clicked (Create / Create paused)
+  // shows its spinner. Null in edit and while idle.
+  const [pendingCreateEnabled, setPendingCreateEnabled] = useState<
+    boolean | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [running, setRunning] = useState(false);
-  const [clearingHistory, setClearingHistory] = useState(false);
+  // Pausing/activating an existing pipeline acts immediately (a separate save), not on the next
+  // "Save changes"; this tracks that in-flight toggle.
+  const [togglingEnabled, setTogglingEnabled] = useState(false);
+  // Clearing the processed record then running, so already-handled files go through again.
+  const [reprocessing, setReprocessing] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -453,15 +467,22 @@ export function PipelineBuilder() {
     setSelected(landed.length > 0 ? { steps: landed } : null);
   }
 
-  function updateStepParams(index: number, params: ErasedToolParams) {
+  function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
-      current.map((step, i) =>
+      current.map((step, i) => {
         // Integration steps are deliberately toolId-less, so they must be editable too; only a
         // genuinely unrecognised step has no editor to send changes from.
-        i === index && (step.toolId !== null || isIntegrationStep(step))
-          ? { ...step, params }
-          : step,
-      ),
+        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+          return step;
+        // Resolve the update against the CURRENT step params, so a settings UI firing several
+        // single-field changes in one tick (convert's source-format change resets target + options)
+        // accumulates instead of each merge clobbering a stale snapshot. updateWorkingStepParams
+        // also re-resolves the endpoint for a format-routed tool so validation reflects the edit;
+        // it's a no-op on the operation for fixed-endpoint steps.
+        const nextParams =
+          typeof update === "function" ? update(step.params) : update;
+        return updateWorkingStepParams(step, nextParams, allTools);
+      }),
     );
   }
 
@@ -508,18 +529,28 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  // Steps as the I/O checker sees them. A step still needing configuration has no settled endpoint
+  // yet (a format-routed tool like convert doesn't know its from/to), so it is presented as
+  // undeclared: it raises no compatibility error and breaks the carry chain, leaving downstream
+  // steps unjudged until it is filled in. Its own "needs configuring" note already flags it.
+  const validationSteps = useMemo(
+    () =>
+      steps.map((step) => ({
+        operation: stepNeedsConfiguring(step, allTools) ? "" : step.operation,
+        parameters: step.params,
+      })),
+    [steps, allTools],
+  );
+
   // Whether each step can actually accept what the one before it produces. Checked here from the
   // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
   // Extract Images then Rotate) is caught while it is being built.
   const chainDiagnostics = useMemo(
     () =>
-      validateToolChain(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
+      validateToolChain(validationSteps).filter(
+        (d) => !stepNeedsConfiguring(steps[d.stepIndex], allTools),
       ),
-    [steps],
+    [validationSteps, steps, allTools],
   );
   const blockingSteps = chainDiagnostics
     .filter((d) => d.severity === "ERROR")
@@ -529,19 +560,16 @@ export function PipelineBuilder() {
   /**
    * What a step added at the open slot would be handed, so the picker can flag tools that cannot
    * take it. Scoped to the steps *before* that slot rather than the whole chain: the graph inserts
-   * anywhere, so what precedes the new step is not necessarily the chain's final output.
+   * anywhere, so what precedes the new step is not necessarily the chain's final output. Sliced from
+   * the validation view so an unconfigured step before the slot yields an unknown (undefined) format
+   * rather than a misleading one from its placeholder endpoint.
    */
   const precedingOutput = useMemo(
     () =>
       pickerAt === null
         ? undefined
-        : chainOutputFormat(
-            steps.slice(0, pickerAt).map((step) => ({
-              operation: step.operation,
-              parameters: step.params,
-            })),
-          ),
-    [steps, pickerAt],
+        : chainOutputFormat(validationSteps.slice(0, pickerAt)),
+    [validationSteps, pickerAt],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
@@ -570,10 +598,11 @@ export function PipelineBuilder() {
   }
 
   // Track unsaved edits: snapshot the form and compare against the state captured just after
-  // seeding, so leaving the builder can prompt to save or discard.
+  // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
+  // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
+  // chosen at submit - so it can never be the thing that makes the form dirty.
   const snapshot = JSON.stringify({
     name: name.trim(),
-    enabled,
     input,
     steps: steps.map((step) => serializeToolStep(step, allTools)),
     uploads: steps.map(stepRequiresUpload),
@@ -585,20 +614,46 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
-  // The input needs a source, and a scheduled input needs a positive interval; the pipeline
-  // needs exactly one output destination.
-  const inputValid =
-    input.sourceId !== "" &&
-    (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0);
+  // Each validity condition is defined exactly once here, then consumed both by the graph (which
+  // flags each end) and by the blocker list below.
+  const sourceChosen = input.sourceId !== "";
+  const scheduleValid =
+    input.triggerType !== "schedule" || Number(input.scheduleCount) > 0;
+  const inputValid = sourceChosen && scheduleValid;
   const outputValid = outputIds.length === 1;
-  const canSave =
-    name.trim() !== "" &&
-    inputValid &&
-    outputValid &&
-    !hasUploadSteps &&
-    !hasUnconfiguredSteps &&
-    !hasIncompatibleSteps &&
-    !submitting;
+
+  // The single source of truth for "can this be committed": every reason it can't be, in the order
+  // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
+  const blockers: string[] = [];
+  if (name.trim() === "")
+    blockers.push(t("portal.pipelines.builder.blocker.name"));
+  if (!sourceChosen)
+    blockers.push(t("portal.pipelines.builder.blocker.source"));
+  else if (!scheduleValid)
+    blockers.push(t("portal.pipelines.builder.blocker.schedule"));
+  if (!outputValid)
+    blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (hasUnconfiguredSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.setup", {
+        tools: unconfiguredStepLabels.join(", "),
+      }),
+    );
+  if (hasUploadSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.upload", {
+        tools: uploadStepLabels.join(", "),
+      }),
+    );
+  if (hasIncompatibleSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.incompatible", {
+        tools: blockingSteps.join(", "),
+      }),
+    );
+
+  // Nothing left to fix, and not already committing.
+  const canSave = blockers.length === 0 && !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
 
@@ -612,14 +667,14 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
-  async function save(destination: string) {
+  async function save(destination: string, enabledOverride?: boolean) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
-      enabled,
+      enabled: enabledOverride ?? enabled,
       // The wire shape stays a list; canSave guarantees the one input has a source.
       inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
@@ -635,6 +690,39 @@ export function PipelineBuilder() {
     } catch (e) {
       setError(errorMessage(e));
       setSubmitting(false);
+      setPendingCreateEnabled(null);
+    }
+  }
+
+  // Create live or paused. The buttons disable until the pipeline is valid, so this only fires on a
+  // saveable pipeline; the flag records which button spins and whether it starts live or paused.
+  function submitCreate(enabledValue: boolean) {
+    setPendingCreateEnabled(enabledValue);
+    void save(listPath, enabledValue);
+  }
+
+  /**
+   * Pause or activate the saved pipeline now, without leaving the builder. It re-saves the
+   * persisted policy with the flag flipped - deliberately NOT the working form - so a pending chain
+   * edit is not silently committed by a pause. The dirty tracker ignores `enabled`, so this never
+   * looks like an unsaved change.
+   */
+  async function handleTogglePause() {
+    // Never run alongside a Save: both write the whole policy, and a concurrent pair would race
+    // (the pause carries the persisted steps, so it could clobber the edits Save is committing).
+    if (togglingEnabled || submitting || !policyState.data) return;
+    const next = !enabled;
+    setTogglingEnabled(true);
+    setError(null);
+    try {
+      await savePipeline({ ...policyState.data, enabled: next });
+      if (!mounted.current) return;
+      setEnabled(next);
+      await invalidatePipelines();
+    } catch (e) {
+      if (mounted.current) setError(errorMessage(e));
+    } finally {
+      if (mounted.current) setTogglingEnabled(false);
     }
   }
 
@@ -724,39 +812,45 @@ export function PipelineBuilder() {
     return { tone: "info", text: t("portal.pipelines.run.empty") };
   }
 
+  // Trigger the saved pipeline and report the outcome: what the sweep started (or why it started
+  // nothing), then each run's terminal state. Shared by Run now and the reprocess action.
+  async function reportRun(policyId: string) {
+    const outcome = await triggerPipeline(policyId);
+    const runIds = outcome.runIds;
+    if (runIds.length === 0) {
+      if (mounted.current) setRunResult(emptySweepResult(outcome));
+      return;
+    }
+    const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
+    if (!mounted.current) return;
+    const failed = finals.find((r) => r?.status === "FAILED");
+    if (failed) {
+      setRunResult({
+        tone: "danger",
+        text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
+      });
+    } else if (finals.some((r) => r === null)) {
+      // Gave up polling before a terminal status; the run may still finish server-side.
+      setRunResult({
+        tone: "warning",
+        text: t("portal.pipelines.run.timeout"),
+      });
+    } else if (finals.every((r) => r?.status === "COMPLETED")) {
+      setRunResult({
+        tone: "success",
+        text: t("portal.pipelines.run.completed", { count: finals.length }),
+      });
+    } else {
+      setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
+    }
+  }
+
   async function handleRun() {
-    if (running || !id) return;
+    if (running || reprocessing || !id) return;
     setRunning(true);
     setRunResult(null);
     try {
-      const outcome = await triggerPipeline(id);
-      const runIds = outcome.runIds;
-      if (runIds.length === 0) {
-        if (mounted.current) setRunResult(emptySweepResult(outcome));
-        return;
-      }
-      const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
-      if (!mounted.current) return;
-      const failed = finals.find((r) => r?.status === "FAILED");
-      if (failed) {
-        setRunResult({
-          tone: "danger",
-          text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
-        });
-      } else if (finals.some((r) => r === null)) {
-        // Gave up polling before a terminal status; the run may still finish server-side.
-        setRunResult({
-          tone: "warning",
-          text: t("portal.pipelines.run.timeout"),
-        });
-      } else if (finals.every((r) => r?.status === "COMPLETED")) {
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.completed", { count: finals.length }),
-        });
-      } else {
-        setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
-      }
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
@@ -766,26 +860,22 @@ export function PipelineBuilder() {
   }
 
   /**
-   * Forget which source files this pipeline has processed, so the next sweep
-   * reprocesses everything currently in its sources (the standard retry for a
-   * parked-by-failure file). Does not touch the files themselves.
+   * Reprocess everything currently in the sources: forget which files the pipeline already handled,
+   * then run at once so those files - which a normal run skips - go through now. Reports the run's
+   * outcome exactly like Run now; does not touch the files themselves.
    */
-  async function handleClearHistory() {
-    if (clearingHistory || !id) return;
-    setClearingHistory(true);
+  async function handleReprocessAll() {
+    if (running || reprocessing || !id) return;
+    setReprocessing(true);
     setRunResult(null);
     try {
       await clearProcessedHistory(id);
-      if (mounted.current)
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.historyCleared"),
-        });
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
     } finally {
-      if (mounted.current) setClearingHistory(false);
+      if (mounted.current) setReprocessing(false);
     }
   }
 
@@ -1046,29 +1136,37 @@ export function PipelineBuilder() {
 
   return (
     <div className="portal-builder">
-      <PipelineHeader
-        name={name}
-        onNameChange={setName}
-        enabled={enabled}
-        onEnabledChange={setEnabled}
-        isEdit={isEdit}
-        stepCount={steps.length}
-        canSave={canSave}
-        saving={submitting}
-        onSave={() => save(listPath)}
-        onCancel={() => attemptLeave(listPath)}
-        onBack={() => attemptLeave(listPath)}
-        onTest={handleTest}
-        testing={testing}
-        onRun={handleRun}
-        running={running}
-        onClearHistory={handleClearHistory}
-        clearingHistory={clearingHistory}
-        onDelete={() => setPendingDelete(true)}
-        onViewDefinition={() => setDefinitionOpen(true)}
-        runResult={testSummary}
-        onDownloadOutput={downloadOutput}
-      />
+      {isEdit ? (
+        <PipelineEditHeader
+          name={name}
+          onNameChange={setName}
+          enabled={enabled}
+          onTogglePause={handleTogglePause}
+          togglingEnabled={togglingEnabled}
+          onBack={() => attemptLeave(listPath)}
+          canSave={canSave}
+          blockers={blockers}
+          saving={submitting}
+          onSave={() => save(listPath)}
+          onRun={handleRun}
+          running={running}
+          onReprocess={handleReprocessAll}
+          reprocessing={reprocessing}
+          onDelete={() => setPendingDelete(true)}
+        />
+      ) : (
+        <PipelineCreateHeader
+          name={name}
+          onNameChange={setName}
+          canSave={canSave}
+          blockers={blockers}
+          saving={submitting}
+          pendingCreateEnabled={pendingCreateEnabled}
+          onCreate={() => submitCreate(true)}
+          onCreatePaused={() => submitCreate(false)}
+          onBack={() => attemptLeave(listPath)}
+        />
+      )}
 
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
@@ -1100,44 +1198,54 @@ export function PipelineBuilder() {
       )}
 
       <div className="portal-builder__grid">
-        <PipelineGraph
-          // An end is on the chain once it has been asked for or already holds a value, so a
-          // loaded pipeline needs no seeding: its source and destination place themselves.
-          input={
-            inputAsked || inputValid
-              ? {
-                  label:
-                    chosenSource?.name ??
-                    t("portal.pipelines.builder.chooseSource"),
-                  detail: chosenSource ? triggerSummary() : undefined,
-                  warning: inputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsSource"),
-                }
-              : null
-          }
-          output={
-            outputAsked || outputValid
-              ? {
-                  label:
-                    chosenDestination?.name ??
-                    t("portal.pipelines.builder.chooseDestination"),
-                  warning: outputValid
-                    ? undefined
-                    : t("portal.pipelines.builder.needsDestination"),
-                }
-              : null
-          }
-          steps={graphSteps}
-          selected={selected}
-          onSelect={setSelected}
-          onAddEnd={addEnd}
-          onRemoveEnd={removeEnd}
-          onInsertStep={setPickerAt}
-          onRemoveSteps={removeSteps}
-          onReorderSteps={reorderSteps}
-          onOpenStepError={(index) => setSelected({ steps: [index] })}
-        />
+        <div className="portal-builder__canvas">
+          <PipelineGraphToolbar
+            stepCount={steps.length}
+            onTest={handleTest}
+            testing={testing}
+            runResult={testSummary}
+            onDownloadOutput={downloadOutput}
+            onViewDefinition={() => setDefinitionOpen(true)}
+          />
+          <PipelineGraph
+            // An end is on the chain once it has been asked for or already holds a value, so a
+            // loaded pipeline needs no seeding: its source and destination place themselves.
+            input={
+              inputAsked || inputValid
+                ? {
+                    label:
+                      chosenSource?.name ??
+                      t("portal.pipelines.builder.chooseSource"),
+                    detail: chosenSource ? triggerSummary() : undefined,
+                    warning: inputValid
+                      ? undefined
+                      : t("portal.pipelines.builder.needsSource"),
+                  }
+                : null
+            }
+            output={
+              outputAsked || outputValid
+                ? {
+                    label:
+                      chosenDestination?.name ??
+                      t("portal.pipelines.builder.chooseDestination"),
+                    warning: outputValid
+                      ? undefined
+                      : t("portal.pipelines.builder.needsDestination"),
+                  }
+                : null
+            }
+            steps={graphSteps}
+            selected={selected}
+            onSelect={setSelected}
+            onAddEnd={addEnd}
+            onRemoveEnd={removeEnd}
+            onInsertStep={setPickerAt}
+            onRemoveSteps={removeSteps}
+            onReorderSteps={reorderSteps}
+            onOpenStepError={(index) => setSelected({ steps: [index] })}
+          />
+        </div>
 
         <PipelineInspector
           title={

@@ -10,16 +10,18 @@ permissions: # required for secure-repo hardening
 
 jobs:
   ai-title-review:
+    # GITHUB_TOKEN obeys this block, so it must cover every API call made below.
     permissions:
-      contents: read
-      pull-requests: write
-      models: read
+      contents: read # actions/checkout, git fetch/diff
+      issues: write # issues.listComments / createComment / updateComment on the PR
+      pull-requests: write # same endpoints when the target is a pull request
+      models: read # actions/ai-inference
 
     runs-on: ubuntu-latest
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -29,15 +31,6 @@ jobs:
 
       - name: Configure Git to suppress detached HEAD warning
         run: git config --global advice.detachedHead false
-
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Check if actor is repo developer
         id: actor
@@ -161,7 +154,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         continue-on-error: true
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('/tmp/ai-title-comment.md', 'utf8');
@@ -172,7 +165,7 @@ jobs:
             const ratingMatch = body.match(/\*\*PR-Title Rating\*\*: (\d+)\/10/);
             const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : null;
 
-            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
+            const expectedActor = "github-actions[bot]";
             const comments = await github.rest.issues.listComments({ owner, repo, issue_number });
 
             const existing = comments.data.find(c =>

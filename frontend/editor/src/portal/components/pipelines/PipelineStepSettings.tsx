@@ -11,12 +11,22 @@ import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExter
 import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
 import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
 
+/**
+ * A params update: the next params outright, or a merge from the latest params. Settings UIs fire
+ * several single-field changes synchronously (e.g. convert's source-format change also resets the
+ * target and options); the merge form lets them accumulate against current state instead of each
+ * rebuilding from the `step` snapshot captured at render, which would clobber the earlier fields.
+ */
+export type ParamsUpdate =
+  | ErasedToolParams
+  | ((prev: ErasedToolParams) => ErasedToolParams);
+
 interface PipelineStepSettingsProps {
   step: WorkingToolStep;
   /** The step's 1-based place in the chain, so cross-step variables offer only earlier steps. */
   stepPosition?: number;
   registry: Partial<ToolRegistry>;
-  onChange: (params: ErasedToolParams) => void;
+  onChange: (update: ParamsUpdate) => void;
 }
 
 /**
@@ -75,7 +85,7 @@ export function PipelineStepSettings({
           <Settings
             parameters={step.params}
             onParameterChange={(key, value) =>
-              onChange({ ...step.params, [key]: value })
+              onChange((prev) => ({ ...prev, [key]: value }))
             }
             disabled={false}
           />

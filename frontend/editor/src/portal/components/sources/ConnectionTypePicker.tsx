@@ -10,6 +10,8 @@ import {
 } from "@portal/components/sources/connectionTypes";
 import { operationsForConnectionType } from "@portal/components/policies/stepOperations";
 import { BrandMark } from "@portal/components/BrandMarks";
+import "@portal/theme/surface.css";
+import "@portal/components/sources/connections.css";
 
 /**
  * Choose what to connect to.
@@ -136,7 +138,7 @@ function TypeCard({
       <button
         type="button"
         className={
-          "portal-conn-picker__card" +
+          "portal-surface portal-conn-picker__card" +
           (type.kind === "custom"
             ? " portal-conn-picker__card--advanced"
             : "") +

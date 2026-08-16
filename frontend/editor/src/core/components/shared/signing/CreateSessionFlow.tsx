@@ -51,7 +51,10 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
           : isCompleted
             ? "var(--mantine-color-gray-light)"
             : "transparent",
-        opacity: !isActive && !isCompleted ? 0.6 : 1,
+        // Pending steps recede via a muted text colour rather than opacity,
+        // which would drag their labels below the contrast floor.
+        color:
+          !isActive && !isCompleted ? "var(--c-text-muted)" : "var(--c-text)",
       }}
     >
       <Group gap="sm" mb={isActive ? "md" : 0}>

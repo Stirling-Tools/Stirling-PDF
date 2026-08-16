@@ -23,6 +23,10 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
+import stirling.software.proprietary.policy.asset.PolicyAsset;
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -46,6 +50,7 @@ class PolicyValidatorTest {
     @Mock private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
+    private final PolicyAssetStore assetStore = new InProcessPolicyAssetStore();
     private PolicyValidator validator;
 
     @BeforeEach
@@ -57,6 +62,7 @@ class PolicyValidatorTest {
                         List.of(outputSink),
                         List.of(stepValidator),
                         sourceStore,
+                        assetStore,
                         new ToolChainValidator(path -> java.util.Optional.empty()));
     }
 
@@ -118,6 +124,90 @@ class PolicyValidatorTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> validator.validateOutput(new OutputSpec("s3", Map.of("connectionId", 1))));
+    }
+
+    @Test
+    void acceptsAStepBindingThatReferencesATeamAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyAsset asset =
+                assetStore.save(
+                        new PolicyAsset(null, "logo.png", null, 0, "owner", null, 1L),
+                        new byte[] {1});
+
+        validator.validate(withFileBinding(PolicyAssetRefs.PREFIX + asset.id(), null));
+    }
+
+    @Test
+    void acceptsARunSuppliedFileKey() {
+        // No asset: prefix, so the binding names a file uploaded with the run - it existed before
+        // stored assets did, and pausing such a policy must not start failing.
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(withFileBinding("company-logo", null));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnUnknownAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + "missing-asset", null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnotherTeamsAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyAsset foreign =
+                assetStore.save(
+                        new PolicyAsset(null, "secret.p12", null, 0, "owner", 99L, 1L),
+                        new byte[] {1});
+
+        // Policy has no team; the asset belongs to team 99 - must read as unknown, not leak.
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + foreign.id(), null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    @Test
+    void rejectsAnAssetBindingWithNoIds() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withFileBinding(PolicyAssetRefs.PREFIX, null)));
+        assertTrue(ex.getMessage().contains("empty file binding"));
+    }
+
+    /** A manual-only policy whose single step binds a file field to the given asset key. */
+    private Policy withFileBinding(String assetKey, Long teamId) {
+        PipelineStep step =
+                new PipelineStep(
+                        "/api/v1/security/add-watermark",
+                        Map.of(),
+                        Map.of("watermarkImage", assetKey));
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(PipelineInput.manual(folderSourceId())),
+                List.of(step),
+                OutputSpec.inline(),
+                teamId);
     }
 
     @Test
@@ -184,6 +274,7 @@ class PolicyValidatorTest {
                 List.of(outputSink),
                 List.of(stepValidator),
                 sourceStore,
+                assetStore,
                 new ToolChainValidator(toolIO));
     }
 
