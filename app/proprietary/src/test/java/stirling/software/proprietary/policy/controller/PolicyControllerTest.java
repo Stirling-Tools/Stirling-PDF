@@ -80,6 +80,8 @@ class PolicyControllerTest {
     private stirling.software.proprietary.policy.overview.PolicyOverviewService
             policyOverviewService;
 
+    @Mock private stirling.software.proprietary.policy.asset.PolicyAssetCleaner assetCleaner;
+
     @Mock private ProcessedLedger processedLedger;
 
     @Mock private TempFileManager tempFileManager;
@@ -111,6 +113,7 @@ class PolicyControllerTest {
                         policyManagementAuthority,
                         policyTriggerManager,
                         policyOverviewService,
+                        assetCleaner,
                         processedLedger,
                         policyTriggers,
                         applicationProperties,
@@ -213,7 +216,7 @@ class PolicyControllerTest {
     }
 
     private static PolicyRunHandle handle(String runId) {
-        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null);
+        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null, null);
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
@@ -319,7 +322,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns the run view when present")
         void found() {
-            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null);
+            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null, null);
             mockOwnedRun("run-3");
             when(runRegistry.get("run-3")).thenReturn(run);
 
@@ -362,9 +365,11 @@ class PolicyControllerTest {
         @Test
         @DisplayName("excludes ad-hoc runs and runs owned by others")
         void filtersRuns() {
-            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep(), null);
-            PolicyRun ownedStored = new PolicyRun("owned", "policy-A", definitionWithStep(), null);
-            PolicyRun otherStored = new PolicyRun("other", "policy-B", definitionWithStep(), null);
+            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep(), null, null);
+            PolicyRun ownedStored =
+                    new PolicyRun("owned", "policy-A", definitionWithStep(), null, null);
+            PolicyRun otherStored =
+                    new PolicyRun("other", "policy-B", definitionWithStep(), null, null);
             when(runRegistry.all()).thenReturn(List.of(adHoc, ownedStored, otherStored));
 
             // ownedByCurrentUser: strip then re-apply scope reproduces the key only for the owned
@@ -492,6 +497,22 @@ class PolicyControllerTest {
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);
         }
+
+        @Test
+        @DisplayName("hands the pre-save version to the asset cleaner")
+        void cleansUpAssetsTheEditDropped() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing =
+                    new Policy("p2", "name", "owner", true, List.of(), List.of(), null, 3L);
+            when(policyStore.get("p2")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            controller.savePolicy(
+                    new Policy("p2", "name", "owner", true, List.of(), List.of(), null, 3L));
+
+            verify(assetCleaner).cleanupAfterSave(eq(existing), any());
+        }
     }
 
     @Nested
@@ -576,6 +597,7 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
             verify(processedLedger).clearPolicy("a");
+            verify(assetCleaner).cleanupAfterDelete(p);
             verify(policyTriggerManager).notifyPoliciesChanged();
         }
 

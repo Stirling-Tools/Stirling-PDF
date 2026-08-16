@@ -9,7 +9,10 @@ import {
 import { MantineProvider } from "@mantine/core";
 import { useIsomorphicEffect } from "@mantine/hooks";
 import { usePreferences } from "@app/contexts/PreferencesContext";
-import { mantineTheme } from "@app/theme/mantineTheme";
+import {
+  mantineTheme,
+  editorCssVariablesResolver,
+} from "@app/theme/mantineTheme";
 import { ToastProvider } from "@app/components/toast";
 import ToastRenderer from "@app/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@app/components/toast";
@@ -91,6 +94,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     <ThemeContext.Provider value={value}>
       <MantineProvider
         theme={mantineTheme}
+        cssVariablesResolver={editorCssVariablesResolver}
         defaultColorScheme={colorScheme}
         forceColorScheme={colorScheme}
       >

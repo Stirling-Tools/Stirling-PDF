@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FilePurpose;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -469,9 +471,21 @@ public class WorkflowSessionService {
                     HttpStatus.NOT_FOUND, "No processed file available for this session");
         }
 
-        String storageKey = session.getProcessedFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        return readBlob(session.getProcessedFile().getStorageKey());
+    }
+
+    /**
+     * Reads a stored blob, translating a revoked encryption key into 403 the same way {@code
+     * FileStorageService} does. Without this the callers' {@code IOException} handling would report
+     * an administrator's deliberate revocation as a server error.
+     */
+    private byte[] readBlob(String storageKey) throws IOException {
+        try {
+            return storageProvider.load(storageKey).getContentAsByteArray();
+        } catch (StorageKeyRevokedException e) {
+            log.warn("Access to workflow blob {} denied: {}", storageKey, e.getMessage());
+            throw StorageEncryptionErrors.revoked(e);
+        }
     }
 
     /** Retrieves the original file data for a workflow session. */
@@ -483,9 +497,7 @@ public class WorkflowSessionService {
                     HttpStatus.NOT_FOUND,
                     "Original file no longer available (session may be finalized)");
         }
-        String storageKey = session.getOriginalFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        return readBlob(session.getOriginalFile().getStorageKey());
     }
 
     /** Deletes a workflow session and associated files. */
@@ -683,9 +695,7 @@ public class WorkflowSessionService {
         }
 
         try {
-            org.springframework.core.io.Resource resource =
-                    storageProvider.load(fileToServe.getStorageKey());
-            return resource.getContentAsByteArray();
+            return readBlob(fileToServe.getStorageKey());
         } catch (IOException e) {
             log.error("Failed to retrieve document for session {}", sessionId, e);
             throw new ResponseStatusException(

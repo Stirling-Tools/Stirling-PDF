@@ -193,6 +193,9 @@ public class ConfigController {
                     "enableMobileScanner",
                     applicationProperties.getSystem().isEnableMobileScanner());
             configData.put(
+                    "enableMobileSignature",
+                    applicationProperties.getSystem().isEnableMobileSignature());
+            configData.put(
                     "mobileScannerConvertToPdf",
                     applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
             configData.put(
