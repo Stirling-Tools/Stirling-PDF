@@ -21,6 +21,7 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
@@ -113,6 +114,31 @@ public class OCRController {
             return OCR_RENDER_DPI;
         }
         return Math.min(OCR_RENDER_DPI, properties.getSystem().getMaxDPI());
+    }
+
+    /**
+     * Records what the heap looks like before each page is rasterised.
+     *
+     * <p>At debug level, because it is a diagnostic rather than something an operator wants in
+     * their logs on every run. It earned its place: an out-of-memory failure on page 11 of an
+     * ordinary 19-page document could not be explained by reading the code, and this separates the
+     * two possibilities that reading cannot - a leak shows as used memory climbing page after page,
+     * a one-off spike shows as a flat line and then a fall off a cliff.
+     */
+    private static void logHeapBefore(int pageNumber, int pageCount, int dpi) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+        Runtime runtime = Runtime.getRuntime();
+        long usedMb = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        long maxMb = runtime.maxMemory() / (1024 * 1024);
+        log.debug(
+                "OCR page {}/{} at {} DPI - heap {} MB used of {} MB max",
+                pageNumber,
+                pageCount,
+                dpi,
+                usedMb,
+                maxMb);
     }
 
     /**
@@ -439,22 +465,33 @@ public class OCRController {
                                     String.format(Locale.ROOT, "page_%d.pdf", pageNum));
 
                     if (shouldOcr) {
-                        // Convert page to image
-                        BufferedImage image;
-
                         final int dpi = ocrRenderDpi(applicationProperties);
                         final int currentPageNum = pageNum;
 
-                        image =
+                        logHeapBefore(currentPageNum + 1, pageCount, dpi);
+
+                        // GRAY, not the RGB default: Tesseract converts to greyscale itself, so
+                        // colour is a quarter of the memory spent on work that gets undone. An A4
+                        // page at 300 DPI is 8.7 megapixels - 35 MB in RGB, 8.7 MB here.
+                        BufferedImage image =
                                 ExceptionUtils.handleOomRendering(
                                         currentPageNum + 1,
                                         dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
+                                        () ->
+                                                pdfRenderer.renderImageWithDPI(
+                                                        currentPageNum, dpi, ImageType.GRAY));
                         File imagePath =
                                 new File(
                                         tempImagesDir,
                                         String.format(Locale.ROOT, "page_%d.png", pageNum));
-                        ImageIO.write(image, "png", imagePath);
+                        try {
+                            ImageIO.write(image, "png", imagePath);
+                        } finally {
+                            // The raster is written and never read again; flushing releases the
+                            // image's cached data now rather than leaving it to the collector. The
+                            // memory saving on this path comes from GRAY above, not from here.
+                            image.flush();
+                        }
 
                         // Build OCR command
                         List<String> command = new ArrayList<>();
