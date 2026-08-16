@@ -1,0 +1,193 @@
+name: Contributing agreement
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+    paths-ignore:
+      - "CONTRIBUTORS.md"
+
+concurrency:
+  group: contributing-agreement-${{ github.event.action == 'closed' && 'merged' || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check-agreement:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    name: Check CONTRIBUTING.md agreement
+    if: github.event.action != 'closed' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate agreement
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AGREEMENT_MARKER: "<!-- contributing-agreement -->"
+          CONTRIBUTORS_FILE: "CONTRIBUTORS.md"
+          AGREEMENT_LABEL: "contributing-agreement-required"
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const crypto = require('crypto');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pullRequest = context.payload.pull_request;
+            const branch = context.payload.repository.default_branch;
+            const login = pullRequest.user.login;
+
+            async function ensureAgreementLabel() {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name: process.env.AGREEMENT_LABEL,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: process.env.AGREEMENT_LABEL,
+                  color: 'B60205',
+                  description: 'Pull request author must agree to CONTRIBUTING.md',
+                });
+              }
+            }
+
+            async function updateAgreementComment(body) {
+              const marker = '<!-- contributing-agreement-bot -->';
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                per_page: 100,
+              });
+              const existingComment = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+              const commentBody = `${marker}\n${body}`;
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                  body: commentBody,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  body: commentBody,
+                });
+              }
+            }
+
+            async function getFile(path, ref = branch) {
+              const response = await github.rest.repos.getContent({ owner, repo, path, ref });
+              if (Array.isArray(response.data) || response.data.encoding !== 'base64') {
+                throw new Error(`${path} is not a regular base64-encoded file.`);
+              }
+              return {
+                content: Buffer.from(response.data.content, 'base64').toString('utf8'),
+                sha: response.data.sha,
+              };
+            }
+
+            const contributingRef = context.payload.action === 'closed'
+              ? pullRequest.merge_commit_sha
+              : branch;
+            const contributing = await getFile('CONTRIBUTING.md', contributingRef);
+            const contributingHash = crypto.createHash('sha256')
+              .update(Buffer.from(contributing.content, 'utf8'))
+              .digest('hex');
+            const contributors = await getFile(process.env.CONTRIBUTORS_FILE);
+            const existingEntry = contributors.content
+              .split(/\r?\n/)
+              .find((line) => line.startsWith(`| @${login} |`));
+            const alreadyAgreed = existingEntry?.includes(contributingHash) === true;
+            const agreementPattern = new RegExp(
+              `${process.env.AGREEMENT_MARKER}\\s*\\r?\\n\\s*- \\[xX\\]\\s*I have read and agree to the \\[Contribution Guidelines\\]`,
+              'i',
+            );
+            // Only the PR's opening description is authoritative for the agreement.
+            // Regular issue/PR comments, including the bot's reminder below, are ignored.
+            const openingDescription = pullRequest.body || '';
+            const hasAgreement = agreementPattern.test(openingDescription);
+
+            if (!alreadyAgreed && !hasAgreement) {
+              await ensureAgreementLabel();
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                labels: [process.env.AGREEMENT_LABEL],
+              });
+              await updateAgreementComment(
+                `A current agreement to [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/${branch}/CONTRIBUTING.md) is required before this Pull Request can be merged. Please check **"I have read and agree to the Contribution Guidelines"** in the PR description.\n\nThe required CONTRIBUTING.md SHA-256 is `${contributingHash}`.`,
+              );
+              core.setFailed(
+                `A current agreement is required. Check the Contribution Guidelines checkbox in the PR description (CONTRIBUTING.md SHA-256: ${contributingHash}).`,
+              );
+              return;
+            }
+
+            await github.rest.issues.removeLabel({
+              owner,
+              repo,
+              issue_number: pullRequest.number,
+              name: process.env.AGREEMENT_LABEL,
+            }).catch((error) => {
+              if (error.status !== 404) {
+                throw error;
+              }
+            });
+            core.info(`Agreement accepted for @${login} (CONTRIBUTING.md SHA-256: ${contributingHash}).`);
+
+            if (context.payload.action !== 'closed' || pullRequest.merged !== true) {
+              return;
+            }
+
+            if (alreadyAgreed) {
+              core.info(`@${login} is already listed for this CONTRIBUTING.md version.`);
+              return;
+            }
+
+            const line = `| @${login} | [#${pullRequest.number}](${pullRequest.html_url}) | ${contributingHash} |`;
+            for (let attempt = 1; attempt <= 3; attempt += 1) {
+              const latest = await getFile(process.env.CONTRIBUTORS_FILE);
+              if (latest.content.split(/\r?\n/).some((entry) => entry.startsWith(`| @${login} |`) && entry.includes(contributingHash))) {
+                core.info(`@${login} was recorded by a concurrent merge.`);
+                return;
+              }
+
+              try {
+                const updatedContent = latest.content.trimEnd() + `\n${line}\n`;
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner,
+                  repo,
+                  path: process.env.CONTRIBUTORS_FILE,
+                  message: `docs: record contributor agreement for #${pullRequest.number}`,
+                  content: Buffer.from(updatedContent, 'utf8').toString('base64'),
+                  sha: latest.sha,
+                  branch,
+                  committer: {
+                    name: 'github-actions[bot]',
+                    email: '41898282+github-actions[bot]@users.noreply.github.com',
+                  },
+                  author: {
+                    name: 'github-actions[bot]',
+                    email: '41898282+github-actions[bot]@users.noreply.github.com',
+                  },
+                });
+                core.info(`Added @${login} to ${process.env.CONTRIBUTORS_FILE}.`);
+                return;
+              } catch (error) {
+                if (error.status !== 409 || attempt === 3) {
+                  throw error;
+                }
+                core.warning(`Concurrent update detected; retrying (${attempt}/3).`);
+              }
+            }
