@@ -8,18 +8,12 @@ import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
 import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
-import { editorQk } from "@app/queries/keys";
-import {
-  fetchEndpointsAvailability,
-  pickEndpointDetails,
-} from "@app/queries/endpoints";
 
 const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
 
 function message(error: unknown): string | null {
   if (!error) return null;
   return error instanceof Error ? error.message : "Unknown error occurred";
-}
 }
 
 /**
