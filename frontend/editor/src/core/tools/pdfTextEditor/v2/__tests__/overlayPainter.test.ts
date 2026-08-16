@@ -5,6 +5,7 @@ import {
   paintLines,
   paintPlainText,
   plainCaretOffset,
+  readOverlayText,
   restoreCaretOffset,
 } from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
 
@@ -156,5 +157,57 @@ describe("caret offsets", () => {
     selection.removeAllRanges();
     selection.addRange(range);
     expect(plainCaretOffset(el)).toBeNull();
+  });
+});
+
+describe("readOverlayText", () => {
+  it("round-trips what paintLines wrote", () => {
+    const el = host();
+    paintLines(el, [line("Hello world"), line("second line")], OPTS);
+    expect(readOverlayText(el)).toBe("Hello world\nsecond line");
+  });
+
+  // The browser leaves a filler <br> in a block the user emptied. innerText
+  // reports that as "\n", which used to add a phantom line and push every
+  // line below it one leading down the page.
+  it("reads a block the browser emptied as ONE blank line", () => {
+    const el = host();
+    paintLines(el, [line("4 Park Plaza"), line("Suite 1930")], OPTS);
+    const first = el.children[0] as HTMLElement;
+    first.replaceChildren(document.createElement("br"));
+    expect(readOverlayText(el)).toBe("\nSuite 1930");
+  });
+
+  it("keeps the line count when every block is emptied", () => {
+    const el = host();
+    paintLines(el, [line("a"), line("b"), line("c")], OPTS);
+    for (const block of Array.from(el.children)) {
+      block.replaceChildren(document.createElement("br"));
+    }
+    expect(readOverlayText(el)).toBe("\n\n");
+  });
+
+  it("keeps a blank first line in the plain <br> DOM", () => {
+    const el = host();
+    el.append(document.createElement("br"), document.createTextNode("abc"));
+    expect(readOverlayText(el)).toBe("\nabc");
+  });
+
+  it("drops the browser's trailing filler <br>", () => {
+    const el = host();
+    el.append(document.createTextNode("abc"), document.createElement("br"));
+    expect(readOverlayText(el)).toBe("abc");
+  });
+
+  it("reads a lone filler <br> as empty, not as a line break", () => {
+    const el = host();
+    el.appendChild(document.createElement("br"));
+    expect(readOverlayText(el)).toBe("");
+  });
+
+  it("normalises non-breaking spaces the browser inserts", () => {
+    const el = host();
+    el.appendChild(document.createTextNode("a\u00A0b"));
+    expect(readOverlayText(el)).toBe("a b");
   });
 });

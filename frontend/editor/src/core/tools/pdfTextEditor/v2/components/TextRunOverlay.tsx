@@ -31,6 +31,7 @@ import {
   paintLines,
   paintPlainText,
   plainCaretOffset,
+  readOverlayText,
   refitTokens,
   restoreCaretOffset,
 } from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
@@ -133,39 +134,6 @@ function caretToEnd(el: HTMLElement, sel: Selection): void {
   }
   sel.removeAllRanges();
   sel.addRange(range);
-}
-
-// Read the overlay's hard breaks without trusting innerText's block-joining.
-// A bare text node at container level is caret drift (Firefox parks the caret
-// after the last line block), never a user line break - fold it into the
-// current line instead of letting it become a phantom one.
-function extractHardBreaks(element: HTMLElement): string {
-  const children = Array.from(element.childNodes);
-  if (children.length === 0) return "";
-  const lines: string[] = [];
-  let lastWasTrailingBr = false;
-  for (const node of children) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent ?? "";
-      if (text.length === 0) continue;
-      if (lines.length === 0) lines.push(text);
-      else lines[lines.length - 1] += text;
-      lastWasTrailingBr = false;
-      continue;
-    }
-    if (!(node instanceof HTMLElement)) continue;
-    if (node.tagName === "BR") {
-      lines.push("");
-      lastWasTrailingBr = true;
-      continue;
-    }
-    lines.push(node.innerText);
-    lastWasTrailingBr = false;
-  }
-  // Browsers park a filler <br> at the end of a contenteditable; innerText
-  // ignores it and so must we.
-  if (lastWasTrailingBr) lines.pop();
-  return lines.join("\n").replace(/\u00A0/g, " ");
 }
 
 interface ExactLayout {
@@ -472,7 +440,7 @@ export function TextRunOverlay({
     if (!el) return;
     const active = document.activeElement === el;
     if (active && (touched || composingRef.current)) return;
-    const domText = extractHardBreaks(el);
+    const domText = readOverlayText(el);
     const wantSignature = freshExact ? freshExact.signature : "";
     if (!freshExact && isLinePainted(el) && domText === run.text) return;
     if (
@@ -648,7 +616,7 @@ export function TextRunOverlay({
         setMaskColor(readMaskColor(e.currentTarget as HTMLDivElement));
         const el = e.currentTarget as HTMLDivElement;
         // Remember the text at focus so blur can tell if the user edited it.
-        focusTextRef.current = extractHardBreaks(el);
+        focusTextRef.current = readOverlayText(el);
         const fromPointer = pointerFocusRef.current;
         pointerFocusRef.current = false;
         const sel = window.getSelection();
@@ -685,7 +653,7 @@ export function TextRunOverlay({
         // width.
         if (!wantWrap || !onWrap) return;
         const el = e.currentTarget as HTMLDivElement;
-        const domText = extractHardBreaks(el);
+        const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
         // Runs that were paragraphs on mount always re-flow when edited.
@@ -699,7 +667,7 @@ export function TextRunOverlay({
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
         const el = e.currentTarget as HTMLDivElement;
-        onEdit(extractHardBreaks(el).replace(/\u00A0/g, " "));
+        onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
       }}
       onInput={(e) => {
         setTouched(true);
@@ -711,7 +679,7 @@ export function TextRunOverlay({
         const el = e.currentTarget as HTMLDivElement;
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
-        const raw = extractHardBreaks(el);
+        const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
         // No per-keystroke reflow: while focused, the box is CAPPED to the page

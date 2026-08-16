@@ -96,6 +96,61 @@ export function paintPlainText(el: HTMLElement, text: string): void {
   el.innerText = text;
 }
 
+function isBr(node: Node): boolean {
+  return node instanceof HTMLElement && node.tagName === "BR";
+}
+
+/** Lines held by one painted line block. A block the browser emptied keeps a
+ * filler <br>, and innerText reports that as a newline of its own - which used
+ * to insert a phantom line and shove every line below it down the page. */
+function blockLines(element: HTMLElement): string[] {
+  const out: string[] = [""];
+  for (const child of element.childNodes) {
+    if (isBr(child)) out.push("");
+    else out[out.length - 1] += child.textContent ?? "";
+  }
+  if (out.length > 1 && out[out.length - 1] === "") out.pop();
+  return out;
+}
+
+/**
+ * Read an overlay back into the model's plain text. The inverse of paintLines
+ * and paintPlainText, so it lives beside them: when the two disagree about how
+ * many lines the DOM holds, the run is re-emitted at the wrong baselines.
+ */
+export function readOverlayText(element: HTMLElement): string {
+  const children = Array.from(element.childNodes);
+  if (children.length === 0) return "";
+  // Seeded with the line a leading <br> would terminate; without it a model
+  // text starting with a newline lost its blank first line, pulling every line
+  // below it up one leading.
+  const lines: string[] = [""];
+  let lastWasTrailingBr = false;
+  let sawBlock = false;
+  for (const node of children) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      lines[lines.length - 1] += node.textContent ?? "";
+      lastWasTrailingBr = false;
+      continue;
+    }
+    if (!(node instanceof HTMLElement)) continue;
+    if (node.tagName === "BR") {
+      lines.push("");
+      lastWasTrailingBr = true;
+      continue;
+    }
+    // Block children carry whole lines, so the seed is not one of them.
+    if (!sawBlock && lines.length === 1 && lines[0] === "") lines.length = 0;
+    sawBlock = true;
+    for (const line of blockLines(node)) lines.push(line);
+    lastWasTrailingBr = false;
+  }
+  // Browsers park a filler <br> at the end of a contenteditable; innerText
+  // ignores it and so must we.
+  if (lastWasTrailingBr) lines.pop();
+  return lines.join("\n").replace(/\u00A0/g, " ");
+}
+
 export function isLinePainted(el: HTMLElement): boolean {
   return el.querySelector(`[${LINE_ATTR}]`) !== null;
 }
