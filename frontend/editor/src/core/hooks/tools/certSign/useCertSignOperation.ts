@@ -199,8 +199,8 @@ export const buildCertSignFormData = (
  * The endpoint is the same either way, so the path cannot carry the distinction:
  * only the chosen certificate type says whether the key is an uploaded file
  * (which any backend can use) or lives in the Windows store or a plugged-in
- * token (which only the local one can reach). The desktop router honours the
- * mark; every other build ignores it, since there is nowhere else to run.
+ * token (which only the local one can reach). Builds that can route elsewhere
+ * honour the mark; the rest ignore it, having nowhere else to send it.
  */
 const certSignRequestConfig = (parameters: CertSignParameters) =>
   parameters.certType === "WINDOWS_STORE" || parameters.certType === "PKCS11"

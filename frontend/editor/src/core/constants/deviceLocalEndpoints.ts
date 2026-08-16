@@ -3,10 +3,11 @@
  * backend the app is otherwise talking to.
  *
  * Ordinary tool endpoints are interchangeable: a merge or an OCR gives the same
- * answer wherever it runs, so the desktop is free to send them to a self-hosted
- * server. These are not. Enumerating the Windows certificate store, or signing
- * with a key held by a USB token, only means anything on the device holding
- * them - a remote server would answer about its own machine, or about nothing.
+ * answer wherever it runs, so a build with a choice of backends is free to send
+ * them anywhere. These are not. Enumerating the Windows certificate store, or
+ * signing with a key held by a USB token, only means anything on the device
+ * holding them - a remote server would answer about its own machine, or about
+ * nothing at all.
  *
  * The list lives here, in the feature's own layer, because the feature is what
  * knows this: the routing layer should not have to keep a catalogue of which
@@ -32,9 +33,9 @@ export function isDeviceLocalEndpoint(url?: string): boolean {
  *
  * Signing posts to `/api/v1/security/cert-sign` whether the key came from an
  * uploaded keystore or from the device, so the path alone cannot decide where
- * it runs - only the chosen certificate type can. A caller marks the request
- * and the desktop router honours it; other flavours ignore it and nothing
- * changes for them.
+ * it runs - only the chosen certificate type can. The caller marks the request;
+ * builds that have somewhere else to send it honour the mark, and builds that
+ * do not simply ignore it, since there is only one backend to reach anyway.
  */
 export type DeviceLocalRequestConfig = {
   deviceLocal?: boolean;
