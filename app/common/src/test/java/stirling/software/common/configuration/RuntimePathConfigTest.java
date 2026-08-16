@@ -284,8 +284,12 @@ class RuntimePathConfigTest {
             assertEquals("ebook-convert", config.getCalibrePath());
             assertEquals("ocrmypdf", config.getOcrMyPdfPath());
             assertEquals("soffice", config.getSOfficePath());
-            // No Tesseract is bundled in a source checkout, so the PATH lookup name is kept.
-            assertEquals("tesseract", config.getTesseractPath());
+            // Tesseract is deliberately absent from this list. It is the one tool resolved
+            // against the installer's bundle directories, and one of those is machine-wide, so
+            // on a host that has actually installed OCR this correctly answers with a real path
+            // instead of a bare name. Asserting a bare name here passes in CI and fails on any
+            // developer machine that uses the feature - which is exactly what it did. The
+            // resolution itself is covered against a simulated layout in BundledResources.
         }
 
         @Test
@@ -311,14 +315,16 @@ class RuntimePathConfigTest {
         }
 
         @Test
-        @DisplayName("Blank tesseract path falls back to the PATH lookup name")
+        @DisplayName("A blank tesseract path is treated as no setting at all")
         void blankTesseractPathFallsBack() {
-            ApplicationProperties properties = newProperties();
-            properties.getSystem().getCustomPaths().getOperations().setTesseract("  ");
+            ApplicationProperties blank = newProperties();
+            blank.getSystem().getCustomPaths().getOperations().setTesseract("  ");
 
-            RuntimePathConfig config = build(properties);
-
-            assertEquals("tesseract", config.getTesseractPath());
+            // Against the unset config rather than a literal, because what the fallback resolves
+            // to depends on whether this host has a bundled runtime. The claim being made is
+            // that whitespace is indistinguishable from absence, and that holds either way.
+            assertEquals(
+                    build(newProperties()).getTesseractPath(), build(blank).getTesseractPath());
         }
 
         @Test
