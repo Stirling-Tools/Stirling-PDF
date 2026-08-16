@@ -8,7 +8,7 @@
  * / saas / desktop bundles.
  *
  * Add an id here when the accompanying tool file lives under
- * {@code frontend/editor/src/prototypes/tools/...} and you want it surfaced in the
+ * {@code frontend/src/prototypes/tools/...} and you want it surfaced in the
  * prototypes build's tool picker.
  */
 
