@@ -65,7 +65,6 @@ const executeApiRequest = async (
 ): Promise<File[]> => {
   const response = await apiClient.post(endpoint, formData, {
     responseType: "blob",
-    timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
   });
 
   return await processMultiFileResponse(

@@ -11,6 +11,7 @@ import {
   buildDirectory,
   type TeamGroup,
 } from "@portal/components/users/directory";
+import "@portal/theme/surface.css";
 import "@portal/views/Users.css";
 
 /** Collapse a group's rows past this many, behind a "Show all" expander. */
@@ -215,7 +216,8 @@ export function UsersDirectory({
   function renderRow(m: Member) {
     const access = m.portalAccess ?? "none";
     return (
-      <div className="portal-users__row" key={m.id}>
+      // data-member-id lets deep links (?member=<id>) scroll to and flash a row.
+      <div className="portal-users__row" key={m.id} data-member-id={m.id}>
         <div className="portal-users__row-main">
           <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
           <div className="portal-users__row-id">
@@ -349,7 +351,7 @@ export function UsersDirectory({
     <div className="portal-users__directory">
       {/* Organization (a single-org deployment only; SaaS has no org). */}
       {capabilities.orgGroup && dir.organization.length > 0 && (
-        <section className="portal-users__group">
+        <section className="portal-surface portal-users__group">
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>{t("users.group.org", "Organization")}</strong>
@@ -372,7 +374,7 @@ export function UsersDirectory({
 
       {/* Teams */}
       {dir.teams.map((team) => (
-        <section className="portal-users__group" key={team.id}>
+        <section className="portal-surface portal-users__group" key={team.id}>
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>
@@ -460,7 +462,7 @@ export function UsersDirectory({
 
       {/* Guests (parked in the live app; shown when showGuests is set). */}
       {showGuests && dir.guests.length > 0 && (
-        <section className="portal-users__group">
+        <section className="portal-surface portal-users__group">
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>{t("users.group.guests", "Guests")}</strong>
