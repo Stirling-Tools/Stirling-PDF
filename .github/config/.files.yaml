@@ -88,6 +88,12 @@ frontend: &frontend
   - .github/workflows/e2e-stubbed.yml
   - .github/workflows/e2e-live.yml
 
+toml: &toml
+  - *ci
+  - frontend/editor/public/locales/*/translation.toml
+  - .github/scripts/check_language_toml.py
+  - .github/workflows/check_toml.yml
+
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
 tauri: &tauri
