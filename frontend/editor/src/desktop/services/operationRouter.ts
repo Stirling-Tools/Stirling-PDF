@@ -4,6 +4,7 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import { isDeviceLocalEndpoint } from "@app/constants/deviceLocalEndpoints";
 import {
   CONVERSION_ENDPOINTS,
   ENDPOINT_NAMES,
@@ -141,8 +142,26 @@ export class OperationRouter {
    * @param operation - The operation endpoint path (for endpoint classification)
    * @returns Base URL for API calls
    */
-  async getBaseUrl(operation?: string): Promise<string> {
+  async getBaseUrl(operation?: string, deviceLocal = false): Promise<string> {
     const mode = await connectionModeService.getCurrentMode();
+
+    // Device-local work is settled before anything else, because no connection
+    // mode can change the answer: enumerating this machine's certificate store,
+    // or signing with a key held by a token plugged into it, has to happen here.
+    // Sent to a self-hosted server it would describe that server's hardware, or
+    // be rejected outright by HardwareKeyStoreService.assertLocalDesktop.
+    if (deviceLocal || isDeviceLocalEndpoint(operation)) {
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) {
+        throw new Error(
+          "Backend URL not available - backend may still be starting",
+        );
+      }
+      console.debug(
+        `[operationRouter] Routing ${operation} to the local backend (device-local)`,
+      );
+      return backendUrl.replace(/\/$/, "");
+    }
 
     // Local-only mode: route everything to local backend; open settings if tool unavailable
     if (mode === "local") {
