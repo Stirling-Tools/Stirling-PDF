@@ -3,12 +3,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1.125rem 1.25rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
   transition:
-    box-shadow var(--motion-fast),
     transform var(--motion-fast),
     border-color var(--motion-fast);
   min-width: 10rem;
@@ -44,7 +39,6 @@
 
 .sui-metric--interactive:hover {
   border-color: var(--c-border-strong);
-  box-shadow: var(--shadow-lg);
   transform: translateY(-0.0625rem);
 }
 

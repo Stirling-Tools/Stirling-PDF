@@ -141,19 +141,8 @@
 }
 
 /* ── Action buttons ──────────────────────────────────────── */
-.landing-btn-primary,
-.landing-btn-secondary {
-  border-radius: 0.75rem !important;
-  font-weight: 600 !important;
-}
-
-.landing-btn-primary,
-.landing-btn-secondary,
 .landing-btn-icon {
   min-height: 3rem !important;
-}
-
-.landing-btn-icon {
   width: 3rem !important;
   min-width: 3rem !important;
   border-radius: 0.75rem !important;

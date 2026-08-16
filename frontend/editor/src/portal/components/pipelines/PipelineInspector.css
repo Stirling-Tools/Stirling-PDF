@@ -7,10 +7,6 @@
   flex-direction: column;
   gap: 0.875rem;
   padding: 1.125rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-
   /* The builder caps its columns so the page itself does not scroll, which means a settings form
      taller than the viewport has to scroll in here - otherwise its lower half is unreachable. */
   max-height: 100%;

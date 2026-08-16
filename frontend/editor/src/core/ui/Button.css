@@ -18,6 +18,11 @@
   display: none;
 }
 
+/* ---- fat ---- */
+.sui-btn--fat.mantine-Button-root {
+  --button-radius: 0.75rem;
+}
+
 /* ---- shape ---- */
 .sui-btn--circle.mantine-Button-root {
   --button-radius: 50%;

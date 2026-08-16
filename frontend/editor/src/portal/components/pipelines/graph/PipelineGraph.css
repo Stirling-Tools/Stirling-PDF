@@ -21,7 +21,7 @@
      the cards in light. */
   background: var(--c-surface-sunken);
   border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-nav);
 }
 
 /* Sits beside the wire it is describing. Absolute, so appearing mid-drag moves nothing. */
