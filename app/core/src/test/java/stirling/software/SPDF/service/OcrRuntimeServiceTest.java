@@ -226,6 +226,26 @@ class OcrRuntimeServiceTest {
         }
 
         @Test
+        @DisplayName("a catalogue host that does not resolve is external, not a mirror")
+        void unresolvableCatalogueIsNotTreatedAsAMirror() throws IOException {
+            // The regression this pins: asking isSensitiveHost whether the catalogue was internal
+            // conflated "resolves inside" with "cannot be resolved at all", so a DNS failure on the
+            // catalogue host read as "internal mirror" and switched the guard off entirely.
+            OcrRuntimeService svc =
+                    serviceWithCatalogue("https://does-not-resolve.invalid/ocr-manifest.json");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "https://127.0.0.1/engine.zip", 1, "0".repeat(64), null, "engine");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> svc.download(artifact, tmp.resolve("out.bin"), "engine"));
+
+            assertTrue(e.getMessage().contains("must not reach"), e.getMessage());
+        }
+
+        @Test
         @DisplayName("a local catalogue may name local artefacts, which is how a mirror works")
         void allowsInternalWhenCatalogueIsLocal() throws IOException {
             // The point of the setting is air-gapped and corporate installs: a mirror's catalogue

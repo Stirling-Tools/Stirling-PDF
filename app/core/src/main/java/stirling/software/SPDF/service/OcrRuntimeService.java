@@ -86,6 +86,9 @@ public class OcrRuntimeService {
     private static final long MAX_EXPANDED_BYTES = 700L * 1024 * 1024;
     private static final int MAX_ENTRIES = 5_000;
 
+    /** Redirect hops allowed. A GitHub release asset takes exactly one. */
+    private static final int MAX_REDIRECTS = 5;
+
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -408,7 +411,6 @@ public class OcrRuntimeService {
             throw new IOException("The OCR catalogue lists " + label + " without a SHA-256");
         }
         URI uri = validatedUri(artifact.url());
-        requireReachableFromServer(uri);
         progress.set(new Progress(label, 0, artifact.size()));
         long written = 0;
         // Copied in chunks rather than with Files.copy so the byte count can be
@@ -539,31 +541,71 @@ public class OcrRuntimeService {
         return uri;
     }
 
+    /**
+     * The single place this class reaches the network, which is why the guard lives here rather
+     * than at the call sites.
+     *
+     * <p>It was at the call sites first, and that was wrong twice over. The catalogue fetch did not
+     * have it, so the manifest URL was never checked; and redirects were followed automatically, so
+     * a public catalogue could answer with a 302 into the internal network and the hop would be
+     * taken <em>after</em> the check. Redirects are now followed by hand, one at a time, with the
+     * guard re-applied to every hop - GitHub release assets need exactly one, so simply refusing
+     * them is not an option.
+     */
     private InputStream open(URI uri) throws IOException {
         if ("file".equalsIgnoreCase(uri.getScheme())) {
             return Files.newInputStream(Path.of(uri));
         }
-        HttpRequest request =
-                HttpRequest.newBuilder(uri)
-                        .timeout(REQUEST_TIMEOUT)
-                        .header("User-Agent", "Stirling-PDF")
-                        .GET()
-                        .build();
         try (HttpClient client =
                 HttpClient.newBuilder()
                         .connectTimeout(CONNECT_TIMEOUT)
-                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .followRedirects(HttpClient.Redirect.NEVER)
                         .build()) {
-            HttpResponse<InputStream> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            if (response.statusCode() != 200) {
-                response.body().close();
-                throw new IOException("HTTP " + response.statusCode() + " fetching " + uri);
+            URI current = uri;
+            for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
+                requireReachableFromServer(current);
+                HttpRequest request =
+                        HttpRequest.newBuilder(current)
+                                .timeout(REQUEST_TIMEOUT)
+                                .header("User-Agent", "Stirling-PDF")
+                                .GET()
+                                .build();
+                HttpResponse<InputStream> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+                URI next = redirectTarget(response, current);
+                if (next != null) {
+                    response.body().close();
+                    current = next;
+                    continue;
+                }
+                if (response.statusCode() != 200) {
+                    response.body().close();
+                    throw new IOException("HTTP " + response.statusCode() + " fetching " + current);
+                }
+                return response.body();
             }
-            return response.body();
+            throw new IOException("Too many redirects fetching " + uri);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted fetching " + uri, e);
+        }
+    }
+
+    /** The next hop for a redirect response, or {@code null} when this is the final answer. */
+    private static URI redirectTarget(HttpResponse<?> response, URI current) throws IOException {
+        int status = response.statusCode();
+        if (status != 301 && status != 302 && status != 303 && status != 307 && status != 308) {
+            return null;
+        }
+        String location = response.headers().firstValue("location").orElse(null);
+        if (location == null || location.isBlank()) {
+            throw new IOException("HTTP " + status + " with no location, fetching " + current);
+        }
+        try {
+            return current.resolve(location);
+        } catch (IllegalArgumentException e) {
+            throw new IOException("Unusable redirect target from " + current, e);
         }
     }
 
