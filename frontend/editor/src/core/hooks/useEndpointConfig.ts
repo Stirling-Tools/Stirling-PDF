@@ -26,20 +26,20 @@ export function useEndpointEnabled(endpoint: string): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-const { data, isPending, error, refetch } = useQuery({
-  queryKey: qk.endpointEnabled(endpoint),
-  queryFn: () => fetchEndpointEnabled(endpoint),
-  enabled: Boolean(endpoint),
-  staleTime: CONFIG_STALE_TIME,
-});
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: qk.endpointEnabled(endpoint),
+    queryFn: () => fetchEndpointEnabled(endpoint),
+    enabled: Boolean(endpoint),
+    staleTime: CONFIG_STALE_TIME,
+  });
 
   return {
-enabled: data ?? null,
-loading: Boolean(endpoint) && isPending,
-error: message(error),
-refetch: useCallback(async () => {
-  await refetch();
-}, [refetch]),
+    enabled: data ?? null,
+    loading: Boolean(endpoint) && isPending,
+    error: message(error),
+    refetch: useCallback(async () => {
+      await refetch();
+    }, [refetch]),
   };
 }
 
@@ -56,47 +56,47 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-const queryClient = useQueryClient();
-const wanted = endpoints ?? [];
+  const queryClient = useQueryClient();
+  const wanted = endpoints ?? [];
 
-const { data, isPending, error, refetch } = useQuery({
-  queryKey: qk.endpointsAvailability(),
-  queryFn: fetchEndpointsAvailability,
-  enabled: wanted.length > 0,
-  staleTime: CONFIG_STALE_TIME,
-  retry: false,
-});
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: qk.endpointsAvailability(),
+    queryFn: fetchEndpointsAvailability,
+    enabled: wanted.length > 0,
+    staleTime: CONFIG_STALE_TIME,
+    retry: false,
+  });
 
-const reload = useCallback(async () => {
-  await refetch();
-}, [refetch]);
+  const reload = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
-useJwtConfigSync(
-  useCallback(() => {
-    void queryClient.invalidateQueries({
-      queryKey: qk.endpointsAvailability(),
-    });
-  }, [queryClient]),
-);
+  useJwtConfigSync(
+    useCallback(() => {
+      void queryClient.invalidateQueries({
+        queryKey: qk.endpointsAvailability(),
+      });
+    }, [queryClient]),
+  );
 
-const key = wanted.join(",");
-const projected = useMemo(() => {
-  const status: Record<string, boolean> = {};
-  const details: Record<string, EndpointAvailabilityDetails> = {};
-  if (!data && !error) return { status, details };
-  for (const endpoint of key ? key.split(",") : []) {
-    const detail = data?.[endpoint] ?? OPTIMISTIC;
-    status[endpoint] = detail.enabled;
-    details[endpoint] = detail;
-  }
-  return { status, details };
-}, [data, error, key]);
+  const key = wanted.join(",");
+  const projected = useMemo(() => {
+    const status: Record<string, boolean> = {};
+    const details: Record<string, EndpointAvailabilityDetails> = {};
+    if (!data && !error) return { status, details };
+    for (const endpoint of key ? key.split(",") : []) {
+      const detail = data?.[endpoint] ?? OPTIMISTIC;
+      status[endpoint] = detail.enabled;
+      details[endpoint] = detail;
+    }
+    return { status, details };
+  }, [data, error, key]);
 
   return {
-endpointStatus: projected.status,
-endpointDetails: projected.details,
-loading: wanted.length > 0 && isPending,
-error: message(error),
-refetch: reload,
+    endpointStatus: projected.status,
+    endpointDetails: projected.details,
+    loading: wanted.length > 0 && isPending,
+    error: message(error),
+    refetch: reload,
   };
 }
