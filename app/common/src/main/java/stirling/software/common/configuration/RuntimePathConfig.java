@@ -182,9 +182,15 @@ public class RuntimePathConfig {
     /**
      * Locates a file or directory bundled alongside the application.
      *
+     * <p>Public because anything that installs or inspects one of these tools has to look in
+     * exactly the same places, in the same order, as the code that later runs it. Keeping a second
+     * opinion about where a runtime lives is how an installer ends up putting the engine somewhere
+     * the application then reports as missing - which is precisely what happened before this was
+     * shared.
+     *
      * @return the first candidate that exists on disk, or empty when nothing is bundled
      */
-    private static Optional<Path> findBundledPath(String relativePath) {
+    public static Optional<Path> findBundledPath(String relativePath) {
         return findBundledPath(bundleRoots(), relativePath);
     }
 
@@ -214,7 +220,7 @@ public class RuntimePathConfig {
      * getCodeSource()} unusable here. The desktop bundler puts the JAR in {@code <root>/libs} and
      * the bundled tools in {@code <root>}, so the home directory's parent is probed as well.
      */
-    private static List<Path> bundleRoots() {
+    public static List<Path> bundleRoots() {
         List<Path> roots = new ArrayList<>();
         // Explicit configuration first: an operator who set a base path meant it.
         roots.add(Path.of(InstallationPathConfig.getPath()));

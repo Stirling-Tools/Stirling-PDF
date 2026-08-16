@@ -103,6 +103,41 @@ class OCRControllerTest {
     }
 
     /**
+     * Measured on an ordinary 19-page A4 document: at the 500 DPI the setting defaults to, each
+     * page is 24 megapixels - about 92 MB in memory - and the desktop app, which runs the backend
+     * with -Xmx2g, died rendering page 11. The setting is documented as "maximum allowed DPI", and
+     * AutoRotateController already reads it that way; this one adopted the ceiling as its target.
+     */
+    @Nested
+    @DisplayName("ocrRenderDpi")
+    class RenderDpi {
+
+        private ApplicationProperties withMaxDpi(int maxDpi) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().setMaxDPI(maxDpi);
+            return properties;
+        }
+
+        @Test
+        @DisplayName("caps at 300 rather than adopting the 500 the setting defaults to")
+        void capsAtThreeHundred() {
+            assertEquals(300, OCRController.ocrRenderDpi(withMaxDpi(500)));
+        }
+
+        @Test
+        @DisplayName("an operator who lowers the ceiling gets the lower value")
+        void honoursALowerCeiling() {
+            assertEquals(150, OCRController.ocrRenderDpi(withMaxDpi(150)));
+        }
+
+        @Test
+        @DisplayName("falls back to 300 with no settings at all")
+        void fallsBackWithoutProperties() {
+            assertEquals(300, OCRController.ocrRenderDpi(null));
+        }
+    }
+
+    /**
      * Measured against the bundled Tesseract 5.4.0: pointing {@code --tessdata-dir} at a directory
      * without {@code configs/pdf} makes the run print "read_params_file: Can't open pdf", write no
      * output file, and still <em>exit 0</em>. A directory of bare .traineddata files is exactly

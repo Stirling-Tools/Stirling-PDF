@@ -406,6 +406,35 @@ class RuntimePathConfigTest {
         }
 
         @Test
+        @DisplayName("The machine-wide data directory is one of the roots")
+        void machineWideRootIsProbed() {
+            // The Windows installer runs elevated and installs the OCR runtime for every account,
+            // so it lands here rather than in any one user's profile. Leaving this root out is not
+            // a theoretical gap: it shipped, and the application reported "not installed" over a
+            // perfectly good installation and downloaded a second 122 MB copy beside it.
+            Optional<Path> machineWide = RuntimePathConfig.machineWideDataDir();
+            assertTrue(machineWide.isPresent(), "every supported platform has one");
+
+            assertTrue(
+                    RuntimePathConfig.bundleRoots().contains(machineWide.get()),
+                    "bundleRoots() must include " + machineWide.get());
+        }
+
+        @Test
+        @DisplayName("A per-user runtime is preferred over the machine-wide one")
+        void perUserWinsOverMachineWide() {
+            List<Path> roots = RuntimePathConfig.bundleRoots();
+            Path machineWide = RuntimePathConfig.machineWideDataDir().orElseThrow();
+
+            // Last on purpose: an install someone made for themselves should take precedence over
+            // whatever an administrator put there for everyone.
+            assertEquals(
+                    roots.size() - 1,
+                    roots.indexOf(machineWide),
+                    "the machine-wide root belongs last");
+        }
+
+        @Test
         @DisplayName("Returns empty when nothing is bundled, so the PATH lookup still applies")
         void nothingBundled(@TempDir Path tempDir) {
             Optional<Path> found =

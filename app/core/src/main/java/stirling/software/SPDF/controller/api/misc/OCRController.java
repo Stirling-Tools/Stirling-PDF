@@ -62,6 +62,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
+    /**
+     * Resolution pages are rasterised at before Tesseract sees them.
+     *
+     * <p>{@code system.maxDPI} is documented as "maximum allowed DPI" and defaults to 500, and this
+     * used to adopt that number as the target - which is a misreading of a ceiling, and the reason
+     * forcing OCR on an ordinary A4 document failed on the desktop app: 500 DPI is 24 megapixels,
+     * or about 92 MB per page in memory, against a 2 GB heap. {@code AutoRotateController} already
+     * reads the setting the right way, choosing its own resolution and clamping to the maximum.
+     *
+     * <p>300 is the resolution Tesseract's own documentation asks for; beyond it the extra pixels
+     * cost memory and time without buying accuracy.
+     */
+    private static final int OCR_RENDER_DPI = 300;
+
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -88,6 +102,17 @@ public class OCRController {
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .toList();
+    }
+
+    /**
+     * Resolution to rasterise at, honouring {@code system.maxDPI} as the ceiling it is documented
+     * to be rather than as a target.
+     */
+    static int ocrRenderDpi(ApplicationProperties properties) {
+        if (properties == null || properties.getSystem() == null) {
+            return OCR_RENDER_DPI;
+        }
+        return Math.min(OCR_RENDER_DPI, properties.getSystem().getMaxDPI());
     }
 
     /**
@@ -417,13 +442,7 @@ public class OCRController {
                         // Convert page to image
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
-                        if (applicationProperties != null
-                                && applicationProperties.getSystem() != null) {
-                            renderDpi = applicationProperties.getSystem().getMaxDPI();
-                        }
-                        final int dpi = renderDpi;
+                        final int dpi = ocrRenderDpi(applicationProperties);
                         final int currentPageNum = pageNum;
 
                         image =

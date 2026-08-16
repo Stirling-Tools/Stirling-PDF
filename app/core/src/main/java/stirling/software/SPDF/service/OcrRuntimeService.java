@@ -132,8 +132,30 @@ public class OcrRuntimeService {
 
     // ---------------------------------------------------------------- layout
 
+    /**
+     * Where the OCR runtime lives.
+     *
+     * <p>Asks {@link RuntimePathConfig} rather than deciding for itself, and that is the whole
+     * point. This used to look only at the per-user directory while the Windows installer, running
+     * elevated, writes to the machine-wide one. The engine ran fine - path resolution already knew
+     * about both - but this class did not, so it reported "not installed" over a perfectly good
+     * installation and then downloaded a second 122 MB copy beside it.
+     *
+     * <p>An existing runtime, wherever it is, wins. Only when there is none does a fresh install
+     * pick a destination.
+     */
     public Path runtimeRoot() {
-        return Path.of(InstallationPathConfig.getPath(), RUNTIME_DIR);
+        return RuntimePathConfig.findBundledPath(RUNTIME_DIR + "/" + executableName())
+                .map(Path::getParent)
+                .orElseGet(OcrRuntimeService::freshInstallRoot);
+    }
+
+    /**
+     * Destination for a first install: the application's own data directory, which is writable
+     * without elevation. The installer uses the machine-wide one; the application cannot.
+     */
+    private static Path freshInstallRoot() {
+        return Path.of(InstallationPathConfig.getPath(), RUNTIME_DIR).toAbsolutePath().normalize();
     }
 
     public Path tessdataRoot() {
