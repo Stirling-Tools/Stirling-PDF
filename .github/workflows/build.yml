@@ -101,7 +101,6 @@ jobs:
       actions: read
       contents: read
       security-events: write
-      pull-requests: write
     uses: ./.github/workflows/backend-build.yml
     secrets: inherit
 
@@ -130,7 +129,6 @@ jobs:
     needs: [files-changed]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
@@ -224,7 +222,6 @@ jobs:
     needs: [files-changed]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
 
@@ -238,7 +235,6 @@ jobs:
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
 

@@ -1,0 +1,72 @@
+name: Report PR check failures
+
+# Reports failures from the pull_request workflow without granting that
+# workflow write access to the base repository. This is required for fork PRs.
+on:
+  workflow_run:
+    workflows: ["Build and Test Workflow"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update PR check comments
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108d7 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const { owner, repo } = context.repo;
+
+            let pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) {
+              const { data: associatedPullRequests } =
+                await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner, repo, commit_sha: run.head_sha,
+                });
+              pullRequest = associatedPullRequests[0];
+            }
+            if (!pullRequest) {
+              core.warning(`No pull request found for workflow run ${run.id}.`);
+              return;
+            }
+
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner, repo, run_id: run.id, per_page: 100 },
+            );
+
+            const checks = [
+              ['<!-- engine-check -->', 'Fail if engine check failed', 'Engine Check Failed', 'Run `task engine:fix`, then `task engine:check` to see what still needs manual fixes.'],
+              ['<!-- java-formatting-check -->', 'Fail if backend format check failed', 'Backend Format Check Failed', 'Run `task backend:format` to auto-fix, then commit and push the changes.'],
+              ['<!-- frontend-check -->', 'Fail if frontend check failed', 'Frontend Check Failed', 'Run `task frontend:fix`, then `task frontend:check:all` to see what still needs manual fixes.'],
+              ['<!-- generated-models-check -->', 'Fail if generated models check failed', 'Generated Models Check Failed', 'Run `task tool-models` to regenerate the models, then commit the updated files.'],
+            ];
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pullRequest.number, per_page: 100 },
+            );
+
+            for (const [marker, failedStep, title, instructions] of checks) {
+              const failed = jobs.some(job => job.steps?.some(step =>
+                step.name === failedStep && step.conclusion === 'failure'));
+              const existing = comments.find(comment => comment.body?.includes(marker));
+              const body = [marker, `### ${title}`, '', 'This check must be fixed before the pull request can be merged.', '', instructions].join('\n');
+
+              if (failed && existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else if (failed) {
+                await github.rest.issues.createComment({ owner, repo, issue_number: pullRequest.number, body });
+              } else if (existing) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+              }
+            }
