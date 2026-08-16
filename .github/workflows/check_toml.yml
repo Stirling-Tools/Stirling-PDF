@@ -7,11 +7,6 @@ name: Check TOML Translation Files on PR
 on:
   workflow_call:
 
-# cancel in-progress jobs if a new job is triggered
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read # Allow read access to repository content
 
