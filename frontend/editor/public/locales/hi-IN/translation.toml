@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "दस्तावेज़ को पलटें ताकि
 SIDE_STITCH_BOOKLET_SORT = "साइड‑स्टिच बुकलेट प्रिंटिंग के लिए पृष्ठ व्यवस्थित करें (साइड बाइंडिंग के लिए अनुकूलित)।"
 
 [pdfTextEditor]
-conversionFailed = "PDF कन्वर्ट करने में विफल। कृपया फिर से प्रयास करें।"
-converting = "PDF को संपादन योग्य फ़ॉर्मेट में बदला जा रहा है..."
-currentFile = "वर्तमान फ़ाइल: {{name}}"
-imageLabel = "लगाई गई इमेज"
-noTextOnPage = "इस पेज पर कोई एडिटेबल टेक्स्ट नहीं मिला।"
-pagePreviewAlt = "पेज पूर्वावलोकन"
-pageSummary = "पेज {{number}}/{{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON एडिटर"
-viewLabel = "PDF एडिटर"
-
-[pdfTextEditor.actions]
-applyChanges = "परिवर्तन लागू करें"
-clearText = "टेक्स्ट साफ़ करें"
-downloadCopy = "कॉपी डाउनलोड करें"
-moreOptions = "अधिक विकल्प"
-reset = "परिवर्तन रीसेट करें"
-
-[pdfTextEditor.badges]
-earlyAccess = "अर्ली एक्सेस"
-modified = "संपादित"
-
-[pdfTextEditor.empty]
-dropzone = "यहाँ PDF या JSON फ़ाइल खींचकर छोड़ें, या ब्राउज़ करने के लिए क्लिक करें"
-dropzoneWithFiles = "फ़ाइलें टैब से कोई फ़ाइल चुनें, या यहाँ PDF या JSON फ़ाइल खींचकर छोड़ें, या ब्राउज़ करने के लिए क्लिक करें"
-title = "कोई दस्तावेज़ लोड नहीं"
-
-[pdfTextEditor.errors]
-invalidJson = "JSON फ़ाइल पढ़ी नहीं जा सकी। सुनिश्चित करें कि यह PDF to JSON टूल द्वारा जनरेट की गई हो."
-pdfConversion = "एडिटेड JSON को वापस PDF में कन्वर्ट नहीं किया जा सका."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "सभी फ़ॉन्ट्स"
-currentPageFonts = "इस पेज के फ़ॉन्ट्स"
-details = "फ़ॉन्ट विवरण"
-embedded = "एम्बेडेड"
-fallback = "fallback"
-infoMessage = "फ़ॉन्ट पुनरुत्पादन जानकारी उपलब्ध है."
-missing = "गायब"
-perfect = "परफेक्ट"
-perfectMessage = "सभी फ़ॉन्ट्स को पूरी तरह पुनरुत्पादित किया जा सकता है."
-subset = "सबसेट"
-suggestions = "नोट्स"
-type = "प्रकार"
-warningMessage = "कुछ फ़ॉन्ट्स सही से रेंडर नहीं हो सकते हैं."
-warnings = "चेतावनियाँ"
-webFormat = "वेब फ़ॉर्मैट"
-
-[pdfTextEditor.groupingMode]
-auto = "ऑटो"
-paragraph = "पैराग्राफ"
-singleLine = "सिंगल लाइन"
-
-[pdfTextEditor.manual]
-expandWidth = "पेज किनारे तक फैलाएँ"
-merge = "चयन मर्ज करें"
-mergeTooltip = "चयनित बॉक्सों को मर्ज करें"
-resetWidth = "चौड़ाई रीसेट करें"
-resizeHandle = "टेक्स्ट चौड़ाई समायोजित करें"
-ungroup = "चयन अनग्रुप करें"
-ungroupTooltip = "पैराग्राफ को फिर से पंक्तियों में विभाजित करें"
-widthMenu = "चौड़ाई विकल्प"
-
-[pdfTextEditor.modeChange]
-cancel = "रद्द करें"
-confirm = "रीसेट करें और मोड बदलें"
-title = "मोड परिवर्तन की पुष्टि"
-warning = "टेक्स्ट ग्रुपिंग मोड बदलने से सभी असहेजे बदलाव रीसेट हो जाएंगे। क्या आप जारी रखना चाहते हैं?"
-
-[pdfTextEditor.options.advanced]
-title = "उन्नत सेटिंग्स"
-
-[pdfTextEditor.options.autoScaleText]
-description = "जब फ़ॉन्ट रेंडरिंग PDF से भिन्न हो, तो मूल बाउंडिंग बॉक्स के भीतर फिट करने हेतु टेक्स्ट को क्षैतिज रूप से स्वतः स्केल करता है।"
-title = "टेक्स्ट को बॉक्स में फिट करने हेतु ऑटो-स्केल"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "सक्रिय होने पर, ओवरलैपिंग glyphs या मिश्रित फ़ॉन्ट्स से बचने के लिए, एडिटर संपादित हर टेक्स्ट बॉक्स को एक PDF टेक्स्ट एलिमेंट के रूप में एक्सपोर्ट करता है."
-title = "संपादित टेक्स्ट को एक ही PDF एलिमेंट में लॉक करें"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "पेज प्रकार स्वतः पहचानकर टेक्स्ट को उपयुक्त रूप से ग्रुप करता है।"
-paragraphDescription = "संरेखित लाइनों को मल्टी-लाइन पैराग्राफ टेक्स्ट बॉक्स में ग्रुप करता है।"
-singleLineDescription = "हर PDF टेक्स्ट लाइन को अलग टेक्स्ट बॉक्स रखता है।"
-title = "टेक्स्ट ग्रुपिंग मोड"
-
-[pdfTextEditor.pageType]
-paragraph = "पैराग्राफ पेज"
-sparse = "छिटपुट टेक्स्ट"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "यह अल्फा व्यूअर अभी विकसित हो रहा है—कुछ फ़ॉन्ट, रंग, पारदर्शिता प्रभाव और लेआउट विवरण हल्के बदल सकते हैं। साझा करने से पहले कृपया जनरेट की गई PDF को दोबारा जाँच लें।"
@@ -5920,32 +5829,6 @@ title = "पूर्वावलोकन अंतर"
 [pdfTextEditor.tooltip.textFocus]
 text = "यह कार्यक्षेत्र टेक्स्ट संपादन और एम्बेडेड छवियों को पुनर्स्थापित करने पर केंद्रित है। जटिल पेज आर्टवर्क, फ़ॉर्म विजेट और लेयर्ड ग्राफ़िक्स निर्यात के लिए सुरक्षित रहते हैं, लेकिन यहाँ पूरी तरह संपादन योग्य नहीं हैं।"
 title = "टेक्स्ट और छवि फोकस"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "इनके साथ सबसे अच्छा काम करता है:"
-bestFor1 = "सरल PDFs जिनमें मुख्यतः टेक्स्ट और इमेज हों"
-bestFor2 = "मानक पैराग्राफ फ़ॉर्मैटिंग वाले दस्तावेज़"
-bestFor3 = "पत्र, निबंध, रिपोर्ट और साधारण दस्तावेज़"
-dontShowAgain = "दोबारा न दिखाएँ"
-experimental = "यह एक प्रायोगिक फीचर है और सक्रिय विकास में है। उपयोग के दौरान कुछ अस्थिरता और समस्याएँ हो सकती हैं."
-feedback = "यह Early Access फीचर है। कृपया मिले किसी भी मुद्दे की रिपोर्ट करें ताकि हम सुधार कर सकें!"
-gotIt = "ठीक है"
-howItWorks = "यह टूल आपके PDF को संपादन योग्य फ़ॉर्मेट में बदलता है, जहाँ आप टेक्स्ट बदल सकते हैं और इमेज की स्थिति बदल सकते हैं। बदलाव एक नए PDF के रूप में सेव होते हैं."
-issue1 = "टेक्स्ट रंग अभी सुरक्षित नहीं रहता (जल्द जोड़ा जाएगा)"
-issue2 = "पैराग्राफ मोड में एलाइनमेंट और स्पेसिंग की अधिक समस्याएँ हैं - सिंगल लाइन मोड अनुशंसित है"
-issue3 = "प्रीव्यू डिस्प्ले एक्सपोर्टेड PDF से अलग दिखता है - एक्सपोर्टेड PDFs मूल के ज्यादा करीब होते हैं"
-issue4 = "घुमाए गए टेक्स्ट के एलाइनमेंट को मैन्युअल समायोजन की आवश्यकता पड़ सकती है"
-issue5 = "ट्रांसपेरेंसी और लेयरिंग इफेक्ट्स मूल से भिन्न हो सकते हैं"
-knownIssues = "ज्ञात समस्याएँ (सुधारी जा रही हैं):"
-limitation1 = "फ़ॉन्ट रेंडरिंग मूल PDF से थोड़ा भिन्न हो सकती है"
-limitation2 = "जटिल ग्राफिक्स, फॉर्म फ़ील्ड्स और एनोटेशन सुरक्षित रहते हैं पर संपादन योग्य नहीं"
-limitation3 = "बड़ी फ़ाइलों को कन्वर्ट और प्रोसेस होने में समय लग सकता है"
-limitations = "वर्तमान सीमाएँ:"
-notIdealFor = "इनके लिए उपयुक्त नहीं:"
-notIdealFor1 = "विशेष फ़ॉर्मैटिंग जैसे बुलेट पॉइंट्स, टेबल्स, या मल्टी-कॉलम लेआउट वाले PDFs"
-notIdealFor2 = "मैगज़ीन, ब्रॉशर, या भारी डिज़ाइन वाले दस्तावेज़"
-notIdealFor3 = "जटिल लेआउट वाले निर्देश पुस्तिकाएँ"
-title = "PDF Text Editor में आपका स्वागत है (Early Access)"
 
 [PDFToCSV]
 header = "PDF से CSV"

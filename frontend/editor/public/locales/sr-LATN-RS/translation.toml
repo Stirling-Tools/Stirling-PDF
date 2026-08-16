@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Obrnite dokument tako da poslednja strana postane prva i tako r
 SIDE_STITCH_BOOKLET_SORT = "Rasporedite strane za brošuru sa bočnim šivenjem (optimizovano za povez na strani)."
 
 [pdfTextEditor]
-conversionFailed = "Konverzija PDF-a nije uspela. Pokušajte ponovo."
-converting = "Konvertovanje PDF-a u format za uređivanje..."
-currentFile = "Trenutni fajl: {{name}}"
-imageLabel = "Postavljena slika"
-noTextOnPage = "Na ovoj strani nije detektovan tekst za uređivanje."
-pagePreviewAlt = "Pregled strane"
-pageSummary = "Strana {{number}} od {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON uređivač"
-viewLabel = "PDF uređivač"
-
-[pdfTextEditor.actions]
-applyChanges = "Primeni izmene"
-clearText = "Obriši tekst"
-downloadCopy = "Preuzmi kopiju"
-moreOptions = "Više opcija"
-reset = "Poništi izmene"
-
-[pdfTextEditor.badges]
-earlyAccess = "Rani pristup"
-modified = "Izmenjeno"
-
-[pdfTextEditor.empty]
-dropzone = "Prevucite i otpustite PDF ili JSON datoteku ovde ili kliknite da izaberete"
-dropzoneWithFiles = "Izaberite datoteku sa kartice Datoteke, ili prevucite i otpustite PDF ili JSON datoteku ovde, ili kliknite da izaberete"
-title = "Nijedan dokument nije učitan"
-
-[pdfTextEditor.errors]
-invalidJson = "Nije moguće pročitati JSON datoteku. Uverite se da je generisana alatom PDF u JSON."
-pdfConversion = "Nije moguće konvertovati izmenjeni JSON nazad u PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Svi fontovi"
-currentPageFonts = "Fontovi na ovoj stranici"
-details = "Detalji fonta"
-embedded = "Ugrađen"
-fallback = "rezervni"
-infoMessage = "Dostupne su informacije o reprodukciji fontova."
-missing = "nedostaje"
-perfect = "savršeno"
-perfectMessage = "Svi fontovi se mogu savršeno reprodukovati."
-subset = "podskup"
-suggestions = "Napomene"
-type = "Tip"
-warningMessage = "Neki fontovi možda neće biti ispravno prikazani."
-warnings = "Upozorenja"
-webFormat = "Web format"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Pasus"
-singleLine = "Jedna linija"
-
-[pdfTextEditor.manual]
-expandWidth = "Proširi do ivice stranice"
-merge = "Spoji izbor"
-mergeTooltip = "Spoji izabrane okvire"
-resetWidth = "Resetuj širinu"
-resizeHandle = "Podesi širinu teksta"
-ungroup = "Razgrupiši izbor"
-ungroupTooltip = "Podeli pasus nazad na redove"
-widthMenu = "Opcije širine"
-
-[pdfTextEditor.modeChange]
-cancel = "Otkaži"
-confirm = "Resetuj i promeni režim"
-title = "Potvrdi promenu režima"
-warning = "Promena načina grupisanja teksta resetuje sve nesačuvane izmene. Da li ste sigurni da želite da nastavite?"
-
-[pdfTextEditor.options.advanced]
-title = "Napredna podešavanja"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Automatski horizontalno prilagođava tekst da stane u njegov izvorni granični okvir kada se iscrtavanje fonta razlikuje od PDF-a."
-title = "Automatski prilagodi tekst okvirima"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Kada je uključeno, editor izvozi svaki izmenjeni tekstualni okvir kao jedan PDF tekstualni element kako bi se izbeglo preklapanje glifova ili mešani fontovi."
-title = "Zaključaj izmenjeni tekst u jedan PDF element"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatski prepoznaje tip stranice i odgovarajuće grupiše tekst."
-paragraphDescription = "Grupiše poravnate redove u višeredne pasusne tekstualne okvire."
-singleLineDescription = "Zadržava svaki red teksta u PDF-u kao zaseban tekstualni okvir."
-title = "Način grupisanja teksta"
-
-[pdfTextEditor.pageType]
-paragraph = "Strana sa pasusima"
-sparse = "Rasuti tekst"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ovaj alfa pregledač se i dalje razvija—određeni fontovi, boje, efekti providnosti i detalji rasporeda mogu se blago promeniti. Molimo dvaput proverite generisani PDF pre deljenja."
@@ -5920,32 +5829,6 @@ title = "Razlike u prikazu"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ovaj radni prostor je usredsređen na uređivanje teksta i premeštanje ugrađenih slika. Složen crtež stranice, vidžeti formulara i slojevita grafika čuvaju se za izvoz, ali ovde nisu u potpunosti izmenjivi."
 title = "Fokus na tekst i sliku"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Najbolje radi sa:"
-bestFor1 = "Jednostavni PDF-ovi sa uglavnom tekstom i slikama"
-bestFor2 = "Dokumenti sa standardnim formatiranjem pasusa"
-bestFor3 = "Pisma, eseji, izveštaji i osnovni dokumenti"
-dontShowAgain = "Ne prikazuj ponovo"
-experimental = "Ovo je eksperimentalna funkcija u aktivnom razvoju. Očekujte izvesnu nestabilnost i probleme tokom korišćenja."
-feedback = "Ovo je funkcija ranog pristupa. Molimo prijavite sve probleme na koje naiđete kako biste nam pomogli da unapredimo alat!"
-gotIt = "Razumem"
-howItWorks = "Ovaj alat konvertuje vaš PDF u format koji se može uređivati, gde možete menjati tekst i premeštati slike. Promene se čuvaju nazad kao novi PDF."
-issue1 = "Boja teksta se trenutno ne zadržava (uskoro će biti dodato)"
-issue2 = "Režim pasusa ima više problema sa poravnanjem i razmakom — preporučuje se režim Jedan red"
-issue3 = "Prikaz pregleda se razlikuje od izvezenog PDF-a — izvezeni PDF je bliži originalu"
-issue4 = "Poravnanje rotiranog teksta može zahtevati ručno podešavanje"
-issue5 = "Efekti transparencije i slojeva mogu odstupati od originala"
-knownIssues = "Poznati problemi (u rešavanju):"
-limitation1 = "Iscrtavanje fontova može se malo razlikovati od originalnog PDF-a"
-limitation2 = "Složena grafika, polja obrazaca i anotacije se čuvaju, ali nisu uređivi"
-limitation3 = "Većim datotekama može trebati vremena za konverziju i obradu"
-limitations = "Trenutna ograničenja:"
-notIdealFor = "Nije idealno za:"
-notIdealFor1 = "PDF-ove sa posebnim formatiranjem poput nabrajanja, tabela ili višekolonskih rasporeda"
-notIdealFor2 = "Magazini, brošure ili kompleksno dizajnirani dokumenti"
-notIdealFor3 = "Uputstva sa složenim rasporedima"
-title = "Dobrodošli u Uređivač teksta za PDF (rani pristup)"
 
 [PDFToCSV]
 header = "PDF u CSV"

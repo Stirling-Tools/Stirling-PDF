@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "سند را وارونه کنید تا صفحه آخر اول �
 SIDE_STITCH_BOOKLET_SORT = "آرایش صفحات برای چاپ دفترچه با صحافی کناری (بهینه‌شده برای صحافی در کنار)."
 
 [pdfTextEditor]
-conversionFailed = "تبدیل PDF ناموفق بود. لطفاً دوباره تلاش کنید."
-converting = "در حال تبدیل PDF به قالب قابل ویرایش..."
-currentFile = "فایل فعلی: {{name}}"
-imageLabel = "تصویر قرارگرفته"
-noTextOnPage = "متن قابل ویرایش در این صفحه شناسایی نشد."
-pagePreviewAlt = "پیش‌نمایش صفحه"
-pageSummary = "صفحه {{number}} از {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "ویرایشگر JSON PDF"
-viewLabel = "ویرایشگر PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "اعمال تغییرات"
-clearText = "پاک کردن متن"
-downloadCopy = "دانلود نسخه"
-moreOptions = "گزینه‌های بیشتر"
-reset = "بازنشانی تغییرات"
-
-[pdfTextEditor.badges]
-earlyAccess = "دسترسی زودهنگام"
-modified = "ویرایش‌شده"
-
-[pdfTextEditor.empty]
-dropzone = "یک فایل PDF یا JSON را اینجا بکشید و رها کنید، یا برای مرور کلیک کنید"
-dropzoneWithFiles = "یک فایل را از برگهٔ فایل‌ها انتخاب کنید، یا یک فایل PDF یا JSON را اینجا بکشید و رها کنید، یا برای مرور کلیک کنید"
-title = "هیچ سندی بارگذاری نشده است"
-
-[pdfTextEditor.errors]
-invalidJson = "خواندن فایل JSON ممکن نیست. مطمئن شوید توسط ابزار PDF به JSON تولید شده است."
-pdfConversion = "تبدیل JSON ویرایش‌شده به PDF ممکن نیست."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "همه فونت‌ها"
-currentPageFonts = "فونت‌های این صفحه"
-details = "جزئیات فونت"
-embedded = "تعبیه‌شده"
-fallback = "جایگزین"
-infoMessage = "اطلاعات بازتولید فونت در دسترس است."
-missing = "مفقود"
-perfect = "بی‌نقص"
-perfectMessage = "همه فونت‌ها به‌طور کامل قابل بازتولید هستند."
-subset = "زیرمجموعه"
-suggestions = "یادداشت‌ها"
-type = "نوع"
-warningMessage = "برخی فونت‌ها ممکن است به‌درستی رندر نشوند."
-warnings = "هشدارها"
-webFormat = "فرمت وب"
-
-[pdfTextEditor.groupingMode]
-auto = "خودکار"
-paragraph = "پاراگراف"
-singleLine = "تک‌خطی"
-
-[pdfTextEditor.manual]
-expandWidth = "گسترش تا لبه صفحه"
-merge = "ادغام انتخاب"
-mergeTooltip = "ادغام باکس‌های انتخاب‌شده"
-resetWidth = "بازنشانی عرض"
-resizeHandle = "تنظیم عرض متن"
-ungroup = "لغو گروه‌بندی انتخاب"
-ungroupTooltip = "تقسیم پاراگراف به خطوط"
-widthMenu = "گزینه‌های عرض"
-
-[pdfTextEditor.modeChange]
-cancel = "لغو"
-confirm = "بازنشانی و تغییر حالت"
-title = "تأیید تغییر حالت"
-warning = "تغییر حالت گروه‌بندی متن همه تغییرات ذخیره‌نشده را بازنشانی می‌کند. آیا مطمئن هستید می‌خواهید ادامه دهید؟"
-
-[pdfTextEditor.options.advanced]
-title = "تنظیمات پیشرفته"
-
-[pdfTextEditor.options.autoScaleText]
-description = "وقتی رندر فونت با PDF متفاوت باشد، متن را به‌صورت افقی خودکار مقیاس می‌کند تا در باکس مرزی اصلی خود جای بگیرد."
-title = "مقیاس خودکار متن برای جا شدن در باکس‌ها"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "وقتی فعال باشد، هر باکس متن ویرایش‌شده را به‌صورت یک عنصر متن PDF خروجی می‌گیرد تا از هم‌پوشانی گلیف‌ها یا فونت‌های ترکیبی جلوگیری شود."
-title = "قفل‌کردن متن ویرایش‌شده به یک عنصر PDF واحد"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "نوع صفحه را خودکار تشخیص می‌دهد و متن را به‌طور مناسب گروه‌بندی می‌کند."
-paragraphDescription = "خطوط هم‌تراز را به باکس‌های متن پاراگراف چندخطی گروه‌بندی می‌کند."
-singleLineDescription = "هر خط متن PDF را به‌صورت باکس متن جدا نگه می‌دارد."
-title = "حالت گروه‌بندی متن"
-
-[pdfTextEditor.pageType]
-paragraph = "صفحه پاراگراف"
-sparse = "متن پراکنده"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "این نمایشگر آلفا هنوز در حال تکامل است—برخی فونت‌ها، رنگ‌ها، افکت‌های شفافیت و جزئیات چیدمان ممکن است کمی جابه‌جا شوند. لطفاً قبل از اشتراک‌گذاری، PDF تولیدشده را دوباره بررسی کنید."
@@ -5920,32 +5829,6 @@ title = "تفاوت پیش‌نمایش"
 [pdfTextEditor.tooltip.textFocus]
 text = "این فضای کاری بر ویرایش متن و جابه‌جایی تصاویر توکار تمرکز دارد. آثار هنری پیچیده صفحه، ابزارک‌های فرم و گرافیک‌های لایه‌ای برای خروجی حفظ می‌شوند اما در اینجا کاملاً قابل ویرایش نیستند."
 title = "تمرکز متن و تصویر"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "بهترین عملکرد برای:"
-bestFor1 = "PDFهای ساده با متن و تصویر"
-bestFor2 = "اسناد با قالب‌بندی استاندارد پاراگراف"
-bestFor3 = "نامه‌ها، مقاله‌ها، گزارش‌ها و اسناد پایه"
-dontShowAgain = "دیگر نشان نده"
-experimental = "این قابلیت آزمایشی و در حال توسعه است؛ کمی ناپایداری و مشکل محتمل است."
-feedback = "این قابلیت در مرحله دسترسی اولیه است. لطفاً هر مشکلی را که با آن مواجه می‌شوید گزارش دهید تا به بهبود کمک کنید!"
-gotIt = "متوجه شدم"
-howItWorks = "این ابزار PDF شما را به قالبی قابل ویرایش تبدیل می‌کند تا متن را تغییر دهید و تصاویر را جابه‌جا کنید. تغییرات به‌صورت یک PDF جدید ذخیره می‌شود."
-issue1 = "رنگ متن فعلاً حفظ نمی‌شود (به‌زودی اضافه می‌شود)"
-issue2 = "در حالت پاراگراف مشکلات تراز و فاصله بیشتر است - حالت تک‌خط توصیه می‌شود"
-issue3 = "نمایش پیش‌نمایش با PDF خروجی متفاوت است - PDFهای خروجی به نسخه اصلی نزدیک‌ترند"
-issue4 = "تراز متن چرخیده ممکن است نیاز به تنظیم دستی داشته باشد"
-issue5 = "شفافیت و افکت‌های لایه‌بندی ممکن است با اصل متفاوت باشد"
-knownIssues = "مشکلات شناخته‌شده (در حال رفع):"
-limitation1 = "رندر فونت ممکن است کمی با PDF اصلی تفاوت داشته باشد"
-limitation2 = "گرافیک‌های پیچیده، فیلدهای فرم و حاشیه‌نویسی‌ها حفظ می‌شوند اما قابل ویرایش نیستند"
-limitation3 = "فایل‌های بزرگ ممکن است برای تبدیل و پردازش زمان‌بر باشند"
-limitations = "محدودیت‌های فعلی:"
-notIdealFor = "نامناسب برای:"
-notIdealFor1 = "PDFهایی با قالب‌بندی ویژه مانند بولت‌ها، جدول‌ها یا چیدمان چندستونه"
-notIdealFor2 = "مجلات، بروشورها یا اسناد با طراحی سنگین"
-notIdealFor3 = "راهنماها با چیدمان پیچیده"
-title = "به ویرایشگر متن PDF (دسترسی زودهنگام) خوش آمدید"
 
 [PDFToCSV]
 header = "PDF به CSV"

@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Inversează documentul astfel încât ultima pagină să devin�
 SIDE_STITCH_BOOKLET_SORT = "Aranjează paginile pentru tipărire broșură cu capsare laterală (optimizat pentru legare pe lateral)."
 
 [pdfTextEditor]
-conversionFailed = "Conversia PDF-ului a eșuat. Vă rugăm să încercați din nou."
-converting = "Se convertește PDF-ul în format editabil..."
-currentFile = "Fișier curent: {{name}}"
-imageLabel = "Imagine plasată"
-noTextOnPage = "Nu a fost detectat text editabil pe această pagină."
-pagePreviewAlt = "Previzualizare pagină"
-pageSummary = "Pagina {{number}} din {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor JSON pentru PDF"
-viewLabel = "Editor PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "Aplică modificările"
-clearText = "Golește textul"
-downloadCopy = "Descarcă o copie"
-moreOptions = "Mai multe opțiuni"
-reset = "Resetați modificările"
-
-[pdfTextEditor.badges]
-earlyAccess = "Acces timpuriu"
-modified = "Editat"
-
-[pdfTextEditor.empty]
-dropzone = "Glisați și fixați aici un fișier PDF sau JSON, sau faceți clic pentru a răsfoi"
-dropzoneWithFiles = "Selectați un fișier din fila Fișiere sau glisați și fixați aici un fișier PDF sau JSON, sau faceți clic pentru a răsfoi"
-title = "Niciun document încărcat"
-
-[pdfTextEditor.errors]
-invalidJson = "Nu se poate citi fișierul JSON. Asigurați-vă că a fost generat de instrumentul PDF to JSON."
-pdfConversion = "Nu se poate converti JSON-ul editat înapoi în PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Toate fonturile"
-currentPageFonts = "Fonturi pe această pagină"
-details = "Detalii font"
-embedded = "Încorporat"
-fallback = "fallback"
-infoMessage = "Sunt disponibile informații despre redarea fonturilor."
-missing = "lipsește"
-perfect = "perfect"
-perfectMessage = "Toate fonturile pot fi redate perfect."
-subset = "subset"
-suggestions = "Note"
-type = "Tip"
-warningMessage = "Unele fonturi pot să nu fie redate corect."
-warnings = "Avertizări"
-webFormat = "Format web"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Paragraf"
-singleLine = "O singură linie"
-
-[pdfTextEditor.manual]
-expandWidth = "Extinde până la marginea paginii"
-merge = "Unește selecția"
-mergeTooltip = "Unește casetele selectate"
-resetWidth = "Resetați lățimea"
-resizeHandle = "Ajustați lățimea textului"
-ungroup = "Separă selecția"
-ungroupTooltip = "Împarte paragraful înapoi în rânduri"
-widthMenu = "Opțiuni lățime"
-
-[pdfTextEditor.modeChange]
-cancel = "Anulați"
-confirm = "Resetați și schimbați modul"
-title = "Confirmați schimbarea modului"
-warning = "Schimbarea modului de grupare a textului va reseta toate modificările nesalvate. Sigur doriți să continuați?"
-
-[pdfTextEditor.options.advanced]
-title = "Setări avansate"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Scalează automat textul pe orizontală pentru a se încadra în caseta de delimitare inițială când randarea fontului diferă față de PDF."
-title = "Scalare automată a textului pentru a se potrivi în casete"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Când este activată, editorul exportă fiecare casetă de text editată ca un singur element de text PDF pentru a evita suprapunerea glifelor sau amestecul de fonturi."
-title = "Blocați textul editat într-un singur element PDF"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Detectează automat tipul paginii și grupează textul corespunzător."
-paragraphDescription = "Grupează liniile aliniate în casete de text paragraf, pe mai multe rânduri."
-singleLineDescription = "Păstrează fiecare linie de text PDF ca o casetă de text separată."
-title = "Mod de grupare a textului"
-
-[pdfTextEditor.pageType]
-paragraph = "Pagină cu paragrafe"
-sparse = "Text rar"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Acest vizualizator alpha este încă în dezvoltare — anumite fonturi, culori, efecte de transparență și detalii de layout pot varia ușor. Verificați încă o dată PDF-ul generat înainte de a-l partaja."
@@ -5920,32 +5829,6 @@ title = "Variații în previzualizare"
 [pdfTextEditor.tooltip.textFocus]
 text = "Acest spațiu de lucru se concentrează pe editarea textului și repoziționarea imaginilor încorporate. Elementele grafice complexe ale paginii, widgeturile de formular și grafica stratificată sunt păstrate pentru export, dar nu sunt pe deplin editabile aici."
 title = "Focalizare pe text și imagine"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Funcționează cel mai bine cu:"
-bestFor1 = "PDF-uri simple care conțin în principal text și imagini"
-bestFor2 = "Documente cu formatare standard a paragrafelor"
-bestFor3 = "Scrisori, eseuri, rapoarte și documente de bază"
-dontShowAgain = "Nu mai afișa"
-experimental = "Aceasta este o funcție experimentală în dezvoltare activă. Așteptați-vă la o anumită instabilitate și probleme în timpul utilizării."
-feedback = "Aceasta este o funcție în acces timpuriu. Vă rugăm să raportați orice problemă întâmpinați, pentru a ne ajuta să îmbunătățim!"
-gotIt = "Am înțeles"
-howItWorks = "Acest instrument convertește PDF-ul într-un format editabil în care puteți modifica textul și repoziționa imaginile. Modificările sunt salvate într-un nou PDF."
-issue1 = "Culoarea textului nu este păstrată în prezent (va fi adăugată în curând)"
-issue2 = "Modul Paragraf are mai multe probleme de aliniere și spațiere - este recomandat modul O singură linie"
-issue3 = "Afișarea în previzualizare diferă de PDF-ul exportat - PDF-urile exportate sunt mai apropiate de original"
-issue4 = "Alinierea textului rotit poate necesita ajustare manuală"
-issue5 = "Efectele de transparență și stratificare pot varia față de original"
-knownIssues = "Probleme cunoscute (în curs de remediere):"
-limitation1 = "Randarea fonturilor poate diferi ușor față de PDF-ul original"
-limitation2 = "Grafica complexă, câmpurile de formular și adnotările sunt păstrate, dar nu sunt editabile"
-limitation3 = "Fișierele mari pot necesita timp pentru conversie și procesare"
-limitations = "Limitări actuale:"
-notIdealFor = "Nu este ideal pentru:"
-notIdealFor1 = "PDF-uri cu formatare specială, cum ar fi liste cu puncte, tabele sau dispuneri pe mai multe coloane"
-notIdealFor2 = "Reviste, broșuri sau documente cu design complex"
-notIdealFor3 = "Manuale cu dispuneri complexe"
-title = "Bine ați venit la Editor text PDF (Acces timpuriu)"
 
 [PDFToCSV]
 header = "PDF în CSV"

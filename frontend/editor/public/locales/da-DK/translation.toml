@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Vend dokumentet, så sidste side bliver først osv."
 SIDE_STITCH_BOOKLET_SORT = "Arrangér sider til sidehæftet hæfteudskrivning (optimeret til indbinding i siden)."
 
 [pdfTextEditor]
-conversionFailed = "Kunne ikke konvertere PDF. Prøv igen."
-converting = "Konverterer PDF til redigerbart format..."
-currentFile = "Aktuel fil: {{name}}"
-imageLabel = "Placeret billede"
-noTextOnPage = "Ingen redigerbar tekst blev fundet på denne side."
-pagePreviewAlt = "Forhåndsvisning af side"
-pageSummary = "Side {{number}} af {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-editor"
-viewLabel = "PDF-editor"
-
-[pdfTextEditor.actions]
-applyChanges = "Anvend ændringer"
-clearText = "Ryd tekst"
-downloadCopy = "Download kopi"
-moreOptions = "Flere indstillinger"
-reset = "Nulstil ændringer"
-
-[pdfTextEditor.badges]
-earlyAccess = "Tidlig adgang"
-modified = "Redigeret"
-
-[pdfTextEditor.empty]
-dropzone = "Træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
-dropzoneWithFiles = "Vælg en fil fra fanen Filer, eller træk og slip en PDF- eller JSON-fil her, eller klik for at gennemse"
-title = "Intet dokument indlæst"
-
-[pdfTextEditor.errors]
-invalidJson = "Kan ikke læse JSON-filen. Sørg for, at den blev genereret af PDF-til-JSON-værktøjet."
-pdfConversion = "Kan ikke konvertere den redigerede JSON tilbage til en PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Alle skrifttyper"
-currentPageFonts = "Skrifttyper på denne side"
-details = "Skrifttypedetaljer"
-embedded = "Indlejret"
-fallback = "fallback"
-infoMessage = "Info om skrifttypegengivelse er tilgængelig."
-missing = "mangler"
-perfect = "perfekt"
-perfectMessage = "Alle skrifttyper kan gengives perfekt."
-subset = "delmængde"
-suggestions = "Bemærkninger"
-type = "Type"
-warningMessage = "Nogle skrifttyper gengives muligvis ikke korrekt."
-warnings = "Advarsler"
-webFormat = "Webformat"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Afsnit"
-singleLine = "Enkeltlinje"
-
-[pdfTextEditor.manual]
-expandWidth = "Udvid til sidens kant"
-merge = "Flet markering"
-mergeTooltip = "Flet valgte bokse"
-resetWidth = "Nulstil bredde"
-resizeHandle = "Juster tekstbredde"
-ungroup = "Ophæv gruppering af markering"
-ungroupTooltip = "Del afsnit op i linjer igen"
-widthMenu = "Breddeindstillinger"
-
-[pdfTextEditor.modeChange]
-cancel = "Annuller"
-confirm = "Nulstil og skift tilstand"
-title = "Bekræft tilstandsændring"
-warning = "Ændring af tekstgruppering nulstiller alle ikke-gemte ændringer. Er du sikker på, at du vil fortsætte?"
-
-[pdfTextEditor.options.advanced]
-title = "Avancerede indstillinger"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Skalerer automatisk tekst vandret, så den passer inden for sin oprindelige afgrænsningsboks, når skrifttypegengivelsen afviger fra PDF'en."
-title = "Autoskalér tekst, så den passer i bokse"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Når aktiveret, eksporterer editoren hver redigeret tekstboks som ét PDF-textelement for at undgå overlap af glyffer eller blandede skrifttyper."
-title = "Lås redigeret tekst til ét enkelt PDF-element"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Registrerer automatisk sidetype og grupperer tekst passende."
-paragraphDescription = "Grupperer justerede linjer til flerlinjede afsnitstekstbokse."
-singleLineDescription = "Beholder hver PDF-tekstlinje som en separat tekstboks."
-title = "Tilstand for tekstgruppering"
-
-[pdfTextEditor.pageType]
-paragraph = "Afsnitsside"
-sparse = "Sparsom tekst"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Denne alfa-fremviser er stadig under udvikling—visse skrifttyper, farver, gennemsigtighedseffekter og layoutdetaljer kan ændre sig en smule. Kontrollér den genererede PDF før deling."
@@ -5920,32 +5829,6 @@ title = "Afvigelser i forhåndsvisning"
 [pdfTextEditor.tooltip.textFocus]
 text = "Dette arbejdsområde fokuserer på redigering af tekst og omplacering af indlejrede billeder. Komplekst sidegrafik, formular-widgets og lagdelte grafikker bevares til eksport, men kan ikke redigeres fuldt ud her."
 title = "Fokus på tekst og billeder"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Fungerer bedst med:"
-bestFor1 = "Enkle PDF'er primært med tekst og billeder"
-bestFor2 = "Dokumenter med standard afsnitsformatering"
-bestFor3 = "Brev, essays, rapporter og basale dokumenter"
-dontShowAgain = "Vis ikke igen"
-experimental = "Dette er en eksperimentel funktion under aktiv udvikling. Forvent en vis ustabilitet og problemer under brug."
-feedback = "Dette er en Early Access-funktion. Rapporter venligst eventuelle problemer, du støder på, så vi kan forbedre os!"
-gotIt = "Forstået"
-howItWorks = "Dette værktøj konverterer din PDF til et redigerbart format, hvor du kan ændre tekstindhold og flytte billeder. Ændringer gemmes tilbage som en ny PDF."
-issue1 = "Tekstfarve bevares ikke i øjeblikket (tilføjes snart)"
-issue2 = "Afsnit-tilstand har flere problemer med justering og afstand - Enkeltlinje-tilstand anbefales"
-issue3 = "Forhåndsvisningen afviger fra den eksporterede PDF - eksporterede PDF'er ligger tættere på originalen"
-issue4 = "Justeret roteret tekst kan kræve manuel finjustering"
-issue5 = "Gennemsigtighed og lagdelte effekter kan afvige fra originalen"
-knownIssues = "Kendte problemer (under rettelse):"
-limitation1 = "Skrifttypegengivelse kan afvige en smule fra den originale PDF"
-limitation2 = "Kompleks grafik, formularfelter og kommentarer bevares, men kan ikke redigeres"
-limitation3 = "Store filer kan tage tid at konvertere og behandle"
-limitations = "Nuværende begrænsninger:"
-notIdealFor = "Ikke ideelt til:"
-notIdealFor1 = "PDF'er med særlig formatering som punktlister, tabeller eller layout med flere kolonner"
-notIdealFor2 = "Magasiner, brochurer eller stærkt designede dokumenter"
-notIdealFor3 = "Brugervejledninger med komplekse layouts"
-title = "Velkommen til PDF-teksteditor (Early Access)"
 
 [PDFToCSV]
 header = "PDF til CSV"

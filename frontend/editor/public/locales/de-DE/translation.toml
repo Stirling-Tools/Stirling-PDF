@@ -5817,99 +5817,8 @@ REVERSE_ORDER = "Dokument umkehren, sodass die letzte Seite zuerst kommt usw."
 SIDE_STITCH_BOOKLET_SORT = "Seiten für seitlich gehefteten Broschürendruck anordnen (optimiert für Bindung an der Seite)."
 
 [pdfTextEditor]
-conversionFailed = "PDF konnte nicht konvertiert werden. Bitte versuchen Sie es erneut."
-converting = "PDF wird in ein bearbeitbares Format umgewandelt..."
-currentFile = "Aktuelle Datei: {{name}}"
-imageLabel = "Platziertes Bild"
-noTextOnPage = "Auf dieser Seite wurde kein bearbeitbarer Text erkannt."
-pagePreviewAlt = "Seitenvorschau"
-pageSummary = "Seite {{number}} von {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF-JSON-Editor"
-viewLabel = "PDF-Editor"
-
-[pdfTextEditor.actions]
-applyChanges = "Änderungen anwenden"
-clearText = "Text leeren"
-downloadCopy = "Kopie herunterladen"
-moreOptions = "Weitere Optionen"
-reset = "Änderungen zurücksetzen"
-
-[pdfTextEditor.badges]
-earlyAccess = "Früher Zugriff"
-modified = "Bearbeitet"
-
-[pdfTextEditor.empty]
-dropzone = "Ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
-dropzoneWithFiles = "Wählen Sie eine Datei auf der Registerkarte Dateien aus oder ziehen Sie eine PDF- oder JSON-Datei hierher, oder klicken Sie zum Durchsuchen"
-title = "Kein Dokument geladen"
-
-[pdfTextEditor.errors]
-invalidJson = "JSON-Datei kann nicht gelesen werden. Stellen Sie sicher, dass sie vom PDF-zu-JSON-Tool erzeugt wurde."
-pdfConversion = "Das bearbeitete JSON kann nicht zurück in ein PDF konvertiert werden."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Alle Schriften"
-currentPageFonts = "Schriften auf dieser Seite"
-details = "Schriftdetails"
-embedded = "Eingebettet"
-fallback = "Fallback"
-infoMessage = "Informationen zur Schriftreproduktion verfügbar."
-missing = "fehlend"
-perfect = "perfekt"
-perfectMessage = "Alle Schriften können perfekt reproduziert werden."
-subset = "Subset"
-suggestions = "Hinweise"
-type = "Typ"
-warningMessage = "Einige Schriften werden möglicherweise nicht korrekt dargestellt."
-warnings = "Warnungen"
-webFormat = "Web-Format"
-
-[pdfTextEditor.groupingMode]
-auto = "Automatisch"
-paragraph = "Absatz"
-singleLine = "Einzeilig"
-
-[pdfTextEditor.manual]
-expandWidth = "Bis zum Seitenrand erweitern"
-merge = "Auswahl zusammenführen"
-mergeTooltip = "Ausgewählte Felder zusammenführen"
-resetWidth = "Breite zurücksetzen"
-resizeHandle = "Textbreite anpassen"
-ungroup = "Gruppierung aufheben"
-ungroupTooltip = "Absatz wieder in Zeilen aufteilen"
-widthMenu = "Breitenoptionen"
-
-[pdfTextEditor.modeChange]
-cancel = "Abbrechen"
-confirm = "Zurücksetzen und Modus ändern"
-title = "Moduswechsel bestätigen"
-warning = "Das Ändern des Textgruppierungsmodus setzt alle nicht gespeicherten Änderungen zurück. Möchten Sie wirklich fortfahren?"
-
-[pdfTextEditor.options.advanced]
-title = "Advanced Settings"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Skaliert Text automatisch horizontal, sodass er in seinen ursprünglichen Begrenzungsrahmen passt, wenn die Schriftwiedergabe vom PDF abweicht."
-title = "Text automatisch in Rahmen einpassen"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Wenn aktiviert, exportiert der Editor jedes bearbeitete Textfeld als ein PDF-Textelement, um überlappende Glyphen oder gemischte Schriften zu vermeiden."
-title = "Bearbeiteten Text auf ein einzelnes PDF-Element fixieren"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Erkennt den Seitentyp automatisch und gruppiert den Text entsprechend."
-paragraphDescription = "Gruppiert ausgerichtete Zeilen zu mehrzeiligen Absatz-Textfeldern."
-singleLineDescription = "Behält jede PDF-Textzeile als eigenes Textfeld bei."
-title = "Textgruppierungsmodus"
-
-[pdfTextEditor.pageType]
-paragraph = "Absatzseite"
-sparse = "Spärlicher Text"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Dieser Alpha-Viewer wird noch weiterentwickelt – bestimmte Schriftarten, Farben, Transparenzeffekte und Layoutdetails können leicht abweichen. Bitte prüfen Sie die erzeugte PDF vor dem Teilen."
@@ -5925,32 +5834,6 @@ title = "Abweichungen in der Vorschau"
 [pdfTextEditor.tooltip.textFocus]
 text = "Dieser Arbeitsbereich konzentriert sich auf das Bearbeiten von Text und das Neupositionieren eingebetteter Bilder. Komplexe Seitengrafiken, Formular-Widgets und Ebenengrafiken bleiben für den Export erhalten, sind hier jedoch nicht vollständig bearbeitbar."
 title = "Fokus auf Text und Bilder"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Am besten geeignet für:"
-bestFor1 = "Einfache PDFs mit überwiegend Text und Bildern"
-bestFor2 = "Dokumente mit standardmäßiger Absatzformatierung"
-bestFor3 = "Briefe, Aufsätze, Berichte und einfache Dokumente"
-dontShowAgain = "Nicht mehr anzeigen"
-experimental = "Dies ist eine experimentelle Funktion in aktiver Entwicklung. Während der Nutzung kann es zu Instabilitäten und Problemen kommen."
-feedback = "Dies ist eine Early-Access-Funktion. Bitte melden Sie auftretende Probleme, um uns bei der Verbesserung zu helfen!"
-gotIt = "Verstanden"
-howItWorks = "Dieses Tool wandelt Ihr PDF in ein bearbeitbares Format um, in dem Sie Textinhalte ändern und Bilder neu positionieren können. Änderungen werden als neues PDF gespeichert."
-issue1 = "Textfarbe wird derzeit nicht beibehalten (wird bald hinzugefügt)"
-issue2 = "Im Absatzmodus treten häufiger Ausrichtungs- und Abstandsprobleme auf – Einzeilig-Modus empfohlen"
-issue3 = "Die Vorschau unterscheidet sich vom exportierten PDF – exportierte PDFs sind näher am Original"
-issue4 = "Ausrichtung von gedrehtem Text erfordert ggf. manuelle Anpassung"
-issue5 = "Transparenz- und Ebeneneffekte können vom Original abweichen"
-knownIssues = "Bekannte Probleme (in Bearbeitung):"
-limitation1 = "Die Schriftwiedergabe kann leicht vom Original-PDF abweichen"
-limitation2 = "Komplexe Grafiken, Formularfelder und Anmerkungen werden beibehalten, sind jedoch nicht bearbeitbar"
-limitation3 = "Große Dateien können beim Konvertieren und Verarbeiten Zeit beanspruchen"
-limitations = "Aktuelle Einschränkungen:"
-notIdealFor = "Weniger geeignet für:"
-notIdealFor1 = "PDFs mit spezieller Formatierung wie Aufzählungen, Tabellen oder mehrspaltigen Layouts"
-notIdealFor2 = "Magazine, Broschüren oder stark gestaltete Dokumente"
-notIdealFor3 = "Anleitungen mit komplexen Layouts"
-title = "Willkommen beim PDF-Texteditor (Early Access)"
 
 [PDFToCSV]
 header = "PDF zu CSV"

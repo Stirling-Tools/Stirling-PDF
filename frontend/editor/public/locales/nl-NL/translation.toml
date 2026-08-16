@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Document omdraaien zodat de laatste pagina de eerste wordt, enz
 SIDE_STITCH_BOOKLET_SORT = "Pagina's rangschikken voor zijkant-geniete boekjes (geoptimaliseerd voor binden aan de zijkant)."
 
 [pdfTextEditor]
-conversionFailed = "PDF converteren mislukt. Probeer het opnieuw."
-converting = "PDF naar bewerkbaar formaat converteren..."
-currentFile = "Huidig bestand: {{name}}"
-imageLabel = "Geplaatste afbeelding"
-noTextOnPage = "Geen bewerkbare tekst op deze pagina gevonden."
-pagePreviewAlt = "Paginavoorbeeld"
-pageSummary = "Pagina {{number}} van {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-editor"
-viewLabel = "PDF-editor"
-
-[pdfTextEditor.actions]
-applyChanges = "Wijzigingen toepassen"
-clearText = "Tekst wissen"
-downloadCopy = "Kopie downloaden"
-moreOptions = "Meer opties"
-reset = "Wijzigingen resetten"
-
-[pdfTextEditor.badges]
-earlyAccess = "Vroege toegang"
-modified = "Bewerkt"
-
-[pdfTextEditor.empty]
-dropzone = "Sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
-dropzoneWithFiles = "Selecteer een bestand op het tabblad Bestanden, of sleep hier een PDF- of JSON-bestand naartoe, of klik om te bladeren"
-title = "Geen document geladen"
-
-[pdfTextEditor.errors]
-invalidJson = "Kan het JSON-bestand niet lezen. Zorg ervoor dat het is gemaakt met de tool PDF naar JSON."
-pdfConversion = "Kan de bewerkte JSON niet terugconverteren naar een PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Alle lettertypen"
-currentPageFonts = "Lettertypen op deze pagina"
-details = "Lettertypedetails"
-embedded = "Ingesloten"
-fallback = "terugval"
-infoMessage = "Informatie over lettertypereproductie beschikbaar."
-missing = "ontbrekend"
-perfect = "perfect"
-perfectMessage = "Alle lettertypen kunnen perfect worden gereproduceerd."
-subset = "deelverzameling"
-suggestions = "Opmerkingen"
-type = "Type"
-warningMessage = "Sommige lettertypen worden mogelijk niet correct weergegeven."
-warnings = "Waarschuwingen"
-webFormat = "Webindeling"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Alinea"
-singleLine = "Enkele regel"
-
-[pdfTextEditor.manual]
-expandWidth = "Uitvouwen tot paginarand"
-merge = "Selectie samenvoegen"
-mergeTooltip = "Geselecteerde vakken samenvoegen"
-resetWidth = "Breedte resetten"
-resizeHandle = "Tekstbreedte aanpassen"
-ungroup = "Selectie degroeperen"
-ungroupTooltip = "Alinea weer in regels splitsen"
-widthMenu = "Breedte-opties"
-
-[pdfTextEditor.modeChange]
-cancel = "Annuleren"
-confirm = "Resetten en modus wijzigen"
-title = "Moduswijziging bevestigen"
-warning = "Het wijzigen van de tekstgroepering zet alle niet-opgeslagen wijzigingen terug. Weet u zeker dat u wilt doorgaan?"
-
-[pdfTextEditor.options.advanced]
-title = "Geavanceerde instellingen"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Schaalt tekst horizontaal automatisch zodat deze binnen het oorspronkelijke begrenzingsvak past wanneer de weergave van lettertypen afwijkt van de PDF."
-title = "Tekst automatisch schalen zodat deze in vakken past"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Wanneer ingeschakeld, exporteert de editor elk bewerkt tekstvak als één PDF-tekstelement om overlappende glyphen of gemengde lettertypen te voorkomen."
-title = "Bewerkte tekst vastzetten op één PDF-element"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Detecteert automatisch het paginatype en groepeert tekst passend."
-paragraphDescription = "Groepeert uitgelijnde regels tot meerregelige alinea-tekstvakken."
-singleLineDescription = "Houdt elke PDF-tekstregel als apart tekstvak."
-title = "Tekstgroepering"
-
-[pdfTextEditor.pageType]
-paragraph = "Alineapagina"
-sparse = "Weinig tekst"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Deze alpha-viewer is nog in ontwikkeling — bepaalde lettertypen, kleuren, transparantie-effecten en opmaakdetails kunnen iets verschuiven. Controleer het gegenereerde PDF-bestand goed voordat je het deelt."
@@ -5920,32 +5829,6 @@ title = "Variantie in voorbeeldweergave"
 [pdfTextEditor.tooltip.textFocus]
 text = "Deze werkruimte richt zich op het bewerken van tekst en het verplaatsen van ingesloten afbeeldingen. Complexe pagina-ontwerpen, formulierwidgets en gelaagde graphics worden behouden voor export, maar zijn hier niet volledig bewerkbaar."
 title = "Focus op Tekst en Afbeeldingen"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Werkt het best met:"
-bestFor1 = "Eenvoudige PDF's met vooral tekst en afbeeldingen"
-bestFor2 = "Documenten met standaard alineavormatting"
-bestFor3 = "Brieven, essays, rapporten en eenvoudige documenten"
-dontShowAgain = "Niet meer tonen"
-experimental = "Dit is een experimentele functie in actieve ontwikkeling. Reken op enige instabiliteit en problemen tijdens het gebruik."
-feedback = "Dit is een functie in vroege toegang. Meld eventuele problemen zodat we kunnen verbeteren!"
-gotIt = "Begrepen"
-howItWorks = "Deze tool zet uw PDF om naar een bewerkbaar formaat waarin u tekst kunt wijzigen en afbeeldingen kunt herpositioneren. Wijzigingen worden opgeslagen als een nieuwe PDF."
-issue1 = "Tekstkleur wordt momenteel niet behouden (wordt binnenkort toegevoegd)"
-issue2 = "Alineamodus heeft meer problemen met uitlijning en afstand - Enkele-regelmodus aanbevolen"
-issue3 = "Het voorbeeld wijkt af van de geëxporteerde PDF - geëxporteerde PDF's liggen dichter bij het origineel"
-issue4 = "Uitlijning van gedraaide tekst kan handmatige aanpassing vereisen"
-issue5 = "Transparantie- en laageffecten kunnen afwijken van het origineel"
-knownIssues = "Bekende problemen (worden verholpen):"
-limitation1 = "Weergave van lettertypen kan iets afwijken van de oorspronkelijke PDF"
-limitation2 = "Complexe grafische elementen, formuliervelden en annotaties worden behouden maar zijn niet bewerkbaar"
-limitation3 = "Grote bestanden kunnen tijd kosten om te converteren en te verwerken"
-limitations = "Huidige beperkingen:"
-notIdealFor = "Niet ideaal voor:"
-notIdealFor1 = "PDF's met speciale opmaak zoals opsommingstekens, tabellen of lay-outs met meerdere kolommen"
-notIdealFor2 = "Magazines, brochures of sterk vormgegeven documenten"
-notIdealFor3 = "Handleidingen met complexe lay-outs"
-title = "Welkom bij PDF-teksteditor (Early Access)"
 
 [PDFToCSV]
 header = "PDF naar CSV"

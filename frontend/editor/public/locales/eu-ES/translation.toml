@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Irauli dokumentua, azken orrialdea lehenengoa bihurtuz eta abar
 SIDE_STITCH_BOOKLET_SORT = "Antolatu orrialdeak alboko‑josketarako liburuxka inprimatzeko (alboko loturarako optimizatua)."
 
 [pdfTextEditor]
-conversionFailed = "Ezin izan da PDFa bihurtu. Saiatu berriro."
-converting = "PDFa editagarri bihurtzen..."
-currentFile = "Uneko fitxategia: {{name}}"
-imageLabel = "Kokatutako irudia"
-noTextOnPage = "Ez da testu editagarririk detektatu orri honetan."
-pagePreviewAlt = "Orriaren aurrebista"
-pageSummary = "{{number}} / {{total}} orri"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON editorea"
-viewLabel = "PDF Editorea"
-
-[pdfTextEditor.actions]
-applyChanges = "Aplikatu aldaketak"
-clearText = "Garbitu testua"
-downloadCopy = "Deskargatu kopia"
-moreOptions = "Aukera gehiago"
-reset = "Aldaketak berrezarri"
-
-[pdfTextEditor.badges]
-earlyAccess = "Sarbide goiztiarra"
-modified = "Editatuta"
-
-[pdfTextEditor.empty]
-dropzone = "Arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
-dropzoneWithFiles = "Hautatu fitxategi bat Fitxategiak fitxatik, edo arrastatu eta jaregin PDF edo JSON fitxategi bat hemen, edo egin klik arakatzeko"
-title = "Ez da dokumenturik kargatu"
-
-[pdfTextEditor.errors]
-invalidJson = "Ezin da JSON fitxategia irakurri. Ziurtatu PDF to JSON tresnarekin sortua dela."
-pdfConversion = "Ezin da editatutako JSONa berriz PDF bihurtu."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Letra-tipo guztiak"
-currentPageFonts = "Orrialde honetan dauden letra-tipoak"
-details = "Letra-tipoaren xehetasunak"
-embedded = "Txertatuta"
-fallback = "ordezko"
-infoMessage = "Letra-tipoen erreprodukzioari buruzko informazioa eskuragarri."
-missing = "falta"
-perfect = "perfektua"
-perfectMessage = "Letra-tipo guztiak perfektuki erreproduzi daitezke."
-subset = "azpimultzoa"
-suggestions = "Oharrak"
-type = "Mota"
-warningMessage = "Zenbait letra-tipo agian ez dira behar bezala errendatuko."
-warnings = "Abisuak"
-webFormat = "Web formatua"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Paragrafoa"
-singleLine = "Lerro bakarra"
-
-[pdfTextEditor.manual]
-expandWidth = "Hedatu orriaren ertzeraino"
-merge = "Hautapena batu"
-mergeTooltip = "Hautatutako kutxak batu"
-resetWidth = "Zabalera berrezarri"
-resizeHandle = "Testuaren zabalera doitu"
-ungroup = "Hautapena banandu"
-ungroupTooltip = "Paragrafoa berriro lerrotan zatitu"
-widthMenu = "Zabalera-aukerak"
-
-[pdfTextEditor.modeChange]
-cancel = "Ezeztatu"
-confirm = "Berrezarri eta aldatu modua"
-title = "Modu aldaketa baieztatu"
-warning = "Testu taldekatzeko modua aldatzeak gorde gabeko aldaketa guztiak berrezarriko ditu. Ziur jarraitu nahi duzula?"
-
-[pdfTextEditor.options.advanced]
-title = "Ezarpen aurreratuak"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Letra-tipoen errendatzea PDFarekiko desberdina denean, testua horizontalki automatikoki eskalatzen du jatorrizko mugaketa-kutxan sartzeko."
-title = "Testua automatikoki eskalatu kutxetara egokitzeko"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Gaituta dagoenean, editoreak editatutako testu-kutxa bakoitza PDFko testu-elementu bakar gisa esportatzen du, glifoen gainjartzeak edo letra-tipo nahasiak saihesteko."
-title = "Editatutako testua PDF elementu bakarrera lotu"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Orrialde mota automatikoki detektatu eta testua egoki taldekatu."
-paragraphDescription = "Lerro lerrokatuak lerro anitzeko paragrafo-testu kutxetan taldekatzen ditu."
-singleLineDescription = "PDFko testu-lerro bakoitza testu-kutxa bereizi gisa mantentzen du."
-title = "Testu taldekatzeko modua"
-
-[pdfTextEditor.pageType]
-paragraph = "Paragrafo orria"
-sparse = "Testu sakabanatua"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Alpha ikustaile hau oraindik eboluzionatzen ari da—zenbait letra-tipo, kolore, gardentasun-efektu eta diseinu xehetasun pixka bat aldatu daitezke. Egiaztatu ongi sortutako PDFa partekatu aurretik."
@@ -5920,32 +5829,6 @@ title = "Aurrebistaren aldakortasuna"
 [pdfTextEditor.tooltip.textFocus]
 text = "Lan-eremu honek testua editatzean eta txertatutako irudiak berrantolatzean jartzen du fokua. Orrialdeko arte lan konplexuak, inprimaki-trepetak eta geruzadun grafikoak esportaziorako mantentzen dira, baina hemen ez dira guztiz editagarriak."
 title = "Testu eta irudien fokua"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Hobeto funtzionatzen du honekin:"
-bestFor1 = "Testua eta irudiak nagusi dituzten PDF sinpleak"
-bestFor2 = "Paragrafo formatu estandarra duten dokumentuak"
-bestFor3 = "Gutunak, saiakerak, txostenak eta oinarrizko dokumentuak"
-dontShowAgain = "Ez erakutsi berriro"
-experimental = "Hau garapen aktiboan dagoen ezaugarri esperimentala da. Espero ezegonkortasuna eta erabileran arazo batzuk."
-feedback = "Hau sarbide goiztiarreko ezaugarria da. Mesedez, jakinarazi aurkitzen dituzun arazoak hobetzen laguntzeko!"
-gotIt = "Ulertuta"
-howItWorks = "Tresna honek zure PDFa formatu editagarri bihurtzen du, testua aldatzeko eta irudiak birkokatzeko. Aldaketak PDF berri gisa gordetzen dira."
-issue1 = "Testuaren kolorea oraindik ez da mantentzen (laster gehituko da)"
-issue2 = "Paragrafo moduak lerrokadura eta tarte arazo gehiago ditu - Gomendatua: Lerro Bakar modua"
-issue3 = "Aurrebistaren bistaratzea esportatutako PDFarekiko desberdina da - esportatutako PDFak jatorrizkoarekiko hurbilago daude"
-issue4 = "Biratutako testuaren lerrokadurak eskuzko doikuntza beharra izan dezake"
-issue5 = "Gardentasun eta geruzatze-efektuak jatorrizkotik alda daitezke"
-knownIssues = "Arazo ezagunak (konpontzen ari gara):"
-limitation1 = "Letra-tipoen errendatzea pixka bat desberdina izan daiteke jatorrizko PDFarekiko"
-limitation2 = "Grafiko konplexuak, inprimaki-eremuak eta anotazioak gordetzen dira baina ez dira editagarriak"
-limitation3 = "Fitxategi handiek denbora behar dezakete bihurtu eta prozesatzeko"
-limitations = "Uneko murriztapenak:"
-notIdealFor = "Ez da egokiena honetarako:"
-notIdealFor1 = "Bala-zerrendak, taulak edo zutabe anitzeko diseinuak dituzten PDFak"
-notIdealFor2 = "Aldizkariak, eskuorriak edo diseinu kargadun dokumentuak"
-notIdealFor3 = "Diseinu konplexua duten eskuliburuak"
-title = "Ongi etorri PDF Text Editor-era (Sarbide goiztiarra)"
 
 [PDFToCSV]
 header = "PDF a CSV"

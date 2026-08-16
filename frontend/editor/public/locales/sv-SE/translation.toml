@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Vänd dokumentet så att sista sidan blir först och så vidare
 SIDE_STITCH_BOOKLET_SORT = "Ordna sidor för sidhäftad häftesutskrift (optimerad för bindning på sidan)."
 
 [pdfTextEditor]
-conversionFailed = "Det gick inte att konvertera PDF. Försök igen."
-converting = "Konverterar PDF till redigerbart format..."
-currentFile = "Aktuell fil: {{name}}"
-imageLabel = "Placerad bild"
-noTextOnPage = "Ingen redigerbar text upptäcktes på denna sida."
-pagePreviewAlt = "Sidförhandsvisning"
-pageSummary = "Sida {{number}} av {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-redigerare"
-viewLabel = "PDF-redigerare"
-
-[pdfTextEditor.actions]
-applyChanges = "Verkställ ändringar"
-clearText = "Rensa text"
-downloadCopy = "Ladda ned kopia"
-moreOptions = "Fler alternativ"
-reset = "Återställ ändringar"
-
-[pdfTextEditor.badges]
-earlyAccess = "Tidig åtkomst"
-modified = "Redigerad"
-
-[pdfTextEditor.empty]
-dropzone = "Dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
-dropzoneWithFiles = "Välj en fil från fliken Filer, eller dra och släpp en PDF- eller JSON-fil här, eller klicka för att bläddra"
-title = "Inget dokument inläst"
-
-[pdfTextEditor.errors]
-invalidJson = "Det gick inte att läsa JSON-filen. Kontrollera att den skapades av verktyget PDF till JSON."
-pdfConversion = "Det gick inte att konvertera den redigerade JSON-filen tillbaka till en PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Alla typsnitt"
-currentPageFonts = "Typsnitt på denna sida"
-details = "Typsnittsdetaljer"
-embedded = "Inbäddad"
-fallback = "reserv"
-infoMessage = "Information om typsnittsåtergivning finns."
-missing = "saknas"
-perfect = "perfekt"
-perfectMessage = "Alla typsnitt kan återskapas perfekt."
-subset = "delmängd"
-suggestions = "Anteckningar"
-type = "Typ"
-warningMessage = "Vissa typsnitt kanske inte återges korrekt."
-warnings = "Varningar"
-webFormat = "Webbformat"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Stycke"
-singleLine = "Enkel rad"
-
-[pdfTextEditor.manual]
-expandWidth = "Utöka till sidkant"
-merge = "Slå ihop markering"
-mergeTooltip = "Slå ihop markerade textrutor"
-resetWidth = "Återställ bredd"
-resizeHandle = "Justera textbredd"
-ungroup = "Dela upp markering"
-ungroupTooltip = "Dela upp stycke i rader"
-widthMenu = "Breddalternativ"
-
-[pdfTextEditor.modeChange]
-cancel = "Avbryt"
-confirm = "Återställ och byt läge"
-title = "Bekräfta lägesbyte"
-warning = "Att byta läge för textgruppering återställer alla osparade ändringar. Är du säker på att du vill fortsätta?"
-
-[pdfTextEditor.options.advanced]
-title = "Avancerade inställningar"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Skalar automatiskt text horisontellt så att den ryms i sin ursprungliga begränsningsruta när fontrenderingen skiljer sig från PDF:en."
-title = "Skala text automatiskt för att passa rutor"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "När detta är aktiverat exporterar editorn varje redigerad textruta som ett PDF-textelement för att undvika överlappande tecken eller blandade typsnitt."
-title = "Lås redigerad text till ett enda PDF-element"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Identifierar automatiskt sidtyp och grupperar texten därefter."
-paragraphDescription = "Grupperar justerade rader till flerradiga styckesrutor."
-singleLineDescription = "Behåller varje PDF-textrad som en separat textruta."
-title = "Läge för gruppering av text"
-
-[pdfTextEditor.pageType]
-paragraph = "Styckessida"
-sparse = "Gles text"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Denna alfa‑visare utvecklas fortfarande — vissa typsnitt, färger, transparenteffekter och layoutdetaljer kan avvika något. Kontrollera den genererade PDF:en noggrant innan du delar den."
@@ -5920,32 +5829,6 @@ title = "Avvikelser i förhandsvisning"
 [pdfTextEditor.tooltip.textFocus]
 text = "Denna arbetsyta fokuserar på att redigera text och flytta inbäddade bilder. Komplex sidgrafik, formulärwidgets och lagergrafik bevaras för export men kan inte redigeras fullt ut här."
 title = "Fokus på text och bild"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Fungerar bäst med:"
-bestFor1 = "Enkla PDF:er som främst innehåller text och bilder"
-bestFor2 = "Dokument med standardiserad styckeformatering"
-bestFor3 = "Brev, essäer, rapporter och grundläggande dokument"
-dontShowAgain = "Visa inte igen"
-experimental = "Detta är en experimentell funktion under aktiv utveckling. Räkna med viss instabilitet och problem under användning."
-feedback = "Detta är en tidig åtkomst-funktion. Rapportera gärna problem du stöter på för att hjälpa oss förbättra!"
-gotIt = "Förstått"
-howItWorks = "Detta verktyg konverterar din PDF till ett redigerbart format där du kan ändra textinnehåll och flytta bilder. Ändringar sparas tillbaka som en ny PDF."
-issue1 = "Textfärg bevaras för närvarande inte (läggs till snart)"
-issue2 = "Styckeläge har fler problem med justering och avstånd – läget Enkel rad rekommenderas"
-issue3 = "Förhandsvisningen skiljer sig från exporterad PDF – exporterade PDF:er ligger närmare originalet"
-issue4 = "Roterad text kan kräva manuell justering"
-issue5 = "Transparens- och lagereffekter kan avvika från originalet"
-knownIssues = "Kända problem (åtgärdas):"
-limitation1 = "Fontrendering kan avvika något från den ursprungliga PDF:en"
-limitation2 = "Komplex grafik, formulärfält och annoteringar bevaras men kan inte redigeras"
-limitation3 = "Stora filer kan ta tid att konvertera och bearbeta"
-limitations = "Nuvarande begränsningar:"
-notIdealFor = "Inte idealiskt för:"
-notIdealFor1 = "PDF:er med speciell formatering som punktlistor, tabeller eller flerkolumnslayouter"
-notIdealFor2 = "Tidskrifter, broschyrer eller tungt designade dokument"
-notIdealFor3 = "Instruktionshandböcker med komplex layout"
-title = "Välkommen till PDF Text Editor (Tidig åtkomst)"
 
 [PDFToCSV]
 header = "PDF till CSV"

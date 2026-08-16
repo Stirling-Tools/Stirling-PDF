@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "A dokumentum megfordítása, hogy az utolsó oldal legyen az el
 SIDE_STITCH_BOOKLET_SORT = "Oldalak elrendezése oldalsó tűzésű füzetnyomtatáshoz (oldalsó kötéshez optimalizált)."
 
 [pdfTextEditor]
-conversionFailed = "Nem sikerült konvertálni a PDF-et. Kérjük, próbálja újra."
-converting = "PDF konvertálása szerkeszthető formátumba..."
-currentFile = "Jelenlegi fájl: {{name}}"
-imageLabel = "Elhelyezett kép"
-noTextOnPage = "Ezen az oldalon nem található szerkeszthető szöveg."
-pagePreviewAlt = "Oldal előnézete"
-pageSummary = "{{number}} / {{total}} oldal"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-szerkesztő"
-viewLabel = "PDF-szerkesztő"
-
-[pdfTextEditor.actions]
-applyChanges = "Változtatások alkalmazása"
-clearText = "Szöveg törlése"
-downloadCopy = "Másolat letöltése"
-moreOptions = "További beállítások"
-reset = "Módosítások visszaállítása"
-
-[pdfTextEditor.badges]
-earlyAccess = "Korai hozzáférés"
-modified = "Szerkesztve"
-
-[pdfTextEditor.empty]
-dropzone = "Húzzon ide egy PDF vagy JSON fájlt, vagy kattintson a tallózáshoz"
-dropzoneWithFiles = "Válasszon fájlt a Fájlok fülön, vagy húzzon ide egy PDF vagy JSON fájlt, illetve kattintson a tallózáshoz"
-title = "Nincs dokumentum betöltve"
-
-[pdfTextEditor.errors]
-invalidJson = "Nem sikerült beolvasni a JSON fájlt. Kérjük, győződjön meg róla, hogy a PDF to JSON eszköz generálta."
-pdfConversion = "A szerkesztett JSON nem alakítható vissza PDF-be."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Összes betűtípus"
-currentPageFonts = "Betűtípusok ezen az oldalon"
-details = "Betűtípus részletei"
-embedded = "Beágyazott"
-fallback = "helyettesítő"
-infoMessage = "Információ a betűtípusok visszaadásáról elérhető."
-missing = "hiányzik"
-perfect = "tökéletes"
-perfectMessage = "Minden betűtípus tökéletesen visszaadható."
-subset = "részhalmaz"
-suggestions = "Megjegyzések"
-type = "Típus"
-warningMessage = "Néhány betűtípus nem biztos, hogy helyesen jelenik meg."
-warnings = "Figyelmeztetések"
-webFormat = "Webformátum"
-
-[pdfTextEditor.groupingMode]
-auto = "Automatikus"
-paragraph = "Bekezdés"
-singleLine = "Egy sor"
-
-[pdfTextEditor.manual]
-expandWidth = "Kiterjesztés az oldal széléig"
-merge = "Kijelölés egyesítése"
-mergeTooltip = "Kijelölt dobozok egyesítése"
-resetWidth = "Szélesség visszaállítása"
-resizeHandle = "Szöveg szélességének beállítása"
-ungroup = "Kijelölés bontása"
-ungroupTooltip = "Bekezdés szétbontása sorokra"
-widthMenu = "Szélesség beállításai"
-
-[pdfTextEditor.modeChange]
-cancel = "Mégse"
-confirm = "Visszaállítás és módváltás"
-title = "Módváltás megerősítése"
-warning = "A szövegcsoportosítási mód megváltoztatása minden nem mentett módosítást visszaállít. Biztosan folytatja?"
-
-[pdfTextEditor.options.advanced]
-title = "Speciális beállítások"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Vízszintesen automatikusan méretezi a szöveget az eredeti határolódobozhoz, ha a betűmegjelenítés eltér a PDF-től."
-title = "Szöveg automatikus méretezése a dobozokhoz"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Bekapcsolva a szerkesztő minden szerkesztett szövegdobozt egy PDF szövegelemként exportál, elkerülve az átfedő glifákat vagy kevert betűtípusokat."
-title = "Szerkesztett szöveg rögzítése egyetlen PDF-elemhez"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatikusan felismeri az oldaltípust és ennek megfelelően csoportosítja a szöveget."
-paragraphDescription = "Az igazított sorokat több soros bekezdéses szövegdobozokba csoportosítja."
-singleLineDescription = "Minden PDF szövegsort külön szövegdobozként tart meg."
-title = "Szövegcsoportosítás módja"
-
-[pdfTextEditor.pageType]
-paragraph = "Bekezdéses oldal"
-sparse = "Ritka szöveg"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ez az alfa megjelenítő még fejlődik — bizonyos betűtípusok, színek, áttetszőségi hatások és elrendezési részletek kissé eltérhetnek. Kérjük, megosztás előtt ellenőrizze a létrehozott PDF-et."
@@ -5920,32 +5829,6 @@ title = "Előnézet eltérései"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ez a munkaterület a szöveg szerkesztésére és a beágyazott képek áthelyezésére fókuszál. Az összetett oldalgrafika, űrlapelemek és rétegelt grafikák exportáláskor megmaradnak, de itt nem minden szerkeszthető teljes körűen."
 title = "Szöveg és képek fókusza"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Legjobban működik:"
-bestFor1 = "Egyszerű PDF-ek, főként szöveggel és képekkel"
-bestFor2 = "Dokumentumok szabványos bekezdésformázással"
-bestFor3 = "Levelek, esszék, jelentések és alap dokumentumok"
-dontShowAgain = "Ne jelenjen meg újra"
-experimental = "Ez egy kísérleti funkció, aktív fejlesztés alatt. Számítson némi instabilitásra és problémákra használat közben."
-feedback = "Ez egy korai hozzáférésű funkció. Kérjük, jelezzen minden észlelt problémát, hogy fejleszthessünk!"
-gotIt = "Rendben"
-howItWorks = "Ez az eszköz a PDF-et szerkeszthető formátumra alakítja, ahol módosíthatja a szövegtartalmat és áthelyezheti a képeket. A módosítások új PDF-ként kerülnek mentésre."
-issue1 = "A szöveg színe jelenleg nem marad meg (hamarosan hozzáadjuk)"
-issue2 = "A Bekezdés módnál több igazítási és térköz probléma fordul elő – a Single Line mód ajánlott"
-issue3 = "Az előnézeti megjelenítés eltér az exportált PDF-től – az exportált PDF-ek közelebb állnak az eredetihez"
-issue4 = "A forgatott szöveg igazítása kézi beállítást igényelhet"
-issue5 = "Az átlátszóság és a rétegzés effektusai eltérhetnek az eredetitől"
-knownIssues = "Ismert problémák (javítás alatt):"
-limitation1 = "A betűtípus-megjelenítés kissé eltérhet az eredeti PDF-től"
-limitation2 = "Az összetett grafikák, űrlapmezők és jegyzetek megmaradnak, de nem szerkeszthetők"
-limitation3 = "A nagy fájlok konvertálása és feldolgozása időbe telhet"
-limitations = "Jelenlegi korlátok:"
-notIdealFor = "Nem ideális:"
-notIdealFor1 = "Speciális formázású PDF-ek, például felsorolások, táblázatok vagy többhasábos elrendezés"
-notIdealFor2 = "Magazinok, brosúrák vagy erősen megtervezett dokumentumok"
-notIdealFor3 = "Használati útmutatók és kézikönyvek összetett elrendezéssel"
-title = "Üdvözöljük a PDF Text Editorben (korai hozzáférés)"
 
 [PDFToCSV]
 header = "PDF konvertálása CSV-be"

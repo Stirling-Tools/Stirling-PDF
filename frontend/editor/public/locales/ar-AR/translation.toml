@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "اقلب ترتيب المستند بحيث تصبح الأخي
 SIDE_STITCH_BOOKLET_SORT = "ترتيب الصفحات لطباعة كتيّب بالخياطة الجانبية (محسّن للتجليد الجانبي)."
 
 [pdfTextEditor]
-conversionFailed = "فشل تحويل PDF. يرجى المحاولة مرة أخرى."
-converting = "جارٍ تحويل PDF إلى صيغة قابلة للتحرير..."
-currentFile = "الملف الحالي: {{name}}"
-imageLabel = "صورة موضوعة"
-noTextOnPage = "لم يتم اكتشاف نص قابل للتحرير في هذه الصفحة."
-pagePreviewAlt = "معاينة الصفحة"
-pageSummary = "الصفحة {{number}} من {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "محرر JSON لملف PDF"
-viewLabel = "محرر PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "تطبيق التغييرات"
-clearText = "مسح النص"
-downloadCopy = "تنزيل نسخة"
-moreOptions = "المزيد من الخيارات"
-reset = "إعادة تعيين التغييرات"
-
-[pdfTextEditor.badges]
-earlyAccess = "وصول مبكر"
-modified = "معدَّل"
-
-[pdfTextEditor.empty]
-dropzone = "اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
-dropzoneWithFiles = "حدد ملفًا من علامة تبويب الملفات، أو اسحب وأفلت ملف PDF أو JSON هنا، أو انقر للاستعراض"
-title = "لم يتم تحميل مستند"
-
-[pdfTextEditor.errors]
-invalidJson = "تعذّر قراءة ملف JSON. تأكّد من أنه تم إنشاؤه بواسطة أداة PDF إلى JSON."
-pdfConversion = "تعذّر تحويل ملف JSON المُحرَّر إلى PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "كل الخطوط"
-currentPageFonts = "الخطوط في هذه الصفحة"
-details = "تفاصيل الخط"
-embedded = "مضمَّن"
-fallback = "بديل"
-infoMessage = "تتوفر معلومات حول إعادة إنتاج الخطوط."
-missing = "مفقود"
-perfect = "مثالي"
-perfectMessage = "يمكن إعادة إنتاج جميع الخطوط بشكل مثالي."
-subset = "فرعي"
-suggestions = "ملاحظات"
-type = "النوع"
-warningMessage = "قد لا تُعرَض بعض الخطوط بشكل صحيح."
-warnings = "تحذيرات"
-webFormat = "تنسيق الويب"
-
-[pdfTextEditor.groupingMode]
-auto = "تلقائي"
-paragraph = "فقرة"
-singleLine = "سطر واحد"
-
-[pdfTextEditor.manual]
-expandWidth = "توسيع حتى حافة الصفحة"
-merge = "دمج التحديد"
-mergeTooltip = "دمج الصناديق المحددة"
-resetWidth = "إعادة تعيين العرض"
-resizeHandle = "ضبط عرض النص"
-ungroup = "إلغاء تجميع التحديد"
-ungroupTooltip = "تفكيك الفقرة إلى سطور"
-widthMenu = "خيارات العرض"
-
-[pdfTextEditor.modeChange]
-cancel = "إلغاء"
-confirm = "إعادة الضبط وتغيير الوضع"
-title = "تأكيد تغيير الوضع"
-warning = "سيؤدي تغيير وضع تجميع النص إلى إعادة ضبط كل التغييرات غير المحفوظة. هل تريد المتابعة بالتأكيد؟"
-
-[pdfTextEditor.options.advanced]
-title = "إعدادات متقدمة"
-
-[pdfTextEditor.options.autoScaleText]
-description = "يضبط النص أفقياً تلقائياً ليتناسب مع صندوق الاحتواء الأصلي عند اختلاف عرض الخط عن PDF."
-title = "ضبط النص تلقائياً ليتناسب مع الصناديق"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "عند التفعيل، يصدّر المحرر كل صندوق نص مُحرّر كعنصر نص PDF واحد لتجنب تراكب المحارف أو اختلاط الخطوط."
-title = "قفل النص المُحرّر ضمن عنصر PDF واحد"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "يكتشف نوع الصفحة تلقائياً ويجمع النص بالشكل المناسب."
-paragraphDescription = "يجمع السطور المتراصة في صناديق نص متعددة الأسطر."
-singleLineDescription = "يبقي كل سطر نص PDF في صندوق نص منفصل."
-title = "وضع تجميع النص"
-
-[pdfTextEditor.pageType]
-paragraph = "صفحة فقرة"
-sparse = "نص متفرق"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "هذا العارض الألفا ما يزال قيد التطوير—قد تتغيّر بعض الخطوط والألوان وتأثيرات الشفافية وتفاصيل التخطيط قليلًا. يرجى التحقق من ملف PDF المُولَّد قبل المشاركة."
@@ -5920,32 +5829,6 @@ title = "اختلاف المعاينة"
 [pdfTextEditor.tooltip.textFocus]
 text = "يركّز هذا المجال على تحرير النص وإعادة تموضع الصور المضمّنة. ستُحفَظ الأعمال الفنية المعقّدة وعناصر النماذج والرسومات الطبقية للتصدير لكنها غير قابلة للتحرير بالكامل هنا."
 title = "تركيز النص والصورة"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "يعمل بشكل أفضل مع:"
-bestFor1 = "ملفات PDF البسيطة التي تحتوي أساساً على نصوص وصور"
-bestFor2 = "المستندات ذات تنسيق الفقرات القياسي"
-bestFor3 = "الرسائل والمقالات والتقارير والمستندات الأساسية"
-dontShowAgain = "لا تُظهر هذا مجددًا"
-experimental = "هذه ميزة تجريبية قيد التطوير النشط. توقّع بعض عدم الاستقرار والمشكلات أثناء الاستخدام."
-feedback = "هذه ميزة وصول مبكر. يُرجى الإبلاغ عن أي مشكلات تصادفها لمساعدتنا على التحسين!"
-gotIt = "حسنًا"
-howItWorks = "تحوّل هذه الأداة ملف PDF إلى صيغة قابلة للتحرير حيث يمكنك تعديل محتوى النص وإعادة تموضع الصور. تُحفظ التغييرات كملف PDF جديد."
-issue1 = "لا يُحفَظ لون النص حاليًا (سيُضاف قريبًا)"
-issue2 = "وضع الفقرة يعاني مشكلات أكثر في المحاذاة والتباعد - يُوصى بوضع السطر الواحد"
-issue3 = "تختلف معاينة العرض عن ملف PDF المُصدَّر - ملفات PDF المُصدَّرة أقرب إلى الأصل"
-issue4 = "قد تحتاج محاذاة النص المُدوَّر إلى ضبط يدوي"
-issue5 = "قد تختلف تأثيرات الشفافية والطبقات عن الأصل"
-knownIssues = "مشكلات معروفة (قيد الإصلاح):"
-limitation1 = "قد يختلف عرض الخطوط قليلًا عن ملف PDF الأصلي"
-limitation2 = "يتم الحفاظ على الرسومات المعقّدة وحقول النماذج والتعليقات، لكنها غير قابلة للتحرير"
-limitation3 = "قد تستغرق الملفات الكبيرة وقتًا للتحويل والمعالجة"
-limitations = "القيود الحالية:"
-notIdealFor = "غير مناسب لـ:"
-notIdealFor1 = "ملفات PDF ذات تنسيق خاص مثل التعداد النقطي والجداول أو التخطيطات متعددة الأعمدة"
-notIdealFor2 = "المجلات، الكتيبات، أو المستندات ذات التصميم المكثف"
-notIdealFor3 = "أدلة الاستخدام ذات التخطيطات المعقّدة"
-title = "مرحباً بك في محرر نصوص PDF (وصول مبكر)"
 
 [PDFToCSV]
 header = "PDF إلى CSV"

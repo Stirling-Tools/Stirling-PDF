@@ -5812,99 +5812,8 @@ REVERSE_ORDER = "Odwróć kolejność dokumentu, aby ostatnia strona stała się
 SIDE_STITCH_BOOKLET_SORT = "Ułóż strony do broszury zszywanej bocznie (zoptymalizowane pod bindowanie z boku)."
 
 [pdfTextEditor]
-conversionFailed = "Nie udało się przekonwertować PDF. Spróbuj ponownie."
-converting = "Konwertowanie PDF do formatu edytowalnego..."
-currentFile = "Bieżący plik: {{name}}"
-imageLabel = "Umieszczony obraz"
-noTextOnPage = "Na tej stronie nie wykryto edytowalnego tekstu."
-pagePreviewAlt = "Podgląd strony"
-pageSummary = "Strona {{number}} z {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Edytor JSON PDF"
-viewLabel = "Edytor PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "Zastosuj zmiany"
-clearText = "Wyczyść tekst"
-downloadCopy = "Pobierz kopię"
-moreOptions = "Więcej opcji"
-reset = "Resetuj zmiany"
-
-[pdfTextEditor.badges]
-earlyAccess = "Wczesny dostęp"
-modified = "Edytowano"
-
-[pdfTextEditor.empty]
-dropzone = "Przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
-dropzoneWithFiles = "Wybierz plik z karty Pliki, przeciągnij i upuść tutaj plik PDF lub JSON albo kliknij, aby przeglądać"
-title = "Nie wczytano dokumentu"
-
-[pdfTextEditor.errors]
-invalidJson = "Nie można odczytać pliku JSON. Upewnij się, że został wygenerowany przez narzędzie PDF do JSON."
-pdfConversion = "Nie można przekonwertować edytowanego JSON z powrotem na PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Wszystkie czcionki"
-currentPageFonts = "Czcionki na tej stronie"
-details = "Szczegóły czcionki"
-embedded = "Osadzona"
-fallback = "zapasowa"
-infoMessage = "Dostępne są informacje o odwzorowaniu czcionek."
-missing = "brakująca"
-perfect = "idealna"
-perfectMessage = "Wszystkie czcionki mogą być odtworzone idealnie."
-subset = "częściowa"
-suggestions = "Uwagi"
-type = "Typ"
-warningMessage = "Niektóre czcionki mogą wyświetlać się niepoprawnie."
-warnings = "Ostrzeżenia"
-webFormat = "Format webowy"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Akapit"
-singleLine = "Pojedyncza linia"
-
-[pdfTextEditor.manual]
-expandWidth = "Rozszerz do krawędzi strony"
-merge = "Scal zaznaczenie"
-mergeTooltip = "Scal zaznaczone pola"
-resetWidth = "Zresetuj szerokość"
-resizeHandle = "Dostosuj szerokość tekstu"
-ungroup = "Rozgrupuj zaznaczenie"
-ungroupTooltip = "Podziel akapit z powrotem na linie"
-widthMenu = "Opcje szerokości"
-
-[pdfTextEditor.modeChange]
-cancel = "Anuluj"
-confirm = "Resetuj i zmień tryb"
-title = "Potwierdź zmianę trybu"
-warning = "Zmiana trybu grupowania tekstu spowoduje utratę wszystkich niezapisanych zmian. Czy na pewno chcesz kontynuować?"
-
-[pdfTextEditor.options.advanced]
-title = "Ustawienia zaawansowane"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Automatycznie skaluje tekst poziomo, aby mieścił się w oryginalnym polu ograniczającym, gdy renderowanie czcionki różni się od PDF."
-title = "Automatycznie skaluj tekst do pól"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Po włączeniu edytor eksportuje każde edytowane pole tekstowe jako jeden element tekstowy PDF, aby uniknąć nakładających się glifów lub mieszanych czcionek."
-title = "Zablokuj edytowany tekst do pojedynczego elementu PDF"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Automatycznie wykrywa typ strony i odpowiednio grupuje tekst."
-paragraphDescription = "Grupuje wyrównane linie w wielowierszowe pola tekstowe akapitu."
-singleLineDescription = "Pozostawia każdą linię tekstu PDF jako oddzielne pole tekstowe."
-title = "Tryb grupowania tekstu"
-
-[pdfTextEditor.pageType]
-paragraph = "Strona akapitowa"
-sparse = "Rzadki tekst"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ten widok alfa wciąż się rozwija — niektóre czcionki, kolory, efekty przezroczystości i szczegóły układu mogą się nieznacznie zmieniać. Przed udostępnieniem prosimy o ponowne sprawdzenie wygenerowanego PDF."
@@ -5920,32 +5829,6 @@ title = "Różnice w podglądzie"
 [pdfTextEditor.tooltip.textFocus]
 text = "To środowisko koncentruje się na edycji tekstu i przestawianiu osadzonych obrazów. Złożona grafika strony, kontrolki formularzy i warstwowa grafika są zachowane do eksportu, ale nie są tutaj w pełni edytowalne."
 title = "Fokus tekstu i obrazów"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Najlepiej działa z:"
-bestFor1 = "Proste PDF-y zawierające głównie tekst i obrazy"
-bestFor2 = "Dokumenty ze standardowym formatowaniem akapitów"
-bestFor3 = "Listy, eseje, raporty i podstawowe dokumenty"
-dontShowAgain = "Nie pokazuj ponownie"
-experimental = "To funkcja eksperymentalna w aktywnym rozwoju. Możliwa niestabilność i problemy podczas używania."
-feedback = "To funkcja we wczesnym dostępie. Prosimy o zgłaszanie napotkanych problemów, aby pomóc nam się ulepszać!"
-gotIt = "Rozumiem"
-howItWorks = "To narzędzie konwertuje PDF do edytowalnego formatu, w którym można modyfikować tekst i zmieniać położenie obrazów. Zmiany zapisywane są jako nowy PDF."
-issue1 = "Kolor tekstu nie jest obecnie zachowywany (wkrótce zostanie dodany)"
-issue2 = "Tryb akapitu ma więcej problemów z wyrównaniem i odstępami — zalecany jest tryb pojedynczej linii"
-issue3 = "Podgląd różni się od eksportowanego PDF — eksportowane PDF-y są bliższe oryginałowi"
-issue4 = "Wyrównanie obróconego tekstu może wymagać ręcznej korekty"
-issue5 = "Efekty przezroczystości i warstw mogą się różnić od oryginału"
-knownIssues = "Znane problemy (w trakcie naprawy):"
-limitation1 = "Renderowanie czcionek może się nieznacznie różnić od oryginalnego PDF"
-limitation2 = "Złożona grafika, pola formularzy i adnotacje są zachowane, lecz nieedytowalne"
-limitation3 = "Konwersja i przetwarzanie dużych plików może potrwać"
-limitations = "Obecne ograniczenia:"
-notIdealFor = "Nie nadaje się do:"
-notIdealFor1 = "PDF-y ze specjalnym formatowaniem, jak wypunktowania, tabele lub układy wielokolumnowe"
-notIdealFor2 = "Magazyny, broszury lub bogato projektowane dokumenty"
-notIdealFor3 = "Instrukcje o złożonych układach"
-title = "Witamy w edytorze tekstu PDF (wczesny dostęp)"
 
 [PDFToCSV]
 header = "PDF na CSV"
