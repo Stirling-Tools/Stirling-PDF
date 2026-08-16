@@ -893,6 +893,7 @@
      does the scrolling. */
   min-height: 16rem;
   padding: 1.35rem 1.6rem;
+
   /* No serif token exists in the theme — the serif is specific to rendering legal terms as paper. */
   font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
   font-size: 0.84rem;
