@@ -58,13 +58,16 @@ function objBoundsLR(
   }
 }
 
-// Map freshly-emitted line objects back to their words, building the slot's
-// mergedFrom* arrays. emitTextLine emits one object per whitespace word.
+// Map freshly-emitted line objects back to the text they carry, building the
+// slot's mergedFrom* arrays. `emitted` is emitTextLine's own record of what
+// each ptr holds - it emits per word OR per character, so deriving it from the
+// text mislabels every ptr past the word count.
 function buildSlotMerged(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   ptrs: number[],
   text: string,
   leftX: number,
+  emitted?: string[],
 ): {
   ptrs: number[];
   texts: string[];
@@ -76,10 +79,20 @@ function buildSlotMerged(
   const bounds: Array<{ x: number; right: number }> = [];
   const charStarts: number[] = [];
   const words: Array<{ text: string; start: number }> = [];
-  const re = /\S+/g;
-  let wm: RegExpExecArray | null;
-  while ((wm = re.exec(text)) !== null) {
-    words.push({ text: wm[0], start: wm.index });
+  if (emitted && emitted.length === ptrs.length) {
+    let at = 0;
+    for (const piece of emitted) {
+      const found = text.indexOf(piece, at);
+      const start = found >= 0 ? found : at;
+      words.push({ text: piece, start });
+      at = start + piece.length;
+    }
+  } else {
+    const re = /\S+/g;
+    let wm: RegExpExecArray | null;
+    while ((wm = re.exec(text)) !== null) {
+      words.push({ text: wm[0], start: wm.index });
+    }
   }
   for (let i = 0; i < ptrs.length; i++) {
     const w = words[i];
@@ -1259,7 +1272,9 @@ export function applyParagraphEditPlan(
       }
       const fallbackFamily = helveticaVariantFor(run.fontId);
       if (lineText.length > 0) {
+        const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
+          outTexts: emittedTexts,
           doc,
           page,
           text: lineText,
@@ -1273,7 +1288,7 @@ export function applyParagraphEditPlan(
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
-        const built = buildSlotMerged(m, ptrs, lineText, leftX);
+        const built = buildSlotMerged(m, ptrs, lineText, leftX, emittedTexts);
         slot.mergedFromPtrs = built.ptrs;
         slot.mergedFromTexts = built.texts;
         slot.mergedFromBounds = built.bounds;

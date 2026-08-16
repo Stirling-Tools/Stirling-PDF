@@ -1,5 +1,8 @@
 import { readUtf16, writeUtf16 } from "@app/services/pdfiumService";
-import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import type {
+  ParagraphLineSlot,
+  TextRun,
+} from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
@@ -1207,27 +1210,46 @@ export function planLineOrigins(
   const rot = rotationFromMatrix(run.matrix);
   const dcos = rot ? rot.cos : 1;
   const dsin = rot ? rot.sin : 0;
-  const slots =
-    run.paragraphLineSlots.length === lineCount ? run.paragraphLineSlots : null;
+  const slots = run.paragraphLineSlots;
+  // Line i keeps slot i whenever that slot exists, even when the edit changed
+  // the line COUNT: an edit that drops a line must not move the lines above it.
+  const last = slots.length > 0 ? slots[slots.length - 1] : null;
+  // Past the last known slot, keep the paragraph's own leading. Restarting the
+  // ladder at run.matrix instead drops the surviving lines onto the text below.
+  const leading = paragraphLeading(slots) || lineHeight;
   const out: LineOrigin[] = [];
   for (let i = 0; i < lineCount; i++) {
-    const slot = slots?.[i];
-    out.push(
-      slot
-        ? { x: slot.matrixE, y: slot.baselineY }
-        : {
-            x: run.matrix.e + i * lineHeight * dsin,
-            y: run.matrix.f - i * lineHeight * dcos,
-          },
-    );
+    const slot = slots[i];
+    if (slot) {
+      out.push({ x: slot.matrixE, y: slot.baselineY });
+      continue;
+    }
+    const step = last ? i - (slots.length - 1) : i;
+    const baseX = last ? last.matrixE : run.matrix.e;
+    const baseY = last ? last.baselineY : run.matrix.f;
+    out.push({
+      x: baseX + step * leading * dsin,
+      y: baseY - step * leading * dcos,
+    });
   }
   return out;
+}
+
+/** Distance between consecutive line origins, robust under rotation. */
+function paragraphLeading(slots: ParagraphLineSlot[]): number {
+  if (slots.length < 2) return 0;
+  const a = slots[slots.length - 2];
+  const b = slots[slots.length - 1];
+  return Math.hypot(b.matrixE - a.matrixE, b.baselineY - a.baselineY);
 }
 
 /** One re-emitted line: the objects created for it and where they landed. */
 export interface EmittedLine {
   ptrs: number[];
   text: string;
+  /** Text of each ptr, parallel to `ptrs`. Callers must not re-derive this:
+   * emitTextLine emits per word OR per character, and guessing drops ptrs. */
+  texts: string[];
   x: number;
   y: number;
 }
@@ -1252,10 +1274,12 @@ export function emitRunLines(opts: {
     const origin = opts.origins[i];
     if (!origin) continue;
     if (text.length === 0) {
-      out.push({ ptrs: [], text: "", x: origin.x, y: origin.y });
+      out.push({ ptrs: [], text: "", texts: [], x: origin.x, y: origin.y });
       continue;
     }
+    const texts: string[] = [];
     const ptrs = emitTextLine({
+      outTexts: texts,
       doc: opts.doc,
       page: opts.page,
       text,
@@ -1271,7 +1295,7 @@ export function emitRunLines(opts: {
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
     });
-    out.push({ ptrs, text, x: origin.x, y: origin.y });
+    out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }
   return out;
 }

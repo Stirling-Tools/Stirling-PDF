@@ -380,7 +380,13 @@ export class EditTextCommand implements Command {
     const allEmittedPtrs: number[] = [];
     // Per-line emit metadata used to rebuild paragraphLineSlots so the NEXT
     // edit can route back through paragraph-aware partial-edit instead of.
-    const perLineEmits: Array<{ ptrs: number[]; text: string; y: number }> = [];
+    const perLineEmits: Array<{
+      ptrs: number[];
+      texts: string[];
+      text: string;
+      x: number;
+      y: number;
+    }> = [];
     const emitted = emitRunLines({
       doc,
       page,
@@ -394,15 +400,38 @@ export class EditTextCommand implements Command {
     for (const line of emitted) {
       // Empty lines keep a placeholder slot; a FAILED emit is dropped entirely.
       if (line.text.length === 0) {
-        perLineEmits.push({ ptrs: [], text: "", y: line.y });
+        perLineEmits.push({
+          ptrs: [],
+          texts: [],
+          text: "",
+          x: line.x,
+          y: line.y,
+        });
         continue;
       }
-      if (line.ptrs.length === 0) continue;
+      if (line.ptrs.length === 0) {
+        // A line whose emit produced nothing still owns its character range.
+        // Skipping it shifts every later slot onto the wrong line of run.text.
+        perLineEmits.push({
+          ptrs: [],
+          texts: [],
+          text: line.text,
+          x: line.x,
+          y: line.y,
+        });
+        continue;
+      }
       this.createdPtrs.push(...line.ptrs);
       allEmittedPtrs.push(...line.ptrs);
       lineAnchorPtrs.push(line.ptrs[0]);
       lineAnchorYs.push(line.y);
-      perLineEmits.push({ ptrs: line.ptrs, text: line.text, y: line.y });
+      perLineEmits.push({
+        ptrs: line.ptrs,
+        texts: line.texts,
+        text: line.text,
+        x: line.x,
+        y: line.y,
+      });
     }
 
     if (lineAnchorPtrs.length > 0) {
@@ -822,13 +851,17 @@ export class EditTextCommand implements Command {
         newMemberFs.push(y);
       } else {
         // New / changed line: re-emit it reusing the run's embedded face.
+        // Keep the line's OWN left edge - a table row grouped as a paragraph
+        // has a different x per line, and slot 0's x drops it into the
+        // neighbouring column.
+        const lineX = slots[i]?.matrixE ?? leftX;
         const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
           outTexts: emittedTexts,
           doc,
           page,
           text,
-          x: leftX,
+          x: lineX,
           y,
           fontSize: run.fontSize,
           fill: run.fill,
@@ -850,7 +883,7 @@ export class EditTextCommand implements Command {
           ptrs,
           text,
           y,
-          leftX,
+          lineX,
           run,
           reuseFontPtr ? run.fontId : `base14:${fallbackFamily}`,
           emittedTexts,
@@ -1169,7 +1202,13 @@ function snapshotRevertLines(
 function buildSlotsFromOverlayEmit(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   run: import("@app/tools/pdfTextEditor/v2/model/TextRun").TextRun,
-  perLineEmits: Array<{ ptrs: number[]; text: string; y: number }>,
+  perLineEmits: Array<{
+    ptrs: number[];
+    texts: string[];
+    text: string;
+    x: number;
+    y: number;
+  }>,
   fontId: string,
 ): import("@app/tools/pdfTextEditor/v2/model/TextRun").ParagraphLineSlot[] {
   const slots = [];
@@ -1185,7 +1224,7 @@ function buildSlotsFromOverlayEmit(
         startChar,
         endChar,
         baselineY: emit.y,
-        matrixE: run.matrix.e,
+        matrixE: emit.x,
         containerPtr: 0,
         fontId,
         fontSize: run.fontSize,
@@ -1198,13 +1237,26 @@ function buildSlotsFromOverlayEmit(
       cursor = endChar + 1;
       continue;
     }
-    // Distribute the text across the emitted ptrs by character-count
-    // proportion. emitTextLine emits one ptr per whitespace-separated word.
     const mergedFromTexts: string[] = [];
     const mergedFromPtrs: number[] = [];
     const mergedFromBounds: Array<{ x: number; right: number }> = [];
     const mergedFromCharStarts: number[] = [];
-    if (emit.ptrs.length === 1) {
+    if (emit.texts.length === emit.ptrs.length) {
+      // The emitter told us what each ptr carries. Never re-derive it: it emits
+      // per word OR per character, and the word guess below silently dropped
+      // every ptr past the word count, leaving those glyphs painted forever.
+      let at = 0;
+      for (let i = 0; i < emit.ptrs.length; i++) {
+        const piece = emit.texts[i];
+        const found = text.indexOf(piece, at);
+        const start = found >= 0 ? found : at;
+        mergedFromPtrs.push(emit.ptrs[i]);
+        mergedFromTexts.push(piece);
+        mergedFromBounds.push(boundsFromPtr(m, emit.ptrs[i], run.matrix.e));
+        mergedFromCharStarts.push(start);
+        at = start + piece.length;
+      }
+    } else if (emit.ptrs.length === 1) {
       mergedFromPtrs.push(emit.ptrs[0]);
       mergedFromTexts.push(text);
       mergedFromBounds.push(boundsFromPtr(m, emit.ptrs[0], run.matrix.e));
