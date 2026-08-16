@@ -276,10 +276,7 @@ def _cleanup_async_job_files():
         )
         return
     if response.status_code != 200:
-        print(
-            f"\n[CLEANUP] Async job cleanup returned {response.status_code}: "
-            f"{response.text[:200]}"
-        )
+        print(f"\n[CLEANUP] Async job cleanup returned {response.status_code}: {response.text[:200]}")
         return
     try:
         summary = response.json()
