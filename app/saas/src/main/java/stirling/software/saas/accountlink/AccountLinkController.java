@@ -4,14 +4,12 @@ import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,13 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
 /**
- * Account-link registration surface (combined-billing "Mode A").
+ * Team-wide management of linked instances (combined-billing "Mode A").
  *
- * <p>A self-hosted instance's local backend calls {@code POST /register} with the admin's
- * short-lived Supabase JWT (validated by the existing {@code SupabaseSecurityConfig} chain — no new
- * auth here). We resolve the caller's team, mint a device credential bound to it, and return the
- * secret exactly once. Ongoing entitlement reads authenticate with that device credential, not this
- * JWT.
+ * <p>Read and revoke only. Instances are created by the browser-mediated handshake in {@link
+ * ConnectController}, not here: an admin approves on our origin and the instance collects its own
+ * credential, so no Supabase JWT is ever relayed through a customer's server.
  *
  * <p>Whole surface gated behind {@code stirling.billing.account-link.enabled}: off → beans absent →
  * 404. Leader-only, and the team is always derived from the caller (never the request body).
@@ -49,13 +45,6 @@ public class AccountLinkController {
         this.leaderTeams = leaderTeams;
     }
 
-    /** Optional display name for the instance (hostname / label). */
-    public record RegisterRequest(String name) {}
-
-    /** {@code deviceSecret} is plaintext and returned exactly once — the caller must store it. */
-    public record RegisterResponse(
-            Long instanceId, Long teamId, String deviceId, String deviceSecret, String name) {}
-
     public record InstanceRow(
             Long instanceId,
             String deviceId,
@@ -64,26 +53,15 @@ public class AccountLinkController {
             String lastSeenAt,
             boolean revoked) {}
 
-    @PostMapping("/register")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RegisterResponse> register(
-            @RequestBody(required = false) RegisterRequest req, Authentication auth) {
-        LeaderTeam lt = leaderTeams.resolve(auth);
-        if (lt.error() != null) {
-            return ResponseEntity.status(lt.error()).build();
-        }
-        String name = req != null ? req.name() : null;
-        AccountLinkService.RegisteredInstance reg =
-                service.register(lt.teamId(), lt.userId(), name);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(
-                        new RegisterResponse(
-                                reg.instanceId(),
-                                lt.teamId(),
-                                reg.deviceId(),
-                                reg.deviceSecret(),
-                                reg.name()));
-    }
+    /*
+     * POST /register is gone. It took the admin's Supabase JWT, relayed from their instance, and
+     * minted a device credential in the response. Linking is now a browser-mediated handshake
+     * (ConnectController), so the token never leaves the admin's own browser and the credential is
+     * collected by the instance against a claim secret instead.
+     *
+     * AccountLinkService.register survives and is still the only thing that mints: ConnectRequestService
+     * calls it when a handshake is claimed. Only the JWT-authenticated entry point has been removed.
+     */
 
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")

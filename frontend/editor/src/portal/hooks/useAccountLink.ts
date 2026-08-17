@@ -1,32 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
-import {
-  ensureSaasSupabase,
-  isSaasSupabaseConfigured,
-  PENDING_LINK_KEY,
-} from "@portal/auth/saasSupabase";
-import {
-  fetchStatus,
-  linkInstance,
-  unlinkInstance,
-  type LinkStatus,
-} from "@portal/api/link";
-import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
+import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
+import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
+import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
 
 /**
- * Orchestrates the account-link flow for THIS instance:
+ * Reads and clears THIS instance's link status.
  *
- *   1. The admin signs in to their Stirling account IN-APP (LinkAccountModal →
- *      shared Supabase login), minting a short-term SaaS JWT.
- *   2. {@link completeLink} POSTs that JWT to the LOCAL backend (api/link.ts),
- *      which registers with SaaS and stores the device secret server-side.
- *   3. The resulting Linked / Not-linked status is read back.
+ * Deliberately does not link. Linking is a browser-mediated handshake started by
+ * LinkAccountModal and finished at /account-link/callback, so the admin's Stirling
+ * token never passes through this backend and there is nothing for this hook to
+ * complete. It reads the resulting status and offers unlink.
  *
- * Email/password resolves inline (the modal calls completeLink). SSO redirects
- * the browser to the provider and back; the returned session is finished here on
- * mount (see the pending-link effect). The device secret is never received or
- * rendered. Subscription state is resolved separately from the wallet, so a fresh
- * link marks the org linked-free.
+ * Subscription state is resolved separately from the wallet, so a linked instance
+ * is marked linked-free here.
  */
 
 export type LinkPhase = "idle" | "linking" | "error";
@@ -38,38 +24,15 @@ export interface UseAccountLink {
   status: LinkStatus | null;
   phase: LinkPhase;
   error: string | null;
-  /** Finish linking THIS instance with a SaaS session minted by the login modal. */
-  completeLink: (session: SupabaseLoginSession, name?: string) => Promise<void>;
   /** Unlink this instance. */
   unlink: () => Promise<void>;
 }
 
 export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
-  const { markSaasSessionChanged } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
-
-  const completeLink = useCallback(
-    async (session: SupabaseLoginSession, name?: string) => {
-      setPhase("linking");
-      setError(null);
-      try {
-        const next = await linkInstance({
-          supabaseJwt: session.access_token,
-          name,
-        });
-        setStatus(next);
-        setPhase("idle");
-        if (next.linked) applyLinkFacts(true, false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setPhase("error");
-      }
-    },
-    [applyLinkFacts],
-  );
 
   // Read the current link status on mount.
   useEffect(() => {
@@ -93,29 +56,13 @@ export function useAccountLink(): UseAccountLink {
     };
   }, [applyLinkFacts]);
 
-  // SSO return: an SSO sign-in we kicked off has redirected back and the SaaS
-  // session is now in the shared Supabase client. The pending marker carries the
-  // mode: "reauth" only refreshes attended reads (the instance is already linked
-  // — re-registering would mint a duplicate credential); anything else links.
-  useEffect(() => {
-    const supabase = ensureSaasSupabase();
-    const pending = sessionStorage.getItem(PENDING_LINK_KEY);
-    if (!supabase || pending === null) return;
-    let cancelled = false;
-    void supabase.auth.getSession().then(({ data }) => {
-      sessionStorage.removeItem(PENDING_LINK_KEY);
-      const token = data.session?.access_token;
-      if (!token || cancelled) return;
-      if (pending === "reauth") {
-        markSaasSessionChanged();
-      } else {
-        void completeLink({ access_token: token });
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [completeLink, markSaasSessionChanged]);
+  /*
+   * There was an SSO-return effect here, reading a sessionStorage marker left before an OAuth
+   * redirect and finishing the link on the way back. It went with the JWT relay, and it never
+   * worked on a real self-hosted host anyway: the provider only redirects to allow-listed URLs, so
+   * a customer origin was never returned to. Linking now completes at /account-link/callback, where
+   * our own approval page sends the admin.
+   */
 
   const unlink = useCallback(async () => {
     setPhase("linking");
@@ -136,7 +83,6 @@ export function useAccountLink(): UseAccountLink {
     status,
     phase,
     error,
-    completeLink,
     unlink,
   };
 }

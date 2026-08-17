@@ -1,6 +1,5 @@
 package stirling.software.proprietary.accountlink;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,19 +37,12 @@ public class AccountLinkService {
     /** Status of this instance's link, for the portal's "Account link" card. */
     public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
 
-    /**
-     * Registers this instance with the SaaS team behind {@code supabaseJwt} and stores the
-     * credential.
-     *
-     * @throws IOException if the SaaS register call fails (surfaced to the admin as a link error).
+    /*
+     * There is no longer a link(supabaseJwt, name) here. Linking used to relay the admin's Supabase
+     * JWT through this backend to a SaaS register endpoint; it is now a browser-mediated handshake
+     * (see ConnectService), so the admin's token never reaches the server at all and this side only
+     * ever collects a device credential.
      */
-    public LinkStatus link(String supabaseJwt, String instanceName) throws IOException {
-        AccountLinkClient.RegisterResult result = client.register(supabaseJwt, instanceName);
-        credentialStore.save(result.deviceId(), result.deviceSecret(), result.teamId());
-        entitlementCache.invalidate();
-        log.info("Account-link: instance linked to team {}", result.teamId());
-        return status();
-    }
 
     /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code

@@ -1,13 +1,5 @@
 import { apiClient } from "@portal/api/http";
 
-/** Body for POST /api/v1/account-link/link — the SaaS JWT + optional name. */
-export interface LinkInstanceRequest {
-  /** Admin's SaaS session JWT, obtained via the hosted-login popup. */
-  supabaseJwt: string;
-  /** Optional label for this instance. */
-  name?: string;
-}
-
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {
   linked: boolean;
@@ -46,11 +38,11 @@ export interface LinkedInstanceRow {
  * Account-link client (combined-billing "Mode A"). Two distinct surfaces:
  *
  * THIS instance — apiClient.local (Spring admin bearer auto-attached):
- *   - POST /api/v1/account-link/link    — hand the local backend the admin's
- *                                          SaaS JWT in the body. It registers
- *                                          with SaaS + stores the device
- *                                          secret SERVER-SIDE; the portal
- *                                          NEVER receives or renders it.
+ *   - POST /api/v1/account-link/connect/*  — the browser-mediated handshake.
+ *                                          No SaaS JWT passes through the
+ *                                          local backend; it collects only a
+ *                                          device secret, SERVER-SIDE, which
+ *                                          the portal never receives.
  *   - GET  /api/v1/account-link/status  — Linked / Not-linked for this
  *                                          instance.
  *   - POST /api/v1/account-link/unlink  — drop this instance's link (local
@@ -68,20 +60,6 @@ export interface LinkedInstanceRow {
  */
 
 const BASE = "/api/v1/account-link";
-
-/**
- * Link THIS instance. The local backend takes the SaaS JWT, registers with
- * SaaS, and persists the device secret itself; the response carries only the
- * resulting link status. No secret is returned.
- */
-export async function linkInstance(
-  req: LinkInstanceRequest,
-): Promise<LinkStatus> {
-  return apiClient.local.json<LinkStatus>(`${BASE}/link`, {
-    method: "POST",
-    body: req,
-  });
-}
 
 /** Linked / Not-linked for this instance. */
 export async function fetchStatus(): Promise<LinkStatus> {

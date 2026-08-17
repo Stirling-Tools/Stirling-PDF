@@ -28,8 +28,9 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>Calls:
  *
  * <ul>
- *   <li>{@link #register} — relays the admin's short-lived Supabase JWT to {@code POST
- *       /api/v1/account-link/register}; the SaaS side mints + returns a device credential.
+ *   <li>{@link #connectRequest} / {@link #connectClaim} — the browser-mediated link handshake. The
+ *       admin's Supabase JWT never passes through here: it goes to their own browser, and this side
+ *       collects only a device credential, authenticated by a claim secret.
  *   <li>{@link #fetchEntitlement} — authenticates with the stored device credential against {@code
  *       GET /api/v1/instance/entitlement}; what the local gate consults.
  *   <li>{@link #reportUsage} — daily usage sync ({@code POST /api/v1/instance/sync}); reports
@@ -72,9 +73,6 @@ public class AccountLinkClient {
         this.httpClient = httpClient;
     }
 
-    /** The device credential a successful {@link #register} returns. */
-    public record RegisterResult(String deviceId, String deviceSecret, Long teamId) {}
-
     /**
      * A non-2xx reply from the SaaS account-link API. Carries the upstream status so the caller can
      * map auth failures (401/403) through rather than masking everything as a 502.
@@ -108,42 +106,6 @@ public class AccountLinkClient {
         public int status() {
             return status;
         }
-    }
-
-    /**
-     * Relays the admin Supabase JWT to the SaaS register endpoint and returns the minted
-     * credential.
-     *
-     * @throws IOException on transport failure or a non-2xx response (caller surfaces to the
-     *     admin).
-     */
-    public RegisterResult register(String supabaseJwt, String instanceName) throws IOException {
-        String body =
-                instanceName == null || instanceName.isBlank()
-                        ? "{}"
-                        : "{\"name\":" + mapper.writeValueAsString(instanceName) + "}";
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(uri("/api/v1/account-link/register"))
-                        .header("Authorization", "Bearer " + supabaseJwt)
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/json")
-                        .timeout(timeout())
-                        .POST(HttpRequest.BodyPublishers.ofString(body))
-                        .build();
-
-        HttpResponse<String> response = send(request);
-        if (response.statusCode() / 100 != 2) {
-            throw new UpstreamException(response.statusCode(), response.body());
-        }
-        JsonNode root = mapper.readTree(response.body());
-        String deviceId = text(root, "deviceId");
-        String deviceSecret = text(root, "deviceSecret");
-        if (deviceId == null || deviceSecret == null) {
-            throw new IOException("SaaS register response missing deviceId/deviceSecret");
-        }
-        Long teamId = root.hasNonNull("teamId") ? root.get("teamId").asLong() : null;
-        return new RegisterResult(deviceId, deviceSecret, teamId);
     }
 
     /**
