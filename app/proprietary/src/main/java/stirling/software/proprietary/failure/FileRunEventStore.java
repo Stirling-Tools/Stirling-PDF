@@ -121,16 +121,19 @@ public class FileRunEventStore {
      *
      * <p>Both filters live in the query, before the limit: filtering an already-limited page could
      * return nothing while matching rows exist.
+     *
+     * <p>{@code actor} narrows to one person's own failures, or reads the whole team when null. Who
+     * gets which is the service's decision, not this method's.
      */
     @Transactional(readOnly = true)
     public List<FileRunEvent> list(
-            Long teamId, FileRunEventStatus status, String kindId, int limit) {
+            Long teamId, FileRunEventStatus status, String kindId, String actor, int limit) {
         Pageable page = PageRequest.of(0, Math.max(1, limit));
         List<FileRunEventEntity> rows =
                 status == null
                         ? repository.findByTeamAndStatusIn(
-                                teamId, FileRunEventStatus.open(), kindId, page)
-                        : repository.findByTeamAndStatus(teamId, status, kindId, page);
+                                teamId, FileRunEventStatus.open(), kindId, actor, page)
+                        : repository.findByTeamAndStatus(teamId, status, kindId, actor, page);
         return rows.stream().map(FileRunEvent::of).toList();
     }
 
