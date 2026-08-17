@@ -10,7 +10,7 @@ export type InfoBannerTone = "info" | "promo" | "warning" | "danger";
 
 /** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
 const TONE_BUTTON = {
-  info: { variant: "primary", accent: "default" },
+  info: { variant: "secondary", accent: "default" },
   promo: { variant: "primary", accent: "premium" },
   warning: { variant: "primary", accent: "warning" },
   danger: { variant: "primary", accent: "danger" },
@@ -60,15 +60,15 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   return (
     <div
       className={[
-        "sui-banner",
-        `sui-banner--${tone}`,
-        compact ? "sui-banner--compact" : "",
+        "app-banner",
+        `app-banner--${tone}`,
+        compact ? "app-banner--compact" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
       {icon != null && (
-        <span className="sui-banner__icon" aria-hidden>
+        <span className="app-banner__icon" aria-hidden>
           {typeof icon === "string" ? (
             <LocalIcon icon={icon} width={iconSize} height={iconSize} />
           ) : (
@@ -77,12 +77,12 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
         </span>
       )}
 
-      <div className="sui-banner__body">
-        {title && <span className="sui-banner__title">{title}</span>}
-        <span className="sui-banner__message">{message}</span>
+      <div className="app-banner__body">
+        {title && <span className="app-banner__title">{title}</span>}
+        <span className="app-banner__message">{message}</span>
       </div>
 
-      <div className="sui-banner__actions">
+      <div className="app-banner__actions">
         {buttonText && onButtonClick && (
           <Button
             variant={TONE_BUTTON[tone].variant}
