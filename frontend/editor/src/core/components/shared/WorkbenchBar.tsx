@@ -229,7 +229,8 @@ export default function WorkbenchBar({
         try {
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
-            filename: fileToExport.name,
+            // Stub name, not File.name: a rename only writes the stub.
+            filename: stub?.name ?? fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
           });
@@ -281,7 +282,8 @@ export default function WorkbenchBar({
         try {
           const result = await downloadRaw({
             data: enforced[idx],
-            filename: file.name,
+            // Stub name, not File.name: a rename only writes the stub.
+            filename: stub?.name ?? file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
           });
