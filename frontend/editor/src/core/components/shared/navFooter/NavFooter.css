@@ -66,7 +66,9 @@
   text-overflow: ellipsis;
 }
 
-.sui-nav-footer__settings {
+/* Trailing affordance on a row: the account row's gear, the switch row's
+   leaving-this-app arrow. */
+.sui-nav-footer__trailing {
   display: flex;
   align-items: center;
   justify-content: center;

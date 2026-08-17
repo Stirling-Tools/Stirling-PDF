@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Avatar, NavSurface, ProgressBar } from "@app/ui";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { type AppSwitchTarget } from "@app/components/shared/AppSwitch";
@@ -116,9 +117,16 @@ export function NavFooter({
               <BrandMark height="1.125rem" />
             </span>
             {!collapsed && (
-              <span className="sui-nav-footer__row-label">
-                {openAppLabel(otherApp.app, t)}
-              </span>
+              <>
+                <span className="sui-nav-footer__row-label">
+                  {openAppLabel(otherApp.app, t)}
+                </span>
+                {/* Same leaving-this-app cue the file rail uses for "Browse all
+                    files & folders". */}
+                <span className="sui-nav-footer__trailing" aria-hidden>
+                  <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                </span>
+              </>
             )}
           </button>
         </Tooltip>
@@ -161,7 +169,7 @@ export function NavFooter({
             </span>
           )}
           {onOpenSettings && !collapsed && (
-            <span className="sui-nav-footer__settings" aria-hidden>
+            <span className="sui-nav-footer__trailing" aria-hidden>
               <GearIcon />
             </span>
           )}
