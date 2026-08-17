@@ -5,6 +5,17 @@ export interface ProcessingFolderState {
   /** The processing record's own id — not the folder's. */
   id: string;
   enabled: boolean;
+  /** Where a disk-backed folder's results land, when the record names one. */
+  outputDirectory?: string;
+}
+
+/** One in-flight run of a processing folder, as the files page shows it. */
+export interface ProcessingRunInfo {
+  runId: string;
+  /** The document being processed, when the run's source recorded a name. */
+  fileName: string | null;
+  currentStep: number;
+  stepCount: number;
 }
 
 export interface ProcessingFoldersApi {
@@ -14,6 +25,8 @@ export interface ProcessingFoldersApi {
   enabledFolderIds: ReadonlySet<string>;
   /** Whether any processing folder is enabled, whatever it watches. */
   anyEnabled: boolean;
+  /** The record's runs that are currently executing (or queued to). */
+  listActiveRuns: (recordId: string) => Promise<ProcessingRunInfo[]>;
   /** Attach the default (classification) pipeline to a folder. */
   enable: (folder: FolderRecord) => Promise<void>;
   /** Remove the processing behaviour; the folder and its files stay. */
@@ -35,6 +48,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     stateFor: () => undefined,
     enabledFolderIds: EMPTY_IDS,
     anyEnabled: false,
+    listActiveRuns: async () => [],
     enable: async () => {},
     disable: async () => {},
     sweep: async () => {},

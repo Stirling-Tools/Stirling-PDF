@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -17,6 +17,8 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
+import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
@@ -96,14 +98,39 @@ function useFolderOriginBadge(folder: FolderRecord): {
 
 export type FilesPageViewMode = "grid" | "list";
 
+/**
+ * The fixed sections a processing folder presents in place of a flat listing:
+ * the untouched originals, the processed results, and what is running right
+ * now. Presentation only — none of these is a stored folder.
+ */
+export type ProcessingSectionId = "inputs" | "outputs" | "processing";
+
+export interface ProcessingSectionEntry {
+  id: ProcessingSectionId;
+  /** Items inside (files listed, or runs in flight); null while still loading. */
+  count: number | null;
+}
+
+/** One in-flight run, shown as a row inside the Processing section. */
+export interface ProcessingRunEntry {
+  runId: string;
+  fileName: string;
+  currentStep: number;
+  stepCount: number;
+}
+
 export interface FilesPageEntry {
-  kind: "folder" | "file" | "diskFile";
+  kind: "folder" | "file" | "diskFile" | "section" | "run";
   folder?: FolderRecord;
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
   /** A file read straight off a mounted directory (kind "diskFile"). */
   disk?: DiskFileEntry;
+  /** A processing folder's section (kind "section"). */
+  section?: ProcessingSectionEntry;
+  /** A run in flight inside the Processing section (kind "run"). */
+  run?: ProcessingRunEntry;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -118,6 +145,8 @@ interface FileGridProps {
   /** Replace the entire selection set. */
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
+  /** Open one of a processing folder's sections. */
+  onOpenSection?: (id: ProcessingSectionId) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   /** Open a file listed straight from a mounted directory. */
@@ -431,6 +460,7 @@ function GridView({
   activeWorkspaceFileIds,
   onSelectFile,
   onOpenFolder,
+  onOpenSection,
   onOpenFile,
   onOpenDiskFile,
   onMoveFiles,
@@ -447,6 +477,18 @@ function GridView({
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
+        if (entry.kind === "section" && entry.section) {
+          return (
+            <SectionCard
+              key={`section-${entry.section.id}`}
+              section={entry.section}
+              onOpen={() => onOpenSection?.(entry.section!.id)}
+            />
+          );
+        }
+        if (entry.kind === "run" && entry.run) {
+          return <RunCard key={`run-${entry.run.runId}`} run={entry.run} />;
+        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderCard
@@ -821,6 +863,199 @@ function ProcessingMenuItems({
   );
 }
 
+/** Section display names, shared with the breadcrumb trail. */
+export const PROCESSING_SECTION_LABELS: Record<
+  ProcessingSectionId,
+  { key: string; fallback: string }
+> = {
+  inputs: { key: "filesPage.processingSections.inputs", fallback: "Inputs" },
+  outputs: {
+    key: "filesPage.processingSections.outputs",
+    fallback: "Outputs",
+  },
+  processing: {
+    key: "filesPage.processingSections.processing",
+    fallback: "Processing",
+  },
+};
+
+/**
+ * The look and copy of each processing-folder section. Fixed identities: the
+ * cards must read the same in every processing folder, so none of the folder
+ * appearance machinery applies here.
+ */
+const SECTION_META: Record<
+  ProcessingSectionId,
+  {
+    color: string;
+    Icon: typeof MoveToInboxIcon;
+    hintKey: string;
+    hintDefault: string;
+  }
+> = {
+  inputs: {
+    color: "#3b82f6",
+    Icon: MoveToInboxIcon,
+    hintKey: "filesPage.processingSections.inputsHint",
+    hintDefault: "Your originals — never changed",
+  },
+  outputs: {
+    color: "#10b981",
+    Icon: TaskAltIcon,
+    hintKey: "filesPage.processingSections.outputsHint",
+    hintDefault: "Processed results",
+  },
+  processing: {
+    color: "#f59e0b",
+    Icon: AutoModeIcon,
+    hintKey: "filesPage.processingSections.processingHint",
+    hintDefault: "Being processed right now",
+  },
+};
+
+/** One of a processing folder's sections, presented as a folder-style card. */
+function SectionCard({
+  section,
+  onOpen,
+}: {
+  section: ProcessingSectionEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const meta = SECTION_META[section.id];
+  return (
+    <div
+      role="listitem"
+      tabIndex={0}
+      className="files-page-card is-folder"
+      onDoubleClick={onOpen}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+    >
+      <div
+        className="files-page-card-thumb"
+        style={{
+          background: `linear-gradient(135deg, color-mix(in srgb, ${meta.color} 18%, var(--c-surface)), color-mix(in srgb, ${meta.color} 6%, var(--c-surface)))`,
+        }}
+      >
+        <meta.Icon style={{ fontSize: "2.5rem", color: meta.color }} />
+      </div>
+      <div className="files-page-card-body">
+        <div className="files-page-card-name">
+          {t(
+            PROCESSING_SECTION_LABELS[section.id].key,
+            PROCESSING_SECTION_LABELS[section.id].fallback,
+          )}
+        </div>
+        <div className="files-page-card-meta">
+          {t(meta.hintKey, meta.hintDefault)}
+          {section.count !== null &&
+            ` · ${t("filesPage.folderItems", "{{count}} items", { count: section.count })}`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** List-view counterpart of {@link SectionCard}. */
+function SectionRow({
+  section,
+  onOpen,
+}: {
+  section: ProcessingSectionEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const meta = SECTION_META[section.id];
+  return (
+    <div
+      role="row"
+      tabIndex={0}
+      className="files-page-list-row is-folder"
+      onDoubleClick={onOpen}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+    >
+      <span aria-hidden="true" />
+      <span className="files-page-list-name">
+        <meta.Icon fontSize="small" style={{ color: meta.color }} />
+        <span>
+          {t(
+            PROCESSING_SECTION_LABELS[section.id].key,
+            PROCESSING_SECTION_LABELS[section.id].fallback,
+          )}
+        </span>
+      </span>
+      <span role="gridcell">{t(meta.hintKey, meta.hintDefault)}</span>
+      <span role="gridcell">
+        {section.count === null
+          ? "-"
+          : t("filesPage.folderItems", "{{count}} items", {
+              count: section.count,
+            })}
+      </span>
+      <span role="gridcell">-</span>
+      <span aria-hidden="true" />
+    </div>
+  );
+}
+
+/** A run in flight, shown inside the Processing section. Read-only. */
+function RunCard({ run }: { run: ProcessingRunEntry }) {
+  const { t } = useTranslation();
+  return (
+    <div role="listitem" className="files-page-card">
+      <div className="files-page-card-thumb">
+        <Loader size="sm" />
+      </div>
+      <div className="files-page-card-body">
+        <div className="files-page-card-name" title={run.fileName}>
+          {run.fileName}
+        </div>
+        <div className="files-page-card-meta">
+          {run.stepCount > 0
+            ? t("filesPage.processingSections.runStep", {
+                current: Math.min(run.currentStep + 1, run.stepCount),
+                total: run.stepCount,
+                defaultValue: "Step {{current}} of {{total}}",
+              })
+            : t("filesPage.processingSections.running", "Processing…")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** List-view counterpart of {@link RunCard}. */
+function RunRow({ run }: { run: ProcessingRunEntry }) {
+  const { t } = useTranslation();
+  return (
+    <div role="row" className="files-page-list-row">
+      <span aria-hidden="true" />
+      <span className="files-page-list-name">
+        <Loader size="xs" />
+        <span title={run.fileName}>{run.fileName}</span>
+      </span>
+      <span role="gridcell">
+        {run.stepCount > 0
+          ? t("filesPage.processingSections.runStep", {
+              current: Math.min(run.currentStep + 1, run.stepCount),
+              total: run.stepCount,
+              defaultValue: "Step {{current}} of {{total}}",
+            })
+          : t("filesPage.processingSections.running", "Processing…")}
+      </span>
+      <span role="gridcell">-</span>
+      <span role="gridcell">-</span>
+      <span aria-hidden="true" />
+    </div>
+  );
+}
+
 /** Shield badges for the policies that have run on a file. */
 function PolicyBadges({ fileId }: { fileId: string }) {
   const badges = usePolicyFileBadges().get(fileId) ?? [];
@@ -1088,6 +1323,7 @@ function ListView({
   onSelectFile,
   onSetSelection,
   onOpenFolder,
+  onOpenSection,
   onOpenFile,
   onOpenDiskFile,
   onMoveFiles,
@@ -1195,6 +1431,18 @@ function ListView({
         <span aria-hidden="true" />
       </div>
       {entries.map((entry) => {
+        if (entry.kind === "section" && entry.section) {
+          return (
+            <SectionRow
+              key={`section-${entry.section.id}`}
+              section={entry.section}
+              onOpen={() => onOpenSection?.(entry.section!.id)}
+            />
+          );
+        }
+        if (entry.kind === "run" && entry.run) {
+          return <RunRow key={`run-${entry.run.runId}`} run={entry.run} />;
+        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderRow

@@ -3,6 +3,7 @@ import {
   CLASSIFY_OPERATION,
   classificationDefaults,
   deleteProcessingFolder,
+  fetchProcessingFolderRuns,
   fetchProcessingFolders,
   saveProcessingFolder,
   sweepProcessingFolder,
@@ -18,6 +19,7 @@ import { folderKind, type FolderRecord } from "@app/types/folder";
 import type {
   ProcessingFolderState,
   ProcessingFoldersApi,
+  ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
 // Consumers import the contract's types from @app, which resolves here in
@@ -25,6 +27,7 @@ import type {
 export type {
   ProcessingFolderState,
   ProcessingFoldersApi,
+  ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
 /**
@@ -129,7 +132,16 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           : undefined;
       }
       const record = recordFor(folder);
-      return record ? { id: record.id, enabled: record.enabled } : undefined;
+      if (!record) return undefined;
+      const outputDirectory = record.output?.["directory"];
+      return {
+        id: record.id,
+        enabled: record.enabled,
+        outputDirectory:
+          typeof outputDirectory === "string" && outputDirectory
+            ? outputDirectory
+            : undefined,
+      };
     },
     [recordFor],
   );
@@ -210,6 +222,22 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     [recordFor, refreshFolders],
   );
 
+  const listActiveRuns = useCallback(
+    async (recordId: string): Promise<ProcessingRunInfo[]> => {
+      const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
+      const runs = await fetchProcessingFolderRuns(recordId).catch(() => []);
+      return runs
+        .filter((run) => run.runId && !TERMINAL.includes(run.status))
+        .map((run) => ({
+          runId: run.runId!,
+          fileName: run.fileName ?? null,
+          currentStep: run.currentStep ?? 0,
+          stepCount: run.stepCount ?? 0,
+        }));
+    },
+    [],
+  );
+
   const sweep = useCallback(
     async (folder: FolderRecord) => {
       if (folderKind(folder) === "virtual") {
@@ -231,8 +259,24 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   );
 
   return useMemo(
-    () => ({ stateFor, enabledFolderIds, anyEnabled, enable, disable, sweep }),
-    [stateFor, enabledFolderIds, anyEnabled, enable, disable, sweep],
+    () => ({
+      stateFor,
+      enabledFolderIds,
+      anyEnabled,
+      listActiveRuns,
+      enable,
+      disable,
+      sweep,
+    }),
+    [
+      stateFor,
+      enabledFolderIds,
+      anyEnabled,
+      listActiveRuns,
+      enable,
+      disable,
+      sweep,
+    ],
   );
 }
 

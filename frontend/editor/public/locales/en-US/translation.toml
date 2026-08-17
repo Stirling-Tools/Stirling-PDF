@@ -4168,6 +4168,16 @@ start = "Process files in this folder…"
 stop = "Stop processing this folder"
 sweep = "Process files now"
 
+[filesPage.processingSections]
+inputs = "Inputs"
+inputsHint = "Your originals — never changed"
+outputs = "Outputs"
+outputsHint = "Processed results"
+processing = "Processing"
+processingHint = "Being processed right now"
+running = "Processing…"
+runStep = "Step {{current}} of {{total}}"
+
 [filesPage.search]
 clear = "Clear filter"
 label = "Filter files by name"

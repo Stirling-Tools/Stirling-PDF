@@ -134,6 +134,10 @@ export interface ProcessingFolderRun {
   status: string;
   error?: string | null;
   outputs?: ProcessingRunOutput[] | null;
+  /** The input document's display name, for runs whose source recorded one. */
+  fileName?: string | null;
+  currentStep?: number;
+  stepCount?: number;
 }
 
 /** Runs belonging to a processing folder, newest first — drives the progress display. */
