@@ -16,11 +16,13 @@
   gap: 0.5rem;
 }
 
+/* Informational, and blue like it always was — but on the accent tint, so it
+   follows a custom accent and adapts to dark instead of being fixed Mantine blue. */
 .sui-banner--info {
-  --sui-banner-bg: var(--c-bg-raised);
-  --sui-banner-border: var(--c-border-subtle);
-  --sui-banner-text: var(--c-text);
-  --sui-banner-icon: var(--c-text-muted);
+  --sui-banner-bg: var(--c-primary-subtle);
+  --sui-banner-border: var(--c-primary-border);
+  --sui-banner-text: var(--c-accent-text);
+  --sui-banner-icon: var(--c-accent-fg, var(--c-primary));
 }
 
 /* Upgrade/announcement: the one bar meant to pop, so it takes the feature gradient
