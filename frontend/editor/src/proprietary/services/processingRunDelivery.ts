@@ -78,7 +78,10 @@ export async function deliverSweepResults(
       }
     }
     if (files.length === 0) return;
-    await addFiles(files, { selectFiles: true });
+    // Never select what is delivered: a selection isn't meaningful across a
+    // folderful of results, and re-selecting on every batch re-renders the
+    // whole growing file list once a second for the length of the sweep.
+    await addFiles(files);
     progress.opened += files.length;
   };
 

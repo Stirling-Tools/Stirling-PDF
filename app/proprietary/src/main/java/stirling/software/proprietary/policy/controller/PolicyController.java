@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -203,15 +204,20 @@ public class PolicyController {
             summary = "List the caller's stored-policy runs",
             description =
                     "Returns the caller's in-flight and recently-finished stored-policy runs (within"
-                            + " the run-retention window). The frontend reconciles these on load so a"
-                            + " run started before a refresh/crash is rediscovered and its outputs"
+                            + " the run-retention window), optionally narrowed to one policy via"
+                            + " `policyId` — a client following a single sweep polls this every"
+                            + " second, and the unfiltered list grows with every other policy's"
+                            + " runs. The frontend reconciles the unfiltered list on load so a run"
+                            + " started before a refresh/crash is rediscovered and its outputs"
                             + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
                             + " policy id) are excluded.")
-    public List<PolicyRunView> listRuns() {
+    public List<PolicyRunView> listRuns(
+            @RequestParam(name = "policyId", required = false) String policyId) {
         // Local runs first (they carry live step state); keyed by runId to dedupe shared entries.
         Map<String, PolicyRunView> byRunId = new LinkedHashMap<>();
         runRegistry.all().stream()
                 .filter(run -> run.getPolicyId() != null)
+                .filter(run -> policyId == null || policyId.equals(run.getPolicyId()))
                 .filter(run -> ownedByCurrentUser(run.getRunId()))
                 .forEach(run -> byRunId.put(run.getRunId(), PolicyRunView.of(run)));
         // Then runs from other nodes, read from the shared job store.
@@ -222,6 +228,9 @@ public class PolicyController {
             Map<String, String> meta = entry.resultMeta();
             if (meta == null || !meta.containsKey("policyId")) {
                 continue; // ad-hoc job, not a stored-policy run
+            }
+            if (policyId != null && !policyId.equals(meta.get("policyId"))) {
+                continue;
             }
             if (ownedByCurrentUser(entry.jobId())) {
                 byRunId.put(entry.jobId(), PolicyRunView.ofEntry(entry));

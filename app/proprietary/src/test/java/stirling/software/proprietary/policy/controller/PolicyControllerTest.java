@@ -359,7 +359,7 @@ class PolicyControllerTest {
             when(jobOwnershipService.createScopedJobKey("owned")).thenReturn("owned");
             when(jobOwnershipService.createScopedJobKey("other")).thenReturn("scoped-other");
 
-            List<PolicyRunView> views = controller.listRuns();
+            List<PolicyRunView> views = controller.listRuns(null);
 
             assertThat(views).hasSize(1);
             assertThat(views.get(0).runId()).isEqualTo("owned");

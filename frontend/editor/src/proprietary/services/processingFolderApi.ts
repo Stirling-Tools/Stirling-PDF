@@ -140,9 +140,12 @@ export interface ProcessingFolderRun {
 export async function fetchProcessingFolderRuns(
   policyId: string,
 ): Promise<ProcessingFolderRun[]> {
+  // Filtered server-side: delivery polls this every second, and the
+  // unfiltered list carries every policy's runs. The client-side filter stays
+  // as a guard against a backend that ignores the parameter.
   const res = await apiClient.get<
     (ProcessingFolderRun & { policyId?: string })[]
-  >("/api/v1/policies/runs");
+  >("/api/v1/policies/runs", { params: { policyId } });
   return (res.data ?? []).filter((run) => run.policyId === policyId);
 }
 
