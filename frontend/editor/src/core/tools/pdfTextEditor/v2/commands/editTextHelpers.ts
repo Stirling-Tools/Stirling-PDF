@@ -12,6 +12,7 @@ import {
   findFontForChar,
   fontIsReusable,
   setCharcodesOn,
+  styleClassFromName,
   tryResolveCharcodes,
 } from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
@@ -982,7 +983,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         // Constrained to the run's own weight/slant: an unconstrained borrow
         // takes the first matching glyph in content order, which is usually a
         // bold heading, and the edited body text comes back bold.
-        charFont = findFontForChar(ch, ctx, opts.originalFontPtr) || 0;
+        charFont =
+          findFontForChar(
+            ch,
+            ctx,
+            opts.originalFontPtr,
+            styleClassFromName(family),
+          ) || 0;
         if (!charFont) {
           allOk = false;
           break;

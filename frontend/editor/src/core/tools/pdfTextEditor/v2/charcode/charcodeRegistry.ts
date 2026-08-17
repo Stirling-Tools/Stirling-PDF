@@ -3,10 +3,16 @@ import {
   findFontForChar,
   fontIsReusable,
   prewarmBackendCacheForPage,
+  styleClassFromName,
 } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
 
 /** Re-export so the emit path can do per-char font lookup. */
-export { findFontForChar, fontIsReusable, prewarmBackendCacheForPage };
+export {
+  findFontForChar,
+  fontIsReusable,
+  prewarmBackendCacheForPage,
+  styleClassFromName,
+};
 import {
   CharcodeResolver,
   CharcodeStrategy,

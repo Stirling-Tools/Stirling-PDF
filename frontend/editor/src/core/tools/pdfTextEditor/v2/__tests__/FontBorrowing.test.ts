@@ -19,6 +19,7 @@ import {
   findFontForChar,
   fontIsReusable,
   fontStyleClass,
+  styleClassFromName,
   _clearFontForCharCacheForTests,
   _clearReusableFontCacheForTests,
 } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
@@ -169,6 +170,25 @@ describe("findFontForChar", () => {
     // Falling back to a substituted regular face is correct; silently going
     // bold is not.
     expect(findFontForChar("o", ctxFor(m), REGULAR)).toBeNull();
+  });
+
+  it("honours an explicit style when there is no source font handle", () => {
+    // The undo path re-emits with `originalFontPtr: 0`. Keying the guard only
+    // off the handle disabled it there, and restored body text came back bold
+    // for every letter whose first page-order occurrence was in a heading.
+    const m = makeModule(
+      [
+        ["p", BOLD],
+        ["p", REGULAR],
+      ],
+      REAL_FONTS,
+    );
+    expect(
+      findFontForChar("p", ctxFor(m), 0, styleClassFromName("Times-Roman")),
+    ).toBe(REGULAR);
+    expect(
+      findFontForChar("p", ctxFor(m), 0, styleClassFromName("Times-Bold")),
+    ).toBe(BOLD);
   });
 
   it("still offers a Type 3 face - the emit path gates it on a measurable advance", () => {

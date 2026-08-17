@@ -271,6 +271,11 @@ export function fontStyleClass(
 ): FontStyleClass | null {
   const name = readFontName(m, fontPtr);
   if (!name) return null;
+  return styleClassFromName(name);
+}
+
+/** Same classification from a font FAMILY name (base-14 or device font). */
+export function styleClassFromName(name: string): FontStyleClass {
   return {
     bold: /bold|black|heavy|semibold|demi/i.test(name),
     italic: /italic|oblique/i.test(name),
@@ -338,12 +343,17 @@ export function findFontForChar(
   // When given, only fonts with the SAME bold/italic class as this one are
   // accepted, so a borrowed glyph never changes the run's weight or slant.
   likeFontPtr?: number,
+  // Used when there is no source font handle to read a style from - notably on
+  // the undo path, which re-emits with `originalFontPtr: 0`. Without it the
+  // borrow is unconstrained again and restored body text comes back bold.
+  likeStyle?: FontStyleClass | null,
 ): number | null {
   if (!unicodeChar) return null;
   const cp = unicodeChar.codePointAt(0);
   if (cp === undefined) return null;
   const m = ctx.module;
-  const want = likeFontPtr ? fontStyleClass(m, likeFontPtr) : null;
+  const want =
+    (likeFontPtr ? fontStyleClass(m, likeFontPtr) : null) ?? likeStyle ?? null;
   // The style is part of the answer, so it must be part of the cache key.
   const styleK = want
     ? `${want.bold ? "b" : ""}${want.italic ? "i" : ""}|`
