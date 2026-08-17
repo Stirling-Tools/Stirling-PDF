@@ -96,6 +96,7 @@ export const addWatermarkOperationConfig = defineSingleFileTool({
   operationType: "watermark",
   endpoint: ENDPOINT,
   defaultParameters,
+  fileFields: [{ field: "watermarkImage", param: "watermarkImage" }],
 });
 
 export const useAddWatermarkOperation = () => {

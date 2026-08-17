@@ -52,6 +52,8 @@ export interface ExecutableTool {
    */
   endpoints?: readonly ToolEndpoint[];
   support: ToolStepSupport;
+  /** Whether the tool takes supporting files beyond its primary document (per its declared fileFields). */
+  acceptsFiles: boolean;
 }
 
 /**
@@ -67,7 +69,7 @@ export interface ToolApiStep {
    * `asset:<id>[,<id>]` (stored supporting files) or a run-supplied key. Absent when the step needs
    * no supporting file. Mirrors the wire {@code PipelineStep.fileParameters}.
    */
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** A step being edited in a UI that maps to a known tool: parameters are in the tool's frontend shape. */
@@ -81,7 +83,7 @@ export interface KnownToolStep {
    * round-trips them without the user re-picking. A field the user re-picks lands in `params` as a
    * File and takes precedence on save.
    */
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** A stored step whose endpoint maps to no known tool: preserved verbatim, not editable. */
@@ -91,7 +93,7 @@ export interface UnknownToolStep {
   params: ErasedToolParams;
   support: "unknown";
   /** Supporting-file bindings preserved verbatim, so an unknown step's files round-trip untouched. */
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** A step being edited in a UI, discriminated by whether its endpoint maps to a known tool. */
@@ -149,26 +151,37 @@ function isFileValue(value: unknown): boolean {
 }
 
 /**
- * The `fileParameters` binding format shared with the backend (see PolicyAssetRefs): a value of
- * `asset:<id>[,<id>...]` names stored supporting files loaded at run time; any other value names a
- * file supplied with the run itself. This module owns the frontend side of the step contract, so the
- * format lives here and the builder/settings reuse it.
+ * A stored supporting-file id, as returned by the asset store.
+ */
+declare const ASSET_ID_BRAND: unique symbol;
+export type AssetId = string & { readonly [ASSET_ID_BRAND]: never };
+
+/**
+ * A step's supporting-file bindings: each backend file field (e.g. `stampImage`) mapped to its file.
+ * A value of `asset:<id>[,<id>]` names stored assets loaded at run time; any other value is a key for
+ * a file supplied with the run itself.
+ */
+export type SupportingFileBindings = Record<string, string>;
+
+/**
+ * The `fileParameters` binding format shared with the backend (see PolicyAssetRefs). This module owns
+ * the frontend side of the step contract, so the format lives here and the builder/settings reuse it.
  */
 export const ASSET_REF_PREFIX = "asset:";
 
 /** A `fileParameters` value binding one tool file field to the given stored asset ids. */
-export function assetRef(ids: string[]): string {
+export function assetRef(ids: readonly AssetId[]): string {
   return ASSET_REF_PREFIX + ids.join(",");
 }
 
 /** The stored asset ids inside a binding value, or none when it isn't an `asset:` ref. */
-export function assetRefIds(binding: string): string[] {
+export function assetRefIds(binding: string): AssetId[] {
   if (!binding.startsWith(ASSET_REF_PREFIX)) return [];
   return binding
     .slice(ASSET_REF_PREFIX.length)
     .split(",")
     .map((id) => id.trim())
-    .filter(Boolean);
+    .filter(Boolean) as AssetId[];
 }
 
 /** buildFormData with a loose file argument, so we can probe single- and multi-file tools alike. */
@@ -216,10 +229,11 @@ function mergedStepParams(
 
 /**
  * The step's params with a stand-in File array injected for each stored binding whose field has no
- * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. The array
- * is sized to the binding's asset count (overlay validates count == file count). Sentinels are empty
- * and live only in this local object - they are never written back to step.params, so they can never
- * be uploaded.
+ * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. The tool's
+ * declared {@link ToolFileField}s map each backend field to the param that holds it, so the sentinel
+ * lands on the right param without assuming field and param share a name. The array is sized to the
+ * binding's asset count (overlay validates count == file count). Sentinels are empty and live only in
+ * this local object - never written back to step.params, so they can never be uploaded.
  */
 function withStoredFileSentinels(
   step: WorkingToolStep,
@@ -227,11 +241,13 @@ function withStoredFileSentinels(
 ): ErasedToolParams {
   const merged = mergedStepParams(step, config);
   const bindings = step.fileParameters;
-  if (!bindings || typeof File === "undefined") return merged;
-  for (const [field, binding] of Object.entries(bindings)) {
-    if (isFileValue(merged[field])) continue; // a fresh pick already stands in
+  const fileFields = config.fileFields;
+  if (!bindings || !fileFields || typeof File === "undefined") return merged;
+  for (const { field, param } of fileFields) {
+    const binding = bindings[field];
+    if (binding == null || isFileValue(merged[param])) continue; // unbound, or a fresh pick stands in
     const count = Math.max(1, assetRefIds(binding).length);
-    merged[field] = Array.from({ length: count }, () => new File([], "stored"));
+    merged[param] = Array.from({ length: count }, () => new File([], "stored"));
   }
   return merged;
 }
@@ -334,6 +350,7 @@ export function getExecutableTools(
       endpoint,
       endpoints: config.endpoints,
       support: classifyToolStepSupport(entry),
+      acceptsFiles: (config.fileFields?.length ?? 0) > 0,
     });
   }
   return tools.sort((a, b) => a.name.localeCompare(b.name));

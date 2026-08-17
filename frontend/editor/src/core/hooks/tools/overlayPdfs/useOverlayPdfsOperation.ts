@@ -68,6 +68,9 @@ export const overlayPdfsOperationConfig: ToolOperationConfig<OverlayPdfsParamete
     fromApiParams: overlayPdfsFromApiParams,
     operationType: "overlayPdfs",
     endpoint: ENDPOINT,
+    fileFields: [
+      { field: "overlayFiles", param: "overlayFiles", multiple: true },
+    ],
   });
 
 export const useOverlayPdfsOperation = () => {

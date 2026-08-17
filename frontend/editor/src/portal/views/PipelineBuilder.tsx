@@ -27,7 +27,9 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   updateWorkingStepParams,
+  type AssetId,
   type ExecutableTool,
+  type SupportingFileBindings,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import {
@@ -719,10 +721,10 @@ export function PipelineBuilder() {
     const wireSteps: PipelineStep[] = [];
     for (const step of steps) {
       const { operation, parameters } = serializeToolStep(step, allTools);
-      const bindings: Record<string, string> = {};
+      const bindings: SupportingFileBindings = {};
       const fresh = extractStepFiles(step, allTools);
       for (const [field, files] of Object.entries(fresh)) {
-        const ids: string[] = [];
+        const ids: AssetId[] = [];
         for (const file of files) {
           ids.push((await uploadPipelineAsset(file)).id);
         }
@@ -848,7 +850,7 @@ export function PipelineBuilder() {
       const { operation, parameters } = serializeToolStep(step, allTools);
       const fresh = extractStepFiles(step, allTools);
       const stored = step.fileParameters ?? {};
-      const fileParameters: Record<string, string> = {};
+      const fileParameters: SupportingFileBindings = {};
       for (const field of activeFileFields(step, allTools)) {
         const files =
           fresh[field] ?? (await storedTestFiles(stored[field] ?? ""));

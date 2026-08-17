@@ -13,6 +13,7 @@ const tools: ExecutableTool[] = [
     subcategoryId: SubcategoryId.GENERAL,
     endpoint: "/api/v1/general/merge-pdfs",
     support: "noSettings",
+    acceptsFiles: false,
   },
   {
     toolId: "split",
@@ -21,6 +22,7 @@ const tools: ExecutableTool[] = [
     subcategoryId: SubcategoryId.GENERAL,
     endpoint: "/api/v1/general/split-pages",
     support: "editable",
+    acceptsFiles: false,
   },
   {
     toolId: "watermark",
@@ -29,6 +31,7 @@ const tools: ExecutableTool[] = [
     subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
     endpoint: "/api/v1/security/add-watermark",
     support: "editable",
+    acceptsFiles: true,
   },
   {
     toolId: "removePassword",
@@ -37,6 +40,7 @@ const tools: ExecutableTool[] = [
     subcategoryId: SubcategoryId.DOCUMENT_SECURITY,
     endpoint: "/api/v1/security/remove-password",
     support: "editable",
+    acceptsFiles: false,
   },
   {
     toolId: "ocr",
@@ -45,6 +49,7 @@ const tools: ExecutableTool[] = [
     subcategoryId: SubcategoryId.EXTRACTION,
     endpoint: "/api/v1/misc/ocr-pdf",
     support: "editable",
+    acceptsFiles: false,
   },
 ];
 

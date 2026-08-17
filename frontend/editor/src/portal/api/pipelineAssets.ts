@@ -1,4 +1,7 @@
 import { apiClient } from "@portal/api/http";
+import { type AssetId } from "@app/hooks/tools/shared/toolAutomation";
+
+export { type AssetId };
 
 /**
  * Stored supporting files for pipeline steps (backend PolicyAssetController).
@@ -15,7 +18,7 @@ import { apiClient } from "@portal/api/http";
 
 /** Metadata for one stored supporting file. Mirrors the Java `PolicyAsset` record. */
 export interface PolicyAsset {
-  id: string;
+  id: AssetId;
   fileName: string;
   contentType: string | null;
   size: number;

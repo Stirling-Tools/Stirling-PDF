@@ -1,5 +1,8 @@
 import { apiClient } from "@portal/api/http";
-import { type ToolApiStep } from "@app/hooks/tools/shared/toolAutomation";
+import {
+  type SupportingFileBindings,
+  type ToolApiStep,
+} from "@app/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -15,7 +18,7 @@ import { type ToolApiStep } from "@app/hooks/tools/shared/toolAutomation";
 export interface PipelineStep {
   operation: string;
   parameters: Record<string, unknown>;
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** When a policy input fires automatically. `type` keys a trigger bean (e.g. "schedule"). */

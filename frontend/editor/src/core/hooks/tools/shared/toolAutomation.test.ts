@@ -527,4 +527,26 @@ describe("supporting files", () => {
     expect(activeFileFields(step, fileRegistry)).toEqual(["overlayFiles"]);
     expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
   });
+
+  test("tools declare their supporting-file fields", () => {
+    expect(overlayPdfsOperationConfig.fileFields).toEqual([
+      { field: "overlayFiles", param: "overlayFiles", multiple: true },
+    ]);
+    expect(certSignOperationConfig.fileFields?.map((f) => f.field)).toEqual([
+      "privateKeyFile",
+      "certFile",
+      "p12File",
+      "jksFile",
+    ]);
+  });
+
+  test("getExecutableTools flags whether a tool accepts supporting files", () => {
+    const byId = Object.fromEntries(
+      getExecutableTools(fileRegistry).map((tool) => [
+        tool.toolId,
+        tool.acceptsFiles,
+      ]),
+    );
+    expect(byId).toEqual({ overlayPdfs: true, certSign: true });
+  });
 });

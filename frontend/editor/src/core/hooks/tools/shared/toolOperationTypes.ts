@@ -46,6 +46,33 @@ export interface CustomProcessorResult {
 }
 
 /**
+ * The parameter keys that carry a supporting file - a `File` or `File[]` value the tool sends
+ * beyond its primary document. Derived from the tool's own parameter type, so a file field can only
+ * ever be declared against a param that genuinely holds a file.
+ */
+export type FileParamKey<TParams> = {
+  [K in keyof TParams]-?: NonNullable<TParams[K]> extends File | File[]
+    ? K
+    : never;
+}[keyof TParams] &
+  string;
+
+/**
+ * A supporting-file field a tool sends alongside its primary document: the backend multipart field
+ * name and the (file-typed) parameter that holds the File(s). Declaring these is what makes "which
+ * tools accept extra files, and which of their params are files" known to the type system and
+ * inspectable at runtime, instead of inferred by probing buildFormData.
+ */
+export interface ToolFileField<TParams> {
+  /** The backend multipart field the file is sent under (e.g. "stampImage", "overlayFiles"). */
+  field: string;
+  /** The parameter holding the File(s); the type system enforces this is a file param of the tool. */
+  param: FileParamKey<TParams>;
+  /** True when the field carries several files (a `File[]` parameter). */
+  multiple?: boolean;
+}
+
+/**
  * Configuration for tool operations defining processing behavior and API integration.
  *
  * Supports three patterns:
@@ -78,6 +105,15 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * The supporting-file fields this tool sends beyond its primary document (a signing certificate, a
+   * watermark image, overlay PDFs, ...). Declaring them lets a step composer know a tool takes extra
+   * files and which params hold them, and keeps stored-asset bindings mapped to the right param
+   * without assuming the field and param share a name. Omitted by tools that take only their primary
+   * document. buildFormData stays the authority on which of these are sent for a given set of params.
+   */
+  fileFields?: readonly ToolFileField<TParams>[];
 
   /**
    * Whether these parameters are complete enough to run. The same predicate a tool gives
