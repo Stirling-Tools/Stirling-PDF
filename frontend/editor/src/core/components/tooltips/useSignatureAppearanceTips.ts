@@ -137,7 +137,7 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
           ),
           t(
             "certSign.appearance.tooltip.logo.bullet4",
-            "The text keeps its share of the box, however wide the logo is",
+            "It takes whatever room the fields can spare, so a bigger box shows it bigger",
           ),
         ],
       },

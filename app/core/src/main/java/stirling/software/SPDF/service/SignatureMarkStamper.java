@@ -111,7 +111,12 @@ public class SignatureMarkStamper {
             SignatureLogoPlacement.Placement placement = null;
             if (logoImage != null) {
                 placement =
-                        SignatureLogoPlacement.place(rect, aspectRatio(logoImage), logo.position());
+                        SignatureLogoPlacement.place(
+                                rect,
+                                aspectRatio(logoImage),
+                                logo.position(),
+                                SignatureAppearanceLayout.keepsTheTextIntact(
+                                        lines, font, rect.getWidth(), rect.getHeight()));
                 textArea = placement.textRect();
             }
 

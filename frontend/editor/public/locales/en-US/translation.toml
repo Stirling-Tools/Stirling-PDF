@@ -2500,7 +2500,7 @@ title = "Invisible Signatures"
 bullet1 = "PNG or JPEG; the image keeps its proportions, never stretched"
 bullet2 = "Put it beside the text, above it, below it, or behind it"
 bullet3 = "Behind draws it as a faded watermark, so the text stays readable on top"
-bullet4 = "The text keeps its share of the box, however wide the logo is"
+bullet4 = "It takes whatever room the fields can spare, so a bigger box shows it bigger"
 text = "Upload your organisation's logo to show it inside the signature box, and choose where it sits. Leave it empty and the built-in Stirling PDF mark is used instead."
 title = "Adding Your Logo"
 

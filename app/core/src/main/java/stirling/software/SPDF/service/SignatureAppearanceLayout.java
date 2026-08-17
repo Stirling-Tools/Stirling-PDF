@@ -32,7 +32,57 @@ public final class SignatureAppearanceLayout {
     /** Padding between the text and the edges of the box, as a multiple of the font size. */
     private static final float PADDING_RATIO = 0.4f;
 
+    /**
+     * How much of the box the text may give up before the signature stops being one.
+     *
+     * <p>Some shrinking is a fair trade for a logo that can actually be seen; below this the
+     * signature reads as small print, and the fields it exists to show stop being the point.
+     */
+    private static final float TEXT_SIZE_FLOOR = 0.75f;
+
     private SignatureAppearanceLayout() {}
+
+    /**
+     * Whether a set of lines still renders acceptably in an area of the given size.
+     *
+     * <p>Exists so the logo can be sized by what the text actually needs instead of by a fixed
+     * share of the box. The rule lives here because this is the class that decides how text fits;
+     * {@link SignatureLogoPlacement} only asks the question.
+     */
+    @FunctionalInterface
+    public interface TextFit {
+
+        /** For callers with no text to protect: any area will do. */
+        TextFit ANY = (width, height) -> true;
+
+        boolean fits(float width, float height) throws IOException;
+    }
+
+    /**
+     * A test that passes while the text loses nothing it would have had with the whole box.
+     *
+     * <p>"Nothing" means two things, and both matter. A line dropped is a certificate field the
+     * signer asked for and no longer gets, so no candidate may cost one. And type that has shrunk
+     * past {@link #TEXT_SIZE_FLOOR} of what it would have been is a signature you have to squint
+     * at, which is not a trade worth making for a bigger picture.
+     *
+     * @param entries the label/value pairs the signature will show
+     * @param font the font they will be drawn with
+     * @param boxWidth full box width in points
+     * @param boxHeight full box height in points
+     */
+    public static TextFit keepsTheTextIntact(
+            Map<String, String> entries, PDFont font, float boxWidth, float boxHeight)
+            throws IOException {
+        Layout whole = fit(entries, font, boxWidth, boxHeight);
+        int wanted = whole.lines().size();
+        float smallestAcceptable = whole.fontSize() * TEXT_SIZE_FLOOR;
+
+        return (width, height) -> {
+            Layout candidate = fit(entries, font, width, height);
+            return candidate.lines().size() >= wanted && candidate.fontSize() >= smallestAcceptable;
+        };
+    }
 
     /**
      * The chosen type size and the lines that fit at it.

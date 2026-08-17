@@ -645,8 +645,19 @@ public class CertSignController {
                             cs.restoreGraphicsState();
                         } else {
                             SignatureLogoPosition position = logoPosition();
+                            // Sized by what the fields actually need, not by a fixed share: a
+                            // box with room to spare gives the logo more, and a cramped one
+                            // gives it less rather than costing the signer a line.
                             SignatureLogoPlacement.Placement placement =
-                                    SignatureLogoPlacement.place(bbox, aspectRatio(img), position);
+                                    SignatureLogoPlacement.place(
+                                            bbox,
+                                            aspectRatio(img),
+                                            position,
+                                            SignatureAppearanceLayout.keepsTheTextIntact(
+                                                    displayLines(signature, visibleAttributes),
+                                                    font,
+                                                    bbox.getWidth(),
+                                                    bbox.getHeight()));
                             SignatureLogoPlacement.draw(
                                     cs,
                                     img,
