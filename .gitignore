@@ -39,6 +39,7 @@ exampleYmlFiles/stirling/
 /testing/file_snapshots
 /testing/cucumber/junit/
 /testing/cucumber/report.html
+/testing/cucumber/.parallel/
 /testing/.failed_tests
 /.test-state/
 SwaggerDoc.json

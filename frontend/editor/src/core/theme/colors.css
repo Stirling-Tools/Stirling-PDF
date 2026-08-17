@@ -32,6 +32,9 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  /* Accent used as TEXT (links, toggles): a deeper hue that clears 4.5:1 on
+     light surfaces, where --c-primary itself does not. */
+  --c-accent-text: var(--p-blue-700);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
@@ -145,6 +148,8 @@ html[data-app-theme="midnight"] {
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
+  --c-accent-text: var(--p-blue-400);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
