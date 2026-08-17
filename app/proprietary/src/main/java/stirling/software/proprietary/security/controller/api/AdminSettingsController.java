@@ -364,10 +364,12 @@ public class AdminSettingsController {
                 }
             }
 
+            Map<String, Object> flattened = new LinkedHashMap<>();
+            flattenSectionData(sectionName, sectionData, flattened);
+
             int updatedCount = 0;
-            for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
-                String propertyKey = entry.getKey();
-                String fullKey = sectionName + "." + propertyKey;
+            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
+                String fullKey = entry.getKey();
                 Object value = entry.getValue();
 
                 if (!isValidSettingKey(fullKey)) {
@@ -1023,6 +1025,26 @@ public class AdminSettingsController {
         }
 
         return result;
+    }
+
+    /**
+     * Flattens a section payload to dotted leaf keys. The UI submits only the fields it changed, so
+     * a nested block arrives as a partial map - keeping it whole would make {@link #pendingChanges}
+     * forget the siblings a previous save of the same block set.
+     */
+    private void flattenSectionData(
+            String prefix, Map<String, Object> sectionData, Map<String, Object> flattened) {
+        for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
+            String key = prefix + "." + entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Map<?, ?> nested && !nested.isEmpty()) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) nested;
+                flattenSectionData(key, nestedMap, flattened);
+            } else {
+                flattened.put(key, value);
+            }
+        }
     }
 
     /**

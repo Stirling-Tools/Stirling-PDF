@@ -136,8 +136,17 @@ public class YamlHelper {
                 } else if ("true".equals(newValue) || "false".equals(newValue)) {
                     newValueNode =
                             new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
+                } else if (newValue instanceof Map<?, ?> map
+                        && valueNode instanceof MappingNode existingMapping) {
+                    // Merge into the existing block instead of replacing it: callers send
+                    // partial maps (the admin UI only submits changed fields), so replacing
+                    // would delete every sibling key and reset it to the template default.
+                    mergeIntoMappingNode(existingMapping, map);
+                    updatedTuples.add(tuple);
+                    updated = true;
+                    continue;
                 } else if (newValue instanceof Map<?, ?> map) {
-                    // Handle Map objects - convert to MappingNode
+                    // No existing block to merge into - build one from scratch
                     List<NodeTuple> mapTuples = new ArrayList<>();
                     for (Map.Entry<?, ?> entry : map.entrySet()) {
                         ScalarNode mapKeyNode =
@@ -194,6 +203,25 @@ public class YamlHelper {
         updatedRootNode = node;
 
         return updated;
+    }
+
+    /**
+     * Applies each entry of {@code values} onto {@code target} in place, keeping any key of {@code
+     * target} the map does not mention (along with its comments). Keys absent from {@code target}
+     * are appended.
+     */
+    private void mergeIntoMappingNode(MappingNode target, Map<?, ?> values) {
+        for (Map.Entry<?, ?> entry : values.entrySet()) {
+            String key = String.valueOf(entry.getKey());
+            if (updateValue(target, List.of(key), entry.getValue())) {
+                continue;
+            }
+            target.getValue()
+                    .add(
+                            new NodeTuple(
+                                    new ScalarNode(Tag.STR, key, ScalarStyle.PLAIN),
+                                    convertValueToNode(entry.getValue())));
+        }
     }
 
     /**
