@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 
 const meta = {
-  title: "Shared/InfoBanner",
-  component: InfoBanner,
+  title: "Shared/AppBanner",
+  component: AppBanner,
   parameters: { layout: "fullscreen" },
-} satisfies Meta<typeof InfoBanner>;
+} satisfies Meta<typeof AppBanner>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -116,7 +116,7 @@ export const AllTopBars: Story = {
       }}
     >
       <Row caption="Upgrade prompt · UpgradeBanner (friendly)">
-        <InfoBanner
+        <AppBanner
           tone="promo"
           compact
           icon="stars-rounded"
@@ -129,7 +129,7 @@ export const AllTopBars: Story = {
       </Row>
 
       <Row caption="Server needs attention · UpgradeBanner (urgent)">
-        <InfoBanner
+        <AppBanner
           tone="warning"
           icon="warning-rounded"
           title="This server needs admin attention"
@@ -142,7 +142,7 @@ export const AllTopBars: Story = {
       </Row>
 
       <Row caption="Free tier limit reached · AdminPlanSection">
-        <InfoBanner
+        <AppBanner
           tone="warning"
           icon="warning-rounded"
           title="Free self-hosted limit reached"
@@ -155,7 +155,7 @@ export const AllTopBars: Story = {
       </Row>
 
       <Row caption="Team invitation · TeamInvitationBanner">
-        <InfoBanner
+        <AppBanner
           icon="mail"
           message="You have been invited to join the Acme Legal team."
           buttonText="Accept"
@@ -167,7 +167,7 @@ export const AllTopBars: Story = {
       </Row>
 
       <Row caption="Set as default app · DefaultAppBanner (desktop)">
-        <InfoBanner
+        <AppBanner
           icon="picture-as-pdf-rounded"
           message="Make Stirling PDF your default application for opening PDF files."
           buttonText="Set Default"
@@ -178,7 +178,7 @@ export const AllTopBars: Story = {
       </Row>
 
       <Row caption="Danger tone (available, no caller yet)">
-        <InfoBanner
+        <AppBanner
           tone="danger"
           icon="warning-rounded"
           title="Storage is full"

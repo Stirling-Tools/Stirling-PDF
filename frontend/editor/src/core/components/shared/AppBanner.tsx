@@ -3,10 +3,10 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import "@app/components/shared/InfoBanner.css";
+import "@app/components/shared/AppBanner.css";
 
 /** Picks the whole look. Callers choose meaning, never colours. */
-export type InfoBannerTone = "info" | "promo" | "warning" | "danger";
+export type AppBannerTone = "info" | "promo" | "warning" | "danger";
 
 /** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
 const TONE_BUTTON = {
@@ -16,7 +16,7 @@ const TONE_BUTTON = {
   danger: { variant: "primary", accent: "danger" },
 } as const;
 
-interface InfoBannerProps {
+interface AppBannerProps {
   /** A LocalIcon name, or a pre-rendered node (e.g. a logo) dropped in as-is. */
   icon?: string | ReactNode;
   title?: ReactNode;
@@ -31,12 +31,12 @@ interface InfoBannerProps {
   dismissible?: boolean;
   loading?: boolean;
   show?: boolean;
-  tone?: InfoBannerTone;
+  tone?: AppBannerTone;
   compact?: boolean;
 }
 
 /** The app's top bar: dismissible messaging above the workspace. */
-export const InfoBanner: React.FC<InfoBannerProps> = ({
+export const AppBanner: React.FC<AppBannerProps> = ({
   icon,
   title,
   message,
@@ -113,7 +113,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             accent="neutral"
             size="sm"
             onClick={() => onDismiss?.()}
-            aria-label={t("infoBanner.dismiss", "Dismiss")}
+            aria-label={t("appBanner.dismiss", "Dismiss")}
           >
             <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
           </ActionIcon>

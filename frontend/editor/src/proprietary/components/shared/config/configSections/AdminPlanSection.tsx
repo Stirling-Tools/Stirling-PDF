@@ -12,7 +12,7 @@ import AvailablePlansSection from "@app/components/shared/config/configSections/
 import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { alert } from "@app/components/toast";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import {
   getPreferredCurrency,
@@ -200,7 +200,7 @@ const AdminPlanSection: React.FC = () => {
       <LoginRequiredBanner show={!loginEnabled} />
 
       {shouldShowLicenseWarning && (
-        <InfoBanner
+        <AppBanner
           icon="warning-rounded"
           tone="warning"
           title={t(

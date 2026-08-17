@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@core/constants/routes";
 import { useCheckout } from "@app/contexts/CheckoutContext";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
@@ -300,7 +300,7 @@ const UpgradeBanner: React.FC = () => {
         );
 
     return (
-      <InfoBanner
+      <AppBanner
         icon="warning-rounded"
         tone="warning"
         title={t(
@@ -334,7 +334,7 @@ const UpgradeBanner: React.FC = () => {
   return (
     <>
       {friendlyVisible && (
-        <InfoBanner
+        <AppBanner
           icon="stars-rounded"
           title={t("upgradeBanner.title", "Upgrade to Server Plan")}
           message={t(
