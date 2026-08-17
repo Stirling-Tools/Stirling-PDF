@@ -134,6 +134,23 @@ function canEverThumbnail(name: string): boolean {
 }
 
 /**
+ * The disk-listed file's already-rendered thumbnail, if the listing produced
+ * one — so opening the file elsewhere can adopt it instead of re-rendering.
+ * A cached "" (failed render) is not a thumbnail and reads as absent.
+ */
+export function getCachedDiskThumbnail(entry: {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  lastModified: number;
+}): string | undefined {
+  const hit = diskThumbCache.get(
+    `${entry.path}|${entry.lastModified}|${entry.sizeBytes}`,
+  );
+  return hit ? hit : undefined;
+}
+
+/**
  * Thumbnail for a disk-listed file, through the same generator and the same
  * concurrency gate as stored files — a mounted folder's rows fill in
  * progressively alongside everything else instead of stampeding the disk.

@@ -267,6 +267,8 @@ function FileContextInner({
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
+        /** Already-rendered display thumbnails, keyed by File instance. */
+        precomputedThumbnails?: Map<File, string>;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

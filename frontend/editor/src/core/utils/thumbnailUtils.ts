@@ -157,6 +157,7 @@ async function renderPdfThumbnailPairPdfium(
   data: ArrayBuffer,
   scale: number,
   collectAllPagesMetadata: boolean,
+  precomputedRotatedThumbnail?: string,
 ): Promise<{ unrotated: PdfiumRenderResult; rotated: PdfiumRenderResult }> {
   const m = await getPdfiumModule();
   let docPtr: number;
@@ -181,17 +182,34 @@ async function renderPdfThumbnailPairPdfium(
 
   try {
     const pageCount = m.FPDF_GetPageCount(docPtr);
-    const unrotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
-      applyRotation: false,
-    });
-    const rotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
-      applyRotation: true,
-    });
+    const firstMeta = await readPdfiumPageMetadata(docPtr, 0);
+
+    // A caller that already rendered this document's display thumbnail (the
+    // disk view, whose cache keys never reach this layer) supplies it instead
+    // of paying for the same rasterisation again. It is the rotated variant;
+    // when page 0 carries no rotation the two variants are identical, so one
+    // image serves both and no rendering happens at all.
+    let unrotatedThumb: string | null;
+    let rotatedThumb: string | null;
+    if (precomputedRotatedThumbnail) {
+      rotatedThumb = precomputedRotatedThumbnail;
+      unrotatedThumb =
+        (firstMeta?.rotation ?? 0) === 0
+          ? precomputedRotatedThumbnail
+          : await renderPdfiumPageDataUrl(docPtr, 0, scale, {
+              applyRotation: false,
+            });
+    } else {
+      unrotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
+        applyRotation: false,
+      });
+      rotatedThumb = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
+        applyRotation: true,
+      });
+    }
     if (!unrotatedThumb || !rotatedThumb) {
       throw new Error("PDFium: failed to render page 0");
     }
-
-    const firstMeta = await readPdfiumPageMetadata(docPtr, 0);
     const pageRotations: number[] = [firstMeta?.rotation ?? 0];
     const pageDimensions: Array<{ width: number; height: number }> = [
       { width: firstMeta?.width ?? 0, height: firstMeta?.height ?? 0 },
@@ -362,7 +380,13 @@ export async function generateThumbnailWithMetadata(
  * Large PDFs only get the linearized-prefix attempt; if that fails, both
  * variants are empty placeholders and page metadata is omitted.
  */
-export async function generateThumbnailPairWithMetadata(file: File): Promise<{
+export async function generateThumbnailPairWithMetadata(
+  file: File,
+  options?: {
+    /** An already-rendered rotated (display) thumbnail to adopt instead of re-rendering. */
+    precomputedRotatedThumbnail?: string;
+  },
+): Promise<{
   unrotated: ThumbnailWithMetadata;
   rotated: ThumbnailWithMetadata;
 }> {
@@ -382,7 +406,12 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
       : await file.arrayBuffer();
-    const pair = await renderPdfThumbnailPairPdfium(buffer, scale, !isLarge);
+    const pair = await renderPdfThumbnailPairPdfium(
+      buffer,
+      scale,
+      !isLarge,
+      options?.precomputedRotatedThumbnail,
+    );
 
     const toPublic = (r: PdfiumRenderResult): ThumbnailWithMetadata =>
       r.isEncrypted

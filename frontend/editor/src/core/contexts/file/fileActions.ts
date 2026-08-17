@@ -121,6 +121,10 @@ export function createProcessedFile(
  */
 export async function generateProcessedFileMetadata(
   file: File,
+  options?: {
+    /** An already-rendered display thumbnail to adopt instead of re-rendering. */
+    precomputedRotatedThumbnail?: string;
+  },
 ): Promise<ProcessedFileMetadata | undefined> {
   // Only generate metadata for PDF files
   if (!file.type.startsWith("application/pdf")) {
@@ -131,7 +135,7 @@ export async function generateProcessedFileMetadata(
     // One parse produces both variants: unrotated thumbnails for PageEditor
     // (rotation applied via CSS) and the rotated one for file manager display.
     const { unrotated: unrotatedResult, rotated: rotatedResult } =
-      await generateThumbnailPairWithMetadata(file);
+      await generateThumbnailPairWithMetadata(file, options);
 
     // Large PDF whose linearized-prefix attempt failed: report "no metadata"
     // (the tolerated failure shape) rather than a bogus zero-page document.
@@ -250,6 +254,14 @@ interface AddFileOptions {
     thumbnail?: string;
     pageCount?: number;
   }>;
+
+  /**
+   * Already-rendered display thumbnails, keyed by the exact File instance
+   * being added. Hydration adopts one instead of re-rendering — for files
+   * whose thumbnail another view (a mounted folder's listing) has just
+   * produced. Metadata is still parsed; only the rasterisation is skipped.
+   */
+  precomputedThumbnails?: Map<File, string>;
 
   // Insertion position
   insertAfterPageId?: string;
@@ -524,8 +536,13 @@ export async function addFiles(
             // here would just duplicate work. Metadata is refreshed after unlock.
             processedFileMetadata = fileStub.processedFile;
           } else {
-            processedFileMetadata =
-              await generateProcessedFileMetadata(targetFile);
+            processedFileMetadata = await generateProcessedFileMetadata(
+              targetFile,
+              {
+                precomputedRotatedThumbnail:
+                  options.precomputedThumbnails?.get(targetFile),
+              },
+            );
             thumbnail = processedFileMetadata?.thumbnailUrl;
           }
         } else {

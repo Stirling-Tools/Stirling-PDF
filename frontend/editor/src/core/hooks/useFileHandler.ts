@@ -13,6 +13,8 @@ export const useFileHandler = () => {
         selectFiles?: boolean;
         /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
+        /** Already-rendered display thumbnails, keyed by File instance. */
+        precomputedThumbnails?: Map<File, string>;
       } = {},
     ): Promise<StirlingFile[]> => {
       // Merge default options with passed options - passed options take precedence

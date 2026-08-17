@@ -46,6 +46,10 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFileManagement } from "@app/contexts/FileContext";
+import { getCachedDiskThumbnail } from "@app/hooks/useLazyThumbnail";
+import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
+import { fileStorage } from "@app/services/fileStorage";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -577,13 +581,34 @@ export default function FileManagerView() {
 
   // Opening a disk file loads its bytes into the workbench — the one moment
   // anything leaves the disk, and only because the user asked to work on it.
+  const { updateStirlingFileStub } = useFileManagement();
   const openDiskFile = useCallback(
     async (entry: DiskFileEntry) => {
       try {
         const file = await readDiskFile(entry);
         if (!file) return;
         clearFilesPageReturnRoute();
-        await addFiles([file], { selectFiles: true });
+        // The listing usually rendered this file's thumbnail already; hand it
+        // through so the workbench adopts it instead of rasterising again.
+        const cachedThumb = getCachedDiskThumbnail(entry);
+        const added = await addFiles([file], {
+          selectFiles: true,
+          ...(cachedThumb
+            ? { precomputedThumbnails: new Map([[file as File, cachedThumb]]) }
+            : {}),
+        });
+        // A processed file carries its labels in its own metadata; stamping
+        // them here puts it in its category the moment it appears, instead of
+        // whenever the lazy backfill gets around to re-reading the PDF.
+        const stirlingFile = added[0];
+        if (stirlingFile) {
+          const labels = await readClassificationLabelsFromFile(file);
+          if (labels && labels.length > 0) {
+            const updates = { classificationLabels: labels };
+            updateStirlingFileStub(stirlingFile.fileId, updates);
+            void fileStorage.updateFileMetadata(stirlingFile.fileId, updates);
+          }
+        }
         navActions.setWorkbench("viewer");
         navigate("/");
       } catch (err) {
@@ -594,7 +619,7 @@ export default function FileManagerView() {
         );
       }
     },
-    [addFiles, navActions, navigate, folders],
+    [addFiles, updateStirlingFileStub, navActions, navigate, folders],
   );
 
   const entries = useMemo<FilesPageEntry[]>(() => {
