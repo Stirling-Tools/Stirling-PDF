@@ -10,6 +10,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ./stirling/data:/usr/share/tessdata:rw
       - ./stirling/config:/configs:rw
       - ./stirling/logs:/logs:rw
       - ./stirling/customFiles:/customFiles:rw

@@ -65,6 +65,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ../../../stirling/keycloak-oauth-test/data:/usr/share/tessdata:rw
       - ../../../stirling/keycloak-oauth-test/config:/configs:rw
       - ../../../stirling/keycloak-oauth-test/logs:/logs:rw
     environment:

@@ -65,6 +65,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ../../../stirling/keycloak-mcp-test/data:/usr/share/tessdata:rw
       - ../../../stirling/keycloak-mcp-test/config:/configs:rw
       - ../../../stirling/keycloak-mcp-test/logs:/logs:rw
     environment:
