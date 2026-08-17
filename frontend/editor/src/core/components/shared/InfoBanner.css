@@ -43,9 +43,9 @@
   color: var(--sui-banner-text);
 }
 
-/* Separates the premium CTA from the gradient it sits on. */
+/* Lifts the premium CTA off the gradient it sits on. */
 .sui-banner--promo .sui-banner__actions .sui-btn--primary {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .sui-banner--warning {
