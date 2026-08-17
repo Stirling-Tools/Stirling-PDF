@@ -6,6 +6,11 @@
 # copyJacocoAgent`) so the published Stirling-PDF image stays untouched and
 # we cannot accidentally ship the agent to end users.
 #
+# Compose resolves every relative bind path from the first compose file in the
+# merged command (`docker/embedded/compose/test_cicd.yml`), not from this
+# override's directory. Three `..` components therefore return to the project
+# root.
+#
 # The container appends the agent to its JVM via `JAVA_CUSTOM_OPTS`, which
 # the init script concatenates into `JAVA_TOOL_OPTIONS` for the Spring Boot
 # process. On graceful shutdown the agent writes
@@ -18,8 +23,8 @@ services:
     # so the volume mounts intentionally land on whichever service uses the
     # key "stirling-pdf" in the base file.
     volumes:
-      - ../../build/jacoco/jacocoagent.jar:/jacoco/jacocoagent.jar:ro
-      - ../../testing/cucumber-coverage:/jacoco-out:rw
+      - ../../../build/jacoco/jacocoagent.jar:/jacoco/jacocoagent.jar:ro
+      - ../../../testing/cucumber-coverage:/jacoco-out:rw
     environment:
       # append=false so an aborted re-run starts clean. dumponexit=true is
       # what flushes the .exec when SIGTERM hits the JVM (which happens on

@@ -13,6 +13,8 @@ permissions:
 jobs:
   frontend-validation:
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
@@ -20,11 +22,23 @@ jobs:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Restore frontend dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: npm-dependencies,uv-dependencies
+          metadata-hints: workflow=frontend-validation
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -109,7 +123,7 @@ jobs:
         if: always()
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          enable-cache: true
+          enable-cache: ${{ env.BORINGCACHE_ENABLED != 'true' }}
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock

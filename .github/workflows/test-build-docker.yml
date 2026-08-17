@@ -45,12 +45,17 @@ jobs:
           - docker-rev: docker/embedded/Dockerfile
             artifact-suffix: Dockerfile
             cache-scope: stirling-pdf-latest
+            boringcache-directory: .github/boringcache/docker-latest
           - docker-rev: docker/embedded/Dockerfile.ultra-lite
             artifact-suffix: Dockerfile.ultra-lite
             cache-scope: stirling-pdf-ultra-lite
+            boringcache-directory: .github/boringcache/docker-ultra-lite
           - docker-rev: docker/embedded/Dockerfile.fat
             artifact-suffix: Dockerfile.fat
             cache-scope: stirling-pdf-fat
+            boringcache-directory: .github/boringcache/docker-fat
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
@@ -59,6 +64,31 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Restore Gradle dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies
+          metadata-hints: workflow=test-build-docker,image=${{ matrix.artifact-suffix }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          metadata-hints: workflow=test-build-docker,image=${{ matrix.artifact-suffix }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -85,6 +115,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -111,7 +142,24 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Set up Docker cache with BoringCache
+        id: boringcache-docker
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22244
+          working-directory: ${{ matrix.boringcache-directory }}
+          docker-command: setup
+          metadata-hints: workflow=test-build-docker,image=${{ matrix.artifact-suffix }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Build base image locally (PR base change only)
         if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
@@ -163,12 +211,12 @@ jobs:
         if: inputs.docker-base-changed != 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha,scope=${{ matrix.cache-scope }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-from || format('type=gha,scope={0}', matrix.cache-scope) }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-to || format('type=gha,mode=max,scope={0}', matrix.cache-scope) }}
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
@@ -189,6 +237,8 @@ jobs:
 
   test-build-unoserver-image:
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
@@ -203,18 +253,34 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Set up Docker cache with BoringCache
+        id: boringcache-docker
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          working-directory: .github/boringcache/docker-unoserver
+          docker-command: setup
+          metadata-hints: workflow=test-build-docker,image=unoserver
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Build docker/unoserver/Dockerfile
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./docker/unoserver/Dockerfile
           push: false
           load: true
-          cache-from: type=gha,scope=stirling-unoserver
-          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-from || 'type=gha,scope=stirling-unoserver' }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-to || 'type=gha,mode=max,scope=stirling-unoserver' }}
           platforms: linux/amd64
           tags: stirling-unoserver:pr-test
           provenance: false

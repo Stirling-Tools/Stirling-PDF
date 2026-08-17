@@ -1,0 +1,67 @@
+workspace = "stirling-tools/stirling-pdf"
+
+[proxy]
+metadata-hints = ["project=stirling-pdf"]
+
+[entries.gradle-wrapper]
+tag = "stirling-gradle-wrapper"
+path = "~/.gradle/wrapper"
+
+[entries.gradle-modules]
+tag = "stirling-gradle-modules"
+path = "~/.gradle/caches/modules-2"
+
+# The CLI gives npm and uv project-local, cross-platform cache directories and
+# exports the matching environment variables to later workflow steps.
+[entries.npm-cache]
+tag = "stirling-npm-cache"
+
+[entries.uv-cache]
+tag = "stirling-uv-cache"
+
+[entries.cargo-registry]
+tag = "stirling-cargo-registry"
+
+[entries.cargo-git]
+tag = "stirling-cargo-git"
+
+[entries.cargo-target]
+kind = "cargo-target"
+tag = "stirling-cargo-target"
+path = "frontend/editor/src-tauri/target"
+
+[profiles.gradle-dependencies]
+entries = ["gradle-wrapper", "gradle-modules"]
+
+[profiles.npm-dependencies]
+entries = ["npm-cache"]
+
+[profiles.uv-dependencies]
+entries = ["uv-cache"]
+
+[profiles.cargo-dependencies]
+entries = ["cargo-registry", "cargo-git"]
+
+[profiles.cargo-product]
+entries = ["cargo-registry", "cargo-git", "cargo-target"]
+
+[adapters.gradle]
+tag = "stirling-gradle"
+metadata-hints = ["tool=gradle"]
+
+[adapters.sccache]
+tag = "stirling-tauri-sccache"
+metadata-hints = ["tool=sccache"]
+
+[adapters.cargo]
+profiles = ["cargo-product"]
+compiler-cache = "sccache"
+metadata-hints = ["phase=cargo"]
+command = [
+  "cargo",
+  "build",
+  "--manifest-path",
+  "frontend/editor/src-tauri/Cargo.toml",
+  "--release",
+  "--message-format=json-render-diagnostics",
+]

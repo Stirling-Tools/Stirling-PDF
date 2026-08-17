@@ -1,0 +1,5 @@
+workspace = "stirling-tools/stirling-pdf"
+
+[adapters.docker]
+tag = "stirling-docker-fat"
+metadata-hints = ["tool=oci", "image=fat"]
