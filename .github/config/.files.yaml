@@ -1,7 +1,7 @@
-# CI routing infra. Editing the top-level router (build.yml) or this filter
-# config re-runs every area's jobs, so every job-gating filter below includes
-# *ci. That makes a change to how jobs are dispatched actually exercise those
-# jobs (self-testing), instead of a router edit only matching the project filter.
+# CI routing infrastructure. Changes to the top-level router (build.yml) or
+# this filter configuration rerun every area's jobs. Every job-gating filter
+# therefore includes *ci, so routing changes exercise the jobs they affect
+# instead of matching only the project filter.
 ci: &ci
   - .github/workflows/build.yml
   - .github/config/.files.yaml
@@ -24,9 +24,9 @@ openapi: &openapi
 docker-base: &docker-base
   - docker/base/Dockerfile
 
-# Dockerfiles only (base + embedded + unoserver). Gates the slow multi-arch
-# (arm64) leg of the PR docker test build: arm64 is only rebuilt when a
-# Dockerfile itself changes, not on every code PR.
+# Dockerfiles only (base, embedded, and unoserver). The slow multi-architecture
+# (arm64) leg of the PR Docker test build runs only when a Dockerfile changes,
+# rather than for every code PR.
 dockerfiles: &dockerfiles
   - docker/**/Dockerfile*
 
@@ -94,8 +94,8 @@ toml: &toml
   - .github/scripts/check_language_toml.py
   - .github/workflows/check_toml.yml
 
-# Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
-# job on changes to any of these.
+# Files that affect the Tauri desktop bundle. Changes to any of these files
+# trigger the multi-OS Tauri build job.
 tauri: &tauri
   - *ci
   - frontend/editor/src-tauri/**
@@ -108,9 +108,9 @@ tauri: &tauri
   - Taskfile.yml
   - .taskfiles/desktop.yml
 
-# Files that affect the AI engine (Python tool models, fixers, tests). Gate
-# the engine validation job on changes to engine sources or to the Java
-# tool surfaces it generates models from.
+# Files that affect the AI engine, including its Python tool models, fixers,
+# and tests. The engine validation job also runs when the Java tool surfaces
+# used to generate those models change.
 engine: &engine
   - *ci
   - engine/**
@@ -120,10 +120,10 @@ engine: &engine
   - .taskfiles/engine.yml
 
 # Files that can make the committed generated API models (frontend tool API
-# types + engine tool models) go stale: the Java tool surfaces they derive from,
-# the generators, the generated files themselves (to catch a hand-edit), and the
-# tasks that drive generation. Deliberately excludes the broad frontend/docker/
-# testing globs, so a CSS-only PR does not boot the backend to rebuild the spec.
+# types and engine tool models) stale: their Java sources, generators,
+# generated outputs (to catch hand edits), and generation tasks. Broad
+# frontend, Docker, and testing globs are intentionally excluded, so a CSS-only
+# PR does not start the backend to rebuild the specification.
 generated-models: &generated-models
   - *ci
   - *openapi
@@ -147,8 +147,8 @@ licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
 
-# Files that can affect premium / enterprise behaviour. Gate the enterprise
-# Playwright job on changes to any of these on PRs.
+# Files that can affect premium or enterprise behaviour. Changes to any of
+# these files trigger the enterprise Playwright job for pull requests.
 proprietary: &proprietary
   - *ci
   - app/proprietary/**
