@@ -22,20 +22,17 @@ export type NotificationOrigin = "TOOL" | "POLICY" | "PIPELINE";
  */
 export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 
-/** Who performs the action: the server on its own record, or this client on its own device. */
-export type NotificationActionExecution = "SERVER" | "CLIENT";
-
 /**
- * One action as offered for one notification. `id` is a plain string rather than a union because the
- * server may know actions this build does not, and the client skips the ones it cannot perform.
+ * One action as offered for one notification, all of them run by this client on its own device.
+ * `id` is a plain string rather than a union because the server may know actions this build does
+ * not, and the client skips the ones it cannot perform.
  */
 export interface NotificationActionOffer {
   id: string;
   labelKey: string;
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
-  execution: NotificationActionExecution;
-  /** False means the server will refuse it. The bell renders no button and states the reason
+  /** False means it cannot work for this row. The bell renders no button and states the reason
    *  instead; the portal's queue still shows it disabled. */
   enabled: boolean;
   disabledReasonKey: string | null;
@@ -92,45 +89,5 @@ export async function fetchNotifications(
     return response?.data?.notifications ?? [];
   } catch {
     return [];
-  }
-}
-
-/**
- * Perform a server-side action on a notification, reporting only whether it took. The server owns the
- * consequences, so the caller's job afterwards is to re-read the list rather than patch its own copy.
- * Takes the prefixed notification id, which is the only id the bell ever holds.
- */
-export async function runNotificationAction(
-  notificationId: string,
-  actionId: string,
-): Promise<boolean> {
-  try {
-    await apiClient.post(
-      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/actions/${encodeURIComponent(actionId)}`,
-    );
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Tell the server that the client fixed what a notification was about, so the bell stops reporting a
- * failure the user has already dealt with. Takes the prefixed id, so the bell never hands a raw row id
- * to a failure endpoint.
- *
- * Never throws. A refusal (already dismissed, not the caller's row) is not worth interrupting the user
- * over: their document is already fixed and in front of them, and the next read tidies up the row.
- */
-export async function reportNotificationResolved(
-  notificationId: string,
-): Promise<boolean> {
-  try {
-    await apiClient.post(
-      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
-    );
-    return true;
-  } catch {
-    return false;
   }
 }

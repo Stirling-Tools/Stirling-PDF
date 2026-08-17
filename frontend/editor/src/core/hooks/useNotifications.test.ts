@@ -19,7 +19,7 @@ vi.mock("@app/services/notifications", () => ({
 // per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
 
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@app/services/localFilePresence", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
 }));
 

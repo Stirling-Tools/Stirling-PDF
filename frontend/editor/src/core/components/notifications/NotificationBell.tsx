@@ -12,10 +12,9 @@ import {
   type ClientActionRegistry,
   type NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
-import {
-  runNotificationAction,
-  type AppNotification,
-  type NotificationActionOffer,
+import type {
+  AppNotification,
+  NotificationActionOffer,
 } from "@app/services/notifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import "@app/components/notifications/NotificationBell.css";
@@ -35,7 +34,6 @@ export function NotificationBell() {
     isUnread,
     documentStateFor,
     markAllSeen,
-    refresh,
   } = useNotifications();
   const registry = useNotificationActions();
   const [open, setOpen] = useState(false);
@@ -137,7 +135,6 @@ export function NotificationBell() {
                   documentState={documentStateFor(notification)}
                   registry={registry}
                   onDismissPanel={() => setOpen(false)}
-                  onChanged={refresh}
                 />
               ))}
             </ul>
@@ -187,7 +184,6 @@ interface NotificationItemProps {
   documentState: NotificationDocumentState;
   registry: ClientActionRegistry;
   onDismissPanel: () => void;
-  onChanged: () => void;
 }
 
 /**
@@ -200,7 +196,6 @@ function NotificationItem({
   documentState,
   registry,
   onDismissPanel,
-  onChanged,
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
@@ -220,7 +215,6 @@ function NotificationItem({
   const usable = notification.actions.filter((offer) => {
     if (!offer.enabled) return false;
     const spec = registry[offer.id];
-    if (offer.execution === "SERVER") return true;
     return spec ? spec.available(context) : false;
   });
 
@@ -232,7 +226,7 @@ function NotificationItem({
       (offer) =>
         !offer.enabled &&
         offer.disabledReasonKey !== null &&
-        (offer.execution === "SERVER" || registry[offer.id] !== undefined),
+        registry[offer.id] !== undefined,
     )?.disabledReasonKey ?? null;
 
   const labelOf = (offer: NotificationActionOffer) =>
@@ -241,22 +235,6 @@ function NotificationItem({
   const run = async (offer: NotificationActionOffer) => {
     if (busy) return;
     setMessage(null);
-
-    if (offer.execution === "SERVER") {
-      setBusy(offer.id);
-      const ok = await runNotificationAction(notification.id, offer.id);
-      setBusy(null);
-      // Re-read rather than patch: the server decides whether the row is gone or merely different.
-      if (ok) onChanged();
-      else
-        setMessage(
-          t(
-            "notifications.action.failed",
-            "That did not work. Try again in a moment.",
-          ),
-        );
-      return;
-    }
 
     const spec = registry[offer.id];
     if (!spec) return;

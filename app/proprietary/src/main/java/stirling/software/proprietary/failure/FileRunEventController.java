@@ -94,23 +94,6 @@ public class FileRunEventController {
         }
     }
 
-    @PostMapping("/{eventId}/resolved")
-    @Operation(
-            summary = "Record that a client-side retry fixed the failure",
-            description =
-                    "The client runs the retry, because it holds the document, and says so here."
-                            + " Not an action id: nobody is offered a resolve button, and a"
-                            + " recurrence reopens the row.")
-    public FileRunEventView resolved(@PathVariable String eventId) {
-        try {
-            FileRunEvent updated = service.resolve(eventId);
-            return FileRunEventView.of(updated, service.availableActions(updated));
-        } catch (FailureActionException e) {
-            throw new ResponseStatusException(
-                    FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
-        }
-    }
-
     @PostMapping("/reports")
     @Operation(
             summary = "Report a failure hit in the editor",

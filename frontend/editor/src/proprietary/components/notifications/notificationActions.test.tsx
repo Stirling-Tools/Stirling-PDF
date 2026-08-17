@@ -66,7 +66,6 @@ function offer(id: string): NotificationActionOffer {
     id,
     labelKey: `portal.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
-    execution: "CLIENT",
     enabled: true,
     disabledReasonKey: null,
   };
@@ -122,15 +121,11 @@ describe("useNotificationActions", () => {
     );
   });
 
-  it("leaves View file as the only usable offer when the server offers retries this build cannot run", () => {
-    // The server offers the retries for a password-protected failure, but this build wires no client
-    // action for them, so they drop out rather than rendering dead and View file is all that is left.
+  it("leaves View file as the only usable offer when the server offers actions this build cannot run", () => {
+    // The server can ship new kinds with new actions ahead of the clients that understand them, so
+    // an id this build wires nothing for drops out rather than rendering dead.
     const actions = registry();
-    const usable = [
-      offer("RETRY"),
-      offer("DECRYPT_AND_RETRY"),
-      offer("VIEW_FILE"),
-    ].filter(
+    const usable = [offer("QUARANTINE"), offer("VIEW_FILE")].filter(
       (candidate) => actions[candidate.id]?.available(context()) ?? false,
     );
 

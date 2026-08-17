@@ -46,7 +46,7 @@ const NONE: ClientActionRegistry = {};
 
 /**
  * Nothing is offered here: every destination a notification could point at ships in a higher layer, so
- * a build without them has nowhere to send anyone. Server-side actions still work.
+ * a build without them has nowhere to send anyone, so its rows carry no buttons.
  */
 export function useNotificationActions(): ClientActionRegistry {
   return NONE;

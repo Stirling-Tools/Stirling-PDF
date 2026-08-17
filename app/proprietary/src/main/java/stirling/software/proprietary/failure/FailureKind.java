@@ -1,8 +1,6 @@
 package stirling.software.proprietary.failure;
 
-import static stirling.software.proprietary.failure.FailureActionId.DECRYPT_AND_RETRY;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
-import static stirling.software.proprietary.failure.FailureActionId.RETRY;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
@@ -44,10 +42,8 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            // The password is the fix and only the owner has it, so everyone else is
-            // offered the run and a way to close the row.
-            offer(DECRYPT_AND_RETRY, OWNER),
-            offer(RETRY, OWNER),
+            // Only the owner holds the document, so the file is theirs to open; a reviewer
+            // gets the run instead, and anyone who sees the row may close it.
             offer(VIEW_FILE, OWNER),
             offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(DISMISS, ANYONE_WHO_SEES)),
@@ -59,9 +55,8 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // Nothing here is known to be fixable, but a plain retry is still worth offering: an
-            // unrecognised failure is often a one-off.
-            offer(RETRY, OWNER),
+            // Nothing here is known to be fixable, so the offers are the places to look:
+            // the owner their document, a reviewer the run, and anyone may close the row.
             offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(VIEW_FILE, OWNER),
             offer(DISMISS, ANYONE_WHO_SEES));

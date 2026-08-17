@@ -7389,10 +7389,8 @@ title = "Failures"
 [portal.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
-decryptAndRetry = "Decrypt and retry"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
-retry = "Retry"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 

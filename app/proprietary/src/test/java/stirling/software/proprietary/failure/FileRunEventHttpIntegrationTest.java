@@ -329,22 +329,10 @@ class FileRunEventHttpIntegrationTest {
 
             assertThat(
                             post(
-                                            "/api/v1/file-run-events/" + id + "/actions/RETRY",
+                                            "/api/v1/file-run-events/" + id + "/actions/VIEW_FILE",
                                             "{\"inputs\":{}}")
                                     .statusCode())
                     .isEqualTo(400);
-        }
-
-        @Test
-        void recordsAClientSideRetryAsResolved() throws Exception {
-            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
-
-            HttpResponse<String> response =
-                    post("/api/v1/file-run-events/" + id + "/resolved", null);
-
-            assertThat(response.statusCode()).isEqualTo(200);
-            assertThat(mapper.readTree(response.body()).get("status").asString())
-                    .isEqualTo("RESOLVED");
         }
 
         @Test

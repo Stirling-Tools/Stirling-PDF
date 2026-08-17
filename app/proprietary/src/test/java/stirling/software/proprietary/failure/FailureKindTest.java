@@ -215,12 +215,11 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so there is no resolution. A retry is still
-            // worth offering the person who hit it: an unrecognised failure is often a one-off.
+        void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
+            // Nothing here is known to be fixable, so the offers are the places to look: the
+            // owner their document, a reviewer the run, and anyone may close the row.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.RETRY, OWNER, "retry"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
@@ -279,13 +278,11 @@ class FailureKindTest {
         }
 
         @Test
-        void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
-            // The whole point of the audiences: the password is the fix and only the owner has it,
-            // so a reviewer is offered the run and a way to close the row instead.
+        void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
+            // The whole point of the audiences: only the owner holds the document, so a reviewer
+            // is offered the run and a way to close the row instead.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.DECRYPT_AND_RETRY, OWNER, "decryptAndRetry"),
-                            offered(FailureActionId.RETRY, OWNER, "retry"),
                             offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -324,8 +321,8 @@ class FailureKindTest {
                     .isEqualTo("portal.failures.action.dismiss");
             assertThat(
                             FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
-                                    FailureActionId.DECRYPT_AND_RETRY))
-                    .isEqualTo("portal.failures.action.decryptAndRetry");
+                                    FailureActionId.VIEW_IN_PROCESSOR))
+                    .isEqualTo("portal.failures.action.viewInProcessor");
         }
 
         @Test

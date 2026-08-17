@@ -3,7 +3,7 @@ import {
   fetchNotifications,
   type AppNotification,
 } from "@app/services/notifications";
-import { hasLocalFile } from "@app/services/notificationRetry";
+import { hasLocalFile } from "@app/services/localFilePresence";
 
 /**
  * The caller's notifications, refreshed on a timer because they arrive from background work rather

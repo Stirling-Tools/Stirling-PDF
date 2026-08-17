@@ -148,8 +148,8 @@ public class FileRunEventService {
                     FailureActionException.Reason.ACTION_NOT_DECLARED,
                     "Kind " + event.kind().getId() + " does not offer action " + resolvedId);
         }
-        // Declared, and still not the server's to run: without this a client could post RETRY and
-        // be answered as though something had been retried, when nothing here has the file.
+        // Declared, and still not the server's to run: without this a client could post VIEW_FILE
+        // and be answered as though something had happened, when nothing here has the file.
         if (!resolvedId.runsOnServer()) {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
@@ -171,26 +171,6 @@ public class FileRunEventService {
                                                 "No handler for action " + resolvedId));
 
         return action.execute(event, inputs == null ? Map.of() : inputs, currentActor());
-    }
-
-    /**
-     * Mark an incident resolved, because a client retried the operation and it worked. Nobody is
-     * offered a "resolve" button, which is why {@code RESOLVED} is a status and not a {@link
-     * FailureActionId}. Idempotent: a client reporting the same success twice reads its row back.
-     *
-     * @throws FailureActionException if the event is not the caller's, or is already closed some
-     *     other way
-     */
-    public FileRunEvent resolve(String eventId) {
-        FileRunEvent event = requireVisible(eventId);
-        // No terminal pre-check: the store's guarded UPDATE decides, and tells a dismissed row
-        // apart from a deleted one after the fact rather than racing a read against the write.
-        return store.applyStatusOnce(
-                event.id(),
-                event.teamId(),
-                FileRunEventStatus.RESOLVED,
-                currentActor(),
-                FileRunEventStatus.open());
     }
 
     /**

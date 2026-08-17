@@ -165,11 +165,8 @@ function messageOf(error: unknown): string {
  * <p>Everything else is reported, client-side refusals included: an unsupported input
  * format is the same class of problem as the processor rejecting a file type, which
  * is already recorded.
- *
- * <p>Exported because the retry stash asks the same question, and a second copy of the
- * test would drift into keeping a retry payload for a run the user chose to stop.
  */
-export function wasCancelled(error: unknown): boolean {
+function wasCancelled(error: unknown): boolean {
   const candidate = error as {
     code?: unknown;
     name?: unknown;

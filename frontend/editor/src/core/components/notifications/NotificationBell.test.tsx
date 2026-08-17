@@ -9,7 +9,6 @@ import { MantineProvider } from "@mantine/core";
 import type {
   AppNotification,
   NotificationActionOffer,
-  NotificationActionSlot,
 } from "@app/services/notifications";
 
 // @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
@@ -23,11 +22,9 @@ const render = (ui: Parameters<typeof baseRender>[0]) =>
  */
 
 const fetchNotifications = vi.fn();
-const runNotificationAction = vi.fn();
 
 vi.mock("@app/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
-  runNotificationAction: (...args: unknown[]) => runNotificationAction(...args),
 }));
 
 // The document lookups read IndexedDB, which jsdom has none of. Answered here so a row's
@@ -44,7 +41,7 @@ const h = vi.hoisted(() => ({
   >,
 }));
 
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@app/services/localFilePresence", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
 }));
 
@@ -78,15 +75,12 @@ const { NotificationBell } =
 
 function offer(
   id: string,
-  slot: NotificationActionSlot,
   overrides: Partial<NotificationActionOffer> = {},
 ): NotificationActionOffer {
   return {
     id,
     labelKey: `portal.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
-    execution: "CLIENT",
-    slot,
     enabled: true,
     disabledReasonKey: null,
     ...overrides,
@@ -128,7 +122,6 @@ describe("NotificationBell", () => {
   beforeEach(() => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue([]);
-    runNotificationAction.mockReset().mockResolvedValue(true);
     h.hasLocalFile = true;
     h.specs = {};
   });
@@ -211,7 +204,6 @@ describe("NotificationBell", () => {
 
   it("puts every one of the row's actions on the row", async () => {
     h.specs = {
-      RETRY: { available: () => true, run: vi.fn(), closesPanel: true },
       VIEW_IN_PROCESSOR: {
         available: () => true,
         run: vi.fn(),
@@ -221,33 +213,28 @@ describe("NotificationBell", () => {
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
-        actions: [
-          offer("RETRY", "SECONDARY"),
-          offer("VIEW_IN_PROCESSOR", "SECONDARY"),
-          offer("VIEW_FILE", "OVERFLOW"),
-          offer("DISMISS", "OVERFLOW", { execution: "SERVER" }),
-        ],
+        actions: [offer("VIEW_IN_PROCESSOR"), offer("VIEW_FILE")],
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
     // Named for the row they belong to: every button in the list says the same thing.
-    for (const id of ["RETRY", "VIEW_IN_PROCESSOR", "VIEW_FILE", "DISMISS"])
+    for (const id of ["VIEW_IN_PROCESSOR", "VIEW_FILE"])
       expect(
         screen.getByRole("button", { name: `${id}: Unrecognised failure` }),
       ).toBeTruthy();
   });
 
-  it("runs an action the server ranked out of the row's first two", async () => {
+  it("runs whichever of the row's actions is pressed", async () => {
     const run = vi.fn();
     h.specs = {
-      RETRY: { available: () => true, run: vi.fn() },
+      VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
       VIEW_FILE: { available: () => true, run },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
-        actions: [offer("RETRY", "RESOLUTION"), offer("VIEW_FILE", "OVERFLOW")],
+        actions: [offer("VIEW_IN_PROCESSOR"), offer("VIEW_FILE")],
       }),
     ]);
     render(<NotificationBell />);
@@ -266,7 +253,7 @@ describe("NotificationBell", () => {
     h.specs = { VIEW_FILE: { available: () => true, run, closesPanel: true } };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("VIEW_FILE", "RESOLUTION")],
+        actions: [offer("VIEW_FILE")],
       }),
     ]);
     render(<NotificationBell />);
@@ -288,7 +275,7 @@ describe("NotificationBell", () => {
     // A new failure kind can ship with new actions; an unwired button would be worse than none.
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
-        actions: [offer("QUARANTINE", "RESOLUTION")],
+        actions: [offer("QUARANTINE")],
       }),
     ]);
     render(<NotificationBell />);
@@ -301,7 +288,7 @@ describe("NotificationBell", () => {
   it("drops an action the device cannot perform, and says why the row is thin", async () => {
     h.hasLocalFile = false;
     h.specs = {
-      RETRY: {
+      VIEW_FILE: {
         available: (context) =>
           (context as { hasLocalFile: boolean }).hasLocalFile,
         run: vi.fn(),
@@ -309,7 +296,7 @@ describe("NotificationBell", () => {
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
-        actions: [offer("RETRY", "RESOLUTION")],
+        actions: [offer("VIEW_FILE")],
       }),
     ]);
     render(<NotificationBell />);
@@ -322,7 +309,7 @@ describe("NotificationBell", () => {
         ),
       ).toBeTruthy(),
     );
-    expect(screen.queryByRole("button", { name: /RETRY/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /VIEW_FILE/ })).toBeNull();
   });
 
   it("says a row was never linked to a document, rather than that the document is missing", async () => {
@@ -365,25 +352,25 @@ describe("NotificationBell", () => {
     // A greyed button on a failure it can never work for is false hope, so the next action takes the
     // row and the reason becomes its note.
     h.specs = {
-      RETRY: { available: () => true, run: vi.fn() },
+      VIEW_FILE: { available: () => true, run: vi.fn() },
       VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
         ownership: "UNOWNED",
         actions: [
-          offer("RETRY", "RESOLUTION", {
+          offer("VIEW_FILE", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.unattended",
           }),
-          offer("VIEW_IN_PROCESSOR", "SECONDARY"),
+          offer("VIEW_IN_PROCESSOR"),
         ],
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
-    expect(screen.queryByRole("button", { name: /RETRY/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /VIEW_FILE/ })).toBeNull();
     expect(
       screen.getByRole("button", {
         name: "VIEW_IN_PROCESSOR: Unrecognised failure",
@@ -396,17 +383,17 @@ describe("NotificationBell", () => {
 
   it("leaves a closed row with no buttons rather than a row of dead ones", async () => {
     h.specs = {
-      RETRY: { available: () => true, run: vi.fn() },
+      VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
       VIEW_FILE: { available: () => true, run: vi.fn() },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Unrecognised failure", {
         actions: [
-          offer("RETRY", "RESOLUTION", {
+          offer("VIEW_IN_PROCESSOR", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.closed",
           }),
-          offer("VIEW_FILE", "OVERFLOW", {
+          offer("VIEW_FILE", {
             enabled: false,
             disabledReasonKey: "portal.failures.disabled.closed",
           }),
@@ -422,7 +409,7 @@ describe("NotificationBell", () => {
       screen.getByText("Not available for this notification."),
     ).toBeTruthy();
     expect(
-      screen.queryByRole("button", { name: /RETRY|VIEW_FILE/ }),
+      screen.queryByRole("button", { name: /VIEW_IN_PROCESSOR|VIEW_FILE/ }),
     ).toBeNull();
     expect(document.querySelector(".notification-bell__actions")).toBeNull();
   });
@@ -436,7 +423,7 @@ describe("NotificationBell", () => {
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("VIEW_FILE", "RESOLUTION")],
+        actions: [offer("VIEW_FILE")],
       }),
     ]);
     render(<NotificationBell />);
@@ -454,29 +441,6 @@ describe("NotificationBell", () => {
     );
     // Still on screen, so the row remains actionable.
     expect(screen.getByText("Password-protected document")).toBeTruthy();
-  });
-
-  it("dismisses server-side and re-reads the list", async () => {
-    fetchNotifications.mockResolvedValue([
-      notification("failure:a", "Unrecognised failure", {
-        actions: [offer("DISMISS", "OVERFLOW", { execution: "SERVER" })],
-      }),
-    ]);
-    render(<NotificationBell />);
-    await openPanel();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "DISMISS: Unrecognised failure" }),
-    );
-
-    // The prefixed id, which is the only one the bell ever holds.
-    await waitFor(() =>
-      expect(runNotificationAction).toHaveBeenCalledWith(
-        "failure:a",
-        "DISMISS",
-      ),
-    );
-    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
   });
 
   it("expands the message without touching the row's actions", async () => {

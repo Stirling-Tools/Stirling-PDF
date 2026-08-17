@@ -162,75 +162,6 @@ class FileRunEventServiceTest {
     }
 
     @Nested
-    @DisplayName("resolve")
-    class Resolve {
-
-        @Test
-        void marksTheRowResolvedWhenAClientReportsItsRetryWorked() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
-
-            FileRunEvent resolved = service.resolve(event.id());
-
-            assertThat(resolved.status()).isEqualTo(FileRunEventStatus.RESOLVED);
-            assertThat(resolved.statusActor()).isEqualTo(ACTOR);
-            assertThat(service.list(null, null, 10)).as("resolved work is not open work").isEmpty();
-        }
-
-        @Test
-        void isNotAnActionAnyoneCanPress() {
-            // System-set on a successful client-side retry, so there is no id to dispatch and no
-            // button to render. Stated as a test because the absence is the property.
-            assertThat(Arrays.stream(FailureActionId.values()).map(Enum::name))
-                    .doesNotContain("RESOLVE", "RESOLVED");
-        }
-
-        @Test
-        void reportingTheSameSuccessTwiceIsNotARefusal() {
-            // A client that retries, succeeds and reports twice is telling the truth twice.
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
-            Instant first = service.resolve(event.id()).statusAt();
-
-            assertThat(service.resolve(event.id()).statusAt()).isEqualTo(first);
-        }
-
-        @Test
-        void aDismissedRowCannotBeResolvedBehindTheReviewersBack() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
-            service.dispatch(event.id(), "DISMISS", Map.of());
-
-            assertThatThrownBy(() -> service.resolve(event.id()))
-                    .isInstanceOf(FailureActionException.class)
-                    .extracting(e -> ((FailureActionException) e).getReason())
-                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
-        }
-
-        @Test
-        void anotherTeamsRowIsNotFound() {
-            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
-
-            assertThatThrownBy(() -> service.resolve(theirs.id()))
-                    .isInstanceOf(FailureActionException.class)
-                    .extracting(e -> ((FailureActionException) e).getReason())
-                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
-        }
-
-        @Test
-        void aRecurrenceReopensIt() {
-            // RESOLVED claims one attempt worked, not that the problem is gone for good.
-            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
-            FileRunEvent event = service.list(null, null, 10).getFirst();
-            service.resolve(event.id());
-
-            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
-
-            assertThat(service.list(null, null, 10))
-                    .singleElement()
-                    .extracting(FileRunEvent::status)
-                    .isEqualTo(FileRunEventStatus.NEW);
-        }
-    }
-
-    @Nested
     @DisplayName("triage never touches the document")
     class NeverTouchesTheDocument {
 
@@ -301,11 +232,11 @@ class FileRunEventServiceTest {
 
         @Test
         void anActionTheClientRunsIsRefusedRatherThanPretendedTo() {
-            // UNKNOWN offers RETRY, and the server has neither the document nor the tool. Answering
-            // 200 here would tell the client something was retried when nothing was.
+            // UNKNOWN offers VIEW_FILE, and the server has neither the document nor the tool.
+            // Answering 200 here would tell the client something happened when nothing did.
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
 
-            assertThatThrownBy(() -> service.dispatch(event.id(), "RETRY", Map.of()))
+            assertThatThrownBy(() -> service.dispatch(event.id(), "VIEW_FILE", Map.of()))
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.ACTION_NOT_DISPATCHABLE);
@@ -428,25 +359,21 @@ class FileRunEventServiceTest {
         }
 
         @Test
-        void theOwnerIsOfferedTheFixAndNotTheReviewersView() {
-            // A member reading their own password failure: the unlock is theirs to do, and the
+        void theOwnerIsOfferedTheirDocumentAndNotTheReviewersView() {
+            // A member reading their own password failure: the document is theirs to open, and the
             // processor view is for whoever reviews the team rather than owns the file.
             when(authority.canEditPolicies()).thenReturn(false);
             FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             assertThat(offeredFor(mine))
-                    .containsExactly(
-                            FailureActionId.DECRYPT_AND_RETRY,
-                            FailureActionId.RETRY,
-                            FailureActionId.VIEW_FILE,
-                            FailureActionId.DISMISS);
+                    .containsExactly(FailureActionId.VIEW_FILE, FailureActionId.DISMISS);
             assertThat(service.availableActions(mine))
                     .allMatch(FileRunEventService.AvailableAction::enabled);
         }
 
         @Test
-        void aReviewerReadingAColleaguesIsNotOfferedThePasswordTheyDoNotHave() {
-            // Dropped rather than disabled: a greyed-out "Decrypt and retry" would read as the
+        void aReviewerReadingAColleaguesIsNotOfferedTheDocumentTheyDoNotHave() {
+            // Dropped rather than disabled: a greyed-out "View file" would read as the
             // reviewer's permission problem, when it is simply not their document.
             FileRunEvent theirs =
                     givenHitBy(
@@ -467,8 +394,6 @@ class FileRunEventServiceTest {
 
             assertThat(offeredFor(unattended))
                     .containsExactly(
-                            FailureActionId.DECRYPT_AND_RETRY,
-                            FailureActionId.RETRY,
                             FailureActionId.VIEW_FILE,
                             FailureActionId.VIEW_IN_PROCESSOR,
                             FailureActionId.DISMISS);
@@ -763,7 +688,7 @@ class FileRunEventServiceTest {
         @Test
         void doesNotAskForAHandlerForAnActionTheClientRuns() {
             // Every kind declares client actions, so a registry holding only the server's two must
-            // still boot; otherwise every retry button would need an empty handler beside it.
+            // still boot; otherwise every client action would need an empty handler beside it.
             FailureActionRegistry serverOnly =
                     new FailureActionRegistry(
                             List.of(new AcknowledgeAction(store), new DismissAction(store)));
@@ -778,7 +703,7 @@ class FileRunEventServiceTest {
             // that is never called is worse than no bean, because it reads as though it were.
             assertThatThrownBy(() -> new FailureActionRegistry(List.of(new ClientSideAction())))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("RETRY");
+                    .hasMessageContaining("VIEW_FILE");
         }
 
         /**
@@ -788,7 +713,7 @@ class FileRunEventServiceTest {
 
             @Override
             public FailureActionId id() {
-                return FailureActionId.RETRY;
+                return FailureActionId.VIEW_FILE;
             }
 
             @Override

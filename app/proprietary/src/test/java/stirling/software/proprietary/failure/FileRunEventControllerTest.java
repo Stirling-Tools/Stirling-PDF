@@ -250,7 +250,7 @@ class FileRunEventControllerTest {
             // Offered, and still not the server's to perform: the document is in the browser.
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
 
-            assertThat(statusOf(() -> controller.act(event.id(), "RETRY", null)))
+            assertThat(statusOf(() -> controller.act(event.id(), "VIEW_FILE", null)))
                     .isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
@@ -262,24 +262,6 @@ class FileRunEventControllerTest {
 
             assertThat(statusOf(() -> controller.act(event.id(), "ACKNOWLEDGE", null)))
                     .isEqualTo(HttpStatus.BAD_REQUEST);
-        }
-
-        @Test
-        void recordsAClientSideRetryAsResolved() {
-            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
-
-            FileRunEventView resolved = controller.resolved(event.id());
-
-            assertThat(resolved.status()).isEqualTo(FileRunEventStatus.RESOLVED);
-            assertThat(resolved.statusActor()).isEqualTo("reviewer@example.com");
-        }
-
-        @Test
-        void resolvingAnotherTeamsRowIsNotFound() {
-            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
-
-            assertThat(statusOf(() -> controller.resolved(theirs.id())))
-                    .isEqualTo(HttpStatus.NOT_FOUND);
         }
 
         @Test
@@ -341,9 +323,7 @@ class FileRunEventControllerTest {
 
             assertThat(locked.actions())
                     .extracting(FailureKindView.ActionDeclaration::labelKey)
-                    .contains(
-                            "portal.failures.action.decryptAndRetry",
-                            "portal.failures.action.dismiss");
+                    .contains("portal.failures.action.viewFile", "portal.failures.action.dismiss");
         }
 
         @Test

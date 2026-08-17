@@ -14,7 +14,7 @@ vi.mock("@app/services/fileStorage", () => ({
   },
 }));
 
-const { hasLocalFile } = await import("@app/services/notificationRetry");
+const { hasLocalFile } = await import("@app/services/localFilePresence");
 
 beforeEach(() => {
   getStirlingFileStub.mockReset().mockResolvedValue(null);
