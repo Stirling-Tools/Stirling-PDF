@@ -125,9 +125,11 @@ export const RevokeConfirmation: Story = {
     const canvas = within(canvasElement);
     const buttons = await canvas.findAllByRole("button", { name: /revoke/i });
     await userEvent.click(buttons[0]);
+    // Presence, not visibility: the a11y scan harness does not compute layout,
+    // so toBeVisible() fails there on an element the browser renders fine.
     await expect(
       await within(document.body).findByText(/stop opening/i),
-    ).toBeVisible();
+    ).toBeInTheDocument();
   },
 };
 

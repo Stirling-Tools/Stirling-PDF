@@ -56,110 +56,118 @@ export function EncryptionMigrationCard({
   const canStart = writeEnabled && plaintextFiles > 0 && state !== "RUNNING";
 
   return (
-    <Card padding="loose">
-      <div className="portal-enc__head">
-        <SectionHeader
-          title={t("portal.infrastructure.encryption.migration.heading")}
-          sub={t("portal.infrastructure.encryption.migration.subheading")}
-        />
-        <StatusBadge tone={STATE_TONE[state]} size="sm">
-          {t(`portal.infrastructure.encryption.migration.state.${state}`)}
-        </StatusBadge>
-      </div>
+    <section>
+      <Card padding="loose">
+        <div className="portal-enc__head">
+          <SectionHeader
+            title={t("portal.infrastructure.encryption.migration.heading")}
+            sub={t("portal.infrastructure.encryption.migration.subheading")}
+          />
+          <StatusBadge tone={STATE_TONE[state]} size="sm">
+            {t(`portal.infrastructure.encryption.migration.state.${state}`)}
+          </StatusBadge>
+        </div>
 
-      {state === "FAILED" ? (
-        <Banner
-          tone="danger"
-          title={t("portal.infrastructure.encryption.migration.failed.title")}
-          description={t(
-            "portal.infrastructure.encryption.migration.failed.description",
-          )}
-        />
-      ) : null}
-
-      {actionError ? <Banner tone="warning" description={actionError} /> : null}
-
-      {state === "RUNNING" || state === "COMPLETED" || state === "FAILED" ? (
-        <>
-          <ProgressBar
-            value={fraction}
-            height={10}
-            // A stopped run should not read as healthy progress.
-            color={
-              state === "FAILED"
-                ? "var(--c-text-subtle)"
-                : state === "COMPLETED"
-                  ? "var(--color-green)"
-                  : undefined
-            }
-            label={t(
-              "portal.infrastructure.encryption.migration.progressLabel",
-              { processed, total },
+        {state === "FAILED" ? (
+          <Banner
+            tone="danger"
+            title={t("portal.infrastructure.encryption.migration.failed.title")}
+            description={t(
+              "portal.infrastructure.encryption.migration.failed.description",
             )}
           />
-          <div className="portal-enc__migration-stats">
-            <StatTile
-              label={t("portal.infrastructure.encryption.migration.encrypted")}
-              value={processed.toLocaleString()}
-            />
-            <StatTile
-              label={t("portal.infrastructure.encryption.migration.skipped")}
-              value={skipped.toLocaleString()}
-            />
-            <StatTile
+        ) : null}
+
+        {actionError ? (
+          <Banner tone="warning" description={actionError} />
+        ) : null}
+
+        {state === "RUNNING" || state === "COMPLETED" || state === "FAILED" ? (
+          <>
+            <ProgressBar
+              value={fraction}
+              height={10}
+              // A stopped run should not read as healthy progress.
+              color={
+                state === "FAILED"
+                  ? "var(--c-text-subtle)"
+                  : state === "COMPLETED"
+                    ? "var(--color-green)"
+                    : undefined
+              }
               label={t(
-                "portal.infrastructure.encryption.migration.failedCount",
+                "portal.infrastructure.encryption.migration.progressLabel",
+                { processed, total },
               )}
-              value={failed.toLocaleString()}
-              tone={failed > 0 ? "danger" : "default"}
             />
-          </div>
-          {skipped > 0 ? (
-            <p className="portal-enc__note">
-              {t("portal.infrastructure.encryption.migration.skippedNote")}
-            </p>
-          ) : null}
-        </>
-      ) : (
-        <p className="portal-enc__note">
-          {plaintextFiles > 0
-            ? t("portal.infrastructure.encryption.migration.backlog", {
-                count: plaintextFiles,
-                // count drives plural selection; formatted is what is rendered,
-                // so large backlogs read as 1,840 rather than 1840.
-                formatted: plaintextFiles.toLocaleString(),
-              })
-            : t("portal.infrastructure.encryption.migration.noBacklog")}
-        </p>
-      )}
+            <div className="portal-enc__migration-stats">
+              <StatTile
+                label={t(
+                  "portal.infrastructure.encryption.migration.encrypted",
+                )}
+                value={processed.toLocaleString()}
+              />
+              <StatTile
+                label={t("portal.infrastructure.encryption.migration.skipped")}
+                value={skipped.toLocaleString()}
+              />
+              <StatTile
+                label={t(
+                  "portal.infrastructure.encryption.migration.failedCount",
+                )}
+                value={failed.toLocaleString()}
+                tone={failed > 0 ? "danger" : "default"}
+              />
+            </div>
+            {skipped > 0 ? (
+              <p className="portal-enc__note">
+                {t("portal.infrastructure.encryption.migration.skippedNote")}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="portal-enc__note">
+            {plaintextFiles > 0
+              ? t("portal.infrastructure.encryption.migration.backlog", {
+                  count: plaintextFiles,
+                  // count drives plural selection; formatted is what is rendered,
+                  // so large backlogs read as 1,840 rather than 1840.
+                  formatted: plaintextFiles.toLocaleString(),
+                })
+              : t("portal.infrastructure.encryption.migration.noBacklog")}
+          </p>
+        )}
 
-      {/* Start is disabled without the write flag; say why rather than leaving a
+        {/* Start is disabled without the write flag; say why rather than leaving a
           dead button next to a backlog the copy says can be encrypted. */}
-      {!writeEnabled && plaintextFiles > 0 ? (
-        <p className="portal-enc__note">
-          {t("portal.infrastructure.encryption.migration.requiresEncryptionOn")}
-        </p>
-      ) : null}
+        {!writeEnabled && plaintextFiles > 0 ? (
+          <p className="portal-enc__note">
+            {t(
+              "portal.infrastructure.encryption.migration.requiresEncryptionOn",
+            )}
+          </p>
+        ) : null}
 
-      {/* Only worth saying once a run exists to lose. */}
-      {state !== "IDLE" ? (
-        <p className="portal-enc__note">
-          {t("portal.infrastructure.encryption.migration.restartNote")}
-        </p>
-      ) : null}
+        {/* Only worth saying once a run exists to lose. */}
+        {state !== "IDLE" ? (
+          <p className="portal-enc__note">
+            {t("portal.infrastructure.encryption.migration.restartNote")}
+          </p>
+        ) : null}
 
-      <div className="portal-enc__actions">
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={!canStart || starting}
-          onClick={onStart}
-        >
-          {state === "FAILED" || state === "COMPLETED"
-            ? t("portal.infrastructure.encryption.migration.runAgain")
-            : t("portal.infrastructure.encryption.migration.start")}
-        </Button>
-      </div>
-    </Card>
+        <div className="portal-enc__actions">
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!canStart || starting}
+            onClick={onStart}
+          >
+            {state === "FAILED" || state === "COMPLETED"
+              ? t("portal.infrastructure.encryption.migration.runAgain")
+              : t("portal.infrastructure.encryption.migration.start")}
+          </Button>
+        </div>
+      </Card>
+    </section>
   );
 }

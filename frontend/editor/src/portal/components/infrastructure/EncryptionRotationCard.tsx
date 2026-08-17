@@ -29,69 +29,77 @@ export function EncryptionRotationCard({
   const { t } = useTranslation();
 
   return (
-    <Card padding="loose">
-      <SectionHeader
-        title={t("portal.infrastructure.encryption.rotation.heading")}
-        sub={t("portal.infrastructure.encryption.rotation.subheading")}
-      />
-
-      <div className="portal-enc__kv">
-        <div className="portal-enc__kv-row">
-          <span className="portal-enc__kv-label">
-            {t("portal.infrastructure.encryption.rotation.currentVersion")}
-          </span>
-          <span className="portal-enc__cell-strong">
-            {masterKeyVersion ?? t("portal.infrastructure.encryption.unknown")}
-          </span>
-        </div>
-        <div className="portal-enc__kv-row">
-          <span className="portal-enc__kv-label">
-            {t("portal.infrastructure.encryption.rotation.pendingRows")}
-          </span>
-          <span className="portal-enc__cell-strong">{pendingRows}</span>
-        </div>
-      </div>
-
-      {pendingRows > 0 ? (
-        <Banner
-          tone="warning"
-          title={t("portal.infrastructure.encryption.rotation.pending.title", {
-            count: pendingRows,
-          })}
-          description={t(
-            "portal.infrastructure.encryption.rotation.pending.description",
-          )}
+    <section>
+      <Card padding="loose">
+        <SectionHeader
+          title={t("portal.infrastructure.encryption.rotation.heading")}
+          sub={t("portal.infrastructure.encryption.rotation.subheading")}
         />
-      ) : null}
 
-      {lastRewrapped !== null ? (
-        <Banner
-          tone="success"
-          description={t(
-            "portal.infrastructure.encryption.rotation.rewrapped",
-            {
-              count: lastRewrapped,
-            },
-          )}
-        />
-      ) : null}
+        <div className="portal-enc__kv">
+          <div className="portal-enc__kv-row">
+            <span className="portal-enc__kv-label">
+              {t("portal.infrastructure.encryption.rotation.currentVersion")}
+            </span>
+            <span className="portal-enc__cell-strong">
+              {masterKeyVersion ??
+                t("portal.infrastructure.encryption.unknown")}
+            </span>
+          </div>
+          <div className="portal-enc__kv-row">
+            <span className="portal-enc__kv-label">
+              {t("portal.infrastructure.encryption.rotation.pendingRows")}
+            </span>
+            <span className="portal-enc__cell-strong">{pendingRows}</span>
+          </div>
+        </div>
 
-      {actionError ? <Banner tone="warning" description={actionError} /> : null}
+        {pendingRows > 0 ? (
+          <Banner
+            tone="warning"
+            title={t(
+              "portal.infrastructure.encryption.rotation.pending.title",
+              {
+                count: pendingRows,
+              },
+            )}
+            description={t(
+              "portal.infrastructure.encryption.rotation.pending.description",
+            )}
+          />
+        ) : null}
 
-      <p className="portal-enc__note">
-        {t("portal.infrastructure.encryption.rotation.keyNeverOverHttp")}
-      </p>
+        {lastRewrapped !== null ? (
+          <Banner
+            tone="success"
+            description={t(
+              "portal.infrastructure.encryption.rotation.rewrapped",
+              {
+                count: lastRewrapped,
+              },
+            )}
+          />
+        ) : null}
 
-      <div className="portal-enc__actions">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={pendingRows === 0 || rotating}
-          onClick={onRotate}
-        >
-          {t("portal.infrastructure.encryption.rotation.rewrap")}
-        </Button>
-      </div>
-    </Card>
+        {actionError ? (
+          <Banner tone="warning" description={actionError} />
+        ) : null}
+
+        <p className="portal-enc__note">
+          {t("portal.infrastructure.encryption.rotation.keyNeverOverHttp")}
+        </p>
+
+        <div className="portal-enc__actions">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pendingRows === 0 || rotating}
+            onClick={onRotate}
+          >
+            {t("portal.infrastructure.encryption.rotation.rewrap")}
+          </Button>
+        </div>
+      </Card>
+    </section>
   );
 }

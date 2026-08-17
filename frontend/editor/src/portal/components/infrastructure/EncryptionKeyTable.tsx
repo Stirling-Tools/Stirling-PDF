@@ -126,65 +126,72 @@ export function EncryptionKeyTable({
   ];
 
   return (
-    <Card padding="loose">
-      <SectionHeader
-        title={t("portal.infrastructure.encryption.keys.heading")}
-        sub={t("portal.infrastructure.encryption.keys.subheading")}
-      />
-      {/* Column headers over an empty body are chrome around nothing. */}
-      {keys.length === 0 ? (
-        <EmptyState
-          size="compact"
-          title={t("portal.infrastructure.encryption.keys.empty.title")}
-          description={t(
-            "portal.infrastructure.encryption.keys.empty.description",
-          )}
+    <section>
+      <Card padding="loose">
+        <SectionHeader
+          title={t("portal.infrastructure.encryption.keys.heading")}
+          sub={t("portal.infrastructure.encryption.keys.subheading")}
         />
-      ) : (
-        <Table columns={columns} rows={keys} rowKey={(row) => row.keyId} />
-      )}
+        {/* Column headers over an empty body are chrome around nothing. */}
+        {keys.length === 0 ? (
+          <EmptyState
+            size="compact"
+            title={t("portal.infrastructure.encryption.keys.empty.title")}
+            description={t(
+              "portal.infrastructure.encryption.keys.empty.description",
+            )}
+          />
+        ) : (
+          <Table columns={columns} rows={keys} rowKey={(row) => row.keyId} />
+        )}
 
-      <Modal
-        open={pendingRevoke !== null}
-        onClose={() => setPendingRevoke(null)}
-        width="md"
-        title={t("portal.infrastructure.encryption.revoke.title")}
-        subtitle={
-          pendingRevoke
-            ? t("portal.infrastructure.encryption.revoke.subtitle", {
-                scope: scopeLabel(pendingRevoke),
-              })
-            : undefined
-        }
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setPendingRevoke(null)}>
-              {t("portal.infrastructure.encryption.revoke.cancel")}
-            </Button>
-            <Button
-              variant="primary"
-              accent="danger"
-              onClick={() => {
-                if (pendingRevoke) onRevoke(pendingRevoke);
-                setPendingRevoke(null);
-              }}
-            >
-              {t("portal.infrastructure.encryption.revoke.confirm")}
-            </Button>
-          </>
-        }
-      >
-        <ul className="portal-enc__consequences">
-          <li>{t("portal.infrastructure.encryption.revoke.readsFail")}</li>
-          <li>
-            {t("portal.infrastructure.encryption.revoke.uploadsContinue")}
-          </li>
-          <li>{t("portal.infrastructure.encryption.revoke.reversible")}</li>
-          {clusterEnabled ? (
-            <li>{t("portal.infrastructure.encryption.revoke.clusterDelay")}</li>
-          ) : null}
-        </ul>
-      </Modal>
-    </Card>
+        <Modal
+          open={pendingRevoke !== null}
+          onClose={() => setPendingRevoke(null)}
+          width="md"
+          title={t("portal.infrastructure.encryption.revoke.title")}
+          subtitle={
+            pendingRevoke
+              ? t("portal.infrastructure.encryption.revoke.subtitle", {
+                  scope: scopeLabel(pendingRevoke),
+                })
+              : undefined
+          }
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setPendingRevoke(null)}
+              >
+                {t("portal.infrastructure.encryption.revoke.cancel")}
+              </Button>
+              <Button
+                variant="primary"
+                accent="danger"
+                onClick={() => {
+                  if (pendingRevoke) onRevoke(pendingRevoke);
+                  setPendingRevoke(null);
+                }}
+              >
+                {t("portal.infrastructure.encryption.revoke.confirm")}
+              </Button>
+            </>
+          }
+        >
+          <ul className="portal-enc__consequences">
+            <li>{t("portal.infrastructure.encryption.revoke.readsFail")}</li>
+            <li>
+              {t("portal.infrastructure.encryption.revoke.uploadsContinue")}
+            </li>
+            <li>{t("portal.infrastructure.encryption.revoke.reversible")}</li>
+            {clusterEnabled ? (
+              <li>
+                {t("portal.infrastructure.encryption.revoke.clusterDelay")}
+              </li>
+            ) : null}
+          </ul>
+        </Modal>
+      </Card>
+    </section>
   );
 }

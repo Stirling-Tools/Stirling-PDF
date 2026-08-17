@@ -177,7 +177,7 @@ export function EncryptionPanel({
     // Keep the section heading: without it this is an unexplained message
     // floating in the middle of the Storage tab.
     return (
-      <div className="portal-enc__stack">
+      <section className="portal-enc__stack">
         <SectionHeader
           title={t("portal.infrastructure.encryption.heading")}
           sub={t("portal.infrastructure.encryption.subheading")}
@@ -193,7 +193,7 @@ export function EncryptionPanel({
             )}
           />
         </Card>
-      </div>
+      </section>
     );
   }
 
@@ -217,7 +217,9 @@ export function EncryptionPanel({
 
   return (
     <div className="portal-enc__stack">
-      <div className="portal-enc__head">
+      {/* Sectioning elements, not divs: SectionHeader renders a <header>, which
+          becomes a banner landmark unless it is scoped by a section. */}
+      <section className="portal-enc__head">
         <SectionHeader
           title={t("portal.infrastructure.encryption.heading")}
           sub={t("portal.infrastructure.encryption.subheading")}
@@ -225,7 +227,7 @@ export function EncryptionPanel({
         <StatusBadge tone={writeStateTone} size="sm">
           {t(`portal.infrastructure.encryption.writeState.${writeStateKey}`)}
         </StatusBadge>
-      </div>
+      </section>
 
       {tier !== "enterprise" ? (
         <Banner
@@ -247,53 +249,58 @@ export function EncryptionPanel({
         />
       ) : null}
 
-      <Card padding="loose">
-        <SectionHeader
-          title={t("portal.infrastructure.encryption.coverage.heading")}
-          sub={t("portal.infrastructure.encryption.coverage.subheading")}
-        />
-        <div className="portal-enc__coverage">
-          <div className="portal-enc__coverage-tiles">
-            <StatTile
-              label={t("portal.infrastructure.encryption.coverage.encrypted")}
-              value={status.encryptedFiles.toLocaleString()}
-            />
-            <StatTile
-              label={t("portal.infrastructure.encryption.coverage.plaintext")}
-              value={status.plaintextFiles.toLocaleString()}
-              tone={status.plaintextFiles > 0 ? "warning" : "default"}
+      <section>
+        <Card padding="loose">
+          <SectionHeader
+            title={t("portal.infrastructure.encryption.coverage.heading")}
+            sub={t("portal.infrastructure.encryption.coverage.subheading")}
+          />
+          <div className="portal-enc__coverage">
+            <div className="portal-enc__coverage-tiles">
+              <StatTile
+                label={t("portal.infrastructure.encryption.coverage.encrypted")}
+                value={status.encryptedFiles.toLocaleString()}
+              />
+              <StatTile
+                label={t("portal.infrastructure.encryption.coverage.plaintext")}
+                value={status.plaintextFiles.toLocaleString()}
+                tone={status.plaintextFiles > 0 ? "warning" : "default"}
+              />
+            </div>
+            {totalFiles > 0 ? (
+              <StatusBadge
+                tone={coverage === 1 ? "success" : "warning"}
+                size="sm"
+              >
+                {t(
+                  "portal.infrastructure.encryption.coverage.percentEncrypted",
+                  {
+                    percent: Math.round(coverage * 100),
+                  },
+                )}
+              </StatusBadge>
+            ) : null}
+          </div>
+          <div className="portal-enc__coverage-bar">
+            <ProgressBar
+              value={coverage}
+              height={10}
+              color={coverage === 1 ? "var(--color-green)" : undefined}
+              label={t(
+                "portal.infrastructure.encryption.coverage.progressLabel",
+                {
+                  percent: Math.round(coverage * 100),
+                },
+              )}
             />
           </div>
-          {totalFiles > 0 ? (
-            <StatusBadge
-              tone={coverage === 1 ? "success" : "warning"}
-              size="sm"
-            >
-              {t("portal.infrastructure.encryption.coverage.percentEncrypted", {
-                percent: Math.round(coverage * 100),
-              })}
-            </StatusBadge>
+          {!status.writeEnabled && status.active ? (
+            <p className="portal-enc__note">
+              {t("portal.infrastructure.encryption.coverage.decryptOnlyNote")}
+            </p>
           ) : null}
-        </div>
-        <div className="portal-enc__coverage-bar">
-          <ProgressBar
-            value={coverage}
-            height={10}
-            color={coverage === 1 ? "var(--color-green)" : undefined}
-            label={t(
-              "portal.infrastructure.encryption.coverage.progressLabel",
-              {
-                percent: Math.round(coverage * 100),
-              },
-            )}
-          />
-        </div>
-        {!status.writeEnabled && status.active ? (
-          <p className="portal-enc__note">
-            {t("portal.infrastructure.encryption.coverage.decryptOnlyNote")}
-          </p>
-        ) : null}
-      </Card>
+        </Card>
+      </section>
 
       {neverUsed ? null : (
         <>
