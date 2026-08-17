@@ -24,6 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final EndpointInterceptor endpointInterceptor;
+    private final PdfMetricsInterceptor pdfMetricsInterceptor;
     private final ApplicationProperties applicationProperties;
 
     private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
@@ -35,6 +36,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
+        registry.addInterceptor(pdfMetricsInterceptor);
     }
 
     @Override
@@ -81,8 +83,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/mstile-*.png",
                         "/safari-pinned-tab.svg",
                         "/icons/**",
-                        "/logo/**",
-                        "/robots.txt",
+                        "/modern-logo/**",
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",
@@ -119,8 +120,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/Login/",
                         staticPath + "icons/",
                         "classpath:/static/icons/",
-                        staticPath + "logo/",
-                        "classpath:/static/logo/")
+                        staticPath + "modern-logo/",
+                        "classpath:/static/modern-logo/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()

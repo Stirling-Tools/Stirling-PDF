@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { BASE_PATH } from "@app/constants/app";
 
-const LOGO_FOLDER = "logo";
+const LOGO_FOLDER = "modern-logo";
 
 export function useLogoAssets() {
   return useMemo(() => {

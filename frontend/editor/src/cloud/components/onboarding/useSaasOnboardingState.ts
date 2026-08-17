@@ -31,12 +31,14 @@ interface UseSaasOnboardingStateProps {
    * (slide shown) so the web (saas) flow is unchanged.
    */
   hideDesktopInstall?: boolean;
+  slideIds?: SlideId[];
 }
 
 export function useSaasOnboardingState({
   opened,
   onClose,
   hideDesktopInstall = false,
+  slideIds,
 }: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
   const { loading } = useAuth();
   const { wallet } = useWallet();
@@ -89,8 +91,9 @@ export function useSaasOnboardingState({
 
   const flowSlideIds = useMemo(
     () =>
+      slideIds ??
       resolveSaasFlow({ showUsageSlide, showTeamSlide, hideDesktopInstall }),
-    [showUsageSlide, showTeamSlide, hideDesktopInstall],
+    [slideIds, showUsageSlide, showTeamSlide, hideDesktopInstall],
   );
   const totalSteps = flowSlideIds.length;
   const maxIndex = Math.max(totalSteps - 1, 0);

@@ -1,9 +1,11 @@
-import { useEffect, useState, Suspense, lazy } from "react";
-import { Box, Loader, Center } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useState, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -11,6 +13,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
@@ -34,7 +37,6 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
 
   // The consent banner used to be initialised by the footer; the legal links
@@ -42,11 +44,10 @@ export default function Workbench() {
   useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
-  const { selectors } = useFileState();
+  const { files: activeFiles, fileIds } = useAllFiles();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -58,6 +59,7 @@ export default function Workbench() {
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
+  const { overlay: signingOverlay } = useSigningOverlay();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -67,18 +69,13 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
-  // Custom workbench views (e.g. Watched Folders) manage their own content and may
-  // have no workbench files, but still need the bar's view switcher so users can
-  // navigate back out.
-  const isCustomViewActive = !isBaseWorkbench(currentView);
+  const { t } = useTranslation();
 
-  // Enable bar transitions after first paint so the initial hidden state shows
-  // without animating (landing page on load shouldn't animate the bar up).
-  const [barTransitionEnabled, setBarTransitionEnabled] = useState(false);
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setBarTransitionEnabled(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // The viewer's tool row can be retracted to give the document more height.
+  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
+  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
+  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -117,7 +114,40 @@ export default function Workbench() {
       return <FileManagerView />;
     }
 
+    // Shared Signing drives the main viewer from the sidebar (document + overlays
+    // via context), ahead of the empty-state landing page.
+    if (currentView === "viewer" && signingOverlay?.file) {
+      return (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={signingOverlay.file}
+          signaturePreviews={signingOverlay.signaturePreviews}
+          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
+          signaturePlacementMode={signingOverlay.signaturePlacementMode}
+          signaturePlacementData={signingOverlay.signaturePlacementData}
+          signaturePlacementType={signingOverlay.signaturePlacementType}
+          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
+          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
+        />
+      );
+    }
+
     if (activeFiles.length === 0) {
+      // Files are open but their bytes are still loading (a cold PDF engine can
+      // take seconds). Showing the drop zone here reads as "the click did nothing".
+      if (fileIds.length > 0) {
+        return (
+          <Center h="100%" w="100%">
+            <Stack align="center" gap="md">
+              <Loader size="lg" />
+              <Text c="dimmed" size="sm">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Stack>
+          </Center>
+        );
+      }
       return <LandingPage />;
     }
 
@@ -199,31 +229,41 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={
-        isRainbowMode
-          ? // No background color in rainbow mode, but still pin min-width:0
-            // so inner flex children (files-page toolbar, etc.) actually
-            // shrink on narrow viewports.
-            { minWidth: 0 }
-          : { backgroundColor: "var(--bg-background)", minWidth: 0 }
-      }
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* Workbench Bar - animates in/out based on file presence */}
+      {/* Workbench Bar — always visible outside My Files (it hosts the
+          global search), even with no files loaded. */}
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
-          <div
-            className={styles.workbenchBarWrapper}
-            data-hidden={String(!hasFiles && !isCustomViewActive)}
-            data-no-transition={String(!barTransitionEnabled)}
-          >
-            <div className={styles.workbenchBarInner}>
-              <WorkbenchBar
-                currentView={currentView}
-                setCurrentView={setCurrentView}
-                hasFiles={hasFiles}
-              />
+          <div className={styles.workbenchBarShell}>
+            <div className={styles.workbenchBarWrapper}>
+              <div className={styles.workbenchBarInner}>
+                <WorkbenchBar
+                  currentView={currentView}
+                  setCurrentView={setCurrentView}
+                  hasFiles={hasFiles}
+                  viewerToolbarCollapsed={viewerToolbarCollapsed}
+                  onCollapseViewerToolbar={setViewerToolbarCollapsed}
+                />
+              </div>
             </div>
+            {/* Reopen tab: a little handle hanging off the bar's bottom-right
+                while the viewer tool row is retracted. */}
+            {showReopenTab && (
+              <Button
+                type="button"
+                variant="quiet"
+                className={styles.workbenchBarReopenTab}
+                onClick={() => setViewerToolbarCollapsed(false)}
+                aria-expanded={false}
+                aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+                title={t("workbenchBar.showToolbar", "Show toolbar")}
+                leftSection={
+                  <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
+                }
+              />
+            )}
           </div>
         )}
 

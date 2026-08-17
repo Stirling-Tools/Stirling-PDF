@@ -12,22 +12,44 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)."
+        description: "Platform to build (windows, windows-arm64, macos, linux, windows-macos, or all)."
         required: false
         type: string
         default: "all"
+      sign:
+        description: "Sign and notarize the bundles."
+        required: false
+        type: boolean
+        default: true
+      minimal:
+        description: "Fast smoke build: Linux deb only, skip rpm and the flaky AppImage pass. Used by PR builds."
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       platform:
-        description: "Platform to build (windows, macos, linux, or all)"
+        description: "Platform to build (windows, windows-arm64, macos, linux, windows-macos, or all)"
         required: true
         default: "all"
         type: choice
         options:
           - all
           - windows
+          - windows-arm64
           - macos
           - linux
+          - windows-macos
+      sign:
+        description: "Sign and notarize the bundles."
+        required: false
+        default: true
+        type: boolean
+      minimal:
+        description: "Fast smoke build: Linux deb only, skip rpm and the flaky AppImage pass."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -35,13 +57,16 @@ permissions:
 
 jobs:
   determine-matrix:
+    # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
+    # signing environment - release-signing would block every PR run.
+    environment: ci-signing
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -52,14 +77,19 @@ jobs:
           PLATFORM: ${{ inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
+          # ARM64: NSIS only (WiX MSI has no arm64 support in Tauri) and no JPDFium
+          # natives yet - flip jpdfium_platforms to windows-arm64 once JPDFium ships it.
+          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
           MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
           case "$PLATFORM" in
-            windows) ENTRIES=("$WINDOWS") ;;
-            macos)   ENTRIES=("$MACOS") ;;
-            linux)   ENTRIES=("$LINUX") ;;
-            *)       ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
+            windows)       ENTRIES=("$WINDOWS" "$WINDOWS_ARM64") ;;
+            windows-arm64) ENTRIES=("$WINDOWS_ARM64") ;;
+            macos)         ENTRIES=("$MACOS") ;;
+            linux)         ENTRIES=("$LINUX") ;;
+            windows-macos) ENTRIES=("$WINDOWS" "$MACOS") ;;
+            *)             ENTRIES=("$WINDOWS" "$WINDOWS_ARM64" "$MACOS" "$LINUX") ;;
           esac
 
           # Drop macOS entries when Apple certificate secret is unavailable
@@ -76,6 +106,12 @@ jobs:
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
   build:
+    # Windows/GPG signing only runs on main (see the per-step gates below), so only
+    # that path needs the reviewer-gated release-signing environment. Everything else
+    # (PRs, merge queue, nightly) signs macOS only and uses ci-signing, which has no
+    # approval or branch restriction.
+    environment:
+      name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
     needs: determine-matrix
     strategy:
       fail-fast: false
@@ -83,13 +119,16 @@ jobs:
     runs-on: ${{ matrix.platform }}
     env:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+      # Per-platform sign gate. macOS signs on any run with the cert available,
+      # PRs included: Gatekeeper blocks an unsigned .dmg, so an unsigned macOS
+      # PR build is not testable. Windows and Linux stay main-only, matching the
+      # gates on their own signing steps below.
+      SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -103,7 +142,7 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
 
       - name: Setup Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: "npm"
@@ -115,9 +154,23 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      # Cache the Cargo registry and compiled dependency crates so the build
+      # only recompiles the app crate. Written on main; PRs and the merge queue
+      # restore from it.
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: frontend/editor/src-tauri
+          # Stable key shared across workflows so the nightly warmer.
+          # rust-cache still appends OS + rustc + Cargo.lock.
+          shared-key: tauri-${{ matrix.name }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          # Save the dependency cache even if a later step fails
+          cache-on-failure: true
+
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
@@ -127,16 +180,23 @@ jobs:
         if: matrix.platform == 'macos-15'
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
+      # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
-          distribution: "temurin"
+          distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          gradle-version: 9.5.1
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -163,7 +223,7 @@ jobs:
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -173,22 +233,28 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
+        env:
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_HOST: ${{ secrets.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
 
           # Decode client certificate
-          $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
+          $certBytes = [Convert]::FromBase64String("$env:SM_CLIENT_CERT_FILE_B64")
           $certPath = "D:\Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
           echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
-          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> $env:GITHUB_ENV
+          echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
+          echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
+          echo "SM_KEYPAIR_ALIAS=$env:SM_KEYPAIR_ALIAS" >> $env:GITHUB_ENV
 
           # Get PKCS11 config path from DigiCert action
           $pkcs11Config = $env:PKCS11_CONFIG
@@ -206,40 +272,8 @@ jobs:
             }
           }
 
-      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
-      - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        shell: powershell
-        run: |
-          if ($env:WINDOWS_CERTIFICATE) {
-            Write-Host "Importing Windows Code Signing Certificate..."
-
-            # Decode base64 certificate and save to file
-            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
-            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
-            [IO.File]::WriteAllBytes($certPath, $certBytes)
-
-            # Import certificate to CurrentUser\My store
-            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
-
-            # Extract and set thumbprint as environment variable
-            $thumbprint = $cert.Thumbprint
-            Write-Host "Certificate imported with thumbprint: $thumbprint"
-            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
-
-            # Clean up certificate file
-            Remove-Item $certPath
-
-            Write-Host "Windows certificate import completed."
-          } else {
-            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
-          }
-
       - name: Import Apple Developer Certificate
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -260,7 +294,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -283,7 +317,7 @@ jobs:
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Preflight smctl
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
@@ -296,7 +330,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
 
       - name: Configure Windows code signing
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: bash
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
@@ -315,7 +349,7 @@ jobs:
           EOF
 
       - name: Import release GPG signing key (Linux)
-        if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
+        if: inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
@@ -332,8 +366,9 @@ jobs:
             exit 1
           fi
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+      - name: Build Tauri app (signed)
+        if: env.SIGN_BUNDLE == 'true'
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -361,20 +396,43 @@ jobs:
         with:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
-          # Linux: build deb+rpm only here. AppImage runs in its own
-          # continue-on-error step below so its persistent linuxdeploy
-          # failure (#6127 onwards) does not tank deb/rpm uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+          # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
+          # AppImage runs in its own continue-on-error step below so its
+          # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+
+      - name: Build Tauri app (unsigned)
+        if: env.SIGN_BUNDLE != 'true'
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN: "0"
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          CI: true
+        with:
+          projectPath: ./frontend/editor
+          tauriScript: npx tauri
+          # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
+          # AppImage runs in its own continue-on-error step below so its
+          # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
+      # Skipped on minimal smoke builds (flaky + slow, deb is enough to verify).
       - name: Build Tauri app (Linux AppImage)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
         continue-on-error: true
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -388,8 +446,39 @@ jobs:
           tauriScript: npx tauri
           args: --bundles appimage
 
+      # Bundled libwayland conflicts with the host's on some distros (Fedora
+      # Wayland: EGL_BAD_PARAMETER, blank window - #6878). The AppImage
+      # ecosystem excludelist agrees these libs must come from the system.
+      - name: Strip bundled Wayland libs from AppImage
+        if: matrix.platform == 'ubuntu-22.04' && !inputs.minimal
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          AI=$(find "$PWD/frontend/editor/src-tauri/target" -name "*.AppImage" | head -1)
+          if [ -z "$AI" ]; then echo "No AppImage found - skipping"; exit 0; fi
+          chmod +x "$AI"
+          WORK=$(mktemp -d)
+          (cd "$WORK" && "$AI" --appimage-extract >/dev/null)
+          if ! ls "$WORK/squashfs-root/usr/lib/"libwayland-* >/dev/null 2>&1; then
+            echo "No bundled libwayland - nothing to strip"
+            rm -rf "$WORK"
+            exit 0
+          fi
+          rm -f "$WORK/squashfs-root/usr/lib/"libwayland-*
+          curl -fsSL -o "$WORK/appimagetool" \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          # Pinned checksum: never execute an unverified downloaded binary. On
+          # mismatch (upstream rebuilt continuous) the step aborts and the
+          # original AppImage ships unchanged - update the pin deliberately.
+          echo "a6d71e2b6cd66f8e8d16c37ad164658985e0cf5fcaa950c90a482890cb9d13e0  $WORK/appimagetool" | sha256sum -c -
+          chmod +x "$WORK/appimagetool"
+          "$WORK/appimagetool" --appimage-extract-and-run "$WORK/squashfs-root" "$AI.new"
+          mv "$AI.new" "$AI"
+          rm -rf "$WORK"
+          echo "Stripped bundled libwayland from $(basename "$AI")"
+
       - name: Clear release GPG key from runner keyring (Linux)
-        if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
+        if: always() && inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         env:
           RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
         run: |
@@ -399,7 +488,7 @@ jobs:
           fi
 
       - name: Verify notarization (macOS only)
-        if: matrix.platform == 'macos-15'
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
           cd ./frontend/editor/src-tauri/target
@@ -426,6 +515,9 @@ jobs:
             # Only ship the MSI installer. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
+          elif [ "${{ matrix.platform }}" = "windows-11-arm" ]; then
+            # arm64 ships the NSIS installer (WiX MSI has no arm64 support in Tauri).
+            find . -name "*-setup.exe" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}-setup.exe" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
@@ -437,9 +529,28 @@ jobs:
       # Verify the MSI AND the inner exe extracted from it are signed.
       # The inner exe is what gets installed on users' machines and what AV scans.
       - name: Verify Windows Code Signature
-        if: matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main'
+        if: inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
+          # arm64 ships an NSIS installer, not an MSI. Tauri's signCommand signs the
+          # inner exe before packing and the setup exe after, so verifying the setup
+          # exe is the arm64 equivalent of the MSI + inner-exe check below.
+          if ("${{ matrix.platform }}" -eq "windows-11-arm") {
+            $exePath = "./dist/Stirling-PDF-${{ matrix.name }}-setup.exe"
+            if (-not (Test-Path $exePath)) {
+              Write-Host "[ERROR] NSIS installer not found at $exePath"
+              exit 1
+            }
+            $sig = Get-AuthenticodeSignature -FilePath $exePath
+            Write-Host "NSIS installer: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne "Valid") {
+              Write-Host "[ERROR] NSIS installer is not signed"
+              exit 1
+            }
+            Write-Host "[SUCCESS] NSIS installer is properly signed"
+            exit 0
+          }
+
           $allSigned = $true
           $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
 
@@ -485,7 +596,7 @@ jobs:
           Write-Host "[SUCCESS] MSI and inner exe are properly signed"
 
       - name: Dump smctl logs on failure
-        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        if: ${{ failure() && startsWith(matrix.platform, 'windows') && env.SM_API_KEY != '' }}
         shell: pwsh
         run: |
           $logDir = "$env:USERPROFILE\.signingmanager\logs"
@@ -512,7 +623,7 @@ jobs:
           cd ./frontend/editor/src-tauri/target
 
           # Check for expected artifacts based on platform
-          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+          if [ "${{ matrix.platform }}" = "windows-latest" ] || [ "${{ matrix.platform }}" = "windows-11-arm" ]; then
             echo "Checking for Windows artifacts..."
             find . -name "*.exe" -o -name "*.msi" | head -5
             if [ $(find . -name "*.exe" | wc -l) -eq 0 ]; then
@@ -556,12 +667,19 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    # Fork and Dependabot pull_request runs receive a read-only GITHUB_TOKEN,
+    # so the API cannot create or update PR comments there. The artifacts are
+    # still uploaded and remain available from the Actions run page.
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.build.result == 'success' &&
+      !github.event.pull_request.head.repo.fork &&
+      github.actor != 'dependabot[bot]'
     permissions:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -584,6 +702,7 @@ jobs:
             // Map of expected artifact names to display info
             const artifactMap = {
               'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
+              'Stirling-PDF-windows-arm64': { icon: '🪟', platform: 'Windows ARM64', files: '-setup.exe (NSIS)' },
               'Stirling-PDF-macos-universal': { icon: '🍎', platform: 'macOS Universal', files: '.dmg' },
               'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .rpm, .AppImage' }
             };
@@ -652,7 +771,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 

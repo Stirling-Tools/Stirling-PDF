@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
+import { Badge, Group, Stack, Text } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
@@ -167,10 +168,10 @@ const ComparePixelWorkbenchView = ({
           </Badge>
         </Group>
         <SegmentedControl
-          size="xs"
+          size="sm"
           value={viewMode}
           onChange={(value) => setViewMode(value as PixelViewMode)}
-          data={[
+          options={[
             {
               value: "side-by-side",
               label: t("compare.pixel.sideBySide", "Side-by-side"),
@@ -187,7 +188,7 @@ const ComparePixelWorkbenchView = ({
       {result.warnings.length > 0 && (
         <Stack gap={4}>
           {result.warnings.map((w, i) => (
-            <Text key={i} size="xs" c="yellow.7">
+            <Text key={i} size="xs" c="var(--color-amber-dark)">
               {w}
             </Text>
           ))}

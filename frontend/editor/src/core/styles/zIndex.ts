@@ -1,7 +1,6 @@
 // Centralized z-index constants for new usages added in this branch.
 // Keep values identical to their original inline usages.
 
-export const Z_INDEX_FULLSCREEN_SURFACE = 1000;
 export const Z_INDEX_OVER_FULLSCREEN_SURFACE = 1300;
 export const Z_ANALYTICS_MODAL = 1301;
 // Config/Settings modal - should appear above analytics modal when navigating from onboarding
@@ -43,11 +42,8 @@ export const Z_INDEX_SIGN_IN_MODAL = 9000;
 // Floating viewer menus rendered through document.body portals.
 export const Z_INDEX_VIEWER_FLOATING_MENU = 10000;
 
-// Toast notifications and error displays - Always on top (higher than rainbow theme at 10000)
 export const Z_INDEX_TOAST = 10001;
 
-// Signature preview overlays inside the PDF viewer
-export const Z_INDEX_SIGNATURE_DRAG_BLOCKER = 999;
 export const Z_INDEX_SIGNATURE_OVERLAY = 1000;
 export const Z_INDEX_SIGNATURE_OVERLAY_HANDLE = 1001;
 export const Z_INDEX_SIGNATURE_OVERLAY_DELETE = 1002;

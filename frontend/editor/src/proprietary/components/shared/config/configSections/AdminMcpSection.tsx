@@ -24,6 +24,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface McpAuthData {
   mode?: string;
@@ -211,6 +212,10 @@ export default function AdminMcpSection() {
               value={authMode}
               onChange={(v) => setAuth({ mode: v || "oauth" })}
               allowDeselect={false}
+              comboboxProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+              }}
               disabled={!settings.enabled}
             />
 

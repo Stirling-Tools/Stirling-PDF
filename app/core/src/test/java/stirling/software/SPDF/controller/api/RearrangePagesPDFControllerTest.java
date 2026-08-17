@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -302,6 +303,11 @@ class RearrangePagesPDFControllerTest {
             assertNotNull(response);
             // 2 pages * 3 duplicates = 6 final pages
             assertEquals(6, realDoc.getNumberOfPages());
+            // Each duplicate must be a distinct page node in the saved output; a shared
+            // node under multiple /Kids is an invalid tree readers reject as cyclic.
+            List<Object> savedPages = reloadAndSnapshot(response);
+            assertEquals(6, savedPages.size());
+            assertEquals(6, new HashSet<>(savedPages).size());
         }
     }
 
@@ -321,6 +327,31 @@ class RearrangePagesPDFControllerTest {
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertEquals(4, realDoc.getNumberOfPages());
+        }
+    }
+
+    @Test
+    void testRearrangePages_SideStitchBooklet_RepeatedPaddingPagesAreDistinctNodes()
+            throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("SIDE_STITCH_BOOKLET_SORT");
+
+        // 6 pages is not a multiple of 4, so booklet padding repeats the last page index
+        // several times; each repeat must be a distinct page node, not one shared node.
+        try (PDDocument realDoc = buildRealPdf(6)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(8, realDoc.getNumberOfPages());
+            List<Object> savedPages = reloadAndSnapshot(response);
+            assertEquals(8, savedPages.size());
+            assertEquals(8, new HashSet<>(savedPages).size());
         }
     }
 }

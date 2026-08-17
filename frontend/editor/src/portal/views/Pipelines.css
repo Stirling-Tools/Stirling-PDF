@@ -1,0 +1,111 @@
+.portal-pipelines {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.portal-pipelines__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
+  gap: 1rem;
+}
+
+.portal-pipelines__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--c-text);
+}
+
+.portal-pipelines__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+  max-width: 46rem;
+}
+
+/* Table cells */
+.portal-pipelines__name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.portal-pipelines__name-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.portal-pipelines__name-text strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-pipelines__pipe-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  background: var(--c-primary-tint);
+  color: var(--c-accent-text);
+}
+
+.portal-pipelines__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  margin: 0;
+}
+
+.portal-pipelines__caret {
+  display: inline-block;
+  color: var(--c-text-subtle);
+  transition: transform var(--motion-fast);
+}
+
+.portal-pipelines__caret.is-open {
+  transform: rotate(90deg);
+  color: var(--c-accent-text);
+}
+
+/* Table skeleton */
+.portal-pipelines__table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Shared with the pipeline builder page. */
+.portal-pipelines__detail-heading {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+.portal-pipelines__source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: 0.625rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+}

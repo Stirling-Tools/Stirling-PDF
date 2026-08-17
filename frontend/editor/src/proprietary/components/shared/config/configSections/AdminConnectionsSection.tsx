@@ -22,7 +22,7 @@ import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ProviderCard from "@app/components/shared/config/configSections/ProviderCard";
 import {
   Provider,
@@ -658,7 +658,7 @@ export default function AdminConnectionsSection() {
               href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
               target="_blank"
               size="xs"
-              c="blue"
+              c="var(--c-accent-text)"
             >
               {t(
                 "admin.settings.connections.documentation",
@@ -687,7 +687,7 @@ export default function AdminConnectionsSection() {
                     "Allow users to upload files from mobile devices by scanning a QR code",
                   )}
                 </Text>
-                <Text size="xs" c="orange" mt={8} fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
                     "admin.settings.connections.mobileScanner.note",
                     "Note: Requires Frontend URL to be configured. ",
@@ -698,7 +698,7 @@ export default function AdminConnectionsSection() {
                       e.preventDefault();
                       navigate("/settings/adminGeneral#frontendUrl");
                     }}
-                    c="orange"
+                    c="var(--color-amber-dark)"
                     td="underline"
                   >
                     {t(
@@ -815,7 +815,10 @@ export default function AdminConnectionsSection() {
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
-                          comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                          comboboxProps={{
+                            withinPortal: true,
+                            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                          }}
                         />
                         <PendingBadge
                           show={isFieldPending("mobileScannerImageResolution")}
@@ -872,7 +875,10 @@ export default function AdminConnectionsSection() {
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
-                          comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                          comboboxProps={{
+                            withinPortal: true,
+                            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                          }}
                         />
                         <PendingBadge
                           show={isFieldPending("mobileScannerPageFormat")}

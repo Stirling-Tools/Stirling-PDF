@@ -1,3 +1,8 @@
+/// <reference types="gapi" />
+/// <reference types="gapi.client.drive-v3" />
+/// <reference types="google.accounts" />
+/// <reference types="google.picker" />
+
 declare module "*.js";
 declare module "*.module.css";
 

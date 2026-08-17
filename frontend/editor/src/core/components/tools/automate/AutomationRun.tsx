@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Text,
-  Stack,
-  Group,
-  Card,
-  Progress,
-  Loader,
-} from "@mantine/core";
+import { Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
@@ -160,7 +153,7 @@ export default function AutomationRun({
             style={{
               width: 16,
               height: 16,
-              border: "2px solid #ccc",
+              border: "2px solid var(--c-border)",
               borderRadius: "50%",
             }}
           />
@@ -223,7 +216,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="red" mt="xs">
+                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
                     {step.error}
                   </Text>
                 )}
@@ -248,7 +241,7 @@ export default function AutomationRun({
           </Button>
 
           {hasResults && (
-            <Button variant="light" onClick={onComplete}>
+            <Button variant="secondary" onClick={onComplete}>
               {t("automate.sequence.finish", "Finish")}
             </Button>
           )}

@@ -5,12 +5,17 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
+import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
-import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
+import {
+  NavKey,
+  VALID_NAV_KEYS,
+  type ConfigNavSection,
+} from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
@@ -24,12 +29,28 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
+  /**
+   * Mirror the active section to /settings/<key> URLs (deep links, history
+   * unwind on close). Hosts mounted away from the editor's /settings route —
+   * the admin portal — turn this off and the modal keeps its section purely in
+   * state.
+   */
+  urlSync?: boolean;
+  /** Section to land on when opening. Only honoured when urlSync is off (URL
+   *  deep links win otherwise). */
+  initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
+  /** Host-specific sections appended after the build's registry sections. */
+  extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 // Extract section from URL path (e.g., /settings/people -> people)
@@ -45,12 +66,20 @@ const getSectionFromPath = (pathname: string): NavKey | null => {
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   opened,
   onClose,
+  urlSync = true,
+  initialSection,
+  initialFocus,
+  extraSections,
+  hiddenSectionKeys,
 }) => {
   const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
   // right tab without a one-frame "general" flicker.
   const [active, setActive] = useState<NavKey>(
-    () => getSectionFromPath(window.location.pathname) ?? "general",
+    () =>
+      (urlSync ? getSectionFromPath(window.location.pathname) : null) ??
+      initialSection ??
+      "general",
   );
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -65,6 +94,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   // those update the URL via `history.replaceState` directly and never push
   // a new React Router location.
   useEffect(() => {
+    if (!urlSync) return;
     const section = getSectionFromPath(location.pathname);
     if (opened && section) {
       setActive(section);
@@ -76,7 +106,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       // If at /settings without a section, redirect to general
       navigate("/settings/general", { replace: true });
     }
-  }, [location.pathname, opened, navigate]);
+  }, [location.pathname, opened, navigate, urlSync]);
+
+  // Non-URL hosts land the modal on the section they asked for.
+  useEffect(() => {
+    if (opened && !urlSync && initialSection) {
+      setActive(initialSection);
+    }
+  }, [opened, urlSync, initialSection]);
 
   useEffect(() => {
     if (opened) {
@@ -98,6 +135,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const switchSection = useCallback(
     (key: NavKey) => {
       setActive(key);
+      if (!urlSync) return;
       const alreadyInSettings = stripBasePath(
         window.location.pathname,
       ).startsWith("/settings");
@@ -111,8 +149,37 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
         navigate(`/settings/${key}`);
       }
     },
-    [navigate],
+    [navigate, urlSync],
   );
+
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, initialFocus, location.search, urlSync]);
 
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.
@@ -133,13 +200,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
 
   const colors = useMemo(
     () => ({
-      navBg: "var(--modal-nav-bg)",
-      sectionTitle: "var(--modal-nav-section-title)",
+      navBg: "var(--c-bg-raised)",
+      sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
-      navItemActive: "var(--modal-nav-item-active)",
-      navItemActiveBg: "var(--modal-nav-item-active-bg)",
-      contentBg: "var(--modal-content-bg)",
-      headerBorder: "var(--modal-header-border)",
+      navItemActive: "var(--c-accent-fg)",
+      navItemActiveBg: "var(--c-primary-subtle)",
+      contentBg: "var(--c-surface)",
+      headerBorder: "var(--c-border-subtle)",
     }),
     [],
   );
@@ -149,34 +216,74 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  /** Resolves false when a dirty-state confirm kept the modal open. */
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
+    if (!canProceed) return false;
 
-    // Pop back to whatever the user came from (files / viewer / tools).
-    // location.key === "default" means /settings was the first entry in
-    // this tab (deep link / refresh), so there's nothing to pop to;
-    // fall back to home in that case.
-    if (location.key === "default") {
-      navigate("/", { replace: true });
-    } else {
-      navigate(-1);
+    // Only unwind history if settings was opened via the URL; opened via state
+    // there's no /settings entry to pop and navigate(-1) would jump to /files.
+    if (urlSync && location.pathname.startsWith("/settings")) {
+      // "default" key = first entry (deep link/refresh); nothing to pop to.
+      if (location.key === "default") {
+        navigate(EDITOR_BASENAME, { replace: true });
+      } else {
+        navigate(-1);
+      }
     }
     onClose();
-  }, [confirmIfDirty, location.key, navigate, onClose]);
+    return true;
+  }, [
+    confirmIfDirty,
+    location.key,
+    location.pathname,
+    navigate,
+    onClose,
+    urlSync,
+  ]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
     void handleClose();
   }, [handleClose]);
 
+  // Cmd/Ctrl+K: hand over to the global super search. The bar's own shortcut
+  // is inert while a dialog traps focus, so the modal closes itself (through
+  // the same dirty-check as any other close) and asks the bar to take focus.
+  // Settings results deep-link straight back into this modal.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo || e.code !== "KeyK") return;
+      e.preventDefault();
+      void handleClose().then((closed) => {
+        if (closed) window.dispatchEvent(new Event("superSearch:focus"));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opened, handleClose]);
+
   // Left navigation structure and icons
-  const configNavSections = useConfigNavSections(
+  const registrySections = useConfigNavSections(
     isAdmin,
     runningEE,
     loginEnabled,
     handleCloseSync,
+    config?.showSettingsWhenNoLogin ?? true,
   );
+  const configNavSections = useMemo(() => {
+    const base = hiddenSectionKeys?.length
+      ? registrySections
+          .map((s) => ({
+            ...s,
+            items: s.items.filter((i) => !hiddenSectionKeys.includes(i.key)),
+          }))
+          .filter((s) => s.items.length > 0)
+      : registrySections;
+    return extraSections?.length ? [...base, ...extraSections] : base;
+  }, [registrySections, extraSections, hiddenSectionKeys]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {
@@ -219,7 +326,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
       removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
-      <div className="modal-container">
+      <div className="modal-container" data-tour="settings-modal">
         {/* Left navigation */}
         <div
           className={`modal-nav ${isMobile ? "mobile" : ""}`}
@@ -357,14 +464,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
                 <ActionIcon
                   ref={closeButtonRef}
-                  variant="subtle"
+                  variant="tertiary"
                   onClick={handleClose}
                   aria-label={t("settings.close", "Close")}
                   data-autofocus

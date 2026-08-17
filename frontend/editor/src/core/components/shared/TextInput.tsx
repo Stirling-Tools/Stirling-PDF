@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/shared/textInput/TextInput.module.css";
 
@@ -35,6 +36,13 @@ export interface TextInputProps {
   readOnly?: boolean;
   /** Accessibility label */
   "aria-label"?: string;
+  /** ARIA role override (e.g. "combobox" for inputs driving a listbox). */
+  role?: React.AriaRole;
+  /** Combobox wiring — forwarded to the native input. */
+  "aria-expanded"?: boolean;
+  "aria-controls"?: string;
+  "aria-activedescendant"?: string;
+  "aria-autocomplete"?: React.AriaAttributes["aria-autocomplete"];
   /** Focus event handler */
   onFocus?: () => void;
   /** Allow the icon to receive pointer events (e.g. when icon is a clickable button) */
@@ -110,14 +118,14 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           {...props}
         />
         {shouldShowClearButton && (
-          <button
-            type="button"
+          <ActionIcon
+            variant="tertiary"
             className={styles.clearButton}
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
           >
             <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-          </button>
+          </ActionIcon>
         )}
       </div>
     );

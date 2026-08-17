@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Modal,
   Text,
-  Button,
   Group,
   Stack,
   Checkbox,
@@ -11,6 +10,7 @@ import {
   Badge,
   SimpleGrid,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { FileId } from "@app/types/file";
@@ -151,10 +151,10 @@ const FilePickerModal = ({
                 )}
               </Text>
               <Group gap="xs">
-                <Button size="xs" variant="light" onClick={selectAll}>
+                <Button size="sm" variant="secondary" onClick={selectAll}>
                   {t("pageEdit.selectAll", "Select All")}
                 </Button>
-                <Button size="xs" variant="light" onClick={selectNone}>
+                <Button size="sm" variant="secondary" onClick={selectNone}>
                   {t("pageEdit.deselectAll", "Select None")}
                 </Button>
               </Group>
@@ -189,6 +189,13 @@ const FilePickerModal = ({
                           checked={isSelected}
                           onChange={() => toggleFileSelection(fileId)}
                           onClick={(e) => e.stopPropagation()}
+                          aria-label={t(
+                            "fileUpload.selectFile",
+                            "Select {{name}}",
+                            {
+                              name: file.name,
+                            },
+                          )}
                         />
 
                         {/* Thumbnail */}
@@ -239,7 +246,7 @@ const FilePickerModal = ({
 
             {/* Selection summary */}
             {selectedFileIds.length > 0 && (
-              <Text size="sm" c="blue" ta="center">
+              <Text size="sm" c="var(--c-accent-text)" ta="center">
                 {selectedFileIds.length}{" "}
                 {t("fileManager.filesSelected", "files selected")}
               </Text>
@@ -249,7 +256,7 @@ const FilePickerModal = ({
 
         {/* Action buttons */}
         <Group justify="flex-end" mt="md">
-          <Button variant="light" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("close", "Cancel")}
           </Button>
           <Button

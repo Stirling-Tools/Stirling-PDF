@@ -12,6 +12,7 @@ export interface AppConfig {
   enableOAuth?: boolean;
   enableSaml?: boolean;
   isAdmin?: boolean;
+  shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
@@ -30,7 +31,9 @@ export interface AppConfig {
   license?: string;
   SSOAutoLogin?: boolean;
   serverCertificateEnabled?: boolean;
+  hardwareSigningAvailable?: boolean;
   enableMobileScanner?: boolean;
+  enableMobileSignature?: boolean;
   mobileScannerConvertToPdf?: boolean;
   mobileScannerImageResolution?: string;
   mobileScannerPageFormat?: string;

@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import SuccessMessage from "@app/routes/login/SuccessMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import NavigationLink from "@app/routes/login/NavigationLink";
 import { supabase } from "@app/auth/supabase";
 import { absoluteWithBasePath } from "@app/constants/app";
 import { useTranslation } from "@app/hooks/useTranslation";
+import { Button } from "@app/ui/Button";
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -233,7 +234,7 @@ export default function ResetPassword() {
               />
             </div>
           </div>
-          <button
+          <Button
             onClick={handleUpdatePassword}
             disabled={isSubmitting || !password || !confirmPassword}
             className="auth-button"
@@ -241,7 +242,7 @@ export default function ResetPassword() {
             {isSubmitting
               ? t("login.sending", "Sending…")
               : t("login.updatePassword", "Update password")}
-          </button>
+          </Button>
           <NavigationLink
             onClick={() => navigate("/login")}
             text={t("login.backToSignIn", "Back to sign in")}

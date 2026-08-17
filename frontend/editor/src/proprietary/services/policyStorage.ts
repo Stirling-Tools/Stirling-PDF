@@ -6,12 +6,13 @@
  */
 
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { defaultRunOn } from "@app/policies/runOn";
 import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
 
 const STORAGE_KEY = "stirling-policies-state";
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
-function defaultState(): PolicyState {
+function defaultState(categoryId: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
   return {
@@ -26,8 +27,7 @@ function defaultState(): PolicyState {
     outputMode: "new_version",
     // No rename by default — the output keeps the input's filename.
     outputName: "",
-    // Enforce on upload by default; export enforcement is the alternative.
-    runOn: "upload",
+    runOn: defaultRunOn(categoryId),
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable).
     isDefault: true,
@@ -53,14 +53,17 @@ export function loadPolicies(): PoliciesByCategory {
   // Always reconcile against the current category list so a newly-added
   // category gets a default rather than being undefined.
   const out: PoliciesByCategory = {};
-  for (const cat of loadPolicyCatalog().categories) {
-    const merged = { ...defaultState(), ...(parsed[cat.id] ?? {}) };
+  loadPolicyCatalog().categories.forEach((cat, index) => {
+    const merged = { ...defaultState(cat.id), ...(parsed[cat.id] ?? {}) };
     // Migration: clear the obsolete persisted reviewer email so it re-defaults
     // to the real signed-in user.
     if (merged.reviewerEmail === STALE_REVIEWER_EMAIL)
       merged.reviewerEmail = "";
+    // Default execution order to the catalog position until an admin reorders,
+    // so ordered dispatch is deterministic before any explicit order is set.
+    if (merged.order == null) merged.order = index;
     out[cat.id] = merged;
-  }
+  });
   return out;
 }
 
@@ -88,7 +91,7 @@ export function updatePolicy(
     // Fall back to defaults so a not-yet-seeded category id still yields a
     // complete PolicyState rather than a partial.
     [categoryId]: {
-      ...defaultState(),
+      ...defaultState(categoryId),
       ...current[categoryId],
       ...patch,
     },
@@ -97,10 +100,28 @@ export function updatePolicy(
   return next;
 }
 
+/**
+ * Persist a new execution order. Assigns `order` 0..n-1 to the given categories in
+ * the sequence provided, so after any reorder every listed policy has an explicit,
+ * contiguous order (no reliance on the catalog-index default). Categories omitted
+ * from the list keep their current order.
+ */
+export function reorderPolicies(
+  orderedCategoryIds: string[],
+): PoliciesByCategory {
+  const current = loadPolicies();
+  const next: PoliciesByCategory = { ...current };
+  orderedCategoryIds.forEach((id, index) => {
+    if (next[id]) next[id] = { ...next[id], order: index };
+  });
+  persist(next);
+  return next;
+}
+
 /** Reset a category to its unconfigured default (the "Delete policy" action). */
 export function resetPolicy(categoryId: string): PoliciesByCategory {
   return updatePolicy(categoryId, {
-    ...defaultState(),
+    ...defaultState(categoryId),
     configured: false,
     status: "default",
     // Drop the backing-folder + backend links (the caller deletes those).

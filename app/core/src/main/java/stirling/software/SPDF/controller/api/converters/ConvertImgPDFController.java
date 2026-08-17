@@ -41,6 +41,11 @@ import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
@@ -78,12 +83,20 @@ public class ConvertImgPDFController {
             value = "/pdf/img",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(
+            produces = ToolFormat.IMAGE,
+            arity = ToolArity.SIMO,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "singleOrMultiple", matches = "single"),
+                            produces = ToolFormat.IMAGE,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
                             + " color type, and DPI. Users can choose to get a single image or multiple"
-                            + " images.  Input:PDF Output:Image Type:SI-Conditional")
+                            + " images.")
     public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
@@ -187,7 +200,7 @@ public class ConvertImgPDFController {
                 }
 
                 if (webpFiles.size() == 1) {
-                    Path webpFilePath = webpFiles.get(0);
+                    Path webpFilePath = webpFiles.getFirst();
                     byte[] webpBytes = Files.readAllBytes(webpFilePath);
                     Files.deleteIfExists(tempFile);
                     tempFile = null;
@@ -248,12 +261,13 @@ public class ConvertImgPDFController {
             value = "/img/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(accepts = ToolFormat.IMAGE, produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Convert images to a PDF file",
             description =
                     "This endpoint converts one or more images to a PDF file. Users can specify"
                             + " whether to stretch the images to fit the PDF page, and whether to"
-                            + " automatically rotate the images. Input:Image Output:PDF Type:MISO")
+                            + " automatically rotate the images.")
     public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request)
             throws IOException {
         MultipartFile[] file = request.getFileInput();
@@ -279,11 +293,10 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/cbz/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.CBZ, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
-            description =
-                    "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
-                            + "Input:CBZ Output:PDF Type:SISO")
+            description = "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file.")
     public ResponseEntity<Resource> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -308,11 +321,10 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/cbz",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.CBZ)
     @Operation(
             summary = "Convert PDF to CBZ comic book archive",
-            description =
-                    "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
-                            + "Input:PDF Output:CBZ Type:SISO")
+            description = "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive.")
     public ResponseEntity<Resource> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -334,11 +346,10 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/cbr/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.CBR, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
-            description =
-                    "This endpoint converts a CBR (RAR) comic book archive to a PDF file. "
-                            + "Input:CBR Output:PDF Type:SISO")
+            description = "This endpoint converts a CBR (RAR) comic book archive to a PDF file.")
     public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -363,11 +374,12 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/pdf/cbr",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.CBR)
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
             description =
-                    "This endpoint converts a PDF file to a CBR comic book archive using the local RAR CLI. "
-                            + "Input:PDF Output:CBR Type:SISO")
+                    "This endpoint converts a PDF file to a CBR comic book archive using the local"
+                            + " RAR CLI.")
     public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

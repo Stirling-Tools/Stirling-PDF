@@ -10,11 +10,13 @@ import { alert } from "@app/components/toast";
 import type { StirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 
 interface ShareLinkLoaderProps {
@@ -78,16 +80,14 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         );
         if (signal.aborted) return;
 
-        const contentType =
-          (response.headers &&
-            (response.headers["content-type"] ||
-              response.headers["Content-Type"])) ||
-          "";
-        const disposition =
-          (response.headers &&
-            (response.headers["content-disposition"] ||
-              response.headers["Content-Disposition"])) ||
-          "";
+        const contentType = readResponseHeader(
+          response.headers,
+          "content-type",
+        );
+        const disposition = readResponseHeader(
+          response.headers,
+          "content-disposition",
+        );
         const filename =
           parseContentDispositionFilename(disposition) || "shared-file";
         const blob = response.data as Blob;
@@ -175,7 +175,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             }
 
             navActions.setWorkbench("viewer");
-            navigate("/", { replace: true });
+            navigate(EDITOR_BASENAME, { replace: true });
             return;
           }
         }
@@ -211,7 +211,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         }
 
         navActions.setWorkbench("viewer");
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       } catch (error: unknown) {
         if (signal.aborted) return;
         const status = isAxiosError(error) ? error.response?.status : undefined;
@@ -241,7 +241,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             expandable: false,
             durationMs: 4500,
           });
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         } else if (status === 404 || status === 410) {
           alert({
             alertType: "error",
@@ -249,7 +249,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             expandable: false,
             durationMs: 4000,
           });
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         } else {
           alert({
             alertType: "error",

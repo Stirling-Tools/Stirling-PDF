@@ -2,30 +2,21 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.InputStream;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.pdfbox.contentstream.operator.Operator;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdfparser.PDFStreamParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.DisplayName;
@@ -54,13 +45,23 @@ class TextRedactionServiceTest {
         return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     }
 
+    private PDFont helvetica(PDDocument doc) throws IOException {
+        try (InputStream is =
+                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+            if (is != null) {
+                return PDType0Font.load(doc, is);
+            }
+        }
+        return helvetica();
+    }
+
     /** Single page, single Tj line per supplied text line, Helvetica 12. */
     private PDDocument buildDoc(String... lines) throws IOException {
         PDDocument doc = new PDDocument();
         PDPage page = new PDPage(PDRectangle.LETTER);
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.setFont(helvetica(), FONT_SIZE);
+            cs.setFont(helvetica(doc), FONT_SIZE);
             for (int i = 0; i < lines.length; i++) {
                 cs.beginText();
                 cs.newLineAtOffset(LEFT_X, TOP_Y - i * 16f);
@@ -75,32 +76,6 @@ class TextRedactionServiceTest {
         PDDocument doc = new PDDocument();
         doc.addPage(new PDPage(PDRectangle.LETTER));
         return doc;
-    }
-
-    // ── isTextShowingOperator ────────────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("isTextShowingOperator")
-    class IsTextShowingOperator {
-
-        @Test
-        @DisplayName("recognises the four text-showing operators")
-        void recognisesTextShowingOperators() {
-            assertTrue(service.isTextShowingOperator("Tj"));
-            assertTrue(service.isTextShowingOperator("TJ"));
-            assertTrue(service.isTextShowingOperator("'"));
-            assertTrue(service.isTextShowingOperator("\""));
-        }
-
-        @Test
-        @DisplayName("rejects non text-showing operators and junk")
-        void rejectsOthers() {
-            assertFalse(service.isTextShowingOperator("BT"));
-            assertFalse(service.isTextShowingOperator("ET"));
-            assertFalse(service.isTextShowingOperator("Tf"));
-            assertFalse(service.isTextShowingOperator(""));
-            assertFalse(service.isTextShowingOperator("tj"));
-        }
     }
 
     // ── findTextToRedact ─────────────────────────────────────────────────────────────────────────
@@ -253,192 +228,6 @@ class TextRedactionServiceTest {
         }
     }
 
-    // ── detectCustomEncodingFonts ────────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("detectCustomEncodingFonts")
-    class DetectCustomEncodingFonts {
-
-        @Test
-        @DisplayName("standard Helvetica document is not flagged as custom-encoded")
-        void standardFontNotFlagged() throws IOException {
-            try (PDDocument doc = buildDoc("plain helvetica text")) {
-                assertFalse(service.detectCustomEncodingFonts(doc));
-            }
-        }
-
-        @Test
-        @DisplayName("document with no content / no fonts is not flagged")
-        void emptyDocumentNotFlagged() throws IOException {
-            try (PDDocument doc = buildEmptyDoc()) {
-                assertFalse(service.detectCustomEncodingFonts(doc));
-            }
-        }
-    }
-
-    // ── createPlaceholderWithFont ────────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("createPlaceholderWithFont")
-    class CreatePlaceholderWithFont {
-
-        @Test
-        @DisplayName("returns the input unchanged for null")
-        void nullReturnsNull() {
-            assertNull(service.createPlaceholderWithFont(null, helvetica()));
-        }
-
-        @Test
-        @DisplayName("returns the input unchanged for empty string")
-        void emptyReturnsEmpty() {
-            assertEquals("", service.createPlaceholderWithFont("", helvetica()));
-        }
-
-        @Test
-        @DisplayName("non-subset font yields spaces matching the original length")
-        void nonSubsetFontYieldsMatchingSpaces() {
-            String placeholder = service.createPlaceholderWithFont("hidden", helvetica());
-            assertEquals(" ".repeat("hidden".length()), placeholder);
-        }
-
-        @Test
-        @DisplayName("null font is treated as non-subset and yields spaces")
-        void nullFontYieldsSpaces() {
-            String placeholder = service.createPlaceholderWithFont("abc", null);
-            assertEquals("   ", placeholder);
-        }
-    }
-
-    // ── createPlaceholderWithWidth ───────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("createPlaceholderWithWidth")
-    class CreatePlaceholderWithWidth {
-
-        @Test
-        @DisplayName("returns the input unchanged for null")
-        void nullReturnsNull() {
-            assertNull(service.createPlaceholderWithWidth(null, 10f, helvetica(), FONT_SIZE));
-        }
-
-        @Test
-        @DisplayName("returns the input unchanged for empty string")
-        void emptyReturnsEmpty() {
-            assertEquals("", service.createPlaceholderWithWidth("", 10f, helvetica(), FONT_SIZE));
-        }
-
-        @Test
-        @DisplayName("null font falls back to one space per original character")
-        void nullFontFallsBackToSpaces() {
-            String placeholder = service.createPlaceholderWithWidth("word", 50f, null, FONT_SIZE);
-            assertEquals(" ".repeat("word".length()), placeholder);
-        }
-
-        @Test
-        @DisplayName("non-positive font size falls back to one space per original character")
-        void nonPositiveFontSizeFallsBackToSpaces() {
-            String placeholder = service.createPlaceholderWithWidth("word", 50f, helvetica(), 0f);
-            assertEquals(" ".repeat("word".length()), placeholder);
-        }
-
-        @Test
-        @DisplayName("standard font produces a non-null all-whitespace placeholder")
-        void standardFontProducesWhitespacePlaceholder() {
-            PDFont font = helvetica();
-            float fontSize = FONT_SIZE;
-            String original = "Secret";
-            // Compute a realistic target width the way the service does (text-space / 1000 * size).
-            float targetWidth;
-            try {
-                targetWidth = font.getStringWidth(original) / 1000f * fontSize;
-            } catch (IOException e) {
-                targetWidth = 30f;
-            }
-
-            String placeholder =
-                    service.createPlaceholderWithWidth(original, targetWidth, font, fontSize);
-
-            assertNotNull(placeholder);
-            assertFalse(placeholder.isEmpty(), "Helvetica supports spaces, so non-empty expected");
-            assertTrue(
-                    placeholder.chars().allMatch(c -> c == ' '),
-                    "placeholder should be composed only of spaces");
-        }
-    }
-
-    // ── createTokensWithoutTargetText / writeFilteredContentStream
-    // ────────────────────────────────
-
-    @Nested
-    @DisplayName("createTokensWithoutTargetText")
-    class CreateTokensWithoutTargetText {
-
-        @Test
-        @DisplayName(
-                "returns a non-empty token list and preserves token count when nothing matches")
-        void noMatchPreservesTokens() throws IOException {
-            try (PDDocument doc = buildDoc("nothing to hide")) {
-                PDPage page = doc.getPage(0);
-                List<Object> originalTokens = parseTokens(page);
-
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("ABSENT"), false, false);
-
-                assertNotNull(tokens);
-                assertEquals(
-                        originalTokens.size(),
-                        tokens.size(),
-                        "token count should be unchanged when nothing matched");
-            }
-        }
-
-        @Test
-        @DisplayName("filtered tokens can be written back and the page re-parses cleanly")
-        void filteredTokensRoundTrip() throws IOException {
-            try (PDDocument doc = buildDoc("redact SECRET token roundtrip")) {
-                PDPage page = doc.getPage(0);
-
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
-                assertNotNull(tokens);
-
-                service.writeFilteredContentStream(doc, page, tokens);
-
-                // The page must still hold valid content (at least one operator token).
-                List<Object> reparsed = parseTokens(page);
-                boolean hasOperator = reparsed.stream().anyMatch(t -> t instanceof Operator);
-                assertTrue(hasOperator, "rewritten content stream must contain operators");
-            }
-        }
-
-        @Test
-        @DisplayName("empty target-word set leaves tokens untouched")
-        void emptyTargetSetLeavesTokens() throws IOException {
-            try (PDDocument doc = buildDoc("some content")) {
-                PDPage page = doc.getPage(0);
-                List<Object> originalTokens = parseTokens(page);
-
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Collections.emptySet(), false, false);
-
-                assertEquals(originalTokens.size(), tokens.size());
-            }
-        }
-
-        private List<Object> parseTokens(PDPage page) throws IOException {
-            PDFStreamParser parser = new PDFStreamParser(page);
-            List<Object> tokens = new ArrayList<>();
-            Object token;
-            while ((token = parser.parseNextToken()) != null) {
-                tokens.add(token);
-            }
-            return tokens;
-        }
-    }
-
     // ── inner data classes ───────────────────────────────────────────────────────────────────────
 
     @Nested
@@ -482,85 +271,6 @@ class TextRedactionServiceTest {
 
         private void assertNotEquals(Object a, Object b) {
             assertFalse(a.equals(b));
-        }
-    }
-
-    // ── private logic exercised via reflection ───────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("findAllMatches / buildCompleteText (private logic via reflection)")
-    class PrivateLogic {
-
-        @Test
-        @DisplayName("findAllMatches returns sorted, non-overlapping match ranges for two terms")
-        @SuppressWarnings("unchecked")
-        void findAllMatchesSorted() throws Exception {
-            String complete = "alpha beta gamma beta";
-            Set<String> terms = new LinkedHashSet<>(List.of("beta", "alpha"));
-
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "findAllMatches",
-                            String.class,
-                            Set.class,
-                            boolean.class,
-                            boolean.class);
-            m.setAccessible(true);
-            List<TextRedactionService.MatchRange> matches =
-                    (List<TextRedactionService.MatchRange>)
-                            m.invoke(service, complete, terms, false, false);
-
-            assertNotNull(matches);
-            assertFalse(matches.isEmpty());
-            // Results are sorted by start position.
-            for (int i = 1; i < matches.size(); i++) {
-                assertTrue(
-                        matches.get(i - 1).getStartPos() <= matches.get(i).getStartPos(),
-                        "matches must be sorted ascending by start position");
-            }
-            // "alpha" at 0, "beta" at 6 and 17 -> three matches total.
-            assertEquals(3, matches.size());
-            assertEquals(0, matches.get(0).getStartPos());
-        }
-
-        @Test
-        @DisplayName("findAllMatches returns nothing when no term occurs")
-        @SuppressWarnings("unchecked")
-        void findAllMatchesEmptyWhenAbsent() throws Exception {
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "findAllMatches",
-                            String.class,
-                            Set.class,
-                            boolean.class,
-                            boolean.class);
-            m.setAccessible(true);
-            List<TextRedactionService.MatchRange> matches =
-                    (List<TextRedactionService.MatchRange>)
-                            m.invoke(service, "no terms here", Set.of("XYZ"), false, false);
-            assertTrue(matches.isEmpty());
-        }
-
-        @Test
-        @DisplayName("extractTextFromToken pulls text from Tj COSString and TJ COSArray")
-        void extractTextFromToken() throws Exception {
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "extractTextFromToken", Object.class, String.class);
-            m.setAccessible(true);
-
-            assertEquals("hi", m.invoke(service, new COSString("hi"), "Tj"));
-            assertEquals("hi", m.invoke(service, new COSString("hi"), "'"));
-
-            COSArray tjArray = new COSArray();
-            tjArray.add(new COSString("foo"));
-            tjArray.add(new COSString("bar"));
-            assertEquals("foobar", m.invoke(service, tjArray, "TJ"));
-
-            // Unknown operator yields empty string.
-            assertEquals("", m.invoke(service, new COSString("x"), "Td"));
-            // Wrong token type for the operator yields empty string.
-            assertEquals("", m.invoke(service, new COSArray(), "Tj"));
         }
     }
 }

@@ -1,4 +1,6 @@
 export * from "@shared/components/Button";
+export * from "@shared/components/ActionIcon";
+export * from "@shared/components/FilePicker";
 export * from "@shared/components/StatusBadge";
 export * from "@shared/components/MethodBadge";
 export * from "@shared/components/ToggleSwitch";
@@ -10,6 +12,7 @@ export * from "@shared/components/CodeBlock";
 export * from "@shared/components/SectionDivider";
 export * from "@shared/components/Card";
 export * from "@shared/components/Modal";
+export * from "@shared/components/SettingsShell";
 
 // Layout
 export * from "@shared/components/Stack";
@@ -27,6 +30,7 @@ export * from "@shared/components/Banner";
 export * from "@shared/components/Toast";
 
 // Compound
+export * from "@shared/components/Collapsible";
 export * from "@shared/components/Tabs";
 export * from "@shared/components/Dropdown";
 export * from "@shared/components/Drawer";
