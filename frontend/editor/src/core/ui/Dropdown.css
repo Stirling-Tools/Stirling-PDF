@@ -11,7 +11,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown);
+  z-index: var(--z-popover);
   animation: fadeInUp var(--motion-enter) both;
   display: flex;
   flex-direction: column;

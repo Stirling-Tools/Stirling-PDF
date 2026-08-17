@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useMemo, useState } from "react";
 import {
   type ColumnDef,
   createColumnHelper,
@@ -265,6 +265,42 @@ export function DataTable<T extends RowData>({
 
   const colCount = effectiveColumns.length;
 
+  // Shared row wiring so grouped rows behave like flat ones (interactivity +
+  // the affordance column) instead of being a second-class path.
+  const rowProps = (original: T, muted?: boolean) => {
+    const rowInteractive =
+      interactive && (isRowInteractive?.(original) ?? true);
+    // A row that owns the whole interaction takes the button role + keyboard
+    // handling; a row with its own controls keeps just the mouse click.
+    const asButton = rowInteractive && !rowsContainControls;
+    return {
+      className: [
+        "sui-datatable__row",
+        rowInteractive ? "sui-datatable__row--interactive" : "",
+        muted ? "sui-datatable__row--muted" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      onClick: rowInteractive ? () => onRowClick?.(original) : undefined,
+      tabIndex: asButton ? 0 : undefined,
+      role: asButton ? ("button" as const) : undefined,
+      onKeyDown: asButton
+        ? (e: KeyboardEvent<HTMLTableRowElement>) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onRowClick?.(original);
+            }
+          }
+        : undefined,
+    };
+  };
+
+  // No rows at all - covers a grouped table whose groups are all empty (or an
+  // empty groups list), which would otherwise render a header-only table.
+  const noRows = groups
+    ? groups.every((g) => g.rows.length === 0)
+    : rows.length === 0;
+
   let body: ReactNode;
   if (loading) {
     body = Array.from({ length: skeletonRows }).map((_, r) => (
@@ -288,6 +324,22 @@ export function DataTable<T extends RowData>({
           role="alert"
         >
           {error}
+        </td>
+      </tr>
+    );
+  } else if (noRows) {
+    const isNode = typeof empty === "object" && empty !== null;
+    body = (
+      <tr>
+        <td
+          className={
+            isNode
+              ? "sui-datatable__state sui-datatable__state--node"
+              : "sui-datatable__state"
+          }
+          colSpan={colCount}
+        >
+          {empty ?? "No data"}
         </td>
       </tr>
     );
@@ -318,13 +370,9 @@ export function DataTable<T extends RowData>({
         <tr
           key={rowKey(row)}
           data-row-key={rowKey(row)}
-          className={
-            g.muted
-              ? "sui-datatable__row sui-datatable__row--muted"
-              : "sui-datatable__row"
-          }
+          {...rowProps(row, g.muted)}
         >
-          {columns.map((c) => (
+          {effectiveColumns.map((c) => (
             <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
               {c.renderCell(row)}
             </td>
@@ -348,72 +396,26 @@ export function DataTable<T extends RowData>({
       ) : null;
       return moreEl ? [header, ...rowEls, moreEl] : [header, ...rowEls];
     });
-  } else if (rows.length === 0) {
-    const isNode = typeof empty === "object" && empty !== null;
-    body = (
-      <tr>
-        <td
-          className={
-            isNode
-              ? "sui-datatable__state sui-datatable__state--node"
-              : "sui-datatable__state"
-          }
-          colSpan={colCount}
-        >
-          {empty ?? "No data"}
-        </td>
-      </tr>
-    );
   } else {
-    body = table.getRowModel().rows.map((row) => {
-      const rowInteractive =
-        interactive && (isRowInteractive?.(row.original) ?? true);
-      // Only a row that owns the whole interaction takes the button role +
-      // keyboard handling; a row with its own controls keeps just the mouse click.
-      const asButton = rowInteractive && !rowsContainControls;
-      return (
-        <tr
-          key={row.id}
-          data-row-key={row.id}
-          className={
-            rowInteractive
-              ? "sui-datatable__row sui-datatable__row--interactive"
-              : "sui-datatable__row"
-          }
-          onClick={
-            rowInteractive ? () => onRowClick?.(row.original) : undefined
-          }
-          tabIndex={asButton ? 0 : undefined}
-          role={asButton ? "button" : undefined}
-          onKeyDown={
-            asButton
-              ? (e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onRowClick?.(row.original);
-                  }
-                }
-              : undefined
-          }
-        >
-          {row.getAllCells().map((cell) => {
-            const meta = cell.column.columnDef.meta;
-            return (
-              <td
-                key={cell.id}
-                className={cellClass(
-                  meta?.align ?? "left",
-                  meta?.nowrap ?? false,
-                  meta?.fit ?? false,
-                )}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            );
-          })}
-        </tr>
-      );
-    });
+    body = table.getRowModel().rows.map((row) => (
+      <tr key={row.id} data-row-key={row.id} {...rowProps(row.original)}>
+        {row.getAllCells().map((cell) => {
+          const meta = cell.column.columnDef.meta;
+          return (
+            <td
+              key={cell.id}
+              className={cellClass(
+                meta?.align ?? "left",
+                meta?.nowrap ?? false,
+                meta?.fit ?? false,
+              )}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          );
+        })}
+      </tr>
+    ));
   }
 
   return (

@@ -108,6 +108,7 @@ export function Integrations() {
     fixedTypeId?: string;
   }>({ open: false, editing: null });
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -223,6 +224,7 @@ export function Integrations() {
     async (connection: IntegrationConfig) => {
       if (busy) return;
       setBusy(true);
+      setDeletingId(connection.id);
       setError(null);
       try {
         await deleteIntegration(connection.id);
@@ -231,6 +233,7 @@ export function Integrations() {
         setError(errorMessage(e));
       } finally {
         setBusy(false);
+        setDeletingId(null);
       }
     },
     [busy, refresh],
@@ -272,7 +275,8 @@ export function Integrations() {
                   {
                     label: t("portal.connections.delete"),
                     tone: "danger",
-                    loading: busy,
+                    loading: busy && deletingId === r.connection.id,
+                    disabled: busy,
                     onClick: () => void remove(r.connection),
                   },
                 ]
@@ -290,7 +294,7 @@ export function Integrations() {
         },
       }),
     ],
-    [t, busy, remove, openEdit, openCreate, worksWithText],
+    [t, busy, deletingId, remove, openEdit, openCreate, worksWithText],
   );
 
   const tableGroups = useMemo<DataTableGroup<IntegrationRow>[]>(() => {

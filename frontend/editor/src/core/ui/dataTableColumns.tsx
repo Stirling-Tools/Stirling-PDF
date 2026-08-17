@@ -91,7 +91,7 @@ export interface CellAction {
  *  `actions` cell kind and grouped-table headers. */
 export function renderCellActions(actions: CellAction[]): ReactNode {
   return (
-    <div className="sui-dtc__actions">
+    <div className="sui-dtc__actions" onClick={(e) => e.stopPropagation()}>
       {actions.map((a) =>
         a.menu ? (
           <Dropdown.Root key={a.label}>
@@ -101,6 +101,8 @@ export function renderCellActions(actions: CellAction[]): ReactNode {
                 size="sm"
                 shape={a.iconOnly ? "circle" : undefined}
                 leftSection={a.glyph ? <KebabGlyph /> : undefined}
+                loading={a.loading}
+                disabled={a.disabled}
                 aria-label={a.iconOnly ? a.label : undefined}
               >
                 {a.iconOnly ? undefined : a.label}
