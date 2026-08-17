@@ -13,6 +13,39 @@ import {
 const DEBUG = process.env.NODE_ENV === "development";
 
 /**
+ * Stub fields describing the link to a file on disk. Every other stub field is
+ * either already persisted at store time or is runtime-only display state, but
+ * these are edited long after the record was written - a save stamps
+ * `localFilePath`/`isDirty`, a disk re-read stamps the baseline - and if they
+ * stay in memory the link dies on reload and the app silently falls back to its
+ * stale copy. So updates touching them are mirrored into IndexedDB.
+ */
+const DISK_LINK_FIELDS = [
+  "localFilePath",
+  "isDirty",
+  "diskSyncedSize",
+  "diskSyncedModifiedMs",
+  "orphanedFilePath",
+  "diskConflictAt",
+  "diskReloadedAt",
+] as const satisfies readonly (keyof StirlingFileStub)[];
+
+function diskLinkUpdates(
+  updates: Partial<StirlingFileStub>,
+): Partial<StirlingFileStub> | null {
+  const persisted: Partial<StirlingFileStub> = {};
+  let found = false;
+  for (const field of DISK_LINK_FIELDS) {
+    if (field in updates) {
+      // Object.assign-style copy keeps each field's own type.
+      (persisted as Record<string, unknown>)[field] = updates[field];
+      found = true;
+    }
+  }
+  return found ? persisted : null;
+}
+
+/**
  * Resource tracking and cleanup utilities
  */
 export class FileLifecycleManager {
@@ -211,6 +244,46 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = diskLinkUpdates(updates);
+    if (linkUpdates) {
+      void import("@app/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    // A save just made disk and app agree, so re-baseline against the file we
+    // wrote. Without this the next open reads it back as an external change.
+    if (updates.isDirty === false && updates.localFilePath) {
+      const path = updates.localFilePath;
+      void import("@app/services/diskFileSync")
+        .then(({ refreshDiskBaselineAfterSave }) =>
+          refreshDiskBaselineAfterSave(fileId, path),
+        )
+        .then((baseline) => {
+          if (baseline) {
+            this.dispatch({
+              type: "UPDATE_FILE_RECORD",
+              payload: { id: fileId, updates: baseline },
+            });
+          }
+        })
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to re-baseline ${fileId} after save:`,
+            error,
+          ),
+        );
+    }
   };
 
   /**

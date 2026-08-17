@@ -32,6 +32,7 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
@@ -771,6 +772,7 @@ function FileCard({
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <DiskLinkBadge file={file} compact />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -1402,6 +1404,7 @@ function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <DiskLinkBadge file={file} compact />
         <PolicyBadges fileId={file.id as string} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">

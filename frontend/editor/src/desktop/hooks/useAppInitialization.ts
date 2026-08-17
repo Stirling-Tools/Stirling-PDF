@@ -3,6 +3,7 @@ import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
 import { createQuickKey } from "@app/types/fileContext";
+import { getDiskFileState } from "@app/services/desktopFileLink";
 
 /**
  * App initialization hook
@@ -80,12 +81,26 @@ export function useAppInitialization(): void {
           );
 
           const addedFiles = await addFiles(filesArray, { selectFiles: true });
-          addedFiles.forEach((file) => {
-            const localFilePath = quickKeyToPath.get(file.quickKey);
-            if (localFilePath) {
-              updateStirlingFileStub(file.fileId, { localFilePath });
-            }
-          });
+          // addFiles has already stored the records, so the path is stamped after
+          // the fact - updateStirlingFileStub mirrors it into IndexedDB so the
+          // link survives a restart. The baseline goes with it, otherwise the
+          // next open reads the file back as if it had changed externally.
+          await Promise.all(
+            addedFiles.map(async (file) => {
+              const localFilePath = quickKeyToPath.get(file.quickKey);
+              if (!localFilePath) return;
+              const state = await getDiskFileState(localFilePath);
+              updateStirlingFileStub(file.fileId, {
+                localFilePath,
+                ...(state.exists
+                  ? {
+                      diskSyncedSize: state.size,
+                      diskSyncedModifiedMs: state.modifiedMs,
+                    }
+                  : {}),
+              });
+            }),
+          );
 
           console.log(
             `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,

@@ -39,7 +39,9 @@ encryptedFilesBlocked_one = "File is password-protected. Unlock it first."
 encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Export & Continue"
 false = "False"
+fileChangedOnDisk = "Changed on disk since you edited it"
 fileNotSavedToDisk = "Not saved to disk"
+fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "File saved to disk"
 fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
@@ -3546,6 +3548,26 @@ title = "Settings Opened"
 message = "Stirling PDF is now your default PDF editor"
 title = "Default App Set"
 
+[desktopFileLink]
+saveAs = "Save as…"
+useDiskVersion = "Use disk version"
+
+[desktopFileLink.conflict]
+body = "\"{{name}}\" changed on disk, but you have unsaved changes here. Your version is being kept - saving will overwrite the file on disk."
+title = "File changed on disk"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."
+title = "File no longer exists"
+
+[desktopFileLink.openDeleted]
+body = "{{label}} no longer exists on disk. It is still open here - saving will ask you for a new location."
+title = "File deleted on disk"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" changed on disk and has been reloaded."
+title = "Updated from disk"
+
 [desktopUpdate]
 downloading = "Downloading update..."
 installing = "Installing update..."
@@ -4122,6 +4144,12 @@ newFolderLabel = "New folder name"
 newFolderPlaceholder = "Folder name"
 newFolderToggle = "Create new folder…"
 title = "Move to folder"
+
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
 
 [filesPage.origin]
 all = "All sources"

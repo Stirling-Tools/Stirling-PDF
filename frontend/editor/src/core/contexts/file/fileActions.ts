@@ -25,6 +25,20 @@ import {
   reportBulkAddProgress,
   clearBulkAddProgress,
 } from "@app/services/bulkAddProgress";
+import {
+  syncLinkedFileFromDisk,
+  persistDiskUpdate,
+  deleteVanishedFile,
+  detachedFields,
+  diskBaseline,
+  loadDiskVersion,
+  notifyFileVanished,
+  notifyDiskConflict,
+  notifyDiskReloaded,
+  notifyOpenFileDeleted,
+  saveOrphanAsCopy,
+} from "@app/services/diskFileSync";
+import { getDiskFileState } from "@app/services/desktopFileLink";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -482,6 +496,14 @@ export async function addFiles(
               `[FileActions] ✓ Found localFilePath: ${localFilePath}`,
             );
           fileStub.localFilePath = localFilePath;
+          // Record what the file looked like on disk as we read it. Without this
+          // baseline the next open has nothing to compare against and re-reads
+          // the file needlessly.
+          const state = await getDiskFileState(localFilePath);
+          if (state.exists) {
+            fileStub.diskSyncedSize = state.size;
+            fileStub.diskSyncedModifiedMs = state.modifiedMs;
+          }
           pendingFilePathMappings.delete(quickKey); // Clean up after use
         }
       } catch (error) {
@@ -795,6 +817,133 @@ export async function undoConsumeFiles(
  */
 
 /**
+ * Take the disk version of a file we are in conflict with, discarding the
+ * unsaved in-app edits that were shadowing it. Runs only from the "Use disk
+ * version" action on the conflict toast.
+ */
+async function useDiskVersion(
+  stub: StirlingFileStub,
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  lifecycleManager: FileLifecycleManager,
+): Promise<void> {
+  const loaded = await loadDiskVersion(stub);
+  if (!loaded) return;
+  const { file, state } = loaded;
+  const reloadedAt = Date.now();
+  filesRef.current.set(stub.id, createStirlingFile(file, stub.id));
+  await persistDiskUpdate(stub.id, file, state, reloadedAt);
+  // Must follow the filesRef write: updateStirlingFileStub drops updates for a
+  // file it cannot find there.
+  lifecycleManager.updateStirlingFileStub(
+    stub.id,
+    {
+      size: file.size,
+      lastModified: file.lastModified,
+      processedFile: undefined,
+      thumbnailUrl: undefined,
+      isDirty: false,
+      diskConflictAt: undefined,
+      diskReloadedAt: reloadedAt,
+      ...diskBaseline(state),
+    },
+    stateRef,
+  );
+}
+
+/**
+ * Re-check specific open files against disk, in response to the watcher seeing
+ * their folder change. Same three outcomes as the open path - gone, moved on,
+ * diverged - but reached while the file is sitting on screen, which is the case
+ * the list-build and open-time checks cannot cover.
+ */
+export async function resyncFilesFromDisk(
+  fileIds: FileId[],
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  lifecycleManager: FileLifecycleManager,
+): Promise<void> {
+  const detached: { name: string; stub: StirlingFileStub }[] = [];
+
+  for (const fileId of fileIds) {
+    const stub = stateRef.current.files.byId[fileId];
+    if (!stub?.localFilePath) continue;
+
+    const outcome = await syncLinkedFileFromDisk(stub);
+
+    if (outcome.status === "missing") {
+      // Never delete what is on screen: cutting the link leaves the document
+      // intact and makes the next save ask for somewhere to put it.
+      lifecycleManager.updateStirlingFileStub(
+        fileId,
+        detachedFields(stub.localFilePath),
+        stateRef,
+      );
+      detached.push({ name: stub.name, stub });
+      continue;
+    }
+
+    if (outcome.status === "conflict") {
+      // Already flagged; re-toasting on every write the other app makes would
+      // be unusable.
+      if (stub.diskConflictAt) continue;
+      lifecycleManager.updateStirlingFileStub(
+        fileId,
+        { diskConflictAt: Date.now() },
+        stateRef,
+      );
+      notifyDiskConflict(
+        stub.name,
+        () => void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+      );
+      continue;
+    }
+
+    if (outcome.status === "updated") {
+      const { file, state } = outcome;
+      const reloadedAt = Date.now();
+      filesRef.current.set(fileId, createStirlingFile(file, fileId));
+      await persistDiskUpdate(fileId, file, state, reloadedAt);
+      lifecycleManager.updateStirlingFileStub(
+        fileId,
+        {
+          size: file.size,
+          lastModified: file.lastModified,
+          processedFile: undefined,
+          thumbnailUrl: undefined,
+          isDirty: false,
+          diskConflictAt: undefined,
+          diskReloadedAt: reloadedAt,
+          ...diskBaseline(state),
+        },
+        stateRef,
+      );
+      notifyDiskReloaded(stub.name);
+    }
+  }
+
+  if (detached.length > 0) {
+    const single = detached.length === 1 ? detached[0] : undefined;
+    notifyOpenFileDeleted(
+      detached.map((d) => d.name),
+      single
+        ? () => {
+            void saveOrphanAsCopy(single.stub).then((saved) => {
+              if (saved) {
+                lifecycleManager.updateStirlingFileStub(
+                  single.stub.id,
+                  saved.updates,
+                  stateRef,
+                );
+              }
+            });
+          }
+        : undefined,
+    );
+  }
+}
+
+/**
  * Add files using existing StirlingFileStubs from storage - preserves all metadata
  * Use this when loading files that already exist in storage (FileManager, etc.)
  * StirlingFileStubs come with proper thumbnails, history, processing state
@@ -897,9 +1046,44 @@ export async function addStirlingFileStubs(
             ),
           STALLED_LOAD_MS,
         );
-        const stirlingFile = await fileStorage
-          .getStirlingFile(fileId)
-          .finally(() => clearTimeout(stall));
+        // A desktop file is only a cache of the real file on disk, so reconcile
+        // against disk BEFORE serving it - otherwise an external edit is invisible
+        // and a deleted file still opens. Only linked files pay for this.
+        const diskSync = await syncLinkedFileFromDisk(stub);
+        if (diskSync.status === "missing") {
+          // The list-time prune missed it: the file was deleted between the list
+          // being drawn and this open. Say so and take it out rather than serving
+          // a copy of a file the user has deleted.
+          console.warn(
+            `[Hydration] ${stub.name} (${fileId}) no longer exists at ${stub.localFilePath}; removing it`,
+          );
+          notifyFileVanished(stub.name);
+          lifecycleManager.removeFiles([fileId], stateRef);
+          void deleteVanishedFile(fileId);
+          clearTimeout(stall);
+          return;
+        }
+        if (diskSync.status === "conflict") {
+          // Record the divergence as state, not just a toast: the file list
+          // badge and the next open both need to know it is unresolved.
+          lifecycleManager.updateStirlingFileStub(
+            fileId,
+            { diskConflictAt: Date.now() },
+            stateRef,
+          );
+          notifyDiskConflict(
+            stub.name,
+            () =>
+              void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+          );
+        }
+
+        // Live bytes from disk win over the stored copy.
+        const stirlingFile = await (
+          diskSync.status === "updated"
+            ? Promise.resolve(createStirlingFile(diskSync.file, fileId))
+            : fileStorage.getStirlingFile(fileId)
+        ).finally(() => clearTimeout(stall));
         if (!stirlingFile) {
           // A row with no bytes renders empty and its clicks look dead, so take it
           // back out. Storage keeps the record; fileStorage has said why.
@@ -911,11 +1095,47 @@ export async function addStirlingFileStubs(
         }
 
         filesRef.current.set(fileId, stirlingFile);
+
         // filesRef is a ref, so the selectors gating the workbench only see the
         // file once something dispatches. Parsing it can't be a precondition.
-        lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
+        // Must follow the filesRef write: updateStirlingFileStub drops updates
+        // for a file it cannot find there.
+        if (diskSync.status === "updated") {
+          const { file, state } = diskSync;
+          const reloadedAt = Date.now();
+          void persistDiskUpdate(fileId, file, state, reloadedAt).catch(
+            (error) =>
+              console.error(
+                `[Hydration] Failed to persist disk update for ${fileId}:`,
+                error,
+              ),
+          );
+          // The cached page data describes the previous bytes, so drop it and let
+          // it regenerate from what is actually on disk now.
+          lifecycleManager.updateStirlingFileStub(
+            fileId,
+            {
+              size: file.size,
+              lastModified: file.lastModified,
+              processedFile: undefined,
+              thumbnailUrl: undefined,
+              isDirty: false,
+              diskConflictAt: undefined,
+              diskReloadedAt: reloadedAt,
+              ...diskBaseline(state),
+            },
+            stateRef,
+          );
+          // Swapping the bytes under the user is the right default, but doing it
+          // with no trace leaves them unable to tell whose version they have.
+          notifyDiskReloaded(stub.name);
+        } else {
+          lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
+        }
 
         const needsProcessing =
+          // Bytes just changed underneath us, so whatever was cached is stale.
+          diskSync.status === "updated" ||
           !stub.processedFile ||
           !stub.processedFile.pages ||
           stub.processedFile.pages.length === 0 ||

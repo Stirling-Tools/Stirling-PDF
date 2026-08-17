@@ -32,6 +32,23 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Disk path this file came from (desktop only). Persisted so the link to the
+  // real file survives a reload - without it every restart drops to the stored copy.
+  localFilePath?: string;
+  // Size/mtime of the disk file when we last read it, so an external edit is
+  // detectable without hashing. Only meaningful alongside localFilePath.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Path this file used to be backed by, once its original is gone. Persisted so
+  // the "not on disk" state survives a reload instead of dying with the toast.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved disk-vs-unsaved-edits divergence.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit.
+  diskReloadedAt?: number;
+  // In-app edits not yet written to localFilePath. Persisted because a reload
+  // would otherwise forget them and let a disk re-read overwrite the user's work.
+  isDirty?: boolean;
   // Cached classification labels — mirrors the stub field so the sidebar can
   // group by label without re-reading PDF bytes, and it survives versioning.
   // See StirlingFileStub.classificationLabels.
@@ -301,6 +318,13 @@ class FileStorageService {
         : await stirlingFile.arrayBuffer(),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
+      localFilePath: stub.localFilePath,
+      diskSyncedSize: stub.diskSyncedSize,
+      diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
+      orphanedFilePath: stub.orphanedFilePath,
+      diskConflictAt: stub.diskConflictAt,
+      diskReloadedAt: stub.diskReloadedAt,
+      isDirty: stub.isDirty,
       isLeaf: stub.isLeaf ?? true,
       remoteStorageId: stub.remoteStorageId,
       remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
@@ -676,6 +700,13 @@ class FileStorageService {
           lastModified: record.lastModified,
           quickKey: record.quickKey,
           thumbnailUrl: fresh ? record.thumbnail : undefined,
+          localFilePath: record.localFilePath,
+          diskSyncedSize: record.diskSyncedSize,
+          diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+          orphanedFilePath: record.orphanedFilePath,
+          diskConflictAt: record.diskConflictAt,
+          diskReloadedAt: record.diskReloadedAt,
+          isDirty: record.isDirty,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -743,6 +774,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -842,6 +880,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
