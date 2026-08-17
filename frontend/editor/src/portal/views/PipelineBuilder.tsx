@@ -17,12 +17,15 @@ import {
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
+  activeFileFields,
+  assetRef,
+  assetRefIds,
   deserializeToolStep,
+  extractStepFiles,
   getExecutableTools,
   newWorkingToolStep,
   serializeToolStep,
   stepNeedsConfiguring,
-  stepRequiresUpload,
   updateWorkingStepParams,
   type ExecutableTool,
   type WorkingToolStep,
@@ -48,13 +51,21 @@ import {
   runPipelineTest,
   savePipeline,
   triggerPipeline,
+  type PipelineStep,
   type Policy,
   type PolicyRunView,
   type RunOutputFile,
+  type TestRunAsset,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
+import {
+  fetchPipelineAssetContent,
+  listPipelineAssets,
+  uploadPipelineAsset,
+  type PolicyAsset,
+} from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
@@ -206,6 +217,17 @@ export function PipelineBuilder() {
     () => getExecutableTools(allTools),
     [allTools],
   );
+
+  // Stored supporting files from earlier saves, so a reopened step can label its bindings by name.
+  const assetsState = useAsync<PolicyAsset[]>(
+    async () => await listPipelineAssets(),
+    [],
+  );
+  const assetNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const asset of assetsState.data ?? []) map[asset.id] = asset.fileName;
+    return map;
+  }, [assetsState.data]);
 
   const policyState = useAsync<Policy | null>(
     async () => (id ? await fetchPipeline(id) : null),
@@ -486,6 +508,34 @@ export function PipelineBuilder() {
     );
   }
 
+  /** A stable identity for a step's fresh file picks (name/size/mtime), for dirty-tracking. */
+  function fileSignature(step: WorkingToolStep): Record<string, string[]> {
+    const signature: Record<string, string[]> = {};
+    for (const [field, files] of Object.entries(
+      extractStepFiles(step, allTools),
+    )) {
+      signature[field] = files.map(
+        (file) => `${file.name}:${file.size}:${file.lastModified}`,
+      );
+    }
+    return signature;
+  }
+
+  /** Drop a step's stored supporting-file binding for one field (the chip's remove action). */
+  function clearStepBinding(index: number, field: string) {
+    setSteps((current) =>
+      current.map((step, i) => {
+        if (i !== index || !step.fileParameters) return step;
+        const next = { ...step.fileParameters };
+        delete next[field];
+        return {
+          ...step,
+          fileParameters: Object.keys(next).length > 0 ? next : undefined,
+        };
+      }),
+    );
+  }
+
   function stepLabel(step: WorkingToolStep): string {
     // An integration step's endpoint is the same for every vendor, so the raw path would read
     // "External api call" for all of them. Name it by the operation instead.
@@ -511,11 +561,6 @@ export function PipelineBuilder() {
     if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
     return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
-
-  // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
-  // policy, so a later run would send null for that field (see stepRequiresUpload).
-  const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
-  const hasUploadSteps = uploadStepLabels.length > 0;
 
   // A step still missing a choice - an integration with no operation or account, a tool whose
   // mandatory parameters are unset - would fail at run time with a raw backend rejection, so block
@@ -601,11 +646,14 @@ export function PipelineBuilder() {
   // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
   // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
   // chosen at submit - so it can never be the thing that makes the form dirty.
+  // A raw File JSON-stringifies to `{}`, so serializeToolStep (which excludes Files) can't see a
+  // file being added or swapped; capture a stable signature of each step's fresh picks so those edits
+  // still mark the form dirty. Stored bindings are already covered by the serialized steps.
   const snapshot = JSON.stringify({
     name: name.trim(),
     input,
     steps: steps.map((step) => serializeToolStep(step, allTools)),
-    uploads: steps.map(stepRequiresUpload),
+    files: steps.map((step) => fileSignature(step)),
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -639,12 +687,6 @@ export function PipelineBuilder() {
         tools: unconfiguredStepLabels.join(", "),
       }),
     );
-  if (hasUploadSteps)
-    blockers.push(
-      t("portal.pipelines.builder.blocker.upload", {
-        tools: uploadStepLabels.join(", "),
-      }),
-    );
   if (hasIncompatibleSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.incompatible", {
@@ -667,23 +709,56 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
+  /**
+   * The wire steps for saving: scalar params from serialization, plus supporting-file bindings.
+   * Fresh picks are uploaded to the asset store first (the save-time validator rejects a policy that
+   * binds an asset id that doesn't yet exist), and a stored binding the tool still uses is kept as-is
+   * when the user didn't replace it. Abandoned uploads (from a later failure) are GC'd server-side.
+   */
+  async function serializeStepsForSave(): Promise<PipelineStep[]> {
+    const wireSteps: PipelineStep[] = [];
+    for (const step of steps) {
+      const { operation, parameters } = serializeToolStep(step, allTools);
+      const bindings: Record<string, string> = {};
+      const fresh = extractStepFiles(step, allTools);
+      for (const [field, files] of Object.entries(fresh)) {
+        const ids: string[] = [];
+        for (const file of files) {
+          ids.push((await uploadPipelineAsset(file)).id);
+        }
+        bindings[field] = assetRef(ids);
+      }
+      // Keep a stored binding the tool still emits and the user didn't re-pick.
+      const stored = step.fileParameters ?? {};
+      for (const field of activeFileFields(step, allTools)) {
+        if (!bindings[field] && stored[field]) bindings[field] = stored[field];
+      }
+      wireSteps.push(
+        Object.keys(bindings).length > 0
+          ? { operation, parameters, fileParameters: bindings }
+          : { operation, parameters },
+      );
+    }
+    return wireSteps;
+  }
+
   async function save(destination: string, enabledOverride?: boolean) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const policy: Policy = {
-      id: policyState.data?.id ?? undefined,
-      name: name.trim(),
-      enabled: enabledOverride ?? enabled,
-      // The wire shape stays a list; canSave guarantees the one input has a source.
-      inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
-      steps: steps.map((step) => serializeToolStep(step, allTools)),
-      // Destinations are the referenced saved sources; the inline output field is
-      // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-      output: policyState.data?.output ?? { type: "inline", options: {} },
-      outputIds,
-    };
     try {
+      const policy: Policy = {
+        id: policyState.data?.id ?? undefined,
+        name: name.trim(),
+        enabled: enabledOverride ?? enabled,
+        // The wire shape stays a list; canSave guarantees the one input has a source.
+        inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+        steps: await serializeStepsForSave(),
+        // Destinations are the referenced saved sources; the inline output field is
+        // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
+        output: policyState.data?.output ?? { type: "inline", options: {} },
+        outputIds,
+      };
       await savePipeline(policy);
       await invalidatePipelines();
       navigate(destination);
@@ -746,19 +821,66 @@ export function PipelineBuilder() {
    * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
    * how the chain gets checked while it is still being built.
    */
+  /** The bytes for a stored binding, fetched back from the asset store to send inline on a test run. */
+  async function storedTestFiles(binding: string): Promise<File[]> {
+    const files: File[] = [];
+    for (const id of assetRefIds(binding)) {
+      const blob = await fetchPipelineAssetContent(id);
+      files.push(new File([blob], assetNames[id] ?? id));
+    }
+    return files;
+  }
+
+  /**
+   * The steps + inline supporting files for a test run. The ad-hoc /run endpoint doesn't resolve
+   * stored assets, so each active file field's bytes ride along as a keyed `assets[i]` (fresh picks
+   * directly, stored ones fetched back). The step's fileParameters point at a per-step run key, not
+   * an `asset:` ref, so the executor binds each file to its field without the resolver.
+   */
+  async function buildTestSteps(): Promise<{
+    steps: PipelineStep[];
+    assets: TestRunAsset[];
+  }> {
+    const outSteps: PipelineStep[] = [];
+    const assets: TestRunAsset[] = [];
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      const { operation, parameters } = serializeToolStep(step, allTools);
+      const fresh = extractStepFiles(step, allTools);
+      const stored = step.fileParameters ?? {};
+      const fileParameters: Record<string, string> = {};
+      for (const field of activeFileFields(step, allTools)) {
+        const files =
+          fresh[field] ?? (await storedTestFiles(stored[field] ?? ""));
+        if (files.length === 0) continue;
+        const key = `s${i}_${field}`;
+        fileParameters[field] = key;
+        for (const runFile of files) assets.push({ key, file: runFile });
+      }
+      outSteps.push(
+        Object.keys(fileParameters).length > 0
+          ? { operation, parameters, fileParameters }
+          : { operation, parameters },
+      );
+    }
+    return { steps: outSteps, assets };
+  }
+
   async function handleTest(file: File) {
     if (testing) return;
     setTesting(true);
     setTestRun(null);
     setRunResult(null);
     try {
+      const { steps: testSteps, assets } = await buildTestSteps();
       const { runId } = await runPipelineTest(
         {
           name: name.trim() || t("portal.pipelines.builder.testRun"),
-          steps: steps.map((step) => serializeToolStep(step, allTools)),
+          steps: testSteps,
           output: { type: "inline", options: {} },
         },
         file,
+        assets,
       );
       const final = await awaitRun(runId, (view) => {
         if (mounted.current) setTestRun(view);
@@ -934,8 +1056,6 @@ export function PipelineBuilder() {
         return t("portal.pipelines.builder.chooseAccount");
       return undefined;
     }
-    if (stepRequiresUpload(step))
-      return t("portal.pipelines.builder.needsUpload");
     if (stepNeedsConfiguring(step, allTools))
       return t("portal.pipelines.builder.needsConfiguring");
     return undefined;
@@ -1120,6 +1240,8 @@ export function PipelineBuilder() {
           step={selectedStep}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
+          assetNames={assetNames}
+          onClearBinding={(field) => clearStepBinding(chosenSteps[0], field)}
         />
       );
     }
@@ -1164,14 +1286,6 @@ export function PipelineBuilder() {
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
         <Banner tone={runResult.tone} description={runResult.text} />
-      )}
-      {hasUploadSteps && (
-        <Banner
-          tone="warning"
-          description={t("portal.pipelines.builder.uploadUnsupported", {
-            tools: uploadStepLabels.join(", "),
-          })}
-        />
       )}
       {hasUnconfiguredSteps && (
         <Banner

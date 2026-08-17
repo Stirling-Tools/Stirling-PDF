@@ -218,13 +218,24 @@ export interface TestRunDefinition {
 }
 
 /**
+ * A supporting file supplied with a test run, bound to the key a step's `fileParameters` references.
+ * The ad-hoc /run endpoint does not resolve stored assets, so a file-step's supporting file must
+ * ride along here (fresh picks directly, stored ones fetched back as bytes).
+ */
+export interface TestRunAsset {
+  key: string;
+  file: File;
+}
+
+/**
  * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
  * path - callers force an inline output so nothing reaches the pipeline's real destination, and
- * the pipeline need not be saved first.
+ * the pipeline need not be saved first. Supporting files travel as keyed `assets[i]` parts.
  */
 export async function runPipelineTest(
   definition: TestRunDefinition,
   file: File,
+  assets: TestRunAsset[] = [],
 ): Promise<{ runId: string }> {
   const form = new FormData();
   form.append(
@@ -232,6 +243,10 @@ export async function runPipelineTest(
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
   form.append("fileInput", file);
+  assets.forEach((asset, i) => {
+    form.append(`assets[${i}].key`, asset.key);
+    form.append(`assets[${i}].file`, asset.file);
+  });
   // The POST returns the identifier as `jobId`, but it is the same run id every other endpoint
   // (fetchRun, fetchRunOutput) calls `runId`; normalise to that here so callers see one name.
   const res = await apiClient.local.multipart<{ jobId: string }>(

@@ -116,6 +116,8 @@ describe("PipelineStepSettings", () => {
             step={step}
             registry={registry}
             onChange={() => {}}
+            assetNames={{}}
+            onClearBinding={() => {}}
           />
         </PortalTestProviders>,
       ),
@@ -131,6 +133,8 @@ describe("PipelineStepSettings", () => {
             step={convertStep}
             registry={convertRegistry}
             onChange={() => {}}
+            assetNames={{}}
+            onClearBinding={() => {}}
           />
         </PortalTestProviders>,
       ),
@@ -205,6 +209,8 @@ describe("PipelineStepSettings", () => {
                 typeof update === "function" ? update(prev) : update,
               )
             }
+            assetNames={{}}
+            onClearBinding={() => {}}
           />
           <span data-testid="out">{JSON.stringify(params)}</span>
         </>

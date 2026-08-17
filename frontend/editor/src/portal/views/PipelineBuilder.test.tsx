@@ -43,6 +43,15 @@ vi.mock("@portal/api/pipelines", () => ({
   fetchRun: (runId: string) => fetchRun(runId),
 }));
 
+const uploadPipelineAsset = vi.fn();
+const listPipelineAssets = vi.fn();
+const fetchPipelineAssetContent = vi.fn();
+vi.mock("@portal/api/pipelineAssets", () => ({
+  uploadPipelineAsset: (file: File) => uploadPipelineAsset(file),
+  listPipelineAssets: () => listPipelineAssets(),
+  fetchPipelineAssetContent: (id: string) => fetchPipelineAssetContent(id),
+}));
+
 const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
@@ -149,8 +158,21 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       toolType: 0,
       endpoint: "/api/v1/misc/compress-pdf",
       defaultParameters: {},
-      buildFormData: () => new FormData(),
-      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      // Sends the supporting file under a named field, like a real file tool, so the upload path
+      // has a field to bind. The scalar mapper drops the File (files never ride in parameters).
+      buildFormData: (params: Record<string, unknown>, file: File | File[]) => {
+        const fd = new FormData();
+        fd.append("fileInput", Array.isArray(file) ? file[0] : file);
+        if (params.watermarkImage instanceof File) {
+          fd.append("watermarkImage", params.watermarkImage);
+        }
+        return fd;
+      },
+      toApiParams: (params: Record<string, unknown>) => {
+        const scalars = { ...params };
+        delete scalars.watermarkImage;
+        return scalars;
+      },
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
@@ -288,6 +310,17 @@ describe("PipelineBuilder", () => {
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
     createIntegration.mockReset();
+    uploadPipelineAsset.mockReset();
+    uploadPipelineAsset.mockResolvedValue({
+      id: "ast-1",
+      fileName: "logo.png",
+      contentType: "image/png",
+      size: 1,
+      createdAt: 0,
+    });
+    listPipelineAssets.mockReset();
+    listPipelineAssets.mockResolvedValue([]);
+    fetchPipelineAssetContent.mockReset();
   });
 
   // The settings of a node are reached by selecting it in the graph, so every helper below opens
@@ -798,7 +831,7 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
   });
 
-  it("blocks saving a step that needs an uploaded file", async () => {
+  it("uploads a step's supporting file and saves it as an asset binding", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(
@@ -810,15 +843,28 @@ describe("PipelineBuilder", () => {
       },
     );
     await addTool("Compress");
-    // The tool's settings upload a file, which a stored pipeline can't persist yet.
+    // The tool's settings attach a supporting file.
     fireEvent.click(await screen.findByText("upload logo"));
 
-    expect(
-      await screen.findByText("portal.pipelines.builder.uploadUnsupported"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("portal.pipelines.composer.create").closest("button"),
-    ).toBeDisabled();
+    await pickInputSource("Claims intake");
+    await pickDestination();
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    // The file is uploaded to the asset store first, then the policy is saved binding that asset.
+    await waitFor(() => expect(uploadPipelineAsset).toHaveBeenCalledTimes(1));
+    expect(uploadPipelineAsset.mock.calls[0][0]).toBeInstanceOf(File);
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        steps: [
+          expect.objectContaining({
+            operation: "/api/v1/misc/compress-pdf",
+            fileParameters: { watermarkImage: "asset:ast-1" },
+          }),
+        ],
+      }),
+    );
   });
 
   it("blocks saving an integration step with no account chosen", async () => {

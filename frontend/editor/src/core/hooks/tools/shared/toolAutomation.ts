@@ -62,6 +62,12 @@ export interface ExecutableTool {
 export interface ToolApiStep {
   operation: string;
   parameters: Record<string, unknown>;
+  /**
+   * Supporting-file bindings: a backend file field (e.g. `stampImage`, `overlayFiles`) mapped to
+   * `asset:<id>[,<id>]` (stored supporting files) or a run-supplied key. Absent when the step needs
+   * no supporting file. Mirrors the wire {@code PipelineStep.fileParameters}.
+   */
+  fileParameters?: Record<string, string>;
 }
 
 /** A step being edited in a UI that maps to a known tool: parameters are in the tool's frontend shape. */
@@ -70,6 +76,12 @@ export interface KnownToolStep {
   operation: ToolEndpoint;
   params: ErasedToolParams;
   support: ToolStepSupport;
+  /**
+   * Stored supporting-file bindings carried from a saved step (field -> `asset:<id>`), so an edit
+   * round-trips them without the user re-picking. A field the user re-picks lands in `params` as a
+   * File and takes precedence on save.
+   */
+  fileParameters?: Record<string, string>;
 }
 
 /** A stored step whose endpoint maps to no known tool: preserved verbatim, not editable. */
@@ -78,6 +90,8 @@ export interface UnknownToolStep {
   operation: string;
   params: ErasedToolParams;
   support: "unknown";
+  /** Supporting-file bindings preserved verbatim, so an unknown step's files round-trip untouched. */
+  fileParameters?: Record<string, string>;
 }
 
 /** A step being edited in a UI, discriminated by whether its endpoint maps to a known tool. */
@@ -135,12 +149,140 @@ function isFileValue(value: unknown): boolean {
 }
 
 /**
- * True if any of a step's parameters is an uploaded file (or list of files). Such a step cannot be
- * saved into a stored pipeline yet: the file bytes are not persisted with the policy, so a later
- * (e.g. scheduled) run would have nothing to send for that named file field.
+ * The `fileParameters` binding format shared with the backend (see PolicyAssetRefs): a value of
+ * `asset:<id>[,<id>...]` names stored supporting files loaded at run time; any other value names a
+ * file supplied with the run itself. This module owns the frontend side of the step contract, so the
+ * format lives here and the builder/settings reuse it.
  */
-export function stepRequiresUpload(step: WorkingToolStep): boolean {
-  return Object.values(step.params).some(isFileValue);
+export const ASSET_REF_PREFIX = "asset:";
+
+/** A `fileParameters` value binding one tool file field to the given stored asset ids. */
+export function assetRef(ids: string[]): string {
+  return ASSET_REF_PREFIX + ids.join(",");
+}
+
+/** The stored asset ids inside a binding value, or none when it isn't an `asset:` ref. */
+export function assetRefIds(binding: string): string[] {
+  if (!binding.startsWith(ASSET_REF_PREFIX)) return [];
+  return binding
+    .slice(ASSET_REF_PREFIX.length)
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+/** buildFormData with a loose file argument, so we can probe single- and multi-file tools alike. */
+type LooseBuildFormData = (
+  params: ErasedToolParams,
+  file: File | File[],
+) => FormData;
+
+/** A throwaway primary document for probing a tool's buildFormData; never sent anywhere. */
+function dummyPrimaryFile(): File {
+  return new File([], "input.pdf", { type: "application/pdf" });
+}
+
+/**
+ * Run a tool's buildFormData so we can read the request it would produce. Single-file tools take a
+ * File and multi-file tools a File[], so both shapes are tried (as in policyPipeline.ts). Returns
+ * null when the tool has no buildFormData, File is unavailable, or every shape throws.
+ */
+function probeFormData(
+  config: RegistryToolOperationConfig,
+  params: ErasedToolParams,
+): FormData | null {
+  const build = config.buildFormData as unknown as
+    | LooseBuildFormData
+    | undefined;
+  if (typeof build !== "function" || typeof File === "undefined") return null;
+  const dummy = dummyPrimaryFile();
+  for (const fileArg of [dummy, [dummy]]) {
+    try {
+      return build(params, fileArg);
+    } catch {
+      // Wrong file-arg shape for this tool - try the other, then give up.
+    }
+  }
+  return null;
+}
+
+/** Defaults merged under the step's params - the shape a tool's mappers and buildFormData expect. */
+function mergedStepParams(
+  step: WorkingToolStep,
+  config: RegistryToolOperationConfig,
+): ErasedToolParams {
+  return { ...(config.defaultParameters ?? {}), ...step.params };
+}
+
+/**
+ * The step's params with a stand-in File array injected for each stored binding whose field has no
+ * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. The array
+ * is sized to the binding's asset count (overlay validates count == file count). Sentinels are empty
+ * and live only in this local object - they are never written back to step.params, so they can never
+ * be uploaded.
+ */
+function withStoredFileSentinels(
+  step: WorkingToolStep,
+  config: RegistryToolOperationConfig,
+): ErasedToolParams {
+  const merged = mergedStepParams(step, config);
+  const bindings = step.fileParameters;
+  if (!bindings || typeof File === "undefined") return merged;
+  for (const [field, binding] of Object.entries(bindings)) {
+    if (isFileValue(merged[field])) continue; // a fresh pick already stands in
+    const count = Math.max(1, assetRefIds(binding).length);
+    merged[field] = Array.from({ length: count }, () => new File([], "stored"));
+  }
+  return merged;
+}
+
+/**
+ * The fresh File picks on a step, grouped by the backend file field its buildFormData sends them
+ * under (excluding the primary `fileInput`). buildFormData is the source of truth for the field name
+ * and for tool-specific selection (certSign picks files by certType), so probing it - rather than
+ * scanning params - keeps the field mapping correct. These are the files to upload on save.
+ */
+export function extractStepFiles(
+  step: WorkingToolStep,
+  registry: Partial<ToolRegistry>,
+): Record<string, File[]> {
+  if (step.toolId === null) return {};
+  const config = registry[step.toolId]?.operationConfig;
+  if (!config) return {};
+  const formData = probeFormData(config, mergedStepParams(step, config));
+  if (!formData) return {};
+  const files: Record<string, File[]> = {};
+  formData.forEach((value, key) => {
+    if (key !== "fileInput" && value instanceof File) {
+      (files[key] ??= []).push(value);
+    }
+  });
+  return files;
+}
+
+/**
+ * The backend file fields this step actually uses right now, per its own buildFormData: fresh picks
+ * plus any stored binding the tool still emits (a stale one - e.g. a PKCS12 keystore after switching
+ * to PEM - is dropped, because buildFormData no longer sends it). Drives the stored-file chips, the
+ * save-time binding set, and the test run. An unknown step has no buildFormData, so its bindings are
+ * reported verbatim.
+ */
+export function activeFileFields(
+  step: WorkingToolStep,
+  registry: Partial<ToolRegistry>,
+): string[] {
+  if (step.toolId === null) {
+    return step.fileParameters ? Object.keys(step.fileParameters) : [];
+  }
+  const config = registry[step.toolId]?.operationConfig;
+  if (!config) return [];
+  const formData = probeFormData(config, withStoredFileSentinels(step, config));
+  if (!formData) return [];
+  const fields = new Set<string>();
+  formData.forEach((value, key) => {
+    if (key !== "fileInput" && value instanceof File) fields.add(key);
+  });
+  return [...fields];
 }
 
 /**
@@ -158,9 +300,10 @@ export function stepNeedsConfiguring(
 ): boolean {
   if (step.toolId === null) return false;
   const config = registry[step.toolId]?.operationConfig;
-  if (!config?.validateParams) return false;
-  const merged = { ...(config.defaultParameters ?? {}), ...step.params };
-  return !config.validateParams(merged);
+  if (!config || !config.validateParams) return false;
+  // Stored supporting files satisfy their field just as a fresh pick would, so validate against the
+  // sentinel-injected params rather than the bare ones (which drop the file on reload).
+  return !config.validateParams(withStoredFileSentinels(step, config));
 }
 
 /**
@@ -240,14 +383,27 @@ export function serializeToolStep(
     step.toolId !== null ? registry[step.toolId]?.operationConfig : undefined;
   if (!config) {
     // Unmapped step (unknown endpoint on edit): round-trip it unchanged.
-    return { operation: step.operation, parameters: step.params };
+    return withFileParameters(
+      { operation: step.operation, parameters: step.params },
+      step,
+    );
   }
   const merged = { ...(config.defaultParameters ?? {}), ...step.params };
   const operation = resolveEndpoint(config, merged) ?? step.operation;
   const parameters = config.toApiParams
     ? (config.toApiParams(merged) as Record<string, unknown>)
     : {};
-  return { operation, parameters };
+  return withFileParameters({ operation, parameters }, step);
+}
+
+/** Attach the step's supporting-file bindings to a serialized step, omitting the field when empty. */
+function withFileParameters(
+  serialized: ToolApiStep,
+  step: WorkingToolStep,
+): ToolApiStep {
+  const bindings = step.fileParameters;
+  if (!bindings || Object.keys(bindings).length === 0) return serialized;
+  return { ...serialized, fileParameters: bindings };
 }
 
 /**
@@ -308,6 +464,7 @@ function unmappedStep(step: ToolApiStep): UnknownToolStep {
     operation: step.operation,
     params: { ...step.parameters },
     support: "unknown",
+    fileParameters: step.fileParameters,
   };
 }
 
@@ -345,5 +502,11 @@ export function deserializeToolStep(
     resolveEndpoint(config, params) ??
     (isToolEndpoint(step.operation) ? step.operation : undefined);
   if (operation === undefined) return unmappedStep(step);
-  return { toolId, operation, params, support: classifyToolStepSupport(entry) };
+  return {
+    toolId,
+    operation,
+    params,
+    support: classifyToolStepSupport(entry),
+    fileParameters: step.fileParameters,
+  };
 }
