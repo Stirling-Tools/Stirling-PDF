@@ -73,6 +73,19 @@ function isObject(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** A single file upload: `type: string, format: binary` (a Java MultipartFile param). */
+function isBinaryField(schema: unknown): schema is Json {
+  return (
+    isObject(schema) && schema.type === "string" && schema.format === "binary"
+  );
+}
+
+/** A multi file upload: an array of binary items (some specs also flag the array itself binary). */
+function isBinaryArrayField(schema: unknown): schema is Json {
+  if (!isObject(schema) || schema.type !== "array") return false;
+  return schema.format === "binary" || isBinaryField(schema.items);
+}
+
 /**
  * Recursively sort object keys so the output is byte-stable regardless of the
  * key ordering springdoc happens to emit.
@@ -358,6 +371,9 @@ async function main(): Promise<void> {
   const usedClassNames = new Set<string>();
   const pendingComponents = new Set<string>();
   const skipped: string[] = [];
+  // Named file fields (as File uploads) per model, so a caller can tell a file param from a scalar
+  // string param - which `format: binary` -> `string` would otherwise erase.
+  const fileFieldsByClass: Record<string, string[]> = {};
 
   for (const path of Object.keys(paths).sort()) {
     if (
@@ -409,6 +425,20 @@ async function main(): Promise<void> {
       // Body wins over query on a name collision.
       const properties: Json = { ...query.props, ...bodyProps };
       for (const field of BASE_FILE_FIELDS) delete properties[field];
+      // Type each named file upload as File/File[] (not the `string` a binary format yields) via
+      // json-schema-to-typescript's `tsType` override, and record it. Base file fields are already
+      // stripped, so what remains is the real supporting-file params.
+      const fileFields: string[] = [];
+      for (const [name, prop] of Object.entries(properties)) {
+        if (isBinaryField(prop)) {
+          prop.tsType = "File";
+          fileFields.push(name);
+        } else if (isBinaryArrayField(prop)) {
+          prop.tsType = "File[]";
+          fileFields.push(name);
+        }
+      }
+      fileFieldsByClass[className] = fileFields;
       modelSchema.properties = properties;
       const required = new Set(computeRequired(modelSchema, properties));
       for (const name of query.required) {
@@ -464,6 +494,7 @@ async function main(): Promise<void> {
   await compileAndWrite(
     tools,
     definitions,
+    fileFieldsByClass,
     outputPath,
     values.check ?? false,
     skipped,
@@ -473,6 +504,7 @@ async function main(): Promise<void> {
 async function compileAndWrite(
   tools: DiscoveredTool[],
   definitions: Record<string, Json>,
+  fileFieldsByClass: Record<string, string[]>,
   outputPath: string,
   check: boolean,
   skipped: string[],
@@ -525,6 +557,15 @@ async function compileAndWrite(
   const endpointList = tools
     .map((t) => `  ${JSON.stringify(t.path)},`)
     .join("\n");
+  // Endpoints that take supporting files, mapped to those file params' names. Only endpoints with at
+  // least one are listed, so membership answers "does this tool take extra files".
+  const fileFieldEntries = tools
+    .filter((t) => (fileFieldsByClass[t.className] ?? []).length > 0)
+    .map(
+      (t) =>
+        `  ${JSON.stringify(t.path)}: ${JSON.stringify(fileFieldsByClass[t.className])},`,
+    )
+    .join("\n");
 
   const footer = [
     "/** Endpoint path for a generated tool operation (the operation identity across languages). */",
@@ -535,6 +576,9 @@ async function compileAndWrite(
     "",
     "/** Every generated tool endpoint, for iteration. */",
     `export const TOOL_ENDPOINTS = [\n${endpointList}\n] as const satisfies readonly ToolEndpoint[];`,
+    "",
+    "/** The supporting-file parameters each endpoint accepts beyond its primary fileInput, by name. */",
+    `export const TOOL_FILE_FIELDS = {\n${fileFieldEntries}\n} as const satisfies Partial<\n  Record<ToolEndpoint, readonly string[]>\n>;`,
     "",
     "/** Union of every generated tool request model. */",
     `export type ToolApiRequest = ToolApiParams[ToolEndpoint];`,

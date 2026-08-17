@@ -18,6 +18,7 @@ import {
   type ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
 import { type ToolId } from "@app/types/toolId";
+import { TOOL_FILE_FIELDS } from "@app/types/toolApiTypes";
 import {
   isToolEndpoint,
   type ToolEndpoint,
@@ -52,7 +53,7 @@ export interface ExecutableTool {
    */
   endpoints?: readonly ToolEndpoint[];
   support: ToolStepSupport;
-  /** Whether the tool takes supporting files beyond its primary document (per its declared fileFields). */
+  /** Whether the tool takes supporting files beyond its primary document (per the generated file-field table). */
   acceptsFiles: boolean;
 }
 
@@ -227,13 +228,43 @@ function mergedStepParams(
   return { ...(config.defaultParameters ?? {}), ...step.params };
 }
 
+/** The backend file fields an endpoint accepts, from the generated spec-sourced table. */
+function backendFileFields(operation: string): readonly string[] {
+  return (
+    (TOOL_FILE_FIELDS as Partial<Record<string, readonly string[]>>)[
+      operation
+    ] ?? []
+  );
+}
+
+/**
+ * Each backend file field the step's endpoint accepts (from {@link TOOL_FILE_FIELDS}), mapped to the
+ * tool param that holds it - the same name unless the tool declared a rename override.
+ */
+function fileFieldMappings(
+  operation: string,
+  config: RegistryToolOperationConfig,
+): { field: string; param: string }[] {
+  // The override's erased type collapses `param` to `never`; restore the real runtime shape.
+  const overrides = (config.fileParamOverrides ?? []) as readonly {
+    field: string;
+    param: string;
+  }[];
+  const paramByField = new Map(overrides.map((o) => [o.field, o.param]));
+  return backendFileFields(operation).map((field) => ({
+    field,
+    param: paramByField.get(field) ?? field,
+  }));
+}
+
 /**
  * The step's params with a stand-in File array injected for each stored binding whose param has no
- * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. Each of a
- * tool's declared `fileFields` is a file param that doubles as its backend field name, so the binding
- * (keyed by field) and the sentinel target (the param) are the same key. The array is sized to the
- * binding's asset count (overlay validates count == file count). Sentinels are empty and live only in
- * this local object - never written back to step.params, so they can never be uploaded.
+ * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. Stored
+ * bindings are keyed by the backend field (from {@link TOOL_FILE_FIELDS}), so each field finds its
+ * binding and the sentinel lands on its param - the two coincide unless the tool declared a rename
+ * override. The array is sized to the binding's asset count (overlay validates count == file count).
+ * Sentinels are empty and live only in this local object - never written back to step.params, so they
+ * can never be uploaded.
  */
 function withStoredFileSentinels(
   step: WorkingToolStep,
@@ -241,10 +272,9 @@ function withStoredFileSentinels(
 ): ErasedToolParams {
   const merged = mergedStepParams(step, config);
   const bindings = step.fileParameters;
-  const fileFields = config.fileFields;
-  if (!bindings || !fileFields || typeof File === "undefined") return merged;
-  for (const param of fileFields) {
-    const binding = bindings[param];
+  if (!bindings || typeof File === "undefined") return merged;
+  for (const { param, field } of fileFieldMappings(step.operation, config)) {
+    const binding = bindings[field];
     if (binding == null || isFileValue(merged[param])) continue; // unbound, or a fresh pick stands in
     const count = Math.max(1, assetRefIds(binding).length);
     merged[param] = Array.from({ length: count }, () => new File([], "stored"));
@@ -350,7 +380,7 @@ export function getExecutableTools(
       endpoint,
       endpoints: config.endpoints,
       support: classifyToolStepSupport(entry),
-      acceptsFiles: (config.fileFields?.length ?? 0) > 0,
+      acceptsFiles: backendFileFields(endpoint).length > 0,
     });
   }
   return tools.sort((a, b) => a.name.localeCompare(b.name));

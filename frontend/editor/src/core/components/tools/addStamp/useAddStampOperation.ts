@@ -96,7 +96,6 @@ export const addStampOperationConfig = defineSingleFileTool({
   operationType: "addStamp",
   endpoint: ENDPOINT,
   defaultParameters,
-  fileFields: ["stampImage"],
 });
 
 export const useAddStampOperation = () => {

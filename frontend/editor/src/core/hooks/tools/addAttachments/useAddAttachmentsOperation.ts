@@ -54,7 +54,6 @@ export const addAttachmentsOperationConfig = defineSingleFileTool({
   operationType: "addAttachments",
   endpoint: ENDPOINT,
   defaultParameters: DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
-  fileFields: ["attachments"],
 });
 
 export const useAddAttachmentsOperation = () => {

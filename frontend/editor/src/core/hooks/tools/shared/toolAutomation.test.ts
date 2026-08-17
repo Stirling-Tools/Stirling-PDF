@@ -10,6 +10,7 @@ import {
   asRegistryConfig,
   ToolType,
 } from "@app/hooks/tools/shared/toolOperationTypes";
+import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
 import {
   activeFileFields,
   deserializeToolStep,
@@ -528,16 +529,6 @@ describe("supporting files", () => {
     expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
   });
 
-  test("tools declare their supporting-file params", () => {
-    expect(overlayPdfsOperationConfig.fileFields).toEqual(["overlayFiles"]);
-    expect(certSignOperationConfig.fileFields).toEqual([
-      "privateKeyFile",
-      "certFile",
-      "p12File",
-      "jksFile",
-    ]);
-  });
-
   test("getExecutableTools flags whether a tool accepts supporting files", () => {
     const byId = Object.fromEntries(
       getExecutableTools(fileRegistry).map((tool) => [
@@ -546,5 +537,41 @@ describe("supporting files", () => {
       ]),
     );
     expect(byId).toEqual({ overlayPdfs: true, certSign: true });
+  });
+
+  test("a rename override binds a backend field to a differently-named param", () => {
+    // The cert-sign endpoint's `certFile` is held by a frontend param named `signingCert`.
+    const config = asRegistryConfig<{ signingCert?: File }>({
+      toolType: ToolType.singleFile,
+      operationType: "certSign",
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      validateParams: (p) => p.signingCert !== undefined,
+      // Sends the File under the backend field `certFile`, like real tools do via objectToFormData
+      // (which sends a param's File or File[] under a named field, iterating arrays).
+      buildFormData: (p, file) =>
+        objectToFormData({}, { fileInput: file, certFile: p.signingCert }),
+      fileParamOverrides: [{ field: "certFile", param: "signingCert" }],
+    });
+    const registry: Partial<ToolRegistry> = {
+      certSign: entry({ name: "Sign", operationConfig: config }),
+    };
+    const step = (
+      fileParameters?: Record<string, string>,
+    ): WorkingToolStep => ({
+      toolId: "certSign" as ToolId,
+      operation: "/api/v1/security/cert-sign",
+      params: {},
+      support: "editable",
+      fileParameters,
+    });
+    // The stored binding is keyed by the backend field, but satisfies the frontend param on reload.
+    expect(stepNeedsConfiguring(step({ certFile: "asset:x" }), registry)).toBe(
+      false,
+    );
+    expect(stepNeedsConfiguring(step(), registry)).toBe(true);
+    expect(activeFileFields(step({ certFile: "asset:x" }), registry)).toEqual([
+      "certFile",
+    ]);
   });
 });

@@ -145,9 +145,6 @@ export const certSignOperationConfig = defineSingleFileTool({
   operationType: "certSign",
   endpoint: ENDPOINT,
   defaultParameters,
-  // Which keystore file is actually sent depends on certType (see certSignFiles); buildFormData
-  // stays the authority on that. This lists every keystore param the tool can send.
-  fileFields: ["privateKeyFile", "certFile", "p12File", "jksFile"],
 });
 
 export const useCertSignOperation = () => {
