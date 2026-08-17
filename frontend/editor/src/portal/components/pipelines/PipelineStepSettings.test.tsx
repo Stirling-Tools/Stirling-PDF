@@ -15,6 +15,8 @@ import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOpera
 import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
 import ChangeMetadataSingleStep from "@app/components/tools/changeMetadata/ChangeMetadataSingleStep";
 import { defaultParameters as changeMetadataDefaults } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
+import { defaultParameters as overlayDefaults } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 
 // Override only useTranslation; keep the rest of react-i18next (initReactI18next et al.) real, so
@@ -78,6 +80,19 @@ const changeMetadataRegistry = {
   changeMetadata: { automationSettings: ChangeMetadataSingleStep },
 } as unknown as Partial<ToolRegistry>;
 
+// The real Overlay PDFs automation settings. Its overlay-file picker uses the
+// editor FilesModal when present; that read is now optional so the portal (which
+// mounts no FilesModalProvider) renders a plain file input instead of crashing.
+const overlayStep = {
+  support: "editable",
+  toolId: "overlayPdfs",
+  params: overlayDefaults,
+} as unknown as WorkingToolStep;
+
+const overlayRegistry = {
+  overlayPdfs: { automationSettings: OverlayPdfsSettings },
+} as unknown as Partial<ToolRegistry>;
+
 describe("PipelineStepSettings", () => {
   it("renders reused editor tool settings (which use the shared Tooltip) without app-wide Preferences/Sidebar providers", () => {
     expect(() =>
@@ -122,6 +137,21 @@ describe("PipelineStepSettings", () => {
       ),
     ).not.toThrow();
     expect(screen.getByText("Standard Metadata")).toBeInTheDocument();
+  });
+
+  it("renders the Overlay PDFs tool's fields in the portal, with no FilesModalProvider mounted", () => {
+    expect(() =>
+      render(
+        <PortalTestProviders>
+          <PipelineStepSettings
+            step={overlayStep}
+            registry={overlayRegistry}
+            onChange={() => {}}
+          />
+        </PortalTestProviders>,
+      ),
+    ).not.toThrow();
+    expect(screen.getByText("Overlay Mode")).toBeInTheDocument();
   });
 
   // Reproduces the convert-in-pipeline bug: picking a source format fires several onParameterChange
