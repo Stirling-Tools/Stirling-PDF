@@ -2,17 +2,15 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Avatar, NavSurface, ProgressBar } from "@app/ui";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { Avatar, NavSurface } from "@app/ui";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { type AppSwitchTarget } from "@app/components/shared/AppSwitch";
+import {
+  NavFooterCreditsRow,
+  type NavFooterCredits,
+} from "@app/components/shared/navFooter/NavFooterCreditsRow";
 import "@app/components/shared/navFooter/NavFooter.css";
-
-export interface NavFooterCredits {
-  /** Free credits still available to spend. */
-  remaining: number;
-  /** Size of the free allowance — the "of N" denominator. */
-  total: number;
-}
 
 export interface NavFooterAppLink {
   /** The app this footer is NOT in — the one the row opens. */
@@ -36,12 +34,6 @@ export interface NavFooterProps {
   /** Icon-rail state: labels collapse to tooltips. */
   collapsed?: boolean;
   className?: string;
-}
-
-/** Remaining-credit bands, mirroring the usage meters' 80% / 100% thresholds. */
-function creditsTone(remaining: number, total: number): string {
-  if (remaining <= 0) return "danger";
-  return total > 0 && remaining / total <= 0.2 ? "warning" : "success";
 }
 
 /**
@@ -87,7 +79,7 @@ export function NavFooter({
     rows.push({
       key: "credits",
       node: (
-        <CreditsRow
+        <NavFooterCreditsRow
           credits={credits}
           collapsed={collapsed}
           label={t("navFooter.credits.label", "Free credits")}
@@ -170,7 +162,7 @@ export function NavFooter({
           )}
           {onOpenSettings && !collapsed && (
             <span className="sui-nav-footer__trailing" aria-hidden>
-              <GearIcon />
+              <SettingsIcon sx={{ fontSize: "1.1rem" }} />
             </span>
           )}
         </button>
@@ -202,71 +194,4 @@ function openAppLabel(
   return app === "editor"
     ? t("navFooter.openEditor", "Open PDF Editor")
     : t("navFooter.openProcessor", "Open PDF Processor");
-}
-
-function CreditsRow({
-  credits,
-  collapsed,
-  label,
-}: {
-  credits: NavFooterCredits;
-  collapsed: boolean;
-  label: string;
-}) {
-  const { t } = useTranslation();
-  const total = Math.max(0, credits.total);
-  const remaining = Math.min(Math.max(0, credits.remaining), total);
-  const tone = creditsTone(remaining, total);
-  const count = t("navFooter.credits.count", "{{remaining}} of {{total}}", {
-    remaining: remaining.toLocaleString(),
-    total: total.toLocaleString(),
-  });
-
-  return (
-    <Tooltip
-      label={`${label}: ${count}`}
-      position="right"
-      withinPortal
-      disabled={!collapsed}
-    >
-      <div className="sui-nav-footer__row sui-nav-footer__credits">
-        {!collapsed && (
-          <div className="sui-nav-footer__credits-head">
-            <span
-              className="sui-nav-footer__dot"
-              data-tone={tone}
-              aria-hidden
-            />
-            <span className="sui-nav-footer__credits-label">{label}</span>
-            <span className="sui-nav-footer__credits-count">{count}</span>
-          </div>
-        )}
-        <ProgressBar
-          value={total > 0 ? remaining / total : 0}
-          height={6}
-          color={`var(--c-${tone})`}
-          label={`${label}: ${count}`}
-        />
-      </div>
-    </Tooltip>
-  );
-}
-
-function GearIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={18}
-      height={18}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
 }

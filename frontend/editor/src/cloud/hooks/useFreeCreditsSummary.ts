@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useWallet } from "@app/hooks/useWallet";
-import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooter";
+import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
 
 /**
  * Cloud builds read the free grant straight off the live wallet — the same

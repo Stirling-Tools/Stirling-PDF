@@ -1,4 +1,4 @@
-import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooter";
+import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
 
 /**
  * Free credits left on this team's allowance, for the sidebar footer meter.
