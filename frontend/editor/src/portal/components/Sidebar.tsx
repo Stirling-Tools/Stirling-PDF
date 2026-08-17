@@ -4,7 +4,7 @@ import { ActionIcon, NavItem, NavSurface } from "@app/ui";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
+import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
