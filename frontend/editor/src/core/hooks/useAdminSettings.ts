@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAdminSection,
@@ -98,11 +98,15 @@ export function useAdminSettings<T = any>(
   );
 
   // Every fetch reseeds the draft, including the refetch after a save — the
-  // response carries the _pending block the form renders from.
+  // response carries the _pending block the form renders from. Adjusted during
+  // render rather than in an effect: React re-runs this component before
+  // committing, so the reseed costs no extra render.
   const [draft, setDraft] = useState<T>(baseline);
-  useEffect(() => {
-    if (rawSettings !== undefined) setDraft(baseline);
-  }, [rawSettings, baseline]);
+  const seededFrom = useRef(rawSettings);
+  if (rawSettings !== undefined && seededFrom.current !== rawSettings) {
+    seededFrom.current = rawSettings;
+    setDraft(baseline);
+  }
 
   const save = useMutation({
     mutationFn: async () => {
