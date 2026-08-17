@@ -45,16 +45,18 @@ function creditsTone(remaining: number, total: number): string {
 
 /**
  * The bottom section every sidebar ends with, shared by the editor and the
- * processor so both present the same three stacked boxes, in this order:
+ * processor so both present the same rows. ONE surface, hairline-separated, in
+ * this order:
  *
- *   1. free credits remaining
- *   2. "Open <the other app>"
- *   3. the account row — avatar, name, settings
+ *   1. caller-contributed rows (the self-hosted link-account CTA)
+ *   2. free credits remaining
+ *   3. "Open <the other app>"
+ *   4. the account row — avatar, name, settings
  *
  * Purely presentational: each app resolves its own identity, wallet and
  * app-switch access and passes them in, so this file carries no build-specific
- * gating. Any box whose data is absent is dropped entirely rather than rendered
- * empty.
+ * gating. A row whose data is absent is dropped along with its divider rather
+ * than rendered empty.
  */
 export function NavFooter({
   displayName,
@@ -73,89 +75,115 @@ export function NavFooter({
     ? `${displayName} - ${settingsLabel}`
     : displayName;
 
-  return (
-    <div
-      className={["sui-nav-footer", className ?? ""].filter(Boolean).join(" ")}
-      data-collapsed={collapsed || undefined}
-    >
-      {credits && (
-        <CreditsBox
+  // One surface, hairline-separated rows. Built as a list so only the rows this
+  // build actually shows get a divider between them — an absent row must not
+  // leave a stray line behind.
+  const rows: Array<{ key: string; node: ReactNode }> = [];
+
+  if (accountExtras) rows.push({ key: "extras", node: accountExtras });
+
+  if (credits) {
+    rows.push({
+      key: "credits",
+      node: (
+        <CreditsRow
           credits={credits}
           collapsed={collapsed}
           label={t("navFooter.credits.label", "Free credits")}
         />
-      )}
+      ),
+    });
+  }
 
-      {otherApp && (
-        <NavSurface className="sui-nav-footer__box">
-          <Tooltip
-            label={openAppLabel(otherApp.app, t)}
-            position="right"
-            withinPortal
-            disabled={!collapsed}
-          >
-            <button
-              type="button"
-              className="sui-nav-footer__row"
-              onClick={() => otherApp.onOpen()}
-              // Collapsed drops the visible label, so name the button here too.
-              aria-label={openAppLabel(otherApp.app, t)}
-            >
-              <span className="sui-nav-footer__row-icon" aria-hidden>
-                <BrandMark height="1.125rem" />
-              </span>
-              {!collapsed && (
-                <span className="sui-nav-footer__row-label">
-                  {openAppLabel(otherApp.app, t)}
-                </span>
-              )}
-            </button>
-          </Tooltip>
-        </NavSurface>
-      )}
-
-      <NavSurface className="sui-nav-footer__box">
-        {accountExtras}
+  if (otherApp) {
+    rows.push({
+      key: "switch",
+      node: (
         <Tooltip
-          label={accountLabel}
+          label={openAppLabel(otherApp.app, t)}
           position="right"
           withinPortal
           disabled={!collapsed}
         >
           <button
             type="button"
-            className="sui-nav-footer__row sui-nav-footer__account"
-            // Called with no args: handlers that take optional params (the
-            // processor's openSettings(section?)) must not receive the event.
-            onClick={onOpenSettings ? () => onOpenSettings() : undefined}
-            disabled={!onOpenSettings}
-            data-testid={onOpenSettings ? "config-button" : undefined}
-            data-tour={onOpenSettings ? "config-button" : undefined}
-            aria-label={accountLabel}
+            className="sui-nav-footer__row"
+            onClick={() => otherApp.onOpen()}
+            // Collapsed drops the visible label, so name the button here too.
+            aria-label={openAppLabel(otherApp.app, t)}
           >
-            {/* Decorative: the button's own label already names the account, so
-                an alt/label here would just repeat it to a screen reader. */}
-            <span aria-hidden>
-              <Avatar
-                size="sm"
-                name={displayName}
-                src={profilePictureUrl ?? undefined}
-              />
+            <span className="sui-nav-footer__row-icon" aria-hidden>
+              <BrandMark height="1.125rem" />
             </span>
             {!collapsed && (
-              <span className="sui-nav-footer__row-label sidebar-content-fade">
-                {displayName}
-              </span>
-            )}
-            {onOpenSettings && !collapsed && (
-              <span className="sui-nav-footer__settings" aria-hidden>
-                <GearIcon />
+              <span className="sui-nav-footer__row-label">
+                {openAppLabel(otherApp.app, t)}
               </span>
             )}
           </button>
         </Tooltip>
-      </NavSurface>
-    </div>
+      ),
+    });
+  }
+
+  rows.push({
+    key: "account",
+    node: (
+      <Tooltip
+        label={accountLabel}
+        position="right"
+        withinPortal
+        disabled={!collapsed}
+      >
+        <button
+          type="button"
+          className="sui-nav-footer__row sui-nav-footer__account"
+          // Called with no args: handlers that take optional params (the
+          // processor's openSettings(section?)) must not receive the event.
+          onClick={onOpenSettings ? () => onOpenSettings() : undefined}
+          disabled={!onOpenSettings}
+          data-testid={onOpenSettings ? "config-button" : undefined}
+          data-tour={onOpenSettings ? "config-button" : undefined}
+          aria-label={accountLabel}
+        >
+          {/* Decorative: the button's own label already names the account, so
+              an alt/label here would just repeat it to a screen reader. */}
+          <span aria-hidden>
+            <Avatar
+              size="sm"
+              name={displayName}
+              src={profilePictureUrl ?? undefined}
+            />
+          </span>
+          {!collapsed && (
+            <span className="sui-nav-footer__row-label sidebar-content-fade">
+              {displayName}
+            </span>
+          )}
+          {onOpenSettings && !collapsed && (
+            <span className="sui-nav-footer__settings" aria-hidden>
+              <GearIcon />
+            </span>
+          )}
+        </button>
+      </Tooltip>
+    ),
+  });
+
+  return (
+    <NavSurface
+      className={["sui-nav-footer", className ?? ""].filter(Boolean).join(" ")}
+      data-collapsed={collapsed || undefined}
+    >
+      {rows.map((row, i) => (
+        <div key={row.key} className="sui-nav-footer__slot">
+          {i > 0 && (
+            <div className="sui-nav-footer__divider" role="separator" />
+          )}
+          {row.node}
+        </div>
+      ))}
+    </NavSurface>
   );
 }
 
@@ -168,7 +196,7 @@ function openAppLabel(
     : t("navFooter.openProcessor", "Open PDF Processor");
 }
 
-function CreditsBox({
+function CreditsRow({
   credits,
   collapsed,
   label,
@@ -187,34 +215,32 @@ function CreditsBox({
   });
 
   return (
-    <NavSurface className="sui-nav-footer__box sui-nav-footer__credits">
-      <Tooltip
-        label={`${label}: ${count}`}
-        position="right"
-        withinPortal
-        disabled={!collapsed}
-      >
-        <div className="sui-nav-footer__credits-inner">
-          {!collapsed && (
-            <div className="sui-nav-footer__credits-head">
-              <span
-                className="sui-nav-footer__dot"
-                data-tone={tone}
-                aria-hidden
-              />
-              <span className="sui-nav-footer__credits-label">{label}</span>
-              <span className="sui-nav-footer__credits-count">{count}</span>
-            </div>
-          )}
-          <ProgressBar
-            value={total > 0 ? remaining / total : 0}
-            height={6}
-            color={`var(--c-${tone})`}
-            label={`${label}: ${count}`}
-          />
-        </div>
-      </Tooltip>
-    </NavSurface>
+    <Tooltip
+      label={`${label}: ${count}`}
+      position="right"
+      withinPortal
+      disabled={!collapsed}
+    >
+      <div className="sui-nav-footer__row sui-nav-footer__credits">
+        {!collapsed && (
+          <div className="sui-nav-footer__credits-head">
+            <span
+              className="sui-nav-footer__dot"
+              data-tone={tone}
+              aria-hidden
+            />
+            <span className="sui-nav-footer__credits-label">{label}</span>
+            <span className="sui-nav-footer__credits-count">{count}</span>
+          </div>
+        )}
+        <ProgressBar
+          value={total > 0 ? remaining / total : 0}
+          height={6}
+          color={`var(--c-${tone})`}
+          label={`${label}: ${count}`}
+        />
+      </div>
+    </Tooltip>
   );
 }
 

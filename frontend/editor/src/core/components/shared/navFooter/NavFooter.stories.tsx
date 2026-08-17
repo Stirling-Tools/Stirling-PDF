@@ -2,6 +2,26 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NavItem } from "@app/ui/NavItem";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 
+/** Stand-in for the processor's own link icon, so the CTA row reads as it does there. */
+function LinkIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
 const meta: Meta<typeof NavFooter> = {
   title: "Shared/NavFooter",
   component: NavFooter,
@@ -47,7 +67,7 @@ export const WithLinkAccountCta: Story = {
       <NavItem
         id="account-link"
         label="Link Stirling account"
-        icon={<span />}
+        icon={<LinkIcon />}
       />
     ),
   },
