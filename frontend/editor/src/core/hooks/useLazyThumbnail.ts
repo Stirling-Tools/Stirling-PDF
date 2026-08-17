@@ -1,9 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { FileId } from "@app/types/file";
 import { useFileManagement } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { readDiskFile } from "@app/services/localFolderContents";
+import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -134,6 +141,42 @@ function canEverThumbnail(name: string): boolean {
 }
 
 /**
+ * Classification labels read off disk-listed PDFs, keyed like the thumbnail
+ * cache and filled by the same read: the thumbnail task already holds the
+ * file's bytes, so extracting the embedded labels there costs one metadata
+ * parse instead of a second full read. Listeners let rows already on screen
+ * pick a late-arriving label up.
+ */
+const diskLabelCache = new Map<string, string[]>();
+const diskLabelListeners = new Set<() => void>();
+const NO_LABELS: string[] = [];
+
+function cacheDiskLabels(key: string, labels: string[]): void {
+  diskLabelCache.set(key, labels);
+  diskLabelListeners.forEach((listener) => listener());
+}
+
+/** Labels for a disk-listed file, once its thumbnail pass has read them. */
+export function useDiskLabels(entry: {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  lastModified: number;
+}): string[] {
+  const key = `${entry.path}|${entry.lastModified}|${entry.sizeBytes}`;
+  const subscribe = useCallback((listener: () => void) => {
+    diskLabelListeners.add(listener);
+    return () => {
+      diskLabelListeners.delete(listener);
+    };
+  }, []);
+  return useSyncExternalStore(
+    subscribe,
+    () => diskLabelCache.get(key) ?? NO_LABELS,
+  );
+}
+
+/**
  * The disk-listed file's already-rendered thumbnail, if the listing produced
  * one — so opening the file elsewhere can adopt it instead of re-rendering.
  * A cached "" (failed render) is not a thumbnail and reads as absent.
@@ -188,6 +231,14 @@ export function useDiskThumbnail(entry: {
         // every re-mount of the same row.
         cacheDiskThumb(key, url);
         if (!cancelled && url) setThumb(url);
+        // Same bytes, second harvest: a processed PDF names its categories in
+        // its own metadata, and this is the one moment the file is in hand.
+        if (file.type === "application/pdf" && !diskLabelCache.has(key)) {
+          const labels = await readClassificationLabelsFromFile(file).catch(
+            () => null,
+          );
+          cacheDiskLabels(key, labels ?? []);
+        }
       } catch {
         cacheDiskThumb(key, "");
       }

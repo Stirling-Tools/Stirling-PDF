@@ -45,12 +45,14 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { FileCategoryBadge } from "@app/components/filesPage/FileCategoryBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import {
   useLazyThumbnail,
   useDiskThumbnail,
+  useDiskLabels,
 } from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
@@ -1207,6 +1209,7 @@ function FileCard({
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <FileCategoryBadge labels={file.classificationLabels} />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -1942,6 +1945,7 @@ function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <FileCategoryBadge labels={file.classificationLabels} />
         <PolicyBadges fileId={file.id as string} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
@@ -2063,6 +2067,7 @@ function DiskFileCard({
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
+  const diskLabels = useDiskLabels(entry);
   const extension = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
     : "";
@@ -2100,6 +2105,7 @@ function DiskFileCard({
             )}
             compact
           />
+          <FileCategoryBadge labels={diskLabels} />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -2150,6 +2156,7 @@ function DiskFileRow({
 }) {
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
+  const diskLabels = useDiskLabels(entry);
   const ext = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
     : "";
@@ -2209,6 +2216,7 @@ function DiskFileRow({
           )}
           compact
         />
+        <FileCategoryBadge labels={diskLabels} />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
