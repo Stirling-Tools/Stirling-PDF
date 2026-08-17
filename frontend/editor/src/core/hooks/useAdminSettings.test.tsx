@@ -63,6 +63,28 @@ describe("useAdminSettings", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
+  it("serves a reopened tab from cache within the stale window", async () => {
+    // Four AI tabs render one at a time, so this — not concurrent mounting —
+    // is where the request saving actually comes from.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
+    });
+    const shared = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    for (let i = 0; i < 4; i++) {
+      const tab = renderHook(
+        () => useAdminSettings({ sectionName: "aiEngine" }),
+        { wrapper: shared },
+      );
+      await waitFor(() => expect(tab.result.current.loading).toBe(false));
+      tab.unmount();
+    }
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps sections with different blocks apart", async () => {
     const { result } = renderHook(
       () => ({

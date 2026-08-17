@@ -88,7 +88,11 @@ export function useAdminSettings<T = any>(
         ? fetchTransformerRef.current()
         : fetchAdminSection<T>(sectionName),
     enabled,
-    staleTime: 0,
+    // Inherits the client's 30s staleTime, so reopening a tab within that
+    // window is free — the four AI tabs all read one block. Not
+    // CONFIG_STALE_TIME: these are editable, and a save invalidates anyway.
+    // A section showing live server state rather than config should override
+    // this locally.
   });
 
   // What the user saw, pending changes folded in — also the delta baseline.
