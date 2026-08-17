@@ -10,8 +10,10 @@ import {
   emitTextLine,
   everyCharIn,
   inkFromRun,
+  measureObjSpanPt,
   removeMemberPtrs,
   rotationFromMatrix,
+  warmOnPageAdvances,
   planLineOrigins,
   emitRunLines,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
@@ -286,11 +288,18 @@ export class EditTextCommand implements Command {
           run.pdfiumObjPtr !== 0));
 
     if (!needsOverlay) {
+      const restoreText = run.text;
+      const restoreBounds = run.bounds;
       run.text = this.nextText;
       run.dirty = true;
       page.markDirty();
-      PdfiumTextWriter.commitRunText(doc, page, run);
-      return;
+      if (PdfiumTextWriter.commitRunText(doc, page, run)) return;
+      // The object's font could not encode the new text - `run.fontId` said
+      // base-14 but `pdfiumObjPtr` still pointed at the original (Type 3 /
+      // symbolic subset) object, so SetText wrote filler charcodes. Undo and
+      // take the overlay path, which resolves charcodes and validates the emit.
+      run.text = restoreText;
+      run.bounds = restoreBounds;
     }
 
     this.overlaid = true;
@@ -347,6 +356,10 @@ export class EditTextCommand implements Command {
       }
       run.coverRectPtr = 0;
     }
+
+    // Measure the page's glyph advances BEFORE the source objects go away:
+    // for a Type 3 face this is the only place a real advance can come from.
+    warmOnPageAdvances(m, page.pagePtr);
 
     const memberPtrs = collectMemberPtrs(run);
     const containers = collectContainersByPtr(run);
@@ -478,6 +491,17 @@ export class EditTextCommand implements Command {
     }
     // Don't reset paragraphLeafPtrs here - we just set them above to the
     // freshly-emitted chunks so the next overlay edit can remove them.
+    // The emit replaced every object this run owns, so the old bounds can
+    // describe geometry that is gone - a box narrower than its own glyphs
+    // leaves the overlay unusable over correctly drawn text. Only ever GROW it
+    // here: trailing whitespace legitimately extends a box past its ink, and
+    // shrinking to the ink would erase that.
+    const span = measureObjSpanPt(m, allEmittedPtrs);
+    if (span) {
+      const left = Math.min(run.bounds.x, span.left);
+      const right = Math.max(run.bounds.x + run.bounds.width, span.right);
+      run.bounds = { ...run.bounds, x: left, width: Math.max(0, right - left) };
+    }
     run.text = this.nextText;
     run.dirty = true;
     page.markDirty();

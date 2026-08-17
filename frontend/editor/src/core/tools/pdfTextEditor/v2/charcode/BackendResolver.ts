@@ -252,16 +252,104 @@ interface FontReadModule {
 // font.
 const fontForCharCache = new Map<string, number | null>();
 
+/** Bold/italic classification of a font, read from its /BaseFont name. */
+export interface FontStyleClass {
+  bold: boolean;
+  italic: boolean;
+}
+
+/**
+ * Classify a font handle as bold/italic from its /BaseFont name.
+ *
+ * Borrowing a glyph from a face of a different weight is what made edited body
+ * text come back bold: the first "o" in document order often lives in a bold
+ * heading.
+ */
+export function fontStyleClass(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): FontStyleClass | null {
+  const name = readFontName(m, fontPtr);
+  if (!name) return null;
+  return {
+    bold: /bold|black|heavy|semibold|demi/i.test(name),
+    italic: /italic|oblique/i.test(name),
+  };
+}
+
+const reusableFontCache = new Map<number, boolean>();
+
+/**
+ * Whether a font has a real font program behind it.
+ *
+ * A Type 3 face is a dictionary of content-stream procedures, so PDFium can
+ * report neither a glyph advance nor a usable ink box for it. Its glyphs are
+ * still drawable - callers may reuse one when they can measure its advance
+ * some other way - but laying out new text on PDFium's numbers alone stacks
+ * every glyph on the previous one.
+ */
+export function fontIsReusable(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): boolean {
+  if (!fontPtr) return false;
+  const cached = reusableFontCache.get(fontPtr);
+  if (cached !== undefined) return cached;
+  const getData = (
+    m as unknown as {
+      FPDFFont_GetFontData?: (
+        font: number,
+        buf: number,
+        buflen: number,
+        outLen: number,
+      ) => boolean;
+    }
+  ).FPDFFont_GetFontData;
+  // No API to ask with: assume reusable so nothing regresses.
+  if (typeof getData !== "function") {
+    reusableFontCache.set(fontPtr, true);
+    return true;
+  }
+  // A Type 3 font is a dictionary of content-stream procedures, not a font
+  // program. PDFium still answers "true" for it, but reports a length of 0 -
+  // the length is the part that distinguishes a real face.
+  let ok = false;
+  const out = m.pdfium.wasmExports.malloc(4);
+  try {
+    m.pdfium.setValue(out, 0, "i32");
+    ok = getData(fontPtr, 0, 0, out) && m.pdfium.getValue(out, "i32") > 0;
+  } catch {
+    ok = false;
+  } finally {
+    m.pdfium.wasmExports.free(out);
+  }
+  reusableFontCache.set(fontPtr, ok);
+  return ok;
+}
+
+/** Test-only: clear the reusable-font cache. */
+export function _clearReusableFontCacheForTests(): void {
+  reusableFontCache.clear();
+}
+
 export function findFontForChar(
   unicodeChar: string,
   ctx: ResolverContext,
+  // When given, only fonts with the SAME bold/italic class as this one are
+  // accepted, so a borrowed glyph never changes the run's weight or slant.
+  likeFontPtr?: number,
 ): number | null {
   if (!unicodeChar) return null;
   const cp = unicodeChar.codePointAt(0);
   if (cp === undefined) return null;
-  const cacheK = `${ctx.pagePtr}:${cp}`;
-  if (fontForCharCache.has(cacheK)) return fontForCharCache.get(cacheK) ?? null;
   const m = ctx.module;
+  const want = likeFontPtr ? fontStyleClass(m, likeFontPtr) : null;
+  // The style is part of the answer, so it must be part of the cache key.
+  const styleK = want
+    ? `${want.bold ? "b" : ""}${want.italic ? "i" : ""}|`
+    : "";
+  const cacheK = `${ctx.pagePtr}:${styleK}${cp}`;
+  if (fontForCharCache.has(cacheK)) return fontForCharCache.get(cacheK) ?? null;
   const tpMod = m as unknown as TextPageModule;
   const fontMod = m as unknown as FontReadModule;
   if (
@@ -288,10 +376,17 @@ export function findFontForChar(
       if (!obj) continue;
       try {
         const f = fontMod.FPDFTextObj_GetFont(obj);
-        if (f) {
-          fontForCharCache.set(cacheK, f);
-          return f;
+        if (!f) continue;
+        if (want) {
+          const got = fontStyleClass(m, f);
+          // An unnamed font can't be vouched for; skip it rather than risk a
+          // weight change.
+          if (!got || got.bold !== want.bold || got.italic !== want.italic) {
+            continue;
+          }
         }
+        fontForCharCache.set(cacheK, f);
+        return f;
       } catch {
         continue;
       }

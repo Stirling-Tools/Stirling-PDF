@@ -10,6 +10,7 @@ import type { RGBA } from "@app/tools/pdfTextEditor/v2/types";
 import {
   emitCharcodeEvent,
   findFontForChar,
+  fontIsReusable,
   setCharcodesOn,
   tryResolveCharcodes,
 } from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
@@ -321,6 +322,43 @@ interface LooseBoxModule {
   FPDFTextObj_GetFont?: (obj: number) => number;
   FPDFText_GetFontSize?: (tp: number, i: number) => number;
   FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
+  FPDFText_GetCharOrigin?: (
+    tp: number,
+    i: number,
+    x: number,
+    y: number,
+  ) => boolean;
+}
+
+// An advance below this many ems is not a real advance - it is an ink box that
+// got mistaken for one. The narrowest advances in the base-14 faces are
+// quotesingle (0.191em) and i/l (0.222em), so 0.18 clears every ordinary glyph
+// while rejecting the collapsed ink boxes PDFium reports for Type 3 faces.
+const MIN_PLAUSIBLE_ADVANCE_EM = 0.18;
+// Above this, the "advance" swallowed a word gap or a Td jump.
+const MAX_PLAUSIBLE_ADVANCE_EM = 2;
+
+/** Baseline origin of char `idx` in page points, or null when unreadable. */
+function charOriginPt(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  tp: number,
+  idx: number,
+): { x: number; y: number } | null {
+  const mod = m as unknown as LooseBoxModule;
+  if (!mod.FPDFText_GetCharOrigin) return null;
+  // FPDFText_GetCharOrigin takes two double* out-params.
+  const buf = m.pdfium.wasmExports.malloc(16);
+  try {
+    if (!mod.FPDFText_GetCharOrigin(tp, idx, buf, buf + 8)) return null;
+    return {
+      x: m.pdfium.getValue(buf, "double"),
+      y: m.pdfium.getValue(buf + 8, "double"),
+    };
+  } catch {
+    return null;
+  } finally {
+    m.pdfium.wasmExports.free(buf);
+  }
 }
 
 function looseBoxAdvancePt(
@@ -418,9 +456,39 @@ function buildOnPageAdvMap(
       }
       const effFs = fs * scale;
       if (!effFs || effFs <= 0) continue;
+      // The loose char box is the glyph's own advance, which is what the emit
+      // path wants: it re-applies the run's letter-spacing itself. On Type 3
+      // faces (Figma/Skia exports) PDFium degrades it to the tight ink box,
+      // which collapses every advance and stacks the glyphs on re-emit - so
+      // an implausible value falls through to the pen movement on the page.
+      // That gap includes any Tc the producer used, but an advance that is
+      // slightly too wide beats one that is zero.
+      let advEm: number | null = null;
       const adv = looseBoxAdvancePt(m, tp, i);
-      if (adv == null) continue;
-      fm.set(u, adv / effFs);
+      const looseEm = adv == null ? null : adv / effFs;
+      if (
+        looseEm != null &&
+        looseEm >= MIN_PLAUSIBLE_ADVANCE_EM &&
+        looseEm <= MAX_PLAUSIBLE_ADVANCE_EM
+      ) {
+        advEm = looseEm;
+      } else {
+        const here = charOriginPt(m, tp, i);
+        const next = i + 1 < count ? charOriginPt(m, tp, i + 1) : null;
+        if (here && next && Math.abs(next.y - here.y) < 0.5) {
+          const delta = (next.x - here.x) / effFs;
+          if (
+            delta >= MIN_PLAUSIBLE_ADVANCE_EM &&
+            delta <= MAX_PLAUSIBLE_ADVANCE_EM
+          ) {
+            advEm = delta;
+          }
+        }
+      }
+      // No trustworthy measurement: leave the char unmapped so the caller
+      // falls back to font metrics rather than advancing by ~nothing.
+      if (advEm == null) continue;
+      fm.set(u, advEm);
     }
   } finally {
     try {
@@ -447,6 +515,26 @@ function onPageAdvanceEm(
   }
   const cp = ch.codePointAt(0) ?? 0;
   return pageMap.get(font)?.get(cp) ?? null;
+}
+
+/**
+ * Build the page's advance map now, while every source glyph is still on the
+ * page.
+ *
+ * The map is the only place a Type 3 glyph's real advance can come from, and
+ * an edit removes the objects it is measured off. Warming it first is what
+ * lets a re-emit keep the original face instead of collapsing.
+ */
+export function warmOnPageAdvances(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+): void {
+  if (!pagePtr || onPageAdvCache.has(pagePtr)) return;
+  try {
+    onPageAdvCache.set(pagePtr, buildOnPageAdvMap(m, pagePtr));
+  } catch {
+    /* best-effort - callers fall back to font metrics */
+  }
 }
 
 /** Drop the per-page on-page-advance cache. */
@@ -645,7 +733,24 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       applyFillAndPos(m, opts.page, p, opts.fill, x, opts.y);
       return p;
     };
-    if (!canReuse) return emitBase14();
+    if (!canReuse) {
+      // Still record the attempt: this is the only signal that an edit fell
+      // back instead of reusing the source face.
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: getActiveCharcodeStrategy(),
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note:
+          opts.originalFontPtr !== 0
+            ? "source font cannot author glyphs (Type 3 / no font program) - substituting"
+            : "no source font available (Helvetica fresh emit)",
+        outcome: "no-font",
+      });
+      return emitBase14();
+    }
 
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
@@ -874,7 +979,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         }
       }
       if (!charFont) {
-        charFont = findFontForChar(ch, ctx) || 0;
+        // Constrained to the run's own weight/slant: an unconstrained borrow
+        // takes the first matching glyph in content order, which is usually a
+        // bold heading, and the edited body text comes back bold.
+        charFont = findFontForChar(ch, ctx, opts.originalFontPtr) || 0;
         if (!charFont) {
           allOk = false;
           break;
@@ -885,6 +993,18 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         !resolved?.result ||
         resolved.result.charcodes.length !== 1 ||
         resolved.result.missing.length > 0
+      ) {
+        allOk = false;
+        break;
+      }
+      // A Type 3 face has no font program, so PDFium can report neither a
+      // glyph advance nor a usable ink box for it: the only trustworthy
+      // advance is one measured from the glyph as the page already draws it.
+      // Without that, each following glyph lands on top of this one - the
+      // reported scramble. Substitute a real face instead.
+      if (
+        !fontIsReusable(m, charFont) &&
+        onPageAdvanceEm(m, opts.page.pagePtr, charFont, ch) == null
       ) {
         allOk = false;
         break;
@@ -932,11 +1052,11 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         if (advEm != null) {
           cursor += advEm * size;
         } else {
-          const measured = measureObjRightEdgePt(m, ptr);
-          cursor =
-            measured > cursor
-              ? measured
-              : cursor + measureAdvancePt(pc.ch, family, size);
+          // Unmeasurable: step by the font metric rather than the object's ink
+          // box. The ink box collapses on faces PDFium can't measure (stacking
+          // the glyphs) and overshoots on wide ones (visible gaps mid-word);
+          // a metric advance is even and always moves forward.
+          cursor += measureAdvancePt(pc.ch, family, size);
         }
         // Reproduce the source run's letter-spacing: the glyph advance above is
         // the font's natural width.
@@ -1031,10 +1151,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       let rightEdge = 0;
       for (const p of wordPtrs)
         rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
-      cursor =
-        rightEdge > cursor
-          ? rightEdge
-          : cursor + measureAdvancePt(chunk.text, family, size);
+      // Only trust the measured edge when it advanced by a believable amount:
+      // a face PDFium can't measure reports a near-zero ink box and would put
+      // the next word on top of this one.
+      const metric = measureAdvancePt(chunk.text, family, size);
+      const advanced = rightEdge > cursor ? rightEdge - cursor : 0;
+      cursor += advanced >= metric * 0.35 ? advanced : metric;
       ptrs.push(...wordPtrs);
     }
     // Word gaps stretch with the run's letter-spacing too: the source layout
@@ -1157,6 +1279,46 @@ export function measureObjRightEdgePt(
   try {
     if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return 0;
     return m.pdfium.getValue(r, "float");
+  } finally {
+    m.pdfium.wasmExports.free(l);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(t);
+  }
+}
+
+/**
+ * Horizontal span covered by `ptrs`, or null when nothing is measurable.
+ *
+ * A fresh overlay emit replaces every object a run owns, so the run's old
+ * bounds describe geometry that no longer exists - a stale box leaves the
+ * editable overlay the wrong size over correctly drawn text.
+ */
+export function measureObjSpanPt(
+  m: WrappedPdfiumModule,
+  ptrs: number[],
+): { left: number; right: number } | null {
+  const l = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const r = m.pdfium.wasmExports.malloc(4);
+  const t = m.pdfium.wasmExports.malloc(4);
+  try {
+    let left = Infinity;
+    let right = -Infinity;
+    for (const ptr of ptrs) {
+      if (!ptr) continue;
+      try {
+        if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) continue;
+      } catch {
+        continue;
+      }
+      const lo = m.pdfium.getValue(l, "float");
+      const hi = m.pdfium.getValue(r, "float");
+      if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
+      if (lo < left) left = lo;
+      if (hi > right) right = hi;
+    }
+    return right > left ? { left, right } : null;
   } finally {
     m.pdfium.wasmExports.free(l);
     m.pdfium.wasmExports.free(b);
