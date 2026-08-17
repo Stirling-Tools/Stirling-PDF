@@ -63,7 +63,6 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ../../../stirling/keycloak-saml-test/data:/usr/share/tessdata:rw
       - ../../../stirling/keycloak-saml-test/config:/configs:rw
       - ../../../stirling/keycloak-saml-test/logs:/logs:rw
       - ../../../stirling/keycloak-saml-test/storage:/storage:rw
