@@ -3,12 +3,12 @@ import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
+  column,
+  DataTable,
   EmptyState,
   Modal,
-  StatusBadge,
-  Table,
+  type DataTableColumn,
   type StatusTone,
-  type TableColumn,
 } from "@app/ui";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import type {
@@ -62,74 +62,54 @@ export function EncryptionKeyTable({
     });
   };
 
-  const columns: TableColumn<EncryptionKeyInfo>[] = [
-    {
+  const columns: DataTableColumn<EncryptionKeyInfo>[] = [
+    column.entity({
       key: "scope",
       header: t("portal.infrastructure.encryption.keys.columns.scope"),
-      render: (row) => (
-        <span className="portal-enc__scope">
-          <span className="portal-enc__cell-strong">{scopeLabel(row)}</span>
-          <span className="portal-enc__mono">
-            {t("portal.infrastructure.encryption.keys.keyVersion", {
-              version: row.keyVersion,
-            })}
-          </span>
-        </span>
-      ),
-    },
-    {
+      sortable: true,
+      primary: (row) => scopeLabel(row),
+      note: (row) =>
+        t("portal.infrastructure.encryption.keys.keyVersion", {
+          version: row.keyVersion,
+        }),
+    }),
+    column.badge({
       key: "status",
       header: t("portal.infrastructure.encryption.keys.columns.status"),
-      render: (row) => (
-        <StatusBadge tone={STATUS_TONE[row.status]} size="sm">
-          {t(`portal.infrastructure.encryption.status.${row.status}`)}
-        </StatusBadge>
-      ),
-    },
-    {
+      sortable: true,
+      get: (row) => ({
+        tone: STATUS_TONE[row.status],
+        label: t(`portal.infrastructure.encryption.status.${row.status}`),
+      }),
+    }),
+    column.muted({
       key: "lastChange",
       header: t("portal.infrastructure.encryption.keys.columns.lastChange"),
-      render: (row) =>
-        row.statusChangedBy ? (
-          <span className="portal-enc__muted">
-            {t("portal.infrastructure.encryption.keys.changedBy", {
+      get: (row) =>
+        row.statusChangedBy
+          ? t("portal.infrastructure.encryption.keys.changedBy", {
               actor: row.statusChangedBy,
-            })}
-          </span>
-        ) : (
-          <span className="portal-enc__muted">
-            {t("portal.infrastructure.encryption.keys.neverChanged")}
-          </span>
-        ),
-    },
-    {
+            })
+          : t("portal.infrastructure.encryption.keys.neverChanged"),
+    }),
+    column.actions({
       key: "actions",
       header: t("portal.infrastructure.encryption.keys.columns.actions"),
-      align: "right",
-      render: (row) => (
-        <span className="portal-enc__actions">
-          {row.status === "DISABLED" ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={busyKeyId === row.keyId}
-              onClick={() => onRestore(row)}
-            >
-              {t("portal.infrastructure.encryption.keys.restore")}
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={busyKeyId === row.keyId}
-              onClick={() => setPendingRevoke(row)}
-            >
-              {t("portal.infrastructure.encryption.keys.revoke")}
-            </Button>
-          )}
-        </span>
-      ),
-    },
+      get: (row) => [
+        row.status === "DISABLED"
+          ? {
+              label: t("portal.infrastructure.encryption.keys.restore"),
+              disabled: busyKeyId === row.keyId,
+              onClick: () => onRestore(row),
+            }
+          : {
+              label: t("portal.infrastructure.encryption.keys.revoke"),
+              tone: "danger",
+              disabled: busyKeyId === row.keyId,
+              onClick: () => setPendingRevoke(row),
+            },
+      ],
+    }),
   ];
 
   return (
@@ -149,7 +129,11 @@ export function EncryptionKeyTable({
             )}
           />
         ) : (
-          <Table columns={columns} rows={keys} rowKey={(row) => row.keyId} />
+          <DataTable
+            columns={columns}
+            rows={keys}
+            rowKey={(row) => row.keyId}
+          />
         )}
 
         <Modal
