@@ -42,7 +42,7 @@ interface ApproveResponse {
 export default function ConnectApprove() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { session, loading } = useAuth();
+  const { session, user, loading, signOut } = useAuth();
   const [params] = useSearchParams();
   const requestId = params.get("request");
 
@@ -117,6 +117,16 @@ export default function ConnectApprove() {
     [requestId, session, t],
   );
 
+  /**
+   * Sign out, then let the signed-out effect above send them to login with the
+   * request preserved. Not a manual navigate: reusing that path means the request
+   * survives the detour by the same mechanism as a cold arrival, rather than a
+   * second copy of the same logic that could drift.
+   */
+  const onSwitchAccount = useCallback(() => {
+    void signOut();
+  }, [signOut]);
+
   if (loading || !session) return null;
 
   return (
@@ -140,9 +150,11 @@ export default function ConnectApprove() {
       <ConnectApproveView
         phase={phase}
         pending={pending}
+        signedInEmail={user?.email ?? null}
         busy={busy}
         error={error}
         onDecide={(approve) => void onDecide(approve)}
+        onSwitchAccount={onSwitchAccount}
       />
     </AuthLayout>
   );

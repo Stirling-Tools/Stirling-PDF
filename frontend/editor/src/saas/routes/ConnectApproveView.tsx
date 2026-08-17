@@ -19,9 +19,13 @@ export interface PendingConnect {
 export interface ConnectApproveViewProps {
   phase: ApprovePhase;
   pending: PendingConnect | null;
+  /** Email of the account the server would be connected to. Null if unreadable. */
+  signedInEmail: string | null;
   busy: boolean;
   error: string | null;
   onDecide: (approve: boolean) => void;
+  /** Sign out and come back here, keeping the request so it survives the detour. */
+  onSwitchAccount: () => void;
 }
 
 /**
@@ -36,9 +40,11 @@ export interface ConnectApproveViewProps {
 export function ConnectApproveView({
   phase,
   pending,
+  signedInEmail,
   busy,
   error,
   onDecide,
+  onSwitchAccount,
 }: ConnectApproveViewProps) {
   const { t } = useTranslation();
 
@@ -98,6 +104,25 @@ export function ConnectApproveView({
           "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
         )}
       </p>
+
+      {/* Which account this binds to. Second only to the origin in importance: with
+          more than one Stirling account, or a personal one signed in from earlier,
+          approving here silently binds the server to whichever happens to be active
+          and the numbers land in the wrong team's billing. */}
+      <div className="saas-connect__account">
+        <div>
+          <span className="saas-connect__account-label">
+            {t("connect.confirm.signedInAs", "You are signed in as")}
+          </span>
+          <span className="saas-connect__account-email">
+            {signedInEmail ??
+              t("connect.confirm.unknownAccount", "an unknown account")}
+          </span>
+        </div>
+        <Button variant="quiet" disabled={busy} onClick={onSwitchAccount}>
+          {t("connect.confirm.switchAccount", "Use a different account")}
+        </Button>
+      </div>
 
       <dl className="saas-connect__facts">
         {pending?.name ? (

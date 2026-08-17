@@ -3357,6 +3357,9 @@ redirecting = "Returning you to your server."
 
 [connect.confirm]
 approve = "Connect server"
+signedInAs = "You are signed in as"
+switchAccount = "Use a different account"
+unknownAccount = "an unknown account"
 consequence = "Approving signs you in on that server and lets it use your team's plan. Do not approve an address you do not recognise."
 deny = "Decline"
 lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
