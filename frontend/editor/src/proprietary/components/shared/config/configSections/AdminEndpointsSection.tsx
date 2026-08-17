@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -57,18 +57,12 @@ export default function AdminEndpointsSection() {
     setSettings: setUiSettings,
     loading: uiLoading,
     saving: uiSaving,
-    fetchSettings: fetchUiSettings,
     saveSettings: saveUiSettings,
     isFieldPending: isUiFieldPending,
   } = useAdminSettings<UISettingsData>({
     sectionName: "ui",
+    enabled: loginEnabled,
   });
-
-  useEffect(() => {
-    if (loginEnabled) {
-      fetchUiSettings();
-    }
-  }, [loginEnabled, fetchUiSettings]);
 
   const {
     isDirty: isEndpointsDirty,
