@@ -18,11 +18,9 @@ type Story = StoryObj<typeof EncryptedFileBadge>;
 function FileRow({
   name,
   encryptionKeyId,
-  featureInUse,
 }: {
   name: string;
   encryptionKeyId: string | null;
-  featureInUse: boolean;
 }) {
   return (
     <div
@@ -35,10 +33,7 @@ function FileRow({
       }}
     >
       <span style={{ fontSize: "0.8125rem", fontWeight: 600 }}>{name}</span>
-      <EncryptedFileBadge
-        encryptionKeyId={encryptionKeyId}
-        featureInUse={featureInUse}
-      />
+      <EncryptedFileBadge encryptionKeyId={encryptionKeyId} />
     </div>
   );
 }
@@ -51,29 +46,24 @@ export const InFileList: Story = {
         <FileRow
           name="Q3-board-pack.pdf"
           encryptionKeyId="1f0b6a11-0000-4000-8000-000000000001"
-          featureInUse
         />
         <FileRow
           name="signed-msa-acme.pdf"
           encryptionKeyId="1f0b6a11-0000-4000-8000-000000000001"
-          featureInUse
         />
-        <FileRow name="scratch-notes.pdf" encryptionKeyId={null} featureInUse />
+        <FileRow name="scratch-notes.pdf" encryptionKeyId={null} />
       </Card>
     </div>
   ),
 };
 
-/** Nothing renders when the deployment has never used encryption. */
+/** A deployment that never enabled encryption: no file has a key, so no markers. */
 export const FeatureUnused: Story = {
   render: () => (
     <div style={{ maxWidth: "36rem" }}>
       <Card padding="loose">
-        <FileRow
-          name="scratch-notes.pdf"
-          encryptionKeyId={null}
-          featureInUse={false}
-        />
+        <FileRow name="scratch-notes.pdf" encryptionKeyId={null} />
+        <FileRow name="draft-terms.pdf" encryptionKeyId={null} />
       </Card>
     </div>
   ),

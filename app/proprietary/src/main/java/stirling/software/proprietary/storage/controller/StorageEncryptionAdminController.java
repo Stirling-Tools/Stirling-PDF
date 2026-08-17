@@ -104,13 +104,20 @@ public class StorageEncryptionAdminController {
                 // Materialisation failed; status still reports counts and key rows.
             }
         }
+        // Counted in the database, not filtered from `keys`: that list is a page.
+        long pendingRotationRows =
+                masterKeyVersion == null
+                        ? 0
+                        : keyRepository.countByMasterKeyVersionLessThan(masterKeyVersion);
         return new StorageEncryptionStatusResponse(
                 encryptionState.isWriteEnabled(),
                 encryptionState.isMaterialised(),
                 fingerprint,
                 masterKeyVersion,
+                applicationProperties.getStorage().getProvider(),
                 storedFileRepository.countByEncryptionKeyIdIsNotNull(),
                 storedFileRepository.countByEncryptionKeyIdIsNull(),
+                pendingRotationRows,
                 keys);
     }
 

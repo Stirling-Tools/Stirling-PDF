@@ -33,8 +33,10 @@ const ACTIVE_STATUS: StorageEncryptionStatus = {
   masterKeyFingerprint: "9f2c41a7be03d5e8",
   masterKeyVersion: 2,
   masterKeySource: "config",
+  provider: "local",
   encryptedFiles: 4128,
   plaintextFiles: 0,
+  pendingRotationRows: 0,
   keys: [
     key({ keyId: "1f0b6a11-0000-4000-8000-000000000001", scopeId: 1 }),
     key({ keyId: "1f0b6a11-0000-4000-8000-000000000002", scopeId: 4 }),
@@ -99,8 +101,10 @@ export const EncryptionOff: Story = {
         active: false,
         masterKeyFingerprint: null,
         masterKeyVersion: null,
+        provider: "local",
         encryptedFiles: 0,
         plaintextFiles: 1840,
+        pendingRotationRows: 0,
         keys: [],
       }),
     },
@@ -237,6 +241,7 @@ export const RotationPending: Story = {
       handlers: handlers({
         ...ACTIVE_STATUS,
         masterKeyVersion: 3,
+        pendingRotationRows: 2,
         keys: [
           key({
             keyId: "1f0b6a11-0000-4000-8000-000000000001",

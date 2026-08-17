@@ -36,8 +36,12 @@ export interface StorageEncryptionStatus {
   masterKeyFingerprint: string | null;
   masterKeyVersion: number | null;
   masterKeySource?: MasterKeySource;
+  /** Backend serving stored blobs: local, database or s3. */
+  provider: string | null;
   encryptedFiles: number;
   plaintextFiles: number;
+  /** Counted server-side, so it stays right when the key list is paged. */
+  pendingRotationRows: number;
   keys: EncryptionKeyInfo[];
 }
 
@@ -71,11 +75,14 @@ export type EncryptionUnavailableReason =
 
 export function unavailableReason(error: unknown): EncryptionUnavailableReason {
   if (!(error instanceof HttpError)) return "unknown";
-  // 403 covers both storage-disabled and a non-admin caller. The backend sends
-  // "Storage is disabled" as the detail for the former.
+  // 403 covers both a disabled store and a caller without the admin role, and the
+  // only signal is the detail prose. Match on the two words rather than the exact
+  // sentence, and fall back to a reason whose copy asserts no cause: guessing
+  // "your account lacks permission" at a config problem sends the operator to the
+  // wrong place entirely.
   if (error.status === 403) {
     const detail = JSON.stringify(error.body ?? "").toLowerCase();
-    return detail.includes("storage is disabled")
+    return detail.includes("storage") && detail.includes("disabled")
       ? "storage-disabled"
       : "forbidden";
   }
@@ -133,7 +140,8 @@ export async function rotateMasterKey(): Promise<RotationResult> {
 
 /** Key rows still wrapped by an older master key version. */
 export function pendingRotationCount(status: StorageEncryptionStatus): number {
-  if (status.masterKeyVersion === null) return 0;
-  const current = status.masterKeyVersion;
-  return status.keys.filter((k) => k.masterKeyVersion < current).length;
+  // Server-side count, not a filter over `keys`: that list is a page, and under-
+  // reporting 0 pending rows is the signal an operator uses to decide the outgoing
+  // master key is safe to delete.
+  return status.pendingRotationRows;
 }

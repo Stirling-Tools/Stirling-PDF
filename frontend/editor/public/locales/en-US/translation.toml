@@ -7607,7 +7607,7 @@ heading = "Coverage"
 percentEncrypted = "{{percent}}% encrypted"
 plaintext = "Plaintext files"
 progressLabel = "{{percent}}% of stored files encrypted"
-subheading = "How much of your stored content is encrypted."
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
 
 [portal.infrastructure.encryption.error]
 action = "That key change could not be applied. Please try again."
@@ -7638,11 +7638,15 @@ description = "A key is created the first time someone uploads a file, not at st
 title = "No keys yet"
 
 [portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
 compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
 copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
 fingerprint = "Fingerprint"
 heading = "Master key"
 notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
 subheading = "Wraps every scope key. Never shown or accepted over the API."
 version = "Version"
 
@@ -7678,7 +7682,6 @@ clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
 confirm = "Revoke access"
 readsFail = "Files already stored under this key stop opening, for everyone."
 reversible = "This is reversible. No key material is deleted."
-subtitle = "{{scope}}"
 title = "Revoke access to this key?"
 uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
 

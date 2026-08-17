@@ -5,24 +5,21 @@ import { StatusBadge } from "@app/ui";
 export interface EncryptedFileBadgeProps {
   /** `StoredFile.encryptionKeyId`. Null means the file is stored as plaintext. */
   encryptionKeyId: string | null;
-  /**
-   * Whether the deployment has ever used encryption at rest. When it hasn't,
-   * nothing renders: a "not encrypted" marker on every file in an install that
-   * does not use the feature is noise, not information.
-   */
-  featureInUse: boolean;
 }
 
 /**
  * Marks a stored file as encrypted at rest. Carries a text label rather than
  * relying on the padlock alone, so it is not colour or icon only.
+ *
+ * Renders nothing for a plaintext file, so a deployment that never enabled the
+ * feature shows no marker anywhere without the caller having to know that: the
+ * key id is the only input, which is what a file list actually has.
  */
 export function EncryptedFileBadge({
   encryptionKeyId,
-  featureInUse,
 }: EncryptedFileBadgeProps) {
   const { t } = useTranslation();
-  if (!featureInUse || !encryptionKeyId) return null;
+  if (!encryptionKeyId) return null;
 
   return (
     <StatusBadge tone="success" size="sm" showDot={false}>

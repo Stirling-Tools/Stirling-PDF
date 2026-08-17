@@ -63,7 +63,9 @@ export function EncryptionPanel({
   const [rotating, setRotating] = useState(false);
   const [lastRewrapped, setLastRewrapped] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const mounted = useRef(true);
+  const fingerprintRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -100,14 +102,18 @@ export function EncryptionPanel({
     const timer = window.setInterval(() => {
       void fetchMigrationStatus()
         .then((next) => {
-          if (mounted.current) setMigration(next);
+          if (!mounted.current) return;
+          setMigration(next);
+          // The run has just changed the encrypted/plaintext split, so re-read
+          // status: without this the coverage card keeps its pre-run counts.
+          if (next.state !== "RUNNING") void load();
         })
         .catch(() => {
           /* transient: the next tick retries */
         });
     }, MIGRATION_POLL_MS);
     return () => window.clearInterval(timer);
-  }, [migration?.state]);
+  }, [migration?.state, load]);
 
   const runKeyAction = async (
     key: EncryptionKeyInfo,
@@ -142,6 +148,32 @@ export function EncryptionPanel({
       );
     } finally {
       if (mounted.current) setStarting(false);
+    }
+  };
+
+  /**
+   * navigator.clipboard is absent on plain-http origins, which is how plenty of
+   * self-hosted installs are reached. Fall back to selecting the fingerprint so
+   * the operator can copy it manually, and always confirm which happened.
+   */
+  const copyFingerprint = async (fingerprint: string | null) => {
+    if (!fingerprint) return;
+    try {
+      await navigator.clipboard.writeText(fingerprint);
+      setCopied(true);
+    } catch {
+      const node = fingerprintRef.current;
+      if (node) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+      setCopied(false);
+      setActionError(
+        t("portal.infrastructure.encryption.masterKey.copyFailed"),
+      );
     }
   };
 
@@ -199,6 +231,10 @@ export function EncryptionPanel({
 
   const totalFiles = status.encryptedFiles + status.plaintextFiles;
   const coverage = totalFiles > 0 ? status.encryptedFiles / totalFiles : 0;
+  const coveragePercent = Math.round(coverage * 100);
+  // Keyed off the count, not the fraction: rounding makes 4,127/4,128 display as
+  // 100%, and a green badge over an amber bar is worse than either alone.
+  const fullyCovered = status.plaintextFiles === 0 && totalFiles > 0;
   // Nothing encrypted, no keys, machinery never started: the key, rotation and
   // revocation cards describe machinery that does not exist yet, so showing
   // them is five cards of noise. Coverage and the backlog are the whole story.
@@ -269,14 +305,12 @@ export function EncryptionPanel({
             </div>
             {totalFiles > 0 ? (
               <StatusBadge
-                tone={coverage === 1 ? "success" : "warning"}
+                tone={fullyCovered ? "success" : "warning"}
                 size="sm"
               >
                 {t(
                   "portal.infrastructure.encryption.coverage.percentEncrypted",
-                  {
-                    percent: Math.round(coverage * 100),
-                  },
+                  { percent: coveragePercent },
                 )}
               </StatusBadge>
             ) : null}
@@ -285,12 +319,10 @@ export function EncryptionPanel({
             <ProgressBar
               value={coverage}
               height={10}
-              color={coverage === 1 ? "var(--color-green)" : undefined}
+              color={fullyCovered ? "var(--color-green)" : undefined}
               label={t(
                 "portal.infrastructure.encryption.coverage.progressLabel",
-                {
-                  percent: Math.round(coverage * 100),
-                },
+                { percent: coveragePercent },
               )}
             />
           </div>
@@ -319,17 +351,23 @@ export function EncryptionPanel({
                           "portal.infrastructure.encryption.masterKey.fingerprint",
                         )}
                       </span>
-                      <code>{status.masterKeyFingerprint}</code>
+                      <code ref={fingerprintRef}>
+                        {status.masterKeyFingerprint}
+                      </code>
                       <Button
                         variant="quiet"
                         size="sm"
                         onClick={() =>
-                          void navigator.clipboard?.writeText(
-                            status.masterKeyFingerprint ?? "",
-                          )
+                          void copyFingerprint(status.masterKeyFingerprint)
                         }
                       >
-                        {t("portal.infrastructure.encryption.masterKey.copy")}
+                        {copied
+                          ? t(
+                              "portal.infrastructure.encryption.masterKey.copied",
+                            )
+                          : t(
+                              "portal.infrastructure.encryption.masterKey.copy",
+                            )}
                       </Button>
                     </div>
                     <div className="portal-enc__kv-row">
@@ -342,7 +380,28 @@ export function EncryptionPanel({
                         {status.masterKeyVersion}
                       </span>
                     </div>
+                    {status.provider ? (
+                      <div className="portal-enc__kv-row">
+                        <span className="portal-enc__kv-label">
+                          {t(
+                            "portal.infrastructure.encryption.masterKey.backend",
+                          )}
+                        </span>
+                        <span className="portal-enc__cell-strong">
+                          {status.provider}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
+                  {/* Presigned URLs are suppressed once anything is encrypted, so
+                      object-store downloads start streaming through the app. */}
+                  {status.provider === "s3" && status.writeEnabled ? (
+                    <p className="portal-enc__note">
+                      {t(
+                        "portal.infrastructure.encryption.masterKey.s3StreamingNote",
+                      )}
+                    </p>
+                  ) : null}
                   {/* Only meaningful next to an actual fingerprint. */}
                   <p className="portal-enc__note">
                     {t(

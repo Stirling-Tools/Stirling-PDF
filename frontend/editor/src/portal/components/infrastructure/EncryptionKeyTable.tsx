@@ -150,13 +150,7 @@ export function EncryptionKeyTable({
           onClose={() => setPendingRevoke(null)}
           width="md"
           title={t("portal.infrastructure.encryption.revoke.title")}
-          subtitle={
-            pendingRevoke
-              ? t("portal.infrastructure.encryption.revoke.subtitle", {
-                  scope: scopeLabel(pendingRevoke),
-                })
-              : undefined
-          }
+          subtitle={pendingRevoke ? scopeLabel(pendingRevoke) : undefined}
           footer={
             <>
               <Button

@@ -148,8 +148,9 @@ export function EncryptionMigrationCard({
           </p>
         ) : null}
 
-        {/* Only worth saying once a run exists to lose. */}
-        {state !== "IDLE" ? (
+        {/* Shown at IDLE too when a backlog remains: that is the state a run lost
+            to a restart leaves behind, so it is where the caveat explains most. */}
+        {state !== "IDLE" || plaintextFiles > 0 ? (
           <p className="portal-enc__note">
             {t("portal.infrastructure.encryption.migration.restartNote")}
           </p>

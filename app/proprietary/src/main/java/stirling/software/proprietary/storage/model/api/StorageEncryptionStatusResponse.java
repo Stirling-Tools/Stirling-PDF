@@ -13,8 +13,15 @@ public record StorageEncryptionStatusResponse(
         boolean active,
         String masterKeyFingerprint,
         Integer masterKeyVersion,
+        /** Backend serving stored blobs: local, database or s3. */
+        String provider,
         long encryptedFiles,
         long plaintextFiles,
+        /**
+         * Key rows still wrapped by an older master key, counted in the database rather than
+         * derived from {@link #keys}, which is a page and not the whole table.
+         */
+        long pendingRotationRows,
         List<KeyInfo> keys) {
 
     public record KeyInfo(
