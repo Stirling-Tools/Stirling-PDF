@@ -228,10 +228,10 @@ function mergedStepParams(
 }
 
 /**
- * The step's params with a stand-in File array injected for each stored binding whose field has no
- * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. The tool's
- * declared {@link ToolFileField}s map each backend field to the param that holds it, so the sentinel
- * lands on the right param without assuming field and param share a name. The array is sized to the
+ * The step's params with a stand-in File array injected for each stored binding whose param has no
+ * fresh pick, so a tool's buildFormData/validateParams sees the supporting file as present. Each of a
+ * tool's declared `fileFields` is a file param that doubles as its backend field name, so the binding
+ * (keyed by field) and the sentinel target (the param) are the same key. The array is sized to the
  * binding's asset count (overlay validates count == file count). Sentinels are empty and live only in
  * this local object - never written back to step.params, so they can never be uploaded.
  */
@@ -243,8 +243,8 @@ function withStoredFileSentinels(
   const bindings = step.fileParameters;
   const fileFields = config.fileFields;
   if (!bindings || !fileFields || typeof File === "undefined") return merged;
-  for (const { field, param } of fileFields) {
-    const binding = bindings[field];
+  for (const param of fileFields) {
+    const binding = bindings[param];
     if (binding == null || isFileValue(merged[param])) continue; // unbound, or a fresh pick stands in
     const count = Math.max(1, assetRefIds(binding).length);
     merged[param] = Array.from({ length: count }, () => new File([], "stored"));

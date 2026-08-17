@@ -528,11 +528,9 @@ describe("supporting files", () => {
     expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
   });
 
-  test("tools declare their supporting-file fields", () => {
-    expect(overlayPdfsOperationConfig.fileFields).toEqual([
-      { field: "overlayFiles", param: "overlayFiles", multiple: true },
-    ]);
-    expect(certSignOperationConfig.fileFields?.map((f) => f.field)).toEqual([
+  test("tools declare their supporting-file params", () => {
+    expect(overlayPdfsOperationConfig.fileFields).toEqual(["overlayFiles"]);
+    expect(certSignOperationConfig.fileFields).toEqual([
       "privateKeyFile",
       "certFile",
       "p12File",

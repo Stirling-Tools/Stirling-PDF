@@ -58,21 +58,6 @@ export type FileParamKey<TParams> = {
   string;
 
 /**
- * A supporting-file field a tool sends alongside its primary document: the backend multipart field
- * name and the (file-typed) parameter that holds the File(s). Declaring these is what makes "which
- * tools accept extra files, and which of their params are files" known to the type system and
- * inspectable at runtime, instead of inferred by probing buildFormData.
- */
-export interface ToolFileField<TParams> {
-  /** The backend multipart field the file is sent under (e.g. "stampImage", "overlayFiles"). */
-  field: string;
-  /** The parameter holding the File(s); the type system enforces this is a file param of the tool. */
-  param: FileParamKey<TParams>;
-  /** True when the field carries several files (a `File[]` parameter). */
-  multiple?: boolean;
-}
-
-/**
  * Configuration for tool operations defining processing behavior and API integration.
  *
  * Supports three patterns:
@@ -107,13 +92,15 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   defaultParameters?: TParams;
 
   /**
-   * The supporting-file fields this tool sends beyond its primary document (a signing certificate, a
-   * watermark image, overlay PDFs, ...). Declaring them lets a step composer know a tool takes extra
-   * files and which params hold them, and keeps stored-asset bindings mapped to the right param
-   * without assuming the field and param share a name. Omitted by tools that take only their primary
-   * document. buildFormData stays the authority on which of these are sent for a given set of params.
+   * The tool's supporting-file parameters - the params holding a `File`/`File[]` it sends beyond its
+   * primary document (a signing certificate, a watermark image, overlay PDFs, ...). Each is a real
+   * file param of the tool (the type rejects a non-file param) and doubles as the backend multipart
+   * field it is sent under, matching each tool's buildFormData. Declaring them lets a step composer
+   * know a tool takes extra files and which params they are; buildFormData stays the authority on
+   * which are actually sent for a given set of params. Omitted by tools that take only their primary
+   * document.
    */
-  fileFields?: readonly ToolFileField<TParams>[];
+  fileFields?: readonly FileParamKey<TParams>[];
 
   /**
    * Whether these parameters are complete enough to run. The same predicate a tool gives
