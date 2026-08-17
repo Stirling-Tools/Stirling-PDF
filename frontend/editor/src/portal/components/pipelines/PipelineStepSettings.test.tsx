@@ -13,6 +13,8 @@ import {
 import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
+import ChangeMetadataSingleStep from "@app/components/tools/changeMetadata/ChangeMetadataSingleStep";
+import { defaultParameters as changeMetadataDefaults } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 
 // Override only useTranslation; keep the rest of react-i18next (initReactI18next et al.) real, so
@@ -63,6 +65,19 @@ const convertRegistry = {
   },
 } as unknown as Partial<ToolRegistry>;
 
+// The real Change Metadata automation settings. Its editor variant auto-prefills the
+// form from the open document via useViewer; that path is now gated on a ViewerProvider
+// so it renders here (the portal mounts none) instead of crashing on useViewer.
+const changeMetadataStep = {
+  support: "editable",
+  toolId: "changeMetadata",
+  params: changeMetadataDefaults,
+} as unknown as WorkingToolStep;
+
+const changeMetadataRegistry = {
+  changeMetadata: { automationSettings: ChangeMetadataSingleStep },
+} as unknown as Partial<ToolRegistry>;
+
 describe("PipelineStepSettings", () => {
   it("renders reused editor tool settings (which use the shared Tooltip) without app-wide Preferences/Sidebar providers", () => {
     expect(() =>
@@ -92,6 +107,21 @@ describe("PipelineStepSettings", () => {
       ),
     ).not.toThrow();
     expect(screen.getByText(/Convert from/)).toBeInTheDocument();
+  });
+
+  it("renders the Change Metadata tool's fields in the portal, with no ViewerProvider mounted", () => {
+    expect(() =>
+      render(
+        <PortalTestProviders>
+          <PipelineStepSettings
+            step={changeMetadataStep}
+            registry={changeMetadataRegistry}
+            onChange={() => {}}
+          />
+        </PortalTestProviders>,
+      ),
+    ).not.toThrow();
+    expect(screen.getByText("Standard Metadata")).toBeInTheDocument();
   });
 
   // Reproduces the convert-in-pipeline bug: picking a source format fires several onParameterChange
