@@ -11,9 +11,7 @@ export type InfoBannerTone = "info" | "promo" | "warning" | "danger";
 /** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
 const TONE_BUTTON = {
   info: { variant: "primary", accent: "default" },
-  // Solid ink on the accent tint reads as two competing colours; the inverse fill
-  // sits on the tint instead of fighting it.
-  promo: { variant: "secondary", accent: "default" },
+  promo: { variant: "primary", accent: "premium" },
   warning: { variant: "primary", accent: "warning" },
   danger: { variant: "primary", accent: "danger" },
 } as const;

@@ -23,12 +23,29 @@
   --sui-banner-icon: var(--c-text-muted);
 }
 
-/* Upgrade/announcement. The accent tint carries it; the button is the loud part. */
+/* Upgrade/announcement: the one bar meant to pop, so it takes the feature gradient
+   rather than a tint. Fixed hues by design — it doesn't follow the chosen accent. */
 .sui-banner--promo {
-  --sui-banner-bg: var(--c-primary-subtle);
-  --sui-banner-border: var(--c-primary-border);
-  --sui-banner-text: var(--c-text);
-  --sui-banner-icon: var(--c-accent-fg, var(--c-primary));
+  --sui-banner-bg: linear-gradient(
+    135deg,
+    var(--c-hue-indigo) 0%,
+    var(--c-hue-purple) 100%
+  );
+  --sui-banner-border: transparent;
+  --sui-banner-text: var(--color-text-on-accent);
+  --sui-banner-icon: var(--color-text-on-accent);
+}
+
+/* On the gradient everything but the CTA is white; muted grey would disappear. */
+.sui-banner--promo .sui-banner__message,
+.sui-banner--promo .sui-banner__actions .sui-btn--tertiary,
+.sui-banner--promo .sui-banner__actions .sui-ai {
+  color: var(--sui-banner-text);
+}
+
+/* Separates the premium CTA from the gradient it sits on. */
+.sui-banner--promo .sui-banner__actions .sui-btn--primary {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .sui-banner--warning {
