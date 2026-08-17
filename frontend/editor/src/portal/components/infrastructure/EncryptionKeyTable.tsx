@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, EmptyState, Modal, StatusBadge, Table } from "@app/ui";
-import type { StatusTone } from "@app/ui";
-import type { TableColumn } from "@app/ui";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Modal,
+  StatusBadge,
+  Table,
+  type StatusTone,
+  type TableColumn,
+} from "@app/ui";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import type {
   EncryptionKeyInfo,
