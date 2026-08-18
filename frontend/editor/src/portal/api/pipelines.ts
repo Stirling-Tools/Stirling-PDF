@@ -233,12 +233,15 @@ export interface TestRunAsset {
 /**
  * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
  * path - callers force an inline output so nothing reaches the pipeline's real destination, and
- * the pipeline need not be saved first. Supporting files travel as keyed `assets[i]` parts.
+ * the pipeline need not be saved first. Fresh supporting files travel as keyed `assets[i]` parts;
+ * a stored file keeps its `asset:<id>` binding, and `policyId` lets the backend resolve it from that
+ * saved policy (so its bytes need not be re-sent).
  */
 export async function runPipelineTest(
   definition: TestRunDefinition,
   file: File,
   assets: TestRunAsset[] = [],
+  policyId?: string,
 ): Promise<{ runId: string }> {
   const form = new FormData();
   form.append(
@@ -246,6 +249,7 @@ export async function runPipelineTest(
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
   form.append("fileInput", file);
+  if (policyId) form.append("policyId", policyId);
   assets.forEach((asset, i) => {
     form.append(`assets[${i}].key`, asset.key);
     form.append(`assets[${i}].file`, asset.file);

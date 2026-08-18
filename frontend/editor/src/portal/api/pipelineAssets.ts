@@ -39,12 +39,3 @@ export async function uploadPipelineAsset(file: File): Promise<PolicyAsset> {
 export async function listPipelineAssets(): Promise<PolicyAsset[]> {
   return apiClient.local.json<PolicyAsset[]>("/api/v1/policies/assets");
 }
-
-/** GET /api/v1/policies/assets/{id}/content: an asset's bytes, for re-sending on an ad-hoc test run. */
-export async function fetchPipelineAssetContent(
-  assetId: string,
-): Promise<Blob> {
-  return apiClient.local.blob(
-    `/api/v1/policies/assets/${encodeURIComponent(assetId)}/content`,
-  );
-}

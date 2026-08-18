@@ -45,11 +45,9 @@ vi.mock("@portal/api/pipelines", () => ({
 
 const uploadPipelineAsset = vi.fn();
 const listPipelineAssets = vi.fn();
-const fetchPipelineAssetContent = vi.fn();
 vi.mock("@portal/api/pipelineAssets", () => ({
   uploadPipelineAsset: (file: File) => uploadPipelineAsset(file),
   listPipelineAssets: () => listPipelineAssets(),
-  fetchPipelineAssetContent: (id: string) => fetchPipelineAssetContent(id),
 }));
 
 const fetchSources = vi.fn();
@@ -320,7 +318,6 @@ describe("PipelineBuilder", () => {
     });
     listPipelineAssets.mockReset();
     listPipelineAssets.mockResolvedValue([]);
-    fetchPipelineAssetContent.mockReset();
   });
 
   // The settings of a node are reached by selecting it in the graph, so every helper below opens

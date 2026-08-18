@@ -19,7 +19,6 @@ import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   activeFileFields,
   assetRef,
-  assetRefIds,
   deserializeToolStep,
   extractStepFiles,
   getExecutableTools,
@@ -63,7 +62,6 @@ import {
   type TriggerOutcome,
 } from "@portal/api/pipelines";
 import {
-  fetchPipelineAssetContent,
   listPipelineAssets,
   uploadPipelineAsset,
   type PolicyAsset,
@@ -823,26 +821,12 @@ export function PipelineBuilder() {
    * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
    * how the chain gets checked while it is still being built.
    */
-  /** The bytes for a stored binding, fetched back from the asset store to send inline on a test run. */
-  async function storedTestFiles(binding: string): Promise<File[]> {
-    const files: File[] = [];
-    for (const id of assetRefIds(binding)) {
-      const blob = await fetchPipelineAssetContent(id);
-      files.push(new File([blob], assetNames[id] ?? id));
-    }
-    return files;
-  }
-
   /**
-   * The steps + inline supporting files for a test run. The ad-hoc /run endpoint doesn't resolve
-   * stored assets, so each active file field's bytes ride along as a keyed `assets[i]` (fresh picks
-   * directly, stored ones fetched back). The step's fileParameters point at a per-step run key, not
-   * an `asset:` ref, so the executor binds each file to its field without the resolver.
+   * The steps + inline supporting files for a test run. A fresh (in-memory) pick rides along as a
+   * keyed `assets[i]` under a per-step run key; a stored file keeps its `asset:<id>` binding, which
+   * the backend resolves from the pipeline's saved policy (passed as policyId) - no re-fetch needed.
    */
-  async function buildTestSteps(): Promise<{
-    steps: PipelineStep[];
-    assets: TestRunAsset[];
-  }> {
+  function buildTestSteps(): { steps: PipelineStep[]; assets: TestRunAsset[] } {
     const outSteps: PipelineStep[] = [];
     const assets: TestRunAsset[] = [];
     for (let i = 0; i < steps.length; i++) {
@@ -852,12 +836,16 @@ export function PipelineBuilder() {
       const stored = step.fileParameters ?? {};
       const fileParameters: SupportingFileBindings = {};
       for (const field of activeFileFields(step, allTools)) {
-        const files =
-          fresh[field] ?? (await storedTestFiles(stored[field] ?? ""));
-        if (files.length === 0) continue;
-        const key = `s${i}_${field}`;
-        fileParameters[field] = key;
-        for (const runFile of files) assets.push({ key, file: runFile });
+        const freshFiles = fresh[field];
+        if (freshFiles?.length) {
+          // In-memory pick: inline the bytes under a run key.
+          const key = `s${i}_${field}`;
+          fileParameters[field] = key;
+          for (const runFile of freshFiles) assets.push({ key, file: runFile });
+        } else if (stored[field]) {
+          // Already an asset: keep its ref for the backend to resolve from the saved policy.
+          fileParameters[field] = stored[field];
+        }
       }
       outSteps.push(
         Object.keys(fileParameters).length > 0
@@ -874,7 +862,7 @@ export function PipelineBuilder() {
     setTestRun(null);
     setRunResult(null);
     try {
-      const { steps: testSteps, assets } = await buildTestSteps();
+      const { steps: testSteps, assets } = buildTestSteps();
       const { runId } = await runPipelineTest(
         {
           name: name.trim() || t("portal.pipelines.builder.testRun"),
@@ -883,6 +871,8 @@ export function PipelineBuilder() {
         },
         file,
         assets,
+        // Lets the backend resolve any stored `asset:<id>` refs from this saved policy.
+        policyState.data?.id,
       );
       const final = await awaitRun(runId, (view) => {
         if (mounted.current) setTestRun(view);
