@@ -2,7 +2,7 @@
    meter, the other-app switch and the account row, hairline-separated.
    Structural only — every colour comes from a --c-* semantic token. */
 
-.sui-nav-footer {
+.nav-footer {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -12,7 +12,7 @@
   overflow: hidden;
 }
 
-.sui-nav-footer__slot {
+.nav-footer__slot {
   padding-inline: 0.375rem;
 }
 
@@ -23,11 +23,11 @@
    and it can't push one to the top or bottom of the surface. A rule that only
    ever matches a slot PRECEDED by another visible slot cannot draw a leading
    separator, whatever the caller passes in. */
-.sui-nav-footer__slot:empty {
+.nav-footer__slot:empty {
   display: none;
 }
 
-.sui-nav-footer__slot:not(:empty) ~ .sui-nav-footer__slot:not(:empty) {
+.nav-footer__slot:not(:empty) ~ .nav-footer__slot:not(:empty) {
   border-top: 1px solid var(--c-border-subtle);
   margin-top: 0.25rem;
   padding-top: 0.25rem;
@@ -37,7 +37,7 @@
    up rather than popping in under the account row. Runs when the slot starts
    matching :not(:empty) — i.e. on first paint for rows that are ready, and on
    arrival for the ones that weren't. */
-@keyframes sui-nav-footer-row-in {
+@keyframes nav-footer-row-in {
   from {
     opacity: 0;
     transform: translateY(0.25rem);
@@ -48,19 +48,19 @@
   }
 }
 
-.sui-nav-footer__slot:not(:empty) {
-  animation: sui-nav-footer-row-in var(--motion-enter) both;
+.nav-footer__slot:not(:empty) {
+  animation: nav-footer-row-in var(--motion-enter) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sui-nav-footer__slot:not(:empty) {
+  .nav-footer__slot:not(:empty) {
     animation: none;
   }
 }
 
 /* ---- Rows (link-account, credits, switch, account) ---- */
 
-.sui-nav-footer__row {
+.nav-footer__row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -76,20 +76,20 @@
   cursor: pointer;
 }
 
-.sui-nav-footer__row:disabled {
+.nav-footer__row:disabled {
   cursor: default;
 }
 
-.sui-nav-footer__row:not(:disabled):hover {
+.nav-footer__row:not(:disabled):hover {
   background-color: var(--c-hover);
 }
 
-.sui-nav-footer__row:focus-visible {
+.nav-footer__row:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: -2px;
 }
 
-.sui-nav-footer__row-icon {
+.nav-footer__row-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,14 +101,14 @@
    motion the chat FAB loops, for a single beat, as a hint that the row hands
    off to the other app. One iteration only: it starts and ends at rest, so
    nothing snaps when it finishes, and re-entering the row replays it. */
-.sui-nav-footer__row:hover .sui-brandmark__a {
+.nav-footer__row:hover .sui-brandmark__a {
   animation: sui-brandmark-drift-a 1.1s ease-in-out 1;
 }
-.sui-nav-footer__row:hover .sui-brandmark__b {
+.nav-footer__row:hover .sui-brandmark__b {
   animation: sui-brandmark-drift-b 1.1s ease-in-out 1;
 }
 
-.sui-nav-footer__row-label {
+.nav-footer__row-label {
   flex: 1;
   min-width: 0;
   font-size: 0.8125rem;
@@ -120,7 +120,7 @@
 
 /* Trailing affordance on a row: the account row's gear, the switch row's
    leaving-this-app arrow. */
-.sui-nav-footer__trailing {
+.nav-footer__trailing {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +131,7 @@
 
 /* Rows contributed by a caller (the link-account NavItem) sit in the same
    surface, so match this footer's row metrics rather than the nav rail's. */
-.sui-nav-footer .sui-navitem {
+.nav-footer .sui-navitem {
   min-height: 2.25rem;
   padding: 0.25rem 0.375rem;
   margin: 0;
@@ -141,16 +141,16 @@
 
 /* ---- Collapsed icon rail ---- */
 
-.sui-nav-footer[data-collapsed] .sui-nav-footer__slot {
+.nav-footer[data-collapsed] .nav-footer__slot {
   padding-inline: 0.25rem;
 }
 
-.sui-nav-footer[data-collapsed] .sui-nav-footer__row {
+.nav-footer[data-collapsed] .nav-footer__row {
   justify-content: center;
   padding-inline: 0;
 }
 
-.sui-nav-footer[data-collapsed] .sui-navitem {
+.nav-footer[data-collapsed] .sui-navitem {
   justify-content: center;
   padding-inline: 0;
 }

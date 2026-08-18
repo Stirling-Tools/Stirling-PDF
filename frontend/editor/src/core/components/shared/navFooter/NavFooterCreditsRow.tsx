@@ -30,7 +30,7 @@ interface NavFooterCreditsRowProps {
  * here so a wallet that reports more remaining than the allowance (or negative)
  * can't overflow the bar.
  *
- * Rendered as a {@code sui-nav-footer__row}, so it inherits that row's metrics
+ * Rendered as a {@code nav-footer__row}, so it inherits that row's metrics
  * from NavFooter.css and only brings its own meter styling.
  */
 export function NavFooterCreditsRow({
@@ -54,16 +54,12 @@ export function NavFooterCreditsRow({
       withinPortal
       disabled={!collapsed}
     >
-      <div className="sui-nav-footer__row sui-nav-footer__credits">
+      <div className="nav-footer__row nav-footer__credits">
         {!collapsed && (
-          <div className="sui-nav-footer__credits-head">
-            <span
-              className="sui-nav-footer__dot"
-              data-tone={tone}
-              aria-hidden
-            />
-            <span className="sui-nav-footer__credits-label">{label}</span>
-            <span className="sui-nav-footer__credits-count">{count}</span>
+          <div className="nav-footer__credits-head">
+            <span className="nav-footer__dot" data-tone={tone} aria-hidden />
+            <span className="nav-footer__credits-label">{label}</span>
+            <span className="nav-footer__credits-count">{count}</span>
           </div>
         )}
         <ProgressBar

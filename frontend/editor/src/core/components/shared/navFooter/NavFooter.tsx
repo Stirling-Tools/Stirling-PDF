@@ -101,22 +101,22 @@ export function NavFooter({
         >
           <button
             type="button"
-            className="sui-nav-footer__row"
+            className="nav-footer__row"
             onClick={() => otherApp.onOpen()}
             // Collapsed drops the visible label, so name the button here too.
             aria-label={openAppLabel(otherApp.app, t)}
           >
-            <span className="sui-nav-footer__row-icon" aria-hidden>
+            <span className="nav-footer__row-icon" aria-hidden>
               <BrandMark height="1.125rem" />
             </span>
             {!collapsed && (
               <>
-                <span className="sui-nav-footer__row-label">
+                <span className="nav-footer__row-label">
                   {openAppLabel(otherApp.app, t)}
                 </span>
                 {/* Same leaving-this-app cue the file rail uses for "Browse all
                     files & folders". */}
-                <span className="sui-nav-footer__trailing" aria-hidden>
+                <span className="nav-footer__trailing" aria-hidden>
                   <OpenInNewIcon sx={{ fontSize: "1rem" }} />
                 </span>
               </>
@@ -138,7 +138,7 @@ export function NavFooter({
       >
         <button
           type="button"
-          className="sui-nav-footer__row sui-nav-footer__account"
+          className="nav-footer__row nav-footer__account"
           // Called with no args: handlers that take optional params (the
           // processor's openSettings(section?)) must not receive the event.
           onClick={onOpenSettings ? () => onOpenSettings() : undefined}
@@ -157,12 +157,12 @@ export function NavFooter({
             />
           </span>
           {!collapsed && (
-            <span className="sui-nav-footer__row-label sidebar-content-fade">
+            <span className="nav-footer__row-label sidebar-content-fade">
               {displayName}
             </span>
           )}
           {onOpenSettings && !collapsed && (
-            <span className="sui-nav-footer__trailing" aria-hidden>
+            <span className="nav-footer__trailing" aria-hidden>
               <SettingsIcon sx={{ fontSize: "1.1rem" }} />
             </span>
           )}
@@ -173,11 +173,11 @@ export function NavFooter({
 
   return (
     <NavSurface
-      className={["sui-nav-footer", className ?? ""].filter(Boolean).join(" ")}
+      className={["nav-footer", className ?? ""].filter(Boolean).join(" ")}
       data-collapsed={collapsed || undefined}
     >
       {rows.map((row) => (
-        <div key={row.key} className="sui-nav-footer__slot">
+        <div key={row.key} className="nav-footer__slot">
           {row.node}
         </div>
       ))}
