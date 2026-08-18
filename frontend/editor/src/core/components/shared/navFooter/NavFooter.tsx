@@ -132,8 +132,7 @@ export function NavFooter({
                   {openAppLabel(otherApp.app, t)}
                 </span>
                 {/* "Takes you there", not "opens a new tab" — both apps are
-                    one SPA, so this navigates in place. Same cue the file rail
-                    uses for "Browse all files & folders". */}
+                    one SPA, so this navigates in place. */}
                 <span className="nav-footer__trailing" aria-hidden>
                   <ArrowForwardIcon sx={{ fontSize: "1rem" }} />
                 </span>
