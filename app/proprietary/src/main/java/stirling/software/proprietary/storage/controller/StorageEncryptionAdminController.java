@@ -104,7 +104,7 @@ public class StorageEncryptionAdminController {
                 // Materialisation failed; status still reports counts and key rows.
             }
         }
-        // Counted in the database, not filtered from `keys`: that list is a page.
+        // Counted in the database so the total stays right if `keys` is ever paged.
         long pendingRotationRows =
                 masterKeyVersion == null
                         ? 0
