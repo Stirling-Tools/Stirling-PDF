@@ -127,6 +127,7 @@ jobs:
   # Runs the @nightly tag (conversion scenarios) plus a 10-shard concurrency run
   # of every other feature.
   cucumber-nightly:
+    environment: ci-unsigned
     name: Cucumber (nightly scenarios + full concurrency)
     runs-on: ubuntu-latest
     # Fork pull requests get no MAVEN_* secrets, so the image build cannot work.

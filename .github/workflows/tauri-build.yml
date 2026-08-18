@@ -57,6 +57,9 @@ permissions:
 
 jobs:
   determine-matrix:
+    # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
+    # signing environment - release-signing would block every PR run.
+    environment: ci-signing
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
@@ -103,6 +106,12 @@ jobs:
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
   build:
+    # Windows/GPG signing only runs on main (see the per-step gates below), so only
+    # that path needs the reviewer-gated release-signing environment. Everything else
+    # (PRs, merge queue, nightly) signs macOS only and uses ci-signing, which has no
+    # approval or branch restriction.
+    environment:
+      name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
     needs: determine-matrix
     strategy:
       fail-fast: false
@@ -110,7 +119,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     env:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
       # Per-platform sign gate. macOS signs on any run with the cert available,
@@ -262,38 +270,6 @@ jobs:
             } else {
               Write-Host "Warning: Could not find PKCS11 config file"
             }
-          }
-
-      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
-      - name: Import Windows Code Signing Certificate
-        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        shell: powershell
-        run: |
-          if ($env:WINDOWS_CERTIFICATE) {
-            Write-Host "Importing Windows Code Signing Certificate..."
-
-            # Decode base64 certificate and save to file
-            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
-            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
-            [IO.File]::WriteAllBytes($certPath, $certBytes)
-
-            # Import certificate to CurrentUser\My store
-            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
-
-            # Extract and set thumbprint as environment variable
-            $thumbprint = $cert.Thumbprint
-            Write-Host "Certificate imported with thumbprint: $thumbprint"
-            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
-
-            # Clean up certificate file
-            Remove-Item $certPath
-
-            Write-Host "Windows certificate import completed."
-          } else {
-            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
           }
 
       - name: Import Apple Developer Certificate
