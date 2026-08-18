@@ -11,18 +11,18 @@ import {
 const MAX_ICONS = 3;
 
 /**
- * A classified file's categories, worn as the classification vocabulary's own
- * icons in the sidebar's own category accents — no text, names on hover.
- * Category (family) icons lead, the labels follow, so the badge names the
- * sidebar group first and the specifics after. Renders nothing for an
- * unclassified file (or in builds without classification): absence of the
- * badge IS the "no category" state.
+ * A classified file's categories, worn as the sidebar's own family icons in
+ * the same cycled accents — no text, and the hover names the group first and
+ * its labels after. The label-level icons only stand in when no visible
+ * family claims the labels (a hidden category), so a tagged file is never
+ * entirely unmarked. Renders nothing for an unclassified file (or in builds
+ * without classification): absence of the badge IS the "no category" state.
  */
 export function FileCategoryBadge({ labels }: { labels?: string[] | null }) {
   const { t } = useTranslation();
   const families = useFamilyBadges(labels);
   const labelBadges = useLabelBadges(labels);
-  const badges = [...families, ...labelBadges];
+  const badges = families.length > 0 ? families : labelBadges;
   if (badges.length === 0) return null;
   const hover =
     families.length > 0
