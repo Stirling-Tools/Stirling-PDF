@@ -68,7 +68,6 @@ project: &project
 frontend: &frontend
   - *ci
   - frontend/**
-  - .github/workflows/testdriver.yml
   - testing/**
   - docker/**
   - scripts/translations/*.py
