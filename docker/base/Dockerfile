@@ -364,7 +364,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS runtime
+FROM eclipse-temurin:26-jre-noble@sha256:05f1117fde0e2371da7fe2e26c3d6020962c6961d2b5687fd507ad05f52fe81b AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
