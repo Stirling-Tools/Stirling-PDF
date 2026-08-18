@@ -10,19 +10,12 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
 
-/** Data access for {@link ConnectRequest}. Plain Spring Data JPA, same posture as the rest here. */
+/** Data access for {@link ConnectRequest}. */
 public interface ConnectRequestRepository extends JpaRepository<ConnectRequest, Long> {
 
     Optional<ConnectRequest> findByRequestId(String requestId);
 
-    /**
-     * Row-locking read used by approve, deny and claim.
-     *
-     * <p>Each of those transitions a status exactly once, and claim additionally mints a
-     * credential. Without the lock, two concurrent claims could both observe {@code APPROVED} and
-     * mint two credentials from one approval, so the single-use guarantee has to be held by the
-     * database rather than by the read-then-write in the service.
-     */
+    /** Row-locking read used by approve, deny and claim. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM ConnectRequest r WHERE r.requestId = :requestId")
     Optional<ConnectRequest> findByRequestIdForUpdate(@Param("requestId") String requestId);

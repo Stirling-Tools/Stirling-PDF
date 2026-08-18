@@ -5,12 +5,7 @@ import {
 } from "@portal/hooks/useAccountLink";
 
 /**
- * Single app-wide {@link useAccountLink} instance, so status is fetched once on
- * mount rather than per consumer.
- *
- * Consumers (the Settings account-link panel, the link card) read this shared
- * instance instead of calling the hook again. Linking itself is not orchestrated
- * here: it is a browser-mediated handshake finished at /account-link/callback.
+ * Single app-wide {@link useAccountLink} instance, so status is fetched once on mount rather than per consumer.
  */
 const AccountLinkContext = createContext<UseAccountLink | null>(null);
 

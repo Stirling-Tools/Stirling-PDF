@@ -19,27 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Browser-mediated account linking, instance side.
- *
- * <p>Modelled on the desktop app's deep-link SSO. There, the app mints a nonce, opens the system
- * browser, and only accepts a callback carrying that nonce back; the OS routes the reply to the
- * waiting process. Here the same handshake runs over an ordinary redirect, because a self-hosted
- * instance cannot be the target of a provider redirect (its hostname can never be in the
- * allow-list), but it can be the target of a redirect issued by our own approval page.
- *
- * <p>The admin's SaaS token never passes through this backend. It goes to the admin's own browser
- * in the callback fragment, which is what lets the portal make attended SaaS reads. This backend
- * collects only the device credential, and does so on a separate server-to-server call
- * authenticated by a secret that never entered a browser.
- */
+/** Browser-mediated account linking, instance side. */
 @Slf4j
 @Service
 @Profile("!saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class ConnectService {
 
-    /** Frontend route that consumes the callback fragment. Must exist in the SPA router. */
+    /** Frontend route that consumes the callback fragment. */
     static final String CALLBACK_PATH = "/account-link/callback";
 
     private static final int SECRET_BYTES = 32;
@@ -69,7 +56,7 @@ public class ConnectService {
         NONE,
         /** A handshake is open, waiting for a leader to approve it on the SaaS site. */
         PENDING,
-        /** Linked. Terminal and happy. */
+        /** Linked. */
         LINKED,
         /** The handshake outlived its window; start a new one. */
         EXPIRED,
@@ -79,10 +66,7 @@ public class ConnectService {
         UNAVAILABLE
     }
 
-    /**
-     * What the portal renders. {@code authorizeUrl} is only populated while a handshake is open, so
-     * the UI never offers a stale link.
-     */
+    /** What the portal renders. */
     public record ConnectStatus(
             Phase phase, String authorizeUrl, Long secondsRemaining, Long teamId) {
         static ConnectStatus of(Phase phase) {
@@ -90,25 +74,11 @@ public class ConnectService {
         }
     }
 
-    /**
-     * Everything we know about where the admin's browser actually is, in decreasing authority.
-     *
-     * @param requestedCallbackUrl the callback the portal built from its own router. The frontend
-     *     is the only party that knows where its route really lives, so this is knowledge rather
-     *     than a guess. Honoured only when its origin matches {@code browserOrigin}.
-     * @param browserOrigin the {@code Origin} header. Set by the browser and not writable from page
-     *     script, which is what makes the check above worth doing.
-     * @param derivedBaseUrl last resort, reconstructed from the request. Right for a direct hit,
-     *     wrong whenever the frontend is served from a different port than the API.
-     */
+    /** Everything we know about where the admin's browser actually is, in decreasing authority. */
     public record CallbackHint(
             String requestedCallbackUrl, String browserOrigin, String derivedBaseUrl) {}
 
-    /**
-     * Opens a handshake and returns where to send the admin.
-     *
-     * @throws IOException if SaaS cannot be reached or refuses the handshake.
-     */
+    /** Opens a handshake and returns where to send the admin. */
     @Transactional
     public ConnectStatus start(String name, CallbackHint hint) throws IOException {
         if (credentialStore.isLinked()) {
@@ -120,13 +90,6 @@ public class ConnectService {
     /**
      * Opens a handshake that only re-establishes the admin's browser session, for an instance that
      * is already linked.
-     *
-     * <p>Presents this instance's device credential, which is what lets the SaaS side pin the
-     * handshake to the team we already belong to. Approval can then only confirm that team, so this
-     * cannot end with the browser signed into an account that does not own this server, and no
-     * second device credential is minted.
-     *
-     * @throws IOException if this instance is not linked, or SaaS refuses the handshake.
      */
     @Transactional
     public ConnectStatus startReauth(CallbackHint hint) throws IOException {
@@ -172,13 +135,7 @@ public class ConnectService {
         return pendingStatus(state, now);
     }
 
-    /**
-     * Finishes a handshake from the callback the approval page redirected to.
-     *
-     * <p>The nonce is the whole authorisation here. Anyone can hit this endpoint, so a caller that
-     * cannot produce the nonce we minted must change nothing — in particular it must not be able to
-     * cancel a legitimate handshake, which is why a mismatch leaves the row alone.
-     */
+    /** Finishes a handshake from the callback the approval page redirected to. */
     @Transactional
     public ConnectStatus complete(String nonce) {
         Optional<ConnectState> found = stateRepo.findById(ConnectState.SINGLETON_ID);
@@ -209,9 +166,6 @@ public class ConnectService {
                 yield new ConnectStatus(Phase.LINKED, null, null, claim.teamId());
             }
             case CONFIRMED -> {
-                // Re-authentication: the credential we already hold is untouched, so there is
-                // nothing to store and nothing to invalidate. The session the browser just
-                // received is the entire point.
                 stateRepo.delete(state);
                 log.info(
                         "Account-link connect: session re-established for team {}", claim.teamId());
@@ -229,7 +183,7 @@ public class ConnectService {
         };
     }
 
-    /** Drops any open handshake. The SaaS row is left to expire on its own. */
+    /** Drops any open handshake. */
     @Transactional
     public void cancel() {
         stateRepo.findById(ConnectState.SINGLETON_ID).ifPresent(stateRepo::delete);
@@ -258,22 +212,7 @@ public class ConnectService {
                 Phase.PENDING, state.getAuthorizeUrl(), Math.max(remaining, 0), null);
     }
 
-    /**
-     * Decides the callback, preferring knowledge over inference.
-     *
-     * <ol>
-     *   <li>An explicit {@code public-url} always wins: an operator who has set it knows something
-     *       we cannot observe.
-     *   <li>Otherwise the portal's own callback, but only if it is on the same origin the browser
-     *       reported. The frontend knows its router's base path and its own port; the {@code
-     *       Origin} header proves the claim came from that origin rather than from a script or a
-     *       stray client.
-     *   <li>Otherwise the browser's origin plus our route, which is still better than the request's
-     *       own host and port.
-     *   <li>Only then the reconstructed request URL, which is wrong whenever the frontend and the
-     *       API are on different ports (every local dev setup).
-     * </ol>
-     */
+    /** Decides the callback, preferring knowledge over inference. */
     String resolveCallbackUrl(CallbackHint hint) {
         String configured = properties.getPublicUrl();
         if (configured != null && !configured.isBlank()) {

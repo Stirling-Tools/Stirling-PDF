@@ -4,10 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 
 /**
- * The callback page handles a live session token in a URL fragment, so the
- * behaviour worth pinning is what it does with it: strip it immediately, refuse
- * anything it cannot verify, and keep the two outcomes (SaaS sign-in, server
- * link) independent of each other.
+ * The callback page handles a live session token in a URL fragment, so the behaviour worth pinning is what it does with it: strip it immediately, refuse anything it cannot verify, and keep the two outcomes (SaaS sign-in, server link) independent of each other.
  */
 const { completeConnect, startConnect, setSession } = vi.hoisted(() => ({
   completeConnect: vi.fn(),

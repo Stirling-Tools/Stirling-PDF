@@ -20,25 +20,7 @@ interface ApproveResponse {
   nonce: string;
 }
 
-/**
- * Approve a self-hosted server's request to connect to a team.
- *
- * <p>This page exists because a self-hosted instance cannot complete an identity
- * round trip on its own origin: the provider only redirects to allow-listed
- * URLs, and a customer's hostname can never be on that list. Doing the human
- * half here, on an origin we control, is what lets SSO and sign-up work for
- * self-hosted linking at all.
- *
- * <p>On approval this page performs the redirect the desktop app gets from the
- * OS: it sends the admin back to their server carrying the session in the URL
- * fragment. Two things make that safe rather than an open redirect. The
- * destination comes from the backend, which read it from the stored request
- * rather than from anything in this page's URL. And the approver was shown the
- * origin first, which is the only check that can tell "my server" from
- * "someone else's".
- *
- * <p>Data only. {@link ConnectApproveView} draws it.
- */
+/** Approve a self-hosted server's request to connect to a team. */
 export default function ConnectApprove() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -54,9 +36,6 @@ export default function ConnectApprove() {
 
   useDocumentMeta({ title: t("connect.meta.title", "Connect a server") });
 
-  // Signed-out visitors sign in and come back here with the request preserved,
-  // which is also the point at which SSO and sign-up become available to a
-  // self-hosted admin.
   useEffect(() => {
     if (loading || session) return;
     const next = `/link${requestId ? `?request=${encodeURIComponent(requestId)}` : ""}`;
@@ -80,9 +59,6 @@ export default function ConnectApprove() {
         setPending(res.data);
         setPhase("confirm");
       } catch {
-        // Unknown, expired and already-settled all look the same on purpose:
-        // telling them apart would help someone probing ids more than it helps
-        // the admin.
         setPhase("notFound");
       }
     })();
@@ -118,10 +94,7 @@ export default function ConnectApprove() {
   );
 
   /**
-   * Sign out, then let the signed-out effect above send them to login with the
-   * request preserved. Not a manual navigate: reusing that path means the request
-   * survives the detour by the same mechanism as a cold arrival, rather than a
-   * second copy of the same logic that could drift.
+   * Sign out, then let the signed-out effect above send them to login with the request preserved.
    */
   const onSwitchAccount = useCallback(() => {
     void signOut();
@@ -160,14 +133,7 @@ export default function ConnectApprove() {
   );
 }
 
-/**
- * The callback with the session appended as a fragment.
- *
- * <p>A fragment rather than a query string so the token never reaches the
- * server: it stays out of access logs and out of the {@code Referer} header.
- * Built from the backend-supplied callback, so this function cannot be steered
- * at a different origin by anything in the page's own URL.
- */
+/** The callback with the session appended as a fragment. */
 function returnUrl(
   approval: ApproveResponse,
   session: { access_token?: string; refresh_token?: string } | null,

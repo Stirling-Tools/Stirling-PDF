@@ -8,13 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Linking orchestrator (self-hosted side of combined-billing "Mode A").
- *
- * <p>{@link #link} is the same-origin action the portal triggers: it relays the admin's Supabase
- * JWT to the SaaS register endpoint, then persists the returned device credential secure-at-rest.
- * The credential — not the JWT — authenticates all later unattended entitlement calls.
- */
+/** Linking orchestrator (self-hosted side of combined-billing "Mode A"). */
 @Slf4j
 @Service
 @Profile("!saas")
@@ -37,17 +31,9 @@ public class AccountLinkService {
     /** Status of this instance's link, for the portal's "Account link" card. */
     public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
 
-    /*
-     * There is no longer a link(supabaseJwt, name) here. Linking used to relay the admin's Supabase
-     * JWT through this backend to a SaaS register endpoint; it is now a browser-mediated handshake
-     * (see ConnectService), so the admin's token never reaches the server at all and this side only
-     * ever collects a device credential.
-     */
-
     /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
-     * revoked_at} set), then clears locally regardless. If SaaS is unreachable the local clear
-     * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
+     * revoked_at} set), then clears locally regardless.
      */
     public void unlink() {
         credentialStore

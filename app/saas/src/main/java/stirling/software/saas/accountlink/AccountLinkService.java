@@ -18,16 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Account-link instance registration + lifecycle (combined-billing "Mode A").
- *
- * <p>Mints a {@code device_id} (public) + {@code device_secret} (high-entropy, returned once) bound
- * to a team, persisting only the SHA-256 hash of the secret. The instance authenticates its
- * unattended entitlement reads with that credential.
- *
- * <p>Gated behind {@code stirling.billing.account-link.enabled}: when off the bean is absent, so
- * {@link AccountLinkController} (which depends on it) drops out too and its endpoints 404.
- */
+/** Account-link instance registration + lifecycle (combined-billing "Mode A"). */
 @Slf4j
 @Service
 @Profile("saas")
@@ -80,10 +71,7 @@ public class AccountLinkService {
         return repo.findByTeamIdOrderByCreatedAtDesc(teamId);
     }
 
-    /**
-     * Revokes an instance iff it belongs to {@code teamId}. Returns false if not found or owned by
-     * a different team (so a caller can never revoke another team's instance). Idempotent.
-     */
+    /** Revokes an instance iff it belongs to {@code teamId}. */
     @Transactional
     public boolean revoke(Long teamId, Long instanceId) {
         Optional<LinkedInstance> found = repo.findById(instanceId);
@@ -101,11 +89,6 @@ public class AccountLinkService {
 
     /**
      * Resolves an active instance from a device credential, or empty if it does not authenticate.
-     *
-     * <p>Same check {@link DeviceCredentialAuthenticationFilter} performs, exposed for callers
-     * outside the {@code /api/v1/instance} paths that filter covers. The connect handshake needs it
-     * so a re-authentication request can be pinned to the team the instance already belongs to,
-     * learned from the credential rather than taken on trust from a browser.
      */
     @Transactional(readOnly = true)
     public Optional<LinkedInstance> resolveActiveInstance(String deviceId, String deviceSecret) {
@@ -127,7 +110,7 @@ public class AccountLinkService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(buf);
     }
 
-    /** SHA-256 hex of a value. The device secret is high-entropy, so no salt is required. */
+    /** SHA-256 hex of a value. */
     static String sha256Hex(String value) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");

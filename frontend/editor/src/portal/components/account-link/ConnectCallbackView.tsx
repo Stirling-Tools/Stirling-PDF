@@ -1,11 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Spinner } from "@app/ui";
 
-/**
- * Outcomes of returning from the approval page. Deliberately not the same shape
- * as the backend's phases: PENDING and UNAVAILABLE both mean "not finished, try
- * again", and the admin does not need that distinction spelled out.
- */
+/** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =
   | "working"
   | "linked"
@@ -22,10 +18,7 @@ export interface ConnectCallbackViewProps {
   onDone: () => void;
 }
 
-/**
- * Presentation for the account-link callback. Pure, so every state is reachable
- * from props alone without a redirect, a token or a backend.
- */
+/** Presentation for the account-link callback. */
 export function ConnectCallbackView({
   state,
   sessionRestored,

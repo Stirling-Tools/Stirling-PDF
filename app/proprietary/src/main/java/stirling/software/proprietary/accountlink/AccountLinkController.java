@@ -20,19 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A").
- *
- * <p>The portal (served from this same origin, admin authenticated by the existing self-hosted
- * security chain) calls these. {@code POST /link} relays the admin's Supabase JWT to the SaaS
- * backend, which mints + returns a device credential we store locally. {@code GET /status} backs
- * the portal's link card; {@code GET /usage} exposes locally-accrued unsynced usage the portal adds
- * to SaaS-synced spend; {@code POST /sync-now} forces an immediate usage sync (ops "reconcile now"
- * / test aid).
- *
- * <p>Admin-only, {@code @Profile("!saas")}, gated behind {@code
- * stirling.billing.account-link.enabled} — off → bean absent → 404.
- */
+/** Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A"). */
 @Slf4j
 @Hidden
 @RestController
@@ -59,11 +47,7 @@ public class AccountLinkController {
         this.syncServiceProvider = syncServiceProvider;
     }
 
-    /**
-     * {@code callbackUrl} is the portal telling us where its own callback route lives. Honoured
-     * only when it matches the browser's {@code Origin}, so it is a way of knowing the frontend's
-     * real origin and base path rather than a redirect the caller gets to choose.
-     */
+    /** {@code callbackUrl} is the portal telling us where its own callback route lives. */
     public record ConnectStartRequest(String name, String callbackUrl) {}
 
     /** {@code nonce} comes from the callback fragment the approval page redirected to. */
@@ -71,10 +55,6 @@ public class AccountLinkController {
 
     /**
      * Opens a browser-mediated link handshake and returns the approval URL to send the admin to.
-     *
-     * <p>Supersedes {@code POST /link}, which needed the admin's SaaS JWT to reach this backend.
-     * Here the token never comes near the server: it is delivered to the admin's own browser by the
-     * approval page, and this backend collects only its device credential.
      */
     @PostMapping("/connect/start")
     public ResponseEntity<?> connectStart(
@@ -94,13 +74,7 @@ public class AccountLinkController {
         }
     }
 
-    /**
-     * Re-establishes the admin's SaaS session for a server that is already linked.
-     *
-     * <p>Same handshake, but the request carries this instance's device credential so the SaaS side
-     * pins it to the team we already belong to. Signing in as an account from a different team is
-     * refused there rather than silently leaving the portal reading the wrong team's billing.
-     */
+    /** Re-establishes the admin's SaaS session for a server that is already linked. */
     @PostMapping("/connect/reauth")
     public ResponseEntity<?> connectReauth(
             @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
@@ -135,11 +109,7 @@ public class AccountLinkController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Everything we know about where the admin's browser is, for the callback. The portal's own
-     * claim is only honoured when the {@code Origin} header agrees with it, which is what makes it
-     * knowledge rather than a redirect the caller chose.
-     */
+    /** Everything we know about where the admin's browser is, for the callback. */
     private static ConnectService.CallbackHint callbackHint(
             ConnectStartRequest req, HttpServletRequest http) {
         return new ConnectService.CallbackHint(
@@ -148,9 +118,7 @@ public class AccountLinkController {
 
     /**
      * This instance's base URL as the browser reached it, including any context path so a subpath
-     * deployment builds a callback that actually resolves. Honours {@code X-Forwarded-*} for the
-     * common reverse-proxy case; an operator behind something that does not set them configures
-     * {@code stirling.billing.account-link.public-url} instead.
+     * deployment builds a callback that actually resolves.
      */
     private static String baseUrlOf(HttpServletRequest request) {
         String forwardedProto = firstHop(request.getHeader("X-Forwarded-Proto"));
@@ -198,12 +166,7 @@ public class AccountLinkController {
         return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
     }
 
-    /**
-     * Forces an immediate usage sync to SaaS — the same work the daily scheduler does. An admin
-     * "reconcile now" action (and a test aid so you don't wait on the scheduler). Idempotent:
-     * re-reports the current cumulative, so a repeat trigger bills nothing. {@code 204} once run;
-     * {@code 409} when metering is off (the sync bean is absent).
-     */
+    /** Forces an immediate usage sync to SaaS — the same work the daily scheduler does. */
     @PostMapping("/sync-now")
     public ResponseEntity<Void> syncNow() {
         UsageSyncService sync = syncServiceProvider.getIfAvailable();

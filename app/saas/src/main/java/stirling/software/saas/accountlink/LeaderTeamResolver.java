@@ -15,16 +15,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
-/**
- * Who is allowed to bind a self-hosted instance to a team.
- *
- * <p>Extracted so registration and connect-approval cannot drift apart on this rule. Both are the
- * same billing-affecting decision, and a difference between them would be a privilege escalation
- * rather than an inconsistency.
- *
- * <p>The team is always derived from the caller's primary membership and never read from a request
- * body, so a caller cannot nominate a team they do not lead.
- */
+/** Who is allowed to bind a self-hosted instance to a team. */
 @Component
 @Profile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
@@ -47,20 +38,12 @@ public class LeaderTeamResolver {
         }
     }
 
-    /** Caller must lead their team. Use for anything that changes who pays for what. */
+    /** Caller must lead their team. */
     public LeaderTeam resolve(Authentication auth) {
         return resolve(auth, true);
     }
 
-    /**
-     * Caller need only belong to a team.
-     *
-     * <p>Used for re-authenticating an already-approved server. Approving a new link is a billing
-     * decision and stays leader-only, but re-establishing a browser session on a server the team
-     * already owns is not, and requiring a leader there would leave a member admin unable to fix
-     * their own expired session. The team is still checked against the one the server is pinned to,
-     * so this widens who may confirm, never which team they may confirm for.
-     */
+    /** Caller need only belong to a team. */
     public LeaderTeam resolveMember(Authentication auth) {
         return resolve(auth, false);
     }

@@ -53,10 +53,7 @@ class SupabaseSecurityConfigMoreTest {
         return config(props, new MockEnvironment());
     }
 
-    /**
-     * Loopback CORS origins are only added outside production, so the environment decides. A bare
-     * {@link MockEnvironment} has no active profiles, which is the production shape.
-     */
+    /** Loopback CORS origins are only added outside production, so the environment decides. */
     private SupabaseSecurityConfig config(ApplicationProperties props, Environment environment) {
         return new SupabaseSecurityConfig(
                 userService,

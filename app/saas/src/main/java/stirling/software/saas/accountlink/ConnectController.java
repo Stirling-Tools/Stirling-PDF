@@ -27,21 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
-/**
- * Browser-mediated "connect this server" handshake.
- *
- * <p>Replaces the need for the admin's Supabase JWT to reach a self-hosted backend at all. The
- * instance starts a handshake here, sends its admin to {@code /link?request=...} on this origin,
- * and collects a device credential afterwards using a secret that never entered the browser.
- * Because the human half happens on an origin we control, SSO and sign-up work without every
- * customer hostname needing to be in the provider's redirect allow-list.
- *
- * <p>{@code /request} and {@code /claim} are unauthenticated on purpose: an instance has no
- * credential until this flow gives it one. Neither grants anything by itself. {@code /request} only
- * records an intent that a human must still approve, and {@code /claim} requires a secret only the
- * instance that created the row has held. The approve and deny steps are leader-only, resolved from
- * the session and never from the request body.
- */
+/** Browser-mediated "connect this server" handshake. */
 @Slf4j
 @Hidden
 @RestController
@@ -58,10 +44,7 @@ public class ConnectController {
     /** Frontend route serving the approval page. */
     static final String LINK_PATH = "/link";
 
-    /**
-     * Origin of our own web app, when it is not the origin serving this API. Empty means "derive it
-     * from the request", which is correct for a single-host deployment.
-     */
+    /** Origin of our own web app, when it is not the origin serving this API. */
     @Value("${stirling.billing.account-link.app-base-url:}")
     private String appBaseUrl;
 
@@ -81,16 +64,10 @@ public class ConnectController {
     /** Sent by the instance's own backend, before it holds any credential. */
     public record CreateBody(String name, String callbackUrl, String nonce, String claimSecret) {}
 
-    /**
-     * {@code authorizeUrl} is where the instance should send its admin.
-     *
-     * <p>Returned rather than composed by the instance, because we are the only party that knows
-     * where our own approval page lives. An instance that had to configure it could only ever get
-     * it wrong, and would need reconfiguring whenever we moved the page.
-     */
+    /** {@code authorizeUrl} is where the instance should send its admin. */
     public record CreateResponse(String requestId, int expiresIn, String authorizeUrl) {}
 
-    /** What the approval page renders. Carries no secret. */
+    /** What the approval page renders. */
     public record ViewResponse(
             String requestId,
             String name,
@@ -106,14 +83,7 @@ public class ConnectController {
 
     public record ClaimResponse(String deviceId, String deviceSecret, Long teamId) {}
 
-    /**
-     * Opens a handshake.
-     *
-     * <p>An instance that already holds a device credential may present it here. Doing so makes
-     * this a re-authentication: the team is pinned from the credential, so approval can only
-     * confirm the team the server already belongs to, and no second credential is minted. Without a
-     * credential this is a first link, where approval decides the team.
-     */
+    /** Opens a handshake. */
     @PostMapping("/request")
     public ResponseEntity<?> request(
             @RequestBody(required = false) CreateBody body, HttpServletRequest http) {
@@ -171,14 +141,7 @@ public class ConnectController {
                                 authorizeUrl(result.requestId(), http)));
     }
 
-    /**
-     * Where to send the admin to approve a handshake.
-     *
-     * <p>Derived from the incoming request by default, which is right whenever the API and the web
-     * app share a host — the normal deployment, so this usually needs no configuration at all. Set
-     * {@code stirling.billing.account-link.app-base-url} where they are split, which locally they
-     * are (API on one port, web app on another).
-     */
+    /** Where to send the admin to approve a handshake. */
     private String authorizeUrl(String requestId, HttpServletRequest http) {
         String base =
                 appBaseUrl != null && !appBaseUrl.isBlank()
@@ -217,10 +180,7 @@ public class ConnectController {
         return first.isEmpty() ? null : first;
     }
 
-    /**
-     * Detail for the approval page. Authenticated but not leader-only, so a member sees what they
-     * are being asked about and gets a clear refusal on approve rather than an opaque 403 on load.
-     */
+    /** Detail for the approval page. */
     @GetMapping("/{requestId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ViewResponse> view(@PathVariable String requestId) {
@@ -238,14 +198,7 @@ public class ConnectController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Approves a handshake.
-     *
-     * <p>A first link is leader-only: it decides which team pays for the server. A
-     * re-authentication only needs a member of the team the server is already pinned to, because it
-     * changes nothing about billing, and requiring a leader would leave a member admin unable to
-     * fix their own expired session. Either way the team comes from the session, never the request.
-     */
+    /** Approves a handshake. */
     @PostMapping("/{requestId}/approve")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> approve(@PathVariable String requestId, Authentication auth) {
@@ -286,11 +239,7 @@ public class ConnectController {
                 : ResponseEntity.notFound().build();
     }
 
-    /**
-     * Collects the device credential. {@code 202} means a human has not decided yet and the caller
-     * should keep waiting; {@code 400} is terminal for every other reason, deliberately without
-     * saying which, so the endpoint cannot be used to probe request ids.
-     */
+    /** Collects the device credential. */
     @PostMapping("/claim")
     public ResponseEntity<?> claim(@RequestBody(required = false) ClaimBody body) {
         if (body == null) {
@@ -313,11 +262,7 @@ public class ConnectController {
         };
     }
 
-    /**
-     * Best-effort source address for the creation cap. The first {@code X-Forwarded-For} hop is
-     * client-supplied and therefore spoofable; it is good enough to slow bulk creation down and is
-     * not used for any authorisation decision.
-     */
+    /** Best-effort source address for the creation cap. */
     private static String clientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {

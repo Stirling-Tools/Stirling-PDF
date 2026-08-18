@@ -8,46 +8,22 @@ import org.springframework.stereotype.Component;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Self-hosted side of combined-billing "Mode A" (connected self-hosted).
- *
- * <p>Binds the {@code stirling.billing.account-link.*} keys. {@link #enabled} mirrors the same flag
- * the gated beans test with {@code @ConditionalOnProperty}; it is kept here only so non-conditional
- * code (e.g. the gate's flag-off short-circuit, exposed status) can read it. The whole feature is
- * <b>off by default</b> and <b>dark</b> — when off nothing gates and the link endpoints 404.
- */
+/** Self-hosted side of combined-billing "Mode A" (connected self-hosted). */
 @Getter
 @Setter
 @Component
 @ConfigurationProperties(prefix = "stirling.billing.account-link")
 public class AccountLinkProperties {
 
-    /** Master switch. When {@code false} (default) the feature is fully inert. */
+    /** Master switch. */
     private boolean enabled = false;
 
-    /**
-     * Base URL of the SaaS backend this instance links to (register + entitlement live there).
-     *
-     * <p>STUB: defaults to the public cloud host; an operator overrides it for staging. There is no
-     * existing SaaS-base-url property in the self-hosted profile, so this is introduced here.
-     */
+    /** Base URL of the SaaS backend this instance links to (register + entitlement live there). */
     private String saasBaseUrl = "https://stirling.com/app";
-
-    /*
-     * There is deliberately no "SaaS web app URL" here. Where to send an admin to approve a link is
-     * answered by the SaaS side in its connect-request reply: it is the only party that knows where
-     * its own approval page lives, so an instance configuring that could only get it wrong, and
-     * would need reconfiguring whenever we moved the page.
-     */
 
     /**
      * Externally reachable base URL of <em>this</em> instance, used to build the callback the
      * approval page returns the admin to.
-     *
-     * <p>Left unset, it is derived from the incoming request, which is correct for a direct hit and
-     * for any proxy that sets {@code X-Forwarded-*}. Set it explicitly when the instance cannot see
-     * its own public address, since a wrong value here sends the admin somewhere that cannot finish
-     * the handshake.
      */
     private String publicUrl;
 
@@ -57,20 +33,18 @@ public class AccountLinkProperties {
     /** Connect/read timeout for the outbound SaaS calls. */
     private int requestTimeoutSeconds = 10;
 
-    /** Phase 2 usage metering + daily sync. Keyed under {@code …account-link.metering.*}. */
+    /** Phase 2 usage metering + daily sync. */
     private final Metering metering = new Metering();
 
     /**
      * Dedicated billing switch, <b>separate</b> from {@link #enabled} so the link plumbing can be
-     * enabled (e.g. to test linking) without ever turning on real usage metering, reporting, or cap
-     * enforcement. Both default off; metering requires the master flag too. This is the production
-     * safety key — flipping it on is what actually bills linked instances.
+     * enabled (e.g.
      */
     @Getter
     @Setter
     public static class Metering {
 
-        /** Turns on usage metering, the daily sync, and cap enforcement. Default off. */
+        /** Turns on usage metering, the daily sync, and cap enforcement. */
         private boolean enabled = false;
 
         /**
@@ -83,12 +57,7 @@ public class AccountLinkProperties {
          */
         private int graceDays = 3;
 
-        /**
-         * Dedup window for identical input sets. A re-run of the same inputs within this window is
-         * treated as workflow chaining and not re-charged; the same inputs run again after it are
-         * billed afresh. Mirrors the cloud's {@code payg.lineage.workflow-window} so the same op
-         * costs the same on the instance and in the cloud.
-         */
+        /** Dedup window for identical input sets. */
         private Duration workflowWindow = Duration.ofMinutes(5);
     }
 }

@@ -25,11 +25,7 @@ import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimR
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectRequestResult;
 import stirling.software.proprietary.accountlink.ConnectService.Phase;
 
-/**
- * Unit tests for the instance half of the connect handshake. The properties that matter: the
- * callback we advertise is our own address, the nonce is the only thing that lets a callback finish
- * the handshake, and a callback we cannot verify changes nothing at all.
- */
+/** Unit tests for the instance half of the connect handshake. */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConnectServiceTest {
@@ -54,10 +50,6 @@ class ConnectServiceTest {
                 new ConnectService(
                         client, stateRepo, credentialStore, entitlementCache, properties);
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Starting a handshake
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void start_advertisesTheConfiguredPublicUrlInPreferenceToTheRequest() throws Exception {
@@ -97,12 +89,6 @@ class ConnectServiceTest {
                 .hasMessageContaining("public-url");
         verifyNoInteractions(client);
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Callback resolution. The frontend and the API are on different ports in every local dev
-    // setup, so anything derived from the API request is wrong there. These pin the order of
-    // preference: configuration, then what the browser proves, then inference.
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void resolveCallback_honoursThePortalsOwnCallbackWhenTheBrowserOriginAgrees() {
@@ -206,10 +192,6 @@ class ConnectServiceTest {
         verify(stateRepo, never()).save(any());
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Finishing a handshake
-    // ---------------------------------------------------------------------------------------
-
     @Test
     void complete_withTheRightNonceStoresTheCredentialAndClearsTheHandshake() {
         ConnectState state = openHandshake();
@@ -295,10 +277,6 @@ class ConnectServiceTest {
         verify(client, never()).connectClaim(anyString(), anyString());
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Re-authentication: already linked, only the browser session needs renewing.
-    // ---------------------------------------------------------------------------------------
-
     @Test
     void startReauth_presentsTheCredentialSoSaaSCanPinTheTeam() throws Exception {
         when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
@@ -341,10 +319,6 @@ class ConnectServiceTest {
         verify(credentialStore, never()).save(anyString(), anyString(), any());
         verify(stateRepo).delete(state);
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Status
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void status_reportsNothingInFlightWhenThereIsNoHandshakeOrCredential() {

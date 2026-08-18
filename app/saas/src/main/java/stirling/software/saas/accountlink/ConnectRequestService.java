@@ -17,34 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * The "connect this server" handshake, SaaS side.
- *
- * <p>Shape borrowed from the desktop app's deep-link login, because the problem is the same: a
- * client that cannot complete an identity round trip on its own origin. There, the app mints a
- * nonce and only accepts a callback carrying it back. Here the self-hosted instance does the same,
- * and the hop the OS performs for the desktop app is performed by our own approval page instead.
- *
- * <p>Two properties carry the security of this flow, and both are easy to lose in a refactor:
- *
- * <ul>
- *   <li>The redirect target is read from the stored row, never from a request parameter. A caller
- *       cannot talk us into posting a session token to an origin of their choosing.
- *   <li>The device credential is minted when it is claimed, not when it is approved, and the claim
- *       is authenticated by a secret that never enters the browser. Approval decides <em>who</em>
- *       the instance belongs to; it does not hand out anything usable.
- * </ul>
- */
+/** The "connect this server" handshake, SaaS side. */
 @Slf4j
 @Service
 @Profile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class ConnectRequestService {
 
-    /**
-     * Long enough for the approver to sign in, pick the right account and read the origin. The
-     * device-grant code next to this uses ten minutes, but that flow does not include a login.
-     */
+    /** Long enough for the approver to sign in, pick the right account and read the origin. */
     static final int LIFETIME_MINUTES = 15;
 
     /** Creating a request needs no authentication, so the only brake is per-source volume. */
@@ -92,11 +72,7 @@ public class ConnectRequestService {
         }
     }
 
-    /**
-     * What the approval page shows. {@code insecureTransport} is surfaced rather than blocked:
-     * plenty of self-hosted instances legitimately run plain HTTP inside a private network, but the
-     * approver should know before a session token is sent over one.
-     */
+    /** What the approval page shows. */
     public record ConnectView(
             String requestId,
             String name,
@@ -111,15 +87,11 @@ public class ConnectRequestService {
     public enum ClaimOutcome {
         /** Approved and collected; {@code credential} is populated. */
         GRANTED,
-        /**
-         * A re-authentication was approved. No credential: the instance already has one, and
-         * issuing a second would orphan the first. The instance only needs to know the browser leg
-         * succeeded.
-         */
+        /** A re-authentication was approved. */
         CONFIRMED,
-        /** Still waiting on a human. The instance should keep waiting. */
+        /** Still waiting on a human. */
         PENDING,
-        /** Declined, expired, unknown, already collected, or a bad claim secret. Terminal. */
+        /** Declined, expired, unknown, already collected, or a bad claim secret. */
         REJECTED
     }
 
@@ -130,13 +102,7 @@ public class ConnectRequestService {
         }
     }
 
-    /**
-     * Records a handshake on behalf of an instance that has no credential yet.
-     *
-     * <p>Unauthenticated by necessity: this is the call an instance makes before it has anything to
-     * authenticate with. It creates no entitlement on its own, and nothing here is usable until a
-     * leader approves and the creator presents its claim secret.
-     */
+    /** Records a handshake on behalf of an instance that has no credential yet. */
     @Transactional
     public CreateResult create(
             String name, String callbackUrl, String nonce, String claimSecret, String requesterIp) {
@@ -146,10 +112,6 @@ public class ConnectRequestService {
     /**
      * As {@link #create}, but for an instance that is already linked and only needs its admin's
      * browser signed in again.
-     *
-     * @param pinnedTeamId the team the instance already belongs to, learned from its device
-     *     credential rather than from the browser. Approval may only confirm this team, so a reauth
-     *     cannot move the instance or leave the browser signed into an unrelated account.
      */
     @Transactional
     public CreateResult createReauth(
@@ -214,7 +176,7 @@ public class ConnectRequestService {
         return CreateResult.ok(request.getRequestId(), LIFETIME_MINUTES * 60);
     }
 
-    /** The approver's view of a handshake. Empty for unknown or expired ids. */
+    /** The approver's view of a handshake. */
     @Transactional(readOnly = true)
     public Optional<ConnectView> lookup(String requestId) {
         return repo.findByRequestId(requestId)
@@ -234,10 +196,7 @@ public class ConnectRequestService {
     public enum ApproveRejection {
         /** Unknown, expired, or already settled. */
         UNAVAILABLE,
-        /**
-         * The approver's team is not the team this server already belongs to. The distinguishing
-         * case worth naming: signing in as the wrong account.
-         */
+        /** The approver's team is not the team this server already belongs to. */
         WRONG_TEAM
     }
 
@@ -247,17 +206,7 @@ public class ConnectRequestService {
         }
     }
 
-    /**
-     * Binds a pending handshake to the approver's team and returns where to send them next.
-     *
-     * <p>Deliberately returns the stored callback rather than accepting one, so the caller cannot
-     * influence the destination.
-     *
-     * <p>For a re-authentication the team is already pinned from the instance's own credential, and
-     * a caller from a different team is refused rather than allowed to rebind the server. Without
-     * that check an admin could sign in with a personal account and leave the portal reading one
-     * team's billing while the server meters against another.
-     */
+    /** Binds a pending handshake to the approver's team and returns where to send them next. */
     @Transactional
     public ApproveResult approve(String requestId, Long teamId, Long userId) {
         Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
@@ -293,7 +242,7 @@ public class ConnectRequestService {
                 new ApprovalTarget(request.getCallbackUrl(), request.getNonce()), null);
     }
 
-    /** Declines a pending handshake. Idempotent in effect: a settled row simply reports false. */
+    /** Declines a pending handshake. */
     @Transactional
     public boolean deny(String requestId) {
         Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
@@ -310,13 +259,7 @@ public class ConnectRequestService {
         return true;
     }
 
-    /**
-     * Collects the device credential for an approved handshake.
-     *
-     * <p>Authenticated purely by possession of the claim secret, which only the instance that
-     * created the row has ever held. The row is locked and marked consumed in the same transaction
-     * as the mint, so one approval can only ever yield one credential.
-     */
+    /** Collects the device credential for an approved handshake. */
     @Transactional
     public ClaimResult claim(String requestId, String claimSecret) {
         if (requestId == null || claimSecret == null) {
@@ -343,10 +286,7 @@ public class ConnectRequestService {
         };
     }
 
-    /**
-     * Settles an approved handshake. A first link mints a credential; a re-authentication only
-     * confirms, because the instance already holds one and a second would orphan it.
-     */
+    /** Settles an approved handshake. */
     private ClaimResult mint(ConnectRequest request) {
         if (request.getMode() == ConnectRequest.Mode.REAUTH) {
             request.setStatus(ConnectRequest.Status.CONSUMED);
@@ -376,11 +316,6 @@ public class ConnectRequestService {
                 request.getTeamId());
     }
 
-    // ------------------------------------------------------------------------------------------
-    // Callback validation. The point of these is that a stored callback is only ever something we
-    // already decided was well formed, so the redirect step has nothing left to judge.
-    // ------------------------------------------------------------------------------------------
-
     /** Absolute http(s) URL, with a host, no credentials and no fragment of its own. */
     static Optional<URI> validateCallback(String candidate) {
         if (candidate == null || candidate.isBlank() || candidate.length() > MAX_CALLBACK_LENGTH) {
@@ -402,9 +337,6 @@ public class ConnectRequestService {
         if (uri.getHost() == null || uri.getHost().isBlank()) {
             return Optional.empty();
         }
-        // Credentials in the URL would end up in logs and history, and a fragment would collide
-        // with
-        // the one we append to carry the session back.
         if (uri.getUserInfo() != null || uri.getFragment() != null) {
             return Optional.empty();
         }

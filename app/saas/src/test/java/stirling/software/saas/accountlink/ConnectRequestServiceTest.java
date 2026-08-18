@@ -50,10 +50,6 @@ class ConnectRequestServiceTest {
         service = new ConnectRequestService(repo, accountLinkService);
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Creation
-    // ---------------------------------------------------------------------------------------
-
     @Test
     void create_storesTheValidatedCallbackAndItsOrigin() {
         ConnectRequestService.CreateResult result =
@@ -120,10 +116,6 @@ class ConnectRequestServiceTest {
         verify(repo, never()).save(any());
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Lookup
-    // ---------------------------------------------------------------------------------------
-
     @Test
     void lookup_flagsPlaintextTransportSoTheApproverCanSeeIt() {
         ConnectRequest row = pending();
@@ -141,10 +133,6 @@ class ConnectRequestServiceTest {
 
         assertThat(service.lookup("req")).isEmpty();
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Approval
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void approve_bindsTheTeamAndReturnsTheStoredCallback() {
@@ -181,12 +169,6 @@ class ConnectRequestServiceTest {
 
         assertThat(service.approve("req", 7L, 42L).isRejected()).isTrue();
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Re-authentication. The instance is already linked; the browser just needs signing in again.
-    // The team is pinned from the instance's own credential, so approving cannot move the server
-    // and cannot leave the browser signed into an account that does not own it.
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void createReauth_pinsTheTeamItWasToldByTheCredential() {
@@ -260,10 +242,6 @@ class ConnectRequestServiceTest {
         // A second credential would orphan the one the instance already holds.
         verifyNoInteractions(accountLinkService);
     }
-
-    // ---------------------------------------------------------------------------------------
-    // Claim
-    // ---------------------------------------------------------------------------------------
 
     @Test
     void claim_mintsOnceForAnApprovedHandshake() {

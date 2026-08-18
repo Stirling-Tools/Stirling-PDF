@@ -8,7 +8,7 @@ export type ApprovePhase =
   | "declined"
   | "notFound";
 
-/** What the approver is being asked to connect. Carries no secret. */
+/** What the approver is being asked to connect. */
 export interface PendingConnect {
   requestId: string;
   name: string | null;
@@ -19,7 +19,7 @@ export interface PendingConnect {
 export interface ConnectApproveViewProps {
   phase: ApprovePhase;
   pending: PendingConnect | null;
-  /** Email of the account the server would be connected to. Null if unreadable. */
+  /** Email of the account the server would be connected to. */
   signedInEmail: string | null;
   busy: boolean;
   error: string | null;
@@ -28,15 +28,7 @@ export interface ConnectApproveViewProps {
   onSwitchAccount: () => void;
 }
 
-/**
- * Presentation for the connect approval page. Pure, so every state is reachable
- * from props without a handshake, a session or a redirect.
- *
- * <p>The origin is the security control on this screen, not decoration. It is
- * where a live session token will be sent, and the approver is the only party
- * who can tell whether it is really their server. That is why it is rendered
- * prominently, and why plaintext transport is called out rather than hidden.
- */
+/** Presentation for the connect approval page. */
 export function ConnectApproveView({
   phase,
   pending,

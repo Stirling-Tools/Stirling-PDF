@@ -21,26 +21,7 @@ import {
 } from "@portal/components/account-link/ConnectCallbackView";
 import "@portal/views/ConnectCallback.css";
 
-/**
- * Where the SaaS approval page sends the admin back to.
- *
- * <p>Two independent things arrive in the fragment, and they are handled
- * separately on purpose:
- *
- * <ul>
- *   <li>The admin's SaaS session, which is deposited into the shared Supabase
- *       client so every attended portal read (usage, billing, documents) starts
- *       working. This is the half that the device-credential-only design could
- *       never provide, because a device credential identifies the server, not a
- *       person.
- *   <li>The nonce, which the local backend needs in order to collect its device
- *       credential. That collection is a server-to-server call authenticated by
- *       a secret this page never sees.
- * </ul>
- *
- * <p>The fragment is stripped before anything awaits, so a live token does not
- * linger in the address bar or the history entry.
- */
+/** Where the SaaS approval page sends the admin back to. */
 function ConnectCallbackContent() {
   const navigate = useNavigate();
   const [state, setState] = useState<ConnectCallbackState>("working");
@@ -82,9 +63,6 @@ function ConnectCallbackContent() {
     const refreshToken = params.get("refresh_token");
 
     void (async () => {
-      // Deposited first and independently of the link. It is the admin's own
-      // token in their own browser, and it is useful even if the link needs
-      // another attempt.
       if (accessToken && refreshToken) {
         try {
           const supabase = ensureSaasSupabase();
@@ -104,8 +82,7 @@ function ConnectCallbackContent() {
   }, [finish]);
 
   /**
-   * Retry means different things either side of a still-valid handshake: finish
-   * the one we have, or open a new one when it is past saving.
+   * Retry means different things either side of a still-valid handshake: finish the one we have, or open a new one when it is past saving.
    */
   const onRetry = useCallback(() => {
     if (state === "retry" && nonceRef.current) {
@@ -140,20 +117,7 @@ function ThemedSui({ children }: { children: ReactNode }) {
   return <SuiProvider colorScheme={theme}>{children}</SuiProvider>;
 }
 
-/**
- * The callback with its own minimal provider shell.
- *
- * <p>This route is a sibling of the portal's, not a page inside it, so it inherits
- * none of {@link PortalApp}'s providers. It needs the theme and Mantine, because the
- * shared Button is a Mantine button underneath, and base.css for the tokens the
- * stylesheet references.
- *
- * <p>Deliberately no PortalAuthBoundary. This is a redirect target carrying a
- * one-time nonce in the fragment, and a client-side auth gate could navigate away
- * to a login screen and take the fragment with it. The endpoints it calls are
- * admin-gated server side, so nothing is lost by not gating here, and a failed call
- * shows the retry state instead of silently discarding the handshake.
- */
+/** The callback with its own minimal provider shell. */
 export default function ConnectCallback() {
   return (
     <ThemeProvider>
@@ -168,9 +132,7 @@ export default function ConnectCallback() {
 }
 
 /**
- * PENDING and UNAVAILABLE collapse into one "try again" state: both mean the
- * handshake is intact but unfinished, which is the same thing to do about it.
- * NONE after a callback means there was nothing left to finish.
+ * PENDING and UNAVAILABLE collapse into one "try again" state: both mean the handshake is intact but unfinished, which is the same thing to do about it.
  */
 function toViewState(phase: ConnectPhase): ConnectCallbackState {
   switch (phase) {

@@ -19,16 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
-/**
- * Team-wide management of linked instances (combined-billing "Mode A").
- *
- * <p>Read and revoke only. Instances are created by the browser-mediated handshake in {@link
- * ConnectController}, not here: an admin approves on our origin and the instance collects its own
- * credential, so no Supabase JWT is ever relayed through a customer's server.
- *
- * <p>Whole surface gated behind {@code stirling.billing.account-link.enabled}: off → beans absent →
- * 404. Leader-only, and the team is always derived from the caller (never the request body).
- */
+/** Team-wide management of linked instances (combined-billing "Mode A"). */
 @Slf4j
 @Hidden
 @RestController
@@ -52,16 +43,6 @@ public class AccountLinkController {
             String createdAt,
             String lastSeenAt,
             boolean revoked) {}
-
-    /*
-     * POST /register is gone. It took the admin's Supabase JWT, relayed from their instance, and
-     * minted a device credential in the response. Linking is now a browser-mediated handshake
-     * (ConnectController), so the token never leaves the admin's own browser and the credential is
-     * collected by the instance against a claim secret instead.
-     *
-     * AccountLinkService.register survives and is still the only thing that mints: ConnectRequestService
-     * calls it when a handshake is claimed. Only the JWT-authenticated entry point has been removed.
-     */
 
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")

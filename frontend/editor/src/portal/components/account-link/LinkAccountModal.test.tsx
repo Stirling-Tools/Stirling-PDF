@@ -2,12 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
-/**
- * The modal every "link account" CTA in the portal opens. What matters is that it
- * starts the right handshake and hands the browser to Stirling, and that the
- * callback URL it advertises is its own origin rather than anything a caller
- * supplied.
- */
+/** The modal every "link account" CTA in the portal opens. */
 const { startConnect, startReauth } = vi.hoisted(() => ({
   startConnect: vi.fn(),
   startReauth: vi.fn(),

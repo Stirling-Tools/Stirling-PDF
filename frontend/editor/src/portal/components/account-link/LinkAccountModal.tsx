@@ -10,29 +10,12 @@ interface Props {
   open: boolean;
   onClose: () => void;
   /**
-   * "link" connects this server to a team for the first time; "reauth" only
-   * re-establishes the browser's Stirling session for a server that is already
-   * linked. The two use different endpoints: a reauth presents the server's
-   * device credential so Stirling pins it to the team that already owns it.
+   * "link" connects this server to a team for the first time; "reauth" only re-establishes the browser's Stirling session for a server that is already linked.
    */
   mode?: "link" | "reauth";
 }
 
-/**
- * Sends the admin off to Stirling to connect this server.
- *
- * <p>There is deliberately no sign-in form here. A self-hosted instance runs on an
- * origin the identity provider will never have on its redirect allow-list, so a
- * sign-in started on this page cannot complete: the provider returns the admin to
- * Stirling and abandons them there. That is exactly what the old provider buttons
- * on this modal did. Doing the sign-in on Stirling's own origin, and having
- * Stirling redirect back here afterwards, is what makes SSO and sign-up work at
- * all for self-hosted linking.
- *
- * <p>So this modal only explains what is about to happen and starts the handshake.
- * The local backend opens it, we navigate to the approval page, and
- * {@code /account-link/callback} finishes it on the way back.
- */
+/** Sends the admin off to Stirling to connect this server. */
 export function LinkAccountModal({ open, onClose, mode = "link" }: Props) {
   const { t } = useTranslation();
   const reauth = mode === "reauth";
@@ -43,9 +26,6 @@ export function LinkAccountModal({ open, onClose, mode = "link" }: Props) {
     setBusy(true);
     setError(null);
     try {
-      // Built here, not on the server: this page is the only party that knows its
-      // own origin and router base path. The backend cross-checks it against the
-      // request's Origin header before trusting it.
       const callbackUrl = new URL(
         withBasePath("/account-link/callback"),
         window.location.origin,

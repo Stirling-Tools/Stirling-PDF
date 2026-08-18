@@ -24,23 +24,6 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * Outbound calls from a self-hosted instance to its linked SaaS backend (combined-billing "Mode
  * A").
- *
- * <p>Calls:
- *
- * <ul>
- *   <li>{@link #connectRequest} / {@link #connectClaim} — the browser-mediated link handshake. The
- *       admin's Supabase JWT never passes through here: it goes to their own browser, and this side
- *       collects only a device credential, authenticated by a claim secret.
- *   <li>{@link #fetchEntitlement} — authenticates with the stored device credential against {@code
- *       GET /api/v1/instance/entitlement}; what the local gate consults.
- *   <li>{@link #reportUsage} — daily usage sync ({@code POST /api/v1/instance/sync}); reports
- *       cumulative units and returns the refreshed entitlement.
- *   <li>{@link #revokeSelf} — self-revokes the credential on local unlink ({@code POST
- *       /api/v1/instance/revoke-self}).
- * </ul>
- *
- * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
- * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
 @Slf4j
 @Service
@@ -73,10 +56,7 @@ public class AccountLinkClient {
         this.httpClient = httpClient;
     }
 
-    /**
-     * A non-2xx reply from the SaaS account-link API. Carries the upstream status so the caller can
-     * map auth failures (401/403) through rather than masking everything as a 502.
-     */
+    /** A non-2xx reply from the SaaS account-link API. */
     public static class UpstreamException extends IOException {
         private final int status;
 
@@ -90,11 +70,7 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Authoritative deny (401/403) — the device credential is revoked or invalid. Unlike a
-     * transport/server failure (which returns {@code null} and fails open), the cache must BLOCK on
-     * this. Unchecked so it propagates through {@link #fetchEntitlement}'s transport try/catch.
-     */
+    /** Authoritative deny (401/403) — the device credential is revoked or invalid. */
     public static final class RevokedException extends RuntimeException {
         private final int status;
 
@@ -108,29 +84,20 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * What the SaaS side hands back when it records a connect handshake.
-     *
-     * <p>{@code authorizeUrl} comes from SaaS rather than being composed here: it is the only party
-     * that knows where its own approval page lives, so an instance that had to configure that could
-     * only get it wrong and would need reconfiguring whenever the page moved.
-     */
+    /** What the SaaS side hands back when it records a connect handshake. */
     public record ConnectRequestResult(
             String requestId, int expiresInSeconds, String authorizeUrl) {}
 
     public enum ConnectClaimOutcome {
         /** Approved and collected; the credential fields are populated. */
         GRANTED,
-        /**
-         * A re-authentication was approved. No credential comes back: we already hold one, and a
-         * second would orphan it. Only the browser leg needed confirming.
-         */
+        /** A re-authentication was approved. */
         CONFIRMED,
-        /** No human decision yet. Keep waiting. */
+        /** No human decision yet. */
         PENDING,
-        /** Declined, expired or already used. Terminal — do not retry. */
+        /** Declined, expired or already used. */
         REJECTED,
-        /** SaaS unreachable or erroring. Transient, so the caller may retry. */
+        /** SaaS unreachable or erroring. */
         UNAVAILABLE
     }
 
@@ -141,12 +108,7 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Opens a connect handshake. Unauthenticated by nature — this is the call made before this
-     * instance holds any credential at all.
-     *
-     * @throws IOException on transport failure or a non-2xx reply.
-     */
+    /** Opens a connect handshake. */
     public ConnectRequestResult connectRequest(
             String name, String callbackUrl, String nonce, String claimSecret) throws IOException {
         return connectRequest(name, callbackUrl, nonce, claimSecret, null);
@@ -155,9 +117,6 @@ public class AccountLinkClient {
     /**
      * As {@link #connectRequest}, but presenting an existing device credential so the SaaS side
      * treats this as a re-authentication and pins the handshake to the team we already belong to.
-     *
-     * <p>Sending the credential is what makes the pinning trustworthy: the team comes from
-     * something only this instance holds, rather than from anything a browser could assert.
      */
     public ConnectRequestResult connectRequest(
             String name,
@@ -195,9 +154,6 @@ public class AccountLinkClient {
         if (requestId == null) {
             throw new IOException("SaaS connect response missing requestId");
         }
-        // We navigate an admin's browser here, so refuse anything that is not a plain absolute
-        // http(s) URL. This is the SaaS host we already trust for entitlement decisions, but a
-        // malformed or scheme-shifted value should fail loudly rather than reach the browser.
         String authorizeUrl = text(body, "authorizeUrl");
         if (authorizeUrl == null || !isAbsoluteHttpUrl(authorizeUrl)) {
             throw new IOException("SaaS connect response carried no usable authorizeUrl");
@@ -207,8 +163,7 @@ public class AccountLinkClient {
 
     /**
      * Collects the device credential for an approved handshake, proving possession of the claim
-     * secret. Never throws: the outcome enum carries the distinction the caller needs between
-     * "wait", "give up" and "try again later".
+     * secret.
      */
     public ConnectClaimResult connectClaim(String requestId, String claimSecret) {
         HttpResponse<String> response;
@@ -265,8 +220,6 @@ public class AccountLinkClient {
 
     /**
      * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
-     * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local
-     * unlink) can still clear locally and log the orphan for follow-up. Idempotent on SaaS.
      */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
@@ -291,17 +244,7 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Fetches the current entitlement using the stored device credential. Three outcomes:
-     *
-     * <ul>
-     *   <li>2xx → the parsed snapshot.
-     *   <li>401/403 → {@link RevokedException} (authoritative deny — revoked/invalid credential);
-     *       the caller must BLOCK, not fail open.
-     *   <li>transport failure, other non-2xx (e.g. 5xx), or a malformed body → {@code null}
-     *       ("unknown" — the caller fails open).
-     * </ul>
-     */
+    /** Fetches the current entitlement using the stored device credential. */
     public InstanceEntitlement fetchEntitlement(String deviceId, String deviceSecret) {
         HttpResponse<String> response;
         try {
@@ -341,9 +284,6 @@ public class AccountLinkClient {
     /**
      * Reports the period's cumulative per-category units to {@code POST /api/v1/instance/sync} and
      * returns the fresh entitlement in the same reply — one round-trip both reports and refreshes.
-     * SaaS bills the delta against its last-seen cumulative, so resending the same totals is
-     * idempotent. Same three outcomes as {@link #fetchEntitlement}; on {@code null} the caller must
-     * not advance its last-synced markers so the usage retries next sync.
      */
     public InstanceEntitlement reportUsage(
             String deviceId,
@@ -414,7 +354,7 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodEnd"));
     }
 
-    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */
+    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. */
     private static UnitCalcPolicy parseUnitCalcPolicy(JsonNode root) {
         if (!root.hasNonNull("unitCalcPolicy")) {
             return null;
@@ -478,7 +418,7 @@ public class AccountLinkClient {
         return node.hasNonNull(field) ? node.get(field).asText() : null;
     }
 
-    /** Absolute http(s) with a host. Rejects relative paths and other schemes. */
+    /** Absolute http(s) with a host. */
     static boolean isAbsoluteHttpUrl(String candidate) {
         try {
             URI uri = URI.create(candidate.strip());
