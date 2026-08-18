@@ -89,7 +89,7 @@ jobs:
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
       - name: Resolve backend dependencies
-        run: ./gradlew :stirling-pdf:classes -PnoSpotless --no-daemon
+        run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
