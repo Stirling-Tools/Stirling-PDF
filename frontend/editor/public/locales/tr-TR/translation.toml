@@ -1879,6 +1879,9 @@ width = "Genişlik"
 [app]
 description = "Ücretsiz Adobe Acrobat alternatifi (10M+ indirme)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "PDF/A-3b'ye dönüştür"
 convertToPdfA3bDescription = "Gömülü eklerle arşivlik bir PDF oluşturur"
@@ -2933,12 +2936,16 @@ text = "Bu izinlerin değiştirilemez olmasını sağlamak için, sahip parolas�
 [chat.actions]
 copy = "Mesajı kopyala"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling ajan seçenekleri"
+assistant = "AI Assistant"
 clearChat = "Sohbeti temizle"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Bu işlem bulut kredilerinizi kullanacak"
 tooltip = "Ekrandan renk seç"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Renk seçin"
 
 [common]
+actions = "Actions"
 back = "Geri"
 cancel = "İptal"
 close = "Kapat"
+codeSample = "Code sample"
 collapse = "Daralt"
 confirm = "Onayla"
 continue = "Devam et"
 copied = "Kopyalandı!"
 copy = "Kopyala"
 done = "Bitti"
+enterValue = "Enter value"
 error = "Hata"
 expand = "Genişlet"
 loading = "Yükleniyor..."
 next = "Sonraki"
+open = "Open"
 preview = "Önizleme"
 previous = "Önceki"
 refresh = "Yenile"
 remaining = "Kalan"
 retry = "Yeniden dene"
 save = "Kaydet"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Seçileni temizle"
@@ -3185,6 +3199,7 @@ title = "Sıkıştırma Yöntemi"
 [compress.settings]
 desiredSize = "İstenen Dosya Boyutu"
 desiredSizePlaceholder = "Boyutu girin"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Sıkıştırma, dosya boyutunu azaltmanın kolay bir yoludur. Hedef boyut girmek ve kaliteyi bizim ayarlamamız için Dosya Boyutu'nu seçin. Sıkıştırma gücünü elle ayarlamak için Kalite'yi seçin."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Ara..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Düzenle"
@@ -3824,11 +3843,13 @@ shareSelected = "Seçileni Paylaş"
 sharing = "Paylaşım"
 showAll = "Tümünü Göster"
 showHistory = "Geçmişi Göster"
+sortBy = "Sort files"
 sortByDate = "Tarihe Göre Sırala"
 sortByName = "Ada Göre Sırala"
 sortBySize = "Boyuta Göre Sırala"
 storage = "Depolama"
 storageState = "Depolama"
+storageUsed = "Storage used"
 synced = "Eşitlendi"
 title = "PDF Dosyaları Yükle"
 toolChain = "Uygulanan Araçlar"
@@ -3874,6 +3895,8 @@ addFiles = "Dosya ekle"
 addingFiles = "Dosyalar ekleniyor…"
 collapse = "Kenar çubuğunu daralt"
 customizeGroups = "Grupları özelleştir"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Başlamak için dosya açın"
 dropToAdd = "Drop files to add"
 expand = "Kenar çubuğunu genişlet"
@@ -3888,12 +3911,12 @@ openFromComputer = "Bilgisayardan aç"
 openSettings = "Ayarları aç"
 other = "Diğer"
 recent = "Son"
-search = "Ara"
-searchPlaceholder = "Dosyalarda ara..."
 viewAll = "{{count}} dosyanın tümünü görüntüle"
 
 [fileSidebar.fileItem]
 closeViewer = "Görüntüleyiciyi kapat"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Görüntüleyicide aç"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Dosyalarıma geri dön"
 breadcrumbs = "Klasör yolu"
 cancel = "İptal"
 classification = "Sınıflandırma"
-clearSearch = "Aramayı temizle"
 clearSelection = "Seçimi temizle"
 closeDetails = "Ayrıntıları kapat"
 create = "Oluştur"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Klasör ağacını yeniden boyutlandır (yön tuşları, bü
 save = "Kaydet"
 saveToServer = "Sunucuya kaydet"
 saveToServerDisabledHint = "Bu sunucuda sunucuya kaydetme etkin değil. Yöneticinizden etkinleştirmesini isteyin."
-search = "Ara"
-searchPlaceholder = "Bu klasörde ve alt klasörlerde ara"
 selectAll = "Tümünü seç"
 selectAllHint = "Tümünü seçmek için tıklayın. İpucu: Tek tek dosya eklemek için Ctrl (veya Cmd) basılı tutun, aralık seçmek için Shift."
 selectedCount = "{{count}} seçildi"
@@ -4043,6 +4063,10 @@ title = "Henüz bulut dosyası yok"
 [filesPage.empty.local]
 hint = "Yüklemeden kaydedilen dosyalar burada kalır. Eklemek için bir dosya bırakın."
 title = "Yalnızca yerel dosya yok"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Açtığınız veya düzenlediğiniz dosyalar burada görünecek."
@@ -4113,6 +4137,11 @@ localHint = "Sadece bu tarayıcıda depolanır"
 shared = "Paylaşılan"
 sharedHint = "Bağlantıyla sizinle paylaşılmış"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "En eskiden"
 modifiedDesc = "En yeniden"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "Depolamada dosya yok. Önce bazı dosyaları açın."
 open = "Aç"
 openFile = "Dosya Aç"
 openFiles = "Dosyalar Aç"
+selectFile = "Select {{name}}"
 selectFromStorage = "Depolamadan Seç"
 upload = "Yükle"
 uploadFile = "Dosya Yükle"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tümü kaydedildi"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV çıkarılamadı"
 extractXlsxError = "XLSX çıkarılamadı"
+filled = "filled"
 flattenAfterFilling = "Doldurduktan sonra düzleştir"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "zor"
 requiredFieldsError = "Lütfen tüm zorunlu alanları doldurun"
 rescanFields = "Alanları yeniden tara"
@@ -4795,9 +4830,6 @@ title = "Resimden PDF'e"
 [imageToPdf]
 tags = "dönüşüm,img,jpg,fotoğraf,resim"
 
-[infoBanner]
-dismiss = "Kapat"
-
 [invite]
 acceptError = "Hesap oluşturulamadı"
 accountFor = "Şunun için hesap oluşturuluyor"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Yükleme Başarılı!"
 uploadSuccessMessage = "Görselleriniz aktarıldı."
 validating = "Oturum doğrulanıyor..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Fotoğrafları yüklemek için tarayın. Görseller otomatik olarak PDF'ye dönüştürülür."
 descriptionNoConvert = "Mobil cihazınızdan fotoğrafları yüklemek için tarayın."
@@ -4997,8 +5057,13 @@ title = "Mobil Cihazdan Yükle"
 tags = "Çoklu Araç,Çoklu işlem,Arayüz,tıklama sürükleme,ön uç,istemci tarafı,etkileşimli,taşınabilir,taşı"
 title = "PDF Çoklu Araç"
 
-[navbar]
-search = "Ara"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Kimlik doğrulama başarılı olmadı. Bu pencereyi kapatıp tekrar deneyebilirsiniz."
@@ -5127,6 +5192,7 @@ activeFiles = "<strong>Aktif Dosyalar</strong> görünümü, araca yüklediğini
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Kapat"
 cropSettings = "Artık kırpmak istediğimiz dosyayı seçtiğimize göre, PDF'nin kırpılacağı alanı seçmek için Kırp aracını yapılandırabiliriz."
+dialogLabel = "Onboarding"
 fileCheckbox = "Dosyalardan birine tıklamak, onu işleme için seçer. Toplu işlemler için birden fazla dosya seçebilirsiniz."
 fileReplacement = "Değiştirilen dosya, Çalışma Alanı'nda orijinal dosyanın yerini otomatik olarak alır; böylece onu kolayca başka araçlardan da geçirebilirsiniz."
 filesButton = "Hızlı Erişim çubuğundaki <strong>Dosyalar</strong> düğmesi, araçları kullanmak üzere PDF yüklemenize olanak tanır."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 Kredi"
 xsmall = "100 Kredi"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "İhtiyaçlarınıza uygun planı seçin"
 title = "Mevcut Planlar"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "Aylık harcama limitine ulaşıldı"
 title = "Stripe portalı açılamadı"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} ücretsiz PDF hakkından kullanıldı"
 capSuffix_other = "{{allowance}} ücretsiz PDF hakkından kullanıldı"
 eyebrow = "Processor denemesi"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Bir ilke çalıştığında bir belgeyi veya bildirimi email ile gönderin."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "İşlenen belgeleri Nextcloud'a dosyalayın."
@@ -7077,11 +7173,6 @@ title = "Resmi SDK'lar"
 beta = "Beta"
 deprecated = "Kullanımdan kaldırıldı"
 
-[portal.docs.search]
-empty = "Eşleşen doküman yok"
-placeholder = "Dokümanlarda ara"
-results = "{{count}} sonuç"
-
 [portal.docs.skills]
 eyebrow = "BECERİLER"
 lead = "Ajanınızın tek bir araç olarak çağırdığı paketlenmiş, adlandırılmış yetenekler. Her beceri, eval'ları ekli deterministik bir op zinciridir."
@@ -7180,11 +7271,11 @@ editorAction = "Düzenleyici"
 empty = "Bu filtreyle eşleşen belge yok."
 rowActions = "Satır eylemleri"
 sensitiveLabel = "Hassas"
-sensitiveTitle = "Hassas — erişim gerekli"
 
 [portal.documents.table.columns]
 action = "Pipeline / Eylem"
 document = "Belge"
+labels = "Labels"
 product = "Ürün"
 status = "Durum"
 time = "Zaman"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "Son görülme"
 region = "Bölge"
 status = "Durum"
+target = "Target"
 version = "Sürüm"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "Çalışıyor"
 description = "Bu görünüm beklenmeyen bir hatayla karşılaştı. Tekrar deneyin veya kenar çubuğundan başka bir bölüm seçin."
 retry = "Tekrar dene"
 title = "Bu sayfada bir şeyler ters gitti"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Geri"
@@ -7380,11 +7522,6 @@ cancel = "İptal"
 confirm = "Anahtarı iptal et"
 title = "API anahtarını iptal et"
 
-[portal.infrastructure.attestationLabel]
-attested = "Doğrulanmış"
-inScope = "Kapsamda"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Denetim etkinliklerini kategoriye göre filtrele"
 heading = "Denetim günlükleri"
@@ -7456,11 +7593,6 @@ info = "Bilgi"
 success = "Başarılı"
 warning = "Uyarı"
 
-[portal.infrastructure.certLabel]
-certified = "Sertifikalı"
-inProgress = "Devam ediyor"
-notStarted = "Başlatılmadı"
-
 [portal.infrastructure.createKey]
 cancel = "İptal"
 createKey = "Anahtar oluştur"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Bu sırrı şimdi kopyalayın — tekrar gösterilmeyecek."
 title = "API anahtarı oluştur"
 titleCreated = "Anahtar oluşturuldu"
 
-[portal.infrastructure.deployLabel]
-live = "Canlı"
-queued = "Kuyrukta"
-rolledBack = "Geri alındı"
-rolling = "Yayınlanıyor"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/dk"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Dağıtan"
-environment = "Ortam"
-product = "Ürün"
-status = "Durum"
-version = "Sürüm"
-when = "Ne zaman"
-
-[portal.infrastructure.deployments.recent]
-heading = "Son dağıtımlar"
-subheading = "Ürünler ve ortamlar genelindeki en son kullanıma almalar."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Örnekler"
-latency = "Gecikme"
-load = "Yük"
-p99 = "P99"
-region = "Bölge"
-status = "Durum"
-throughput = "Aktarım hızı"
-uptime = "Çalışma süresi"
-version = "Sürüm"
-
-[portal.infrastructure.deployments.regions]
-heading = "Bölgeler"
-subheading = "Dağıtılmış her Stirling bölgesi için canlı sağlık — gecikme, yük ve rollout sürümü."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Çalışma alanınız hazırlandıktan sonra dağıtılmış bölgeler burada görünür."
-title = "Dağıtılmış bölge yok"
-
 [portal.infrastructure.keyLabel]
 active = "Aktif"
 revoked = "İptal edildi"
-
-[portal.infrastructure.modelLabel]
-active = "Aktif"
-degraded = "Bozulmuş"
-disabled = "Devre dışı"
-
-[portal.infrastructure.models]
-heading = "Modeller"
-msValue = "{{value}} ms"
-subheading = "Çalışma alanınız genelinde belge işlemeyi destekleyen model kataloğu ve yönlendirme."
-
-[portal.infrastructure.models.byom]
-description = "On-prem veya self-hosted bir modeli kaydedin ve veri yerleşimiyle sınırlı işleme için bir bölgeye sabitleyin."
-title = "Kendi modelinizi getirin"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalog"
-sub = "Çalışma alanınız için kullanılabilir yönetilen modeller, canlı gecikme ve maliyetle birlikte."
-subEnterprise = "Yönetilen, kendi getirdiğiniz ve on-prem modeller — bölge bazında sabitleme kullanılabilir."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Çalışma alanınızın kataloğundaki modeller burada görünür."
-title = "Kullanılabilir model yok"
-
-[portal.infrastructure.models.columns]
-cost = "Maliyet"
-latency = "Gecikme"
-load = "Yük"
-model = "Model"
-status = "Durum"
-type = "Tür"
-version = "Sürüm"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/çağrı"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Aktif modeller"
-avgLatency = "Ort. gecikme"
-included = "Dahil"
-monthlySpend = "Aylık model harcaması"
-
-[portal.infrastructure.models.routing]
-empty = "Yapılandırılmış yönlendirme kuralı yok."
-heading = "Yönlendirme kuralları"
-sub = "Her işlemi hangi modelin yönettiği. Daha dar bir kural eşleşmediğinde varsayılan uygulanır."
-subLocked = "İşlemleri belirli modellere yönlendirin — ücretli planlarda kullanılabilir."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Her işlemi ve belge türünü hangi modelin yöneteceğini kontrol etmek için Pro'ya yükseltin."
-title = "Model yönlendirme ücretli bir özelliktir"
-
-[portal.infrastructure.models.routingColumns]
-default = "Varsayılan"
-docType = "Belge türü"
-modelForAria = "{{operation}} için model"
-operation = "İşlem"
-routedTo = "Yönlendirildiği yer"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Sınıflandırma"
-extraction = "Çıkarma"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Bozulmuş"
-down = "Kapalı"
-healthy = "Sağlıklı"
-
-[portal.infrastructure.security.access.byok]
-description = "Kendi KMS'nizden bir anahtar sağlayın. Stirling bununla şifreler ancak yine de okuyabilir."
-label = "Kendi anahtarınızı getirin (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Anahtarlar KMS'nizden asla ayrılmaz. Stirling yalnızca şifreli metni tutar."
-label = "Kendi anahtarınızı tutun (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling şifreleme anahtarlarını yönetir. En basiti — sizin tarafınızda sıfır anahtar operasyonu."
-label = "Stirling tarafından tutulan anahtarlar"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Belge erişim ilkesi"
-subheading = "İşlenen belgelerin beklemedeyken şifresini kimlerin çözebileceğini kontrol eder."
-
-[portal.infrastructure.security.attestations]
-heading = "Uyumluluk beyanları"
-noReport = "Rapor mevcut değil"
-subheading = "Beyan edilmiş kontrollerde raporların bulunduğu, çerçeve bazında denetim duruşu."
-viewReport = "Raporu görüntüle →"
-
-[portal.infrastructure.security.compliance]
-heading = "Uyumluluk"
-subheading = "Stirling platformunu kapsayan beyanlar ve sertifikasyonlar."
-
-[portal.infrastructure.security.empty]
-description = "Çalışma alanınızın güvenlik yapılandırması burada görünür."
-title = "Güvenlik duruşu kullanılamıyor"
-
-[portal.infrastructure.security.hyokBanner]
-description = "HYOK ile şifreleme anahtarları KMS'nizden asla ayrılmaz. Stirling yalnızca istediğiniz zaman iptal edebileceğiniz şifreli metni saklar ve işler."
-title = "Stirling belgelerinizin şifresini çözemez"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Yapılandırılmış IP aralığı yok — tüm IP'lere izin verilir."
-heading = "IP izin listesi"
-sub = "API erişimi bu CIDR aralıklarıyla sınırlandırılmıştır."
-subLocked = "API erişimini bilinen IP aralıklarıyla sınırlandırın — ücretli planlarda kullanılabilir."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "API erişimini belirli ağlarla sınırlandırmak için Pro'ya yükseltin."
-title = "IP izin listeleme ücretli bir özelliktir"
-
-[portal.infrastructure.security.ipColumns]
-added = "Eklendi"
-addedBy = "Ekleyen"
-cidr = "CIDR"
-label = "Etiket"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algoritma"
-heading = "Şifreleme anahtarı yönetimi"
-keyId = "Anahtar tanımlayıcısı"
-lastRotated = "Son döndürme"
-rotateKey = "Anahtarı döndür"
-rotationPolicy = "Döndürme ilkesi"
-subheading = "Beklemedeki belgeleri şifreleyen anahtarların saklama sorumluluğu — kim şifre çözebilir ve anahtarlar nasıl döndürülür."
-
-[portal.infrastructure.security.managedBanner]
-description = "Kendi anahtarını getir (BYOK) ve kendi anahtarını tut (HYOK) saklama sorumluluğu Enterprise'da kullanılabilir. Kendi KMS'nizden anahtar sağlamak için yükseltin."
-title = "Planınızda anahtarlar Stirling tarafından yönetilir"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asya Pasifik"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR veri sınırı"
-label = "Avrupa Birliği"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Amerika Birleşik Devletleri"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Veri yerleşimi"
-subheading = "Belgelerin depolandığı ve işlendiği yer."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} kullanıldı"
-
-[portal.infrastructure.storage.empty]
-description = "Bağlı depolama ve kullanım burada görünür."
-title = "Yapılandırılmış depolama yok"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktif"
-activeRange = "0–{{value}}g"
-archived = "Arşivlendi"
-coldStorage = "soğuk depolama"
-deleted = "Silindi"
-never = "asla"
-purged = "kalıcı olarak silindi"
-
-[portal.infrastructure.storage.providers]
-connect = "Bağlan"
-connected = "Bağlandı"
-heading = "Bağlı sağlayıcılar"
-subheading = "İşlenen çıktılarının yazıldığı yer."
-
-[portal.infrastructure.storage.retention]
-heading = "Saklama"
-subheading = "Yaşam döngüsü silinmesinden önce çıktıların ne kadar süre tutulacağı."
-windowLabel = "Varsayılan saklama penceresi"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} gün"
-days_other = "{{count}} gün"
-never = "Asla silme"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Toplam kullanım"
-progressLabel = "Kullanılan depolama"
-subheading = "Tüm bağlı sağlayıcılar genelinde tüketilen depolama."
 
 [portal.infrastructure.tabs]
 apiKeys = "API Anahtarları"
@@ -7715,11 +7619,9 @@ security = "Güvenlik"
 storage = "Depolama"
 
 [portal.integrations]
-addAnother = "Başka ekle"
 availableHeading = "Kullanılabilir"
 comingSoonHeading = "Yakında"
 connect = "Bağlan"
-connectedHeading = "Bağlı"
 connectionCount_one = "{{count}} bağlantı"
 connectionCount_other = "{{count}} bağlantı"
 customApi = "Özel API"
@@ -7736,6 +7638,10 @@ notify = "Bildirim"
 security = "Güvenlik"
 signing = "İmzalama"
 storage = "Depolama"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Bağlı"
@@ -7767,7 +7673,6 @@ integrations = "Entegrasyonlar"
 pipelines = "Pipelines"
 policies = "İlkeler"
 procurement = "Tedarik"
-settings = "Ayarlar"
 sources = "Kaynaklar"
 usage = "Kullanım ve Faturalandırma"
 users = "Kullanıcılar"
@@ -7784,7 +7689,7 @@ title = "Pipelines"
 newPipeline = "Yeni pipeline"
 
 [portal.pipelines.builder]
-addStep = "Araç ekle"
+activate = "Activate"
 back = "Pipeline'lara dön"
 cannotFollow = "{{produced}} alınamaz"
 chooseAccount = "Bir hesap seçin"
@@ -7792,28 +7697,40 @@ chooseDestination = "Bir hedef seçin"
 chooseOperation = "Bu adımın ne yapacağını seçin"
 chooseSource = "Bir kaynak seçin"
 discard = "Değişiklikleri at"
-enabled = "Etkin"
 inputs = "Girdi"
 inputSource = "Girdi kaynağı"
 inputTrigger = "Tetikleyici"
 keepEditing = "Düzenlemeye devam et"
+moreActions = "More actions"
 needsConfiguring = "Kurulum gerekli"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Yüklenmiş bir dosya gerekiyor"
-noSources = "Henüz bağlı kaynak yok. Girdi olarak kullanmak için bir tane oluşturun."
 noToolMatches = "Aramanızla eşleşen araç yok."
-pipelineSettings = "Pipeline ayarları"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Araç ara"
-selectToolBody = "Pipeline'ınızı oluşturmak için bir araç ekleyin."
-selectToolTitle = "Henüz araç yok"
 sendToSystem = "Başka bir sisteme gönder"
 stepsIncompatible = "Bu adımlar, önceki adımlarının ürettiği üzerinde çalışamaz: {{tools}}."
 stepsNeedSetup = "Kaydetmeden önce bu adımların hâlâ kurulması gerekiyor: {{tools}}."
-toolSettings = "Araç ayarları"
+testRun = "Test with a file"
 unknownStep = "Tanınmayan işlem, olduğu gibi tutuldu."
 unsavedBody = "Kaydedilmemiş değişiklikleriniz var. Ayrılmadan önce kaydedin mi, yoksa atılsın mı?"
 unsavedTitle = "Kaydedilmemiş değişiklikler"
 uploadUnsupported = "Yüklenen dosyalar henüz pipeline'larda desteklenmiyor, bu nedenle şu adımlar kaydedilemez: {{tools}}."
 usesDefaults = "Varsayılan ayarlarla çalışır"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Önceki adımdaki her dosyayı birleştirir"
@@ -7825,30 +7742,35 @@ undeclared-operation = "Bu adımın ne kabul ettiği denetlenemiyor"
 
 [portal.pipelines.composer]
 addTool = "Araç ekle"
-cancel = "İptal"
-chainEmpty = "Pipeline'ınızı oluşturmaya başlamak için bir araç ekleyin."
 create = "Pipeline oluştur"
+createPaused = "Create paused"
 editingUnsupported = "Bu araç parametrelerinin düzenleme için görüntülenmesi henüz desteklenmiyor."
-moveDown = "Aşağı taşı"
-moveUp = "Yukarı taşı"
+editSource = "Edit source"
 name = "Ad"
 namePlaceholder = "örn. Redaction taraması"
 noToolSettings = "Bu aracın yapılandırılabilir ayarı yok."
-operations_one = "İşlem ({{count}})"
-operations_other = "İşlemler ({{count}})"
 output = "Çıktı"
-removeStep = "İşlemi kaldır"
 save = "Değişiklikleri kaydet"
 scheduleEvery = "Şu aralıkla çalıştır"
-sources = "Kaynaklar"
-sourcesLoading = "Kaynaklar yükleniyor..."
 trigger = "Tetikleyici"
 triggerManual = "Yalnızca manuel"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "gün"
 hours = "saat"
 minutes = "dakika"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\" silinsin mi? Bu geri alınamaz."
@@ -7867,6 +7789,37 @@ connectSource = "Bir kaynak bağla"
 description = "İlk pipeline'ınızı oluşturun: çalışacağı kaynakları seçin, işlemleri zincirleyin ve çıktının nereye gideceğini belirleyin."
 title = "Henüz pipeline yok"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktif"
 paused = "Duraklatıldı"
@@ -7879,7 +7832,6 @@ completed_one = "Çalıştırma tamamlandı."
 completed_other = "{{count}} çalıştırmanın tümü tamamlandı."
 empty = "Çalıştırılacak bir şey yok: kaynaklarda işlenecek belge yoktu."
 failed = "Çalıştırma başarısız: {{error}}"
-historyCleared = "Geçmiş temizlendi. Sonraki çalıştırma, şu anda kaynaklarda bulunan her şeyi yeniden işler."
 inFlight = "Çalıştırılacak yeni bir şey yok: belgeler önceki bir çalıştırmadan hâlâ işleniyor."
 parked_one = "Çalıştırılacak bir şey yok: {{count}} belge daha önce başarısız oldu ve park edildi. Nedeni düzeltin, ardından yeniden denemek için geçmişi temizleyin."
 parked_other = "Çalıştırılacak bir şey yok: {{count}} belge daha önce başarısız oldu ve park edildi. Nedeni düzeltin, ardından yeniden denemek için geçmişi temizleyin."
@@ -7895,6 +7847,7 @@ name = "Pipeline"
 sources = "Kaynaklar"
 status = "Durum"
 steps = "Adımlar"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Klasör izleme"
@@ -8208,6 +8161,24 @@ label = "Bir Jira issue'suna ekle"
 [portal.policies.operations.mailgunEmail]
 description = "İşlenen belgeyi ek olarak gönderir."
 label = "Belgeyi e-posta ile gönder (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "İşlenen belgeyi bir klasöre yazar."
@@ -8683,16 +8654,6 @@ maxed = "Sınıra ulaşıldı"
 subtitle = "Ücretsiz denemeniz {{date}} tarihine kadar sürer. Kart gerekmez."
 title = "Enterprise denemesi"
 
-[portal.search]
-ariaLabel = "Ara"
-placeholder = "Stirling'de ara — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Hızlı eylemler kullanılabilir olduğunda burada görünecek."
-noActionsTitle = "Hızlı eylem yok"
-noMatches = "\"{{query}}\" için eşleşme yok"
-noMatchesDescription = "Farklı bir anahtar kelime deneyin veya kataloğa göz atın."
-
 [portal.settings.groups]
 admin = "Yönetici"
 
@@ -8743,10 +8704,6 @@ cancel = "İptal"
 confirm = "Sil"
 title = "Kaynak silinsin mi?"
 
-[portal.sources.empty]
-description = "İlkelerinizin belgeleri alabileceği bir yer olması için bir klasör (ve yakında bulut depolama) bağlayın."
-title = "Henüz bağlı kaynak yok"
-
 [portal.sources.kpi]
 inUse = "Kullanımda"
 total = "Bağlantılar"
@@ -8785,6 +8742,7 @@ unused = "Kullanılmıyor"
 documents = "Belgeler"
 source = "Kaynak"
 status = "Durum"
+type = "Type"
 usedBy = "İlkeler"
 
 [portal.sources.types.box]
@@ -9980,9 +9938,6 @@ title = "Politikalar ve Gizlilik"
 [settings.preferences]
 title = "Tercihler"
 
-[settings.search]
-placeholder = "Ayar sayfalarında ara..."
-
 [settings.security]
 description = "Hesabınızı güvende tutmak için şifrenizi güncelleyin."
 title = "Güvenlik"
@@ -10128,6 +10083,7 @@ last = "Son sayfa"
 maintainRatio = "Oranı korumayı değiştir"
 next = "Sonraki sayfa"
 noSavedSigs = "Kayıtlı imza bulunamadı"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Kişisel İmzalar"
 previous = "Önceki sayfa"
 redo = "Yinele"
@@ -10166,6 +10122,7 @@ backgroundRemovalFailedTitle = "Arka plan kaldırılamadı"
 hint = "İmzanızın PNG veya JPG görselini yükleyin"
 label = "İmza görseli yükle"
 placeholder = "Görsel dosyası seç"
+previewAlt = "Current image signature"
 processing = "Görsel işleniyor..."
 removeBackground = "Beyaz arka planı kaldır (şeffaf yap)"
 
@@ -10178,6 +10135,17 @@ resumeHint = "İmzanızı eklemek için yerleştirmeyi sürdürün."
 saved = "Yukarıdan kaydedilmiş bir imza seçin, ardından PDF üzerinde herhangi bir yere tıklayarak yerleştirin."
 text = "Adınızı yukarıya girdikten sonra, imzanızı PDF üzerinde herhangi bir yere tıklayarak yerleştirin."
 title = "İmza nasıl eklenir"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "İmzayı Taşı"
@@ -10625,6 +10593,23 @@ title = "Sunucuya Yükle"
 updateButton = "Sunucuda Güncelle"
 uploadButton = "Sunucuya Yükle"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10759,6 @@ goBack = "Geri dön"
 pdfTools = "PDF Araçları"
 placeholder = "Başlamak için bir araç seçin"
 premiumFeature = "Premium özellik:"
-searchTools = "Araçları ara"
 toolsHeader = "Araçlar"
 viewAllTools = "Tüm araçları görüntüle"
 
@@ -10821,6 +10805,9 @@ pageFormatting = "Sayfa Biçimlendirme"
 removal = "Kaldırma"
 signing = "İmzalama"
 verification = "Doğrulama"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Araç bulunamadı"
@@ -10979,6 +10966,13 @@ approver = "İlkeyi onaylar"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "{{email}} adresine gönderilen davetiye iptal edilsin mi? Mevcut bağlantıyla katılamayacaklar."
 cancelInviteTitle = "Davetiyeyi iptal et"
@@ -10998,10 +10992,8 @@ title = "Henüz üye yok"
 addToTeam = "Takıma ekle"
 guestCount = "{{count}} misafir"
 guests = "Misafirler"
-guestsDesc = "Dış iş ortakları, paylaştıklarınızla sınırlıdır. Yalnızca Editor."
 ledBy = "{{owner}} tarafından yönetiliyor"
 org = "Kuruluş"
-orgDesc = "Kuruluş genelinde yetkiye ve ilke onayına sahip sahipler"
 owners = "{{count}} sahip"
 team = "{{name}} takımı"
 teamMeta = "{{count}} kişi"
@@ -11041,12 +11033,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Davet eden: {{who}}"
 cancel = "İptal"
-count = "{{count}} beklemede"
-desc = "Henüz katılmamış davet edilen kişiler. Kabul edene kadar bir koltuk tutarlar."
 expiresInDays_one = "{{count}} gün içinde sona erer"
 expiresInDays_other = "{{count}} gün içinde sona erer"
 expiresToday = "Bugün sona erer"
 title = "Bekleyen davetiyeler"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Arka uca ulaşılırken bir sorun oluştu veya erişiminiz yok. Tekrar deneyin."
@@ -11237,12 +11231,15 @@ searchPlaceholder = "Eklerde ara"
 title = "Ekler"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Yer imi başlığı"
 bookmarkTitleRequired = "Yer imi başlığı gereklidir"
 closeSidebar = "Yer imleri kenar çubuğunu kapat"
 collapseAll = "Tüm yer imlerini daralt"
+empty = "No bookmarks in this document"
 expandAll = "Tüm yer imlerini genişlet"
 searchPlaceholder = "Yer imlerini ara"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Yorum ekle"
@@ -11264,10 +11261,12 @@ locateAnnotation = "Belgede konumlandır"
 moreActions = "Diğer işlemler"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Sayfa {{page}}"
 placingHint = "Yerleştirmek için bir sayfaya tıklayın… (iptal)"
 removeCommentOnly = "Yalnızca yorumu kaldır"
 saveReply = "Yanıtı kaydet"
+searchPlaceholder = "Search comments"
 title = "Yorumlar"
 typeComment = "Yorum"
 typeInsertText = "Metin Ekle"
@@ -11290,6 +11289,7 @@ unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
 closeSidebar = "Katmanlar kenar çubuğunu kapat"
 hideAll = "Tüm katmanları gizle"
 showAll = "Tüm katmanları göster"
+title = "Layers"
 
 [viewer.link]
 delete = "Bağlantıyı sil"
@@ -11646,6 +11646,7 @@ exitRedaction = "Karartma modundan çık"
 exportAll = "PDF'yi dışa aktar"
 exportSelected = "Seçili sayfaları dışa aktar"
 formFill = "Form doldur"
+hideToolbar = "Hide toolbar"
 multiTool = "Çoklu araç"
 panMode = "Kaydırma modu"
 print = "PDF'yi yazdır"
@@ -11666,6 +11667,7 @@ selectAll = "Tümünü seç"
 selectByNumber = "Sayfa numaralarına göre seç"
 selectLanguage = "Dil seç"
 share = "Paylaş"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Ek açıklamaların görünürlüğünü değiştir"
 toggleAttachments = "Ekleri göster/gizle"
 toggleBookmarks = "Yer imlerini göster/gizle"

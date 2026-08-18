@@ -1879,6 +1879,9 @@ width = "Ширина"
 [app]
 description = "Бесплатная альтернатива Adobe Acrobat (10M+ загрузок)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Преобразовать в PDF/A-3b"
 convertToPdfA3bDescription = "Создаёт архивный PDF со встроенными вложениями"
@@ -2933,12 +2936,16 @@ text = "Чтобы сделать эти разрешения неизменяе
 [chat.actions]
 copy = "Копировать сообщение"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Параметры агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Очистить чат"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Эта операция использует ваши облачны�
 tooltip = "Выбрать цвет с экрана"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Выберите цвет"
 
 [common]
+actions = "Actions"
 back = "Назад"
 cancel = "Отмена"
 close = "Закрыть"
+codeSample = "Code sample"
 collapse = "Свернуть"
 confirm = "Подтвердить"
 continue = "Продолжить"
 copied = "Скопировано!"
 copy = "Копировать"
 done = "Готово"
+enterValue = "Enter value"
 error = "Ошибка"
 expand = "Развернуть"
 loading = "Загрузка..."
 next = "Далее"
+open = "Open"
 preview = "Предпросмотр"
 previous = "Предыдущий"
 refresh = "Обновить"
 remaining = "Осталось"
 retry = "Повторить"
 save = "Сохранить"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Очистить выбранное"
@@ -3185,6 +3199,7 @@ title = "Метод сжатия"
 [compress.settings]
 desiredSize = "Желаемый размер файла"
 desiredSizePlaceholder = "Введите размер"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Сжатие — простой способ уменьшить размер файла. Выберите «Размер файла», чтобы указать целевой размер, а мы подберём качество. Выберите «Качество», чтобы задать силу сжатия вручную."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Поиск..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Изменить"
@@ -3824,11 +3843,13 @@ shareSelected = "Поделиться выбранными"
 sharing = "Общий доступ"
 showAll = "Показать все"
 showHistory = "Показать историю"
+sortBy = "Sort files"
 sortByDate = "Сортировать по дате"
 sortByName = "Сортировать по имени"
 sortBySize = "Сортировать по размеру"
 storage = "Хранилище"
 storageState = "Хранилище"
+storageUsed = "Storage used"
 synced = "Синхронизировано"
 title = "Загрузить PDF-файлы"
 toolChain = "Применённые инструменты"
@@ -3874,6 +3895,8 @@ addFiles = "Добавить файлы"
 addingFiles = "Добавление файлов…"
 collapse = "Свернуть боковую панель"
 customizeGroups = "Настроить группы"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Откройте файлы, чтобы начать"
 dropToAdd = "Drop files to add"
 expand = "Развернуть боковую панель"
@@ -3888,12 +3911,12 @@ openFromComputer = "Открыть с компьютера"
 openSettings = "Открыть настройки"
 other = "Другое"
 recent = "Недавние"
-search = "Поиск"
-searchPlaceholder = "Поиск файлов..."
 viewAll = "Показать все {{count}} файлов"
 
 [fileSidebar.fileItem]
 closeViewer = "Закрыть просмотрщик"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Открыть в просмотрщике"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Назад к Моим файлам"
 breadcrumbs = "Путь к папке"
 cancel = "Отмена"
 classification = "Классификация"
-clearSearch = "Очистить поиск"
 clearSelection = "Очистить выбор"
 closeDetails = "Закрыть сведения"
 create = "Создать"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Изменить размер дерева папок (ст�
 save = "Сохранить"
 saveToServer = "Сохранить на сервер"
 saveToServerDisabledHint = "Сохранение на сервер не включено на этом сервере. Попросите администратора включить его."
-search = "Поиск"
-searchPlaceholder = "Искать в этой папке и подпапках"
 selectAll = "Выбрать всё"
 selectAllHint = "Нажмите, чтобы выбрать всё. Совет: удерживайте Ctrl (или Cmd), чтобы добавлять файлы по одному, Shift — для выбора диапазона."
 selectedCount = "Выбрано: {{count}}"
@@ -4043,6 +4063,10 @@ title = "Пока нет облачных файлов"
 [filesPage.empty.local]
 hint = "Файлы, сохранённые без загрузки, остаются здесь. Перетащите файл, чтобы добавить его."
 title = "Нет локальных файлов"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Здесь будут отображаться файлы, которые вы открывали или редактировали."
@@ -4113,6 +4137,11 @@ localHint = "Хранится только в этом браузере"
 shared = "Общий доступ"
 sharedHint = "Предоставлен по ссылке"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "Сначала старые"
 modifiedDesc = "Сначала новые"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "В хранилище нет файлов. Сначал�
 open = "Открыть"
 openFile = "Открыть файл"
 openFiles = "Открыть файлы"
+selectFile = "Select {{name}}"
 selectFromStorage = "Выбрать из хранилища"
 upload = "Загрузить"
 uploadFile = "Загрузить файл"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Все сохранено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Не удалось извлечь CSV"
 extractXlsxError = "Не удалось извлечь XLSX"
+filled = "filled"
 flattenAfterFilling = "Сплющить после заполнения"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "обяз."
 requiredFieldsError = "Заполните все обязательные поля"
 rescanFields = "Пересканировать поля"
@@ -4795,9 +4830,6 @@ title = "Изображение в PDF"
 [imageToPdf]
 tags = "конвертация,изображение,jpg,картинка,фото"
 
-[infoBanner]
-dismiss = "Закрыть"
-
 [invite]
 acceptError = "Не удалось создать учетную запись"
 accountFor = "Создание учетной записи для"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Загрузка выполнена!"
 uploadSuccessMessage = "Ваши изображения переданы."
 validating = "Проверка сеанса..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Сканируйте для загрузки фото. Изображения автоматически преобразуются в PDF."
 descriptionNoConvert = "Сканируйте, чтобы загрузить фото с мобильного устройства."
@@ -4997,8 +5057,13 @@ title = "Загрузка с мобильного"
 tags = "Мультиинструмент,Многооперационный,UI,перетаскивание,клиентская часть,интерактивный"
 title = "Мультиинструмент PDF"
 
-[navbar]
-search = "Поиск"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Аутентификация не выполнена. Закройте окно и попробуйте снова."
@@ -5127,6 +5192,7 @@ activeFiles = "Вид <strong>Активные файлы</strong> показы�
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Закрыть"
 cropSettings = "Теперь, когда мы выбрали файл для обрезки, можно настроить инструмент «Обрезка», чтобы выбрать область, до которой нужно обрезать PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Щелчок по файлу выбирает его для обработки. Можно выбрать несколько файлов для пакетных операций."
 fileReplacement = "Измененный файл автоматически заменит исходный файл в Рабочей области, что позволит легко прогнать его через другие инструменты."
 filesButton = "Кнопка <strong>Файлы</strong> на панели быстрого доступа позволяет загружать PDF, с которыми будут работать инструменты."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 кредитов"
 xsmall = "100 кредитов"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Выберите план, подходящий вашим потребностям"
 title = "Доступные планы"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "Месячный лимит расходов достигнут"
 title = "Не удалось открыть портал Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "из {{allowance}} бесплатных PDF использовано"
 capSuffix_other = "из {{allowance}} бесплатных PDF использовано"
 eyebrow = "Пробный период Processor"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Отправляйте документ или уведомление по Email, когда выполняется политика."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Сохраняйте обработанные документы в Nextcloud."
@@ -7077,11 +7173,6 @@ title = "Официальные SDK"
 beta = "Beta"
 deprecated = "Устарело"
 
-[portal.docs.search]
-empty = "Подходящих документов нет"
-placeholder = "Искать в документации"
-results = "{{count}} результатов"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Встроенные именованные возможности, которые ваш агент вызывает как единый инструмент. Каждый skill — детерминированная цепочка операций с привязанными evals."
@@ -7180,11 +7271,11 @@ editorAction = "Редактор"
 empty = "Нет документов, соответствующих этому фильтру."
 rowActions = "Действия со строкой"
 sensitiveLabel = "Конфиденциально"
-sensitiveTitle = "Конфиденциально — требуется доступ"
 
 [portal.documents.table.columns]
 action = "Pipeline / Действие"
 document = "Документ"
+labels = "Labels"
 product = "Продукт"
 status = "Статус"
 time = "Время"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "Последний сеанс"
 region = "Регион"
 status = "Статус"
+target = "Target"
 version = "Версия"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "Работает"
 description = "В этом представлении произошла непредвиденная ошибка. Попробуйте еще раз или выберите другой раздел на боковой панели."
 retry = "Попробовать еще раз"
 title = "На этой странице что-то пошло не так"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Назад"
@@ -7380,11 +7522,6 @@ cancel = "Отмена"
 confirm = "Отозвать ключ"
 title = "Отозвать API ключ"
 
-[portal.infrastructure.attestationLabel]
-attested = "Подтверждено"
-inScope = "В области действия"
-notApplicable = "Н/Д"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Фильтровать события аудита по категории"
 heading = "Журналы аудита"
@@ -7456,11 +7593,6 @@ info = "Информация"
 success = "Успешно"
 warning = "Предупреждение"
 
-[portal.infrastructure.certLabel]
-certified = "Сертифицировано"
-inProgress = "В процессе"
-notStarted = "Не начато"
-
 [portal.infrastructure.createKey]
 cancel = "Отмена"
 createKey = "Создать ключ"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Скопируйте этот секрет сейчас — �
 title = "Создать ключ API"
 titleCreated = "Ключ создан"
 
-[portal.infrastructure.deployLabel]
-live = "Работает"
-queued = "В очереди"
-rolledBack = "Откат выполнен"
-rolling = "Развертывается"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} мс"
-throughputValue = "{{value}}/мин"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Развернул"
-environment = "Среда"
-product = "Продукт"
-status = "Статус"
-version = "Версия"
-when = "Когда"
-
-[portal.infrastructure.deployments.recent]
-heading = "Недавние развертывания"
-subheading = "Последние выпуски по продуктам и средам."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Экземпляры"
-latency = "Задержка"
-load = "Нагрузка"
-p99 = "P99"
-region = "Регион"
-status = "Статус"
-throughput = "Пропускная способность"
-uptime = "Uptime"
-version = "Версия"
-
-[portal.infrastructure.deployments.regions]
-heading = "Регионы"
-subheading = "Текущее состояние каждого развернутого региона Stirling — задержка, нагрузка и версия выпуска."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Развернутые регионы появятся здесь после подготовки вашего рабочего пространства."
-title = "Нет развернутых регионов"
-
 [portal.infrastructure.keyLabel]
 active = "Активен"
 revoked = "Отозван"
-
-[portal.infrastructure.modelLabel]
-active = "Активна"
-degraded = "Снижена производительность"
-disabled = "Отключена"
-
-[portal.infrastructure.models]
-heading = "Модели"
-msValue = "{{value}} мс"
-subheading = "Каталог моделей и маршрутизация, обеспечивающие обработку документов во всем вашем рабочем пространстве."
-
-[portal.infrastructure.models.byom]
-description = "Зарегистрируйте локальную или самостоятельно размещенную модель и закрепите ее за регионом для обработки с учетом резидентности данных."
-title = "Используйте свою модель"
-
-[portal.infrastructure.models.catalogue]
-heading = "Каталог"
-sub = "Управляемые модели, доступные вашему рабочему пространству, с текущей задержкой и стоимостью."
-subEnterprise = "Управляемые, собственные и локальные модели — с возможностью закрепления по регионам."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Модели из каталога вашего рабочего пространства появятся здесь."
-title = "Нет доступных моделей"
-
-[portal.infrastructure.models.columns]
-cost = "Стоимость"
-latency = "Задержка"
-load = "Нагрузка"
-model = "Модель"
-status = "Статус"
-type = "Тип"
-version = "Версия"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/вызов"
-perThousand = "{{price}}/1 тыс."
-
-[portal.infrastructure.models.metrics]
-activeModels = "Активные модели"
-avgLatency = "Средняя задержка"
-included = "Включено"
-monthlySpend = "Ежемесячные расходы на модели"
-
-[portal.infrastructure.models.routing]
-empty = "Правила маршрутизации не настроены."
-heading = "Правила маршрутизации"
-sub = "Какая модель обрабатывает каждую операцию. Значение по умолчанию применяется, когда нет более узкого подходящего правила."
-subLocked = "Направляйте операции к определенным моделям — доступно на платных планах."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Перейдите на Pro, чтобы управлять тем, какая модель обрабатывает каждую операцию и тип документа."
-title = "Маршрутизация моделей — платная функция"
-
-[portal.infrastructure.models.routingColumns]
-default = "По умолчанию"
-docType = "Тип документа"
-modelForAria = "Модель для {{operation}}"
-operation = "Операция"
-routedTo = "Направлено в"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Классификация"
-extraction = "Извлечение"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Снижена производительность"
-down = "Недоступен"
-healthy = "Исправен"
-
-[portal.infrastructure.security.access.byok]
-description = "Предоставьте ключ из собственного KMS. Stirling шифрует им, но все еще может читать."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Ключи никогда не покидают ваш KMS. Stirling хранит только ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling управляет ключами шифрования. Самый простой вариант — нулевые операции с ключами с вашей стороны."
-label = "Ключи хранятся в Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Политика доступа к документам"
-subheading = "Управляет тем, кто может расшифровывать обработанные документы в состоянии покоя."
-
-[portal.infrastructure.security.attestations]
-heading = "Подтверждения соответствия"
-noReport = "Отчет недоступен"
-subheading = "Состояние аудита по каждому фреймворку, с отчетами по подтвержденным контролям."
-viewReport = "Просмотреть отчет →"
-
-[portal.infrastructure.security.compliance]
-heading = "Соответствие требованиям"
-subheading = "Подтверждения и сертификации, охватывающие платформу Stirling."
-
-[portal.infrastructure.security.empty]
-description = "Конфигурация безопасности вашего рабочего пространства появится здесь."
-title = "Состояние безопасности недоступно"
-
-[portal.infrastructure.security.hyokBanner]
-description = "С HYOK ключи шифрования никогда не покидают ваш KMS. Stirling хранит и обрабатывает только ciphertext, который вы можете отозвать в любое время."
-title = "Stirling не может расшифровать ваши документы"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Диапазоны IP не настроены — разрешены все IP."
-heading = "IP allowlist"
-sub = "Доступ к API ограничен этими диапазонами CIDR."
-subLocked = "Ограничьте доступ к API известными диапазонами IP — доступно на платных планах."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Перейдите на Pro, чтобы ограничить доступ к API определенными сетями."
-title = "IP allowlisting — платная функция"
-
-[portal.infrastructure.security.ipColumns]
-added = "Добавлено"
-addedBy = "Добавил"
-cidr = "CIDR"
-label = "Метка"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Алгоритм"
-heading = "Управление ключами шифрования"
-keyId = "Идентификатор ключа"
-lastRotated = "Последняя смена"
-rotateKey = "Сменить ключ"
-rotationPolicy = "Политика смены"
-subheading = "Хранение ключей, шифрующих документы в состоянии покоя — кто может расшифровать и как меняются ключи."
-
-[portal.infrastructure.security.managedBanner]
-description = "Хранение ключей Bring-your-own-key (BYOK) и hold-your-own-key (HYOK) доступно в Enterprise. Улучшите план, чтобы предоставлять ключи из собственного KMS."
-title = "На вашем плане ключами управляет Stirling"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Азиатско-Тихоокеанский регион"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · граница данных GDPR"
-label = "Европейский союз"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "США"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Резидентность данных"
-subheading = "Где документы хранятся и обрабатываются."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "Использовано {{value}}"
-
-[portal.infrastructure.storage.empty]
-description = "Подключенное хранилище и использование появятся здесь."
-title = "Хранилище не настроено"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Активно"
-activeRange = "0–{{value}}d"
-archived = "В архиве"
-coldStorage = "холодное хранилище"
-deleted = "Удалено"
-never = "никогда"
-purged = "очищено"
-
-[portal.infrastructure.storage.providers]
-connect = "Подключить"
-connected = "Подключено"
-heading = "Подключенные провайдеры"
-subheading = "Куда записываются обработанные артефакты."
-
-[portal.infrastructure.storage.retention]
-heading = "Хранение"
-subheading = "Как долго артефакты хранятся перед удалением по жизненному циклу."
-windowLabel = "Окно хранения по умолчанию"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} день"
-days_other = "{{count}} дней"
-never = "Никогда не удалять"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Общее использование"
-progressLabel = "Использовано хранилища"
-subheading = "Хранилище, использованное во всех подключенных провайдерах."
 
 [portal.infrastructure.tabs]
 apiKeys = "Ключи API"
@@ -7715,11 +7619,9 @@ security = "Безопасность"
 storage = "Хранилище"
 
 [portal.integrations]
-addAnother = "Добавить еще"
 availableHeading = "Доступно"
 comingSoonHeading = "Скоро"
 connect = "Подключить"
-connectedHeading = "Подключено"
 connectionCount_one = "{{count}} подключение"
 connectionCount_other = "{{count}} подключений"
 customApi = "Пользовательский API"
@@ -7736,6 +7638,10 @@ notify = "Уведомления"
 security = "Безопасность"
 signing = "Подписание"
 storage = "Хранилище"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Подключено"
@@ -7767,7 +7673,6 @@ integrations = "Интеграции"
 pipelines = "Pipelines"
 policies = "Политики"
 procurement = "Закупки"
-settings = "Настройки"
 sources = "Источники"
 usage = "Использование и оплата"
 users = "Пользователи"
@@ -7784,7 +7689,7 @@ title = "Pipelines"
 newPipeline = "Новый pipeline"
 
 [portal.pipelines.builder]
-addStep = "Добавить инструмент"
+activate = "Activate"
 back = "Назад к pipelines"
 cannotFollow = "Не удается принять {{produced}}"
 chooseAccount = "Выберите учетную запись"
@@ -7792,28 +7697,40 @@ chooseDestination = "Выберите место назначения"
 chooseOperation = "Выберите, что делает этот шаг"
 chooseSource = "Выберите источник"
 discard = "Отменить изменения"
-enabled = "Включено"
 inputs = "Ввод"
 inputSource = "Источник ввода"
 inputTrigger = "Триггер"
 keepEditing = "Продолжить редактирование"
+moreActions = "More actions"
 needsConfiguring = "Требуется настройка"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Требуется загруженный файл"
-noSources = "Источники еще не подключены. Создайте источник, чтобы использовать его как ввод."
 noToolMatches = "Нет инструментов, соответствующих вашему поиску."
-pipelineSettings = "Настройки pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Искать инструменты"
-selectToolBody = "Добавьте инструмент, чтобы создать свой pipeline."
-selectToolTitle = "Инструментов пока нет"
 sendToSystem = "Отправить в другую систему"
 stepsIncompatible = "Эти шаги не могут работать с тем, что производит предыдущий шаг: {{tools}}."
 stepsNeedSetup = "Эти шаги все еще нужно настроить перед сохранением: {{tools}}."
-toolSettings = "Настройки инструмента"
+testRun = "Test with a file"
 unknownStep = "Нераспознанная операция, сохранена как есть."
 unsavedBody = "У вас есть несохраненные изменения. Сохранить их перед выходом или отменить?"
 unsavedTitle = "Несохраненные изменения"
 uploadUnsupported = "Загруженные файлы пока не поддерживаются в pipelines, поэтому эти шаги нельзя сохранить: {{tools}}."
 usesDefaults = "Запускается с настройками по умолчанию"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Объединяет каждый файл из предыдущего шага"
@@ -7825,30 +7742,35 @@ undeclared-operation = "Не удается проверить, что прин�
 
 [portal.pipelines.composer]
 addTool = "Добавить инструмент"
-cancel = "Отмена"
-chainEmpty = "Добавьте инструмент, чтобы начать создавать свой pipeline."
 create = "Создать pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Отображение этих параметров инструмента для редактирования пока не поддерживается."
-moveDown = "Переместить вниз"
-moveUp = "Переместить вверх"
+editSource = "Edit source"
 name = "Имя"
 namePlaceholder = "например, проверка редактирования"
 noToolSettings = "У этого инструмента нет настраиваемых параметров."
-operations_one = "Операция ({{count}})"
-operations_other = "Операции ({{count}})"
 output = "Вывод"
-removeStep = "Удалить операцию"
 save = "Сохранить изменения"
 scheduleEvery = "Запускать каждые"
-sources = "Источники"
-sourcesLoading = "Загрузка источников..."
 trigger = "Триггер"
 triggerManual = "Только вручную"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "дней"
 hours = "часов"
 minutes = "минут"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Удалить \"{{name}}\"? Это действие нельзя отменить."
@@ -7867,6 +7789,37 @@ connectSource = "Подключить источник"
 description = "Создайте первый pipeline: выберите источники, над которыми он запускается, свяжите операции и выберите, куда отправлять вывод."
 title = "Pipelines пока нет"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Активные"
 paused = "Приостановленные"
@@ -7879,7 +7832,6 @@ completed_one = "Запуск завершен."
 completed_other = "Все {{count}} запусков завершены."
 empty = "Нечего запускать: в источниках не было документов для обработки."
 failed = "Запуск не удался: {{error}}"
-historyCleared = "История очищена. При следующем запуске будет заново обработано все, что сейчас находится в источниках."
 inFlight = "Нет ничего нового для запуска: документы все еще обрабатываются после предыдущего запуска."
 parked_one = "Нечего запускать: {{count}} документ ранее завершился с ошибкой и отложен. Устраните причину, затем очистите историю, чтобы повторить попытку."
 parked_other = "Нечего запускать: {{count}} документов ранее завершились с ошибкой и отложены. Устраните причину, затем очистите историю, чтобы повторить попытку."
@@ -7895,6 +7847,7 @@ name = "Pipeline"
 sources = "Источники"
 status = "Статус"
 steps = "Шаги"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Отслеживание папки"
@@ -8208,6 +8161,24 @@ label = "Прикрепить к задаче Jira"
 [portal.policies.operations.mailgunEmail]
 description = "Отправляет обработанный документ как вложение."
 label = "Отправить документ по email (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Записывает обработанный документ в папку."
@@ -8683,16 +8654,6 @@ maxed = "Лимит исчерпан"
 subtitle = "Ваш бесплатный пробный период действует до {{date}}. Карта не требуется."
 title = "Пробный период Enterprise"
 
-[portal.search]
-ariaLabel = "Поиск"
-placeholder = "Поиск в Stirling — endpoints, конвейеры, документы…"
-
-[portal.search.empty]
-noActionsDescription = "Быстрые действия появятся здесь, когда станут доступны."
-noActionsTitle = "Нет быстрых действий"
-noMatches = "Нет совпадений для «{{query}}»"
-noMatchesDescription = "Попробуйте другое ключевое слово или просмотрите каталог."
-
 [portal.settings.groups]
 admin = "Администратор"
 
@@ -8743,10 +8704,6 @@ cancel = "Отмена"
 confirm = "Удалить"
 title = "Удалить источник?"
 
-[portal.sources.empty]
-description = "Подключите папку (а скоро и облачное хранилище), чтобы вашим политикам было откуда получать документы."
-title = "Источники пока не подключены"
-
 [portal.sources.kpi]
 inUse = "Используются"
 total = "Подключения"
@@ -8785,6 +8742,7 @@ unused = "Не используется"
 documents = "Документы"
 source = "Источник"
 status = "Статус"
+type = "Type"
 usedBy = "Политики"
 
 [portal.sources.types.box]
@@ -9980,9 +9938,6 @@ title = "Политики и конфиденциальность"
 [settings.preferences]
 title = "Настройки"
 
-[settings.search]
-placeholder = "Поиск по страницам настроек..."
-
 [settings.security]
 description = "Обновите пароль, чтобы защитить свою учётную запись."
 title = "Безопасность"
@@ -10128,6 +10083,7 @@ last = "Последняя страница"
 maintainRatio = "Переключить сохранение пропорций"
 next = "Следующая страница"
 noSavedSigs = "Сохраненные подписи не найдены"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Личные подписи"
 previous = "Предыдущая страница"
 redo = "Повторить"
@@ -10166,6 +10122,7 @@ backgroundRemovalFailedTitle = "Не удалось удалить фон"
 hint = "Загрузите PNG или JPG с вашей подписью"
 label = "Загрузить изображение подписи"
 placeholder = "Выберите файл изображения"
+previewAlt = "Current image signature"
 processing = "Обработка изображения..."
 removeBackground = "Удалить белый фон (сделать прозрачным)"
 
@@ -10178,6 +10135,17 @@ resumeHint = "Возобновите размещение, чтобы нажат
 saved = "Выберите сохранённую подпись выше, затем щёлкните по PDF, чтобы разместить её."
 text = "После ввода вашего имени выше щелкните в любом месте PDF, чтобы поставить подпись."
 title = "Как добавить подпись"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Переместить подпись"
@@ -10625,6 +10593,23 @@ title = "Загрузить на сервер"
 updateButton = "Обновить на сервере"
 uploadButton = "Загрузить на сервер"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10759,6 @@ goBack = "Вернуться"
 pdfTools = "Инструменты PDF"
 placeholder = "Выберите инструмент, чтобы начать"
 premiumFeature = "Премиум‑функция:"
-searchTools = "Поиск инструментов"
 toolsHeader = "Инструменты"
 viewAllTools = "Показать все инструменты"
 
@@ -10821,6 +10805,9 @@ pageFormatting = "Форматирование страниц"
 removal = "Удаление"
 signing = "Подписание"
 verification = "Проверка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Инструменты не найдены"
@@ -10979,6 +10966,13 @@ approver = "Утверждает политику"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Отменить приглашение для {{email}}? Они не смогут присоединиться по текущей ссылке."
 cancelInviteTitle = "Отменить приглашение"
@@ -10998,10 +10992,8 @@ title = "Участников пока нет"
 addToTeam = "Добавить в команду"
 guestCount = "{{count}} гость"
 guests = "Гости"
-guestsDesc = "Внешние участники с доступом только к тому, чем вы поделились. Только Editor."
 ledBy = "руководит {{owner}}"
 org = "Организация"
-orgDesc = "Владельцы с полномочиями на уровне всей организации и утверждением политик"
 owners = "{{count}} владельцев"
 team = "Команда {{name}}"
 teamMeta = "{{count}} человек"
@@ -11041,12 +11033,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Пригласил(а) {{who}}"
 cancel = "Отменить"
-count = "{{count}} в ожидании"
-desc = "Приглашенные люди, которые еще не присоединились. Они занимают место, пока не примут приглашение."
 expiresInDays_one = "Истекает через {{count}} день"
 expiresInDays_other = "Истекает через {{count}} дн."
 expiresToday = "Истекает сегодня"
 title = "Ожидающие приглашения"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Что-то пошло не так при обращении к серверной части, или у вас нет доступа. Попробуйте снова."
@@ -11237,12 +11231,15 @@ searchPlaceholder = "Поиск вложений"
 title = "Вложения"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Название закладки"
 bookmarkTitleRequired = "Название закладки обязательно"
 closeSidebar = "Закрыть боковую панель закладок"
 collapseAll = "Свернуть все закладки"
+empty = "No bookmarks in this document"
 expandAll = "Развернуть все закладки"
 searchPlaceholder = "Поиск закладок"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Добавить комментарий"
@@ -11264,10 +11261,12 @@ locateAnnotation = "Найти в документе"
 moreActions = "Другие действия"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Страница {{page}}"
 placingHint = "Щёлкните по странице, чтобы разместить… (отмена)"
 removeCommentOnly = "Удалить только комментарий"
 saveReply = "Сохранить ответ"
+searchPlaceholder = "Search comments"
 title = "Комментарии"
 typeComment = "Комментарий"
 typeInsertText = "Вставить текст"
@@ -11290,6 +11289,7 @@ unsavedDesc = "У вас есть несохранённые изменения"
 closeSidebar = "Закрыть боковую панель слоев"
 hideAll = "Скрыть все слои"
 showAll = "Показать все слои"
+title = "Layers"
 
 [viewer.link]
 delete = "Удалить ссылку"
@@ -11646,6 +11646,7 @@ exitRedaction = "Выйти из режима скрытия данных"
 exportAll = "Экспортировать PDF"
 exportSelected = "Экспортировать выбранные страницы"
 formFill = "Заполнить форму"
+hideToolbar = "Hide toolbar"
 multiTool = "Мультиинструмент"
 panMode = "Режим перемещения"
 print = "Печать PDF"
@@ -11666,6 +11667,7 @@ selectAll = "Выбрать все"
 selectByNumber = "Выбрать по номерам страниц"
 selectLanguage = "Выбрать язык"
 share = "Поделиться"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Показать/скрыть аннотации"
 toggleAttachments = "Показать/скрыть вложения"
 toggleBookmarks = "Показать/скрыть закладки"

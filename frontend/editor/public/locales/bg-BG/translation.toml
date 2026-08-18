@@ -1879,6 +1879,9 @@ width = "Ширина"
 [app]
 description = "Безплатната алтернатива на Adobe Acrobat (10M+ изтегляния)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Конвертиране в PDF/A-3b"
 convertToPdfA3bDescription = "Създава архивен PDF с вградени прикачени файлове"
@@ -2933,12 +2936,16 @@ text = "За да направите тези разрешения непром�
 [chat.actions]
 copy = "Копирайте съобщение"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Опции на агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Изчистете чата"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Тази операция ще използва вашите обла
 tooltip = "Изберете цвят от екрана"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Изберете цвят"
 
 [common]
+actions = "Actions"
 back = "Назад"
 cancel = "Отказ"
 close = "Затвори"
+codeSample = "Code sample"
 collapse = "Свий"
 confirm = "Потвърди"
 continue = "Продължи"
 copied = "Копирано!"
 copy = "Копирай"
 done = "Готово"
+enterValue = "Enter value"
 error = "Грешка"
 expand = "Разгъни"
 loading = "Зареждане..."
 next = "Напред"
+open = "Open"
 preview = "Преглед"
 previous = "Назад"
 refresh = "Опресни"
 remaining = "Оставащи"
 retry = "Повтори"
 save = "Запазване"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Изчисти избраните"
@@ -3185,6 +3199,7 @@ title = "Метод на компресиране"
 [compress.settings]
 desiredSize = "Желан размер на файла"
 desiredSizePlaceholder = "Въведете размер"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Компресията е лесен начин да намалите размера на файла си. Изберете File Size, за да въведете целеви размер и ние ще нагласим качеството вместо вас. Изберете Quality, за да зададете силата на компресията ръчно."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Търсене..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Редактиране"
@@ -3824,11 +3843,13 @@ shareSelected = "Сподели избраните"
 sharing = "Споделяне"
 showAll = "Покажи всички"
 showHistory = "Покажи история"
+sortBy = "Sort files"
 sortByDate = "Сортирай по дата"
 sortByName = "Сортирай по име"
 sortBySize = "Сортирай по размер"
 storage = "Хранилище"
 storageState = "Съхранение"
+storageUsed = "Storage used"
 synced = "Синхронизирано"
 title = "Качване на PDF файлове"
 toolChain = "Приложени инструменти"
@@ -3874,6 +3895,8 @@ addFiles = "Добавяне на файлове"
 addingFiles = "Добавяне на файлове…"
 collapse = "Свиване на страничната лента"
 customizeGroups = "Персонализиране на групи"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Отворете файлове, за да започнете"
 dropToAdd = "Drop files to add"
 expand = "Разгъване на страничната лента"
@@ -3888,12 +3911,12 @@ openFromComputer = "Отваряне от компютър"
 openSettings = "Отваряне на настройките"
 other = "Други"
 recent = "Скорошни"
-search = "Търсене"
-searchPlaceholder = "Търсене на файлове..."
 viewAll = "Виж всички {{count}} файла"
 
 [fileSidebar.fileItem]
 closeViewer = "Затворете визуализатора"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Отворете във визуализатора"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Назад към Моите файлове"
 breadcrumbs = "Път на папката"
 cancel = "Отказ"
 classification = "Класификация"
-clearSearch = "Изчистете търсенето"
 clearSelection = "Изчистете избора"
 closeDetails = "Затворете подробностите"
 create = "Създайте"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Преоразмерете дървото на папкит�
 save = "Запазете"
 saveToServer = "Запазете на сървъра"
 saveToServerDisabledHint = "Запазването към сървъра не е активирано на този сървър. Помолете администратора да го активира."
-search = "Търсене"
-searchPlaceholder = "Търсене в тази папка и подпапките"
 selectAll = "Изберете всички"
 selectAllHint = "Кликнете, за да изберете всички. Съвет: задръжте Ctrl (или Cmd), за да добавяте файлове поотделно, Shift за избор на диапазон."
 selectedCount = "{{count}} избрани"
@@ -4043,6 +4063,10 @@ title = "Още няма облачни файлове"
 [filesPage.empty.local]
 hint = "Файловете, записани без качване, остават тук. Пуснете файл, за да добавите такъв."
 title = "Няма само локални файлове"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Файловете, които отваряте или редактирате, ще се показват тук."
@@ -4113,6 +4137,11 @@ localHint = "Съхранява се само в този браузър"
 shared = "Споделени"
 sharedHint = "Споделени с вас чрез връзка"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "Най-старите първо"
 modifiedDesc = "Най-новите първо"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "Няма налични файлове в хранили
 open = "Отвори"
 openFile = "Отвори файл"
 openFiles = "Отвори файлове"
+selectFile = "Select {{name}}"
 selectFromStorage = "Изберете от хранилище"
 upload = "Качване"
 uploadFile = "Качване на файл"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Всичко е запазено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Неуспешно извличане на CSV"
 extractXlsxError = "Неуспешно извличане на XLSX"
+filled = "filled"
 flattenAfterFilling = "Фиксиране след попълване"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "зад."
 requiredFieldsError = "Моля, попълнете всички задължителни полета"
 rescanFields = "Пресканирайте полетата"
@@ -4795,9 +4830,6 @@ title = "Изображение към PDF"
 [imageToPdf]
 tags = "преобразуване,img,jpg,изображение,снимка"
 
-[infoBanner]
-dismiss = "Отхвърлете"
-
 [invite]
 acceptError = "Неуспешно създаване на акаунт"
 accountFor = "Създаване на акаунт за"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Качването е успешно!"
 uploadSuccessMessage = "Вашите изображения бяха прехвърлени."
 validating = "Валидиране на сесията..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Сканирайте, за да качите снимки. Изображенията се конвертират автоматично в PDF."
 descriptionNoConvert = "Сканирайте, за да качвате снимки от мобилното си устройство."
@@ -4997,8 +5057,13 @@ title = "Качване от мобилно устройство"
 tags = "Мултиинструмент,Мулти операции,UI,плъзгане с щракване,потребителска част,страна на клиента,интерактивен,неразрешим,преместване"
 title = "PDF Мулти инструмент"
 
-[navbar]
-search = "Търсене"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Удостоверяването беше неуспешно. Можете да затворите този прозорец и да опитате отново."
@@ -5127,6 +5192,7 @@ activeFiles = "Изгледът <strong>Активни файлове</strong> �
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Затвори"
 cropSettings = "След като избрахме файла за изрязване, можем да конфигурираме инструмента Изрязване, за да изберем областта, до която да изрежем PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Кликването върху файл го избира за обработка. Можете да избирате множество файлове за пакетни операции."
 fileReplacement = "Промененият файл автоматично ще замени оригинала в Работната зона, което позволява лесно да го пуснете през още инструменти."
 filesButton = "Бутонът <strong>Файлове</strong> в лентата за бърз достъп ви позволява да качите PDF файлове, върху които да използвате инструментите."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 кредита"
 xsmall = "100 кредита"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Изберете план, който отговаря на нуждите ви"
 title = "Налични планове"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "Месечният лимит на разходите е дос�
 title = "Stripe порталът не можа да бъде отворен"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "от {{allowance}} безплатни PDF използвани"
 capSuffix_other = "от {{allowance}} безплатни PDF използвани"
 eyebrow = "Пробен Processor"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Изпратете документ или известие по email, когато правило се изпълнява."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Записвайте обработени документи в Nextcloud."
@@ -7077,11 +7173,6 @@ title = "Официални SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "Няма съвпадащи документи"
-placeholder = "Търсене в документи"
-results = "{{count}} резултата"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Включени, именувани способности, които вашият агент извиква като един инструмент. Всяко skill е детерминирана верига от операции с прикачени evals."
@@ -7180,11 +7271,11 @@ editorAction = "Редактор"
 empty = "Няма документи, отговарящи на този филтър."
 rowActions = "Действия за реда"
 sensitiveLabel = "Чувствителен"
-sensitiveTitle = "Чувствителен — необходим е достъп"
 
 [portal.documents.table.columns]
 action = "Pipeline / Действие"
 document = "Документ"
+labels = "Labels"
 product = "Продукт"
 status = "Статус"
 time = "Време"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "Последно видян"
 region = "Регион"
 status = "Статус"
+target = "Target"
 version = "Версия"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "Работи"
 description = "Този изглед срещна неочаквана грешка. Опитайте отново или изберете друга секция от страничната лента."
 retry = "Опитайте отново"
 title = "Нещо се обърка на тази страница"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Назад"
@@ -7380,11 +7522,6 @@ cancel = "Отказ"
 confirm = "Отмяна на ключ"
 title = "Отмяна на API ключ"
 
-[portal.infrastructure.attestationLabel]
-attested = "Удостоверено"
-inScope = "В обхвата"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Филтриране на одитни събития по категория"
 heading = "Одитни logs"
@@ -7456,11 +7593,6 @@ info = "Информация"
 success = "Успех"
 warning = "Предупреждение"
 
-[portal.infrastructure.certLabel]
-certified = "Сертифицирано"
-inProgress = "В процес"
-notStarted = "Не е започнато"
-
 [portal.infrastructure.createKey]
 cancel = "Отказ"
 createKey = "Създай ключ"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Копирайте тази тайна сега — няма 
 title = "Създай API ключ"
 titleCreated = "Ключът е създаден"
 
-[portal.infrastructure.deployLabel]
-live = "На живо"
-queued = "На опашка"
-rolledBack = "Върнато назад"
-rolling = "Разгръща се"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Разгърнато от"
-environment = "Среда"
-product = "Продукт"
-status = "Статус"
-version = "Версия"
-when = "Кога"
-
-[portal.infrastructure.deployments.recent]
-heading = "Скорошни разгръщания"
-subheading = "Най-новите внедрявания в продукти и среди."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Инстанции"
-latency = "Латентност"
-load = "Натоварване"
-p99 = "P99"
-region = "Регион"
-status = "Статус"
-throughput = "Пропускателност"
-uptime = "Uptime"
-version = "Версия"
-
-[portal.infrastructure.deployments.regions]
-heading = "Региони"
-subheading = "Здраве на живо за всеки разгърнат Stirling регион — латентност, натоварване и версия на внедряването."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Разгърнатите региони ще се появят тук, след като работното ви пространство бъде provisioned."
-title = "Няма разгърнати региони"
-
 [portal.infrastructure.keyLabel]
 active = "Активен"
 revoked = "Отменен"
-
-[portal.infrastructure.modelLabel]
-active = "Активен"
-degraded = "Влошен"
-disabled = "Деактивиран"
-
-[portal.infrastructure.models]
-heading = "Модели"
-msValue = "{{value}} ms"
-subheading = "Каталогът с модели и routing, които задвижват обработката на документи във вашето работно пространство."
-
-[portal.infrastructure.models.byom]
-description = "Регистрирайте on-prem или самостоятелно хостван модел и го фиксирайте към регион за обработка, обвързана с местонахождението на данните."
-title = "Bring your own model"
-
-[portal.infrastructure.models.catalogue]
-heading = "Каталог"
-sub = "Управлявани модели, достъпни за вашето работно пространство, с латентност и цена на живо."
-subEnterprise = "Управлявани, bring-your-own и on-prem модели — с налично фиксиране по регион."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Моделите в каталога на вашето работно пространство ще се появят тук."
-title = "Няма налични модели"
-
-[portal.infrastructure.models.columns]
-cost = "Цена"
-latency = "Латентност"
-load = "Натоварване"
-model = "Модел"
-status = "Статус"
-type = "Тип"
-version = "Версия"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/извикване"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Активни модели"
-avgLatency = "Средна латентност"
-included = "Включено"
-monthlySpend = "Месечни разходи за модели"
-
-[portal.infrastructure.models.routing]
-empty = "Няма конфигурирани правила за routing."
-heading = "Правила за routing"
-sub = "Кой модел обработва всяка операция. Стойността по подразбиране се прилага, когато няма по-тясно правило."
-subLocked = "Насочвайте операции към конкретни модели — достъпно в платени планове."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Надстройте до Pro, за да контролирате кой модел обработва всяка операция и тип документ."
-title = "Model routing е платена функция"
-
-[portal.infrastructure.models.routingColumns]
-default = "По подразбиране"
-docType = "Тип документ"
-modelForAria = "Модел за {{operation}}"
-operation = "Операция"
-routedTo = "Насочено към"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Класификация"
-extraction = "Извличане"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Влошен"
-down = "Недостъпен"
-healthy = "Здрав"
-
-[portal.infrastructure.security.access.byok]
-description = "Предоставете ключ от вашия собствен KMS. Stirling криптира с него, но все още може да чете."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Ключовете никога не напускат вашия KMS. Stirling държи само ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling управлява ключовете за криптиране. Най-просто — нулеви операции с ключове от ваша страна."
-label = "Ключове, държани от Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Политика за достъп до документи"
-subheading = "Контролира кой може да декриптира обработени документи в покой."
-
-[portal.infrastructure.security.attestations]
-heading = "Атестации за съответствие"
-noReport = "Няма наличен отчет"
-subheading = "Одитно състояние по рамки, с налични отчети за атестирани контроли."
-viewReport = "Вижте отчета →"
-
-[portal.infrastructure.security.compliance]
-heading = "Съответствие"
-subheading = "Атестации и сертификации, покриващи платформата Stirling."
-
-[portal.infrastructure.security.empty]
-description = "Конфигурацията за сигурност на вашето работно пространство ще се появи тук."
-title = "Състоянието на сигурността не е налично"
-
-[portal.infrastructure.security.hyokBanner]
-description = "С HYOK ключовете за криптиране никога не напускат вашия KMS. Stirling съхранява и обработва само ciphertext, който можете да оттеглите по всяко време."
-title = "Stirling не може да декриптира вашите документи"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Няма конфигурирани IP диапазони — всички IP адреси са разрешени."
-heading = "IP allowlist"
-sub = "API достъпът е ограничен до тези CIDR диапазони."
-subLocked = "Ограничете API достъпа до известни IP диапазони — достъпно в платени планове."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Надстройте до Pro, за да ограничите API достъпа до конкретни мрежи."
-title = "IP allowlisting е платена функция"
-
-[portal.infrastructure.security.ipColumns]
-added = "Добавено"
-addedBy = "Добавено от"
-cidr = "CIDR"
-label = "Етикет"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Алгоритъм"
-heading = "Управление на ключове за криптиране"
-keyId = "Идентификатор на ключ"
-lastRotated = "Последно ротиран"
-rotateKey = "Ротирай ключ"
-rotationPolicy = "Политика за ротация"
-subheading = "Попечителство на ключовете, които криптират документи в покой — кой може да декриптира и как се ротират ключовете."
-
-[portal.infrastructure.security.managedBanner]
-description = "Попечителството bring-your-own-key (BYOK) и hold-your-own-key (HYOK) е достъпно в Enterprise. Надстройте, за да предоставяте ключове от вашия собствен KMS."
-title = "Ключовете се управляват от Stirling във вашия план"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Азиатско-тихоокеански регион"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR граница на данните"
-label = "Европейски съюз"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Съединени щати"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Местонахождение на данните"
-subheading = "Къде се съхраняват и обработват документите."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} използвани"
-
-[portal.infrastructure.storage.empty]
-description = "Свързаното storage и използване ще се появят тук."
-title = "Няма конфигурирано storage"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Активно"
-activeRange = "0–{{value}}d"
-archived = "Архивирано"
-coldStorage = "cold storage"
-deleted = "Изтрито"
-never = "никога"
-purged = "изчистено"
-
-[portal.infrastructure.storage.providers]
-connect = "Свържи"
-connected = "Свързано"
-heading = "Свързани доставчици"
-subheading = "Къде се записват обработените артефакти."
-
-[portal.infrastructure.storage.retention]
-heading = "Задържане"
-subheading = "Колко дълго се пазят артефактите преди изтриване по lifecycle."
-windowLabel = "Прозорец за задържане по подразбиране"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} ден"
-days_other = "{{count}} дни"
-never = "Никога не изтривай"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Общо използване"
-progressLabel = "Използвано storage"
-subheading = "Storage, използвано във всички свързани доставчици."
 
 [portal.infrastructure.tabs]
 apiKeys = "API ключове"
@@ -7715,11 +7619,9 @@ security = "Сигурност"
 storage = "Storage"
 
 [portal.integrations]
-addAnother = "Добавяне на още една"
 availableHeading = "Налични"
 comingSoonHeading = "Очаквайте скоро"
 connect = "Свързване"
-connectedHeading = "Свързани"
 connectionCount_one = "{{count}} връзка"
 connectionCount_other = "{{count}} връзки"
 customApi = "Персонализиран API"
@@ -7736,6 +7638,10 @@ notify = "Известяване"
 security = "Сигурност"
 signing = "Подписване"
 storage = "Съхранение"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Свързано"
@@ -7767,7 +7673,6 @@ integrations = "Интеграции"
 pipelines = "Pipelines"
 policies = "Политики"
 procurement = "Снабдяване"
-settings = "Настройки"
 sources = "Източници"
 usage = "Използване и фактуриране"
 users = "Потребители"
@@ -7784,7 +7689,7 @@ title = "Pipelines"
 newPipeline = "Нов pipeline"
 
 [portal.pipelines.builder]
-addStep = "Добави инструмент"
+activate = "Activate"
 back = "Назад към pipelines"
 cannotFollow = "Не може да приеме {{produced}}"
 chooseAccount = "Изберете акаунт"
@@ -7792,28 +7697,40 @@ chooseDestination = "Изберете дестинация"
 chooseOperation = "Изберете какво прави тази стъпка"
 chooseSource = "Изберете източник"
 discard = "Отхвърли промените"
-enabled = "Активирано"
 inputs = "Вход"
 inputSource = "Входен източник"
 inputTrigger = "Тригер"
 keepEditing = "Продължи редактирането"
+moreActions = "More actions"
 needsConfiguring = "Нуждае се от настройка"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Нуждае се от качен файл"
-noSources = "Все още няма свързани източници. Създайте такъв, за да го използвате като вход."
 noToolMatches = "Няма инструменти, отговарящи на търсенето ви."
-pipelineSettings = "Настройки на pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Търсене на инструменти"
-selectToolBody = "Добавете инструмент, за да изградите вашия pipeline."
-selectToolTitle = "Все още няма инструменти"
 sendToSystem = "Изпращане към друга система"
 stepsIncompatible = "Тези стъпки не могат да се изпълнят върху това, което произвежда предишната им стъпка: {{tools}}."
 stepsNeedSetup = "Тези стъпки все още трябва да бъдат настроени преди запазване: {{tools}}."
-toolSettings = "Настройки на инструмента"
+testRun = "Test with a file"
 unknownStep = "Неразпозната операция, запазена както е."
 unsavedBody = "Имате незапазени промени. Запазете ги преди да напуснете или ги отхвърлете?"
 unsavedTitle = "Незапазени промени"
 uploadUnsupported = "Качените файлове все още не се поддържат в pipelines, затова тези стъпки не могат да бъдат запазени: {{tools}}."
 usesDefaults = "Изпълнява се с настройки по подразбиране"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Комбинира всеки файл от предишната стъпка"
@@ -7825,30 +7742,35 @@ undeclared-operation = "Не може да се провери какво при
 
 [portal.pipelines.composer]
 addTool = "Добави инструмент"
-cancel = "Отказ"
-chainEmpty = "Добавете инструмент, за да започнете да изграждате вашия pipeline."
 create = "Създай pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Показването на тези параметри на инструмента за редактиране все още не се поддържа."
-moveDown = "Премести надолу"
-moveUp = "Премести нагоре"
+editSource = "Edit source"
 name = "Име"
 namePlaceholder = "напр. Redaction sweep"
 noToolSettings = "Този инструмент няма конфигурируеми настройки."
-operations_one = "Операция ({{count}})"
-operations_other = "Операции ({{count}})"
 output = "Изход"
-removeStep = "Премахни операция"
 save = "Запази промените"
 scheduleEvery = "Изпълнявай на всеки"
-sources = "Източници"
-sourcesLoading = "Зареждане на източници..."
 trigger = "Trigger"
 triggerManual = "Само ръчно"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "дни"
 hours = "часа"
 minutes = "минути"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Да се изтрие ли \"{{name}}\"? Това не може да бъде отменено."
@@ -7867,6 +7789,37 @@ connectSource = "Свързване на източник"
 description = "Създайте първия си pipeline: изберете източниците, върху които се изпълнява, свържете операциите и изберете къде да отива изходът."
 title = "Все още няма pipelines"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Активни"
 paused = "Поставени на пауза"
@@ -7879,7 +7832,6 @@ completed_one = "Изпълнението завърши."
 completed_other = "Всички {{count}} изпълнения завършиха."
 empty = "Няма какво да се изпълни: източниците нямаха документи за обработка."
 failed = "Изпълнението не бе успешно: {{error}}"
-historyCleared = "Историята е изчистена. Следващото изпълнение ще обработи отново всичко, което в момента е в източниците."
 inFlight = "Няма нищо ново за изпълнение: документи все още се обработват от предишно изпълнение."
 parked_one = "Няма нищо за изпълнение: {{count}} документ е бил неуспешен преди и е паркиран. Отстранете причината, след това изчистете историята, за да опитате отново."
 parked_other = "Няма нищо за изпълнение: {{count}} документа са били неуспешни преди и са паркирани. Отстранете причината, след това изчистете историята, за да опитате отново."
@@ -7895,6 +7847,7 @@ name = "Pipeline"
 sources = "Източници"
 status = "Статус"
 steps = "Стъпки"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Наблюдение на папка"
@@ -8208,6 +8161,24 @@ label = "Прикачване към Jira issue"
 [portal.policies.operations.mailgunEmail]
 description = "Изпраща обработения документ като прикачен файл."
 label = "Изпращане на документа по имейл (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Записва обработения документ в папка."
@@ -8683,16 +8654,6 @@ maxed = "Достигнат максимум"
 subtitle = "Вашият безплатен trial продължава до {{date}}. Не се изисква карта."
 title = "Enterprise trial"
 
-[portal.search]
-ariaLabel = "Търсене"
-placeholder = "Търсене в Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Бързите действия ще се появят тук, когато са налични."
-noActionsTitle = "Няма бързи действия"
-noMatches = "Няма съвпадения за „{{query}}“"
-noMatchesDescription = "Опитайте с друга ключова дума или разгледайте каталога."
-
 [portal.settings.groups]
 admin = "Администратор"
 
@@ -8743,10 +8704,6 @@ cancel = "Отказ"
 confirm = "Изтриване"
 title = "Да се изтрие ли източникът?"
 
-[portal.sources.empty]
-description = "Свържете папка (а скоро и cloud storage), така че вашите политики да имат откъде да вземат документи."
-title = "Все още няма свързани източници"
-
 [portal.sources.kpi]
 inUse = "В употреба"
 total = "Връзки"
@@ -8785,6 +8742,7 @@ unused = "Неизползван"
 documents = "Документи"
 source = "Източник"
 status = "Статус"
+type = "Type"
 usedBy = "Политики"
 
 [portal.sources.types.box]
@@ -9980,9 +9938,6 @@ title = "Политики и поверителност"
 [settings.preferences]
 title = "Предпочитания"
 
-[settings.search]
-placeholder = "Търсене в страниците с настройки..."
-
 [settings.security]
 description = "Актуализирайте паролата си, за да запазите акаунта си защитен."
 title = "Сигурност"
@@ -10128,6 +10083,7 @@ last = "Последна страница"
 maintainRatio = "Превключване за поддържане на съотношението на страните"
 next = "Следваща страница"
 noSavedSigs = "Не са намерени запазени подписи"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Лични подписи"
 previous = "Предишна стараница"
 redo = "Повтори"
@@ -10166,6 +10122,7 @@ backgroundRemovalFailedTitle = "Неуспешно премахване на ф�
 hint = "Качете PNG или JPG изображение на вашия подпис"
 label = "Качете изображение на подпис"
 placeholder = "Изберете файл с изображение"
+previewAlt = "Current image signature"
 processing = "Обработка на изображението..."
 removeBackground = "Премахване на бял фон (прозрачен)"
 
@@ -10178,6 +10135,17 @@ resumeHint = "Възобновете поставянето, за да щрак�
 saved = "Изберете запазен подпис по-горе, след това щракнете навсякъде в PDF, за да го поставите."
 text = "След като въведете името си по-горе, щракнете навсякъде върху PDF-а, за да поставите подписа."
 title = "Как да добавите подпис"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Преместване на подпис"
@@ -10625,6 +10593,23 @@ title = "Качване на сървъра"
 updateButton = "Актуализиране на сървъра"
 uploadButton = "Качване на сървъра"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10759,6 @@ goBack = "Върнете се"
 pdfTools = "PDF инструменти"
 placeholder = "Изберете инструмент, за да започнете"
 premiumFeature = "Премиум функция:"
-searchTools = "Търсене на инструменти"
 toolsHeader = "Инструменти"
 viewAllTools = "Виж всички инструменти"
 
@@ -10821,6 +10805,9 @@ pageFormatting = "Форматиране на страници"
 removal = "Премахване"
 signing = "Подписване"
 verification = "Проверка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Няма намерени инструменти"
@@ -10979,6 +10966,13 @@ approver = "Одобрява политика"
 editor = "Редактор"
 processor = "Процесор"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Да се отмени ли поканата до {{email}}? Те няма да могат да се присъединят с текущата връзка."
 cancelInviteTitle = "Отмяна на поканата"
@@ -10998,10 +10992,8 @@ title = "Все още няма членове"
 addToTeam = "Добавяне към екип"
 guestCount = "{{count}} гост"
 guests = "Гости"
-guestsDesc = "Външни сътрудници, ограничени до това, което сте споделили. Само редактор."
 ledBy = "воден от {{owner}}"
 org = "Организация"
-orgDesc = "Собственици с правомощия в цялата организация и одобрение на политики"
 owners = "{{count}} собственик"
 team = "Екип {{name}}"
 teamMeta = "{{count}} души"
@@ -11041,12 +11033,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Поканен от {{who}}"
 cancel = "Отказ"
-count = "{{count}} чакащи"
-desc = "Поканени хора, които още не са се присъединили. Те заемат място, докато не приемат."
 expiresInDays_one = "Изтича след {{count}} ден"
 expiresInDays_other = "Изтича след {{count}} дни"
 expiresToday = "Изтича днес"
 title = "Чакащи покани"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Нещо се обърка при свързването със сървърната част или нямате достъп. Опитайте отново."
@@ -11237,12 +11231,15 @@ searchPlaceholder = "Търсене в прикачените файлове"
 title = "Прикачени файлове"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Заглавие на отметката"
 bookmarkTitleRequired = "Заглавието на отметката е задължително"
 closeSidebar = "Затвори страничната лента с отметки"
 collapseAll = "Свий всички отметки"
+empty = "No bookmarks in this document"
 expandAll = "Разгъни всички отметки"
 searchPlaceholder = "Търсене в отметките"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Добавяне на коментар"
@@ -11264,10 +11261,12 @@ locateAnnotation = "Намиране в документа"
 moreActions = "Още действия"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Страница {{page}}"
 placingHint = "Щракнете върху страница, за да поставите… (отказ)"
 removeCommentOnly = "Премахване само на коментара"
 saveReply = "Запис на отговора"
+searchPlaceholder = "Search comments"
 title = "Коментари"
 typeComment = "Коментар"
 typeInsertText = "Вмъкване на текст"
@@ -11290,6 +11289,7 @@ unsavedDesc = "Имате незаписани промени"
 closeSidebar = "Затвори страничната лента със слоеве"
 hideAll = "Скрий всички слоеве"
 showAll = "Покажи всички слоеве"
+title = "Layers"
 
 [viewer.link]
 delete = "Изтриване на връзка"
@@ -11646,6 +11646,7 @@ exitRedaction = "Изход от режим на заличаване"
 exportAll = "Експортиране на PDF"
 exportSelected = "Експортиране на избраните страници"
 formFill = "Попълване на формуляр"
+hideToolbar = "Hide toolbar"
 multiTool = "Мултиинструмент"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
@@ -11666,6 +11667,7 @@ selectAll = "Избиране на всички"
 selectByNumber = "Избор по номера на страници"
 selectLanguage = "Избор на език"
 share = "Сподели"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Превключване на видимостта на анотациите"
 toggleAttachments = "Превключване на прикачените файлове"
 toggleBookmarks = "Превключване на отметките"

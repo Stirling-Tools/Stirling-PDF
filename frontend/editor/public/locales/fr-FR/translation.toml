@@ -1879,6 +1879,9 @@ width = "Largeur"
 [app]
 description = "L’alternative gratuite à Adobe Acrobat (10M+ téléchargements)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Convertir en PDF/A-3b"
 convertToPdfA3bDescription = "Crée un PDF d’archivage avec pièces jointes intégrées"
@@ -2933,12 +2936,16 @@ text = "Pour rendre ces permissions non modifiables, utilisez l’outil Ajouter 
 [chat.actions]
 copy = "Copier le message"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Options de l’agent Stirling"
+assistant = "AI Assistant"
 clearChat = "Effacer la discussion"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Cette opération utilisera vos crédits cloud"
 tooltip = "Prélever une couleur à l’écran"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Choisir la couleur"
 
 [common]
+actions = "Actions"
 back = "Retour"
 cancel = "Annuler"
 close = "Fermer"
+codeSample = "Code sample"
 collapse = "Réduire"
 confirm = "Confirmer"
 continue = "Continuer"
 copied = "Copié !"
 copy = "Copier"
 done = "Terminé"
+enterValue = "Enter value"
 error = "Erreur"
 expand = "Développer"
 loading = "Chargement…"
 next = "Suivant"
+open = "Open"
 preview = "Aperçu"
 previous = "Précédent"
 refresh = "Actualiser"
 remaining = "Restant"
 retry = "Réessayer"
 save = "Enregistrer"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Effacer la sélection"
@@ -3185,6 +3199,7 @@ title = "Méthode de compression"
 [compress.settings]
 desiredSize = "Taille de fichier souhaitée"
 desiredSizePlaceholder = "Saisir la taille"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "La compression est un moyen simple de réduire la taille de votre fichier. Choisissez Taille de fichier pour saisir une taille cible et nous ajusterons la qualité pour vous. Choisissez Qualité pour régler manuellement la force de compression."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Rechercher..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Modifier"
@@ -3824,11 +3843,13 @@ shareSelected = "Partager la sélection"
 sharing = "Partage"
 showAll = "Tout afficher"
 showHistory = "Afficher l’historique"
+sortBy = "Sort files"
 sortByDate = "Trier par date"
 sortByName = "Trier par nom"
 sortBySize = "Trier par taille"
 storage = "Stockage"
 storageState = "Stockage"
+storageUsed = "Storage used"
 synced = "Synchronisé"
 title = "Téléverser des fichiers PDF"
 toolChain = "Outils appliqués"
@@ -3874,6 +3895,8 @@ addFiles = "Ajouter des fichiers"
 addingFiles = "Ajout de fichiers…"
 collapse = "Réduire la barre latérale"
 customizeGroups = "Personnaliser les groupes"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Ouvrez des fichiers pour commencer"
 dropToAdd = "Drop files to add"
 expand = "Développer la barre latérale"
@@ -3888,12 +3911,12 @@ openFromComputer = "Ouvrir depuis l’ordinateur"
 openSettings = "Ouvrir les paramètres"
 other = "Autre"
 recent = "Récent"
-search = "Rechercher"
-searchPlaceholder = "Rechercher des fichiers..."
 viewAll = "Voir les {{count}} fichiers"
 
 [fileSidebar.fileItem]
 closeViewer = "Fermer la visionneuse"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Ouvrir dans la visionneuse"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Retour à Mes fichiers"
 breadcrumbs = "Chemin du dossier"
 cancel = "Annuler"
 classification = "Classification"
-clearSearch = "Effacer la recherche"
 clearSelection = "Effacer la sélection"
 closeDetails = "Fermer les détails"
 create = "Créer"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Redimensionner l’arborescence des dossiers (touches fléch
 save = "Enregistrer"
 saveToServer = "Enregistrer sur le serveur"
 saveToServerDisabledHint = "L’enregistrement sur le serveur n’est pas activé sur ce serveur. Demandez à votre administrateur de l’activer."
-search = "Rechercher"
-searchPlaceholder = "Rechercher dans ce dossier et les sous-dossiers"
 selectAll = "Tout sélectionner"
 selectAllHint = "Cliquez pour tout sélectionner. Astuce : maintenez Ctrl (ou Cmd) pour ajouter des fichiers un par un, Maj pour sélectionner une plage."
 selectedCount = "{{count}} sélectionné(s)"
@@ -4043,6 +4063,10 @@ title = "Pas encore de fichiers cloud"
 [filesPage.empty.local]
 hint = "Les fichiers enregistrés sans téléversement restent ici. Déposez un fichier pour en ajouter un."
 title = "Aucun fichier local uniquement"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Les fichiers que vous ouvrez ou modifiez apparaîtront ici."
@@ -4113,6 +4137,11 @@ localHint = "Stocké uniquement dans ce navigateur"
 shared = "Partagé"
 sharedHint = "Partagé avec vous via un lien"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "Plus ancien d’abord"
 modifiedDesc = "Plus récent d’abord"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "Aucun fichier disponible dans le stockage. Ouvrez d’ab
 open = "Ouvrir"
 openFile = "Ouvrir un fichier"
 openFiles = "Ouvrir des fichiers"
+selectFile = "Select {{name}}"
 selectFromStorage = "Sélectionner depuis le stockage"
 upload = "Téléverser"
 uploadFile = "Téléverser un fichier"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tout est enregistré"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Échec de l’extraction du CSV"
 extractXlsxError = "Échec de l’extraction du XLSX"
+filled = "filled"
 flattenAfterFilling = "Aplatir après remplissage"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl."
 requiredFieldsError = "Veuillez remplir tous les champs obligatoires"
 rescanFields = "Réanalyser les champs"
@@ -4795,9 +4830,6 @@ title = "Image en PDF"
 [imageToPdf]
 tags = "pdf,conversion,img,jpg,image,photo"
 
-[infoBanner]
-dismiss = "Fermer"
-
 [invite]
 acceptError = "Échec de la création du compte"
 accountFor = "Création du compte pour"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Téléversement réussi !"
 uploadSuccessMessage = "Vos images ont été transférées."
 validating = "Validation de la session..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Scannez pour téléverser des photos. Les images se convertissent automatiquement en PDF."
 descriptionNoConvert = "Scannez pour téléverser des photos depuis votre appareil mobile."
@@ -4997,8 +5057,13 @@ title = "Téléverser depuis un mobile"
 tags = "outil multifonction,opération multifonction,interface utilisateur,glisser déposer,front-end,client side,interactif,intransigeant,déplacer,multi tool"
 title = "Outil multifonction PDF"
 
-[navbar]
-search = "Rechercher"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "L'authentification n'a pas abouti. Vous pouvez fermer cette fenêtre et réessayer."
@@ -5127,6 +5192,7 @@ activeFiles = "La vue <strong>Fichiers actifs</strong> affiche tous les PDF char
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Fermer"
 cropSettings = "Maintenant que nous avons sélectionné le fichier que nous voulons rogner, nous pouvons configurer l’outil Rogner pour définir la zone de rognage du PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Cliquer sur l’un des fichiers le sélectionne pour le traitement. Vous pouvez en sélectionner plusieurs pour des opérations par lots."
 fileReplacement = "Le fichier modifié remplacera automatiquement le fichier d’origine dans le Workbench, ce qui vous permettra de le faire passer facilement par d’autres outils."
 filesButton = "Le bouton <strong>Fichiers</strong> de la barre d’accès rapide vous permet de téléverser des PDF à utiliser avec les outils."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 Credits"
 xsmall = "100 Credits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Choisissez le forfait adapté à vos besoins"
 title = "Forfaits disponibles"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "Limite de dépenses mensuelle atteinte"
 title = "Impossible d’ouvrir le portail Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "sur {{allowance}} PDF gratuits utilisés"
 capSuffix_other = "sur {{allowance}} PDF gratuits utilisés"
 eyebrow = "Essai Processor"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Envoyer un document ou une notification par email lorsqu’une politique s’exécute."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Classer les documents traités dans Nextcloud."
@@ -7077,11 +7173,6 @@ title = "SDK officiels"
 beta = "Beta"
 deprecated = "Obsolète"
 
-[portal.docs.search]
-empty = "Aucune doc correspondante"
-placeholder = "Rechercher dans les docs"
-results = "{{count}} résultats"
-
 [portal.docs.skills]
 eyebrow = "COMPÉTENCES"
 lead = "Capacités nommées et groupées que votre agent invoque comme un seul outil. Chaque compétence est une chaîne d’opérations déterministe avec des évaluations associées."
@@ -7180,11 +7271,11 @@ editorAction = "Éditeur"
 empty = "Aucun document ne correspond à ce filtre."
 rowActions = "Actions de ligne"
 sensitiveLabel = "Sensible"
-sensitiveTitle = "Sensible — accès requis"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
 document = "Document"
+labels = "Labels"
 product = "Produit"
 status = "Statut"
 time = "Heure"
@@ -7200,6 +7291,7 @@ host = "Hôte"
 lastSeen = "Dernière activité"
 region = "Région"
 status = "Statut"
+target = "Target"
 version = "Version"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "En cours d’exécution"
 description = "Cette vue a rencontré une erreur inattendue. Réessayez ou choisissez une autre section dans la barre latérale."
 retry = "Réessayer"
 title = "Un problème est survenu sur cette page"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Retour"
@@ -7380,11 +7522,6 @@ cancel = "Annuler"
 confirm = "Révoquer la clé"
 title = "Révoquer la clé API"
 
-[portal.infrastructure.attestationLabel]
-attested = "Attesté"
-inScope = "Dans le périmètre"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrer les événements d’audit par catégorie"
 heading = "Journaux d’audit"
@@ -7456,11 +7593,6 @@ info = "Info"
 success = "Succès"
 warning = "Avertissement"
 
-[portal.infrastructure.certLabel]
-certified = "Certifié"
-inProgress = "En cours"
-notStarted = "Non démarré"
-
 [portal.infrastructure.createKey]
 cancel = "Annuler"
 createKey = "Créer une clé"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Copiez ce secret maintenant — il ne sera plus affiché."
 title = "Créer une clé API"
 titleCreated = "Clé créée"
 
-[portal.infrastructure.deployLabel]
-live = "En ligne"
-queued = "En file d’attente"
-rolledBack = "Restauré"
-rolling = "Déploiement en cours"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Déployé par"
-environment = "Environnement"
-product = "Produit"
-status = "Statut"
-version = "Version"
-when = "Quand"
-
-[portal.infrastructure.deployments.recent]
-heading = "Déploiements récents"
-subheading = "Les derniers déploiements sur les produits et environnements."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instances"
-latency = "Latence"
-load = "Charge"
-p99 = "P99"
-region = "Région"
-status = "Statut"
-throughput = "Débit"
-uptime = "Temps de disponibilité"
-version = "Version"
-
-[portal.infrastructure.deployments.regions]
-heading = "Régions"
-subheading = "Santé en direct de chaque région Stirling déployée — latence, charge et version de déploiement."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Les régions déployées apparaissent ici une fois votre espace de travail provisionné."
-title = "Aucune région déployée"
-
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Révoquée"
-
-[portal.infrastructure.modelLabel]
-active = "Actif"
-degraded = "Dégradé"
-disabled = "Désactivé"
-
-[portal.infrastructure.models]
-heading = "Modèles"
-msValue = "{{value}} ms"
-subheading = "Le catalogue de modèles et le routage qui alimentent le traitement des documents dans votre espace de travail."
-
-[portal.infrastructure.models.byom]
-description = "Enregistrez un modèle on-prem ou auto-hébergé et épinglez-le à une région pour un traitement lié à la résidence des données."
-title = "Apportez votre propre modèle"
-
-[portal.infrastructure.models.catalogue]
-heading = "Catalogue"
-sub = "Modèles gérés disponibles pour votre espace de travail, avec latence et coût en direct."
-subEnterprise = "Modèles gérés, apportez-votre-propre-modèle et on-prem — avec épinglage par région disponible."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Les modèles du catalogue de votre espace de travail apparaissent ici."
-title = "Aucun modèle disponible"
-
-[portal.infrastructure.models.columns]
-cost = "Coût"
-latency = "Latence"
-load = "Charge"
-model = "Modèle"
-status = "Statut"
-type = "Type"
-version = "Version"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/appel"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Modèles actifs"
-avgLatency = "Latence moy."
-included = "Inclus"
-monthlySpend = "Dépense mensuelle des modèles"
-
-[portal.infrastructure.models.routing]
-empty = "Aucune règle de routage configurée."
-heading = "Règles de routage"
-sub = "Quel modèle gère chaque opération. La valeur par défaut s’applique lorsqu’aucune règle plus précise ne correspond."
-subLocked = "Acheminez les opérations vers des modèles spécifiques — disponible sur les plans payants."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Passez à Pro pour contrôler quel modèle gère chaque opération et type de document."
-title = "Le routage des modèles est une fonctionnalité payante"
-
-[portal.infrastructure.models.routingColumns]
-default = "Par défaut"
-docType = "Type de document"
-modelForAria = "Modèle pour {{operation}}"
-operation = "Opération"
-routedTo = "Acheminé vers"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Classification"
-extraction = "Extraction"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Dégradé"
-down = "Indisponible"
-healthy = "Sain"
-
-[portal.infrastructure.security.access.byok]
-description = "Fournissez une clé depuis votre propre KMS. Stirling chiffre avec celle-ci mais peut toujours lire."
-label = "Apportez votre propre clé (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Les clés ne quittent jamais votre KMS. Stirling ne détient que du texte chiffré."
-label = "Conservez votre propre clé (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling gère les clés de chiffrement. Le plus simple — aucune opération de clé de votre côté."
-label = "Clés détenues par Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Politique d’accès aux documents"
-subheading = "Contrôle qui peut déchiffrer les documents traités au repos."
-
-[portal.infrastructure.security.attestations]
-heading = "Attestations de conformité"
-noReport = "Aucun rapport disponible"
-subheading = "Posture d’audit cadre par cadre, avec rapports disponibles sur les contrôles attestés."
-viewReport = "Voir le rapport →"
-
-[portal.infrastructure.security.compliance]
-heading = "Conformité"
-subheading = "Attestations et certifications couvrant la plateforme Stirling."
-
-[portal.infrastructure.security.empty]
-description = "La configuration de sécurité de votre espace de travail apparaîtra ici."
-title = "Posture de sécurité indisponible"
-
-[portal.infrastructure.security.hyokBanner]
-description = "Avec HYOK, les clés de chiffrement ne quittent jamais votre KMS. Stirling stocke et traite uniquement du texte chiffré que vous pouvez révoquer à tout moment."
-title = "Stirling ne peut pas déchiffrer vos documents"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Aucune plage IP configurée — toutes les IP sont autorisées."
-heading = "Liste d’autorisation IP"
-sub = "L’accès API est limité à ces plages CIDR."
-subLocked = "Limitez l’accès API aux plages IP connues — disponible sur les plans payants."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Passez à Pro pour limiter l’accès API à des réseaux spécifiques."
-title = "La liste d’autorisation IP est une fonctionnalité payante"
-
-[portal.infrastructure.security.ipColumns]
-added = "Ajouté"
-addedBy = "Ajouté par"
-cidr = "CIDR"
-label = "Libellé"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithme"
-heading = "Gestion des clés de chiffrement"
-keyId = "Identifiant de clé"
-lastRotated = "Dernière rotation"
-rotateKey = "Faire tourner la clé"
-rotationPolicy = "Politique de rotation"
-subheading = "Garde des clés qui chiffrent les documents au repos — qui peut déchiffrer et comment les clés tournent."
-
-[portal.infrastructure.security.managedBanner]
-description = "La garde apportez-votre-propre-clé (BYOK) et conservez-votre-propre-clé (HYOK) est disponible sur Enterprise. Mettez à niveau pour fournir des clés depuis votre propre KMS."
-title = "Les clés sont gérées par Stirling avec votre plan"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asie-Pacifique"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · limite des données GDPR"
-label = "Union européenne"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "États-Unis"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Résidence des données"
-subheading = "Où les documents sont stockés et traités."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} utilisé"
-
-[portal.infrastructure.storage.empty]
-description = "Le stockage connecté et l’utilisation apparaissent ici."
-title = "Aucun stockage configuré"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Actif"
-activeRange = "0–{{value}}j"
-archived = "Archivé"
-coldStorage = "stockage froid"
-deleted = "Supprimé"
-never = "jamais"
-purged = "purgé"
-
-[portal.infrastructure.storage.providers]
-connect = "Connecter"
-connected = "Connecté"
-heading = "Fournisseurs connectés"
-subheading = "Où les artefacts traités sont écrits."
-
-[portal.infrastructure.storage.retention]
-heading = "Rétention"
-subheading = "Durée de conservation des artefacts avant suppression du cycle de vie."
-windowLabel = "Fenêtre de rétention par défaut"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} jour"
-days_other = "{{count}} jours"
-never = "Ne jamais supprimer"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Utilisation totale"
-progressLabel = "Stockage utilisé"
-subheading = "Stockage consommé sur tous les fournisseurs connectés."
 
 [portal.infrastructure.tabs]
 apiKeys = "Clés API"
@@ -7715,11 +7619,9 @@ security = "Sécurité"
 storage = "Stockage"
 
 [portal.integrations]
-addAnother = "Ajouter un autre"
 availableHeading = "Disponible"
 comingSoonHeading = "Bientôt disponible"
 connect = "Connecter"
-connectedHeading = "Connecté"
 connectionCount_one = "{{count}} connexion"
 connectionCount_other = "{{count}} connexions"
 customApi = "API personnalisée"
@@ -7736,6 +7638,10 @@ notify = "Notification"
 security = "Sécurité"
 signing = "Signature"
 storage = "Stockage"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Connecté"
@@ -7767,7 +7673,6 @@ integrations = "Intégrations"
 pipelines = "Pipelines"
 policies = "Politiques"
 procurement = "Achats"
-settings = "Paramètres"
 sources = "Sources"
 usage = "Utilisation et facturation"
 users = "Utilisateurs"
@@ -7784,7 +7689,7 @@ title = "Pipelines"
 newPipeline = "Nouveau pipeline"
 
 [portal.pipelines.builder]
-addStep = "Ajouter un outil"
+activate = "Activate"
 back = "Retour aux pipelines"
 cannotFollow = "Impossible d’accepter {{produced}}"
 chooseAccount = "Choisir un compte"
@@ -7792,28 +7697,40 @@ chooseDestination = "Choisir une destination"
 chooseOperation = "Choisir l’action de cette étape"
 chooseSource = "Choisir une source"
 discard = "Abandonner les modifications"
-enabled = "Activé"
 inputs = "Entrée"
 inputSource = "Source d’entrée"
 inputTrigger = "Déclencheur"
 keepEditing = "Continuer à modifier"
+moreActions = "More actions"
 needsConfiguring = "Configuration requise"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Nécessite un fichier téléversé"
-noSources = "Aucune source connectée pour le moment. Créez-en une pour l’utiliser comme entrée."
 noToolMatches = "Aucun outil ne correspond à votre recherche."
-pipelineSettings = "Paramètres du pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Rechercher des outils"
-selectToolBody = "Ajoutez un outil pour construire votre pipeline."
-selectToolTitle = "Aucun outil pour le moment"
 sendToSystem = "Envoyer vers un autre système"
 stepsIncompatible = "Ces étapes ne peuvent pas s’exécuter sur ce que produit leur étape précédente : {{tools}}."
 stepsNeedSetup = "Ces étapes doivent encore être configurées avant l’enregistrement : {{tools}}."
-toolSettings = "Paramètres de l’outil"
+testRun = "Test with a file"
 unknownStep = "Opération non reconnue, conservée telle quelle."
 unsavedBody = "Vous avez des modifications non enregistrées. Enregistrez-les avant de quitter ou abandonnez-les ?"
 unsavedTitle = "Modifications non enregistrées"
 uploadUnsupported = "Les fichiers téléversés ne sont pas encore pris en charge dans les pipelines, ces étapes ne peuvent donc pas être enregistrées : {{tools}}."
 usesDefaults = "S’exécute avec les paramètres par défaut"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Combine tous les fichiers de l’étape précédente"
@@ -7825,30 +7742,35 @@ undeclared-operation = "Impossible de vérifier ce que cette étape accepte"
 
 [portal.pipelines.composer]
 addTool = "Ajouter un outil"
-cancel = "Annuler"
-chainEmpty = "Ajoutez un outil pour commencer à construire votre pipeline."
 create = "Créer le pipeline"
+createPaused = "Create paused"
 editingUnsupported = "L’affichage de ces paramètres d’outil pour modification n’est pas encore pris en charge."
-moveDown = "Déplacer vers le bas"
-moveUp = "Déplacer vers le haut"
+editSource = "Edit source"
 name = "Nom"
 namePlaceholder = "p. ex. Passage de caviardage"
 noToolSettings = "Cet outil n’a aucun paramètre configurable."
-operations_one = "Opération ({{count}})"
-operations_other = "Opérations ({{count}})"
 output = "Sortie"
-removeStep = "Supprimer l’opération"
 save = "Enregistrer les modifications"
 scheduleEvery = "Exécuter tous les"
-sources = "Sources"
-sourcesLoading = "Chargement des sources..."
 trigger = "Déclencheur"
 triggerManual = "Manuel uniquement"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "jours"
 hours = "heures"
 minutes = "minutes"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Supprimer \"{{name}}\" ? Cette action est irréversible."
@@ -7867,6 +7789,37 @@ connectSource = "Connecter une source"
 description = "Créez votre premier pipeline : choisissez les sources sur lesquelles il s’exécute, enchaînez les opérations et choisissez où va la sortie."
 title = "Aucun pipeline pour le moment"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Actifs"
 paused = "En pause"
@@ -7879,7 +7832,6 @@ completed_one = "Exécution terminée."
 completed_other = "Les {{count}} exécutions sont terminées."
 empty = "Rien à exécuter : les sources n’avaient aucun document à traiter."
 failed = "Échec de l’exécution : {{error}}"
-historyCleared = "Historique effacé. La prochaine exécution retraitera tout ce qui se trouve actuellement dans les sources."
 inFlight = "Rien de nouveau à exécuter : des documents sont encore en cours de traitement depuis une exécution précédente."
 parked_one = "Rien à exécuter : {{count}} document a échoué précédemment et est mis en attente. Corrigez la cause, puis effacez l’historique pour le réessayer."
 parked_other = "Rien à exécuter : {{count}} documents ont échoué précédemment et sont mis en attente. Corrigez la cause, puis effacez l’historique pour les réessayer."
@@ -7895,6 +7847,7 @@ name = "Pipeline"
 sources = "Sources"
 status = "Statut"
 steps = "Étapes"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Surveillance de dossier"
@@ -8208,6 +8161,24 @@ label = "Joindre à un ticket Jira"
 [portal.policies.operations.mailgunEmail]
 description = "Envoie le document traité en pièce jointe."
 label = "Envoyer le document par e-mail (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Écrit le document traité dans un dossier."
@@ -8683,16 +8654,6 @@ maxed = "Limite atteinte"
 subtitle = "Votre essai gratuit est valable jusqu’au {{date}}. Aucune carte requise."
 title = "Essai Enterprise"
 
-[portal.search]
-ariaLabel = "Rechercher"
-placeholder = "Rechercher dans Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Les actions rapides apparaîtront ici une fois disponibles."
-noActionsTitle = "Aucune action rapide"
-noMatches = "Aucune correspondance pour \"{{query}}\""
-noMatchesDescription = "Essayez un autre mot-clé ou parcourez le catalogue."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8743,10 +8704,6 @@ cancel = "Annuler"
 confirm = "Supprimer"
 title = "Supprimer la source ?"
 
-[portal.sources.empty]
-description = "Connectez un dossier (et bientôt un stockage cloud) afin que vos politiques disposent d’un emplacement où récupérer des documents."
-title = "Aucune source connectée pour le moment"
-
 [portal.sources.kpi]
 inUse = "En cours d’utilisation"
 total = "Connexions"
@@ -8785,6 +8742,7 @@ unused = "Inutilisé"
 documents = "Documents"
 source = "Source"
 status = "Statut"
+type = "Type"
 usedBy = "Politiques"
 
 [portal.sources.types.box]
@@ -9980,9 +9938,6 @@ title = "Politiques et confidentialité"
 [settings.preferences]
 title = "Préférences"
 
-[settings.search]
-placeholder = "Rechercher dans les paramètres…"
-
 [settings.security]
 description = "Mettez à jour votre mot de passe pour sécuriser votre compte."
 title = "Sécurité"
@@ -10128,6 +10083,7 @@ last = "Dernière page"
 maintainRatio = "Conserver les proportions"
 next = "Page suivante"
 noSavedSigs = "Aucun sceau enregistré trouvé"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Sceaux personnels"
 previous = "Page précédente"
 redo = "Refaire"
@@ -10166,6 +10122,7 @@ backgroundRemovalFailedTitle = "Échec de la suppression du fond"
 hint = "Téléversez une image PNG ou JPG de votre signature"
 label = "Téléverser une image de signature"
 placeholder = "Sélectionner un fichier image"
+previewAlt = "Current image signature"
 processing = "Traitement de l’image..."
 removeBackground = "Supprimer le fond blanc (le rendre transparent)"
 
@@ -10178,6 +10135,17 @@ resumeHint = "Reprenez le placement pour cliquer et ajouter votre signature."
 saved = "Sélectionnez une signature enregistrée ci-dessus, puis cliquez n’importe où sur le PDF pour la placer."
 text = "Après avoir saisi votre nom ci-dessus, cliquez n’importe où sur le PDF pour placer votre signature."
 title = "Comment ajouter une signature"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Déplacer la signature"
@@ -10625,6 +10593,23 @@ title = "Téléverser sur le serveur"
 updateButton = "Mettre à jour sur le serveur"
 uploadButton = "Téléverser sur le serveur"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10759,6 @@ goBack = "Revenir en arrière"
 pdfTools = "Outils PDF"
 placeholder = "Choisissez un outil pour commencer"
 premiumFeature = "Fonctionnalité Premium :"
-searchTools = "Rechercher des outils"
 toolsHeader = "Outils"
 viewAllTools = "Voir tous les outils"
 
@@ -10821,6 +10805,9 @@ pageFormatting = "Mise en page"
 removal = "Suppression"
 signing = "Signature"
 verification = "Vérification"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Aucun outil trouvé"
@@ -10979,6 +10966,13 @@ approver = "Approuve la politique"
 editor = "Éditeur"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Annuler l’invitation envoyée à {{email}} ? Cette personne ne pourra pas rejoindre avec le lien actuel."
 cancelInviteTitle = "Annuler l’invitation"
@@ -10998,10 +10992,8 @@ title = "Aucun membre pour le moment"
 addToTeam = "Ajouter à l’équipe"
 guestCount = "{{count}} invité"
 guests = "Invités"
-guestsDesc = "Collaborateurs externes, limités à ce que vous avez partagé. Éditeur uniquement."
 ledBy = "dirigée par {{owner}}"
 org = "Organisation"
-orgDesc = "Propriétaires avec autorité à l’échelle de l’organisation et approbation des politiques"
 owners = "{{count}} propriétaire"
 team = "Équipe {{name}}"
 teamMeta = "{{count}} personnes"
@@ -11041,12 +11033,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Invité par {{who}}"
 cancel = "Annuler"
-count = "{{count}} en attente"
-desc = "Personnes invitées qui n’ont pas encore rejoint. Elles occupent une place jusqu’à leur acceptation."
 expiresInDays_one = "Expire dans {{count}} jour"
 expiresInDays_other = "Expire dans {{count}} jours"
 expiresToday = "Expire aujourd’hui"
 title = "Invitations en attente"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Une erreur s’est produite lors de l’accès au backend, ou vous n’avez pas accès. Réessayez."
@@ -11237,12 +11231,15 @@ searchPlaceholder = "Rechercher des pièces jointes"
 title = "Pièces jointes"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Titre du signet"
 bookmarkTitleRequired = "Le titre du signet est requis"
 closeSidebar = "Fermer le panneau latéral des signets"
 collapseAll = "Réduire tous les signets"
+empty = "No bookmarks in this document"
 expandAll = "Développer tous les signets"
 searchPlaceholder = "Rechercher des signets"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Ajouter un commentaire"
@@ -11264,10 +11261,12 @@ locateAnnotation = "Chercher dans le document"
 moreActions = "Plus d'actions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Page {{page}}"
 placingHint = "Cliquez sur une page pour placer… (annuler)"
 removeCommentOnly = "Supprimer seulement le commentaire"
 saveReply = "Sauvegarder la réponse"
+searchPlaceholder = "Search comments"
 title = "Commentaires"
 typeComment = "Commentaire"
 typeInsertText = "Insérer du text"
@@ -11290,6 +11289,7 @@ unsavedDesc = "Vous avez des modifications non enregistrées"
 closeSidebar = "Fermer le panneau latéral des calques"
 hideAll = "Masquer tous les calques"
 showAll = "Afficher tous les calques"
+title = "Layers"
 
 [viewer.link]
 delete = "Supprimer le lien"
@@ -11646,6 +11646,7 @@ exitRedaction = "Quitter le mode Rédaction"
 exportAll = "Exporter le PDF"
 exportSelected = "Exporter les pages sélectionnées"
 formFill = "Remplir le formulaire"
+hideToolbar = "Hide toolbar"
 multiTool = "Outil multifonction"
 panMode = "Mode panoramique"
 print = "Imprimer le PDF"
@@ -11666,6 +11667,7 @@ selectAll = "Tout sélectionner"
 selectByNumber = "Sélectionner par numéros de pages"
 selectLanguage = "Sélectionner la langue"
 share = "Partager"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Basculer la visibilité des annotations"
 toggleAttachments = "Basculer les pièces jointes"
 toggleBookmarks = "Basculer les signets"
