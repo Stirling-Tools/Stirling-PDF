@@ -22,18 +22,41 @@ vi.mock("react-router-dom", async () => ({
   useNavigate: () => navigate,
 }));
 
-// No i18n instance is initialised here, so the real hook would return bare keys.
+// No i18n instance is initialised here, so the real hook would return bare keys. The plugin is
+// stubbed too because the workbench contexts below reach `core/i18n`, which registers it on import.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string) => fallback,
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
-const { FileActionsContext } = await import("@app/contexts/file/contexts");
+// The document lookup reads IndexedDB, which jsdom has none of. Answered here so that whether the
+// bytes are present is a fact of the test rather than of the environment.
+const h = vi.hoisted(() => ({
+  stub: { id: "f-1" } as unknown,
+  getStirlingFileStub: vi.fn(),
+}));
+
+vi.mock("@app/services/fileStorage", () => ({
+  fileStorage: {
+    getStirlingFileStub: (fileId: string) => h.getStirlingFileStub(fileId),
+  },
+}));
+
+const { FileActionsContext, FileStoreContext } =
+  await import("@app/contexts/file/contexts");
+const { NavigationActionsContext } =
+  await import("@app/contexts/NavigationContext");
+const { ViewerContext } = await import("@app/contexts/ViewerContext");
 const { useNotificationActions } =
   await import("@app/components/notifications/notificationActions");
 
-const setSelectedFiles = vi.fn();
+const addStirlingFileStubs = vi.fn();
+const setActiveFileId = vi.fn();
+const setWorkbench = vi.fn();
+/** What the workbench already holds, so the "do not add it twice" path can be exercised. */
+let openFileIds: string[] = [];
 
 function notification(
   overrides: Partial<AppNotification> = {},
@@ -81,16 +104,32 @@ function context(
   };
 }
 
-/** The editor shell: a file context sits above the bell. */
+/** The editor shell: the workbench's providers all sit above the bell. */
 const inEditor = ({ children }: { children: ReactNode }) => (
   <MemoryRouter>
     <FileActionsContext.Provider
       value={{
-        actions: { setSelectedFiles } as never,
+        actions: { addStirlingFileStubs } as never,
         dispatch: vi.fn(),
       }}
     >
-      {children}
+      <FileStoreContext.Provider
+        value={
+          {
+            getState: () => ({ files: { ids: openFileIds } }),
+            subscribe: () => () => {},
+            selectors: {},
+          } as never
+        }
+      >
+        <NavigationActionsContext.Provider
+          value={{ actions: { setWorkbench } } as never}
+        >
+          <ViewerContext.Provider value={{ setActiveFileId } as never}>
+            {children}
+          </ViewerContext.Provider>
+        </NavigationActionsContext.Provider>
+      </FileStoreContext.Provider>
     </FileActionsContext.Provider>
   </MemoryRouter>
 );
@@ -106,7 +145,11 @@ function registry(wrapper = inEditor) {
 
 beforeEach(() => {
   navigate.mockReset();
-  setSelectedFiles.mockReset();
+  addStirlingFileStubs.mockReset().mockResolvedValue([]);
+  setActiveFileId.mockReset();
+  setWorkbench.mockReset();
+  h.getStirlingFileStub.mockReset().mockResolvedValue(h.stub);
+  openFileIds = [];
   window.sessionStorage.clear();
   window.history.pushState({}, "", "/");
 });
@@ -132,33 +175,67 @@ describe("useNotificationActions", () => {
     expect(usable.map((candidate) => candidate.id)).toEqual(["VIEW_FILE"]);
   });
 
-  it("opens the document with it selected when an editor is above", () => {
-    registry().VIEW_FILE?.run(context());
+  it("opens the document into the viewer when an editor is above", async () => {
+    await registry().VIEW_FILE?.run(context());
 
-    expect(setSelectedFiles).toHaveBeenCalledWith(["f-1"]);
-    expect(window.location.pathname).toBe("/");
+    // Selecting alone would show nothing: the workbench does not hold the file yet, and it keeps
+    // whatever view it was already on.
+    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
+    expect(setActiveFileId).toHaveBeenCalledWith("f-1");
+    expect(setWorkbench).toHaveBeenCalledWith("viewer");
   });
 
-  it("hands the document over when there is no editor above it", () => {
-    registry(inProcessor).VIEW_FILE?.run(context());
+  it("stays where it is rather than routing through the role-based root", async () => {
+    // "/" decides a landing page from the reader's role, so navigating there reads as the app
+    // reloading and can land them somewhere other than their document.
+    await registry().VIEW_FILE?.run(context());
 
-    // Nothing to select against, so the intent outlives the navigation that mounts the editor.
+    expect(window.location.pathname).toBe("/");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("does not add a document the workbench is already holding", async () => {
+    openFileIds = ["f-1"];
+
+    await registry().VIEW_FILE?.run(context());
+
+    expect(addStirlingFileStubs).not.toHaveBeenCalled();
+    // Still brought to the front: the point of the click is to look at it.
+    expect(setActiveFileId).toHaveBeenCalledWith("f-1");
+    expect(setWorkbench).toHaveBeenCalledWith("viewer");
+  });
+
+  it("reports a document that has gone from storage instead of opening nothing", async () => {
+    h.getStirlingFileStub.mockResolvedValue(null);
+
+    const outcome = await registry().VIEW_FILE?.run(context());
+
+    expect(outcome).toEqual({ ok: false });
+    expect(setWorkbench).not.toHaveBeenCalled();
+  });
+
+  it("hands the document over to the editor when there is no workbench above it", async () => {
+    await registry(inProcessor).VIEW_FILE?.run(context());
+
+    // Nothing to open into, so the intent outlives the navigation that mounts the editor.
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
     ).toBe("f-1");
-    expect(window.location.pathname).toBe("/");
+    // The editor's own URL, not "/", which would hand the reader to the role router instead.
+    expect(window.location.pathname).toBe("/editor");
   });
 
-  it("picks up a handed-over document as soon as an editor is there", () => {
+  it("picks up a handed-over document as soon as an editor is there", async () => {
     window.sessionStorage.setItem(
       "stirling.notifications.pendingSelection",
       "f-9",
     );
 
     registry();
+    await vi.waitFor(() => expect(setActiveFileId).toHaveBeenCalledWith("f-9"));
 
-    expect(setSelectedFiles).toHaveBeenCalledWith(["f-9"]);
-    // One-shot: a later mount must not re-select a document the user has moved on from.
+    expect(setWorkbench).toHaveBeenCalledWith("viewer");
+    // One-shot: a later mount must not reopen a document the user has moved on from.
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
     ).toBeNull();
