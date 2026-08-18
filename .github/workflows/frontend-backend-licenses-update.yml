@@ -42,6 +42,8 @@ jobs:
           filters: .github/config/.files.yaml
 
   generate-frontend-license-report:
+    # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
+    environment: ci-bot
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
     needs: files-changed
@@ -255,6 +257,8 @@ jobs:
           GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
 
   generate-backend-license-report:
+    # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
+    environment: ci-bot
     if: needs.files-changed.outputs.licenses-backend == 'true'
     needs: files-changed
     name: Generate Backend License Report
