@@ -7672,6 +7672,15 @@ start = "Start"
 startedAt = "Started {{when}}"
 subheading = "Encrypts the plaintext backlog left from before encryption was switched on."
 
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
+
 [portal.infrastructure.encryption.migration.failed]
 description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
 title = "The run stopped early"
@@ -7701,6 +7710,15 @@ rewrapped_one = "{{count}} key row re-wrapped."
 rewrapped_other = "{{count}} key rows re-wrapped."
 runbook = "Rotation runbook"
 subheading = "Re-wraps scope keys under a new master key. File contents are never rewritten."
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
 
 [portal.infrastructure.encryption.rotation.pending]
 description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."

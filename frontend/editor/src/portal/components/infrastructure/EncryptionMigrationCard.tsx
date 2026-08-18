@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -6,6 +7,7 @@ import {
   Card,
   ProgressBar,
   StatTile,
+  Modal,
   StatusBadge,
   Tooltip,
 } from "@app/ui";
@@ -57,6 +59,7 @@ export function EncryptionMigrationCard({
   const failed = status?.failed ?? 0;
   const fraction = total > 0 ? Math.min(processed / total, 1) : 0;
   const canStart = writeEnabled && plaintextFiles > 0 && state !== "RUNNING";
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <section>
@@ -185,13 +188,59 @@ export function EncryptionMigrationCard({
             variant="primary"
             size="sm"
             disabled={!canStart || starting}
-            onClick={onStart}
+            onClick={() => setConfirming(true)}
           >
             {state === "FAILED" || state === "COMPLETED"
               ? t("portal.infrastructure.encryption.migration.runAgain")
               : t("portal.infrastructure.encryption.migration.start")}
           </Button>
         </div>
+
+        <Modal
+          open={confirming}
+          onClose={() => setConfirming(false)}
+          width="md"
+          title={t("portal.infrastructure.encryption.migration.confirm.title")}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setConfirming(false)}>
+                {t("portal.infrastructure.encryption.migration.confirm.cancel")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setConfirming(false);
+                  onStart();
+                }}
+              >
+                {t(
+                  "portal.infrastructure.encryption.migration.confirm.confirm",
+                )}
+              </Button>
+            </>
+          }
+        >
+          <ul className="portal-enc__consequences">
+            <li>
+              {t(
+                "portal.infrastructure.encryption.migration.confirm.rewrites",
+                {
+                  count: plaintextFiles,
+                  formatted: plaintextFiles.toLocaleString(),
+                },
+              )}
+            </li>
+            {/* The reason this dialog exists: there is no stop control. */}
+            <li>
+              {t("portal.infrastructure.encryption.migration.confirm.noCancel")}
+            </li>
+            <li>
+              {t(
+                "portal.infrastructure.encryption.migration.confirm.throttled",
+              )}
+            </li>
+          </ul>
+        </Modal>
       </Card>
     </section>
   );

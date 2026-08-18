@@ -192,6 +192,55 @@ export const KeyRestoredAsRetired: Story = {
   },
 };
 
+/**
+ * The migration confirmation. This one exists because the run cannot be
+ * stopped: there is no cancel endpoint, so the dialog is the last exit.
+ */
+export const MigrationConfirmation: Story = {
+  globals: { tier: "enterprise" },
+  parameters: {
+    msw: {
+      handlers: handlers({
+        ...ACTIVE_STATUS,
+        encryptedFiles: 2288,
+        plaintextFiles: 1840,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /^start$/i }),
+    );
+    await expect(
+      await within(document.body).findByText(/no stop control/i),
+    ).toBeInTheDocument();
+  },
+};
+
+/** The re-wrap confirmation, over a table with rows still on the old key. */
+export const RotationConfirmation: Story = {
+  globals: { tier: "enterprise" },
+  parameters: {
+    msw: {
+      handlers: handlers({
+        ...ACTIVE_STATUS,
+        masterKeyVersion: 3,
+        pendingRotationRows: 2,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /re-wrap keys/i }),
+    );
+    await expect(
+      await within(document.body).findByText(/File contents are not touched/i),
+    ).toBeInTheDocument();
+  },
+};
+
 /** 07. Migration in flight over a real backlog. */
 export const MigrationRunning: Story = {
   globals: { tier: "enterprise" },
