@@ -31,17 +31,20 @@ const styles = {
     letterSpacing: "0.04em",
     lineHeight: 1.2,
   },
+  // Tints are mixed into the surface colour, never transparency: these badges
+  // sit on top of thumbnails, where a see-through backer makes them illegible.
   local: {
-    background: "color-mix(in srgb, var(--c-text-subtle) 16%, transparent)",
+    background:
+      "color-mix(in srgb, var(--c-text-subtle) 16%, var(--c-surface))",
     color: "var(--c-text-muted)",
   },
   cloud: {
-    background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
+    background: "color-mix(in srgb, var(--c-primary) 16%, var(--c-surface))",
     color: "var(--c-accent-text)",
   },
   shared: {
     background:
-      "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
+      "color-mix(in srgb, var(--mantine-color-orange-6) 16%, var(--c-surface))",
     color: "var(--color-amber-dark)",
   },
 };

@@ -45,8 +45,10 @@ export function FileCategoryBadge({ labels }: { labels?: string[] | null }) {
           padding: "0.1rem 0.4rem",
           borderRadius: "999px",
           lineHeight: 1.2,
+          // Mixed into the surface, not transparency — the badge sits on top
+          // of thumbnails, where a see-through backer is illegible.
           background:
-            "color-mix(in srgb, var(--c-text-subtle) 16%, transparent)",
+            "color-mix(in srgb, var(--c-text-subtle) 16%, var(--c-surface))",
         }}
       >
         {badges.slice(0, MAX_ICONS).map((badge) => (
