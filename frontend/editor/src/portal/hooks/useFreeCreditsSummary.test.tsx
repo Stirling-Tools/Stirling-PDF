@@ -34,7 +34,11 @@ function renderFor(initialState: LinkState) {
 describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", () => {
   beforeEach(() => {
     fetchWallet.mockReset();
-    fetchWallet.mockResolvedValue({ freeRemaining: 247, freeAllowance: 500 });
+    fetchWallet.mockResolvedValue({
+      status: "free",
+      freeRemaining: 247,
+      freeAllowance: 500,
+    });
   });
 
   it("unlinked reads no wallet at all", async () => {
@@ -46,6 +50,19 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
   it("linked surfaces the free grant", async () => {
     const el = renderFor("linked-free");
     await waitFor(() => expect(el.textContent).toBe("247/500"));
+  });
+
+  it("hides the meter once the team subscribes", async () => {
+    // The grant is a lifetime pool that survives subscribing, so a paying team
+    // would otherwise sit on a spent meter forever.
+    fetchWallet.mockResolvedValue({
+      status: "subscribed",
+      freeRemaining: 0,
+      freeAllowance: 500,
+    });
+    const el = renderFor("linked-subscribed");
+    await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
+    expect(el.textContent).toBe("none");
   });
 
   it("hides the meter when the wallet read fails", async () => {
