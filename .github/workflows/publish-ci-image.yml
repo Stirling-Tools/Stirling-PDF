@@ -6,7 +6,7 @@ on:
       task-version:
         description: Task version to publish
         required: true
-        default: 3.52.0
+        default: 3.53.1
         type: string
   push:
     paths:
@@ -28,7 +28,7 @@ jobs:
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.task-version }}
-        run: echo "value=${INPUT_VERSION:-3.52.0}" >> "${GITHUB_OUTPUT}"
+        run: echo "value=${INPUT_VERSION:-3.53.1}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0

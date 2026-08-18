@@ -1,10 +1,10 @@
 name: Setup Task from the CI image
-description: Install the pinned Task binary, using the Ubuntu CI image on Linux
+description: Install the pinned Task binary from the CI image on Linux or natively on other runners
 inputs:
   version:
     description: Task version to install
     required: false
-    default: 3.52.0
+    default: 3.53.1
 runs:
   using: composite
   steps:
@@ -36,10 +36,10 @@ runs:
         install_dir="${RUNNER_TEMP}/task-bin"
         mkdir -p "${install_dir}"
         case "${RUNNER_OS}-${RUNNER_ARCH}" in
-          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=416348147bc2f1c729417249d932add7894fb01a126128778195942c249d7c0b ;;
-          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=debfa9a3bc06fcb5d5550b44725ecd22bb305499ce057bd6d7a774db5cdaa7b8 ;;
-          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=e3bd4439b445f4f135758a2666ec8b33ccde789f7f615309c58f116b0e566e79 ;;
-          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=3f3b5bbf23d10c73f8f11bc4a47d1465f3a61a30fa231fddf0a87edc52937237 ;;
+          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=7f1a702d54a789cb818a636039a83df071f4179893133afafa4eba351a7e19ef ;;
+          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=85d2d96c2380b33d7855b07b3f7a20dc7ca0eda999a26efa0fb5f6f32b366cd7 ;;
+          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=27c0cd248c12cba03d8958d954a3df981c900be885ec9ce5f6a3cdc4e9a19316 ;;
+          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=4f7c32c0b5a09aabfd860bcf4ff5649f0483339c1f7f90ad5ee55692da7237b6 ;;
           *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
         esac
         archive="${RUNNER_TEMP}/${task_file}"

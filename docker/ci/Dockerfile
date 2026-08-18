@@ -1,9 +1,9 @@
-# Lightweight Ubuntu image with a pinned Task binary for CI experiments.
+# Lightweight Ubuntu image with a pinned Task binary for CI.
 # Build with: task docker:build:ci
 
 FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea
 
-ARG TASK_VERSION=3.52.0
+ARG TASK_VERSION=3.53.1
 ARG TARGETARCH=amd64
 
 RUN set -eux; \
@@ -11,8 +11,8 @@ RUN set -eux; \
     apt-get install --no-install-recommends -y ca-certificates curl tar; \
     rm -rf /var/lib/apt/lists/*; \
     case "${TARGETARCH}" in \
-      amd64) task_arch=amd64; task_sha256=02c679ffae53dca791804847d78b31731615894e292948397c971c87ac9e95bd ;; \
-      arm64) task_arch=arm64; task_sha256=7e0044108830cec0534577b289564e3b7c83e6df276feb631a1edc63d04e4ebe ;; \
+      amd64) task_arch=amd64; task_sha256=a54a408f6861ff921f6e87774180db31bacd8c1e7c944ca696db9fea49a82fc7 ;; \
+      arm64) task_arch=arm64; task_sha256=e3ad19101493a0112e1f22ae8ccc54bf03e533b1076a0ca1e6c782a09ad2e588 ;; \
       *) echo "Unsupported Docker architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     archive="/tmp/task_linux_${task_arch}.tar.gz"; \
