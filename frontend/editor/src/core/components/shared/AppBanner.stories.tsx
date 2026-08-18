@@ -102,9 +102,10 @@ function Row({ caption, children }: { caption: string; children: ReactNode }) {
 
 /**
  * Every top bar the app can show, in one place: each entry mirrors a real caller,
- * so a change to the component is visible against the whole set at once.
+ * so a change to the component is visible against the whole set at once. Renders a
+ * composition rather than the component, so it takes no args of its own.
  */
-export const AllTopBars: Story = {
+export const AllTopBars: StoryObj = {
   render: () => (
     <div
       style={{
