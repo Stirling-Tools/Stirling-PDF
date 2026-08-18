@@ -164,3 +164,9 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+.portal-enc__stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

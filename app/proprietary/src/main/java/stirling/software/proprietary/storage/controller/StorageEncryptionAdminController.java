@@ -95,11 +95,13 @@ public class StorageEncryptionAdminController {
                         .toList();
         String fingerprint = null;
         Integer masterKeyVersion = null;
+        String masterKeySource = null;
         if (encryptionState.isMaterialised()) {
             try {
                 FileEncryptionKeyService keyService = encryptionState.keyService();
                 fingerprint = keyService.masterKey().fingerprint();
                 masterKeyVersion = keyService.masterKey().currentVersion();
+                masterKeySource = keyService.masterKey().source().wireName();
             } catch (StorageEncryptionException ignored) {
                 // Materialisation failed; status still reports counts and key rows.
             }
@@ -114,6 +116,7 @@ public class StorageEncryptionAdminController {
                 encryptionState.isMaterialised(),
                 fingerprint,
                 masterKeyVersion,
+                masterKeySource,
                 applicationProperties.getStorage().getProvider(),
                 storedFileRepository.countByEncryptionKeyIdIsNotNull(),
                 storedFileRepository.countByEncryptionKeyIdIsNull(),

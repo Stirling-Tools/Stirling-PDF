@@ -62,6 +62,24 @@ export function EncryptionKeyTable({
     });
   };
 
+  const lastChange = (key: EncryptionKeyInfo): string => {
+    const when = key.statusChangedAt
+      ? new Date(key.statusChangedAt).toLocaleString()
+      : null;
+    if (key.statusChangedBy && when)
+      return t("portal.infrastructure.encryption.keys.changedByAt", {
+        actor: key.statusChangedBy,
+        when,
+      });
+    if (key.statusChangedBy)
+      return t("portal.infrastructure.encryption.keys.changedBy", {
+        actor: key.statusChangedBy,
+      });
+    if (when)
+      return t("portal.infrastructure.encryption.keys.changedAt", { when });
+    return t("portal.infrastructure.encryption.keys.neverChanged");
+  };
+
   const columns: DataTableColumn<EncryptionKeyInfo>[] = [
     column.entity({
       key: "scope",
@@ -85,12 +103,7 @@ export function EncryptionKeyTable({
     column.muted({
       key: "lastChange",
       header: t("portal.infrastructure.encryption.keys.columns.lastChange"),
-      get: (row) =>
-        row.statusChangedBy
-          ? t("portal.infrastructure.encryption.keys.changedBy", {
-              actor: row.statusChangedBy,
-            })
-          : t("portal.infrastructure.encryption.keys.neverChanged"),
+      get: (row) => lastChange(row),
     }),
     column.actions({
       key: "actions",
@@ -129,11 +142,18 @@ export function EncryptionKeyTable({
             )}
           />
         ) : (
-          <DataTable
-            columns={columns}
-            rows={keys}
-            rowKey={(row) => row.keyId}
-          />
+          <>
+            <DataTable
+              columns={columns}
+              rows={keys}
+              rowKey={(row) => row.keyId}
+            />
+            {keys.some((key) => key.status === "RETIRED") ? (
+              <p className="portal-enc__note">
+                {t("portal.infrastructure.encryption.keys.retiredNote")}
+              </p>
+            ) : null}
+          </>
         )}
 
         <Modal

@@ -8,6 +8,15 @@ import { apiClient, HttpError } from "@portal/api/http";
 
 const BASE = "/api/v1/admin/storage-encryption";
 
+/**
+ * Runbook sections the panel links to. These point at the devGuide until the
+ * encryption-at-rest pages are published on docs.stirlingpdf.com.
+ */
+const RUNBOOK =
+  "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/STORAGE_ENCRYPTION_AT_REST.md";
+export const RUNBOOK_BACKUP = `${RUNBOOK}#backing-up-the-master-key`;
+export const RUNBOOK_ROTATION = `${RUNBOOK}#rotating-the-master-key`;
+
 export type EncryptionKeyStatus = "ACTIVE" | "RETIRED" | "DISABLED";
 
 export type EncryptionScopeType = "GLOBAL" | "TEAM" | "SOURCE";
@@ -35,7 +44,8 @@ export interface StorageEncryptionStatus {
   /** SHA-256 prefix of the master key, for comparing against a backup. */
   masterKeyFingerprint: string | null;
   masterKeyVersion: number | null;
-  masterKeySource?: MasterKeySource;
+  /** Null until the key machinery has materialised on this node. */
+  masterKeySource: MasterKeySource | null;
   /** Backend serving stored blobs: local, database or s3. */
   provider: string | null;
   encryptedFiles: number;
@@ -93,6 +103,11 @@ export function unavailableReason(error: unknown): EncryptionUnavailableReason {
 /** True when the backend rejected the action because of current state, not a fault. */
 export function isConflict(error: unknown): boolean {
   return error instanceof HttpError && error.status === 409;
+}
+
+/** The key row is gone, so retrying the same call cannot succeed. */
+export function isMissing(error: unknown): boolean {
+  return error instanceof HttpError && error.status === 404;
 }
 
 export async function fetchEncryptionStatus(): Promise<StorageEncryptionStatus> {

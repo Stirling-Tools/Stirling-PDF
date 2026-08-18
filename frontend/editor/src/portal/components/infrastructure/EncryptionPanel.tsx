@@ -18,8 +18,10 @@ import {
   fetchEncryptionStatus,
   fetchMigrationStatus,
   isConflict,
+  isMissing,
   pendingRotationCount,
   rotateMasterKey,
+  RUNBOOK_BACKUP,
   startEncryptionMigration,
   unavailableReason,
   type EncryptionKeyInfo,
@@ -128,7 +130,9 @@ export function EncryptionPanel({
       setActionError(
         isConflict(error)
           ? errorMessage(error)
-          : t("portal.infrastructure.encryption.error.action"),
+          : isMissing(error)
+            ? t("portal.infrastructure.encryption.error.keyMissing")
+            : t("portal.infrastructure.encryption.error.action"),
       );
     } finally {
       if (mounted.current) setBusyKeyId(null);
@@ -282,6 +286,18 @@ export function EncryptionPanel({
           description={t(
             "portal.infrastructure.encryption.generatedKey.description",
           )}
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              as="a"
+              href={RUNBOOK_BACKUP}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t("portal.infrastructure.encryption.generatedKey.backupGuide")}
+            </Button>
+          }
         />
       ) : null}
 

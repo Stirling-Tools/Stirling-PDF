@@ -14,6 +14,8 @@ public record StorageEncryptionStatusResponse(
         String masterKeyFingerprint,
         Integer masterKeyVersion,
         /** Backend serving stored blobs: local, database or s3. */
+        /** Where the master key came from: config, environment or generated. */
+        String masterKeySource,
         String provider,
         long encryptedFiles,
         long plaintextFiles,

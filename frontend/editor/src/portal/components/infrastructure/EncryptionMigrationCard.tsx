@@ -1,12 +1,15 @@
 import { useTranslation } from "react-i18next";
 import {
+  ActionIcon,
   Banner,
   Button,
   Card,
   ProgressBar,
   StatTile,
   StatusBadge,
+  Tooltip,
 } from "@app/ui";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import type { StatusTone } from "@app/ui";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import type {
@@ -67,6 +70,13 @@ export function EncryptionMigrationCard({
             {t(`portal.infrastructure.encryption.migration.state.${state}`)}
           </StatusBadge>
         </div>
+        {status?.startedAt ? (
+          <p className="portal-enc__note">
+            {t("portal.infrastructure.encryption.migration.startedAt", {
+              when: new Date(status.startedAt).toLocaleString(),
+            })}
+          </p>
+        ) : null}
 
         {state === "FAILED" ? (
           <Banner
@@ -108,7 +118,26 @@ export function EncryptionMigrationCard({
                 value={processed.toLocaleString()}
               />
               <StatTile
-                label={t("portal.infrastructure.encryption.migration.skipped")}
+                label={
+                  <span className="portal-enc__stat-label">
+                    {t("portal.infrastructure.encryption.migration.skipped")}
+                    <Tooltip
+                      content={t(
+                        "portal.infrastructure.encryption.migration.skippedNote",
+                      )}
+                    >
+                      <ActionIcon
+                        variant="quiet"
+                        size="sm"
+                        aria-label={t(
+                          "portal.infrastructure.encryption.migration.skippedHelp",
+                        )}
+                      >
+                        <LocalIcon icon="info-rounded" width="0.875rem" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </span>
+                }
                 value={skipped.toLocaleString()}
               />
               <StatTile
@@ -119,11 +148,6 @@ export function EncryptionMigrationCard({
                 tone={failed > 0 ? "danger" : "default"}
               />
             </div>
-            {skipped > 0 ? (
-              <p className="portal-enc__note">
-                {t("portal.infrastructure.encryption.migration.skippedNote")}
-              </p>
-            ) : null}
           </>
         ) : (
           <p className="portal-enc__note">

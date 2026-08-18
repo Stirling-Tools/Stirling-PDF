@@ -7611,19 +7611,24 @@ subheading = "Covers files in My Files and signing workflows. Files a pipeline r
 
 [portal.infrastructure.encryption.error]
 action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
 migrationStart = "The migration could not be started. Please try again."
 rotate = "The re-wrap could not be completed. Please try again."
 
 [portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
 description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
 title = "This key was generated for you"
 
 [portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
 changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
 heading = "Scope keys"
 keyVersion = "Version {{version}}"
 neverChanged = "Never changed"
 restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
 revoke = "Revoke"
 subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
 
@@ -7662,8 +7667,10 @@ requiresEncryptionOn = "Switch encryption on before running this: the backlog is
 restartNote = "Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
 runAgain = "Run again"
 skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
 skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
 start = "Start"
+startedAt = "Started {{when}}"
 subheading = "Encrypts the plaintext backlog left from before encryption was switched on."
 
 [portal.infrastructure.encryption.migration.failed]
@@ -7693,6 +7700,7 @@ pendingRows = "Rows on an older version"
 rewrap = "Re-wrap keys"
 rewrapped_one = "{{count}} key row re-wrapped."
 rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
 subheading = "Re-wraps scope keys under a new master key. File contents are never rewritten."
 
 [portal.infrastructure.encryption.rotation.pending]

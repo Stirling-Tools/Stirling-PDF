@@ -101,6 +101,7 @@ export const EncryptionOff: Story = {
         active: false,
         masterKeyFingerprint: null,
         masterKeyVersion: null,
+        masterKeySource: null,
         provider: "local",
         encryptedFiles: 0,
         plaintextFiles: 1840,
