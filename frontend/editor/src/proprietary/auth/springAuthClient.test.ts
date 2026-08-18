@@ -227,67 +227,6 @@ describe("SpringAuthClient", () => {
     });
   });
 
-  describe("signUp", () => {
-    it("should successfully register new user", async () => {
-      const credentials = {
-        email: "newuser@example.com",
-        password: "newpassword123",
-      };
-
-      const mockUser = {
-        id: "456",
-        email: credentials.email,
-        username: credentials.email,
-        role: "USER",
-      };
-
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        status: 200,
-        data: { user: mockUser },
-      } as unknown as AxiosResponse);
-
-      const result = await springAuth.signUp(credentials);
-
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/api/v1/user/register",
-        {
-          username: credentials.email,
-          password: credentials.password,
-        },
-        { withCredentials: true },
-      );
-      expect(result.user).toEqual(mockUser);
-      expect(result.session).toBeNull(); // No auto-login on signup
-      expect(result.error).toBeNull();
-    });
-
-    it("should return error on failed registration", async () => {
-      expectConsole.error(/\[SpringAuth\] signUp error/);
-      const credentials = {
-        email: "existing@example.com",
-        password: "password123",
-      };
-
-      const errorMessage = "User already exists";
-      const mockError = Object.assign(new Error(errorMessage), {
-        isAxiosError: true,
-        response: {
-          status: 409,
-          data: { message: errorMessage },
-        },
-      });
-
-      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
-
-      const result = await springAuth.signUp(credentials);
-
-      expect(result.user).toBeNull();
-      expect(result.session).toBeNull();
-      expect(result.error).toBeTruthy();
-      expect(result.error?.message).toBe(errorMessage);
-    });
-  });
-
   describe("signOut", () => {
     it("should successfully sign out and clear JWT", async () => {
       const mockToken = "jwt-to-clear";

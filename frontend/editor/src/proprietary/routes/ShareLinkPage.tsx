@@ -20,6 +20,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { alert } from "@app/components/toast";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   downloadShareLink,
   fetchShareLinkMetadata,
@@ -143,7 +144,7 @@ export default function ShareLinkPage() {
         actions.setSelectedFiles(selectedIds);
       }
       navActions.setWorkbench("viewer");
-      navigate("/", { replace: true });
+      navigate(EDITOR_BASENAME, { replace: true });
     } catch (error: unknown) {
       const statusCode = isAxiosError(error)
         ? error.response?.status

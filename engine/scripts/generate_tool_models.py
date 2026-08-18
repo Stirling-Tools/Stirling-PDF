@@ -65,6 +65,8 @@ class ToolIOWhen(ApiModel):
 
     param: str
     matches: list[str]
+    # The value the endpoint uses when this parameter is absent; None when it has none.
+    default: str | None = None
 
 
 class ToolIOCase(ApiModel):
@@ -147,6 +149,9 @@ class ToolDiscovery:
         "/api/v1/misc/add-image",
         "/api/v1/misc/add-attachments",
         "/api/v1/general/overlay-pdfs",
+        # 5. Server maintenance, not a document operation: releases finished jobs and
+        #    their stored files. Nothing an edit agent should ever call on its own.
+        "/api/v1/general/jobs/cleanup",
     )
 
     def _is_excluded(self, path: str) -> bool:
@@ -378,7 +383,10 @@ def collect_tool_io(spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _render_when(condition: dict[str, Any]) -> str:
-    return f"ToolIOWhen(param={json.dumps(condition['param'])}, matches={json.dumps(condition['matches'])})"
+    parts = [f"param={json.dumps(condition['param'])}", f"matches={json.dumps(condition['matches'])}"]
+    if "default" in condition:
+        parts.append(f"default={json.dumps(condition['default'])}")
+    return f"ToolIOWhen({', '.join(parts)})"
 
 
 def _render_case(case: dict[str, Any]) -> str:
