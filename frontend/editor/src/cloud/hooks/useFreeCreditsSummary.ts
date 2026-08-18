@@ -1,46 +1,50 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useWallet } from "@app/hooks/useWallet";
 import {
-  readWalletIsMetered,
-  writeWalletIsMetered,
-} from "@app/services/walletPlanHint";
+  readCachedCredits,
+  writeCachedCredits,
+  type CachedCredits,
+} from "@app/services/navFooterCache";
 import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
 
+/** The wallet reduced to what the footer shows: figures, or null for a payer. */
+function toCredits(
+  status: string,
+  freeRemaining: number,
+  freeAllowance: number,
+): CachedCredits {
+  // Free teams only. The grant is a lifetime pool that survives subscribing, so
+  // a paying team would otherwise sit on a permanent "0 of 500" in red while
+  // nothing is wrong. Plan draws the same line — subscribed teams get the
+  // spend-vs-cap meter there, and admins get usage in the processor.
+  if (status === "subscribed") return null;
+  return { remaining: freeRemaining, total: freeAllowance };
+}
+
 /**
- * Cloud builds read the free grant straight off the live wallet — the same
- * snapshot the Plan page's free meter renders, so the sidebar and Plan can't
- * disagree.
+ * Cloud builds read the free grant off the live wallet — the same snapshot the
+ * Plan page's free meter renders, so the sidebar and Plan can't disagree.
  *
- * Free teams only. The grant is a lifetime pool that survives subscribing, so a
- * paying team would otherwise sit on a permanent "0 of 500" in red while
- * nothing is actually wrong. Plan draws the same line — subscribed teams get
- * the spend-vs-cap meter there, and admins get usage in the processor.
- *
- * Before the wallet answers, the last known plan decides whether the row holds
- * its space (see {@link readWalletIsMetered}): a free team gets the row with a
- * spinner where the figures go, a paying team gets nothing, and a browser that
- * has never loaded a wallet waits rather than guessing. The figures themselves
- * are never persisted — a credit balance shown from storage would be wrong the
- * moment anything ran.
+ * Seeded from the last figures this browser saw, so the row is right at first
+ * paint and stays put while the wallet refetches underneath. Only a browser
+ * that has never loaded a wallet has nothing to show, and that one time the row
+ * animates in. The seed is read once, at first render: later reads would fight
+ * the live value, and the whole point is that the row stops moving.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { wallet } = useWallet();
-  const metered = wallet ? wallet.status === "subscribed" : null;
+  const [seed] = useState(readCachedCredits);
 
+  const live = wallet
+    ? toCredits(wallet.status, wallet.freeRemaining, wallet.freeAllowance)
+    : undefined;
+
+  // useWallet reuses the snapshot reference when nothing changed, so keying on
+  // it writes only on a real change, not on every render.
   useEffect(() => {
-    if (metered !== null) writeWalletIsMetered(metered);
-  }, [metered]);
-
-  return useMemo(() => {
-    if (!wallet) {
-      // No wallet yet: hold the space only if this browser last saw a free team.
-      return readWalletIsMetered() === false ? { state: "loading" } : null;
-    }
-    if (wallet.status === "subscribed") return null;
-    return {
-      state: "ready",
-      remaining: wallet.freeRemaining,
-      total: wallet.freeAllowance,
-    };
+    if (live !== undefined) writeCachedCredits(live);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet]);
+
+  return (live !== undefined ? live : seed) ?? null;
 }

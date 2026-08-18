@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -39,6 +39,14 @@ export interface NavFooterProps {
 }
 
 /**
+ * Whether the enter animation has already played this page session. The rows
+ * are seeded from cache now, so they're present from first paint and every
+ * later mount — switching apps, remounting a view — would otherwise replay the
+ * animation on content that never changed, which reads as the UI twitching.
+ */
+let hasPlayedEnter = false;
+
+/**
  * The bottom section every sidebar ends with, shared by the editor and the
  * processor so both present the same rows. ONE surface, hairline-separated, in
  * this order:
@@ -65,6 +73,11 @@ export function NavFooter({
   className,
 }: NavFooterProps) {
   const { t } = useTranslation();
+  const [animate] = useState(() => {
+    if (hasPlayedEnter) return false;
+    hasPlayedEnter = true;
+    return true;
+  });
 
   const settingsLabel = t("fileSidebar.openSettings", "Open settings");
   const accountLabel = onOpenSettings
@@ -179,6 +192,7 @@ export function NavFooter({
     <NavSurface
       className={["nav-footer", className ?? ""].filter(Boolean).join(" ")}
       data-collapsed={collapsed || undefined}
+      data-animate={animate || undefined}
     >
       {rows.map((row) => (
         <div key={row.key} className="nav-footer__slot">

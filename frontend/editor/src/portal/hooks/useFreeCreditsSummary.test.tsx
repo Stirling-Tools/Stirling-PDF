@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
@@ -13,11 +13,7 @@ function Probe() {
   const credits = useFreeCreditsSummary();
   return (
     <span data-testid="credits">
-      {credits === null
-        ? "none"
-        : credits.state === "loading"
-          ? "loading"
-          : `${credits.remaining}/${credits.total}`}
+      {credits ? `${credits.remaining}/${credits.total}` : "none"}
     </span>
   );
 }
@@ -37,6 +33,8 @@ function renderFor(initialState: LinkState) {
 
 describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", () => {
   beforeEach(() => {
+    // The figures persist across mounts now, so isolate the suite from itself.
+    localStorage.clear();
     fetchWallet.mockReset();
     fetchWallet.mockResolvedValue({
       status: "free",
@@ -76,16 +74,24 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
     await waitFor(() => expect(el.textContent).toBe("none"));
   });
 
-  it("holds the row's space while a linked instance loads its wallet", async () => {
+  it("shows the last known figures while the wallet reloads", async () => {
+    // What stops the row popping in — and resizing the footer — every time the
+    // processor mounts.
+    const el = renderFor("linked-free");
+    await waitFor(() => expect(el.textContent).toBe("247/500"));
+    cleanup();
+
     let release: (v: unknown) => void = () => {};
     fetchWallet.mockReturnValue(
       new Promise((resolve) => {
         release = resolve;
       }),
     );
-    const el = renderFor("linked-free");
-    await waitFor(() => expect(el.textContent).toBe("loading"));
-    release({ status: "free", freeRemaining: 247, freeAllowance: 500 });
-    await waitFor(() => expect(el.textContent).toBe("247/500"));
+    const second = renderFor("linked-free");
+    // Seeded before the refetch lands...
+    expect(second.textContent).toBe("247/500");
+    release({ status: "free", freeRemaining: 12, freeAllowance: 500 });
+    // ...then updated in place, without the row ever being absent.
+    await waitFor(() => expect(second.textContent).toBe("12/500"));
   });
 });

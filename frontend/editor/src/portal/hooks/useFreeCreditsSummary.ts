@@ -1,7 +1,13 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLink } from "@portal/contexts/LinkContext";
 import { fetchWallet } from "@portal/api/billing";
 import { qk } from "@portal/queries/keys";
+import {
+  readCachedCredits,
+  writeCachedCredits,
+  type CachedCredits,
+} from "@app/services/navFooterCache";
 import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
 
 /**
@@ -28,18 +34,27 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();
   // Shared query key, so the footer rides the same cached snapshot as any other
   // wallet reader rather than adding a fetch per mount.
-  const { data: wallet, isPending } = useQuery({
+  const { data: wallet } = useQuery({
     queryKey: qk.wallet(isLinked),
     queryFn: fetchWallet,
     enabled: isLinked,
   });
-  // Linkage is known synchronously, so a linked instance can hold the row's
-  // space while the wallet loads without needing a remembered hint.
-  if (!wallet) return isLinked && isPending ? { state: "loading" } : null;
-  if (wallet.status === "subscribed") return null;
-  return {
-    state: "ready",
-    remaining: wallet.freeRemaining,
-    total: wallet.freeAllowance,
-  };
+  // Shared with the editor's seam, so crossing between the two apps shows the
+  // figures the other one last saw rather than re-fetching into an empty row.
+  const [seed] = useState(readCachedCredits);
+
+  const live: CachedCredits | undefined = !wallet
+    ? undefined
+    : wallet.status === "subscribed"
+      ? null
+      : { remaining: wallet.freeRemaining, total: wallet.freeAllowance };
+
+  useEffect(() => {
+    // Only once linked: an unlinked instance never asks, so it has no answer of
+    // its own and must not overwrite what the editor recorded.
+    if (isLinked && live !== undefined) writeCachedCredits(live);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallet, isLinked]);
+
+  return (live !== undefined ? live : seed) ?? null;
 }

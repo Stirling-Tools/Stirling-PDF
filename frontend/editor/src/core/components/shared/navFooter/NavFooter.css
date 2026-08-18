@@ -33,10 +33,10 @@
   padding-top: 0.25rem;
 }
 
-/* Rows arrive as their data resolves (wallet, processor access), so they fade
-   up rather than popping in under the account row. Runs when the slot starts
-   matching :not(:empty) — i.e. on first paint for rows that are ready, and on
-   arrival for the ones that weren't. */
+/* Fades the rows up on the first footer mount of a page session only. They are
+   seeded from cache, so they're already present at first paint; replaying this
+   on every later mount (switching apps, remounting a view) would animate
+   content that never changed and read as a twitch. */
 @keyframes nav-footer-row-in {
   from {
     opacity: 0;
@@ -48,12 +48,12 @@
   }
 }
 
-.nav-footer__slot:not(:empty) {
+.nav-footer[data-animate] .nav-footer__slot:not(:empty) {
   animation: nav-footer-row-in var(--motion-enter) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-footer__slot:not(:empty) {
+  .nav-footer[data-animate] .nav-footer__slot:not(:empty) {
     animation: none;
   }
 }

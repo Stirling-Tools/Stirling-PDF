@@ -36,6 +36,9 @@ function renderHook<T>(cb: () => T) {
 
 describe("usePortalAccess", () => {
   beforeEach(() => {
+    // The hook now remembers the last answer across mounts, so without this a
+    // prior test's result seeds the next one.
+    localStorage.clear();
     get.mockReset();
     currentUserId = null;
     client = new QueryClient({
@@ -104,6 +107,24 @@ describe("usePortalAccess", () => {
     get.mockResolvedValue(meReturning(true));
     const second = renderHook(() => usePortalAccess());
     await waitFor(() => expect(second.result.current).toBe(true));
+  });
+
+  it("shows the last known answer at first paint, then revalidates", async () => {
+    // What stops the switcher and the footer's "Open ..." row popping in a
+    // request late on every mount.
+    currentUserId = "admin-1";
+    get.mockResolvedValue(meReturning(true));
+    const first = renderHook(() => usePortalAccess());
+    await waitFor(() => expect(first.result.current).toBe(true));
+    first.unmount();
+
+    client.clear();
+    get.mockResolvedValue(meReturning(false));
+    const second = renderHook(() => usePortalAccess());
+    // Seeded from the remembered answer before the request lands...
+    expect(second.result.current).toBe(true);
+    // ...and corrected once the backend disagrees.
+    await waitFor(() => expect(second.result.current).toBe(false));
   });
 
   it("ignores a response that lands after unmount", async () => {

@@ -1,6 +1,11 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
+import {
+  readCachedOtherApp,
+  writeCachedOtherApp,
+} from "@app/services/navFooterCache";
 import { qk } from "@app/query/keys";
 
 async function fetchPortalAccess(): Promise<boolean> {
@@ -31,8 +36,13 @@ async function fetchPortalAccess(): Promise<boolean> {
 export function usePortalAccess(): boolean {
   const { user } = useAuth();
   const userId = user?.id ?? null;
+  // The query cache is per-tree and per-load, so it can't help a cold start or
+  // the hop into the processor, which mounts its own client. Seed from the last
+  // answer this browser saw so the switcher and the footer's "Open ..." row are
+  // there at first paint. Marked ancient so it still revalidates immediately.
+  const [seed] = useState(readCachedOtherApp);
 
-  const { data } = useQuery({
+  const { data, isSuccess } = useQuery({
     queryKey: qk.portalAccess(userId),
     queryFn: fetchPortalAccess,
     // Signed out: nothing to ask, and any previous answer is void.
@@ -40,7 +50,15 @@ export function usePortalAccess(): boolean {
     // Backend unreachable or guest (401) means no access now; a later refetch
     // asks again rather than trusting the failure.
     retry: false,
+    initialData: seed,
+    initialDataUpdatedAt: 0,
   });
+
+  useEffect(() => {
+    // Only a real answer is recorded — a failed probe is not one, so the next
+    // mount trusts the last backend response rather than a network blip.
+    if (isSuccess && data !== undefined) writeCachedOtherApp(data);
+  }, [isSuccess, data]);
 
   return data === true;
 }
