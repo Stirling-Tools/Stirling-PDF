@@ -24,6 +24,25 @@ export function useFileSidebarGroups(
   return null;
 }
 
+/** One classification label as a file card wears it: its own icon and the
+ *  accent its category carries in the sidebar, named on hover. */
+export interface LabelBadge {
+  id: string;
+  /** Translated display name, for the hover. */
+  name: string;
+  /** Material Symbols icon key (rendered via LocalIcon). */
+  icon: string;
+  /** CSS colour matching the label's sidebar category accent. */
+  color?: string;
+}
+
+const NO_BADGES: LabelBadge[] = [];
+
+/** Badge descriptors for a file's labels; core (no classification) has none. */
+export function useLabelBadges(_labels?: string[] | null): LabelBadge[] {
+  return NO_BADGES;
+}
+
 // Header control for customizing the grouping; core has none, an override renders a group picker.
 export function FileSidebarGroupControls(_props: {
   stubs: StirlingFileStub[];

@@ -22,9 +22,16 @@ import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogi
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
+import type {
+  FileSidebarGroup,
+  LabelBadge,
+} from "@core/components/shared/fileSidebarGrouping";
+import { DEFAULT_CLASSIFICATION_LABELS } from "@app/data/classificationLabels";
+import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
+import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 
 export type { FileSidebarGroup };
+export type { LabelBadge } from "@core/components/shared/fileSidebarGrouping";
 // Pure grouping logic lives in a component-free module so tests don't drag in the picker's UI deps.
 export {
   buildLabelGroups,
@@ -106,4 +113,47 @@ export function useFileSidebarGroups(
     () => (enabled ? buildLabelGroups(stubs, t, categories) : null),
     [enabled, stubs, t, categories],
   );
+}
+
+/**
+ * Badge descriptors for a file's labels: each label's own icon from the
+ * classification vocabulary, coloured with the accent its category cycles to
+ * in the sidebar (visible categories in display order — the same order the
+ * groups render in, so a badge and its group read as one colour). Labels
+ * under a hidden category wear the same neutral grey as the "Other" group.
+ */
+export function useLabelBadges(labels?: string[] | null): LabelBadge[] {
+  const { t } = useTranslation();
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
+  );
+  return useMemo(() => {
+    if (!labels || labels.length === 0) return [];
+    const visible = categories
+      .filter((category) => !category.hidden)
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    const accentByLabel = new Map<string, string>();
+    visible.forEach((category, index) => {
+      for (const labelKey of category.labelKeys) {
+        if (!accentByLabel.has(labelKey)) {
+          accentByLabel.set(labelKey, accentCycleColor(index));
+        }
+      }
+    });
+    const byId = new Map(
+      DEFAULT_CLASSIFICATION_LABELS.map((label) => [label.id, label]),
+    );
+    return labels.map((id) => {
+      const label = byId.get(id);
+      return {
+        id,
+        name: t(`classification.labels.${id}`, label?.name ?? id),
+        icon: label?.icon ?? DEFAULT_LABEL_ICON,
+        color: accentByLabel.get(id) ?? accentColor("gray"),
+      };
+    });
+  }, [labels, categories, t]);
 }
