@@ -5,6 +5,7 @@ import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
+import { useOpenPlan } from "@portal/hooks/useOpenPlan";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +47,7 @@ export function Sidebar() {
   });
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
+  const openPlan = useOpenPlan();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -157,6 +159,7 @@ export function Sidebar() {
         profilePictureUrl={profilePictureUrl}
         onOpenSettings={openSettings}
         credits={credits}
+        onOpenPlan={openPlan ?? undefined}
         otherApp={{ app: "editor", onOpen: goToEditor }}
         accountExtras={<LinkAccountFooterItem />}
         collapsed={collapsed}

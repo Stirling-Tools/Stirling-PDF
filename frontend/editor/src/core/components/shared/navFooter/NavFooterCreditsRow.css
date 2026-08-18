@@ -8,9 +8,17 @@
   cursor: default;
 }
 
-/* Not actionable, so it must not read as hoverable. */
-.nav-footer__credits:not(:disabled):hover {
+/* Inert by default, so it must not read as hoverable; the actionable variant
+   opts back into the shared row hover. */
+.nav-footer__credits:hover {
   background: none;
+}
+
+.nav-footer__credits--actionable {
+  cursor: pointer;
+}
+.nav-footer__credits--actionable:hover {
+  background-color: var(--c-hover);
 }
 
 .nav-footer__credits-head {

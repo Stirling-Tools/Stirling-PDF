@@ -16,6 +16,7 @@ const meta: Meta<typeof NavFooter> = {
     displayName: "admin",
     onOpenSettings: () => {},
     credits: { remaining: 247, total: 500 },
+    onOpenPlan: () => {},
     otherApp: { app: "processor", onOpen: () => {} },
   },
   decorators: [

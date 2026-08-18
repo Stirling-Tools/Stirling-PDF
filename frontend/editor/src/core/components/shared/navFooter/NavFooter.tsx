@@ -27,6 +27,8 @@ export interface NavFooterProps {
   onOpenSettings?: () => void;
   /** Null/undefined hides the meter — builds with no wallet never show it. */
   credits?: NavFooterCredits | null;
+  /** Opens the plan surface from the credits row; omit to leave it inert. */
+  onOpenPlan?: () => void;
   /** Null/undefined hides the switch row — e.g. no access to the other app. */
   otherApp?: NavFooterAppLink | null;
   /** Extra rows above the account row (the self-hosted link-account CTA). */
@@ -56,6 +58,7 @@ export function NavFooter({
   profilePictureUrl,
   onOpenSettings,
   credits,
+  onOpenPlan,
   otherApp,
   accountExtras,
   collapsed = false,
@@ -84,6 +87,7 @@ export function NavFooter({
           credits={credits}
           collapsed={collapsed}
           label={t("navFooter.credits.label", "Free credits")}
+          onOpen={onOpenPlan}
         />
       ),
     });

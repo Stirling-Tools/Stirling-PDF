@@ -25,6 +25,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
 import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
+import { useOpenPlan } from "@app/hooks/useOpenPlan";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
   useIndexedDB,
@@ -245,6 +246,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       useAccountIdentity();
     const credits = useFreeCreditsSummary();
     const otherApp = useOtherAppSwitch();
+    const openPlan = useOpenPlan();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
@@ -1238,6 +1240,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           profilePictureUrl={profilePictureUrl}
           onOpenSettings={onOpenSettings}
           credits={credits}
+          onOpenPlan={openPlan ?? undefined}
           otherApp={otherApp}
           collapsed={collapsed}
         />

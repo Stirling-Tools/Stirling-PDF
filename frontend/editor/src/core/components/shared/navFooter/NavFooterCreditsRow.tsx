@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import { ProgressBar } from "@app/ui";
@@ -22,6 +23,8 @@ interface NavFooterCreditsRowProps {
   collapsed: boolean;
   /** Row label, passed in so the meter owns no copy of its own. */
   label: string;
+  /** Opens the plan surface. Omit to render the meter as inert text. */
+  onOpen?: () => void;
 }
 
 /**
@@ -37,6 +40,7 @@ export function NavFooterCreditsRow({
   credits,
   collapsed,
   label,
+  onOpen,
 }: NavFooterCreditsRowProps) {
   const { t } = useTranslation();
   const total = Math.max(0, credits.total);
@@ -54,7 +58,7 @@ export function NavFooterCreditsRow({
       withinPortal
       disabled={!collapsed}
     >
-      <div className="nav-footer__row nav-footer__credits">
+      <Row onOpen={onOpen} label={`${label}: ${count}`}>
         {!collapsed && (
           <div className="nav-footer__credits-head">
             <span className="nav-footer__dot" data-tone={tone} aria-hidden />
@@ -68,7 +72,37 @@ export function NavFooterCreditsRow({
           color={`var(--c-${tone})`}
           label={`${label}: ${count}`}
         />
-      </div>
+      </Row>
     </Tooltip>
+  );
+}
+
+/**
+ * The meter is a button only where there is a plan surface to open — otherwise
+ * it stays a plain div, so a build with nowhere to go doesn't advertise a
+ * click that does nothing.
+ */
+function Row({
+  onOpen,
+  label,
+  children,
+}: {
+  onOpen?: () => void;
+  label: string;
+  children: ReactNode;
+}) {
+  const className = `nav-footer__row nav-footer__credits${
+    onOpen ? " nav-footer__credits--actionable" : ""
+  }`;
+  if (!onOpen) return <div className={className}>{children}</div>;
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={() => onOpen()}
+      aria-label={label}
+    >
+      {children}
+    </button>
   );
 }
