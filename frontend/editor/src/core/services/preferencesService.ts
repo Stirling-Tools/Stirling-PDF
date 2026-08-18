@@ -3,6 +3,10 @@ import {
   DEFAULT_TOOL_PANEL_MODE,
 } from "@app/constants/toolPanel";
 import { type ThemeMode } from "@app/constants/theme";
+import {
+  type AppSwitchStyle,
+  DEFAULT_APP_SWITCH_STYLE,
+} from "@app/constants/appSwitchStyle";
 
 export type LogoVariant = "modern" | "classic";
 
@@ -26,6 +30,8 @@ export type ViewerZoomSetting =
 export type LoginLandingView = "processor" | "editor";
 
 export interface UserPreferences {
+  /** How the editor <-> processor switch animates. */
+  appSwitchStyle: AppSwitchStyle;
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
   defaultToolPanelMode: ToolPanelMode;
@@ -47,6 +53,7 @@ export interface UserPreferences {
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
+  appSwitchStyle: DEFAULT_APP_SWITCH_STYLE,
   autoUnzip: true,
   autoUnzipFileLimit: 4,
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,

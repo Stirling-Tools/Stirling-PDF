@@ -4,7 +4,7 @@ import { ActionIcon, NavItem, NavSurface } from "@app/ui";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
@@ -37,7 +37,7 @@ export function Sidebar() {
     toggleSidebarCollapsed,
   } = useUI();
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { switchToApp } = useAppSwitch();
   const isMobile = useMediaQuery(MOBILE_QUERY, false, {
     getInitialValueInEffect: false,
   });
@@ -47,10 +47,10 @@ export function Sidebar() {
   const collapsed = sidebarCollapsed && !isMobile;
 
   // Editor and portal are one SPA when the editor serves this origin's root, so
-  // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
-  // needs a full page load.
+  // the switch stays client-side and plays the cross-app transition; an absolute
+  // EDITOR_URL (dev cross-app setup) needs a full page load.
   const goToEditor = () => {
-    if (EDITOR_IS_SAME_APP) navigate(EDITOR_BASENAME);
+    if (EDITOR_IS_SAME_APP) switchToApp("editor", EDITOR_BASENAME);
     else window.location.href = EDITOR_URL;
   };
 

@@ -4,7 +4,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.22rem 1rem;
+  min-height: 3.5rem;
+  padding: 0 1rem;
   flex-shrink: 0;
 }
 

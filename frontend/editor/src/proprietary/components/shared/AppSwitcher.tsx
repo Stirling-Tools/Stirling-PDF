@@ -1,13 +1,12 @@
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/context";
 import { Logo } from "@app/ui/Logo";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { type AppSwitcherProps } from "@core/components/shared/AppSwitcher";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 
 export function AppSwitcher({ collapsed }: AppSwitcherProps) {
   const { portalAccess } = useAuth();
-  const navigate = useNavigate();
+  const { switchToApp } = useAppSwitch();
 
   if (!portalAccess) {
     return (
@@ -22,7 +21,7 @@ export function AppSwitcher({ collapsed }: AppSwitcherProps) {
   return (
     <BrandSwitcher
       current="editor"
-      onSwitch={() => navigate(PORTAL_BASENAME)}
+      onSwitch={() => switchToApp("processor")}
       collapsed={collapsed}
     />
   );

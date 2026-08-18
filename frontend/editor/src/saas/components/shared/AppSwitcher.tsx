@@ -1,9 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { Logo } from "@app/ui/Logo";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { type AppSwitcherProps } from "@core/components/shared/AppSwitcher";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 
 /**
  * SaaS sidebar brand header. When the backend says this user can open the
@@ -19,7 +18,7 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
  */
 export function AppSwitcher({ collapsed }: AppSwitcherProps) {
   const portalAccess = usePortalAccess();
-  const navigate = useNavigate();
+  const { switchToApp } = useAppSwitch();
 
   if (!portalAccess) {
     return (
@@ -34,7 +33,7 @@ export function AppSwitcher({ collapsed }: AppSwitcherProps) {
   return (
     <BrandSwitcher
       current="editor"
-      onSwitch={() => navigate(PORTAL_BASENAME)}
+      onSwitch={() => switchToApp("processor")}
       collapsed={collapsed}
     />
   );
