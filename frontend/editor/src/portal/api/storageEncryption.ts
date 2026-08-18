@@ -14,8 +14,9 @@ const BASE = "/api/v1/admin/storage-encryption";
  */
 const RUNBOOK =
   "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/STORAGE_ENCRYPTION_AT_REST.md";
-export const RUNBOOK_BACKUP = `${RUNBOOK}#backing-up-the-master-key`;
-export const RUNBOOK_ROTATION = `${RUNBOOK}#rotating-the-master-key`;
+const section = (anchor: string) => `${RUNBOOK}#${anchor}`;
+export const RUNBOOK_BACKUP = section("backing-up-the-master-key");
+export const RUNBOOK_ROTATION = section("rotating-the-master-key");
 
 export type EncryptionKeyStatus = "ACTIVE" | "RETIRED" | "DISABLED";
 
