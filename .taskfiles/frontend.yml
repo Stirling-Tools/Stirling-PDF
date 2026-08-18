@@ -8,8 +8,7 @@ version: '3'
 vars:
   # Dev-only browser-tab label so concurrent worktrees are distinguishable. Only
   # the worktree folder basename (e.g. "wt1") is exposed — never the full path,
-  # hostname, or user. Consumed at dev-serve time by vite.config and dropped from
-  # production builds. Shared by the two dev runners so neither has to repeat it.
+  # hostname, or user. Dropped from production builds.
   DEV_LABEL:
     sh: >-
       {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
@@ -93,19 +92,15 @@ tasks:
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
-  # As dev:_run, plus pointing the frontend at the same Supabase project the
-  # backend is using. Separate rather than a flag on dev:_run because Task sets an
-  # `env:` key even when its value resolves to empty, and Vite treats an empty
-  # process.env VITE_* as authoritative over the committed editor/.env. Folding
-  # this into dev:_run therefore blanked Supabase config for the core, proprietary
-  # and desktop dev servers. The duplication is one vite line; the alternative was
-  # a silent regression in three flavors.
+  # Separate from dev:_run rather than a flag on it: Task sets an `env:` key even
+  # when its value resolves to empty, and Vite treats an empty process.env VITE_* as
+  # authoritative over the committed editor/.env, so folding these in blanks Supabase
+  # config for the core, proprietary and desktop dev servers.
   dev:_run:saas:
     internal: true
     ignore_error: true
-    # Read the backend's env files so the frontend cannot authenticate against a
-    # different project than the backend is talking to. Relative to this taskfile's
-    # dir, which is `frontend`.
+    # The backend's own env files, so both halves target one project. Paths are
+    # relative to this taskfile's dir, `frontend`.
     dotenv: ['../app/.env.saas.local', '../app/.env.saas']
     vars:
       PORT: '{{.PORT | default "5173"}}'
@@ -117,15 +112,11 @@ tasks:
       STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
       SAAS_ENV: '{{.SAAS_ENV}}'
       # A real process.env VITE_* beats a committed .env in Vite (loadEnv applies
-      # process.env last), which is what lets this override editor/.env without a
-      # new vite mode or a hand-edited .local file.
+      # process.env last), which is what lets this override editor/.env.
       #
-      # `sh:` runs in Task's embedded POSIX shell on every OS, including Windows,
-      # and can see the dotenv values above. Go templates cannot: dotenv entries
-      # are shell-only, so {{.SAAS_DEV_PROJECT_REF}} is always empty.
-      #
-      # dev falls back to the staging ref exactly as backend:dev:saas does, so both
-      # halves land on the same project when no preview branch is configured.
+      # These must stay `sh:`, not Go templates: dotenv values are visible to Task's
+      # embedded shell but not to templates, where {{.SAAS_DEV_PROJECT_REF}} is
+      # always empty.
       VITE_SUPABASE_URL:
         sh: |
           case "${SAAS_ENV:-dev}" in
@@ -165,22 +156,13 @@ tasks:
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
-    # Reads the backend's env files so the frontend cannot end up authenticating
-    # against a different Supabase project than the backend is using. Paths are
-    # relative to this taskfile's dir, which is `frontend`.
-    #
-    # Without this the frontend always used editor/.env, which pins PRODUCTION -
-    # so `task dev:saas` gave you a backend on a preview branch and a login
-    # against prod unless you had hand-written editor/.env.saas.local.
     deps:
       - task: prepare
         vars: { MODE: saas }
     vars:
-      # dev (default) follows SAAS_DEV_PROJECT_REF, falling back to staging exactly
-      # as backend:dev:saas does. staging is the shared v3 project. prod routes to
-      # the plain runner, which sets no VITE_SUPABASE_* and so leaves the committed
-      # editor/.env (and any editor/.env.saas.local) alone.
       SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+      # prod routes to the plain runner, which sets no VITE_SUPABASE_* and so leaves
+      # the committed editor/.env alone.
       RUNNER: '{{if eq .SAAS_ENV "prod"}}dev:_run{{else}}dev:_run:saas{{end}}'
     cmds:
       - task: '{{.RUNNER}}'

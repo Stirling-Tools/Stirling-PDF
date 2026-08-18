@@ -96,18 +96,13 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
-  # Backend, frontend and engine against the Supabase preview branch of the SaaS PR
-  # you are working on (SAAS_DEV_PROJECT_REF in app/.env.saas.local). With no ref
-  # set, both halves fall back to staging and say so.
+  # Set SAAS_DEV_PROJECT_REF in app/.env.saas.local to pick the PR.
   dev:saas:
     desc: "Start SaaS backend + frontend + engine against the current PR's preview branch"
     cmds:
       - task: dev:_all
         vars: { FRONTEND: saas, BACKEND: saas, SAAS_ENV: dev }
 
-  # The same three against the shared long-lived v3 project. Use this when you want
-  # somewhere stable to reproduce something or paste a link, rather than a branch
-  # that disappears with its PR.
   staging:saas:
     desc: "Start SaaS backend + frontend + engine against the shared v3 staging project"
     cmds:
@@ -128,9 +123,6 @@ tasks:
     vars:
       FRONTEND: '{{.FRONTEND | default "proprietary"}}'
       BACKEND: '{{.BACKEND | default "proprietary"}}'
-      # Which backend task to run. Defaults to the dev one for the chosen flavor;
-      # staging:saas overrides it, so the environment is picked in one place instead
-      # of threading a profile down through three layers.
       BACKEND_TASK: '{{.BACKEND_TASK | default (printf "backend:dev:%s" .BACKEND)}}'
       # Only meaningful to the saas frontend; every other flavor ignores it.
       SAAS_ENV: '{{.SAAS_ENV | default ""}}'

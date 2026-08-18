@@ -9,14 +9,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Logs which Supabase project this backend is talking to, and its schema policy.
- *
- * <p>The non-prod profiles look alike and are not: {@code dev} follows a PR's preview branch with
- * {@code ddl-auto=update}, {@code staging} is shared v3 with {@code none}. Being on the wrong one
- * is quiet until a migration turns out to be missing, which surfaces as {@code relation does not
- * exist} some requests later, so both are stated at startup rather than inferred.
- */
+/** Logs which Supabase project this backend is talking to, and its schema policy. */
 @Slf4j
 @Component
 @Profile({"dev", "staging"})
