@@ -159,11 +159,6 @@
   margin-top: 0.75rem;
 }
 
-.portal-enc__badge-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
 .portal-enc__stat-label {
   display: inline-flex;
