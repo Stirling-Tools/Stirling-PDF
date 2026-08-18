@@ -172,7 +172,7 @@ jobs:
           # Save the dependency cache even if a later step fails
           cache-on-failure: true
 
-      - name: Cache Gradle User Home
+      - name: Restore cache Gradle User Home
         if: inputs.use_shared_cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -180,6 +180,15 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Restore cache Gradle
+        if: inputs.use_shared_cache == false
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
@@ -202,15 +211,12 @@ jobs:
 
       - name: Cache Gradle
         if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0

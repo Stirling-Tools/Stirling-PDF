@@ -44,7 +44,7 @@ jobs:
             engine/uv.lock
           cache-suffix: generated-models
 
-      - name: Cache Gradle User Home
+      - name: Restore cache Gradle User Home
         if: inputs.use_shared_cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -52,6 +52,15 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Restore cache Gradle
+        if: inputs.use_shared_cache == false
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
@@ -61,15 +70,12 @@ jobs:
 
       - name: Cache Gradle
         if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
