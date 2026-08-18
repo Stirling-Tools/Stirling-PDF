@@ -12,7 +12,7 @@ import os
 import shutil
 import sys
 import tomllib
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,14 +39,14 @@ class TranslationMerger:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except (OSError, tomllib.TOMLDecodeError) as e:
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
     def _save_translation_file(self, data: dict[str, Any], file_path: Path, backup: bool = False) -> None:
         """Save TOML translation file with backup option."""
         if backup and file_path.exists():
-            backup_path = file_path.with_suffix(f".backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}.toml")
+            backup_path = file_path.with_suffix(f".backup.{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.toml")
             shutil.copy2(file_path, backup_path)
             print(f"Backup created: {backup_path}")
 
@@ -64,7 +64,7 @@ class TranslationMerger:
 
             # Convert to sets for faster lookup
             return {lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()}
-        except Exception as e:
+        except (OSError, tomllib.TOMLDecodeError, TypeError, AttributeError) as e:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 
@@ -264,7 +264,7 @@ class TranslationMerger:
 
                 self._set_nested_value(target_data, key, translation)
                 applied_count += 1
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 errors.append(f"Error setting {key}: {e}")
 
         if applied_count > 0:
@@ -316,7 +316,7 @@ class TranslationMerger:
                 "source_language": "en-US",
                 "target_language": target_file.parent.name,
                 "total_entries": len(untranslated),
-                "created_at": datetime.now().isoformat(),
+                "created_at": datetime.now(UTC).isoformat(),
                 "instructions": 'Translate the "original" values to the target language. Keep the same keys.',
             },
             "translations": {},
