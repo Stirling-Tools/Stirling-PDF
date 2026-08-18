@@ -5077,6 +5077,10 @@ copy = "Copy error"
 less = "Show less"
 more = "Show full message"
 
+[notifications.section]
+earlier = "Earlier"
+new = "New"
+
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
 title = "Authentication Failed"

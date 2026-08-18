@@ -218,10 +218,11 @@ export function refreshNotificationsNow(): void {
 
 export interface NotificationsState {
   notifications: AppNotification[];
-  /** How many are newer than the last one the user looked at. */
+  /**
+   * How many are newer than the last one the user looked at: the badge, and the boundary the panel
+   * divides new from earlier on. Read before {@link markAllSeen}, which zeroes it.
+   */
   unreadCount: number;
-  /** Whether a given notification is newer than that, for a per-row marker. */
-  isUnread: (notification: AppNotification) => boolean;
   /** What this device holds for a row's document. Answers for a document it knows nothing about. */
   documentStateFor: (
     notification: AppNotification,
@@ -249,8 +250,6 @@ export function useNotifications(): NotificationsState {
   return {
     notifications,
     unreadCount,
-    isUnread: (notification) =>
-      notifications.indexOf(notification) < unreadCount,
     documentStateFor: (notification) =>
       (notification.fileId ? documents[notification.fileId] : null) ??
       NO_DOCUMENT,

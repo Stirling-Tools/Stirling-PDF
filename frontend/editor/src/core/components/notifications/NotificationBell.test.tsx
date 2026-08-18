@@ -157,6 +157,60 @@ describe("NotificationBell", () => {
     await waitFor(() => expect(screen.queryByText("2")).toBeNull());
   });
 
+  it("divides what is new from what the user has already seen", async () => {
+    // "b" was the newest last time, so "a" is the only new one.
+    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    fetchNotifications.mockResolvedValue([
+      notification("a"),
+      notification("b"),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    expect(await screen.findByText("New")).toBeTruthy();
+    expect(screen.getByText("Earlier")).toBeTruthy();
+  });
+
+  it("keeps the division on screen after opening marks them read", async () => {
+    // The boundary is frozen on open. Read live it would collapse the moment the badge cleared,
+    // taking the divider with it while the user was still looking at the list.
+    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    fetchNotifications.mockResolvedValue([
+      notification("a"),
+      notification("b"),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    await waitFor(() => expect(screen.queryByText("1")).toBeNull());
+    expect(screen.getByText("New")).toBeTruthy();
+    expect(screen.getByText("Earlier")).toBeTruthy();
+  });
+
+  it("does not divide a list with nothing new in it", async () => {
+    window.localStorage.setItem("stirling.notifications.lastSeenId", "a");
+    fetchNotifications.mockResolvedValue([notification("a")]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // A lone "Earlier" heading over everything says nothing the empty badge has not.
+    expect(await screen.findByText("Unrecognised failure")).toBeTruthy();
+    expect(screen.queryByText("Earlier")).toBeNull();
+    expect(screen.queryByText("New")).toBeNull();
+  });
+
+  it("labels an all-new list without inventing an earlier section", async () => {
+    fetchNotifications.mockResolvedValue([
+      notification("a"),
+      notification("b"),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    expect(await screen.findByText("New")).toBeTruthy();
+    expect(screen.queryByText("Earlier")).toBeNull();
+  });
+
   it("marks only what arrived since the user last looked", async () => {
     fetchNotifications.mockResolvedValue([notification("a")]);
     const first = render(<NotificationBell />);

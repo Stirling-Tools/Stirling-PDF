@@ -1,8 +1,16 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { BellIcon } from "@app/components/notifications/BellIcon";
+import DividerWithText from "@app/components/shared/DividerWithText";
 import {
   isResolvableHere,
   useNotifications,
@@ -28,17 +36,21 @@ import "@app/components/notifications/NotificationBell.css";
  */
 export function NotificationBell() {
   const { t } = useTranslation();
-  const {
-    notifications,
-    unreadCount,
-    isUnread,
-    documentStateFor,
-    markAllSeen,
-  } = useNotifications();
+  const { notifications, unreadCount, documentStateFor, markAllSeen } =
+    useNotifications();
   const registry = useNotificationActions();
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const headingId = useId();
+  /**
+   * The first notification the user had already seen when they opened the panel, which is where the
+   * new ones stop. Held as an id rather than a count because opening marks everything read, so a
+   * live count would collapse to zero and take the divider with it while they were reading.
+   *
+   * An id also survives the list changing underneath: one arriving on a poll lands above the
+   * divider, where it belongs, instead of shifting a frozen index onto the wrong row.
+   */
+  const [firstSeenId, setFirstSeenId] = useState<string | null>(null);
   // Fixed to the viewport, positioned from the trigger. The workbench bar clips its overflow, so
   // an absolutely positioned panel is cut off by its own toolbar.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
@@ -68,10 +80,27 @@ export function NotificationBell() {
   // until close would leave the badge lit while they are looking at the list.
   const toggle = () => {
     setOpen((wasOpen) => {
-      if (!wasOpen) markAllSeen();
+      if (!wasOpen) {
+        // Read the boundary before marking, or there is nothing left to read.
+        setFirstSeenId(notifications[unreadCount]?.id ?? null);
+        markAllSeen();
+      }
       return !wasOpen;
     });
   };
+
+  /**
+   * How many of the listed notifications count as new, for this reading of the panel. Everything
+   * above it is new, everything from it down is earlier.
+   *
+   * No boundary id means everything was new when the panel opened, so the whole list is. A boundary
+   * that has since left the list (dismissed elsewhere, its document deleted) leaves nothing to
+   * divide on, and reads as "none new" rather than guessing at a row.
+   */
+  const boundaryIndex = firstSeenId
+    ? notifications.findIndex((notification) => notification.id === firstSeenId)
+    : notifications.length;
+  const dividedAt = Math.max(0, boundaryIndex);
 
   useEffect(() => {
     if (!open) return;
@@ -127,15 +156,32 @@ export function NotificationBell() {
             </p>
           ) : (
             <ul className="notification-bell__list">
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  unread={isUnread(notification)}
-                  documentState={documentStateFor(notification)}
-                  registry={registry}
-                  onDismissPanel={() => setOpen(false)}
-                />
+              {notifications.map((notification, index) => (
+                <Fragment key={notification.id}>
+                  {index === 0 && dividedAt > 0 && (
+                    <li aria-hidden>
+                      <DividerWithText
+                        text={t("notifications.section.new", "New")}
+                      />
+                    </li>
+                  )}
+                  {/* Only where there is something on both sides of it: a lone "Earlier" heading
+                      over the whole list says nothing the empty badge has not already said. */}
+                  {index === dividedAt && dividedAt > 0 && (
+                    <li aria-hidden>
+                      <DividerWithText
+                        text={t("notifications.section.earlier", "Earlier")}
+                      />
+                    </li>
+                  )}
+                  <NotificationItem
+                    notification={notification}
+                    unread={index < dividedAt}
+                    documentState={documentStateFor(notification)}
+                    registry={registry}
+                    onDismissPanel={() => setOpen(false)}
+                  />
+                </Fragment>
               ))}
             </ul>
           )}

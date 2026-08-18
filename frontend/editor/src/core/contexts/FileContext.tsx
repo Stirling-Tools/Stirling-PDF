@@ -611,9 +611,14 @@ function FileContextInner({
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
 
-        // Any failure recorded against these stops needing attention: the document is gone.
-        // Fire-and-forget, so a server that cannot be told never blocks the delete.
-        void reportFilesRemoved(fileIds);
+        // Only a real delete closes a failure. Most callers pass false and mean "take it out of
+        // the workbench": closing a tab, unchecking it in the file manager, swapping which files
+        // are open. The document is still on the device and its failures still need attention, so
+        // telling the server it was deleted would quietly clear the user's own notifications while
+        // they worked. Fire-and-forget, so a server that cannot be told never blocks the delete.
+        if (deleteFromStorage !== false) {
+          void reportFilesRemoved(fileIds);
+        }
 
         // Remove from IndexedDB if enabled
         if (indexedDB && enablePersistence && deleteFromStorage !== false) {
