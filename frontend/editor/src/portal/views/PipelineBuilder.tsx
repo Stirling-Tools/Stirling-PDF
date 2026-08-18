@@ -26,7 +26,6 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   updateWorkingStepParams,
-  type AssetId,
   type ExecutableTool,
   type SupportingFileBindings,
   type WorkingToolStep,
@@ -710,36 +709,63 @@ export function PipelineBuilder() {
   }
 
   /**
-   * The wire steps for saving: scalar params from serialization, plus supporting-file bindings.
-   * Fresh picks are uploaded to the asset store first (the save-time validator rejects a policy that
-   * binds an asset id that doesn't yet exist), and a stored binding the tool still uses is kept as-is
-   * when the user didn't replace it. Abandoned uploads (from a later failure) are GC'd server-side.
+   * The active supporting-file fields of a step, each paired with its fresh in-memory pick(s) and its
+   * stored `asset:<id>` binding (either may be absent). The single source both saving and test-running
+   * read, so the two agree on which fields are active and how a binding is chosen; they differ only in
+   * how a fresh pick is emitted - uploaded as an asset vs. sent inline.
+   */
+  function stepFileFields(
+    step: WorkingToolStep,
+  ): { field: string; fresh: File[] | null; stored: string | null }[] {
+    const fresh = extractStepFiles(step, allTools);
+    const stored = step.fileParameters ?? {};
+    return activeFileFields(step, allTools).map((field) => ({
+      field,
+      fresh: fresh[field] ?? null,
+      stored: stored[field] ?? null,
+    }));
+  }
+
+  /** A wire step, attaching fileParameters only when it has any. */
+  function toWireStep(
+    operation: string,
+    parameters: Record<string, unknown>,
+    bindings: SupportingFileBindings,
+  ): PipelineStep {
+    return Object.keys(bindings).length > 0
+      ? { operation, parameters, fileParameters: bindings }
+      : { operation, parameters };
+  }
+
+  /**
+   * The wire steps for saving: scalar params from serialization, plus supporting-file bindings. A
+   * fresh pick is uploaded to the asset store (the save-time validator rejects a policy that binds an
+   * asset id that doesn't yet exist); a stored binding the tool still uses is kept when the user
+   * didn't replace it. Uploads run in parallel; any abandoned by a later failure are GC'd server-side.
    */
   async function serializeStepsForSave(): Promise<PipelineStep[]> {
-    const wireSteps: PipelineStep[] = [];
-    for (const step of steps) {
-      const { operation, parameters } = serializeToolStep(step, allTools);
-      const bindings: SupportingFileBindings = {};
-      const fresh = extractStepFiles(step, allTools);
-      for (const [field, files] of Object.entries(fresh)) {
-        const ids: AssetId[] = [];
-        for (const file of files) {
-          ids.push((await uploadPipelineAsset(file)).id);
-        }
-        bindings[field] = assetRef(ids);
-      }
-      // Keep a stored binding the tool still emits and the user didn't re-pick.
-      const stored = step.fileParameters ?? {};
-      for (const field of activeFileFields(step, allTools)) {
-        if (!bindings[field] && stored[field]) bindings[field] = stored[field];
-      }
-      wireSteps.push(
-        Object.keys(bindings).length > 0
-          ? { operation, parameters, fileParameters: bindings }
-          : { operation, parameters },
-      );
-    }
-    return wireSteps;
+    return Promise.all(
+      steps.map(async (step) => {
+        const { operation, parameters } = serializeToolStep(step, allTools);
+        const entries = await Promise.all(
+          stepFileFields(step).map(async ({ field, fresh, stored }) => {
+            if (fresh?.length) {
+              const ids = await Promise.all(
+                fresh.map((file) =>
+                  uploadPipelineAsset(file).then((a) => a.id),
+                ),
+              );
+              return [field, assetRef(ids)] as const;
+            }
+            return stored ? ([field, stored] as const) : null;
+          }),
+        );
+        const bindings: SupportingFileBindings = Object.fromEntries(
+          entries.filter((e): e is readonly [string, string] => e !== null),
+        );
+        return toWireStep(operation, parameters, bindings);
+      }),
+    );
   }
 
   async function save(destination: string, enabledOverride?: boolean) {
@@ -817,45 +843,36 @@ export function PipelineBuilder() {
   }
 
   /**
-   * Run the steps as they stand against one uploaded file. Output is forced inline so nothing
-   * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
-   * how the chain gets checked while it is still being built.
-   */
-  /**
    * The steps + inline supporting files for a test run. A fresh (in-memory) pick rides along as a
    * keyed `assets[i]` under a per-step run key; a stored file keeps its `asset:<id>` binding, which
    * the backend resolves from the pipeline's saved policy (passed as policyId) - no re-fetch needed.
    */
   function buildTestSteps(): { steps: PipelineStep[]; assets: TestRunAsset[] } {
-    const outSteps: PipelineStep[] = [];
     const assets: TestRunAsset[] = [];
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
+    const outSteps = steps.map((step, i) => {
       const { operation, parameters } = serializeToolStep(step, allTools);
-      const fresh = extractStepFiles(step, allTools);
-      const stored = step.fileParameters ?? {};
-      const fileParameters: SupportingFileBindings = {};
-      for (const field of activeFileFields(step, allTools)) {
-        const freshFiles = fresh[field];
-        if (freshFiles?.length) {
+      const bindings: SupportingFileBindings = {};
+      for (const { field, fresh, stored } of stepFileFields(step)) {
+        if (fresh?.length) {
           // In-memory pick: inline the bytes under a run key.
           const key = `s${i}_${field}`;
-          fileParameters[field] = key;
-          for (const runFile of freshFiles) assets.push({ key, file: runFile });
-        } else if (stored[field]) {
+          bindings[field] = key;
+          for (const file of fresh) assets.push({ key, file });
+        } else if (stored) {
           // Already an asset: keep its ref for the backend to resolve from the saved policy.
-          fileParameters[field] = stored[field];
+          bindings[field] = stored;
         }
       }
-      outSteps.push(
-        Object.keys(fileParameters).length > 0
-          ? { operation, parameters, fileParameters }
-          : { operation, parameters },
-      );
-    }
+      return toWireStep(operation, parameters, bindings);
+    });
     return { steps: outSteps, assets };
   }
 
+  /**
+   * Run the steps as they stand against one uploaded file. Output is forced inline so nothing
+   * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
+   * how the chain gets checked while it is still being built.
+   */
   async function handleTest(file: File) {
     if (testing) return;
     setTesting(true);

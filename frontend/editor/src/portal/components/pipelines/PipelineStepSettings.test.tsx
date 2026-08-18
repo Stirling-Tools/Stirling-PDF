@@ -150,6 +150,8 @@ describe("PipelineStepSettings", () => {
             step={changeMetadataStep}
             registry={changeMetadataRegistry}
             onChange={() => {}}
+            assetNames={{}}
+            onClearBinding={() => {}}
           />
         </PortalTestProviders>,
       ),
@@ -165,6 +167,8 @@ describe("PipelineStepSettings", () => {
             step={overlayStep}
             registry={overlayRegistry}
             onChange={() => {}}
+            assetNames={{}}
+            onClearBinding={() => {}}
           />
         </PortalTestProviders>,
       ),
