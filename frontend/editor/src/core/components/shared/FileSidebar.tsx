@@ -39,7 +39,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
@@ -1084,7 +1084,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                      <ArrowForwardIcon sx={{ fontSize: "1rem" }} />
                     </ActionIcon>
                     <ActionIcon
                       variant="quiet"

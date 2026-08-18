@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Avatar, NavSurface } from "@app/ui";
 import { BrandMark } from "@app/components/shared/BrandMark";
@@ -131,10 +131,11 @@ export function NavFooter({
                 <span className="nav-footer__row-label">
                   {openAppLabel(otherApp.app, t)}
                 </span>
-                {/* Same leaving-this-app cue the file rail uses for "Browse all
-                    files & folders". */}
+                {/* "Takes you there", not "opens a new tab" — both apps are
+                    one SPA, so this navigates in place. Same cue the file rail
+                    uses for "Browse all files & folders". */}
                 <span className="nav-footer__trailing" aria-hidden>
-                  <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                  <ArrowForwardIcon sx={{ fontSize: "1rem" }} />
                 </span>
               </>
             )}
