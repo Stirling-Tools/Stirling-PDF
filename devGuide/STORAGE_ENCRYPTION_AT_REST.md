@@ -195,6 +195,21 @@ account.
 The same information is on the Storage tab under Infrastructure in the admin UI, which is the
 surface most operators should use.
 
+## Known limitations
+
+Being addressed; this section goes away as they are.
+
+- **A revoked key reads as a generic failure to the person holding the file.** The API answers 403
+  with "Access to this file has been revoked", but no user-facing surface distinguishes that from an
+  ordinary permissions error, so the user cannot tell that an administrator did this deliberately
+  and that asking them can undo it.
+- **The migration cannot be stopped, and its pacing is fixed.** `PAGE_SIZE` and the pause between
+  pages are constants in `StorageEncryptionMigrationService`, so a run cannot be slowed on a busy
+  server or sped up on an idle one, and the only way to end one early is to switch encryption off,
+  which ends it as `FAILED`.
+- **`/status` returns every key row.** There is no paging, so an install with a key per team returns
+  the whole table on every poll of the admin UI.
+
 ## What this protects against
 
 Stolen disks, database dumps, exposed object-storage buckets, decommissioned media, and platform
