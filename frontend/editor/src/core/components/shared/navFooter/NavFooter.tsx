@@ -48,8 +48,8 @@ export interface NavFooterProps {
  *
  * Purely presentational: each app resolves its own identity, wallet and
  * app-switch access and passes them in, so this file carries no build-specific
- * gating. A row whose data is absent is dropped along with its divider rather
- * than rendered empty.
+ * gating. A row whose data is absent is dropped, and so is the separator that
+ * would have sat beside it.
  */
 export function NavFooter({
   displayName,
@@ -68,9 +68,10 @@ export function NavFooter({
     ? `${displayName} - ${settingsLabel}`
     : displayName;
 
-  // One surface, hairline-separated rows. Built as a list so only the rows this
-  // build actually shows get a divider between them — an absent row must not
-  // leave a stray line behind.
+  // One surface, hairline-separated rows. Each row gets a slot; the separators
+  // are drawn by CSS between adjacent NON-EMPTY slots (see NavFooter.css), so a
+  // row that renders nothing — the link-account CTA returns null once the org is
+  // linked, and an element is truthy even then — can't leave a line behind.
   const rows: Array<{ key: string; node: ReactNode }> = [];
 
   if (accountExtras) rows.push({ key: "extras", node: accountExtras });
@@ -175,11 +176,8 @@ export function NavFooter({
       className={["sui-nav-footer", className ?? ""].filter(Boolean).join(" ")}
       data-collapsed={collapsed || undefined}
     >
-      {rows.map((row, i) => (
+      {rows.map((row) => (
         <div key={row.key} className="sui-nav-footer__slot">
-          {i > 0 && (
-            <div className="sui-nav-footer__divider" role="separator" />
-          )}
           {row.node}
         </div>
       ))}

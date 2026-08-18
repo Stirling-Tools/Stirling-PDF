@@ -3,6 +3,11 @@ import LinkIcon from "@mui/icons-material/Link";
 import { NavItem } from "@app/ui/NavItem";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 
+/** Stands in for a CTA that has decided it has nothing to show. */
+function RendersNothing() {
+  return null;
+}
+
 const meta: Meta<typeof NavFooter> = {
   title: "Shared/NavFooter",
   component: NavFooter,
@@ -52,6 +57,14 @@ export const WithLinkAccountCta: Story = {
       />
     ),
   },
+};
+
+/** Regression guard: the processor always passes its link-account CTA, but that
+ *  component renders null once the org is linked. An element is truthy even
+ *  when it renders nothing, so this must not leave a separator above the first
+ *  visible row. */
+export const ExtrasThatRenderNothing: Story = {
+  args: { accountExtras: <RendersNothing /> },
 };
 
 /** A real profile picture replaces the initials disc. */

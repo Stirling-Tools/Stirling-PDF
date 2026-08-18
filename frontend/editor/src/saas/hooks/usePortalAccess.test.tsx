@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook as baseRenderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
@@ -20,10 +22,25 @@ function meReturning(portalAccess: boolean) {
   return { data: { user: { portalAccess } } };
 }
 
+// A fresh client per render, so one test's cached answer can't satisfy the
+// next — each case exercises a cold cache unless it deliberately shares one.
+let client: QueryClient;
+
+function renderHook<T>(cb: () => T) {
+  return baseRenderHook(cb, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+}
+
 describe("usePortalAccess", () => {
   beforeEach(() => {
     get.mockReset();
     currentUserId = null;
+    client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+    });
   });
 
   it("reports the backend's answer for the signed-in user", async () => {
@@ -82,7 +99,8 @@ describe("usePortalAccess", () => {
     expect(first.result.current).toBe(false);
     first.unmount();
 
-    // The failure isn't sticky.
+    // The failure isn't sticky — a cold cache asks again.
+    client.clear();
     get.mockResolvedValue(meReturning(true));
     const second = renderHook(() => usePortalAccess());
     await waitFor(() => expect(second.result.current).toBe(true));
