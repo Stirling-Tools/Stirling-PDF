@@ -23,6 +23,7 @@ import { scheduleIdle } from "@app/utils/scheduleIdle";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type {
+  CategoryFilterOption,
   FileSidebarGroup,
   LabelBadge,
 } from "@core/components/shared/fileSidebarGrouping";
@@ -31,7 +32,10 @@ import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 
 export type { FileSidebarGroup };
-export type { LabelBadge } from "@core/components/shared/fileSidebarGrouping";
+export type {
+  CategoryFilterOption,
+  LabelBadge,
+} from "@core/components/shared/fileSidebarGrouping";
 // Pure grouping logic lives in a component-free module so tests don't drag in the picker's UI deps.
 export {
   buildLabelGroups,
@@ -112,6 +116,32 @@ export function useFileSidebarGroups(
   return useMemo(
     () => (enabled ? buildLabelGroups(stubs, t, categories) : null),
     [enabled, stubs, t, categories],
+  );
+}
+
+/**
+ * The visible categories as filter options, in the sidebar's own display
+ * order — the files-page category filter and the sidebar groups must name
+ * and order the world identically.
+ */
+export function useCategoryFilterOptions(): CategoryFilterOption[] {
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
+  );
+  return useMemo(
+    () =>
+      categories
+        .filter((category) => !category.hidden)
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+        )
+        .map((category) => ({
+          id: category.id,
+          name: category.name,
+          labelKeys: [...category.labelKeys],
+        })),
+    [categories],
   );
 }
 

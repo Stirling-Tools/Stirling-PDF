@@ -77,6 +77,7 @@ import {
   useProcessingFolders,
   type ProcessingRunInfo,
 } from "@app/hooks/useProcessingFolders";
+import { useCategoryFilterOptions } from "@app/components/shared/fileSidebarGrouping";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -385,6 +386,16 @@ export default function FileManagerView() {
     }
   }, [availableTypes, typeFilter, setTypeFilter]);
 
+  // Category filter over the classification families the sidebar groups by;
+  // empty (core, classification off) means the dropdown never renders.
+  const categoryOptions = useCategoryFilterOptions();
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const categoryLabelKeys = useMemo(() => {
+    if (categoryFilter === "all") return null;
+    const option = categoryOptions.find((c) => c.id === categoryFilter);
+    return option ? new Set(option.labelKeys) : null;
+  }, [categoryFilter, categoryOptions]);
+
   const visibleFiles = useMemo(() => {
     const filtered = filesInCurrentFolder
       .filter((f) =>
@@ -397,7 +408,14 @@ export default function FileManagerView() {
         if (typeFilter.length === 0) return true;
         const ext = (f.name.split(".").pop() ?? "").toUpperCase();
         return typeFilter.includes(ext);
-      });
+      })
+      .filter(
+        (f) =>
+          !categoryLabelKeys ||
+          (f.classificationLabels ?? []).some((label) =>
+            categoryLabelKeys.has(label),
+          ),
+      );
     const sorted = [...filtered];
     sorted.sort((a, b) => {
       switch (sortMode) {
@@ -417,7 +435,14 @@ export default function FileManagerView() {
       }
     });
     return sorted;
-  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
+  }, [
+    filesInCurrentFolder,
+    search,
+    sortMode,
+    originFilter,
+    typeFilter,
+    categoryLabelKeys,
+  ]);
 
   /**
    * Resolve a folder id to its breadcrumb path (e.g. "Receipts / 2024 / Q1").
@@ -1746,6 +1771,31 @@ export default function FileManagerView() {
                 style={{ width: 140 }}
                 aria-label={t("filesPage.originFilter", "Filter by source")}
               />
+              {categoryOptions.length > 0 && (
+                <Select
+                  size="xs"
+                  value={categoryFilter}
+                  onChange={(value) => setCategoryFilter(value ?? "all")}
+                  data={[
+                    {
+                      value: "all",
+                      label: t(
+                        "filesPage.categoryFilter.all",
+                        "All categories",
+                      ),
+                    },
+                    ...categoryOptions.map((category) => ({
+                      value: category.id,
+                      label: category.name,
+                    })),
+                  ]}
+                  style={{ width: 150 }}
+                  aria-label={t(
+                    "filesPage.categoryFilter.label",
+                    "Filter by category",
+                  )}
+                />
+              )}
               {availableTypes.length > 1 && (
                 <MultiSelect
                   size="xs"

@@ -43,6 +43,21 @@ export function useLabelBadges(_labels?: string[] | null): LabelBadge[] {
   return NO_BADGES;
 }
 
+/** One category (label family) as a files-page filter offers it. */
+export interface CategoryFilterOption {
+  id: string;
+  name: string;
+  /** Label ids the category rolls up — a file matches if it carries any. */
+  labelKeys: string[];
+}
+
+const NO_CATEGORIES: CategoryFilterOption[] = [];
+
+/** Categories to filter by; core (no classification) offers none. */
+export function useCategoryFilterOptions(): CategoryFilterOption[] {
+  return NO_CATEGORIES;
+}
+
 // Header control for customizing the grouping; core has none, an override renders a group picker.
 export function FileSidebarGroupControls(_props: {
   stubs: StirlingFileStub[];

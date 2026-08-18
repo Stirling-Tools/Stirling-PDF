@@ -4037,6 +4037,10 @@ icon = "Icon"
 title = "Appearance"
 useColour = "Use color {{c}}"
 
+[filesPage.categoryFilter]
+all = "All categories"
+label = "Filter by category"
+
 [filesPage.column]
 modified = "Modified"
 name = "Name"
