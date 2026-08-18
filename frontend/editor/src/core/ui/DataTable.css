@@ -58,12 +58,15 @@
   border-bottom: 1px solid var(--c-border);
   white-space: nowrap;
 }
+
 .sui-datatable__th--right {
   text-align: right;
 }
+
 .sui-datatable__th--fit {
   width: 1%;
 }
+
 /* Accessible-only header text for blank affordance/action columns. */
 .sui-datatable__th-sr {
   position: absolute;
@@ -91,31 +94,38 @@
   text-transform: inherit;
   color: inherit;
 }
+
 .sui-datatable__th--right .sui-datatable__sort {
   flex-direction: row-reverse;
 }
+
 .sui-datatable__sort:hover {
   color: var(--c-text);
 }
+
 .sui-datatable__sort:focus-visible {
   outline: 0.125rem solid var(--c-primary);
   outline-offset: 0.125rem;
   border-radius: var(--radius-sm);
 }
+
 .sui-datatable__sort-icon {
   display: inline-flex;
   color: var(--c-text-subtle);
   opacity: 0;
   transition: opacity var(--motion-fast);
 }
+
 .sui-datatable__sort:hover .sui-datatable__sort-icon {
   opacity: 0.5;
 }
+
 .sui-datatable__sort-icon--asc,
 .sui-datatable__sort-icon--desc {
   opacity: 1;
   color: var(--c-primary);
 }
+
 .sui-datatable__sort-icon--desc svg {
   transform: rotate(180deg);
 }
@@ -127,15 +137,19 @@
   border-bottom: 1px solid var(--c-border-subtle);
   vertical-align: middle;
 }
+
 .sui-datatable__table tbody tr:last-child .sui-datatable__td {
   border-bottom: none;
 }
+
 .sui-datatable__td--right {
   text-align: right;
 }
+
 .sui-datatable__td--nowrap {
   white-space: nowrap;
 }
+
 .sui-datatable__td--fit {
   width: 1%;
   white-space: nowrap;
@@ -152,9 +166,11 @@
   cursor: pointer;
   transition: background var(--motion-fast);
 }
+
 .sui-datatable__row--interactive:hover {
   background: var(--c-hover);
 }
+
 .sui-datatable__row--interactive:focus-visible {
   outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;
@@ -167,6 +183,7 @@
   color: var(--c-text-muted);
   font-weight: 500;
 }
+
 .sui-datatable__row--muted .sui-dtc__entity-icon {
   opacity: 0.4;
 }
@@ -182,9 +199,11 @@
   text-align: center;
   color: var(--c-text-subtle);
 }
+
 .sui-datatable__state--error {
   color: var(--c-danger);
 }
+
 .sui-datatable__state--node {
   padding: 0;
 }
@@ -197,24 +216,30 @@
 .sui-dtc__text {
   color: var(--c-text-muted);
 }
+
 /* Labeled value ("Category: action"): full-strength text, bold label. */
 .sui-dtc__text--labeled {
   color: var(--c-text);
 }
+
 .sui-dtc__text-label {
   font-weight: 600;
 }
+
 .sui-dtc__mono {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--c-text-muted);
 }
+
 .sui-dtc__muted {
   color: var(--c-text-subtle);
 }
+
 .sui-dtc__num {
   font-variant-numeric: tabular-nums;
 }
+
 .sui-dtc__labels {
   display: flex;
   align-items: center;
@@ -229,38 +254,45 @@
   gap: 0.625rem;
   min-width: 0;
 }
+
 .sui-dtc__entity-icon {
   display: inline-flex;
   align-items: center;
   flex: none;
   color: var(--c-text-muted);
 }
+
 /* The component sizes bare icons; self-styled marks (Avatar) render as-is. */
 .sui-dtc__entity-icon svg {
   width: 1.2rem;
   height: 1.2rem;
 }
+
 .sui-dtc__entity-body {
   display: flex;
   flex-direction: column;
   gap: 0.1875rem;
   min-width: 0;
 }
+
 .sui-dtc__entity-head {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.25rem;
 }
+
 .sui-dtc__entity-name {
   font-weight: 600;
   color: var(--c-text);
 }
+
 .sui-dtc__entity-suffix {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--c-text-subtle);
 }
+
 .sui-dtc__note {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
@@ -272,6 +304,7 @@
   justify-content: flex-end;
   gap: 0.25rem;
 }
+
 .sui-dtc__menu-item--danger {
   color: var(--c-danger);
 }
@@ -282,35 +315,42 @@
   background: var(--c-surface-sunken, var(--c-hover));
   border-bottom: 1px solid var(--c-border);
 }
+
 .sui-datatable__table
-  tbody
-  tr.sui-datatable__group:not(:first-child)
-  .sui-datatable__group-cell {
+tbody
+tr.sui-datatable__group:not(:first-child)
+.sui-datatable__group-cell {
   border-top: 1px solid var(--c-border);
 }
+
 .sui-datatable__group-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
+
 .sui-datatable__group-title {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
 .sui-datatable__group-title strong {
   font-size: 0.8125rem;
   color: var(--c-text);
 }
+
 .sui-datatable__group-meta {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
 .sui-datatable__group-more {
   padding: 0.5rem 0.875rem;
 }
+
 .sui-datatable__show-all {
   background: none;
   border: none;
@@ -320,6 +360,7 @@
   font-size: 0.75rem;
   color: var(--c-accent-text);
 }
+
 .sui-datatable__show-all:hover {
   text-decoration: underline;
 }
@@ -329,10 +370,12 @@
   align-items: center;
   gap: 0.5rem;
 }
+
 .sui-dtc__progress-bar {
   display: block;
   width: 5rem;
 }
+
 .sui-dtc__progress-pct {
   font-variant-numeric: tabular-nums;
   color: var(--c-text-muted);
@@ -345,6 +388,7 @@
   justify-content: flex-end;
   gap: 0.75rem;
 }
+
 /* Neutral chip-style link (matches the invoice-link look): the colour is not an
  * accent - the trailing glyph + hover fill carry the affordance. */
 .sui-dtc__link {
@@ -361,10 +405,12 @@
     background var(--motion-fast),
     border-color var(--motion-fast);
 }
+
 .sui-dtc__link:hover {
   background: var(--c-surface-sunken);
   border-color: var(--c-border);
 }
+
 .sui-dtc__link:focus-visible {
   outline: none;
   border-color: var(--c-primary);
