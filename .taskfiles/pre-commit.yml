@@ -108,7 +108,7 @@ tasks:
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff format --isolated --ignore=EXE001 --target-version=py313 --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff format --isolated --target-version=py313 --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]
