@@ -74,6 +74,19 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
     await waitFor(() => expect(el.textContent).toBe("none"));
   });
 
+  it("ignores cached figures once the instance is unlinked", async () => {
+    // The cache survives an unlink and nothing rewrites it afterwards, so the
+    // linkage gate has to cover the seed too, not just the fetch.
+    const linked = renderFor("linked-free");
+    await waitFor(() => expect(linked.textContent).toBe("247/500"));
+    cleanup();
+
+    fetchWallet.mockClear();
+    const unlinked = renderFor("unlinked");
+    expect(unlinked.textContent).toBe("none");
+    expect(fetchWallet).not.toHaveBeenCalled();
+  });
+
   it("shows the last known figures while the wallet reloads", async () => {
     // What stops the row popping in — and resizing the footer — every time the
     // processor mounts.

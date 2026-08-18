@@ -56,5 +56,10 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet, isLinked]);
 
+  // Linkage gates the seed as well as the fetch. The cache outlives an unlink
+  // — nothing refetches or rewrites it once the instance stops asking — so
+  // without this an unlinked instance would keep showing the figures from when
+  // it was linked, indefinitely.
+  if (!isLinked) return null;
   return (live !== undefined ? live : seed) ?? null;
 }
