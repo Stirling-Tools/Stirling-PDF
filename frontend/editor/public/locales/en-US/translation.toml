@@ -1879,6 +1879,9 @@ width = "Width"
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
@@ -4826,9 +4829,6 @@ title = "Image to PDF"
 
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
-
-[infoBanner]
-dismiss = "Dismiss"
 
 [invite]
 acceptError = "Failed to create account"
