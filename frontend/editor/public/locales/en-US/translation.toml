@@ -7398,6 +7398,14 @@ dismissSkipFile = "Skip this file"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
 [portal.failures.disabled]
 closed = "This failure is already closed."
 noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
