@@ -57,43 +57,17 @@ tasks:
       - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
         platforms: [linux, darwin]
 
-  # ============================================================
-  # SaaS backend
-  #
-  # Three environments, one implementation. `dev:saas` and `staging:saas` are the
-  # front doors; both delegate to `_run:saas` with a different profile.
-  #
-  #   task backend:dev:saas                 the SaaS PR's Supabase preview branch
-  #   task backend:staging:saas             the shared long-lived v3 project
-  #   task backend:dev:saas PROFILES=none   production, against your own SAAS_DB_*
-  #
-  # Production deliberately has no named task. Reaching it should take a conscious
-  # PROFILES=none rather than a tab-complete. It is `none` rather than an empty
-  # value because Go template `default` treats "" as absent, so `PROFILES=` would
-  # silently resolve back to dev.
-  # ============================================================
+  # SaaS backend. dev:saas -> the PR's preview branch, staging:saas -> shared v3,
+  # PROFILES=none -> production against your own SAAS_DB_*. Production has no named
+  # task on purpose. Use `none`, not an empty value: Go template `default` treats ""
+  # as absent and would resolve back to dev.
 
   dev:saas:
     desc: "Start SaaS backend against the current PR's Supabase preview branch"
-    # `dotenv:` reads from the root Taskfile's directory (".") because this
-    # subtaskfile is included with `dir: .`. Loaded here as well as in _run:saas
-    # so the fallback below can see SAAS_DEV_PROJECT_REF.
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
     cmds:
-      # Plain POSIX, no `platforms:` needed: Task's default shell is its embedded
-      # interpreter on every OS. Only the gradlew calls need a real cmd.exe.
-      #
-      # This task always runs the dev profile. It used to pick dev or staging from a
-      # `sh:` var testing SAAS_DEV_PROJECT_REF, but on Task 3.51.1 dotenv values are
-      # NOT visible during `sh:` var evaluation -- only inside cmds like this one --
-      # so that test always saw an empty value and silently ran staging even with a
-      # preview branch configured. Silently ignoring your configuration is worse than
-      # either outcome it was choosing between, and `staging:saas` already exists for
-      # when you actually want the shared project.
-      #
-      # Unconfigured, the dev profile fails on a required property rather than
-      # falling back, deliberately: dev sets ddl-auto=update, so pointing it at the
-      # shared project would let a feature branch create tables there.
+      # Don't move this check into a `sh:` var: dotenv is visible in cmds but not
+      # during var evaluation, so the test would always see an empty value.
       - cmd: |
           if [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
             echo ">> SAAS_DEV_PROJECT_REF is not set, so the dev profile will refuse to start."

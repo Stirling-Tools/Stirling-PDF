@@ -10,22 +10,12 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * States which Supabase project this backend is actually talking to, and how much it may change.
+ * Logs which Supabase project this backend is talking to, and its schema policy.
  *
- * <p>The two non-prod profiles look identical from the outside and are not: {@code dev} follows a
- * SaaS PR's preview branch and has {@code ddl-auto=update}, {@code staging} is the shared v3
- * project with {@code ddl-auto=none}. Being on the wrong one is quiet until it isn't. Point at
- * staging while you believe you are on a PR branch and everything works until a migration the PR
- * added turns out to be missing, which surfaces as {@code relation ... does not exist} some
- * requests later. So the project ref and the schema policy both get stated at startup rather than
- * inferred.
- *
- * <p>This matters most when {@code task backend:dev:saas} has fallen back: with no {@code
- * SAAS_DEV_PROJECT_REF} set it runs the staging profile instead, and this line is the confirmation
- * of what you ended up with.
- *
- * <p>Logged on {@link ApplicationReadyEvent} so it lands at the end of the boot output where it can
- * be seen, rather than buried in bean initialisation.
+ * <p>The non-prod profiles look alike and are not: {@code dev} follows a PR's preview branch with
+ * {@code ddl-auto=update}, {@code staging} is shared v3 with {@code none}. Being on the wrong one
+ * is quiet until a migration turns out to be missing, which surfaces as {@code relation does not
+ * exist} some requests later, so both are stated at startup rather than inferred.
  */
 @Slf4j
 @Component
