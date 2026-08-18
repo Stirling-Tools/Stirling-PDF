@@ -273,6 +273,14 @@ export async function mockAppApis(
   await page.route("**/api/v1/policies/runs", (route: Route) =>
     route.fulfill({ json: [] }),
   );
+
+  // The notification bell polls GET /api/v1/notifications from every shell it
+  // is mounted in, starting on load. The hook swallows the failure and shows an
+  // empty bell, but the browser still logs the failed request itself, which the
+  // console-hygiene guard counts. Empty list, for the same reason as policies.
+  await page.route("**/api/v1/notifications*", (route: Route) =>
+    route.fulfill({ json: { notifications: [] } }),
+  );
 }
 
 /**
