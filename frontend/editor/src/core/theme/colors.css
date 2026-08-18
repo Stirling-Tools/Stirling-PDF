@@ -71,6 +71,11 @@ html[data-app-theme="light"] {
     var(--c-success) 10%,
     var(--c-surface)
   );
+  --c-warning-subtle: color-mix(
+    in srgb,
+    var(--c-warning) 10%,
+    var(--c-surface)
+  );
 
   /* ── Decorative / brand / categorical palette ──────────────────────────
      Fixed hues that intentionally do NOT follow the chosen accent: brand
