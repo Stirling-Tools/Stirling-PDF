@@ -26,7 +26,7 @@ engine = [
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
     "anyio>=4.14.2",
-    "datamodel-code-generator[ruff]==0.64.0",
+    "datamodel-code-generator[ruff]==0.72.3",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
     "referencing>=0.37.0",
