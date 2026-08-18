@@ -91,14 +91,14 @@ jobs:
           lookup-only: true
 
       - name: Set up JDK 25
-        if: steps.cache-gradle-restore.outputs.cache-hit == 'true'
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
       - name: Resolve backend dependencies
-        if: steps.cache-gradle-restore.outputs.cache-hit == 'true'
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
         run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
@@ -107,7 +107,7 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Save cache Gradle User Home
-        if: steps.cache-gradle-restore.outputs.cache-hit == 'true'
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
