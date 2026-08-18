@@ -77,7 +77,16 @@ import {
   useProcessingFolders,
   type ProcessingRunInfo,
 } from "@app/hooks/useProcessingFolders";
-import { useCategoryFilterOptions } from "@app/components/shared/fileSidebarGrouping";
+import {
+  useCategoryFilterOptions,
+  useLabelSearchMatcher,
+} from "@app/components/shared/fileSidebarGrouping";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import {
+  fileMatchesFilters,
+  type FileFilterContext,
+  type FileFilters,
+} from "@app/components/filesPage/fileFilters";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -185,6 +194,8 @@ export default function FileManagerView() {
     setOriginFilter,
     typeFilter,
     setTypeFilter,
+    categoryFilter,
+    setCategoryFilter,
     currentTab,
     setCurrentTab,
     folderNameDialog,
@@ -389,7 +400,7 @@ export default function FileManagerView() {
   // Category filter over the classification families the sidebar groups by;
   // empty (core, classification off) means the dropdown never renders.
   const categoryOptions = useCategoryFilterOptions();
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const labelsMatchText = useLabelSearchMatcher();
   const categoryLabelKeys = useMemo(() => {
     if (categoryFilter === "all") return null;
     const option = categoryOptions.find((c) => c.id === categoryFilter);
@@ -397,25 +408,22 @@ export default function FileManagerView() {
   }, [categoryFilter, categoryOptions]);
 
   const visibleFiles = useMemo(() => {
-    const filtered = filesInCurrentFolder
-      .filter((f) =>
-        search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
-      )
-      .filter((f) =>
-        originFilter === "all" ? true : getFileOrigin(f) === originFilter,
-      )
-      .filter((f) => {
-        if (typeFilter.length === 0) return true;
-        const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-        return typeFilter.includes(ext);
-      })
-      .filter(
-        (f) =>
-          !categoryLabelKeys ||
-          (f.classificationLabels ?? []).some((label) =>
-            categoryLabelKeys.has(label),
-          ),
-      );
+    // One unified filter pass: text (names + classification), origin, type,
+    // category — see fileFilters.ts, where new facets belong.
+    const filters: FileFilters = {
+      text: search,
+      origin: originFilter,
+      types: typeFilter,
+      category: categoryFilter,
+    };
+    const ctx: FileFilterContext = {
+      originOf: getFileOrigin,
+      categoryLabelKeys,
+      labelsMatchText,
+    };
+    const filtered = filesInCurrentFolder.filter((f) =>
+      fileMatchesFilters(f, filters, ctx),
+    );
     const sorted = [...filtered];
     sorted.sort((a, b) => {
       switch (sortMode) {
@@ -441,7 +449,9 @@ export default function FileManagerView() {
     sortMode,
     originFilter,
     typeFilter,
+    categoryFilter,
     categoryLabelKeys,
+    labelsMatchText,
   ]);
 
   /**
@@ -1789,7 +1799,48 @@ export default function FileManagerView() {
                       label: category.name,
                     })),
                   ]}
-                  style={{ width: 150 }}
+                  renderOption={({ option }) => {
+                    const category = categoryOptions.find(
+                      (c) => c.id === option.value,
+                    );
+                    return (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.4rem",
+                        }}
+                      >
+                        {category && (
+                          <LocalIcon
+                            icon={category.icon}
+                            width="0.95rem"
+                            style={
+                              category.color
+                                ? { color: category.color }
+                                : undefined
+                            }
+                          />
+                        )}
+                        {option.label}
+                      </span>
+                    );
+                  }}
+                  leftSection={(() => {
+                    const selected = categoryOptions.find(
+                      (c) => c.id === categoryFilter,
+                    );
+                    return selected ? (
+                      <LocalIcon
+                        icon={selected.icon}
+                        width="0.95rem"
+                        style={
+                          selected.color ? { color: selected.color } : undefined
+                        }
+                      />
+                    ) : undefined;
+                  })()}
+                  style={{ width: 165 }}
                   aria-label={t(
                     "filesPage.categoryFilter.label",
                     "Filter by category",
@@ -1821,7 +1872,10 @@ export default function FileManagerView() {
                 size="xs"
                 value={search}
                 onChange={(e) => setSearch(e.currentTarget.value)}
-                placeholder={t("filesPage.search.placeholder", "Filter files…")}
+                placeholder={t(
+                  "filesPage.search.placeholder",
+                  "Filter by name or category…",
+                )}
                 leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
                 rightSection={
                   search ? (

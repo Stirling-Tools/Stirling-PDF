@@ -136,13 +136,57 @@ export function useCategoryFilterOptions(): CategoryFilterOption[] {
         .sort((a, b) =>
           a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
         )
-        .map((category) => ({
+        .map((category, index) => ({
           id: category.id,
           name: category.name,
+          icon: category.icon,
+          color: accentCycleColor(index),
           labelKeys: [...category.labelKeys],
         })),
     [categories],
   );
+}
+
+/**
+ * Text matcher over classification: a file matches when any of its labels'
+ * display names — or the names of the categories those labels roll up into —
+ * contain the needle. The index is built once per vocabulary/category state,
+ * so per-file checks during filtering are set lookups, not string assembly.
+ */
+export function useLabelSearchMatcher(): (
+  labels: string[] | null | undefined,
+  needle: string,
+) => boolean {
+  const { t } = useTranslation();
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
+  );
+  return useMemo(() => {
+    const familyNameByLabel = new Map<string, string>();
+    for (const category of categories) {
+      for (const key of category.labelKeys) {
+        if (!familyNameByLabel.has(key)) {
+          familyNameByLabel.set(key, category.name.toLowerCase());
+        }
+      }
+    }
+    const searchableByLabel = new Map<string, string>();
+    for (const label of DEFAULT_CLASSIFICATION_LABELS) {
+      const name = t(
+        `classification.labels.${label.id}`,
+        label.name,
+      ).toLowerCase();
+      const family = familyNameByLabel.get(label.id) ?? "";
+      searchableByLabel.set(label.id, `${name} ${family}`);
+    }
+    return (labels: string[] | null | undefined, needle: string) => {
+      if (!labels || labels.length === 0 || !needle) return false;
+      return labels.some((id) =>
+        (searchableByLabel.get(id) ?? id).includes(needle),
+      );
+    };
+  }, [categories, t]);
 }
 
 /**

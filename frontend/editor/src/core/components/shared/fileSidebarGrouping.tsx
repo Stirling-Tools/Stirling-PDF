@@ -55,6 +55,10 @@ export function useFamilyBadges(_labels?: string[] | null): LabelBadge[] {
 export interface CategoryFilterOption {
   id: string;
   name: string;
+  /** Material Symbols icon key — the family's own sidebar icon. */
+  icon: string;
+  /** The accent its sidebar group wears. */
+  color?: string;
   /** Label ids the category rolls up — a file matches if it carries any. */
   labelKeys: string[];
 }
@@ -64,6 +68,21 @@ const NO_CATEGORIES: CategoryFilterOption[] = [];
 /** Categories to filter by; core (no classification) offers none. */
 export function useCategoryFilterOptions(): CategoryFilterOption[] {
   return NO_CATEGORIES;
+}
+
+const NEVER_MATCHES = () => false;
+
+/**
+ * Text matcher over a file's classification: whether any of its labels' or
+ * their categories' display names contain the needle. Core, which has no
+ * classification, never matches — the files-page text filter then falls back
+ * to names alone.
+ */
+export function useLabelSearchMatcher(): (
+  labels: string[] | null | undefined,
+  needle: string,
+) => boolean {
+  return NEVER_MATCHES;
 }
 
 // Header control for customizing the grouping; core has none, an override renders a group picker.

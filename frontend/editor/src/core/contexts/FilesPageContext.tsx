@@ -104,6 +104,9 @@ interface FilesPageContextValue {
    *  Empty array = no type filter applied. */
   typeFilter: string[];
   setTypeFilter: (next: string[]) => void;
+  /** Selected classification category (label family) id; "all" = no filter. */
+  categoryFilter: string;
+  setCategoryFilter: (id: string) => void;
 
   /** Active filter-tab. Drives which files appear and which UI affordances enable. */
   currentTab: FilesPageTab;
@@ -246,6 +249,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const [originFilter, setOriginFilter] =
     useState<FilesPageOriginFilter>("all");
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentTab, setCurrentTab] = useState<FilesPageTab>("all");
 
   // Dialog: folder name -----------------------------------------------------
@@ -699,6 +703,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       setOriginFilter,
       typeFilter,
       setTypeFilter,
+      categoryFilter,
+      setCategoryFilter,
       currentTab,
       setCurrentTab,
       folderNameDialog,
@@ -735,6 +741,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       search,
       originFilter,
       typeFilter,
+      categoryFilter,
       currentTab,
       folderNameDialog,
       openNewFolderDialog,

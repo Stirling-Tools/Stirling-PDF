@@ -4187,7 +4187,7 @@ runStep = "Step {{current}} of {{total}}"
 [filesPage.search]
 clear = "Clear filter"
 label = "Filter files by name"
-placeholder = "Filter files…"
+placeholder = "Filter by name or category…"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"
