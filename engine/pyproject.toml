@@ -98,6 +98,10 @@ select = [
     "BLE", # flake8-blind-except: flags bare `except Exception`
 ]
 
+ignore = [
+    "EXE001"
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["stirling", "tests"]
 
