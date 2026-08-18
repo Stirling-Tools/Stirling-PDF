@@ -7185,6 +7185,7 @@ beforeHelper = "header against your signing secret before trusting a payload. SD
 beforeSignature = "Verify the"
 
 [portal.documents]
+encryptedAtRest = "Encrypted"
 exportCsv = "Export CSV"
 search = "Search by filename, ID..."
 subtitle = "Every document your org has processed, with its full processing record. Content access is request-gated."
