@@ -203,7 +203,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const openWatchedFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
       setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
-      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
 
     // Clicking a file's membership dot jumps straight into that folder.
@@ -211,7 +211,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       (folderId: string) => {
         if (collapsed && onToggleCollapse) onToggleCollapse();
         setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
       },
       [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
     );
