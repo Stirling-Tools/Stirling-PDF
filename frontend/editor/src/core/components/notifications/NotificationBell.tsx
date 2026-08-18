@@ -168,12 +168,12 @@ function noteFor(
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",
-      "This failure is not linked to a specific document, so it cannot be opened or retried here.",
+      "This failure is not linked to a specific document, so there is nothing to open here.",
     );
   return isResolvableHere(notification)
     ? t(
         "notifications.notOnThisDevice",
-        "This document is not on this device, so it cannot be opened or retried here.",
+        "This document is not on this device, so it cannot be opened here.",
       )
     : null;
 }

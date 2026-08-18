@@ -305,7 +305,7 @@ describe("NotificationBell", () => {
     await waitFor(() =>
       expect(
         screen.getByText(
-          "This document is not on this device, so it cannot be opened or retried here.",
+          "This document is not on this device, so it cannot be opened here.",
         ),
       ).toBeTruthy(),
     );
@@ -322,7 +322,7 @@ describe("NotificationBell", () => {
 
     expect(
       await screen.findByText(
-        "This failure is not linked to a specific document, so it cannot be opened or retried here.",
+        "This failure is not linked to a specific document, so there is nothing to open here.",
       ),
     ).toBeTruthy();
   });
