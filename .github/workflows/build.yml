@@ -85,9 +85,6 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
       - name: Resolve backend dependencies
         run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
@@ -193,7 +190,14 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence, gradle-cache-prime]
+    needs:
+      [
+        files-changed,
+        build,
+        check-generateOpenApiDocs,
+        check-licence,
+        gradle-cache-prime,
+      ]
     permissions:
       contents: read
       packages: read
