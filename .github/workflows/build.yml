@@ -48,52 +48,72 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
+    environment: ci-unsigned
     name: Prime shared Gradle cache
     needs: [files-changed]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-      - name: Cache Gradle User Home
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+
+      - name: Calculate Gradle cache key
+        id: gradle-cache-key
+        shell: bash
+        run: |
+          echo "key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Gradle (lookup-only)
+        id: cache-gradle-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
+          key: ${{ steps.gradle-cache-key.outputs.key }}
+          lookup-only: true
+
+      - name: Set up JDK 25
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
       - name: Resolve backend dependencies
-        run: ./gradlew :stirling-pdf:classes -PnoSpotless --no-daemon
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
+        run: ./gradlew :stirling-pdf:classes --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Save cache Gradle User Home
+        if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.gradle-cache-key.outputs.key }}
 
   build:
     needs: [files-changed, gradle-cache-prime]
@@ -169,6 +189,8 @@ jobs:
       contents: read
     uses: ./.github/workflows/build-enterprise.yml
     secrets: inherit
+    with:
+      use_shared_cache: true
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
@@ -192,7 +214,14 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence, gradle-cache-prime]
+    needs:
+      [
+        files-changed,
+        build,
+        check-generateOpenApiDocs,
+        check-licence,
+        gradle-cache-prime,
+      ]
     permissions:
       contents: read
       packages: read
@@ -204,7 +233,7 @@ jobs:
 
   tauri-build:
     if: needs.files-changed.outputs.tauri == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
       pull-requests: write
@@ -218,6 +247,7 @@ jobs:
     with:
       platform: windows-macos
       sign: true
+      use_shared_cache: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -241,6 +271,8 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
+    with:
+      use_shared_cache: true
 
   pre-commit:
     needs: [files-changed]
@@ -306,7 +338,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
