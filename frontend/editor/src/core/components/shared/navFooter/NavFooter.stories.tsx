@@ -15,7 +15,7 @@ const meta: Meta<typeof NavFooter> = {
   args: {
     displayName: "admin",
     onOpenSettings: () => {},
-    credits: { remaining: 247, total: 500 },
+    credits: { state: "ready", remaining: 247, total: 500 },
     onOpenPlan: () => {},
     otherApp: { app: "processor", onOpen: () => {} },
   },
@@ -82,12 +82,18 @@ export const WithProfilePicture: Story = {
 
 /** Credits running low — the dot and bar shift to the warning tone at 20% left. */
 export const CreditsLow: Story = {
-  args: { credits: { remaining: 42, total: 500 } },
+  args: { credits: { state: "ready", remaining: 42, total: 500 } },
 };
 
 /** Allowance exhausted. */
 export const CreditsExhausted: Story = {
-  args: { credits: { remaining: 0, total: 500 } },
+  args: { credits: { state: "ready", remaining: 0, total: 500 } },
+};
+
+/** Wallet still loading: the row holds its final height with a spinner where
+ *  the figures go, so nothing below it moves when they land. */
+export const CreditsLoading: Story = {
+  args: { credits: { state: "loading" } },
 };
 
 /** Core OSS: no wallet, no second app, settings only. */

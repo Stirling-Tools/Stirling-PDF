@@ -13,7 +13,11 @@ function Probe() {
   const credits = useFreeCreditsSummary();
   return (
     <span data-testid="credits">
-      {credits ? `${credits.remaining}/${credits.total}` : "none"}
+      {credits === null
+        ? "none"
+        : credits.state === "loading"
+          ? "loading"
+          : `${credits.remaining}/${credits.total}`}
     </span>
   );
 }
@@ -61,14 +65,27 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
       freeAllowance: 500,
     });
     const el = renderFor("linked-subscribed");
-    await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
-    expect(el.textContent).toBe("none");
+    // The row holds its space while the wallet loads, then drops once the
+    // answer says this team is paying.
+    await waitFor(() => expect(el.textContent).toBe("none"));
   });
 
   it("hides the meter when the wallet read fails", async () => {
     fetchWallet.mockRejectedValue(new Error("saas unreachable"));
     const el = renderFor("linked-subscribed");
-    await waitFor(() => expect(fetchWallet).toHaveBeenCalled());
-    expect(el.textContent).toBe("none");
+    await waitFor(() => expect(el.textContent).toBe("none"));
+  });
+
+  it("holds the row's space while a linked instance loads its wallet", async () => {
+    let release: (v: unknown) => void = () => {};
+    fetchWallet.mockReturnValue(
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+    );
+    const el = renderFor("linked-free");
+    await waitFor(() => expect(el.textContent).toBe("loading"));
+    release({ status: "free", freeRemaining: 247, freeAllowance: 500 });
+    await waitFor(() => expect(el.textContent).toBe("247/500"));
   });
 });

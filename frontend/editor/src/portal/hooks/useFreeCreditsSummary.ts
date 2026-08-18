@@ -28,11 +28,18 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isLinked } = useLink();
   // Shared query key, so the footer rides the same cached snapshot as any other
   // wallet reader rather than adding a fetch per mount.
-  const { data: wallet } = useQuery({
+  const { data: wallet, isPending } = useQuery({
     queryKey: qk.wallet(isLinked),
     queryFn: fetchWallet,
     enabled: isLinked,
   });
-  if (!wallet || wallet.status === "subscribed") return null;
-  return { remaining: wallet.freeRemaining, total: wallet.freeAllowance };
+  // Linkage is known synchronously, so a linked instance can hold the row's
+  // space while the wallet loads without needing a remembered hint.
+  if (!wallet) return isLinked && isPending ? { state: "loading" } : null;
+  if (wallet.status === "subscribed") return null;
+  return {
+    state: "ready",
+    remaining: wallet.freeRemaining,
+    total: wallet.freeAllowance,
+  };
 }

@@ -1,15 +1,23 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { ProgressBar } from "@app/ui";
+import { ProgressBar, Spinner } from "@app/ui";
 import "@app/components/shared/navFooter/NavFooterCreditsRow.css";
 
-export interface NavFooterCredits {
-  /** Free credits still available to spend. */
-  remaining: number;
-  /** Size of the free allowance — the "of N" denominator. */
-  total: number;
-}
+/**
+ * Either the figures, or "this team is on the free plan but the wallet hasn't
+ * answered yet". The loading arm exists so the row can hold its space from
+ * first paint instead of appearing later and shoving the rows below it down.
+ */
+export type NavFooterCredits =
+  | { state: "loading" }
+  | {
+      state: "ready";
+      /** Free credits still available to spend. */
+      remaining: number;
+      /** Size of the free allowance — the "of N" denominator. */
+      total: number;
+    };
 
 /** Remaining-credit bands, mirroring the usage meters' 80% / 100% thresholds. */
 function creditsTone(remaining: number, total: number): string {
@@ -43,6 +51,23 @@ export function NavFooterCreditsRow({
   onOpen,
 }: NavFooterCreditsRowProps) {
   const { t } = useTranslation();
+
+  if (credits.state === "loading") {
+    return (
+      <Row onOpen={onOpen} label={label}>
+        {!collapsed && (
+          <div className="nav-footer__credits-head">
+            <span className="nav-footer__dot" data-tone="loading" aria-hidden />
+            <span className="nav-footer__credits-label">{label}</span>
+            <Spinner size="sm" label={t("loading", "Loading")} />
+          </div>
+        )}
+        {/* Same height as the real bar, so nothing moves when it resolves. */}
+        <div className="nav-footer__credits-track" aria-hidden />
+      </Row>
+    );
+  }
+
   const total = Math.max(0, credits.total);
   const remaining = Math.min(Math.max(0, credits.remaining), total);
   const tone = creditsTone(remaining, total);

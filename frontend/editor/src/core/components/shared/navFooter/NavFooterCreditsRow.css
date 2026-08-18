@@ -41,6 +41,17 @@
 .nav-footer__dot[data-tone="danger"] {
   background-color: var(--c-danger);
 }
+.nav-footer__dot[data-tone="loading"] {
+  background-color: var(--c-border-strong);
+}
+
+/* Empty stand-in for the fill bar while the figures load, so the row is its
+   final height from first paint. */
+.nav-footer__credits-track {
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--c-surface-sunken);
+}
 
 .nav-footer__credits-label {
   flex: 1;
