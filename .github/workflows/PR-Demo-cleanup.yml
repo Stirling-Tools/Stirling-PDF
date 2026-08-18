@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   cleanup:
-    environment: pr-preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:

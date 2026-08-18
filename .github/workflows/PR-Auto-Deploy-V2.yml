@@ -462,7 +462,6 @@ jobs:
             });
 
   cleanup-v2-deployment:
-    environment: pr-preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:

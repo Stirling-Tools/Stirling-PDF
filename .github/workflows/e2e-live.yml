@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   playwright-e2e-live:
-    environment: ci-unsigned
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

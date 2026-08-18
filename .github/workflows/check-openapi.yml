@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   check-generate-openapi-docs:
-    environment: ci-unsigned
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
