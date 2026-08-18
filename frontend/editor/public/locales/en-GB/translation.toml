@@ -9745,8 +9745,6 @@ apiKeys = "API Keys"
 title = "Developer"
 
 [settings.general]
-appSwitchStyle = "Editor / Processor transition"
-appSwitchStyleDescription = "How the screen animates when you switch between the editor and the processor."
 autoUnzip = "Auto-unzip API responses"
 autoUnzipDescription = "Automatically extract files from ZIP responses"
 autoUnzipFileLimit = "Auto-unzip file limit"
@@ -9791,13 +9789,6 @@ themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "User"
-
-[settings.general.appSwitch]
-axis = "Slide"
-depth = "Depth"
-dissolve = "Dissolve"
-panels = "Panels"
-wipe = "Wipe"
 
 [settings.general.enableFeatures]
 action = "Configure"
