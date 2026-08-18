@@ -2,29 +2,41 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useLabelBadges } from "@app/components/shared/fileSidebarGrouping";
+import {
+  useFamilyBadges,
+  useLabelBadges,
+} from "@app/components/shared/fileSidebarGrouping";
 
-/** At most this many label icons on a card; the hover names every label. */
+/** At most this many icons on a card; the hover names everything. */
 const MAX_ICONS = 3;
 
 /**
  * A classified file's categories, worn as the classification vocabulary's own
  * icons in the sidebar's own category accents — no text, names on hover.
- * Renders nothing for an unclassified file (or in builds without
- * classification): absence of the badge IS the "no category" state.
+ * Category (family) icons lead, the labels follow, so the badge names the
+ * sidebar group first and the specifics after. Renders nothing for an
+ * unclassified file (or in builds without classification): absence of the
+ * badge IS the "no category" state.
  */
 export function FileCategoryBadge({ labels }: { labels?: string[] | null }) {
   const { t } = useTranslation();
-  const badges = useLabelBadges(labels);
+  const families = useFamilyBadges(labels);
+  const labelBadges = useLabelBadges(labels);
+  const badges = [...families, ...labelBadges];
   if (badges.length === 0) return null;
+  const hover =
+    families.length > 0
+      ? t("filesPage.categoryHintGrouped", {
+          families: families.map((badge) => badge.name).join(", "),
+          labels: labelBadges.map((badge) => badge.name).join(", "),
+          defaultValue: "{{families}} — {{labels}}",
+        })
+      : t("filesPage.categoryHint", {
+          labels: labelBadges.map((badge) => badge.name).join(", "),
+          defaultValue: "Categories: {{labels}}",
+        });
   return (
-    <Tooltip
-      label={t("filesPage.categoryHint", {
-        labels: badges.map((badge) => badge.name).join(", "),
-        defaultValue: "Categories: {{labels}}",
-      })}
-      withinPortal
-    >
+    <Tooltip label={hover} withinPortal>
       <span
         style={{
           display: "inline-flex",

@@ -43,6 +43,14 @@ export function useLabelBadges(_labels?: string[] | null): LabelBadge[] {
   return NO_BADGES;
 }
 
+/**
+ * Badge descriptors for the categories (label families) a file's labels roll
+ * up into — the same identities the sidebar groups by. Core has none.
+ */
+export function useFamilyBadges(_labels?: string[] | null): LabelBadge[] {
+  return NO_BADGES;
+}
+
 /** One category (label family) as a files-page filter offers it. */
 export interface CategoryFilterOption {
   id: string;

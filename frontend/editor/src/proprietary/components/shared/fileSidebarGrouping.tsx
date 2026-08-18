@@ -146,6 +146,39 @@ export function useCategoryFilterOptions(): CategoryFilterOption[] {
 }
 
 /**
+ * Badge descriptors for the categories a file's labels roll up into: each
+ * visible family's own icon, wearing the same cycled accent its sidebar group
+ * does. Deduped and in sidebar display order; labels only under hidden
+ * categories contribute nothing (their files read as "Other").
+ */
+export function useFamilyBadges(labels?: string[] | null): LabelBadge[] {
+  const { t } = useTranslation();
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
+  );
+  return useMemo(() => {
+    if (!labels || labels.length === 0) return [];
+    const carried = new Set(labels);
+    return categories
+      .filter((category) => !category.hidden)
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      )
+      .map((category, index) => ({ category, index }))
+      .filter(({ category }) =>
+        category.labelKeys.some((key) => carried.has(key)),
+      )
+      .map(({ category, index }) => ({
+        id: category.id,
+        name: category.name,
+        icon: category.icon,
+        color: accentCycleColor(index),
+      }));
+  }, [labels, categories, t]);
+}
+
+/**
  * Badge descriptors for a file's labels: each label's own icon from the
  * classification vocabulary, coloured with the accent its category cycles to
  * in the sidebar (visible categories in display order — the same order the
