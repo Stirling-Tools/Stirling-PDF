@@ -57,8 +57,11 @@ public enum FailureKind {
             fallback("This run failed for a reason Stirling does not yet recognise."),
             // Nothing here is known to be fixable, so the offers are the places to look:
             // the owner their document, a reviewer the run, and anyone may close the row.
-            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
+            // Declared in the same order as every other kind, because declaration order is
+            // display order: the document leads wherever it is offered, so a reader is not
+            // asked to re-learn which button leads from one failure to the next.
             offer(VIEW_FILE, OWNER),
+            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(DISMISS, ANYONE_WHO_SEES));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";

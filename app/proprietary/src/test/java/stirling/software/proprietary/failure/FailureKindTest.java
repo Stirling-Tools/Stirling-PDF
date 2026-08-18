@@ -73,6 +73,28 @@ class FailureKindTest {
             assertThat(kind.getId()).matches("^[A-Z][A-Z0-9_]*$");
         }
 
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
+            // Declaration order is display order, and the first offer a reader can use is the one
+            // rendered as the row's primary. Two kinds listing the same actions in different orders
+            // therefore flip the solid button between rows, which reads as a bug rather than as
+            // emphasis. Asserted as a shared ranking so a kind added later cannot reintroduce it.
+            List<FailureActionId> ranking =
+                    List.of(
+                            FailureActionId.VIEW_FILE,
+                            FailureActionId.VIEW_IN_PROCESSOR,
+                            FailureActionId.DISMISS);
+
+            List<FailureActionId> declared = kind.getActions();
+            assertThat(ranking)
+                    .as("%s declares an action the shared ranking does not rank", kind.getId())
+                    .containsAll(declared);
+            assertThat(declared)
+                    .as("%s declares its actions out of the shared order", kind.getId())
+                    .isEqualTo(ranking.stream().filter(declared::contains).toList());
+        }
+
         @Test
         void idsAreUnique() {
             Set<String> ids = new HashSet<>();
@@ -220,11 +242,11 @@ class FailureKindTest {
             // owner their document, a reviewer the run, and anyone may close the row.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
+                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
                                     "viewInProcessor"),
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
         }
 
