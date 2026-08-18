@@ -50,6 +50,12 @@
   height: 2.5rem;
   font-size: 1rem;
 }
+/* Account-settings hero disc. */
+.sui-avatar--xl {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.75rem;
+}
 
 .sui-avatar__img {
   width: 100%;
