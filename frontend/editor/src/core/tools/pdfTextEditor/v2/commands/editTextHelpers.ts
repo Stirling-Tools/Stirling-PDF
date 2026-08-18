@@ -331,10 +331,14 @@ interface LooseBoxModule {
   ) => boolean;
 }
 
-// An advance below this many ems is not a real advance - it is an ink box that
-// got mistaken for one. The narrowest advances in the base-14 faces are
-// quotesingle (0.191em) and i/l (0.222em), so 0.18 clears every ordinary glyph
-// while rejecting the collapsed ink boxes PDFium reports for Type 3 faces.
+// A measured advance below this many ems is treated as an ink box mistaken for
+// an advance - that collapse is what stacked Type 3 glyphs onto each other.
+//
+// This is a deliberate trade-off, not a safe floor: real faces do go under it
+// (Garamond's "i" is 0.177em), and such a glyph falls through to an estimated
+// metric that can be ~25% wide. Lowering the threshold is not the fix - the
+// Type 3 ink boxes it exists to reject measure about 0.12em, so there is no
+// gap between the two populations to separate them cleanly.
 const MIN_PLAUSIBLE_ADVANCE_EM = 0.18;
 // Above this, the "advance" swallowed a word gap or a Td jump.
 const MAX_PLAUSIBLE_ADVANCE_EM = 2;
