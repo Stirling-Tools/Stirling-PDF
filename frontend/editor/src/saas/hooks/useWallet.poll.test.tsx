@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 const get = vi.fn();
 vi.mock("@app/services/apiClient", () => ({
@@ -83,6 +84,53 @@ describe("useWallet — keeping the figures fresh", () => {
 
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
+    expect(result.current.wallet?.freeRemaining).toBe(500);
+  });
+
+  it("settles loading when a silent poll supersedes an in-flight visible load", async () => {
+    // The mount load raises `loading`; a poll firing before it lands cancels it.
+    // If clearing the flag were the silent load's to skip, both would decline
+    // and `loading` would stay true forever — which permanently suppresses the
+    // limit modals, since they do `if (loading || !wallet) return null`.
+    const visibility = vi.spyOn(document, "visibilityState", "get");
+    visibility.mockReturnValue("visible");
+
+    let landMount: (v: unknown) => void = () => {};
+    get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        landMount = resolve;
+      }),
+    );
+    const { result } = renderHook(() => useWallet());
+    expect(result.current.loading).toBe(true);
+
+    get.mockResolvedValue(walletWith(470));
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await act(async () => {
+      landMount(walletWith(500));
+    });
+
+    await waitFor(() => expect(result.current.wallet?.freeRemaining).toBe(470));
+    expect(result.current.loading).toBe(false);
+    visibility.mockRestore();
+  });
+
+  it("clears a stale error once a silent poll succeeds", async () => {
+    // The visible mount load failing is meant to be logged; only the silent
+    // retries stay quiet.
+    expectConsole.warn(/\[useWallet\] fetch failed/);
+    get.mockRejectedValueOnce(new Error("network blip"));
+    const { result } = renderHook(() => useWallet());
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+
+    get.mockResolvedValue(walletWith(500));
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+    });
+
+    await waitFor(() => expect(result.current.error).toBeNull());
     expect(result.current.wallet?.freeRemaining).toBe(500);
   });
 

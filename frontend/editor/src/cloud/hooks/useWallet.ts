@@ -216,12 +216,15 @@ export function useWallet(): UseWalletResult {
   // "the request fired." Cleared when no load is pending.
   const inFlight = useRef<Promise<void> | null>(null);
 
-  // Set for refreshes the user didn't ask for (the poll below). Those must not
-  // touch `loading` or `error`: consumers gate on them — the limit modals do
+  // Set for refreshes the user didn't ask for (the poll below). Silence governs
+  // whether a load may RAISE `loading` / `error`, never whether it may clear
+  // them: consumers gate on both — the limit modals do
   // `if (loading || !wallet) return null`, and Plan swaps in an error alert —
-  // so a background tick would blink an open modal out or replace a working
-  // page over a transient failure. A silent refresh either commits fresher
-  // data or leaves the last good snapshot alone.
+  // so a background tick must not blink an open modal out or replace a working
+  // page over a transient failure. Clearing is always the latest request's job,
+  // silent or not; a silent load that skipped the clear would strand `loading`
+  // true after superseding a visible one, which suppresses those modals for the
+  // rest of the session.
   const silentRefresh = useRef(false);
 
   useEffect(() => {
@@ -249,6 +252,9 @@ export function useWallet(): UseWalletResult {
         const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, res.data));
+        // Fresh data retires any earlier failure, including one a silent poll
+        // is recovering from — otherwise Plan keeps its alert over good data.
+        setError(null);
       } catch (e: unknown) {
         if (cancelled || reqId !== latestReqId.current) return;
         if (!silent) {
@@ -259,7 +265,10 @@ export function useWallet(): UseWalletResult {
         // stands and the next tick self-heals, so it neither surfaces nor
         // logs — otherwise an offline tab warns every WALLET_POLL_MS.
       } finally {
-        if (!silent && !cancelled && reqId === latestReqId.current) {
+        // Deliberately not gated on `silent`: whichever load is latest owns
+        // settling the flag, or a silent refresh that supersedes a visible one
+        // leaves it stuck true.
+        if (!cancelled && reqId === latestReqId.current) {
           setLoading(false);
         }
       }
