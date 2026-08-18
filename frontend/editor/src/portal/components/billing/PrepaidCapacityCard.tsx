@@ -10,8 +10,8 @@ import type { Wallet } from "@portal/api/billing";
  *   - No bundle → a slim "Get 12 months for the price of 10" offer nudge with a
  *     "Review offer" CTA (the demo's commit-nudge card), shown only when a buyer
  *     ({@code onBuy}, leader) is present.
- *   - Bundle held → the capacity meter (fills as the pool is drawn down, so it
- *     warns as capacity runs low) plus a "Top up" action for the leader.
+ *   - Bundle held → the capacity meter (drains towards empty as the pool is drawn
+ *     down, so it warns as capacity runs low) plus a "Top up" action for the leader.
  *
  * Prepaid is consumed before metered billing and sits outside the spend limit, so
  * it reads as its own dimension. Buying/topping up opens {@code BundleCheckoutModal}

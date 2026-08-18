@@ -177,10 +177,11 @@ export function prepaidSnapshotFromWallet(
 }
 
 /**
- * Prepaid capacity meter. The bar fills as the pool is drawn down ({@code used =
- * total − remaining}), so it WARNs when the pool is running low and DEGRADEs once
- * exhausted — same bands as the free/cap meters. Prepaid is consumed ahead of the
- * meter and outside the spend cap, so it reads as its own dimension.
+ * Prepaid capacity meter. The bar shows what is left and drains towards empty,
+ * while the bands still key on what is gone ({@code used = total − remaining}), so
+ * it WARNs when the pool is running low and DEGRADEs once exhausted — same bands
+ * as the free/cap meters. Prepaid is consumed ahead of the meter and outside the
+ * spend cap, so it reads as its own dimension.
  */
 export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
   const { t } = useTranslation();
