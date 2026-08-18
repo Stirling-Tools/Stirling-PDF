@@ -57,3 +57,27 @@
   color: var(--c-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- Collapsed rail ---- */
+
+/* Rotated so the fill starts at 12 o'clock and runs clockwise. */
+.nav-footer__credits-ring {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline: auto;
+  transform: rotate(-90deg);
+}
+
+.nav-footer__credits-ring-track,
+.nav-footer__credits-ring-fill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.nav-footer__credits-ring-track {
+  stroke: var(--c-surface-sunken);
+}
+
+.nav-footer__credits-ring-fill {
+  stroke-linecap: round;
+}

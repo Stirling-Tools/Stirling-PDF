@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@app/ui";
-import { formatPeriodDate, MeterBar, meterState } from "@app/billing";
+import { formatPeriodDate, MeterBar, remainingMeter } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 
 /**
@@ -55,8 +55,7 @@ export function PrepaidCapacityCard({
 
   const remaining = wallet.prepaidUnitsRemaining;
   const total = wallet.prepaidUnitsTotal;
-  const used = Math.max(0, total - remaining);
-  const { state, pct } = meterState(used, total);
+  const { state, pct } = remainingMeter(remaining, total);
   const stateLabel =
     state === "DEGRADED"
       ? t("portal.billing.prepaid.state.exhausted", "Used up")

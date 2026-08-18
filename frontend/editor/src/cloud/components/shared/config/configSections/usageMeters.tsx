@@ -12,6 +12,7 @@ import {
   formatPeriodDate,
   MeterBar,
   meterState,
+  remainingMeter,
 } from "@app/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
@@ -48,7 +49,8 @@ export function useFreeSnapshot(): FreeSnapshot {
 
 export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
   const { t } = useTranslation();
-  const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
+  const remaining = Math.max(0, snap.billableLimit - snap.billableUsed);
+  const { state, pct } = remainingMeter(remaining, snap.billableLimit);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.free.state.limitReached", "Limit reached")
@@ -60,9 +62,9 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
-      barLabel={t("payg.free.hero.barAria", "Free PDFs used")}
-      figure={snap.billableUsed.toLocaleString()}
-      capSuffix={t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
+      barLabel={t("payg.free.hero.barAria", "Free PDFs remaining")}
+      figure={remaining.toLocaleString()}
+      capSuffix={t("payg.free.hero.capSuffix", "of {{limit}} free PDFs left", {
         limit: snap.billableLimit.toLocaleString(),
       })}
       statusLabel={stateLabel}
@@ -182,8 +184,7 @@ export function prepaidSnapshotFromWallet(
  */
 export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
   const { t } = useTranslation();
-  const used = Math.max(0, snap.total - snap.remaining);
-  const { state, pct } = meterState(used, snap.total);
+  const { state, pct } = remainingMeter(snap.remaining, snap.total);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.prepaid.state.exhausted", "Used up")

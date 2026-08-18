@@ -60,21 +60,70 @@ export function NavFooterCreditsRow({
       disabled={!collapsed}
     >
       <Row onOpen={onOpen} label={`${label}: ${count}`}>
-        {!collapsed && (
-          <div className="nav-footer__credits-head">
-            <span className="nav-footer__dot" data-tone={tone} aria-hidden />
-            <span className="nav-footer__credits-label">{label}</span>
-            <span className="nav-footer__credits-count">{count}</span>
-          </div>
+        {collapsed ? (
+          // The rail is one icon wide, so a full-width bar would read as a
+          // stray line; a ring carries the same fraction at icon size.
+          <CreditsRing
+            fraction={total > 0 ? remaining / total : 0}
+            tone={tone}
+            label={`${label}: ${count}`}
+          />
+        ) : (
+          <>
+            <div className="nav-footer__credits-head">
+              <span className="nav-footer__dot" data-tone={tone} aria-hidden />
+              <span className="nav-footer__credits-label">{label}</span>
+              <span className="nav-footer__credits-count">{count}</span>
+            </div>
+            <ProgressBar
+              value={total > 0 ? remaining / total : 0}
+              height={6}
+              color={`var(--c-${tone})`}
+              label={`${label}: ${count}`}
+            />
+          </>
         )}
-        <ProgressBar
-          value={total > 0 ? remaining / total : 0}
-          height={6}
-          color={`var(--c-${tone})`}
-          label={`${label}: ${count}`}
-        />
       </Row>
     </Tooltip>
+  );
+}
+
+/** Icon-sized donut carrying the same remaining fraction as the expanded bar. */
+function CreditsRing({
+  fraction,
+  tone,
+  label,
+}: {
+  fraction: number;
+  tone: string;
+  label: string;
+}) {
+  const RADIUS = 8;
+  const circumference = 2 * Math.PI * RADIUS;
+  const filled = Math.min(1, Math.max(0, fraction)) * circumference;
+
+  return (
+    <svg
+      className="nav-footer__credits-ring"
+      viewBox="0 0 20 20"
+      role="img"
+      aria-label={label}
+    >
+      <circle
+        className="nav-footer__credits-ring-track"
+        cx="10"
+        cy="10"
+        r={RADIUS}
+      />
+      <circle
+        className="nav-footer__credits-ring-fill"
+        cx="10"
+        cy="10"
+        r={RADIUS}
+        stroke={`var(--c-${tone})`}
+        strokeDasharray={`${filled} ${circumference - filled}`}
+      />
+    </svg>
   );
 }
 
