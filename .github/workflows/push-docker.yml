@@ -20,9 +20,8 @@ on:
         default: false
   push:
     branches:
-      - master
+      - release
       - main
-      - V2-master
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -53,7 +52,7 @@ jobs:
       RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -91,13 +90,13 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Install cosign
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
+        if: github.ref == 'refs/heads/release'
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v2.4.1"
 
       - name: Install cosign
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
+        if: github.ref == 'refs/heads/release'
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
           cosign-release: "v2.4.1"
@@ -133,8 +132,8 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/release' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/release' }}
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest
@@ -158,7 +157,7 @@ jobs:
           sbom: true
 
       - name: Sign regular images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-latest.outputs.digest != ''
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/release') && steps.build-push-latest.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-latest.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -182,8 +181,8 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/release' }}
+            type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/release' }}
 
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
@@ -204,7 +203,7 @@ jobs:
           sbom: true
 
       - name: Sign fat images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-fat.outputs.digest != ''
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/release') && steps.build-push-fat.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-fat.outputs.digest }}
           TAGS: ${{ steps.meta-fat.outputs.tags }}
@@ -226,8 +225,8 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/release' }}
+            type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/release' }}
 
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
@@ -248,7 +247,7 @@ jobs:
           sbom: true
 
       - name: Sign ultra-lite images
-        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-lite.outputs.digest != ''
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/release') && steps.build-push-lite.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-lite.outputs.digest }}
           TAGS: ${{ steps.meta-lite.outputs.tags }}
@@ -260,7 +259,7 @@ jobs:
           done
 
       # Standalone unoserver image — versioned independently via
-      # docker/unoserver/VERSION. master/V2-master: publish <version>+latest
+      # docker/unoserver/VERSION. release: publish <version>+latest
       # only when the version is new. main/testMain: republish :alpha only
       # when the source hash differs from the published image's annotation.
       - name: Read unoserver image version
@@ -319,7 +318,7 @@ jobs:
           fi
 
           case "$EFFECTIVE_REF" in
-            refs/heads/master|refs/heads/V2-master)
+            refs/heads/release)
               if [ "${FORCE_REBUILD}" = "true" ]; then
                 echo "force_unoserver_rebuild=true — building stable regardless"
                 mode="stable"

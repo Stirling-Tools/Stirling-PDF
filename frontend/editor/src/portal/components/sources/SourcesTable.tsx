@@ -1,12 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
-  Chip,
-  StatusBadge,
+  column,
+  DataTable,
+  type DataTableColumn,
   type StatusTone,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import type { SourceStatus, SourceView } from "@portal/api/sources";
 import {
@@ -14,7 +12,6 @@ import {
   sourceTypeMeta,
 } from "@portal/components/sources/sourceTypes";
 import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
-import "@portal/views/Sources.css";
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
   active: "success",
@@ -30,95 +27,65 @@ interface SourcesTableProps {
 
 export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
   const { t } = useTranslation();
-  const columns = useMemo<TableColumn<SourceView>[]>(
+  const columns = useMemo<DataTableColumn<SourceView>[]>(
     () => [
-      {
+      column.entity({
         key: "name",
         header: t("portal.sources.table.source"),
-        render: (s) => {
-          const meta = sourceTypeMeta(s.type);
-          // The editor is a system source with no instance name: label it from its type and drop
-          // the chip, which would just repeat the name.
-          const isEditor = s.type === EDITOR_SOURCE_TYPE;
-          return (
-            <div className="portal-sources__name-cell">
-              <span className="portal-sources__type-dot" aria-hidden>
-                <SourceTypeIcon type={s.type} />
-              </span>
-              <div className="portal-sources__name-text">
-                <strong>{isEditor ? t(meta.labelKey) : s.name}</strong>
-                {!isEditor && (
-                  <Chip accent={meta.accent} size="sm">
-                    {t(meta.labelKey)}
-                  </Chip>
-                )}
-              </div>
-            </div>
-          );
-        },
-      },
-      {
+        sortable: true,
+        icon: (s) => <SourceTypeIcon type={s.type} />,
+        // The editor is a system source with no instance name: label it from its
+        // type (and leave its Type cell blank, so it isn't repeated).
+        primary: (s) =>
+          s.type === EDITOR_SOURCE_TYPE
+            ? t(sourceTypeMeta(s.type).labelKey)
+            : s.name,
+      }),
+      column.text({
+        key: "type",
+        header: t("portal.sources.table.type", "Type"),
+        sortable: true,
+        get: (s) =>
+          s.type === EDITOR_SOURCE_TYPE
+            ? ""
+            : t(sourceTypeMeta(s.type).labelKey),
+      }),
+      column.badge({
         key: "status",
         header: t("portal.sources.table.status"),
-        render: (s) => (
-          <StatusBadge tone={STATUS_TONE[s.status]} size="sm">
-            {t(`portal.sources.status.${s.status}`)}
-          </StatusBadge>
-        ),
-      },
-      {
+        sortable: true,
+        get: (s) => ({
+          tone: STATUS_TONE[s.status],
+          label: t(`portal.sources.status.${s.status}`),
+        }),
+      }),
+      column.number({
         key: "docs",
         header: t("portal.sources.table.documents"),
-        align: "right",
-        render: (s) => (
-          <span
-            className={s.docsTotal === 0 ? "portal-sources__muted" : undefined}
-          >
-            {s.docsTotal.toLocaleString()}
-          </span>
-        ),
-      },
-      {
+        sortable: true,
+        get: (s) => s.docsTotal,
+        format: (n) => n.toLocaleString(),
+      }),
+      column.number({
         key: "referenceCount",
         header: t("portal.sources.table.usedBy"),
-        align: "right",
-        render: (s) => (
-          <span
-            className={
-              s.referenceCount === 0 ? "portal-sources__muted" : undefined
-            }
-          >
-            {s.referenceCount}
-          </span>
-        ),
-      },
-      {
-        key: "open",
-        header: t("portal.sources.table.open"),
-        headerHidden: true,
-        align: "right",
-        width: "2.5rem",
-        // The editor source has no page to open, so it shows no chevron.
-        render: (s) =>
-          s.type === EDITOR_SOURCE_TYPE ? null : (
-            <span className="portal-sources__caret" aria-hidden>
-              <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
-            </span>
-          ),
-      },
+        sortable: true,
+        get: (s) => s.referenceCount,
+      }),
     ],
     [t],
   );
 
   return (
-    <Table<SourceView>
-      className="portal-sources__table"
+    <DataTable<SourceView>
       columns={columns}
       rows={sources}
       rowKey={(s) => s.id}
       onRowClick={onRowClick}
-      // The virtual editor row has no page to open, so it's inert - not a fake button.
+      // The virtual editor row has no page to open, so it's inert (and gets no
+      // chevron) - not a fake button.
       isRowInteractive={(s) => s.type !== EDITOR_SOURCE_TYPE}
+      rowAffordance="chevron"
     />
   );
 }

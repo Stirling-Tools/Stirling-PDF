@@ -61,6 +61,7 @@
   /* ── Z-index ladder ── */
   --z-dropdown: 25;
   --z-drawer: 50;
+  --z-popover: 150;
   --z-toast: 200;
 
   /* Fullscreen tool-picker surfaces (editor) */
