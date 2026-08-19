@@ -173,7 +173,8 @@
     "devalue": "^5.8.1",
     "tsconfck": {
       "typescript": "$typescript"
-    }
+    },
+    "react-router": "7.18.2"
   },
   "msw": {
     "workerDirectory": [
