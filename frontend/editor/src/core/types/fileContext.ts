@@ -62,6 +62,12 @@ export interface StirlingFileStub extends BaseFileMetadata {
    */
   classificationLabels?: string[];
   /**
+   * How sure the local heuristic was about {@link classificationLabels}. Recorded because it
+   * decides whether the AI classifier is asked at all: a confident local verdict stands, an unsure
+   * one is escalated. Undefined when the labels came from the AI rather than the heuristic.
+   */
+  classificationConfidence?: "none" | "low" | "medium" | "high";
+  /**
    * This session proved the stored bytes unreadable (WebKit losing a blob's
    * backing store). The row renders as "data lost" instead of pretending the
    * file can open; re-uploading is the only recovery.

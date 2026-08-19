@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
     sourceFileIds?: string[];
     derivedFromTool?: boolean;
     classificationLabels?: string[];
+    classificationConfidence?: "none" | "low" | "medium" | "high";
   }>,
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
@@ -114,7 +115,7 @@ beforeEach(() => {
   resetPolicyRuns();
   vi.clearAllMocks();
 
-  mocks.workspace = [{ id: "file-0" }];
+  mocks.workspace = [{ id: "file-0", classificationConfidence: "low" }];
 
   mocks.listPolicyRuns.mockResolvedValue([]);
   mocks.getStirlingFile.mockResolvedValue(

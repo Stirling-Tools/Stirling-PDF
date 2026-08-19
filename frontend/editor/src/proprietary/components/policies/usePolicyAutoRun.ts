@@ -195,8 +195,9 @@ export function usePolicyAutoRun(): void {
               s.sources.length === 0 ||
               s.sources.includes("editor")) &&
             (s.runOn ?? "upload") === "upload" &&
-            // Non-AI systems classify in the browser (useClientSideClassification), so keep the
-            // Classification policy out of the server chain when the AI engine is off.
+            // Classification's first pass is always the local heuristic
+            // (useClientSideClassification). The server chain only ever carries the escalation, so
+            // with no engine to escalate to there is nothing for it to do.
             !(id === "classification" && !aiEnabled),
         )
         // Classification runs last: it's non-blocking, so an enforcement policy
@@ -218,6 +219,10 @@ export function usePolicyAutoRun(): void {
   // Latest policies, read from inside the stable retry callback (which has no deps).
   const policiesRef = useRef(policies);
   policiesRef.current = policies;
+  // Latest stubs, for the chaining effect: it keys off runs, not stubs, so it must not add them as
+  // a dependency just to read one file's heuristic confidence.
+  const stubsRef = useRef(fileStubs);
+  stubsRef.current = fileStubs;
   // Per-file (dispatchKey) count of consecutive queue-rejection retries, so backoff escalates and
   // eventually gives up. Survives the run-id changing on each retry; reset on any real outcome.
   const queueRetries = useRef<Map<string, number>>(new Map());
@@ -301,6 +306,8 @@ export function usePolicyAutoRun(): void {
       ) {
         continue;
       }
+      // A confident local verdict stands; only an unsure one is escalated to the engine.
+      if (!shouldDispatchToAi(firstCategory, stub)) continue;
       dispatching.current.add(key);
       void runPolicyOnFile(firstCategory, backendId, stub.id, stub.name)
         .catch(() => {
@@ -336,6 +343,11 @@ export function usePolicyAutoRun(): void {
       // ZIP-unpacked) must apply the next policy to all of them, or outputs 2..N silently skip it.
       for (const outputId of outputIds) {
         if (isDispatched(nextCategory, outputId as FileId)) continue;
+        const outputStub = stubsRef.current.find((s) => s.id === outputId);
+        // Not yet classified locally: defer rather than skip - this effect re-runs when the
+        // heuristic verdict lands on the stub.
+        if (outputStub && !shouldDispatchToAi(nextCategory, outputStub))
+          continue;
         void runPolicyOnFile(
           nextCategory,
           backendId,
@@ -345,7 +357,7 @@ export function usePolicyAutoRun(): void {
         ).catch(() => {});
       }
     }
-  }, [runs, policies, orderedUploadCategories]);
+  }, [runs, policies, orderedUploadCategories, fileStubs]);
 
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
@@ -916,6 +928,33 @@ async function importOutputs(
       ),
     );
   }
+}
+
+/**
+ * The one heuristic verdict trusted to stand on its own.
+ *
+ * <p>The local heuristic runs on every editor upload, but only a high-confidence answer settles the
+ * matter; anything less is escalated to the AI classifier, which overwrites it. Deliberately strict:
+ * a wrong label is worse than the cost of an engine call.
+ */
+const TRUSTED_CONFIDENCE = "high";
+
+/**
+ * Whether the AI classifier should be asked about this file.
+ *
+ * <p>Only for the Classification category, and only once the heuristic has actually reported: a
+ * stub with no confidence yet has not been classified locally, and dispatching then would race the
+ * first pass and bill for an answer it was about to produce for free.
+ */
+export function shouldDispatchToAi(
+  categoryId: string,
+  stub: StirlingFileStub,
+): boolean {
+  if (!isClassificationCategory(categoryId)) {
+    return true;
+  }
+  const confidence = stub.classificationConfidence;
+  return confidence != null && confidence !== TRUSTED_CONFIDENCE;
 }
 
 /** Resolve the file's bytes, fire a backend run, and record it. */

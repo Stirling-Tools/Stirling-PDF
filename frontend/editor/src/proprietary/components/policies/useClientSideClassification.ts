@@ -1,5 +1,7 @@
-// With the AI engine off, the Classification policy runs here in the browser:
-// each upload is labelled by the heuristic engine and metered for billing parity.
+// The Classification policy's first pass, and on the editor path it always runs: every upload is
+// labelled by the local heuristic engine before anything is asked of the AI. The confidence it
+// reports is what decides whether the AI is asked at all - see usePolicyAutoRun - so a document the
+// heuristic is sure about never costs an engine call, and an unsure one is escalated.
 
 import { useEffect, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
@@ -7,7 +9,6 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
@@ -18,6 +19,7 @@ import {
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { HeuristicConfidence } from "@app/services/heuristic/types";
 
 /** The category id of the Classification policy (see policyDefinitions). */
 const CLASSIFICATION_CATEGORY = "classification";
@@ -47,9 +49,8 @@ export function useClientSideClassification(): void {
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const classificationEnabled = useClassificationEnabled();
-  const aiEnabled = useAiEngineEnabled();
-  // While app-config loads, aiEnabled reads false even on AI-on tenants; classifying
-  // in that window would double-run (and double-bill) files the server also labels.
+  // Still waited on: a verdict written before app-config lands would be acted on by the
+  // escalation decision before it knows whether the AI engine is even available.
   const { loading: configLoading } = useAppConfig();
   // Files claimed this session, keyed id+lastModified so a new version is retried once. A claim is
   // taken synchronously right before classifying, so overlapping batches never double-classify.
@@ -69,7 +70,8 @@ export function useClientSideClassification(): void {
   );
 
   useEffect(() => {
-    if (configLoading || !classificationEnabled || aiEnabled || !active) {
+    // Runs whether or not the AI engine is on: it is the first pass either way, not a fallback.
+    if (configLoading || !classificationEnabled || !active) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>
@@ -95,17 +97,19 @@ export function useClientSideClassification(): void {
           // Re-validate at execution time - another batch may have claimed it since.
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
-          const labels = await classifyStub(stub.id as FileId, stub.name);
+          const verdict = await classifyStub(stub.id as FileId, stub.name);
           // Bytes never landed (file removed mid-wait): leave undelivered so a
           // reload (or new version) retries; the claim stops churn this session.
-          if (labels == null) continue;
+          if (verdict == null) continue;
           // Deliver unconditionally - a re-render must never discard a computed
           // (and already metered) result. Writes are idempotent.
           updateStirlingFileStub(stub.id as FileId, {
-            classificationLabels: labels,
+            classificationLabels: verdict.labels,
+            classificationConfidence: verdict.confidence,
           });
           const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
-            classificationLabels: labels,
+            classificationLabels: verdict.labels,
+            classificationConfidence: verdict.confidence,
           });
           if (ok) wrote = true;
         }
@@ -122,7 +126,6 @@ export function useClientSideClassification(): void {
     fileStubs,
     active,
     classificationEnabled,
-    aiEnabled,
     configLoading,
     updateStirlingFileStub,
     bumpRevision,
@@ -134,7 +137,7 @@ export function useClientSideClassification(): void {
 async function classifyStub(
   fileId: FileId,
   fileName: string,
-): Promise<string[] | null> {
+): Promise<{ labels: string[]; confidence: HeuristicConfidence } | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
     file = await fileStorage.getStirlingFile(fileId).catch(() => null);
@@ -175,7 +178,7 @@ async function classifyStub(
       });
     }
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
-    return labels;
+    return { labels, confidence: result.confidence };
   } catch (err) {
     // Never persist a verdict for an unreadable file - the failure may be
     // environmental, so it must stay eligible to retry (and meter) later.
