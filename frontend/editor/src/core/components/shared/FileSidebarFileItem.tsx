@@ -314,6 +314,7 @@ export const FileItem = React.memo(function FileItem({
 
   const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
+  const [menuOpened, setMenuOpened] = useState(false);
 
   const handleMouseEnter = useCallback(() => {
     setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
@@ -321,9 +322,10 @@ export const FileItem = React.memo(function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
+  // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready.
+  // The kebab suppresses it - two cards floating off one row read as a glitch.
   const thumbPos =
-    hoverRect && resolvedThumbnail
+    hoverRect && resolvedThumbnail && !menuOpened
       ? {
           top: hoverRect.top + hoverRect.height / 2,
           left: hoverRect.right + 10,
@@ -481,7 +483,13 @@ export const FileItem = React.memo(function FileItem({
               sx={{ fontSize: "1.1rem" }}
             />
           </ActionIcon>
-          <Menu position="bottom-end" withinPortal shadow="md" width={220}>
+          <Menu
+            position="bottom-end"
+            withinPortal
+            shadow="md"
+            width={220}
+            onChange={setMenuOpened}
+          >
             <Menu.Target>
               <ActionIcon
                 variant="tertiary"

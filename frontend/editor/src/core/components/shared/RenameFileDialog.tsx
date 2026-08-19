@@ -84,6 +84,9 @@ export function RenameFileDialog({
       centered
       size="sm"
       transitionProps={{ duration: 0 }}
+      // Mantine zeroes the body's top padding when a header is present, which
+      // would butt the input's border straight against the header rule.
+      styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
     >
       <Stack gap="sm">
         <TextInput
