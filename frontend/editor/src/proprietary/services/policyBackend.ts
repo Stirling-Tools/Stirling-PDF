@@ -19,9 +19,14 @@ import {
 import type { PolicyState } from "@app/types/policies";
 
 /**
- * Fetch every stored policy and decode it, keyed by its catalog category. If two
- * stored policies share a category (shouldn't happen — one per category), the
- * last one wins; policies with no recognised categoryId are skipped.
+ * Fetch every stored policy and decode it, keyed by its catalog category. If two stored policies
+ * share a category (shouldn't happen - one per category), the last one wins.
+ *
+ * <p>A pipeline built on the Pipelines page carries no categoryId, so it is keyed by its own id
+ * instead of being dropped. It is still a policy: one set to run on editor uploads must fire on
+ * editor uploads, whether it was authored through a category tile or the builder. The key only has
+ * to be unique and stable - the catalog id is used where there is one so the per-category lookups
+ * (the Policies page, the Classification special case) keep working.
  */
 export async function fetchPoliciesByCategory(): Promise<
   Map<string, DecodedPolicy>
@@ -32,8 +37,10 @@ export async function fetchPoliciesByCategory(): Promise<
   const byCategory = new Map<string, DecodedPolicy>();
   stored.forEach((policy, index) => {
     const decoded = fromBackendPolicy(policy);
-    if (decoded.categoryId)
-      byCategory.set(decoded.categoryId, { ...decoded, order: index });
+    const key = decoded.categoryId || decoded.id;
+    if (key) {
+      byCategory.set(key, { ...decoded, order: index });
+    }
   });
   return byCategory;
 }

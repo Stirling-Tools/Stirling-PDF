@@ -945,6 +945,12 @@ const TRUSTED_CONFIDENCE = "high";
  * <p>Only for the Classification category, and only once the heuristic has actually reported: a
  * stub with no confidence yet has not been classified locally, and dispatching then would race the
  * first pass and bill for an answer it was about to produce for free.
+ *
+ * <p>TODO: a pipeline that merely CONTAINS a classify step (built on the Pipelines page, so it has
+ * no category) is not covered - it runs the step on the backend unconditionally, with no local pass
+ * first. Extending the rule to it needs per-step suppression inside a run, which the executor
+ * cannot express today: the heuristic would have to satisfy one step of a chain while the rest
+ * still run. Deliberately deferred rather than half-built.
  */
 export function shouldDispatchToAi(
   categoryId: string,

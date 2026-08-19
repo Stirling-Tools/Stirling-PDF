@@ -16,6 +16,8 @@ import { meterClassificationRun } from "@app/services/classificationMeter";
 import {
   isDispatched,
   markDispatched,
+  recordRunStart,
+  updateRun,
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
@@ -58,6 +60,8 @@ export function useClientSideClassification(): void {
   // Bumped after each batch to drain the next one.
   const [tick, setTick] = useState(0);
 
+  // TODO: keyed on the Classification CATEGORY, so a pipeline that merely contains a classify step
+  // gets no local pass - see shouldDispatchToAi in usePolicyAutoRun for why that is deferred.
   const policy = policies[CLASSIFICATION_CATEGORY];
   // Only when the admin has an active Classification policy - the same gate the AI path uses.
   const active = Boolean(
@@ -97,7 +101,11 @@ export function useClientSideClassification(): void {
           // Re-validate at execution time - another batch may have claimed it since.
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
-          const verdict = await classifyStub(stub.id as FileId, stub.name);
+          const verdict = await classifyStub(
+            stub.id as FileId,
+            stub.name,
+            stub.size ?? 0,
+          );
           // Bytes never landed (file removed mid-wait): leave undelivered so a
           // reload (or new version) retries; the claim stops churn this session.
           if (verdict == null) continue;
@@ -137,6 +145,7 @@ export function useClientSideClassification(): void {
 async function classifyStub(
   fileId: FileId,
   fileName: string,
+  fileSize: number,
 ): Promise<{ labels: string[]; confidence: HeuristicConfidence } | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
@@ -152,10 +161,29 @@ async function classifyStub(
   }
   const debug = isClassificationDebug();
   const startedAt = performance.now();
+  // Classifying locally is still a policy run: it enforces the Classification policy on this file
+  // and is billed for it, so it belongs in the activity feed with the same identity and icon as a
+  // run the server performed. Recorded here, once the bytes are in hand, so a file whose bytes
+  // never land leaves no phantom row.
+  // Read before recording the run: recordRunStart takes the dispatch key itself, so asking
+  // afterwards would always answer "already dispatched" and silently stop metering.
+  const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY, fileId);
+  const runId = `local-${CLASSIFICATION_CATEGORY}-${fileId}-${Date.now()}`;
+  recordRunStart({
+    runId,
+    categoryId: CLASSIFICATION_CATEGORY,
+    fileId: fileId as string,
+    fileName,
+    fileSize,
+    target: "local",
+    status: "RUNNING",
+    outputs: [],
+    error: null,
+    startedAt: Date.now(),
+  });
   try {
     const result = await classifyFileHeuristically(file, { explain: debug });
     const { labels } = result;
-    const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY, fileId);
     const ms = Math.round(performance.now() - startedAt);
     const verdict =
       labels.length > 0
@@ -178,11 +206,21 @@ async function classifyStub(
       });
     }
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
+    // Labels, no output file - the same settle shape the server-run classification uses.
+    updateRun(runId, {
+      status: "COMPLETED",
+      imported: true,
+      outputFileIds: [fileId as string],
+    });
     return { labels, confidence: result.confidence };
   } catch (err) {
     // Never persist a verdict for an unreadable file - the failure may be
     // environmental, so it must stay eligible to retry (and meter) later.
     console.warn(`[Classify] ${fileName}: could not be read, will retry`, err);
+    updateRun(runId, {
+      status: "FAILED",
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
