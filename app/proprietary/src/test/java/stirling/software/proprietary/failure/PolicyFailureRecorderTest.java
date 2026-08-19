@@ -383,12 +383,8 @@ class PolicyFailureRecorderTest {
 
         @Test
         void theSameDocumentFailingInTwoAttendedRunsIsOneIncident() {
-            // WHAT THE DOCUMENT REFERENCE BUYS. A password-protected input is FILE-scoped, and
-            // every
-            // upload is a new run, so with no reference the run id stands in for the document and
-            // the
-            // same broken file re-uploaded reads as a second incident instead of a second
-            // occurrence.
+            // Every upload is a new run, so with no reference the run id stands in for the document
+            // and the same broken file reads as a second incident rather than a second occurrence.
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
@@ -403,8 +399,7 @@ class PolicyFailureRecorderTest {
 
         @Test
         void twoDocumentsFailingTheSameWayStaySeparateIncidents() {
-            // The other half of the rule: folding is per document, so two broken uploads are still
-            // two rows and neither is credited with the other's occurrence.
+            // Folding is per document, so neither row is credited with the other's occurrence.
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(

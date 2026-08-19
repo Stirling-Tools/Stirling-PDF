@@ -32,10 +32,7 @@ import stirling.software.common.util.ExceptionUtils;
  */
 class FailureKindTest {
 
-    /**
-     * One expected offer in full, rather than four separate extracting() assertions, so a
-     * declaration that pairs the right action with the wrong audience cannot pass.
-     */
+    /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
     private static FailureKind.OfferedAction offered(
             FailureActionId id, FailureAudience audience, String labelKeySuffix) {
         return new FailureKind.OfferedAction(
@@ -76,10 +73,9 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
-            // Declaration order is display order, and the first offer a reader can use is the one
-            // rendered as the row's primary. Two kinds listing the same actions in different orders
-            // therefore flip the solid button between rows, which reads as a bug rather than as
-            // emphasis. Asserted as a shared ranking so a kind added later cannot reintroduce it.
+            // Declaration order is display order and the first usable offer is the row's primary,
+            // so
+            // two kinds disagreeing would flip the solid button between rows.
             List<FailureActionId> ranking =
                     List.of(
                             FailureActionId.VIEW_FILE,
@@ -126,8 +122,7 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void everyOfferSaysWhoItIsFor(FailureKind kind) {
-            // Read per row to decide what a caller is shown, so a missing one would be a button
-            // offered to whoever the null case happened to let through.
+            // Read per row to decide what a caller is shown, so a null would leak a button.
             for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
                 assertThat(offer.audience())
                         .as("%s offers %s", kind.getId(), offer.id())
@@ -138,8 +133,8 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void offersEachActionAtMostOnce(FailureKind kind) {
-            // Declaration order is the client's tie-break, so the same action twice would be two
-            // buttons with one meaning, and labelKeyFor would silently answer for the first.
+            // The same action twice would be two buttons with one meaning, and labelKeyFor would
+            // answer for the first.
             assertThat(kind.getActions()).doesNotHaveDuplicates();
         }
 
@@ -238,8 +233,7 @@ class FailureKindTest {
 
         @Test
         void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so the offers are the places to look: the
-            // owner their document, a reviewer the run, and anyone may close the row.
+            // Nothing here is known to be fixable, so the offers are just the places to look.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
                             offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
@@ -301,8 +295,7 @@ class FailureKindTest {
 
         @Test
         void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
-            // The whole point of the audiences: only the owner holds the document, so a reviewer
-            // is offered the run and a way to close the row instead.
+            // The point of the audiences: only the owner holds the document.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
                             offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
@@ -315,8 +308,8 @@ class FailureKindTest {
 
         @Test
         void noKindOffersAcknowledgeAnyMore() {
-            // Kept in the vocabulary because rows are already ACKNOWLEDGED, and those must stay
-            // readable. Nothing offers it, so nothing can dispatch it either.
+            // Kept in the vocabulary for rows already ACKNOWLEDGED; offered by nothing, so
+            // dispatchable by nothing.
             for (FailureKind kind : FailureKind.values()) {
                 assertThat(kind.declares(FailureActionId.ACKNOWLEDGE))
                         .as("%s offers ACKNOWLEDGE", kind.getId())
@@ -326,8 +319,7 @@ class FailureKindTest {
 
         @Test
         void everyKindLabelsItsActionsWithTheSharedWordingToday() {
-            // The per-kind override still exists for wording that reads badly in context; nothing
-            // needs it now that Dismiss sits in an overflow menu, where the shared word is right.
+            // The per-kind override still exists for wording that reads badly in context.
             for (FailureKind kind : FailureKind.values()) {
                 for (FailureActionId action : kind.getActions()) {
                     assertThat(kind.labelKeyFor(action))

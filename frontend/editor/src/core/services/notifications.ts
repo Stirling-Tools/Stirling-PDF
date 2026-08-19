@@ -1,53 +1,33 @@
 import apiClient from "@app/services/apiClient";
 
-/**
- * The caller's notifications. Derived server-side from whatever produces them, so this client
- * needs to know nothing about failures, policies or any later source: it renders what it is given
- * and branches on `source` only when it wants to.
- */
-
+// Derived server-side from whatever produces them, so this client knows nothing about failures.
 const NOTIFICATIONS_PATH = "/api/v1/notifications";
 
-/** Which subsystem produced a notification. Widen as the server gains sources. */
 export type NotificationSource = "FAILURE";
 
 export type NotificationSeverity = "ERROR" | "WARNING" | "INFO";
 
-/** What was running when it failed. */
 export type NotificationOrigin = "TOOL" | "POLICY" | "PIPELINE";
 
-/**
- * Whose document it is, from this reader's point of view. `UNOWNED` is an unattended run: nobody has
- * the file, so nothing that needs the bytes can be offered.
- */
+/** From this reader's point of view. `UNOWNED` is an unattended run: nobody holds the file. */
 export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 
-/**
- * One action as offered for one notification, all of them run by this client on its own device.
- * `id` is a plain string rather than a union because the server may know actions this build does
- * not, and the client skips the ones it cannot perform.
- */
+/** `id` is an open string, not a union: the server may know actions this build does not. */
 export interface NotificationActionOffer {
   id: string;
   labelKey: string;
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
-  /** False means it cannot work for this row. The bell renders no button and states the reason
-   *  instead; the portal's queue still shows it disabled. */
+  /** False renders no button in the bell, and a disabled one in the portal's queue. */
   enabled: boolean;
   disabledReasonKey: string | null;
 }
 
 export interface AppNotification {
-  /**
-   * Unique across sources, so it can be keyed and compared on its own. Prefixed with its source
-   * (`failure:<uuid>`), so it is the id the notification endpoints take and never one a per-source
-   * endpoint would accept.
-   */
+  /** Prefixed with its source (`failure:<uuid>`), so it is never an id a per-source endpoint takes. */
   id: string;
   source: NotificationSource;
-  /** Which failure kind, e.g. `INPUT_PASSWORD_PROTECTED`. An open string: the server adds kinds
-   *  without waiting for a client that knows them. */
+  /** Open string, e.g. `INPUT_PASSWORD_PROTECTED`: the server adds kinds without a client change. */
   kindId: string;
   origin: NotificationOrigin;
   ownership: NotificationOwnership;
@@ -56,12 +36,9 @@ export interface AppNotification {
   titleKey: string;
   defaultTitle: string;
   detail: string | null;
-  /**
-   * Opaque reference to the document, resolvable only by the client that stored it. Two id spaces
-   * share this field, and `sourceId` says which: see `isResolvableHere` in `useNotifications`.
-   */
+  /** Two id spaces share this field, and `sourceId` says which: see `isResolvableHere`. */
   fileId: string | null;
-  /** Which folder, bucket or webhook fed the failing run, and null for an attended run. */
+  /** Which folder, bucket or webhook fed the run, and null for an attended one. */
   sourceId: string | null;
   policyId: string | null;
   occurrences: number;
@@ -74,11 +51,7 @@ interface NotificationsResponse {
   notifications: AppNotification[];
 }
 
-/**
- * Newest first. Empty rather than throwing on a build without the endpoint, or for a caller the
- * server will not answer: a bell that cannot load is a bell with nothing in it, not an error the
- * user needs to see.
- */
+/** Newest first. Empty rather than throwing: a bell that cannot load is an empty bell, not an error. */
 export async function fetchNotifications(
   limit = 20,
 ): Promise<AppNotification[]> {

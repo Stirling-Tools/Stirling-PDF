@@ -3,10 +3,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { AppNotification } from "@app/services/notifications";
 
 /**
- * The bell is mounted several times over (floated over an empty workbench, inside the workbench bar,
- * again in the portal shell) and all of them show the same thing, so what is pinned here is that
- * they share one read of it: one poll, one set of document lookups, one read marker, and no timer
- * left running once the last of them has gone.
+ * The bell is mounted several times over, so what is pinned here is that they share one read: one
+ * poll, one set of lookups, one marker, and no timer left running once the last has gone.
  */
 
 const fetchNotifications = vi.fn();
@@ -15,8 +13,7 @@ vi.mock("@app/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
 }));
 
-// The document lookups read IndexedDB, which jsdom has none of. Counted here so that "resolved once
-// per list, not once per row" is observable.
+// Counted here so "resolved once per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
 
 vi.mock("@app/services/localFilePresence", () => ({
@@ -85,9 +82,8 @@ describe("useNotifications", () => {
   });
 
   it("looks up an attended run's document but never an unattended run's", async () => {
-    // Both rows name a document, but only the attended one names a reference this browser could
-    // resolve. Asking storage about a source's hash can only miss, which would then be shown as "not
-    // on this device" about a document that was never on one.
+    // Asking storage about a source's hash can only miss, and would then be shown as "not on this
+    // device" about a document that never was.
     fetchNotifications.mockResolvedValue([
       notification("attended", {
         origin: "POLICY",
@@ -156,8 +152,7 @@ describe("useNotifications", () => {
     await waitFor(() => expect(first.result.current.unreadCount).toBe(2));
     expect(second.result.current.unreadCount).toBe(2);
 
-    // Async, because the store tells its subscribers on a microtask: a bell marks the list read
-    // from inside its own state updater, so it cannot re-render its neighbours from there.
+    // Async because subscribers are told on a microtask: a bell marks the list read while rendering.
     await act(async () => first.result.current.markAllSeen());
 
     expect(first.result.current.unreadCount).toBe(0);
@@ -205,8 +200,7 @@ describe("useNotifications", () => {
     );
     first.unmount();
 
-    // Nothing to report by the time the next bell appears: it must not show the old row while its
-    // own read is in flight.
+    // It must not show the old row while its own read is in flight.
     fetchNotifications.mockResolvedValue([]);
     const second = renderHook(() => useNotifications());
 

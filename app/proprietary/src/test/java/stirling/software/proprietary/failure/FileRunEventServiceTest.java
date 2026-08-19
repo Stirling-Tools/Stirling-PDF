@@ -85,9 +85,7 @@ class FileRunEventServiceTest {
     class Acknowledge {
 
         /**
-         * No kind offers ACKNOWLEDGE any more, so it cannot be dispatched; the bean stays for rows
-         * that are already {@code ACKNOWLEDGED}. Exercised directly so their transition stays
-         * covered.
+         * No kind offers it, so it cannot be dispatched; exercised directly for rows that have it.
          */
         private FileRunEvent acknowledge(FileRunEvent event, String actor) {
             return new AcknowledgeAction(store).execute(event, Map.of(), actor);
@@ -128,8 +126,6 @@ class FileRunEventServiceTest {
 
         @Test
         void anAlreadyAcknowledgedRowStaysReadableAndClosable() {
-            // The reason the id and its bean stay: a row in this state predates the retry actions
-            // and must not become a row nobody can act on.
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             acknowledge(event, ACTOR);
 
@@ -232,8 +228,7 @@ class FileRunEventServiceTest {
 
         @Test
         void anActionTheClientRunsIsRefusedRatherThanPretendedTo() {
-            // UNKNOWN offers VIEW_FILE, and the server has neither the document nor the tool.
-            // Answering 200 here would tell the client something happened when nothing did.
+            // Answering 200 would tell the client something happened when nothing did.
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
 
             assertThatThrownBy(() -> service.dispatch(event.id(), "VIEW_FILE", Map.of()))
@@ -247,8 +242,7 @@ class FileRunEventServiceTest {
 
         @Test
         void everyClientActionIsRefusedWhicheverKindDeclaresIt() {
-            // Asserted over the vocabulary rather than one id, so an action added on the client
-            // side cannot arrive dispatchable because nobody thought to test it.
+            // Over the whole vocabulary, so a client action added later cannot arrive dispatchable.
             for (FailureKind kind : FailureKind.values()) {
                 FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
                 for (FailureActionId action : kind.getActions()) {
@@ -337,8 +331,7 @@ class FileRunEventServiceTest {
 
         @Test
         void theSameRowIsMineToOnePersonAndTheirsToAnother() {
-            // Why it is derived and not stored: one stored answer would be wrong for everyone but
-            // the person it was stored for.
+            // Why it is derived: a stored answer would be wrong for everyone but one person.
             FileRunEvent event = givenHitBy(ACTOR, FailureKind.UNKNOWN, TEAM, "f1");
             assertThat(service.ownershipOf(event)).isEqualTo(Ownership.MINE);
 
@@ -360,8 +353,7 @@ class FileRunEventServiceTest {
 
         @Test
         void theOwnerIsOfferedTheirDocumentAndNotTheReviewersView() {
-            // A member reading their own password failure: the document is theirs to open, and the
-            // processor view is for whoever reviews the team rather than owns the file.
+            // The document is theirs to open; the processor view is for whoever reviews the team.
             when(authority.canEditPolicies()).thenReturn(false);
             FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
@@ -373,8 +365,7 @@ class FileRunEventServiceTest {
 
         @Test
         void aReviewerReadingAColleaguesIsNotOfferedTheDocumentTheyDoNotHave() {
-            // Dropped rather than disabled: a greyed-out "View file" would read as the
-            // reviewer's permission problem, when it is simply not their document.
+            // Dropped, not disabled: greyed out would read as their permission problem.
             FileRunEvent theirs =
                     givenHitBy(
                             "colleague@example.com",
@@ -401,8 +392,8 @@ class FileRunEventServiceTest {
 
         @Test
         void inheritedOwnerActionsComeBackDisabledWithTheReasonWhy() {
-            // The file was fed by a folder, bucket or webhook, and re-running it from there is work
-            // that has not landed. Said out loud rather than offered as a button that does nothing.
+            // No browser holds a source-fed file, so it is stated rather than offered as a dead
+            // button.
             FileRunEvent unattended =
                     givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
@@ -434,9 +425,8 @@ class FileRunEventServiceTest {
 
         @Test
         void theOwnersActionsAreDisabledWhenTheRowNamesNoDocument() {
-            // A row with no document id has nothing to name even for the owner holding the file.
-            // Answered here rather than left to the client, which would otherwise report it "not on
-            // this device" while it sits in their own workbench.
+            // Answered here, or the client calls it "not on this device" while it sits in their
+            // own workbench.
             FileRunEvent documentless =
                     givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, null);
 
@@ -465,8 +455,7 @@ class FileRunEventServiceTest {
 
         @Test
         void aMemberIsNotOfferedTheOwnerActionsOnAnUnattendedRow() {
-            // The inheritance is the reviewer's, not everybody's. A member has no claim on a run
-            // nobody attended, and cannot see one in the first place.
+            // The inheritance is the reviewer's: a member has no claim on a run nobody attended.
             when(authority.canEditPolicies()).thenReturn(false);
             FileRunEvent unattended =
                     givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
@@ -476,8 +465,8 @@ class FileRunEventServiceTest {
 
         @Test
         void aLoginDisabledOperatorKeepsTheirOwnActions() {
-            // Its rows are unowned because it has no users, not because nothing attended them, and
-            // the one operator is holding the document. Disabling their retry would be wrong.
+            // Unowned for want of users, not because nothing attended: the one operator holds the
+            // file.
             ApplicationProperties props = new ApplicationProperties();
             props.getSecurity().setEnableLogin(false);
             FileRunEventService unsecured =
@@ -679,16 +668,14 @@ class FileRunEventServiceTest {
             complete.verifyEveryDeclaredActionHasAHandler();
 
             for (FailureActionId id : FailureActionId.values()) {
-                // Only the server's actions need a handler: the rest are run by the client, which
-                // is why the boot check no longer asks about them.
+                // Only server actions need a handler, which is why the boot check ignores the rest.
                 assertThat(complete.find(id).isPresent()).isEqualTo(id.runsOnServer());
             }
         }
 
         @Test
         void doesNotAskForAHandlerForAnActionTheClientRuns() {
-            // Every kind declares client actions, so a registry holding only the server's two must
-            // still boot; otherwise every client action would need an empty handler beside it.
+            // Otherwise every client action would need an empty handler beside it.
             FailureActionRegistry serverOnly =
                     new FailureActionRegistry(
                             List.of(new AcknowledgeAction(store), new DismissAction(store)));
@@ -699,16 +686,14 @@ class FileRunEventServiceTest {
 
         @Test
         void refusesAHandlerForAnActionTheClientRuns() {
-            // It could never be reached: dispatch refuses the id before resolving a handler. A bean
-            // that is never called is worse than no bean, because it reads as though it were.
+            // Dispatch refuses the id before resolving a handler, so the bean reads as live and is
+            // not.
             assertThatThrownBy(() -> new FailureActionRegistry(List.of(new ClientSideAction())))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("VIEW_FILE");
         }
 
-        /**
-         * A handler for an action the client runs, which is exactly what must not be registered.
-         */
+        /** A handler for a client action, which is exactly what must not be registered. */
         private static final class ClientSideAction implements FailureAction {
 
             @Override

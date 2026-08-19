@@ -121,13 +121,8 @@ public class PolicyRunner {
      * The supplied documents are still counted against the virtual {@link EditorSource}, scoped to
      * the policy's team, so the Sources overview reports the whole team's editor throughput.
      *
-     * <p>Attended: no source fed this run, which is what later tells its recorded failures apart
-     * from an unattended sweep's.
-     *
-     * @param documentReference the caller's own opaque reference to the single document it is
-     *     running on, or null when it supplied none (or supplied several). Passed through
-     *     untouched, and lands where an unattended run's {@link ResolvedInput#forFile} identity
-     *     does; see {@code PolicyEngine#runPolicy} for how the two are told apart.
+     * @param documentReference the caller's own opaque reference to the single document it runs on,
+     *     or null when it supplied none or several. Passed through untouched.
      */
     public PolicyRunHandle runWith(
             Policy policy,

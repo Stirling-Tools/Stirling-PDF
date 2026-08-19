@@ -16,9 +16,8 @@ const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 
 /**
- * The bell renders whatever the server sends, and does with each row's actions only what the registry
- * for this build says it can. Two things are its own and worth pinning: which notifications the user has
- * already looked at, and how a row behaves around an action (message on failure, re-read on success).
+ * Two things are the bell's own and worth pinning: which notifications the user has already looked
+ * at, and how a row behaves around an action.
  */
 
 const fetchNotifications = vi.fn();
@@ -27,8 +26,7 @@ vi.mock("@app/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
 }));
 
-// The document lookups read IndexedDB, which jsdom has none of. Answered here so a row's
-// availability is a fact of the test rather than of the environment.
+// IndexedDB, which jsdom has none of. Answered here so availability is a fact of the test.
 const h = vi.hoisted(() => ({
   hasLocalFile: true,
   specs: {} as Record<
@@ -45,16 +43,14 @@ vi.mock("@app/services/localFilePresence", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
 }));
 
-// Stands in for the layer that owns the destinations. Core's own registry is empty, so without
-// this there are no client actions to test.
+// Core's own registry is empty, so without this there are no client actions to test.
 vi.mock("@app/components/notifications/notificationActions", () => ({
   useNotificationActions: () => h.specs,
 }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    // Mirrors i18next closely enough for this component: a string fallback, or an options object
-    // carrying defaultValue plus the values it interpolates.
+    // A string fallback, or an options object with defaultValue plus what it interpolates.
     t: (key: string, fallback?: unknown) => {
       if (typeof fallback === "string") return fallback;
       if (fallback && typeof fallback === "object") {
@@ -152,8 +148,7 @@ describe("NotificationBell", () => {
     render(<NotificationBell />);
     await openPanel();
 
-    // Opening is what marks them read: waiting for the close would leave the badge lit
-    // while the user is looking at the list.
+    // Opening marks them read: waiting for the close would leave the badge lit.
     await waitFor(() => expect(screen.queryByText("2")).toBeNull());
   });
 
@@ -172,8 +167,7 @@ describe("NotificationBell", () => {
   });
 
   it("keeps the division on screen after opening marks them read", async () => {
-    // The boundary is frozen on open. Read live it would collapse the moment the badge cleared,
-    // taking the divider with it while the user was still looking at the list.
+    // Frozen on open: read live it would collapse the moment the badge cleared.
     window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
     fetchNotifications.mockResolvedValue([
       notification("a"),
@@ -229,8 +223,7 @@ describe("NotificationBell", () => {
   });
 
   it("treats everything as unread when the last seen one is gone", async () => {
-    // Dismissed or expired: we cannot tell how far the user got, so show them rather than
-    // silently marking the lot read.
+    // We cannot tell how far the user got, so show them rather than marking the lot read.
     window.localStorage.setItem(
       "stirling.notifications.lastSeenId",
       "vanished",
@@ -273,7 +266,7 @@ describe("NotificationBell", () => {
     render(<NotificationBell />);
     await openPanel();
 
-    // Named for the row they belong to: every button in the list says the same thing.
+    // Named for their row: every button in the list says the same thing.
     for (const id of ["VIEW_IN_PROCESSOR", "VIEW_FILE"])
       expect(
         screen.getByRole("button", { name: `${id}: Unrecognised failure` }),
@@ -382,8 +375,7 @@ describe("NotificationBell", () => {
   });
 
   it("claims nothing about a device for a row it never looks up", async () => {
-    // A source-fed run's fileId is a server-side identity that was never on any device, so it is not
-    // probed. Absent lookups must not read as an absent document, and the server said nothing either.
+    // Never on any device, so never probed, and an absent lookup is not an absent document.
     h.hasLocalFile = false;
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
@@ -403,8 +395,7 @@ describe("NotificationBell", () => {
   });
 
   it("renders no button for an action the server would refuse, and says why in words", async () => {
-    // A greyed button on a failure it can never work for is false hope, so the next action takes the
-    // row and the reason becomes its note.
+    // A greyed button that can never work is false hope, so the reason becomes the row's note.
     h.specs = {
       VIEW_FILE: { available: () => true, run: vi.fn() },
       VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
@@ -457,7 +448,7 @@ describe("NotificationBell", () => {
     render(<NotificationBell />);
     await openPanel();
 
-    // The message and its reading aids remain, so the row still reads as a row.
+    // The message and its chips remain, so the row still reads as a row.
     expect(screen.getByText("Unrecognised failure")).toBeTruthy();
     expect(
       screen.getByText("Not available for this notification."),

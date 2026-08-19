@@ -86,8 +86,7 @@ class PolicyControllerTest {
 
     @Mock private ProcessedLedger processedLedger;
 
-    // Real, not mocked: the run endpoints spool their uploads through it, and a test that supplies
-    // files needs them to actually land somewhere.
+    // Real, not mocked: the run endpoints spool uploads through it.
     private final TempFileManager tempFileManager =
             new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
 
@@ -669,9 +668,7 @@ class PolicyControllerTest {
     @DisplayName("runStoredPolicy")
     class RunStoredPolicy {
 
-        /**
-         * The run files an editor sends: the documents, plus its own id for a single one of them.
-         */
+        /** What an editor sends: the documents, plus its own id for a single one of them. */
         private PolicyRunFiles filesWith(String fileId, int documents) {
             PolicyRunFiles files = new PolicyRunFiles();
             files.setFileId(fileId);
@@ -689,7 +686,6 @@ class PolicyControllerTest {
             return files;
         }
 
-        /** The document reference the run was actually started with. */
         private String documentReferenceOf(PolicyRunFiles files) throws Exception {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
@@ -724,8 +720,8 @@ class PolicyControllerTest {
         @Test
         @DisplayName("records the caller's own id for a single-document run")
         void carriesTheCallersDocumentReference() throws Exception {
-            // The point of the whole field: a failure of this run names a document the client that
-            // started it can resolve, so the actions that need the bytes are reachable.
+            // The point of the field: a failure names a document the client that started it can
+            // resolve.
             assertThat(documentReferenceOf(filesWith("editor-file-1", 1)))
                     .isEqualTo("editor-file-1");
         }
@@ -733,15 +729,14 @@ class PolicyControllerTest {
         @Test
         @DisplayName("records nothing when the run carries several documents")
         void refusesToGuessWhichOfSeveralDocumentsItIs() throws Exception {
-            // One incident, one file reference: naming one of several would attribute the
-            // failure to whichever document happened to be bound first.
+            // One incident, one reference: naming one of several would attribute it to whichever
+            // bound first.
             assertThat(documentReferenceOf(filesWith("editor-file-1", 3))).isNull();
         }
 
         @Test
         @DisplayName("records nothing when the caller sent no id")
         void toleratesACallerThatSendsNoReference() throws Exception {
-            // Every other client (and every older one) keeps working exactly as before.
             assertThat(documentReferenceOf(filesWith(null, 1))).isNull();
         }
 

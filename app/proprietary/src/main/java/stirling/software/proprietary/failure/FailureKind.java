@@ -24,14 +24,8 @@ import lombok.Getter;
  * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
- * <p>Actions are declared here but run elsewhere: a server action in a {@link FailureAction} bean
- * resolved by id, a client action in the browser that holds the document. Either way a new kind
- * ships as a registry entry plus copy. Two members today: {@link #UNKNOWN} gives every failed run a
- * record, and kinds get promoted out of it as production shows what occurs.
- *
- * <p>Each offer also says who it is for, because the same incident is read by the person who hit it
- * and by whoever reviews after them: only the owner holds the document, only a reviewer wants the
- * run.
+ * <p>A new kind ships as a registry entry plus copy. Each offer also says who it is for, since one
+ * incident is read both by whoever hit it and by whoever reviews after them.
  */
 @Getter
 public enum FailureKind {
@@ -42,8 +36,6 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            // Only the owner holds the document, so the file is theirs to open; a reviewer
-            // gets the run instead, and anyone who sees the row may close it.
             offer(VIEW_FILE, OWNER),
             offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(DISMISS, ANYONE_WHO_SEES)),
@@ -55,11 +47,8 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // Nothing here is known to be fixable, so the offers are the places to look:
-            // the owner their document, a reviewer the run, and anyone may close the row.
-            // Declared in the same order as every other kind, because declaration order is
-            // display order: the document leads wherever it is offered, so a reader is not
-            // asked to re-learn which button leads from one failure to the next.
+            // Same order as every other kind: declaration order is display order, so the document
+            // leads wherever it is offered rather than moving between failures.
             offer(VIEW_FILE, OWNER),
             offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
             offer(DISMISS, ANYONE_WHO_SEES));
@@ -110,19 +99,15 @@ public enum FailureKind {
     }
 
     /**
-     * One action this kind offers: who it is for, and the key to label it by. One ordered list
-     * rather than ids plus parallel maps of audiences and label overrides, which could disagree
-     * with each other.
+     * One ordered list rather than ids plus parallel maps of audiences and labels, which could
+     * disagree with each other.
      *
      * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
      *     label
      */
     private record Offer(FailureActionId id, FailureAudience audience, String labelKeySuffix) {}
 
-    /**
-     * An action this kind offers, for whoever can actually take it, labelled by the shared wording.
-     * Declaration order is display order.
-     */
+    /** Declaration order is display order. */
     private static Offer offer(FailureActionId id, FailureAudience audience) {
         return new Offer(id, audience, null);
     }

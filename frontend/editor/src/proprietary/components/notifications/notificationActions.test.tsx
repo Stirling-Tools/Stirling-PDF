@@ -9,9 +9,8 @@ import type {
 import type { NotificationActionContext } from "@core/components/notifications/notificationActions";
 
 /**
- * What this build can actually do about a failure, and where each action sends the reader. The bell hangs
- * in the editor and in the processor, and only the editor has a file context above it, so the two shells
- * are the interesting cases: selecting the document directly, or handing it over.
+ * Where each action sends the reader. Only the editor has the workbench contexts above it, so the two
+ * shells are the interesting cases: opening the document, or handing it over.
  */
 
 const navigate = vi.fn();
@@ -22,8 +21,7 @@ vi.mock("react-router-dom", async () => ({
   useNavigate: () => navigate,
 }));
 
-// No i18n instance is initialised here, so the real hook would return bare keys. The plugin is
-// stubbed too because the workbench contexts below reach `core/i18n`, which registers it on import.
+// No i18n instance here, and the plugin is stubbed because the contexts below reach `core/i18n`.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string) => fallback,
@@ -31,8 +29,7 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
-// The document lookup reads IndexedDB, which jsdom has none of. Answered here so that whether the
-// bytes are present is a fact of the test rather than of the environment.
+// IndexedDB, which jsdom has none of. Answered here so presence is a fact of the test.
 const h = vi.hoisted(() => ({
   stub: { id: "f-1" } as unknown,
   getStirlingFileStub: vi.fn(),
@@ -83,7 +80,6 @@ function notification(
   };
 }
 
-/** An action the server offered, enabled: what it does with it is the client's decision. */
 function offer(id: string): NotificationActionOffer {
   return {
     id,
@@ -165,8 +161,7 @@ describe("useNotificationActions", () => {
   });
 
   it("leaves View file as the only usable offer when the server offers actions this build cannot run", () => {
-    // The server can ship new kinds with new actions ahead of the clients that understand them, so
-    // an id this build wires nothing for drops out rather than rendering dead.
+    // An id this build wires nothing for drops out rather than rendering dead.
     const actions = registry();
     const usable = [offer("QUARANTINE"), offer("VIEW_FILE")].filter(
       (candidate) => actions[candidate.id]?.available(context()) ?? false,
@@ -178,16 +173,14 @@ describe("useNotificationActions", () => {
   it("opens the document into the viewer when an editor is above", async () => {
     await registry().VIEW_FILE?.run(context());
 
-    // Selecting alone would show nothing: the workbench does not hold the file yet, and it keeps
-    // whatever view it was already on.
+    // Selecting alone shows nothing: the workbench holds neither the file nor the viewer yet.
     expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
     expect(setActiveFileId).toHaveBeenCalledWith("f-1");
     expect(setWorkbench).toHaveBeenCalledWith("viewer");
   });
 
   it("stays where it is rather than routing through the role-based root", async () => {
-    // "/" decides a landing page from the reader's role, so navigating there reads as the app
-    // reloading and can land them somewhere other than their document.
+    // "/" lands on a page chosen by the reader's role, which reads as the app reloading.
     await registry().VIEW_FILE?.run(context());
 
     expect(window.location.pathname).toBe("/");
@@ -217,11 +210,11 @@ describe("useNotificationActions", () => {
   it("hands the document over to the editor when there is no workbench above it", async () => {
     await registry(inProcessor).VIEW_FILE?.run(context());
 
-    // Nothing to open into, so the intent outlives the navigation that mounts the editor.
+    // The intent outlives the navigation that mounts the editor.
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
     ).toBe("f-1");
-    // The editor's own URL, not "/", which would hand the reader to the role router instead.
+    // The editor's own URL, not the role router at "/".
     expect(window.location.pathname).toBe("/editor");
   });
 
@@ -242,8 +235,7 @@ describe("useNotificationActions", () => {
   });
 
   it("says it cannot hand the document over rather than navigating to nothing", async () => {
-    // Storage refused, so nothing would be selected on arrival: the row reports it and stays put.
-    // On the prototype: jsdom's storage object is a proxy, so an own-property spy does not take.
+    // Spied on the prototype: jsdom's storage is a proxy, so an own-property spy does not take.
     const setItem = vi
       .spyOn(Storage.prototype, "setItem")
       .mockImplementation(() => {
@@ -257,7 +249,7 @@ describe("useNotificationActions", () => {
       message:
         "This browser will not let the processor pass the document to the editor. Open it from the editor instead.",
     });
-    // Still on the page it started on, so the failure is visible rather than mysterious.
+    // Still on the page it started on, so the failure is visible.
     expect(window.location.pathname).toBe("/");
     setItem.mockRestore();
   });
@@ -269,8 +261,7 @@ describe("useNotificationActions", () => {
   });
 
   it("offers the processor link whenever the server did", () => {
-    // The server only sends it to someone it will let read the queue, so there is nothing left
-    // to gate here.
+    // The server only sends it to someone it will let read the queue.
     expect(
       registry(inProcessor).VIEW_IN_PROCESSOR?.available(
         context({ hasLocalFile: false }),

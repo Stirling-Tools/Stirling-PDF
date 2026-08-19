@@ -4,20 +4,14 @@ import org.springframework.http.HttpStatus;
 
 import lombok.Getter;
 
-/**
- * Why an action could not be dispatched. Thrown carrying a {@link Reason} rather than an HTTP
- * status, so the service stays web-agnostic and only a controller ever reaches for {@link
- * #statusOf}.
- */
+/** Carries a {@link Reason} rather than an HTTP status, so the service stays web-agnostic. */
 @Getter
 public class FailureActionException extends RuntimeException {
 
     public enum Reason {
         /**
-         * No such event, it belongs to another team, or the caller's team did not resolve. One
-         * reason for all three, so the response does not vary with which it was. Unrelated to
-         * {@link FailureKind#UNKNOWN}, which is an unclassified failure rather than a refused
-         * action.
+         * No such event, another team's, or an unresolved team: one reason, so the answer cannot
+         * vary.
          */
         EVENT_NOT_FOUND,
 
@@ -25,16 +19,11 @@ public class FailureActionException extends RuntimeException {
         ACTION_NOT_RECOGNISED,
 
         /**
-         * The action exists but this kind does not declare it, so an incoherent pairing (releasing
-         * a document whose destination is what failed) cannot be dispatched even by hand. Reachable
-         * as of the kinds that stopped offering {@link FailureActionId#ACKNOWLEDGE}.
+         * The action exists but this kind does not offer it, so it cannot be dispatched by hand.
          */
         ACTION_NOT_DECLARED,
 
-        /**
-         * The kind offers it, but the client is what runs it (see {@link
-         * FailureActionId.Execution#CLIENT}), so it is refused rather than half-performed.
-         */
+        /** Offered, but the client is what runs it, so refused rather than half-performed. */
         ACTION_NOT_DISPATCHABLE,
 
         /** The event is already closed, so no further transition is possible. */
@@ -47,20 +36,14 @@ public class FailureActionException extends RuntimeException {
         this(reason, message, null);
     }
 
-    /** For a refusal that follows from a lower-level failure, so its stack is not dropped. */
     public FailureActionException(Reason reason, String message, Throwable cause) {
         super(message, cause);
         this.reason = reason;
     }
 
     /**
-     * The HTTP status each refusal reason answers with. Lives with the reasons it maps, so the two
-     * surfaces that dispatch actions, the failure queue and the notification bell, cannot drift
-     * apart and a client's error handling does not depend on which one it called.
-     *
-     * <p>A closed row is a conflict rather than a bad request: the request was well-formed and
-     * would have been valid a moment earlier. A missing row is a 404 whether it never existed,
-     * belongs to another team or is a colleague's, so trying does not confirm which.
+     * Lives with the reasons it maps, so every surface that dispatches an action answers alike. A
+     * closed row is a conflict, not a bad request: it was well-formed and valid a moment earlier.
      */
     public static HttpStatus statusOf(Reason reason) {
         return switch (reason) {

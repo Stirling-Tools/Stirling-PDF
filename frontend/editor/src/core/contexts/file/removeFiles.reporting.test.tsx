@@ -7,11 +7,8 @@ import type { FileContextActions } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
 /**
- * Which removals tell the server a document is gone.
- *
- * `removeFiles` serves two jobs the caller distinguishes only by `deleteFromStorage`: deleting a
- * document, and taking one out of the workbench. Reporting both closes the user's own failure
- * notifications as they open and close files, which is not a decision they made.
+ * `removeFiles` deletes a document or merely takes it out of the workbench, told apart only by
+ * `deleteFromStorage`. Reporting both closed the user's own notifications as they opened files.
  */
 
 const reportFilesRemoved = vi.fn();
@@ -20,8 +17,7 @@ vi.mock("@app/services/failureReporting", () => ({
   reportToolFailure: vi.fn(),
 }));
 
-// A real delete reaches IndexedDB, which jsdom has none of. Only the delete itself is stubbed: the
-// point of these tests is which branch runs, so the branch has to be allowed to finish.
+// IndexedDB, which jsdom has none of. Stubbed so the delete branch can run to the end.
 vi.mock("@app/services/fileStorage", () => ({
   // FileContext subscribes to this to drop files whose bytes are unreadable.
   onRecordUnreadable: () => () => {},
@@ -68,8 +64,7 @@ describe("removeFiles and the failure queue", () => {
   });
 
   it("says nothing when the file is only closed in the workbench", async () => {
-    // Closing a tab, unchecking it in the file manager, swapping which files are open: all of them
-    // pass false and leave the document on the device, so its failures still need attention.
+    // Closing a tab or unchecking it leaves the document on the device, failures and all.
     setup();
 
     await act(async () => {
@@ -80,8 +75,7 @@ describe("removeFiles and the failure queue", () => {
   });
 
   it("treats an unspecified removal as a delete, the way the storage path does", async () => {
-    // Same default as the IndexedDB branch below it: absent means delete, only an explicit false
-    // means keep.
+    // Same default as the IndexedDB branch: only an explicit false means keep.
     setup();
 
     await act(async () => {

@@ -57,10 +57,8 @@ class RecordFailurePrivacyTest {
 
     @Test
     void theRunRequestThatSuppliesADocumentReferenceCarriesNoNameEither() {
-        // An attended run sends its own opaque reference to the document so a failure of it can be
-        // resolved back to that document. The same discipline applies at the door as in the row: an
-        // id and nothing else, or a document name reaches the wire on the way to a table that
-        // deliberately has nowhere to put it.
+        // The same discipline at the door as in the row: an id and nothing else, or a document name
+        // reaches a table that deliberately has nowhere to put it.
         assertThat(List.of(PolicyRunFiles.class.getDeclaredFields()))
                 .extracting(Field::getName)
                 .contains("fileId")

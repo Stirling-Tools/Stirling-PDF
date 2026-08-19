@@ -91,8 +91,7 @@ describe("auto-run ordered chaining", () => {
 
     // The first policy (order 0) runs on the upload; the second waits for the chain.
     expect(runStored).toHaveBeenCalledTimes(1);
-    // The workspace id goes with the run: a failure of it is then recorded against a document this
-    // browser can resolve, which is what makes the notification about it actionable.
+    // Recorded against a document this browser can resolve, which is what makes its failure actionable.
     expect(runStored).toHaveBeenCalledWith(
       "backend-sec",
       [{ size: 100 }],
@@ -126,8 +125,7 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    // The next policy (order 1) fires on the first policy's output, not the original - and reports
-    // that output's own workspace id, since that is the document now in front of the user.
+    // Fires on the first policy's output and reports that output's own id, not the original's.
     expect(runStored).toHaveBeenCalledWith(
       "backend-cls",
       [{ size: 100 }],
@@ -160,13 +158,8 @@ describe("auto-run ordered chaining", () => {
   });
 
   it("never dispatches on a file marked derivedFromTool", async () => {
-    // THE GATE OTHER CODE RELIES ON. A file added programmatically after it has already been through a
-    // policy or a tool carries this flag, and this effect must leave it alone. A policy run is a BILLED
-    // automation run, so both callers charge the customer for work nobody asked for if this stops
-    // holding: policy output delivery (`importOutputs`) would re-enforce a policy on its own output
-    // forever, and the bell's "Decrypt and retry" (`notificationActions.adopt`) would have the adoption
-    // of an unlocked document fire the whole upload chain on it. If this test fails, fix the gate rather
-    // than the test.
+    // A policy run is billed, so this gate is what stops `importOutputs` re-enforcing a policy on
+    // its own output forever. If this fails, fix the gate rather than the test.
     setFileStubs([
       { id: "file-1", name: "unlocked.pdf", derivedFromTool: true },
     ]);

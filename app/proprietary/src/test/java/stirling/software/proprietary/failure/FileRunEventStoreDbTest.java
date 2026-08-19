@@ -241,9 +241,8 @@ class FileRunEventStoreDbTest {
                 store.record(
                         RecordFailure.forEditor(
                                 FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
-        // A policy the user's own upload triggered. Recorded by the processor, but about the very
-        // document they just deleted, and carrying the id their client minted for it. Keying on
-        // origin left these behind: the user deleted the file and the failure stayed in the queue.
+        // Recorded by the processor, about the document they just deleted. Keying on origin left
+        // these in the queue.
         FileRunEvent myPolicyRun =
                 store.record(failure(FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1"));
         FileRunEvent theirs =
@@ -278,11 +277,8 @@ class FileRunEventStoreDbTest {
     @Test
     @DisplayName("a source-fed incident survives a client naming its file id")
     void markFilesRemovedLeavesSourceFedRowsAlone() {
-        // The two id spaces meet here. A source-fed run's fileId is a one-way hash of a path or key
-        // that was never on any device, so no client can legitimately claim to have deleted it.
-        // With login disabled the actor is null on both sides, so the actor clause matches and the
-        // absence of a source is the only thing standing between a local delete and a sweep's
-        // incidents.
+        // With login disabled the actor is null on both sides, so the absence of a source is all
+        // that stands between a local delete and a sweep's incidents.
         FileRunEvent sweep =
                 store.record(
                         new RecordFailure(

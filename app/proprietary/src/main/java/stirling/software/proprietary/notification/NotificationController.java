@@ -14,13 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * The caller's notifications. Open to any authenticated user, unlike the failure endpoints it draws
- * on: each source scopes its own rows and resolves its own actions, so a member is told about their
- * own failures and a leader about their team's.
- *
- * <p>Read-only: every action a notification offers is one the client runs on its own device, so
- * there is nothing to post back here yet. Ids are still prefixed with their source, so the bell is
- * never given the producing row's id; see {@link NotificationSource}.
+ * Open to any authenticated user, unlike the failure endpoints it draws on: each source scopes its
+ * own rows. Read-only, because every action a notification offers runs on the client's own device.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -29,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Notifications", description = "Things worth telling the caller about")
 public class NotificationController {
 
-    /** One page of a bell. Enough to fill a panel; the badge counts what it is given. */
     private static final int DEFAULT_LIMIT = 20;
 
     private static final int MAX_LIMIT = 100;
@@ -47,8 +41,6 @@ public class NotificationController {
         return new NotificationsResponse(notifications.list(capped));
     }
 
-    /**
-     * Wrapped rather than a bare array so paging or a total can be added without breaking clients.
-     */
+    /** Wrapped so paging or a total can be added without breaking clients. */
     public record NotificationsResponse(List<NotificationView> notifications) {}
 }

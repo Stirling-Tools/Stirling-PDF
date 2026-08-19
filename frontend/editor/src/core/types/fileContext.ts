@@ -330,9 +330,8 @@ export interface FileContextActions {
       selectFiles?: boolean;
       skipUploadTracking?: boolean;
       /**
-       * Mark every added file as produced in-app rather than uploaded, which is what stops the
-       * policy auto-run enforcing an upload policy on it. Set by anything adding a file that has
-       * already been through a policy or a tool: policy output delivery, and the bell's unlock.
+       * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload
+       * policy on it. Set by anything adding a file already through a policy or a tool.
        */
       derivedFromTool?: boolean;
     },

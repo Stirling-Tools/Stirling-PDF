@@ -1,10 +1,7 @@
 import { fileStorage } from "@app/services/fileStorage";
 import type { FileId } from "@app/types/file";
 
-/**
- * Whether the document a failure was filed against is still in this browser. It decides whether the
- * bell can offer to open it: the id is this workspace's own, so no other device can answer yes.
- */
+/** Whether the document is still in this browser. The id is this workspace's own, so only it can say. */
 export async function hasLocalFile(fileId: string | null): Promise<boolean> {
   if (!isUsableId(fileId)) return false;
 
