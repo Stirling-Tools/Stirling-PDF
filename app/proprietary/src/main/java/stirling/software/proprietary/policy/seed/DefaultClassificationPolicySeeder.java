@@ -13,6 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -24,6 +25,11 @@ import stirling.software.proprietary.security.service.TeamService;
 /**
  * Seeds an enabled Classification policy per team so classification is on by default. Idempotent;
  * skips the internal team.
+ *
+ * <p>The policy is owned by the internal API user rather than a placeholder name. An owner is not
+ * only an attribution label: a run with no triggering user (a sweep, a schedule) falls back to it
+ * for output ownership, and a step dispatch authenticates as it. A name with no user row behind it
+ * fails both, so the one identity that always exists is used.
  */
 @Slf4j
 @Component
@@ -33,6 +39,11 @@ public class DefaultClassificationPolicySeeder {
     static final String CATEGORY = "classification";
     private static final String CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
     private static final String POLICY_NAME = "Classification Policy";
+
+    /**
+     * Pre-existing seeds used this placeholder, which was never a user; see {@link #repairOwner}.
+     */
+    private static final String LEGACY_OWNER = "system";
 
     private final PolicyStore policyStore;
     private final TeamRepository teamRepository;
@@ -58,14 +69,32 @@ public class DefaultClassificationPolicySeeder {
         if (teamId == null || TeamService.INTERNAL_TEAM_NAME.equals(teamName)) {
             return;
         }
-        boolean alreadySeeded =
+        Policy existing =
                 policyStore.findByTeam(teamId).stream()
-                        .anyMatch(DefaultClassificationPolicySeeder::isClassification);
-        if (alreadySeeded) {
+                        .filter(DefaultClassificationPolicySeeder::isClassification)
+                        .findFirst()
+                        .orElse(null);
+        if (existing != null) {
+            repairOwner(existing);
             return;
         }
         policyStore.save(defaultPolicy(teamId));
         log.info("Seeded default Classification policy for team {}", teamId);
+    }
+
+    /**
+     * Move a policy seeded before the owner was a real identity onto the internal API user. Left
+     * alone otherwise, so an owner someone deliberately changed is never overwritten.
+     */
+    private void repairOwner(Policy policy) {
+        if (!LEGACY_OWNER.equals(policy.owner())) {
+            return;
+        }
+        policyStore.save(policy.withOwner(Role.INTERNAL_API_USER.getRoleId()));
+        log.info(
+                "Re-owned Classification policy {} from '{}' to the internal API user",
+                policy.id(),
+                LEGACY_OWNER);
     }
 
     private static boolean isClassification(Policy policy) {
@@ -85,7 +114,7 @@ public class DefaultClassificationPolicySeeder {
         return new Policy(
                 null,
                 POLICY_NAME,
-                "system",
+                Role.INTERNAL_API_USER.getRoleId(),
                 true,
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),

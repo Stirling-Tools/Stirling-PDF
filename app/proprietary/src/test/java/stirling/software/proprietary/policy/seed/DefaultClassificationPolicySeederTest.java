@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -36,10 +37,14 @@ class DefaultClassificationPolicySeederTest {
     }
 
     private static Policy classificationPolicy(Long teamId) {
+        return classificationPolicy(teamId, Role.INTERNAL_API_USER.getRoleId());
+    }
+
+    private static Policy classificationPolicy(Long teamId, String owner) {
         return new Policy(
                 "p1",
                 "Classification Policy",
-                "system",
+                owner,
                 true,
                 List.of(),
                 List.of(),
@@ -71,6 +76,29 @@ class DefaultClassificationPolicySeederTest {
     @Test
     void doesNotSeedWhenAClassificationPolicyAlreadyExists() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L)));
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        verify(policyStore, never()).save(any());
+    }
+
+    @Test
+    void reOwnsAPolicySeededUnderThePlaceholderName() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "system")));
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        // "system" was never a user row: a sweep-fired run would fall back to it for output
+        // ownership, and a step dispatch would authenticate as it. Both need a real identity.
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policyStore).save(saved.capture());
+        assertThat(saved.getValue().owner()).isEqualTo(Role.INTERNAL_API_USER.getRoleId());
+        assertThat(saved.getValue().id()).isEqualTo("p1");
+    }
+
+    @Test
+    void leavesADeliberatelyChosenOwnerAlone() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "alice")));
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
 
