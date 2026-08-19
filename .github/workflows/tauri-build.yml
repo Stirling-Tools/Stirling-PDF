@@ -63,7 +63,9 @@ jobs:
   determine-matrix:
     # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
     # signing environment - release-signing would block every PR run.
-    environment: ci-signing
+    environment:
+      name: ci-signing
+      deployment: false
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
