@@ -13,7 +13,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -79,18 +78,17 @@ public class DefaultClassificationPolicySeeder {
     }
 
     /**
-     * Move a policy seeded before the owner was a real identity onto the internal API user. Left
-     * alone otherwise, so an owner someone deliberately changed is never overwritten.
+     * Clear an owner seeded as a placeholder name. An owner someone deliberately set is left alone.
      */
     private void repairOwner(Policy policy) {
         if (!LEGACY_OWNER.equals(policy.owner())) {
             return;
         }
-        policyStore.save(policy.withOwner(Role.INTERNAL_API_USER.getRoleId()));
+        policyStore.save(policy.withOwner(null));
         log.info(
-                "Re-owned Classification policy {} from '{}' to the internal API user",
-                policy.id(),
-                LEGACY_OWNER);
+                "Cleared placeholder owner '{}' on Classification policy {}",
+                LEGACY_OWNER,
+                policy.id());
     }
 
     private static boolean isClassification(Policy policy) {
@@ -110,7 +108,9 @@ public class DefaultClassificationPolicySeeder {
         return new Policy(
                 null,
                 POLICY_NAME,
-                Role.INTERNAL_API_USER.getRoleId(),
+                // Nobody created this - it is seeded. A name here would have to be a real user, and
+                // every consumer of owner already handles its absence.
+                null,
                 true,
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),

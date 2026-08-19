@@ -17,7 +17,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -37,7 +36,7 @@ class DefaultClassificationPolicySeederTest {
     }
 
     private static Policy classificationPolicy(Long teamId) {
-        return classificationPolicy(teamId, Role.INTERNAL_API_USER.getRoleId());
+        return classificationPolicy(teamId, null);
     }
 
     private static Policy classificationPolicy(Long teamId, String owner) {
@@ -83,16 +82,16 @@ class DefaultClassificationPolicySeederTest {
     }
 
     @Test
-    void reOwnsAPolicySeededUnderThePlaceholderName() {
+    void clearsAPlaceholderOwnerSeededBeforeOwnersHadToBeReal() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "system")));
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
 
-        // "system" was never a user row: a sweep-fired run would fall back to it for output
-        // ownership, and a step dispatch would authenticate as it. Both need a real identity.
+        // "system" was never a user row, and a step dispatch authenticates as the owner. Absence
+        // is handled everywhere; a placeholder name is not.
         ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
         verify(policyStore).save(saved.capture());
-        assertThat(saved.getValue().owner()).isEqualTo(Role.INTERNAL_API_USER.getRoleId());
+        assertThat(saved.getValue().owner()).isNull();
         assertThat(saved.getValue().id()).isEqualTo("p1");
     }
 
