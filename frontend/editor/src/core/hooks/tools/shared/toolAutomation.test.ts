@@ -554,16 +554,6 @@ describe("supporting files", () => {
     expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
   });
 
-  test("getExecutableTools flags whether a tool accepts supporting files", () => {
-    const byId = Object.fromEntries(
-      getExecutableTools(fileRegistry).map((tool) => [
-        tool.toolId,
-        tool.acceptsFiles,
-      ]),
-    );
-    expect(byId).toEqual({ overlayPdfs: true, certSign: true });
-  });
-
   test("a rename override binds a backend field to a differently-named param", () => {
     // The cert-sign endpoint's `certFile` is held by a frontend param named `signingCert`.
     const config = asRegistryConfig<{ signingCert?: File }>({

@@ -525,9 +525,7 @@ export interface FlattenRequest {
    */
   renderDpi?: number;
 }
-export interface GeneralExtractBookmarksRequest {
-  file: File;
-}
+export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
@@ -1276,7 +1274,6 @@ export interface ScannerEffectRequest {
   yellowish?: boolean;
 }
 export interface SecurityCertSignSessionsRequest {
-  file: File;
   request?: WorkflowCreationRequest;
 }
 export interface WorkflowCreationRequest {
@@ -1743,7 +1740,6 @@ export const TOOL_ENDPOINTS = [
 
 /** The supporting-file parameters each endpoint accepts beyond its primary fileInput, by name. */
 export const TOOL_FILE_FIELDS = {
-  "/api/v1/general/extract-bookmarks": ["file"],
   "/api/v1/general/overlay-pdfs": ["overlayFiles"],
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
@@ -1755,7 +1751,6 @@ export const TOOL_FILE_FIELDS = {
     "p12File",
     "jksFile",
   ],
-  "/api/v1/security/cert-sign/sessions": ["file"],
   "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
   "/api/v1/security/validate-signature": ["certFile"],
 } as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;

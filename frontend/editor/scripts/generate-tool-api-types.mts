@@ -28,10 +28,11 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/integration/",
 ];
 
-// File plumbing, not user parameters: `fileInput` is the uploaded document and
-// `fileId` a server-side handle. Stripped from every generated request model.
-// Named file fields (stampImage, attachments, ...) are real parameters and kept.
-const BASE_FILE_FIELDS = new Set(["fileInput", "fileId"]);
+// File plumbing, not user parameters: `fileInput` and `file` are the uploaded primary document
+// (endpoints use one name or the other - `file` is never a second, supporting upload) and `fileId`
+// a server-side handle. Stripped from every generated request model. Named supporting-file fields
+// (stampImage, attachments, ...) are real parameters and kept.
+const BASE_FILE_FIELDS = new Set(["fileInput", "file", "fileId"]);
 
 // The shared "upload a file or provide a file ID" wrapper schema and its two
 // branches. An endpoint whose body is exactly this has no parameters, so it must

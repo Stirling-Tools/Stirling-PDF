@@ -54,8 +54,6 @@ export interface ExecutableTool {
    */
   endpoints?: readonly ToolEndpoint[];
   support: ToolStepSupport;
-  /** Whether the tool takes supporting files beyond its primary document (per the generated file-field table). */
-  acceptsFiles: boolean;
 }
 
 /**
@@ -374,7 +372,6 @@ export function getExecutableTools(
       endpoint,
       endpoints: config.endpoints,
       support: classifyToolStepSupport(entry),
-      acceptsFiles: backendFileFields(endpoint).length > 0,
     });
   }
   return tools.sort((a, b) => a.name.localeCompare(b.name));
