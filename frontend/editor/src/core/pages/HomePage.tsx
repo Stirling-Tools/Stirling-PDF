@@ -105,11 +105,16 @@ export default function HomePage() {
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
   //
-  // Read the live URL rather than `location.pathname`: react-router defers
-  // location updates through a transition, so under load it can still hold the
-  // pre-navigation path and re-open a modal the user just closed.
+  // Both halves read the live URL rather than `location.pathname`, and popstate
+  // is subscribed to directly: react-router defers location updates through a
+  // transition, so `location` can still hold the pre-navigation path. Deriving
+  // from it re-opens a modal the user just closed, and depending on it alone
+  // misses Back entirely when the push it should have committed never landed.
   useEffect(() => {
-    setConfigModalOpen(isInSettings());
+    const syncFromUrl = () => setConfigModalOpen(isInSettings());
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
   }, [location.pathname]);
 
   useEffect(() => {

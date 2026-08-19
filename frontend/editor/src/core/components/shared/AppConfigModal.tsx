@@ -54,6 +54,21 @@ interface AppConfigModalProps {
   hiddenSectionKeys?: NavKey[];
 }
 
+/**
+ * Whether this session has a history entry behind the current one.
+ *
+ * react-router keeps its own entry index in `history.state.idx`, so reading it
+ * live is the non-stale equivalent of the `location.key === "default"` test
+ * this used to do ("default" = first entry, nothing to pop back to). It has to
+ * be live: `location` lags behind a pending transition, and intra-modal tab
+ * switches rewrite the URL through `history.replaceState`, which react-router
+ * never observes at all.
+ */
+const canUnwindHistory = (): boolean => {
+  const idx = (window.history.state as { idx?: number } | null)?.idx;
+  return typeof idx === "number" && idx > 0;
+};
+
 // Extract section from URL path (e.g., /settings/people -> people)
 const getSectionFromPath = (pathname: string): NavKey | null => {
   const match = pathname.match(/\/settings\/([^/]+)/);
@@ -89,10 +104,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  // Whether this modal pushed its own /settings entry, so close knows there is
-  // one to pop. `location.key` can't answer that: react-router defers location
-  // updates through a transition and may still read the pre-open entry.
-  const pushedSettingsEntry = useRef(false);
 
   // Sync active state with URL path. Runs on open, on external URL changes,
   // and on the redirect path below - NOT on intra-modal tab clicks, because
@@ -151,7 +162,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
           withBasePath(`/settings/${key}`),
         );
       } else {
-        pushedSettingsEntry.current = true;
         navigate(`/settings/${key}`);
       }
     },
@@ -235,8 +245,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     // the pre-open path here and skip the unwind entirely - leaving the URL on
     // /settings/* so the modal immediately re-opens.
     if (urlSync && isInSettings()) {
-      if (pushedSettingsEntry.current) {
-        pushedSettingsEntry.current = false;
+      if (canUnwindHistory()) {
         navigate(-1);
       } else {
         // Deep link or refresh straight into /settings: nothing to pop to.
