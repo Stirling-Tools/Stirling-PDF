@@ -31,6 +31,7 @@ import {
 } from "@app/contexts/UnsavedChangesContext";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { isInSettings } from "@app/utils/settingsNavigation";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -88,6 +89,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  // Whether this modal pushed its own /settings entry, so close knows there is
+  // one to pop. `location.key` can't answer that: react-router defers location
+  // updates through a transition and may still read the pre-open entry.
+  const pushedSettingsEntry = useRef(false);
 
   // Sync active state with URL path. Runs on open, on external URL changes,
   // and on the redirect path below - NOT on intra-modal tab clicks, because
@@ -146,6 +151,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
           withBasePath(`/settings/${key}`),
         );
       } else {
+        pushedSettingsEntry.current = true;
         navigate(`/settings/${key}`);
       }
     },
@@ -223,24 +229,23 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
 
     // Only unwind history if settings was opened via the URL; opened via state
     // there's no /settings entry to pop and navigate(-1) would jump to /files.
-    if (urlSync && location.pathname.startsWith("/settings")) {
-      // "default" key = first entry (deep link/refresh); nothing to pop to.
-      if (location.key === "default") {
-        navigate(EDITOR_BASENAME, { replace: true });
-      } else {
+    // Both checks read the live URL, not `location`: tab switches rewrite the
+    // address bar through `history.replaceState`, and react-router defers its
+    // own location updates through a transition, so `location` can still hold
+    // the pre-open path here and skip the unwind entirely - leaving the URL on
+    // /settings/* so the modal immediately re-opens.
+    if (urlSync && isInSettings()) {
+      if (pushedSettingsEntry.current) {
+        pushedSettingsEntry.current = false;
         navigate(-1);
+      } else {
+        // Deep link or refresh straight into /settings: nothing to pop to.
+        navigate(EDITOR_BASENAME, { replace: true });
       }
     }
     onClose();
     return true;
-  }, [
-    confirmIfDirty,
-    location.key,
-    location.pathname,
-    navigate,
-    onClose,
-    urlSync,
-  ]);
+  }, [confirmIfDirty, navigate, onClose, urlSync]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {

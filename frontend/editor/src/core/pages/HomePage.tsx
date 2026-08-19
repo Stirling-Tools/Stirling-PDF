@@ -29,6 +29,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { isInSettings } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -103,9 +104,12 @@ export default function HomePage() {
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
+  //
+  // Read the live URL rather than `location.pathname`: react-router defers
+  // location updates through a transition, so under load it can still hold the
+  // pre-navigation path and re-open a modal the user just closed.
   useEffect(() => {
-    const isSettings = location.pathname.startsWith("/settings");
-    setConfigModalOpen(isSettings);
+    setConfigModalOpen(isInSettings());
   }, [location.pathname]);
 
   useEffect(() => {
@@ -116,10 +120,10 @@ export default function HomePage() {
 
   const handleCloseConfig = useCallback(() => {
     setConfigModalOpen(false);
-    if (location.pathname.startsWith("/settings")) {
+    if (isInSettings()) {
       navigate(EDITOR_BASENAME, { replace: true });
     }
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
