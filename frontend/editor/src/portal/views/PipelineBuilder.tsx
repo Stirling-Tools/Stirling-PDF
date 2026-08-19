@@ -216,13 +216,12 @@ export function PipelineBuilder() {
     async () => await fetchTriggers(),
     [],
   );
-  // The editor is a built-in, client-driven source (it runs on editor upload,
-  // not as a pipeline input), so it's excluded from a pipeline's inputs.
+  // The editor is a built-in, client-driven source: picking it means the pipeline runs in the
+  // browser as each file is uploaded or exported, rather than being swept server-side. It is a
+  // legitimate input, so it is offered - but it never becomes a wire input (see save), and it is
+  // not writable, so isWritableSource keeps it out of the destinations below.
   const availableSources = useMemo<SourceView[]>(
-    () =>
-      (sourcesState.data?.sources ?? []).filter(
-        (source) => source.type !== EDITOR_SOURCE_TYPE,
-      ),
+    () => sourcesState.data?.sources ?? [],
     [sourcesState.data],
   );
   // A destination is a source used as a write target: only writable types (folder/S3, filtered per
@@ -241,6 +240,17 @@ export function PipelineBuilder() {
   // Exactly one input: the row is always present, so the working state is a single object; the
   // wire shape stays a list (see save()).
   const [input, setInput] = useState<WorkingInput>(blankInput);
+  // When the editor is the source, the pipeline fires client-side on each file: on upload as it
+  // arrives, or on export as it leaves. Meaningless for a swept source, which has no such moment.
+  const [runOn, setRunOn] = useState<"upload" | "export">("upload");
+  const isEditorInput = useMemo(
+    () =>
+      availableSources.some(
+        (source) =>
+          source.id === input.sourceId && source.type === EDITOR_SOURCE_TYPE,
+      ),
+    [availableSources, input.sourceId],
+  );
   const [steps, setSteps] = useState<WorkingToolStep[]>([]);
   /** Which node the inspector is editing: an end of the chain, a step, or nothing. */
   const [selected, setSelected] = useState<GraphSelection>(null);
@@ -329,8 +339,19 @@ export function PipelineBuilder() {
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
+    // An editor pipeline has no wire input; it is recognised by its recorded sources.
+    const storedOptions = (policy?.output?.options ?? {}) as {
+      sources?: string[];
+      runOn?: string;
+    };
+    const editorSourceId = (sourcesState.data?.sources ?? []).find(
+      (source) => source.type === EDITOR_SOURCE_TYPE,
+    )?.id;
+    setRunOn(storedOptions.runOn === "export" ? "export" : "upload");
     const stored = policy?.inputs[0];
-    if (stored) {
+    if (storedOptions.sources?.includes("editor") && editorSourceId) {
+      setInput({ ...blankInput(), sourceId: editorSourceId });
+    } else if (stored) {
       const trigger = parseTrigger(stored.trigger);
       setInput({
         sourceId: stored.sourceId,
@@ -346,7 +367,7 @@ export function PipelineBuilder() {
     );
     setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
-  }, [isEdit, policyState.data, allTools, seeded]);
+  }, [isEdit, policyState.data, allTools, seeded, sourcesState.data]);
 
   const sourceType = (sourceId: string) =>
     availableSources.find((s) => s.id === sourceId)?.type;
@@ -617,10 +638,15 @@ export function PipelineBuilder() {
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
   const sourceChosen = input.sourceId !== "";
+  // An editor pipeline has no trigger to schedule: it fires as each file passes through.
   const scheduleValid =
-    input.triggerType !== "schedule" || Number(input.scheduleCount) > 0;
+    isEditorInput ||
+    input.triggerType !== "schedule" ||
+    Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
-  const outputValid = outputIds.length === 1;
+  // Nor does it need a destination: its results land back in the workspace the file came from,
+  // which is the whole point of running there rather than sweeping a folder.
+  const outputValid = isEditorInput || outputIds.length === 1;
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
@@ -675,12 +701,25 @@ export function PipelineBuilder() {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
       enabled: enabledOverride ?? enabled,
-      // The wire shape stays a list; canSave guarantees the one input has a source.
-      inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+      // The editor is virtual - there is no stored Source to pull from, and nothing server-side
+      // sweeps it - so it is recorded in the output options the editor reads, not as a wire input.
+      inputs: isEditorInput
+        ? []
+        : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       // Destinations are the referenced saved sources; the inline output field is
       // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-      output: policyState.data?.output ?? { type: "inline", options: {} },
+      output: {
+        ...(policyState.data?.output ?? { type: "inline", options: {} }),
+        options: {
+          ...(policyState.data?.output?.options ?? {}),
+          // Written only for an editor pipeline: the auto-run holds a pipeline to explicit
+          // metadata, so a swept one must not claim the editor by leaving these behind.
+          ...(isEditorInput
+            ? { sources: ["editor"], runOn }
+            : { sources: [], runOn: undefined }),
+        },
+      },
       outputIds,
     };
     try {
@@ -1035,25 +1074,60 @@ export function PipelineBuilder() {
                 </div>
               </FormField>
 
-              <FormField label={t("portal.pipelines.builder.inputTrigger")}>
-                <Select
-                  inputSize="sm"
-                  aria-label={t("portal.pipelines.builder.inputTrigger")}
-                  value={
-                    input.triggerType === MANUAL
-                      ? MANUAL_OPTION
-                      : input.triggerType
-                  }
-                  disabled={input.sourceId === ""}
-                  onChange={(value) =>
-                    updateInput({
-                      triggerType:
-                        value && value !== MANUAL_OPTION ? value : MANUAL,
-                    })
-                  }
-                  options={triggerOptionsFor(input.sourceId)}
-                />
-              </FormField>
+              {isEditorInput ? (
+                <FormField
+                  label={t("portal.pipelines.builder.runOn", "Runs on")}
+                  helperText={t(
+                    "portal.pipelines.builder.runOnHelper",
+                    "Editor pipelines run in the browser as each file passes through - there is no server-side sweep to schedule.",
+                  )}
+                >
+                  <Select
+                    inputSize="sm"
+                    aria-label={t("portal.pipelines.builder.runOn", "Runs on")}
+                    value={runOn}
+                    onChange={(value) =>
+                      setRunOn(value === "export" ? "export" : "upload")
+                    }
+                    options={[
+                      {
+                        value: "upload",
+                        label: t(
+                          "portal.pipelines.builder.runOnUpload",
+                          "Every upload",
+                        ),
+                      },
+                      {
+                        value: "export",
+                        label: t(
+                          "portal.pipelines.builder.runOnExport",
+                          "Every export",
+                        ),
+                      },
+                    ]}
+                  />
+                </FormField>
+              ) : (
+                <FormField label={t("portal.pipelines.builder.inputTrigger")}>
+                  <Select
+                    inputSize="sm"
+                    aria-label={t("portal.pipelines.builder.inputTrigger")}
+                    value={
+                      input.triggerType === MANUAL
+                        ? MANUAL_OPTION
+                        : input.triggerType
+                    }
+                    disabled={input.sourceId === ""}
+                    onChange={(value) =>
+                      updateInput({
+                        triggerType:
+                          value && value !== MANUAL_OPTION ? value : MANUAL,
+                      })
+                    }
+                    options={triggerOptionsFor(input.sourceId)}
+                  />
+                </FormField>
+              )}
 
               {input.triggerType === "schedule" && (
                 <div className="portal-builder__schedule">
