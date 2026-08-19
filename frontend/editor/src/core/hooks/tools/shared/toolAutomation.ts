@@ -305,20 +305,19 @@ export function extractStepFiles(
  * The backend file fields this step actually uses right now, per its own buildFormData: fresh picks
  * plus any stored binding the tool still emits (a stale one - e.g. a PKCS12 keystore after switching
  * to PEM - is dropped, because buildFormData no longer sends it). Drives the stored-file chips, the
- * save-time binding set, and the test run. An unknown step has no buildFormData, so its bindings are
- * reported verbatim.
+ * save-time binding set, and the test run.
  */
 export function activeFileFields(
   step: WorkingToolStep,
   registry: Partial<ToolRegistry>,
-): string[] {
+): string[] | null {
   if (step.toolId === null) {
     return step.fileParameters ? Object.keys(step.fileParameters) : [];
   }
   const config = registry[step.toolId]?.operationConfig;
-  if (!config) return [];
+  if (!config) return null;
   const formData = probeFormData(config, withStoredFileSentinels(step, config));
-  if (!formData) return [];
+  if (!formData) return null;
   const fields = new Set<string>();
   formData.forEach((value, key) => {
     if (key !== "fileInput" && value instanceof File) fields.add(key);

@@ -507,19 +507,6 @@ export function PipelineBuilder() {
     );
   }
 
-  /** A stable identity for a step's fresh file picks (name/size/mtime), for dirty-tracking. */
-  function fileSignature(step: WorkingToolStep): Record<string, string[]> {
-    const signature: Record<string, string[]> = {};
-    for (const [field, files] of Object.entries(
-      extractStepFiles(step, allTools),
-    )) {
-      signature[field] = files.map(
-        (file) => `${file.name}:${file.size}:${file.lastModified}`,
-      );
-    }
-    return signature;
-  }
-
   /** Drop a step's stored supporting-file binding for one field (the chip's remove action). */
   function clearStepBinding(index: number, field: string) {
     setSteps((current) =>
@@ -645,14 +632,30 @@ export function PipelineBuilder() {
   // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
   // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
   // chosen at submit - so it can never be the thing that makes the form dirty.
-  // A raw File JSON-stringifies to `{}`, so serializeToolStep (which excludes Files) can't see a
-  // file being added or swapped; capture a stable signature of each step's fresh picks so those edits
-  // still mark the form dirty. Stored bindings are already covered by the serialized steps.
+  // Per-step dirty signature: the serialized step plus a stable identity (name/size/mtime) of its
+  // fresh file picks - a raw File JSON-stringifies to `{}`, so serializeToolStep (which excludes
+  // Files) can't see a file added or swapped. Memoized on the steps because it probes each tool's
+  // buildFormData; without this it would re-run for every step on any render (e.g. each keystroke in
+  // the name field). Stored bindings are covered by the serialized step.
+  const stepSnapshot = useMemo(
+    () =>
+      steps.map((step) => {
+        const files: Record<string, string[]> = {};
+        for (const [field, picks] of Object.entries(
+          extractStepFiles(step, allTools),
+        )) {
+          files[field] = picks.map(
+            (file) => `${file.name}:${file.size}:${file.lastModified}`,
+          );
+        }
+        return { step: serializeToolStep(step, allTools), files };
+      }),
+    [steps, allTools],
+  );
   const snapshot = JSON.stringify({
     name: name.trim(),
     input,
-    steps: steps.map((step) => serializeToolStep(step, allTools)),
-    files: steps.map((step) => fileSignature(step)),
+    steps: stepSnapshot,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -719,7 +722,8 @@ export function PipelineBuilder() {
   ): { field: string; fresh: File[] | null; stored: string | null }[] {
     const fresh = extractStepFiles(step, allTools);
     const stored = step.fileParameters ?? {};
-    return activeFileFields(step, allTools).map((field) => ({
+    const fields = activeFileFields(step, allTools) ?? Object.keys(stored);
+    return fields.map((field) => ({
       field,
       fresh: fresh[field] ?? null,
       stored: stored[field] ?? null,

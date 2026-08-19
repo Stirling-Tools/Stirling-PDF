@@ -221,9 +221,9 @@ export interface TestRunDefinition {
 }
 
 /**
- * A supporting file supplied with a test run, bound to the key a step's `fileParameters` references.
- * The ad-hoc /run endpoint does not resolve stored assets, so a file-step's supporting file must
- * ride along here (fresh picks directly, stored ones fetched back as bytes).
+ * A fresh, in-memory supporting file sent inline with a test run, bound to the run key a test step's
+ * `fileParameters` references. Only unsaved picks ride along here; a stored file keeps its
+ * `asset:<id>` binding, which the backend resolves from the saved policy (see `runPipelineTest`).
  */
 export interface TestRunAsset {
   key: string;

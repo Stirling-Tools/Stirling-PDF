@@ -519,6 +519,31 @@ describe("supporting files", () => {
     ).toEqual([]);
   });
 
+  test("activeFileFields is null (not empty) when the tool can't be probed", () => {
+    // A buildFormData that throws can't be probed; returning null (vs []) tells callers to keep the
+    // step's stored bindings rather than drop them and let the server GC the assets.
+    const config = asRegistryConfig<{ signingCert?: File }>({
+      toolType: ToolType.singleFile,
+      operationType: "certSign",
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      buildFormData: () => {
+        throw new Error("cannot build");
+      },
+    });
+    const registry: Partial<ToolRegistry> = {
+      certSign: entry({ name: "Boom", operationConfig: config }),
+    };
+    const step: WorkingToolStep = {
+      toolId: "certSign" as ToolId,
+      operation: "/api/v1/security/cert-sign",
+      params: {},
+      support: "editable",
+      fileParameters: { certFile: "asset:x" },
+    };
+    expect(activeFileFields(step, registry)).toBeNull();
+  });
+
   test("the overlay sentinel is sized to the binding's asset count", () => {
     // Two ids -> two files, matching two counts, so FixedRepeat validation passes.
     const step = overlayStep(

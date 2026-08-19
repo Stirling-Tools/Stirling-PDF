@@ -239,17 +239,6 @@ export const pipelinesHandlers = [
     return HttpResponse.json(asset);
   }),
 
-  http.get("/api/v1/policies/assets/:id/content", async ({ params }) => {
-    const asset = assetStore.find((a) => a.id === params.id);
-    if (!asset) return undefined;
-    await delay(80);
-    return new HttpResponse(
-      new Blob([""], {
-        type: asset.contentType ?? "application/octet-stream",
-      }),
-    );
-  }),
-
   // Run status: the mock completes runs immediately, so polling resolves at once.
   http.get("/api/v1/policies/run/:runId", async ({ params }) => {
     await delay(120);

@@ -56,10 +56,14 @@ function storedFileChips(
 ): StoredFileChip[] {
   const bindings = step.fileParameters;
   if (!bindings) return [];
-  const active = new Set(activeFileFields(step, registry));
+  // A null active set means the tool couldn't be probed; show every stored binding rather than hide
+  // the user's files (mirrors the save path, which keeps them too).
+  const active = activeFileFields(step, registry);
   const fresh = extractStepFiles(step, registry);
   return Object.entries(bindings)
-    .filter(([field]) => active.has(field) && !fresh[field])
+    .filter(
+      ([field]) => (active === null || active.includes(field)) && !fresh[field],
+    )
     .map(([field, binding]) => ({
       field,
       label:
