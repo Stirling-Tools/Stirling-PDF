@@ -24,6 +24,7 @@ import {
   type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import {
+  ToolType,
   type ErasedToolParams,
   type RegistryToolOperationConfig,
 } from "@app/hooks/tools/shared/toolOperationTypes";
@@ -185,39 +186,33 @@ export function assetRefIds(binding: string): AssetId[] {
     .filter(Boolean) as AssetId[];
 }
 
-/** buildFormData with a loose file argument, so we can probe single- and multi-file tools alike. */
-type LooseBuildFormData = (
-  params: ErasedToolParams,
-  file: File | File[],
-) => FormData;
-
 /** A throwaway primary document for probing a tool's buildFormData; never sent anywhere. */
 function dummyPrimaryFile(): File {
   return new File([], "input.pdf", { type: "application/pdf" });
 }
 
 /**
- * Run a tool's buildFormData so we can read the request it would produce. Single-file tools take a
- * File and multi-file tools a File[], so both shapes are tried (as in policyPipeline.ts). Returns
- * null when the tool has no buildFormData, File is unavailable, or every shape throws.
+ * Run a tool's buildFormData so we can read the request it would produce.
+ * Returns null when File is unavailable or buildFormData throws.
  */
 function probeFormData(
   config: RegistryToolOperationConfig,
   params: ErasedToolParams,
 ): FormData | null {
-  const build = config.buildFormData as unknown as
-    | LooseBuildFormData
-    | undefined;
-  if (typeof build !== "function" || typeof File === "undefined") return null;
+  if (typeof File === "undefined") return null;
   const dummy = dummyPrimaryFile();
-  for (const fileArg of [dummy, [dummy]]) {
-    try {
-      return build(params, fileArg);
-    } catch {
-      // Wrong file-arg shape for this tool - try the other, then give up.
+  try {
+    switch (config.toolType) {
+      case ToolType.singleFile:
+        return config.buildFormData(params, dummy);
+      case ToolType.multiFile:
+        return config.buildFormData(params, [dummy]);
+      default:
+        return null;
     }
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /** Defaults merged under the step's params - the shape a tool's mappers and buildFormData expect. */
