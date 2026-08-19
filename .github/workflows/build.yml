@@ -61,7 +61,9 @@ jobs:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     name: Prime shared Gradle cache
     needs: [files-changed]
     runs-on: ubuntu-latest
