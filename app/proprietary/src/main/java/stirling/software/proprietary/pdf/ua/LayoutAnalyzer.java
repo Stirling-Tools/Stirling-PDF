@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,8 +92,7 @@ public class LayoutAnalyzer {
                     "Text on page(s) "
                             + suppressedPages.stream()
                                     .map(i -> String.valueOf(i + 1))
-                                    .reduce((a, b) -> a + ", " + b)
-                                    .orElse("")
+                                    .collect(Collectors.joining(", "))
                             + " could not be tagged reliably and was marked as artifacts. The"
                             + " converter will not claim conformance while real text is hidden"
                             + " from assistive technology.");
