@@ -39,7 +39,10 @@ import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
-import { isClassificationCategory } from "@app/data/policyCategories";
+import {
+  isClassificationCategory,
+  POLICY_CATEGORY_IDS,
+} from "@app/data/policyCategories";
 import {
   acquireDispatchSlot,
   releaseDispatchSlot,
@@ -191,9 +194,15 @@ export function usePolicyAutoRun(): void {
             s.configured &&
             s.status === "active" &&
             s.backendId &&
-            (!s.sources ||
-              s.sources.length === 0 ||
-              s.sources.includes("editor")) &&
+            // A catalogue policy's blank source list means "not yet narrowed", so it still
+            // covers the editor. A pipeline built on the Pipelines page has blank metadata
+            // because nothing ever stamped it - inheriting that default would fire an S3 or
+            // folder pipeline on every editor upload. It has to name the editor outright.
+            (isCatalogueCategory(id)
+              ? !s.sources ||
+                s.sources.length === 0 ||
+                s.sources.includes("editor")
+              : (s.sources?.includes("editor") ?? false)) &&
             (s.runOn ?? "upload") === "upload" &&
             // Classification's first pass is always the local heuristic
             // (useClientSideClassification). The server chain only ever carries the escalation, so
@@ -928,6 +937,17 @@ async function importOutputs(
       ),
     );
   }
+}
+
+/**
+ * Whether this key is one of the catalogue's category tiles rather than a bare pipeline id.
+ *
+ * <p>The two are keyed into the same map (see fetchPoliciesByCategory) but carry different
+ * metadata: a tile always stamps its own, a builder pipeline stamps none, so defaults that are
+ * right for one are wrong for the other.
+ */
+function isCatalogueCategory(key: string): boolean {
+  return POLICY_CATEGORY_IDS.has(key);
 }
 
 /**
