@@ -1,8 +1,6 @@
 /**
- * The rule that decides whether a document costs an AI classification.
- *
- * The local heuristic runs on every editor upload; only a high-confidence verdict from it stands
- * alone. Anything weaker - or not yet computed - goes to the engine, which overwrites it.
+ * Only a high-confidence local heuristic verdict avoids a paid AI classification;
+ * anything weaker, or not yet computed, escalates to the engine.
  */
 import { describe, expect, it } from "vitest";
 import { shouldDispatchToAi } from "@app/components/policies/usePolicyAutoRun";
@@ -25,8 +23,8 @@ describe("classification escalation", () => {
   });
 
   it("defers while the heuristic has not reported yet", () => {
-    // Not a skip: dispatching now would race the local pass and pay for an answer it is about to
-    // produce for free. The caller re-evaluates when the verdict lands on the stub.
+    // Not a skip: dispatching now races the local pass and pays for a free answer;
+    // the caller re-evaluates once the verdict lands.
     expect(shouldDispatchToAi("classification", stub(undefined))).toBe(false);
   });
 

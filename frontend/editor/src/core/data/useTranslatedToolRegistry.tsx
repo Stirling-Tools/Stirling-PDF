@@ -1355,11 +1355,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "Identify what kind of document this is and tag it.",
         ),
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
+        subcategoryId: SubcategoryId.AI,
         maxFiles: -1,
         endpoints: ["classify-and-label"],
         operationConfig: asRegistryConfig(classifyOperationConfig),
         automationSettings: null,
+        // Pipeline-only: there is no interactive classify tool to open in the editor.
+        hiddenFromToolList: true,
       },
       compress: {
         icon: (

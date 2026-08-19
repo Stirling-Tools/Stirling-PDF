@@ -2,11 +2,8 @@
 export const CLASSIFICATION_CATEGORY_ID = "classification";
 
 /**
- * Every catalog category id.
- *
- * <p>Kept here rather than derived from POLICY_CATEGORIES so this module stays free of the
- * definitions' React imports. A policy keyed by anything else is a pipeline built on the Pipelines
- * page, which carries none of the metadata a category tile stamps.
+ * Listed here, not derived from POLICY_CATEGORIES, to keep this module free of React imports.
+ * Anything outside this set is a Pipelines-page pipeline, lacking category tile metadata.
  */
 export const POLICY_CATEGORY_IDS: ReadonlySet<string> = new Set([
   "ingestion",
@@ -17,18 +14,12 @@ export const POLICY_CATEGORY_IDS: ReadonlySet<string> = new Set([
   "retention",
 ]);
 
-/**
- * Classification is metadata-only: it runs async (never blocks), never forks a
- * version, and always runs last. This predicate gates that special handling.
- */
+/** Gates classification's special handling: async, never forks a version, always runs last. */
 export function isClassificationCategory(categoryId: string): boolean {
   return categoryId === CLASSIFICATION_CATEGORY_ID;
 }
 
-/**
- * Move classification to the end of an execution order (others keep their order),
- * so a persisted/displayed order can't place it anywhere but last.
- */
+/** Forces classification last so a persisted or displayed order cannot place it elsewhere. */
 export function pinClassificationLast(orderedCategoryIds: string[]): string[] {
   return [
     ...orderedCategoryIds.filter((id) => !isClassificationCategory(id)),

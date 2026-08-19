@@ -1,12 +1,6 @@
 /**
- * Backend source-of-truth layer for Policies. Wraps the raw `policyApi` client +
- * the `policyPipeline` mapper into category-shaped operations the hook can use:
- * fetch the stored policies (grouped by catalog category), persist one, flip its
- * enabled flag, and delete it.
- *
- * The frontend is category-keyed (one policy per catalog category); the backend
- * is a flat list with assigned ids. The bridge is `trigger.options.categoryId`,
- * which `policyPipeline` encodes on save and decodes on read.
+ * Category-shaped wrapper over `policyApi` + `policyPipeline`: the frontend is
+ * category-keyed, the backend a flat list, bridged by `trigger.options.categoryId`.
  */
 
 import * as policyApi from "@app/services/policyApi";
@@ -19,20 +13,13 @@ import {
 import type { PolicyState } from "@app/types/policies";
 
 /**
- * Fetch every stored policy and decode it, keyed by its catalog category. If two stored policies
- * share a category (shouldn't happen - one per category), the last one wins.
- *
- * <p>A pipeline built on the Pipelines page carries no categoryId, so it is keyed by its own id
- * instead of being dropped. It is still a policy: one set to run on editor uploads must fire on
- * editor uploads, whether it was authored through a category tile or the builder. The key only has
- * to be unique and stable - the catalog id is used where there is one so the per-category lookups
- * (the Policies page, the Classification special case) keep working.
+ * Fetch and decode every stored policy, keyed by catalog category (last wins on a clash).
+ * Builder-made pipelines have no categoryId, so they key by own id rather than being dropped.
  */
 export async function fetchPoliciesByCategory(): Promise<
   Map<string, DecodedPolicy>
 > {
-  // The backend returns policies in the team's run order; the list index IS the
-  // order (server-side, shared team-wide), which we carry onto the decoded state.
+  // List index IS the team's server-side run order, carried onto the decoded state.
   const stored = await policyApi.listPolicies();
   const byCategory = new Map<string, DecodedPolicy>();
   stored.forEach((policy, index) => {
@@ -46,9 +33,8 @@ export async function fetchPoliciesByCategory(): Promise<
 }
 
 /**
- * Project a decoded backend policy onto the frontend per-category state. The
- * locally-cached `folderId` (the editable-automation link, which the backend
- * doesn't track) is preserved by the caller via `localFolderId`.
+ * Project a decoded policy onto per-category state. `folderId` is local-only (the
+ * backend doesn't track it), so the caller passes it back in via `localFolderId`.
  */
 export function decodedToState(
   decoded: DecodedPolicy,
@@ -75,9 +61,8 @@ export function decodedToState(
 }
 
 /**
- * The backend id of the stored policy for a category, if one exists. Used to
- * enforce one-policy-per-category: a save reuses this id (update) rather than
- * creating a duplicate, even if the local cache lost the link.
+ * Backend id of a category's stored policy, so a save updates it rather than
+ * duplicating - enforces one-per-category even if the local cache lost the link.
  */
 export async function findBackendId(
   categoryId: string,
@@ -93,9 +78,8 @@ export async function persistPolicy(store: PolicyToStore): Promise<string> {
 }
 
 /**
- * Flip a stored policy's `enabled` flag (pause/resume) — the backend gates
- * automatic triggering on it. Reads the current policy so the rest of its config
- * is preserved on the round-trip.
+ * Flip `enabled` (pause/resume), which gates automatic triggering. Reads first so
+ * the rest of the config survives the round-trip.
  */
 export async function setPolicyEnabled(
   backendId: string,

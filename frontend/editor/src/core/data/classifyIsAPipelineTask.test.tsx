@@ -13,6 +13,7 @@ import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { getExecutableTools } from "@app/hooks/tools/shared/toolAutomation";
 import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 import { TOOL_IO } from "@app/types/toolIO";
+import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -49,6 +50,18 @@ describe("classify as a pipeline task", () => {
       produces: "PDF",
       arity: "SISO",
     });
+  });
+
+  test("it is offered to pipelines but kept out of the editor's tool list", () => {
+    const { result } = renderHook(() => useTranslatedToolCatalog());
+
+    // There is no interactive classify tool to open - it only means something inside a pipeline.
+    expect(result.current.regularTools.classify?.hiddenFromToolList).toBe(true);
+    expect(
+      filterToolRegistryByQuery(result.current.regularTools, "").some(
+        (ranked) => ranked.item[0] === "classify",
+      ),
+    ).toBe(false);
   });
 
   test("it does not re-classify by default", () => {

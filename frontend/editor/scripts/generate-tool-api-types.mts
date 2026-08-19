@@ -12,12 +12,8 @@ import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
 import * as prettier from "prettier";
 
-// The API namespaces whose endpoints a pipeline can reference. Extend this list when other
-// namespaces become tools.
-//
-// `/api/v1/filter/`, `/api/v1/integration/` and `/api/v1/ai/tools/` are included even though none
-// is an ordinary user-facing tool: a stored pipeline can contain one, and ToolEndpoint keys the I/O
-// table, so leaving them out would stop a chain being checked past such a step.
+// Endpoints a pipeline can reference. filter/integration are not user-facing tools but a stored
+// pipeline can contain one; the AI namespace is admitted one endpoint at a time, not wholesale.
 const ALLOWED_PATH_PREFIXES = [
   "/api/v1/general/",
   "/api/v1/misc/",
@@ -25,7 +21,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/convert/",
   "/api/v1/filter/",
   "/api/v1/integration/",
-  "/api/v1/ai/tools/",
+  "/api/v1/ai/tools/classify-and-label",
 ];
 
 // File plumbing, not user parameters: `fileInput` is the uploaded document and

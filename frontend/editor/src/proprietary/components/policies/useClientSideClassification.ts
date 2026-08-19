@@ -1,7 +1,5 @@
-// The Classification policy's first pass, and on the editor path it always runs: every upload is
-// labelled by the local heuristic engine before anything is asked of the AI. The confidence it
-// reports is what decides whether the AI is asked at all - see usePolicyAutoRun - so a document the
-// heuristic is sure about never costs an engine call, and an unsure one is escalated.
+// The Classification policy's first pass: every upload is labelled locally before the AI is asked.
+// The confidence reported here decides whether the AI is asked at all - see usePolicyAutoRun.
 
 import { useEffect, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
@@ -161,12 +159,11 @@ async function classifyStub(
   }
   const debug = isClassificationDebug();
   const startedAt = performance.now();
-  // Classifying locally is still a policy run: it enforces the Classification policy on this file
-  // and is billed for it, so it belongs in the activity feed with the same identity and icon as a
-  // run the server performed. Recorded here, once the bytes are in hand, so a file whose bytes
-  // never land leaves no phantom row.
-  // Read before recording the run: recordRunStart takes the dispatch key itself, so asking
-  // afterwards would always answer "already dispatched" and silently stop metering.
+  // A local run is still a billable policy run, so it belongs in the activity feed; recorded only
+  // once the bytes are in hand, so a file whose bytes never land leaves no phantom row.
+
+  // Read before recordRunStart, which takes the dispatch key itself and would otherwise always
+  // answer "already dispatched", silently stopping metering.
   const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY, fileId);
   const runId = `local-${CLASSIFICATION_CATEGORY}-${fileId}-${Date.now()}`;
   recordRunStart({

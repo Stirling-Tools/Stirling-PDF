@@ -23,13 +23,9 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Seeds an enabled Classification policy per team so classification is on by default. Idempotent;
- * skips the internal team.
- *
- * <p>The policy is owned by the internal API user rather than a placeholder name. An owner is not
- * only an attribution label: a run with no triggering user (a sweep, a schedule) falls back to it
- * for output ownership, and a step dispatch authenticates as it. A name with no user row behind it
- * fails both, so the one identity that always exists is used.
+ * Seeds an enabled Classification policy per team; idempotent, skips the internal team. Owned by
+ * the internal API user, as ownerless runs fall back to the owner and step dispatch authenticates
+ * as it.
  */
 @Slf4j
 @Component
@@ -57,9 +53,9 @@ public class DefaultClassificationPolicySeeder {
                 .ifPresent(team -> seedIfMissing(team.getId(), team.getName()));
     }
 
-    // Any team created at runtime (admin-created, SaaS sign-ups). Seeds inside the team's own
-    // transaction: rollback still leaves no policy behind, and the store's pessimistic lock needs a
-    // live transaction, which AFTER_COMMIT cannot offer.
+    // Seeds inside the new team's own transaction: rollback leaves no policy behind, and the
+    // store's
+    // pessimistic lock needs a live transaction, which AFTER_COMMIT cannot offer.
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void onTeamCreated(TeamCreatedEvent event) {
         seedIfMissing(event.teamId(), event.teamName());
