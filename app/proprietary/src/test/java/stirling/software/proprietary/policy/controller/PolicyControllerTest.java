@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -737,6 +738,79 @@ class PolicyControllerTest {
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.NOT_FOUND));
+        }
+
+        @Test
+        @DisplayName("trigger is forbidden for a team member who cannot manage policies")
+        void triggerForbiddenForMember() {
+            // Sweeping a policy's configured sources is a policy-management capability, so being
+            // in the policy's team is not on its own enough to perform it.
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canTriggerPolicies()).thenReturn(false);
+
+            assertThatThrownBy(() -> controller.trigger("a"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            // Rejected before the policy is looked up, so no run starts.
+            verify(policyRunner, never()).run(any());
+            verify(policyStore, never()).get(any());
+        }
+
+        @Test
+        @DisplayName("trigger runs for a caller who may manage policies")
+        void triggerAllowedForLeader() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canTriggerPolicies()).thenReturn(true);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
+            when(policyRunner.run(p)).thenReturn(outcome);
+
+            ResponseEntity<SweepOutcome> response = controller.trigger("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+            assertThat(response.getBody()).isEqualTo(outcome);
+        }
+
+        @Test
+        @DisplayName("trigger skips the role check when login is disabled")
+        void triggerTrustsTheLocalOperator() {
+            // Single-user deployments have no roles at all; the gate must not lock them out of
+            // their
+            // own sweeps.
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy p = policy("a", null);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
+            when(policyRunner.run(p)).thenReturn(outcome);
+
+            assertThat(controller.trigger("a").getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+            verify(policyManagementAuthority, never()).canTriggerPolicies();
+        }
+
+        @Test
+        @DisplayName("running a policy over the caller's own files stays open to any member")
+        void storedRunIsNotGatedByRole() {
+            // Editor enforcement: every member's upload/export runs the team's stored policies on
+            // their own documents. Gating this the way the sweep is gated would break the editor.
+            applicationProperties.getSecurity().setEnableLogin(true);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-9"));
+
+            ResponseEntity<JobResponse<Void>> response =
+                    assertDoesNotThrow(() -> controller.runStoredPolicy("a", new PolicyRunFiles()));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+            verify(policyManagementAuthority, never()).canTriggerPolicies();
+            verify(policyManagementAuthority, never()).canEditPolicies();
         }
     }
 }
