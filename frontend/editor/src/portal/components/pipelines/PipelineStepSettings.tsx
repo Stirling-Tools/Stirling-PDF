@@ -59,10 +59,12 @@ function storedFileChips(
   // A null active set means the tool couldn't be probed; show every stored binding rather than hide
   // the user's files (mirrors the save path, which keeps them too).
   const active = activeFileFields(step, registry);
+  const activeSet = active === null ? null : new Set(active);
   const fresh = extractStepFiles(step, registry);
   return Object.entries(bindings)
     .filter(
-      ([field]) => (active === null || active.includes(field)) && !fresh[field],
+      ([field]) =>
+        (activeSet === null || activeSet.has(field)) && !fresh[field],
     )
     .map(([field, binding]) => ({
       field,

@@ -425,6 +425,17 @@ async function main(): Promise<void> {
       const query = queryParameters(pathItem);
       // Body wins over query on a name collision.
       const properties: Json = { ...query.props, ...bodyProps };
+      // `file` is stripped as a primary-document alias (see BASE_FILE_FIELDS). That only holds while
+      // no endpoint uses `file` as a *supporting* upload beside a primary `fileInput`; if one ever
+      // does, blanket-stripping would silently drop it. Fail generation so the assumption is fixed
+      // here rather than shipping a lost file.
+      if ("file" in properties && "fileInput" in properties) {
+        throw new Error(
+          `${path} has both 'fileInput' and 'file' uploads. 'file' is stripped as a primary-document` +
+            " alias, which would drop it as a supporting file. Rename the supporting param or revise" +
+            " BASE_FILE_FIELDS handling in this generator.",
+        );
+      }
       for (const field of BASE_FILE_FIELDS) delete properties[field];
       // Type each named file upload as File/File[] (not the `string` a binary format yields) via
       // json-schema-to-typescript's `tsType` override, and record it. Base file fields are already

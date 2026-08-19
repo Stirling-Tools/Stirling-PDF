@@ -223,10 +223,32 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
+  // A tool whose buildFormData throws, so it can't be probed: exercises the "activeFileFields is
+  // null" path where a reopened step's stored binding must be kept, not dropped.
+  const sign = {
+    name: "Sign",
+    icon: null,
+    component: null,
+    description: "",
+    categoryId: "recommendedTools",
+    subcategoryId: "general",
+    operationConfig: {
+      operationType: "certSign",
+      toolType: 0,
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      buildFormData: () => {
+        throw new Error("cannot build");
+      },
+      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
+    },
+  } as unknown as ToolRegistryEntry;
   const allTools = {
     compress,
     extractImages,
     ocr,
+    sign,
   } as unknown as ToolRegistryCatalog["allTools"];
   const catalog: ToolRegistryCatalog = {
     regularTools: allTools,
@@ -862,6 +884,43 @@ describe("PipelineBuilder", () => {
         ],
       }),
     );
+  });
+
+  it("keeps a step's stored file binding on save when the tool can't be probed", async () => {
+    // buildFormData throws for `sign`, so activeFileFields is null. The stored binding must survive
+    // the save unchanged - dropping it would let the server GC the user's uploaded file - and no
+    // re-upload should happen.
+    fetchPipeline.mockResolvedValue({
+      id: "plc-sign",
+      name: "Signed",
+      enabled: true,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [
+        {
+          operation: "/api/v1/security/cert-sign",
+          parameters: {},
+          fileParameters: { certFile: "asset:x" },
+        },
+      ],
+      output: { type: "inline", options: {} },
+      outputIds: ["src-1"],
+    });
+    renderBuilder("/processor/pipelines/plc-sign");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        steps: [
+          expect.objectContaining({
+            operation: "/api/v1/security/cert-sign",
+            fileParameters: { certFile: "asset:x" },
+          }),
+        ],
+      }),
+    );
+    expect(uploadPipelineAsset).not.toHaveBeenCalled();
   });
 
   it("blocks saving an integration step with no account chosen", async () => {
