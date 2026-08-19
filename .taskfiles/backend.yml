@@ -65,19 +65,22 @@ tasks:
   dev:saas:
     desc: "Start SaaS backend against the current PR's Supabase preview branch"
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    vars:
+      PROFILES: '{{.PROFILES | default "dev"}}'
     cmds:
       # Don't move this check into a `sh:` var: dotenv is visible in cmds but not
       # during var evaluation, so the test would always see an empty value.
       - cmd: |
-          if [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
-            echo ">> SAAS_DEV_PROJECT_REF is not set, so the dev profile will refuse to start."
+          if [ "{{.PROFILES}}" = "dev" ] && [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
+            echo ">> SAAS_DEV_PROJECT_REF is not set."
             echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
             echo ">> Wanted the shared v3 project? Use 'task backend:staging:saas' instead."
+            exit 1
           fi
       - task: _run:saas
         vars:
           PORT: '{{.PORT}}'
-          PROFILES: '{{.PROFILES | default "dev"}}'
+          PROFILES: '{{.PROFILES}}'
           AIENGINE_URL: '{{.AIENGINE_URL}}'
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'

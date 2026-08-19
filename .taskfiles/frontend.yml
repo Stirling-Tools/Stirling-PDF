@@ -120,15 +120,15 @@ tasks:
       VITE_SUPABASE_URL:
         sh: |
           case "${SAAS_ENV:-dev}" in
-            staging) ref="${SAAS_STAGING_PROJECT_REF:-}" ;;
-            *)       ref="${SAAS_DEV_PROJECT_REF:-${SAAS_STAGING_PROJECT_REF:-}}" ;;
+            staging) ref="${SAAS_STAGING_PROJECT_REF:?set it in app/.env.saas.local}" ;;
+            *)       ref="${SAAS_DEV_PROJECT_REF:?set it in app/.env.saas.local, or run task staging:saas}" ;;
           esac
           echo "https://${ref}.supabase.co"
       VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY:
         sh: |
           case "${SAAS_ENV:-dev}" in
-            staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:-}" ;;
-            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:-${SAAS_STAGING_PUBLISHABLE_KEY:-}}" ;;
+            staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
           esac
     cmds:
       - 'echo ">> frontend Supabase target: $VITE_SUPABASE_URL"'
