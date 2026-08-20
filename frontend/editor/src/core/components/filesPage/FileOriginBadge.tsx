@@ -11,6 +11,11 @@ interface FileOriginBadgeProps {
   origin: FileOrigin;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
+  /**
+   * Override the hover text. The defaults are phrased for files; a folder
+   * wearing the same badge needs its own wording.
+   */
+  tooltip?: string;
 }
 
 const styles = {
@@ -44,6 +49,7 @@ const styles = {
 export function FileOriginBadge({
   origin,
   compact = false,
+  tooltip,
 }: FileOriginBadgeProps) {
   const { t } = useTranslation();
 
@@ -88,7 +94,7 @@ export function FileOriginBadge({
   );
 
   return (
-    <Tooltip label={config.tooltip} withinPortal>
+    <Tooltip label={tooltip ?? config.tooltip} withinPortal>
       {badge}
     </Tooltip>
   );

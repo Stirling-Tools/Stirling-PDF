@@ -10,8 +10,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Drawer,
   Group,
+  Menu,
   MultiSelect,
   Select,
+  Text,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -32,6 +34,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import CloudIcon from "@mui/icons-material/Cloud";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 import { stripBasePath } from "@app/constants/app";
@@ -56,7 +61,7 @@ import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
+import { FolderId, ROOT_FOLDER_ID, folderKind } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -65,6 +70,13 @@ import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
+import {
+  canListDirectory,
+  listDirectory,
+  readDiskFile,
+  type DiskFileEntry,
+} from "@app/services/localFolderContents";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
@@ -418,12 +430,105 @@ export default function FileManagerView() {
     [foldersById],
   );
 
+  // ─── read-through listing for a mounted local folder ────────────────────
+  // The directory is the source of truth: its contents are read fresh off
+  // the disk whenever the user is inside the folder, never ingested to show.
+  const currentFolder = currentFolderId
+    ? folders.foldersById.get(currentFolderId)
+    : undefined;
+  const currentLocalDirectory =
+    currentFolder && folderKind(currentFolder) === "local"
+      ? currentFolder.directory
+      : undefined;
+  const { setError: setFolderError } = folders;
+  const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
+  const [diskLoading, setDiskLoading] = useState(false);
+  useEffect(() => {
+    if (!currentLocalDirectory || !canListDirectory) {
+      setDiskEntries([]);
+      // Also stand the loading flag down: when the user navigates OUT of a
+      // mount mid-listing, the in-flight finally skips its reset (cancelled),
+      // and this branch is the only code that runs — without the reset the
+      // skeleton covers every folder for the rest of the session.
+      setDiskLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setDiskLoading(true);
+    listDirectory(currentLocalDirectory)
+      .then((listed) => {
+        if (!cancelled) setDiskEntries(listed ?? []);
+      })
+      .catch((err) => {
+        console.warn("[FileManagerView] disk listing failed", err);
+        if (!cancelled) {
+          setDiskEntries([]);
+          setFolderError(
+            err instanceof Error
+              ? `Could not read the folder: ${err.message}`
+              : "Could not read the folder.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDiskLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // The stable setter, not the context object: that changes identity on
+    // every folder mutation — including the setError call above, which would
+    // make a failing listing re-trigger itself.
+  }, [currentLocalDirectory, setFolderError]);
+
+  // Opening a disk file loads its bytes into the workbench — the one moment
+  // anything leaves the disk, and only because the user asked to work on it.
+  const openDiskFile = useCallback(
+    async (entry: DiskFileEntry) => {
+      try {
+        const file = await readDiskFile(entry);
+        if (!file) return;
+        clearFilesPageReturnRoute();
+        await addFiles([file], { selectFiles: true });
+        navActions.setWorkbench("viewer");
+        navigate("/");
+      } catch (err) {
+        folders.setError(
+          err instanceof Error
+            ? `Could not open ${entry.name}: ${err.message}`
+            : `Could not open ${entry.name}.`,
+        );
+      }
+    },
+    [addFiles, navActions, navigate, folders],
+  );
+
   const entries = useMemo<FilesPageEntry[]>(() => {
     // When searching, items may come from anywhere in the subtree, so we
     // expose a "parentPath" subtitle whenever the item's parent differs from
     // currentFolderId. When no search is active, every item is in the
     // current folder by definition and the subtitle is suppressed.
     const inSearch = search.length > 0;
+    // Inside a mounted folder the listing IS the directory; storage rows and
+    // subfolders don't apply there.
+    if (currentLocalDirectory) {
+      const needle = search.toLowerCase();
+      const compare: Record<
+        string,
+        (a: DiskFileEntry, b: DiskFileEntry) => number
+      > = {
+        "name-asc": (a, b) => a.name.localeCompare(b.name),
+        "name-desc": (a, b) => b.name.localeCompare(a.name),
+        "size-asc": (a, b) => a.sizeBytes - b.sizeBytes,
+        "size-desc": (a, b) => b.sizeBytes - a.sizeBytes,
+        "modified-asc": (a, b) => a.lastModified - b.lastModified,
+        "modified-desc": (a, b) => b.lastModified - a.lastModified,
+      };
+      return diskEntries
+        .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
+        .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
+        .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk }));
+    }
     return [
       ...visibleFolders.map<FilesPageEntry>((folder) => ({
         kind: "folder",
@@ -449,6 +554,9 @@ export default function FileManagerView() {
     filesPage.fileCountsByFolder,
     search,
     currentFolderId,
+    currentLocalDirectory,
+    diskEntries,
+    filesPage.sortMode,
     pathForFolderId,
   ]);
 
@@ -816,13 +924,47 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
+  // Per-destination availability for the New-folder menu. The reasons render
+  // inline as the disabled item's caption — the reason IS the information.
+  const serverFolderDisabledReason =
+    signInRequiredReason ??
+    (!uploadEnabled || !folders.serverReachable
+      ? t(
+          "filesPage.newFolderStorageDisabled",
+          "Server folder storage isn't enabled.",
+        )
+      : undefined);
+  const addExistingDisabledReason = canPickDirectory
+    ? undefined
+    : t(
+        "filesPage.folderKindChoice.localUnavailable",
+        "Available in the desktop app, which can see your disk.",
+      );
+
+  // "Add an existing folder" needs no dialog at all: the native picker is the
+  // whole interaction, and the directory's name is the folder's name. Landing
+  // inside the fresh mount is the confirmation.
+  const addExistingFolder = useCallback(async () => {
+    try {
+      const picked = await pickDirectory();
+      if (!picked) return;
+      const record = await folders.mountLocalFolder(picked.path, picked.name);
+      // The URL is the source of truth for folder selection (the pathname →
+      // state effect owns currentFolderId). Setting state directly here races
+      // that effect — it re-runs on the same commit's foldersById change with
+      // the old pathname and snaps the selection back to root.
+      navigate(`/files/${record.id}`);
+    } catch (err) {
+      folders.setError(
+        err instanceof Error
+          ? `Could not add the folder: ${err.message}`
+          : "Could not add the folder.",
+      );
+    }
+  }, [folders, navigate]);
+
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
-    // Guests can't use cloud folders at all - say so before any tab/storage
-    // hint, since switching tabs wouldn't help them.
-    if (signInRequiredReason) {
-      return signInRequiredReason;
-    }
     if (currentTab === "local") {
       return t(
         "filesPage.localFoldersUnavailable",
@@ -839,14 +981,35 @@ export default function FileManagerView() {
         "Switch to All or Cloud to create folders.",
       );
     }
-    if (!folders.serverReachable) {
+    // Inside a mounted folder there is nothing to create: its contents ARE
+    // the directory, and subfolders are made in the file explorer.
+    if (currentLocalDirectory) {
       return t(
-        "filesPage.newFolderStorageDisabled",
-        "Server folder storage isn't enabled. Ask your admin to turn it on.",
+        "filesPage.newFolderInLocalUnavailable",
+        "This folder mirrors a directory on disk — create subfolders in your file explorer.",
       );
     }
+    // Inside a server folder the subfolder inherits kind server, so the
+    // server-side blockers apply to the button itself — otherwise the dialog
+    // opens only to fail at submit with a raw error.
+    if (
+      currentFolder &&
+      folderKind(currentFolder) === "server" &&
+      serverFolderDisabledReason
+    ) {
+      return serverFolderDisabledReason;
+    }
+    // Reachability and storage no longer disable the button: those only rule
+    // out the server option, which the dialog now greys out individually —
+    // browser and disk folders remain creatable regardless.
     return null;
-  }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
+  }, [
+    currentTab,
+    currentLocalDirectory,
+    currentFolder,
+    serverFolderDisabledReason,
+    t,
+  ]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
@@ -948,7 +1111,9 @@ export default function FileManagerView() {
                       </Button>
                     </span>
                   </Tooltip>
-                ) : (
+                ) : folders.currentFolderId !== null ? (
+                  // Inside a folder there is nothing to choose: the subfolder
+                  // inherits its parent's kind, so plain click → name dialog.
                   <Button
                     variant="secondary"
                     size="sm"
@@ -957,6 +1122,73 @@ export default function FileManagerView() {
                   >
                     {t("filesPage.newFolder", "New folder")}
                   </Button>
+                ) : (
+                  // Root: the button IS the menu. The three destinations are
+                  // peers — none deserves to be the hidden one behind a
+                  // chevron — so every click shows all of them.
+                  <Menu shadow="md" position="bottom-end" withinPortal>
+                    <Menu.Target>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftSection={<CreateNewFolderIcon fontSize="small" />}
+                        rightSection={<ArrowDropDownIcon fontSize="small" />}
+                      >
+                        {t("filesPage.newFolder", "New folder")}
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<CreateNewFolderIcon fontSize="small" />}
+                        onClick={() => openNewFolderDialog(null, "virtual")}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.device",
+                          "New folder on this device",
+                        )}
+                        <Text size="xs" c="dimmed">
+                          {t(
+                            "filesPage.newFolderMenu.deviceHint",
+                            "Lives only on this device. Works offline.",
+                          )}
+                        </Text>
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<DriveFolderUploadIcon fontSize="small" />}
+                        disabled={Boolean(addExistingDisabledReason)}
+                        onClick={() => void addExistingFolder()}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.addExisting",
+                          "Add folder from this computer…",
+                        )}
+                        <Text size="xs" c="dimmed">
+                          {addExistingDisabledReason ??
+                            t(
+                              "filesPage.newFolderMenu.addExistingHint",
+                              "Its files stay exactly where they are.",
+                            )}
+                        </Text>
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<CloudIcon fontSize="small" />}
+                        disabled={Boolean(serverFolderDisabledReason)}
+                        onClick={() => openNewFolderDialog(null, "server")}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.server",
+                          "New folder on the server",
+                        )}
+                        <Text size="xs" c="dimmed">
+                          {serverFolderDisabledReason ??
+                            t(
+                              "filesPage.newFolderMenu.serverHint",
+                              "Synced to your account, available wherever you sign in.",
+                            )}
+                        </Text>
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 )}
                 <Button
                   size="sm"
@@ -1467,7 +1699,7 @@ export default function FileManagerView() {
           >
             <FileGrid
               entries={entries}
-              loading={loading}
+              loading={loading || diskLoading}
               currentTab={currentTab}
               searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
@@ -1479,6 +1711,7 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
+              onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
@@ -1509,7 +1742,15 @@ export default function FileManagerView() {
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
               onEmptyUpload={() => fileInputRef.current?.click()}
-              onEmptyCreateFolder={() => openNewFolderDialog()}
+              onEmptyCreateFolder={() =>
+                // At the root the kind must be said out loud — the context's
+                // default prefers the server, which a guest can't use. On this
+                // surface there is no menu, so the never-fails kind wins.
+                openNewFolderDialog(
+                  folders.currentFolderId,
+                  folders.currentFolderId === null ? "virtual" : undefined,
+                )
+              }
               newFolderDisabledReason={newFolderDisabledReason}
             />
             {isDraggingExternal && (
