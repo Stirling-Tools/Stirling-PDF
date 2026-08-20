@@ -14,6 +14,11 @@ jobs:
   playwright-e2e:
     name: playwright-e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    # The image already contains the Playwright browsers and all Linux
+    # dependencies. This keeps the matrix for per-browser reporting while
+    # avoiding three concurrent `playwright install --with-deps` runs.
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
     strategy:
       # One browser breaking must not mask a failure in another - report all.
       fail-fast: false
@@ -40,8 +45,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
-      - name: Install Playwright (${{ matrix.browser }})
-        run: task e2e:install -- ${{ matrix.browser }}
+      - name: Install frontend dependencies
+        run: task frontend:install
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
