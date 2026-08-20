@@ -13,11 +13,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import HistoryIcon from "@mui/icons-material/History";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -37,6 +39,8 @@ import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 import SaveToSharedModal from "@app/components/shared/SaveToSharedModal";
@@ -91,6 +95,12 @@ interface FileGridProps {
   onSaveToServer?: (file: StirlingFileStub) => void;
   /** Open the version-history modal for a file (only when it has >1 version). */
   onVersionHistory?: (file: StirlingFileStub) => void;
+  /** Download a copy (desktop: save a copy). */
+  onDownloadFile?: (file: StirlingFileStub) => void;
+  /** Open the rename dialog for a file. */
+  onRenameFile?: (file: StirlingFileStub) => void;
+  /** Save a second copy of the file into the library. */
+  onDuplicateFile?: (file: StirlingFileStub) => void;
   /** When set, the Save to server item renders disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
@@ -98,6 +108,8 @@ interface FileGridProps {
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
   currentTab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** A filter is applied; an empty result then means "no matches", not "no files". */
+  searchActive?: boolean;
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -113,6 +125,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     entries,
     loading,
     currentTab,
+    searchActive,
     serverReachable,
     onEmptyUpload,
     onEmptyCreateFolder,
@@ -124,15 +137,28 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }
 
   if (entries.length === 0) {
-    return (
+    const emptyState = (
       <EmptyState
         tab={currentTab}
+        searchActive={searchActive}
         serverReachable={serverReachable}
         onUpload={onEmptyUpload}
         onCreateFolder={onEmptyCreateFolder}
         newFolderDisabledReason={newFolderDisabledReason}
       />
     );
+    // When a filter empties the list view, keep the column headers in place and
+    // show the no-results message beneath them, rather than replacing the whole
+    // table. Grid view (cards, no headers) just shows the empty state.
+    if (viewMode === "list" && searchActive) {
+      return (
+        <>
+          <ListView {...props} />
+          {emptyState}
+        </>
+      );
+    }
+    return emptyState;
   }
 
   if (viewMode === "list") {
@@ -196,6 +222,8 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 interface EmptyStateProps {
   /** Drives copy + iconography. */
   tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** When true the empty list is the result of a filter, not a bare folder. */
+  searchActive?: boolean;
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -207,12 +235,35 @@ interface EmptyStateProps {
 
 function EmptyState({
   tab = "all",
+  searchActive = false,
   serverReachable = true,
   onUpload,
   onCreateFolder,
   newFolderDisabledReason,
 }: EmptyStateProps) {
   const { t } = useTranslation();
+
+  // A filter with no matches isn't an empty folder - say so, and skip the
+  // upload / new-folder CTAs since clearing the filter is the way out.
+  if (searchActive) {
+    return (
+      <div className="files-page-empty">
+        <span className="files-page-empty-icon">
+          <SearchIcon style={{ fontSize: "2.5rem" }} />
+        </span>
+        <div className="files-page-empty-title">
+          {t("filesPage.empty.noResults.title", "No matching files")}
+        </div>
+        <div className="files-page-empty-hint">
+          {t(
+            "filesPage.empty.noResults.hint",
+            "No files in this folder match your filter. Try a different term or clear the filter.",
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const { titleKey, titleFallback, hintKey, hintFallback } = (() => {
     switch (tab) {
       case "local":
@@ -333,24 +384,21 @@ function EmptyState({
   );
 }
 
-function GridView({
-  entries,
-  selectedFileIds,
-  activeWorkspaceFileIds,
-  onSelectFile,
-  onOpenFolder,
-  onOpenFile,
-  onMoveFiles,
-  onMoveFolder,
-  onRenameFolder,
-  onDeleteFolder,
-  onChangeFolderAppearance,
-  onRemoveFiles,
-  onPromptMoveFiles,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
-}: FileGridProps) {
+function GridView(props: FileGridProps) {
+  const {
+    entries,
+    selectedFileIds,
+    activeWorkspaceFileIds,
+    onSelectFile,
+    onOpenFolder,
+    onOpenFile,
+    onMoveFiles,
+    onMoveFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onChangeFolderAppearance,
+  } = props;
+  const menuHandlersFor = useFileMenuHandlers(props);
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
@@ -391,22 +439,7 @@ function GridView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onDoubleClick={() => onOpenFile(entry.file!)}
-              onRemove={() => onRemoveFiles([entry.file!.id])}
-              onMove={() => {
-                const target = selectedFileIds.has(entry.file!.id)
-                  ? Array.from(selectedFileIds)
-                  : [entry.file!.id];
-                onPromptMoveFiles(target);
-              }}
-              onSaveToServer={
-                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
-              }
-              onVersionHistory={
-                onVersionHistory
-                  ? () => onVersionHistory(entry.file!)
-                  : undefined
-              }
-              saveToServerDisabledReason={saveToServerDisabledReason}
+              {...menuHandlersFor(entry.file)}
             />
           );
         }
@@ -593,7 +626,286 @@ function PolicyBadges({ fileId }: { fileId: string }) {
   return <PolicyBadgeRow policies={badges} />;
 }
 
-interface FileCardProps {
+/** Sharing state for one file: may I write back, is it shared with me, and is
+ *  the server copy newer than the one these local bytes came from. */
+function useSharedFileFlags(file: StirlingFileStub) {
+  const { config } = useAppConfig();
+  const sharingEnabled =
+    config?.storageEnabled === true && config?.storageSharingEnabled === true;
+  const isSharedWithYou =
+    sharingEnabled &&
+    (file.remoteOwnedByCurrentUser === false ||
+      Boolean(file.remoteSharedViaLink));
+  return {
+    isSharedEditor: sharingEnabled && canEditSharedFile(file),
+    isSharedWithYou,
+    hasRemoteUpdate: isSharedWithYou && hasNewerSharedVersion(file),
+  };
+}
+
+/** Per-file actions. Shared verbatim by the grid card and the list row, and
+ *  kept in step with the file sidebar's kebab so both surfaces offer the same. */
+interface FileActionsMenuProps {
+  file: StirlingFileStub;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+  onOpen: () => void;
+  onMove: () => void;
+  onRemove: () => void;
+  onDownload?: () => void;
+  onRename?: () => void;
+  onDuplicate?: () => void;
+  onSaveToServer?: () => void;
+  onVersionHistory?: () => void;
+  saveToServerDisabledReason?: string | null;
+}
+
+function FileActionsMenu({
+  file,
+  triggerRef,
+  onOpen,
+  onMove,
+  onRemove,
+  onDownload,
+  onRename,
+  onDuplicate,
+  onSaveToServer,
+  onVersionHistory,
+  saveToServerDisabledReason,
+}: FileActionsMenuProps) {
+  const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
+  const DownloadIcon = useFileActionIcons().download;
+  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
+  const { fetchLatestCopy } = useSharedFileActions();
+  const { isSharedEditor, isSharedWithYou, hasRemoteUpdate } =
+    useSharedFileFlags(file);
+  const showSaveToServer =
+    Boolean(onSaveToServer) && file.remoteStorageId == null;
+  const showVersionHistory =
+    Boolean(onVersionHistory) && (file.versionNumber ?? 1) > 1;
+  return (
+    <>
+      <Menu shadow="md" position="bottom-end" withinPortal width={220}>
+        <Menu.Target>
+          <ActionIcon
+            ref={triggerRef}
+            variant="tertiary"
+            size="sm"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t("filesPage.fileMenu", "File actions")}
+            data-testid="file-card-actions"
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            leftSection={<OpenInNewIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen();
+            }}
+          >
+            {t("filesPage.addToWorkspace", "Add to workspace")}
+          </Menu.Item>
+          <OpenInNewWindowMenuItem file={file} />
+          <Menu.Item
+            leftSection={<DriveFileMoveIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove();
+            }}
+            data-testid="file-menu-move-to"
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
+
+          {(onDownload || onRename || onDuplicate) && <Menu.Divider />}
+          {onDownload && (
+            <Menu.Item
+              leftSection={<DownloadIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownload();
+              }}
+              data-testid="file-menu-download"
+            >
+              {terminology.download}
+            </Menu.Item>
+          )}
+          {onRename && (
+            <Menu.Item
+              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRename();
+              }}
+              data-testid="file-menu-rename"
+            >
+              {t("filesPage.rename", "Rename")}
+            </Menu.Item>
+          )}
+          {onDuplicate && (
+            <Menu.Item
+              leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate();
+              }}
+              data-testid="file-menu-duplicate"
+            >
+              {t("filesPage.duplicate", "Duplicate")}
+            </Menu.Item>
+          )}
+
+          {(showSaveToServer ||
+            showVersionHistory ||
+            isSharedEditor ||
+            isSharedWithYou) && <Menu.Divider />}
+          {/* Per-file Save to server; shown for local-only files. When
+              storage is off it stays visible but disabled with a tooltip. */}
+          {showSaveToServer && onSaveToServer && (
+            <Tooltip
+              label={saveToServerDisabledReason}
+              disabled={!saveToServerDisabledReason}
+              withinPortal
+              position="left"
+              multiline
+              w={240}
+            >
+              <Menu.Item
+                leftSection={<CloudUploadIcon fontSize="small" />}
+                disabled={Boolean(saveToServerDisabledReason)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveToServer();
+                }}
+                style={
+                  saveToServerDisabledReason
+                    ? { pointerEvents: "auto" }
+                    : undefined
+                }
+              >
+                {t("filesPage.saveToServer", "Save to server")}
+              </Menu.Item>
+            </Tooltip>
+          )}
+          {isSharedEditor && (
+            <Menu.Item
+              leftSection={<CloudSyncIcon fontSize="small" />}
+              data-testid="file-menu-save-to-shared"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSaveToSharedModal(true);
+              }}
+            >
+              {t("storageCollab.saveToShared", "Save to shared file")}
+            </Menu.Item>
+          )}
+          {isSharedWithYou && (
+            <Menu.Item
+              leftSection={<FileDownloadIcon fontSize="small" />}
+              rightSection={
+                hasRemoteUpdate ? (
+                  <Badge size="xs" color="orange" variant="filled">
+                    {t("storageCollab.newBadge", "New")}
+                  </Badge>
+                ) : undefined
+              }
+              data-testid="file-menu-get-latest"
+              onClick={(e) => {
+                e.stopPropagation();
+                void fetchLatestCopy(file);
+              }}
+            >
+              {t("storageCollab.getLatest", "Get latest version")}
+            </Menu.Item>
+          )}
+          {showVersionHistory && onVersionHistory && (
+            <Menu.Item
+              leftSection={<HistoryIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onVersionHistory();
+              }}
+            >
+              {t("filesPage.versionHistory", "Version history")}
+            </Menu.Item>
+          )}
+
+          <Menu.Divider />
+          <Menu.Item
+            color="red"
+            leftSection={<DeleteIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+          >
+            {t("filesPage.remove", "Delete")}
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+      {isSharedEditor && (
+        <SaveToSharedModal
+          opened={showSaveToSharedModal}
+          onClose={() => setShowSaveToSharedModal(false)}
+          file={file}
+        />
+      )}
+    </>
+  );
+}
+
+/** Binds one file's kebab handlers, so grid and list wire them identically. */
+function useFileMenuHandlers(
+  props: FileGridProps,
+): (file: StirlingFileStub) => FileMenuHandlers {
+  const {
+    selectedFileIds,
+    onRemoveFiles,
+    onPromptMoveFiles,
+    onSaveToServer,
+    onVersionHistory,
+    onDownloadFile,
+    onRenameFile,
+    onDuplicateFile,
+    saveToServerDisabledReason,
+  } = props;
+  return (file: StirlingFileStub) => ({
+    onRemove: () => onRemoveFiles([file.id]),
+    // A move acts on the whole selection when this file is part of it.
+    onMove: () =>
+      onPromptMoveFiles(
+        selectedFileIds.has(file.id) ? Array.from(selectedFileIds) : [file.id],
+      ),
+    onDownload: onDownloadFile ? () => onDownloadFile(file) : undefined,
+    onRename: onRenameFile ? () => onRenameFile(file) : undefined,
+    onDuplicate: onDuplicateFile ? () => onDuplicateFile(file) : undefined,
+    onSaveToServer: onSaveToServer ? () => onSaveToServer(file) : undefined,
+    onVersionHistory: onVersionHistory
+      ? () => onVersionHistory(file)
+      : undefined,
+    saveToServerDisabledReason,
+  });
+}
+
+/** Per-file kebab handlers, shared by the card and row wrappers. */
+interface FileMenuHandlers {
+  onRemove: () => void;
+  onMove: () => void;
+  onDownload?: () => void;
+  onRename?: () => void;
+  onDuplicate?: () => void;
+  /** Kebab Save to server; only fires when file is local-only. */
+  onSaveToServer?: () => void;
+  /** Open the version-history modal; shown only when file has >1 version. */
+  onVersionHistory?: () => void;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
+}
+
+interface FileCardProps extends FileMenuHandlers {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
@@ -604,14 +916,6 @@ interface FileCardProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
-  onRemove: () => void;
-  onMove: () => void;
-  /** Kebab Save to server; only fires when file is local-only. */
-  onSaveToServer?: () => void;
-  /** Open the version-history modal; shown only when file has >1 version. */
-  onVersionHistory?: () => void;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
-  saveToServerDisabledReason?: string | null;
 }
 
 function FileCard({
@@ -623,11 +927,7 @@ function FileCard({
   multiSelectActive,
   onClick,
   onDoubleClick,
-  onRemove,
-  onMove,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
+  ...menuHandlers
 }: FileCardProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -636,17 +936,7 @@ function FileCard({
     () => getFileDate({ lastModified: file.lastModified }),
     [file.lastModified],
   );
-  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
-  const { fetchLatestCopy } = useSharedFileActions();
-  const { config } = useAppConfig();
-  const sharingEnabled =
-    config?.storageEnabled === true && config?.storageSharingEnabled === true;
-  const isSharedEditor = sharingEnabled && canEditSharedFile(file);
-  const isSharedWithYou =
-    sharingEnabled &&
-    (file.remoteOwnedByCurrentUser === false ||
-      Boolean(file.remoteSharedViaLink));
-  const hasRemoteUpdate = isSharedWithYou && hasNewerSharedVersion(file);
+  const { hasRemoteUpdate } = useSharedFileFlags(file);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -779,158 +1069,40 @@ function FileCard({
         </div>
       </div>
       <div className="files-page-card-actions">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.fileMenu", "File actions")}
-              data-testid="file-card-actions"
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDoubleClick();
-              }}
-            >
-              {t("filesPage.addToWorkspace", "Add to workspace")}
-            </Menu.Item>
-            <OpenInNewWindowMenuItem file={file} />
-            <Menu.Item
-              leftSection={<DriveFileMoveIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMove();
-              }}
-              data-testid="file-menu-move-to"
-            >
-              {t("filesPage.moveTo", "Move to…")}
-            </Menu.Item>
-            {/* Per-file Save to server; shown for local-only files. When
-                storage is off it stays visible but disabled with a tooltip. */}
-            {onSaveToServer && file.remoteStorageId == null && (
-              <Tooltip
-                label={saveToServerDisabledReason}
-                disabled={!saveToServerDisabledReason}
-                withinPortal
-                position="left"
-                multiline
-                w={240}
-              >
-                <Menu.Item
-                  leftSection={<CloudUploadIcon fontSize="small" />}
-                  disabled={Boolean(saveToServerDisabledReason)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveToServer();
-                  }}
-                  style={
-                    saveToServerDisabledReason
-                      ? { pointerEvents: "auto" }
-                      : undefined
-                  }
-                >
-                  {t("filesPage.saveToServer", "Save to server")}
-                </Menu.Item>
-              </Tooltip>
-            )}
-            {isSharedEditor && (
-              <Menu.Item
-                leftSection={<CloudSyncIcon fontSize="small" />}
-                data-testid="file-menu-save-to-shared"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSaveToSharedModal(true);
-                }}
-              >
-                {t("storageCollab.saveToShared", "Save to shared file")}
-              </Menu.Item>
-            )}
-            {isSharedWithYou && (
-              <Menu.Item
-                leftSection={<FileDownloadIcon fontSize="small" />}
-                rightSection={
-                  hasRemoteUpdate ? (
-                    <Badge size="xs" color="orange" variant="filled">
-                      {t("storageCollab.newBadge", "New")}
-                    </Badge>
-                  ) : undefined
-                }
-                data-testid="file-menu-get-latest"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void fetchLatestCopy(file);
-                }}
-              >
-                {t("storageCollab.getLatest", "Get latest version")}
-              </Menu.Item>
-            )}
-            {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
-              <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVersionHistory();
-                }}
-              >
-                {t("filesPage.versionHistory", "Version history")}
-              </Menu.Item>
-            )}
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-            >
-              {t("filesPage.remove", "Delete")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </div>
-      {isSharedEditor && (
-        <SaveToSharedModal
-          opened={showSaveToSharedModal}
-          onClose={() => setShowSaveToSharedModal(false)}
+        <FileActionsMenu
           file={file}
+          triggerRef={kebabRef}
+          onOpen={onDoubleClick}
+          {...menuHandlers}
         />
-      )}
+      </div>
     </div>
   );
 }
 
-function ListView({
-  entries,
-  selectedFileIds,
-  activeWorkspaceFileIds,
-  onSelectFile,
-  onSetSelection,
-  onOpenFolder,
-  onOpenFile,
-  onMoveFiles,
-  onMoveFolder,
-  onRenameFolder,
-  onDeleteFolder,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
-  onChangeFolderAppearance,
-  onRemoveFiles,
-  onPromptMoveFiles,
-  sortMode,
-  onChangeSortMode,
-}: FileGridProps & {
-  sortMode?: FilesPageSortMode;
-  onChangeSortMode?: (next: FilesPageSortMode) => void;
-}) {
+function ListView(
+  props: FileGridProps & {
+    sortMode?: FilesPageSortMode;
+    onChangeSortMode?: (next: FilesPageSortMode) => void;
+  },
+) {
+  const {
+    entries,
+    selectedFileIds,
+    activeWorkspaceFileIds,
+    onSelectFile,
+    onSetSelection,
+    onOpenFolder,
+    onOpenFile,
+    onMoveFiles,
+    onMoveFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onChangeFolderAppearance,
+    sortMode,
+    onChangeSortMode,
+  } = props;
+  const menuHandlersFor = useFileMenuHandlers(props);
   const { t } = useTranslation();
 
   // Tri-state header checkbox state - computed from current entries.
@@ -1056,22 +1228,7 @@ function ListView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onOpen={() => onOpenFile(entry.file!)}
-              onRemove={() => onRemoveFiles([entry.file!.id])}
-              onMove={() => {
-                const target = selectedFileIds.has(entry.file!.id)
-                  ? Array.from(selectedFileIds)
-                  : [entry.file!.id];
-                onPromptMoveFiles(target);
-              }}
-              onSaveToServer={
-                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
-              }
-              onVersionHistory={
-                onVersionHistory
-                  ? () => onVersionHistory(entry.file!)
-                  : undefined
-              }
-              saveToServerDisabledReason={saveToServerDisabledReason}
+              {...menuHandlersFor(entry.file)}
             />
           );
         }
@@ -1268,7 +1425,7 @@ function FolderRow({
   );
 }
 
-interface FileRowProps {
+interface FileRowProps extends FileMenuHandlers {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
@@ -1278,14 +1435,6 @@ interface FileRowProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
-  onRemove: () => void;
-  onMove: () => void;
-  /** Kebab Save to server; only fires when file is local-only. */
-  onSaveToServer?: () => void;
-  /** Open the version-history modal; shown only when file has >1 version. */
-  onVersionHistory?: () => void;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
-  saveToServerDisabledReason?: string | null;
 }
 
 function FileRow({
@@ -1297,11 +1446,7 @@ function FileRow({
   multiSelectActive,
   onClick,
   onOpen,
-  onRemove,
-  onMove,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
+  ...menuHandlers
 }: FileRowProps) {
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1441,91 +1586,12 @@ function FileRow({
       <span role="gridcell">{fileSize}</span>
       <span role="gridcell">{fileDate}</span>
       <span role="gridcell">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              variant="tertiary"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.fileMenu", "File actions")}
-              data-testid="file-card-actions"
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen();
-              }}
-            >
-              {t("filesPage.addToWorkspace", "Add to workspace")}
-            </Menu.Item>
-            <OpenInNewWindowMenuItem file={file} />
-            <Menu.Item
-              leftSection={<DriveFileMoveIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMove();
-              }}
-            >
-              {t("filesPage.moveTo", "Move to…")}
-            </Menu.Item>
-            {/* Per-file Save to server; shown for local-only files. When
-              storage is off it stays visible but disabled with a tooltip. */}
-            {onSaveToServer && file.remoteStorageId == null && (
-              <Tooltip
-                label={saveToServerDisabledReason}
-                disabled={!saveToServerDisabledReason}
-                withinPortal
-                position="left"
-                multiline
-                w={240}
-              >
-                <Menu.Item
-                  leftSection={<CloudUploadIcon fontSize="small" />}
-                  disabled={Boolean(saveToServerDisabledReason)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveToServer();
-                  }}
-                  style={
-                    saveToServerDisabledReason
-                      ? { pointerEvents: "auto" }
-                      : undefined
-                  }
-                >
-                  {t("filesPage.saveToServer", "Save to server")}
-                </Menu.Item>
-              </Tooltip>
-            )}
-            {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
-              <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVersionHistory();
-                }}
-              >
-                {t("filesPage.versionHistory", "Version history")}
-              </Menu.Item>
-            )}
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-            >
-              {t("filesPage.remove", "Delete")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        <FileActionsMenu
+          file={file}
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          {...menuHandlers}
+        />
       </span>
     </div>
   );

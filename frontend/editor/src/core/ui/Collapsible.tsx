@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "@app/ui/Surface.css";
 import "@app/ui/Collapsible.css";
 
 export interface CollapsibleProps {
@@ -29,7 +30,9 @@ export function Collapsible({
 }: CollapsibleProps) {
   return (
     <div
-      className={["sui-collapsible", className ?? ""].filter(Boolean).join(" ")}
+      className={["sui-surface", "sui-collapsible", className ?? ""]
+        .filter(Boolean)
+        .join(" ")}
     >
       <button
         type="button"
