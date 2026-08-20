@@ -1,0 +1,52 @@
+/* ========== WORKSPACE FRAME ========== */
+/* The app's left region: a brand row spanning the full width, with the quick nav
+   rail and the sidebar side by side beneath it.
+
+   The brand has to be a sibling ABOVE the rail, not a child of the sidebar:
+   while the rail owned the left edge full-height it pushed the logo inward by
+   its own width, so the logo could never reach the corner. Shared by the editor
+   and the processor so the two can't drift apart on the most visible geometry in
+   the product. */
+.workspace-frame {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  flex-shrink: 0;
+  background-color: var(--c-bg);
+}
+
+/* Deliberately two classes deep: each app's own brand class (.file-sidebar-brand,
+   .portal-sidebar__logo) is applied to the same element, and a single-class rule
+   would win or lose on source order. Setting every box property here means both
+   apps get an identical row whichever stylesheet loads last. */
+.workspace-frame > .workspace-frame__brand {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  box-sizing: content-box;
+  height: var(--nav-brand-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* Inline padding matches the sidebar's gutter so the logo lines up with the
+     boxes below it rather than sitting flush to the window edge. */
+  padding: var(--nav-gutter) var(--nav-gutter) 0;
+  flex-shrink: 0;
+  /* The wordmark is dropped when the sidebar collapses, so this row narrows from
+     the full column width to rail + collapsed rail. Clip rather than reflow. */
+  overflow: hidden;
+}
+
+/* Under the shell's mobile breakpoint the sidebar becomes an off-canvas drawer
+   and the rail is hidden, so the frame stops being a two-column grid. The
+   drawer positions itself (fixed), and the mobile topbar carries its own brand,
+   so the hoisted brand row would be a second logo - drop it. */
+@media (max-width: 48rem) {
+  .workspace-frame {
+    display: block;
+    height: auto;
+  }
+  .workspace-frame__brand {
+    display: none;
+  }
+}

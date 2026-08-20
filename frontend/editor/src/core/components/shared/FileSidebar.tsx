@@ -32,8 +32,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
-import { AppSwitcher } from "@app/components/shared/AppSwitcher";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
+import { SidebarBrandHeader } from "@app/components/shared/SidebarBrandHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
@@ -78,8 +77,9 @@ import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
-const COLLAPSED_WIDTH = "3.5rem";
-const EXPANDED_WIDTH = "16.25rem"; // ~260px
+// Shared with the processor sidebar via tokens, so the two cannot drift.
+const COLLAPSED_WIDTH = "var(--sidebar-collapsed-w)";
+const EXPANDED_WIDTH = "var(--sidebar-w)";
 
 // Inlined to avoid a circular import with WatchedFoldersRegistration.
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
@@ -98,6 +98,8 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
+  /** The workspace renders the brand header itself, above the quick nav rail. */
+  brandHoisted?: boolean;
   /** Accessible name override for the toggle button. */
   toggleAriaLabel?: string;
   /** Icon override for the toggle button (e.g. back-arrow on /files). */
@@ -155,6 +157,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       collapsed = false,
       onToggleCollapse,
       onOpenSettings,
+      brandHoisted = false,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
@@ -943,25 +946,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
         )}
         <div className="file-sidebar-inner">
-          <div className="file-sidebar-brand">
-            <AppSwitcher collapsed={collapsed} />
-            {onToggleCollapse && (
-              <ActionIcon
-                variant="tertiary"
-                size="md"
-                className="file-sidebar-collapse-toggle"
-                onClick={() => onToggleCollapse()}
-                aria-label={
-                  toggleAriaLabel ??
-                  (collapsed
-                    ? t("fileSidebar.expand", "Expand sidebar")
-                    : t("fileSidebar.collapse", "Collapse sidebar"))
-                }
-              >
-                {toggleIcon ?? <SidebarToggleIcon size={18} />}
-              </ActionIcon>
-            )}
-          </div>
+          {/* Omitted when the workspace hoists the brand into its own top-left
+              header row, above the quick nav rail (see HomePage). */}
+          {!brandHoisted && (
+            <SidebarBrandHeader
+              collapsed={collapsed}
+              onToggleCollapse={onToggleCollapse}
+              toggleAriaLabel={toggleAriaLabel}
+              toggleIcon={toggleIcon}
+            />
+          )}
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
               search lives in the global super search (top bar), not here. */}

@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
@@ -57,6 +57,7 @@ export default function Workbench() {
     setPageEditorFunctions,
     setSidebarsVisible,
     customWorkbenchViews,
+    readerMode,
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
@@ -93,6 +94,18 @@ export default function Workbench() {
     (currentView === "viewer" && !!signingOverlay?.file);
   const showWorkbenchBar = topControlsAvailable && hasWorkbenchContent;
   const showFloatingSearch = topControlsAvailable && !hasWorkbenchContent;
+
+  // Reader is a distraction-free mode, so entering it retracts the tool row and
+  // leaving it brings the row back. Driven off the transition rather than
+  // derived, so the reopen tab still works while reading - the mode sets the
+  // starting state, it doesn't lock it.
+  const prevReaderModeRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode !== prevReaderModeRef.current) {
+      setViewerToolbarCollapsed(readerMode);
+      prevReaderModeRef.current = readerMode;
+    }
+  }, [readerMode]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);

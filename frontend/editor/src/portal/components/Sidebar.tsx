@@ -8,12 +8,10 @@ import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
 import { useOpenPlan } from "@portal/hooks/useOpenPlan";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
-import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { useGoToEditor } from "@portal/hooks/useGoToEditor";
 import { CloseIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -29,9 +27,18 @@ const NAV_SECTIONS: NavGroup[] = [
 ];
 
 /** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
-const MOBILE_QUERY = "(max-width: 48rem)";
+export const MOBILE_QUERY = "(max-width: 48rem)";
 
-export function Sidebar() {
+export interface SidebarProps {
+  /**
+   * The shell renders the brand and the collapse toggle itself, in its own
+   * top-left header row above the quick nav rail (see AppShell). Only the
+   * mobile drawer's close button stays here.
+   */
+  brandHoisted?: boolean;
+}
+
+export function Sidebar({ brandHoisted = false }: SidebarProps) {
   const { activeView, setActiveView } = useView();
   const {
     openSettings,
@@ -41,7 +48,6 @@ export function Sidebar() {
     toggleSidebarCollapsed,
   } = useUI();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const isMobile = useMediaQuery(MOBILE_QUERY, false, {
     getInitialValueInEffect: false,
   });
@@ -53,13 +59,7 @@ export function Sidebar() {
   // off-canvas drawer, so the icon-rail state never applies there.
   const collapsed = sidebarCollapsed && !isMobile;
 
-  // Editor and portal are one SPA when the editor serves this origin's root, so
-  // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
-  // needs a full page load.
-  const goToEditor = () => {
-    if (EDITOR_IS_SAME_APP) navigate(EDITOR_BASENAME);
-    else window.location.href = EDITOR_URL;
-  };
+  const goToEditor = useGoToEditor();
 
   // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
   // a takeover modal (matching the marketing prototype).
@@ -106,35 +106,47 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      <div className="portal-sidebar__logo">
-        <BrandSwitcher
-          current="processor"
-          onSwitch={goToEditor}
-          collapsed={collapsed}
-        />
+      {/* With the brand hoisted into the workspace frame, this row's only job is
+          hosting the mobile drawer's close button - which is hidden on desktop.
+          Rendering it anyway would still reserve --nav-brand-h there, starting
+          the nav 3rem below the quick nav rail beside it. */}
+      {(!brandHoisted || isMobile) && (
+        <div className="portal-sidebar__logo">
+          {!brandHoisted && (
+            <>
+              <BrandSwitcher
+                current="processor"
+                // Wrapped, not passed by reference: onSwitch hands over the target
+                // app id, which goToEditor would take as a tool path.
+                onSwitch={() => goToEditor()}
+                collapsed={collapsed}
+              />
 
-        <ActionIcon
-          variant="tertiary"
-          className="portal-sidebar__collapse"
-          aria-label={
-            collapsed
-              ? t("fileSidebar.expand", "Expand sidebar")
-              : t("fileSidebar.collapse", "Collapse sidebar")
-          }
-          onClick={toggleSidebarCollapsed}
-        >
-          <SidebarToggleIcon size={18} />
-        </ActionIcon>
+              <ActionIcon
+                variant="tertiary"
+                className="portal-sidebar__collapse"
+                aria-label={
+                  collapsed
+                    ? t("fileSidebar.expand", "Expand sidebar")
+                    : t("fileSidebar.collapse", "Collapse sidebar")
+                }
+                onClick={toggleSidebarCollapsed}
+              >
+                <SidebarToggleIcon size={18} />
+              </ActionIcon>
+            </>
+          )}
 
-        <ActionIcon
-          variant="tertiary"
-          className="portal-sidebar__close"
-          aria-label={t("portal.shell.topbar.closeNav")}
-          onClick={closeMobileNav}
-        >
-          <CloseIcon size={18} />
-        </ActionIcon>
-      </div>
+          <ActionIcon
+            variant="tertiary"
+            className="portal-sidebar__close"
+            aria-label={t("portal.shell.topbar.closeNav")}
+            onClick={closeMobileNav}
+          >
+            <CloseIcon size={18} />
+          </ActionIcon>
+        </div>
+      )}
 
       <nav className="portal-sidebar__nav">
         {NAV_SECTIONS.map((section) => (

@@ -24,6 +24,8 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
+import { QuickNavRail } from "@app/components/shared/QuickNavRail";
+import { SidebarBrandHeader } from "@app/components/shared/SidebarBrandHeader";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
@@ -40,6 +42,7 @@ import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
+import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
@@ -159,6 +162,20 @@ export default function HomePage() {
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
   }, [navigationState.workbench]);
+  // Reader minimises the left rail too, for the same distraction-free reason the
+  // tool panel and the viewer's tool row retract. Imperative (not folded into the
+  // `collapsed` prop) so the collapse toggle still works while reading, and it
+  // never writes to storage - a mode is not a stored preference.
+  const prevReaderModeRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode !== prevReaderModeRef.current) {
+      setFileSidebarCollapsed(
+        readerMode ? true : readPersistedSidebarCollapsed(),
+      );
+      prevReaderModeRef.current = readerMode;
+    }
+  }, [readerMode]);
+
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
 
@@ -200,6 +217,20 @@ export default function HomePage() {
       false);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
+
+  // Shared by the hoisted brand header's toggle and the sidebar itself, so the
+  // two can't drift. On /files the toggle is a "leave" affordance instead.
+  const handleSidebarToggle = useCallback(() => {
+    if (navigationState.workbench === "myFiles") {
+      navigate(EDITOR_BASENAME);
+      return;
+    }
+    setFileSidebarCollapsed((c) => {
+      const next = !c;
+      writePersistedSidebarCollapsed(next);
+      return next;
+    });
+  }, [navigationState.workbench, navigate]);
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -502,39 +533,44 @@ export default function HomePage() {
             className="flex-nowrap flex"
             bg="var(--c-bg)"
           >
-            <MyFilesAwareFileSidebar
-              ref={quickAccessRef}
-              active={navigationState.workbench === "myFiles"}
-              // /files always shows the rail collapsed - force it here so a
-              // deep-link/reload onto /files (no workbench transition) still
-              // collapses, and a manual expand can't stick.
-              collapsed={
-                navigationState.workbench === "myFiles" || fileSidebarCollapsed
-              }
-              toggleAriaLabel={
-                navigationState.workbench === "myFiles"
-                  ? t("fileSidebar.leaveMyFiles", "Leave My Files")
-                  : undefined
-              }
-              // Back-arrow on /files; burger elsewhere.
-              toggleIcon={
-                navigationState.workbench === "myFiles" ? (
-                  <ArrowBackIcon />
-                ) : undefined
-              }
-              onToggleCollapse={() => {
-                if (navigationState.workbench === "myFiles") {
-                  navigate(EDITOR_BASENAME);
-                  return;
+            {/* Left column: the brand spans the top row so the logo sits in the
+                true top-left corner, with the quick nav rail beginning beneath
+                it rather than pushing it inward. */}
+            <div className="workspace-frame">
+              <SidebarBrandHeader
+                className="workspace-frame__brand"
+                collapsed={
+                  navigationState.workbench === "myFiles" ||
+                  fileSidebarCollapsed
                 }
-                setFileSidebarCollapsed((c) => {
-                  const next = !c;
-                  writePersistedSidebarCollapsed(next);
-                  return next;
-                });
-              }}
-              onOpenSettings={() => setConfigModalOpen(true)}
-            />
+                toggleAriaLabel={
+                  navigationState.workbench === "myFiles"
+                    ? t("fileSidebar.leaveMyFiles", "Leave My Files")
+                    : undefined
+                }
+                toggleIcon={
+                  navigationState.workbench === "myFiles" ? (
+                    <ArrowBackIcon />
+                  ) : undefined
+                }
+                onToggleCollapse={handleSidebarToggle}
+              />
+              <QuickNavRail onOpenSettings={() => setConfigModalOpen(true)} />
+              <MyFilesAwareFileSidebar
+                ref={quickAccessRef}
+                brandHoisted
+                active={navigationState.workbench === "myFiles"}
+                // /files always shows the rail collapsed - force it here so a
+                // deep-link/reload onto /files (no workbench transition) still
+                // collapses, and a manual expand can't stick.
+                collapsed={
+                  navigationState.workbench === "myFiles" ||
+                  fileSidebarCollapsed
+                }
+                onToggleCollapse={handleSidebarToggle}
+                onOpenSettings={() => setConfigModalOpen(true)}
+              />
+            </div>
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}

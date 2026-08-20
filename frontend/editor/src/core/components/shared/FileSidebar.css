@@ -41,23 +41,14 @@
 .file-sidebar-brand {
   display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 0.375rem;
+  min-height: var(--nav-brand-h);
+  padding: 0 var(--nav-gutter);
   flex-shrink: 0;
 }
 
 .file-sidebar-collapse-toggle {
   margin-left: auto;
   flex-shrink: 0;
-}
-
-.file-sidebar[data-collapsed="true"] .file-sidebar-brand {
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {
-  margin-left: 0;
 }
 
 /* ---- Three floating nav-surface boxes (controls / files / footer) ---- */

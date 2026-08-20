@@ -1,0 +1,53 @@
+/* Settings + avatar, pinned to the bottom of the bar. */
+
+.quick-nav-rail-account {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* Same disc as the sidebar's account avatar was, at the same 28px - it is the
+   only identity cue left on this surface, so it shouldn't be the smallest thing
+   on the rail. Doubles as the settings button. */
+.quick-nav-rail-avatar {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background-color: var(--c-accent-text);
+  color: var(--c-text-on-primary);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* No colored disc behind an actual photo; keep it for the initials fallback. */
+.quick-nav-rail-avatar:has(.quick-nav-rail-avatar-img) {
+  background-color: transparent;
+}
+
+.quick-nav-rail-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.quick-nav-rail-avatar:hover {
+  filter: brightness(1.08);
+}
+
+.quick-nav-rail-avatar:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: 0.125rem;
+}

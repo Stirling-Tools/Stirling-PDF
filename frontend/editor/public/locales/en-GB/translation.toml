@@ -9187,6 +9187,13 @@ automate = "Automate"
 config = "Config"
 files = "Files"
 
+[quickNav]
+editor = "Editor"
+noProcessorAccess = "Ask an admin for processor access"
+processor = "Processor"
+reader = "Reader"
+toolUnavailable = "Not available in this deployment"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 

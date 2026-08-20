@@ -1,0 +1,133 @@
+/* ========== QUICK NAV RAIL ========== */
+/* Always-icon strip for switching between the product's top-level surfaces,
+   plus a group of quick actions. Icons match the sidebar's own action-row scale
+   (18px glyph in --c-text-subtle). One solid bar; the groups inside it are
+   separated by spacing. */
+
+/* The bar's own stack: groups top-down, account control pushed to the bottom. */
+.quick-nav-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+/* A group of related icons within the single bar. */
+.quick-nav-rail-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* Padded well past the glyph: the icon stays 18px to match the sidebar, but the
+   button is a 36px target - an 18px one is under the 24px minimum and hard to
+   hit. The padding is invisible, it only buys hit area. */
+.quick-nav-rail-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+/* LocalIcon renders an svg or img and the callers size it themselves; clamp it
+   to the sidebar's 18px icon scale regardless. */
+.quick-nav-rail-item svg,
+.quick-nav-rail-item img {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: inherit;
+  fill: currentColor;
+}
+
+/* The bare brand mark is taller than it is wide (71x79), so let its height drive
+   the width instead of being letterboxed into the square icon box above. */
+.quick-nav-rail-item .sui-brandmark {
+  width: auto;
+  height: 1.125rem;
+}
+
+/* Branded app icons keep their own fills rather than inheriting currentColor, so
+   they read as product marks and not as another monochrome glyph. */
+.quick-nav-rail-item[aria-disabled="true"] .sui-brandmark,
+.quick-nav-rail-item[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
+  filter: grayscale(1);
+}
+
+.quick-nav-rail-item:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+/* A tinted tile, not just a colour swap: the active-vs-rest colour change alone
+   is a hue shift with almost no lightness difference, so it fails as a sole
+   indicator, and a plain hover would otherwise out-rank the current item. Same
+   token pair the app's other active nav controls use (.sui-navitem.is-active,
+   .workbench-bar-view-btn.active, and the portal's collapsed icon rail). */
+.quick-nav-rail-item[data-current] {
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-text);
+}
+.quick-nav-rail-item[data-current]:hover {
+  background: var(--c-primary-subtle);
+}
+
+/* Dimmed via opacity, matching .file-sidebar-action-row.disabled - there is no
+   disabled text token. Still focusable so its tooltip can explain why. */
+.quick-nav-rail-item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.quick-nav-rail-item[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--c-text-subtle);
+}
+
+.quick-nav-rail-item:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+}
+
+/* Attention count. Sits on the icon rather than adding a slot, so a changing
+   count never shifts the rail. */
+.quick-nav-rail-badge {
+  position: absolute;
+  top: 0.125rem;
+  inset-inline-end: 0.125rem;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 0.1875rem;
+  border-radius: var(--radius-pill);
+  background: var(--c-danger);
+  color: var(--c-text-on-primary);
+  font-size: 0.5625rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 0.875rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Divides the core landing zones from the destinations and actions inside them.
+   Full-width of the bar's inner area so it reads as one continuous rule rather
+   than a floating dash. */
+.quick-nav-rail-divider {
+  width: 100%;
+  height: 0;
+  margin: var(--space-2) 0;
+  border: 0;
+  border-top: 1px solid var(--c-border);
+}
