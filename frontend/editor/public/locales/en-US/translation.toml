@@ -8680,6 +8680,7 @@ title = "Sources"
 connectSource = "Connect source"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Back to sources"
 backToSource = "Back to source setup"
 backToTypes = "All source types"

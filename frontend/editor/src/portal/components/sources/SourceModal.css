@@ -107,6 +107,13 @@ button.portal-source-modal__card:focus-visible {
   gap: 0.875rem;
 }
 
+/* The Advanced disclosure's revealed fields stack like the rest of the form. */
+.portal-source-modal__advanced-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
 .portal-source-modal__loading {
   display: flex;
   justify-content: center;

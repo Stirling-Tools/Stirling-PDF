@@ -4,6 +4,7 @@ import {
   Banner,
   Button,
   Checkbox,
+  Collapsible,
   FormField,
   Input,
   Modal,
@@ -29,6 +30,7 @@ import {
   defaultOptions,
   WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
+  type SourceFieldDef,
 } from "@portal/components/sources/sourceTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
@@ -155,6 +157,9 @@ export function SourceModal({
   );
   const [connField, setConnField] = useState("");
   const [connSaving, setConnSaving] = useState(false);
+  // The "Advanced" disclosure starts closed; on edit it opens if a stored value
+  // there differs from its default, so nothing non-standard hides behind it.
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Seed on every open: fresh catalogue for create, fetched record for edit.
   useEffect(() => {
@@ -170,6 +175,7 @@ export function SourceModal({
       setOptions(defaultOptions(OFFERED_TYPES[0]));
       setEnabled(true);
       setLoaded(null);
+      setShowAdvanced(false);
       return;
     }
     setStage("configure");
@@ -177,11 +183,17 @@ export function SourceModal({
     fetchSource(sourceId)
       .then((source) => {
         const resolved = typeFor(source.type);
+        const opts = optionsFor(resolved, source.options);
         setLoaded(source);
         setType(resolved);
         setName(source.name ?? "");
-        setOptions(optionsFor(resolved, source.options));
+        setOptions(opts);
         setEnabled(source.enabled ?? true);
+        setShowAdvanced(
+          resolved.fields.some(
+            (f) => f.advanced && (opts[f.key] ?? "") !== (f.defaultValue ?? ""),
+          ),
+        );
       })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
@@ -190,6 +202,7 @@ export function SourceModal({
   function chooseType(next: CreatableSourceType) {
     setType(next);
     setOptions(defaultOptions(next));
+    setShowAdvanced(false);
     setStage("configure");
   }
 
@@ -436,6 +449,90 @@ export function SourceModal({
     }
   }
 
+  function renderS3ConnectionControl(field: SourceFieldDef) {
+    return (
+      <S3ConnectionPicker
+        value={options[field.key] ?? ""}
+        onChange={(id) => setOption(field.key, id)}
+        onCreateNew={() => openConnectionStage(field.key, S3_CONNECTION_TYPE)}
+      />
+    );
+  }
+
+  function renderConnectionControl(field: SourceFieldDef) {
+    const connectionType = connectionTypeById(field.connectionTypeId ?? "");
+    return (
+      <ConnectionPicker
+        value={options[field.key] ?? ""}
+        onChange={(id) => setOption(field.key, id)}
+        integrationType={connectionType.integrationType}
+        createTypeId={field.connectionTypeId ?? ""}
+        presetId={field.connectionTypeId}
+        onCreateNew={() => openConnectionStage(field.key, connectionType)}
+      />
+    );
+  }
+
+  function renderSelectControl(field: SourceFieldDef) {
+    return (
+      <Select
+        value={options[field.key] ?? ""}
+        options={(field.options ?? []).map((o) => ({
+          value: o.value,
+          label: t(o.labelKey),
+        }))}
+        onChange={(value) => setOption(field.key, value ?? "")}
+      />
+    );
+  }
+
+  function renderInputControl(field: SourceFieldDef) {
+    return (
+      <Input
+        type={field.control === "password" ? "password" : undefined}
+        value={options[field.key] ?? ""}
+        placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+        onChange={(e) => setOption(field.key, e.target.value)}
+      />
+    );
+  }
+
+  function renderControl(field: SourceFieldDef) {
+    switch (field.control) {
+      case "s3Connection":
+        return renderS3ConnectionControl(field);
+      case "connection":
+        return renderConnectionControl(field);
+      case "select":
+        return renderSelectControl(field);
+      default:
+        return renderInputControl(field);
+    }
+  }
+
+  function renderField(field: SourceFieldDef) {
+    return (
+      <FormField
+        key={field.key}
+        label={t(field.labelKey)}
+        info={field.helperTextKey ? t(field.helperTextKey) : undefined}
+        required={field.required}
+      >
+        {renderControl(field)}
+      </FormField>
+    );
+  }
+
+  // A field can gate itself on another's current value (e.g. change detection
+  // only applies in consume mode), so a knob that does nothing never shows.
+  function fieldVisible(field: SourceFieldDef): boolean {
+    const cond = field.visibleWhen;
+    return !cond || (options[cond.key] ?? "") === cond.equals;
+  }
+
+  const visibleFields = type.fields.filter(fieldVisible);
+  const primaryFields = visibleFields.filter((field) => !field.advanced);
+  const advancedFields = visibleFields.filter((field) => field.advanced);
   const back = stageBack();
 
   return (
@@ -536,69 +633,19 @@ export function SourceModal({
                 </p>
               )}
 
-              {type.fields.map((field) => (
-                <FormField
-                  key={field.key}
-                  label={t(field.labelKey)}
-                  info={
-                    field.helperTextKey ? t(field.helperTextKey) : undefined
-                  }
-                  required={field.required}
+              {primaryFields.map((field) => renderField(field))}
+
+              {advancedFields.length > 0 && (
+                <Collapsible
+                  open={showAdvanced}
+                  onToggle={() => setShowAdvanced((v) => !v)}
+                  header={t("portal.sources.builder.advanced")}
                 >
-                  {field.control === "s3Connection" ? (
-                    <S3ConnectionPicker
-                      value={options[field.key] ?? ""}
-                      onChange={(connectionId) =>
-                        setOption(field.key, connectionId)
-                      }
-                      onCreateNew={() =>
-                        openConnectionStage(field.key, S3_CONNECTION_TYPE)
-                      }
-                    />
-                  ) : field.control === "connection" ? (
-                    <ConnectionPicker
-                      value={options[field.key] ?? ""}
-                      onChange={(connectionId) =>
-                        setOption(field.key, connectionId)
-                      }
-                      integrationType={
-                        connectionTypeById(field.connectionTypeId ?? "")
-                          .integrationType
-                      }
-                      createTypeId={field.connectionTypeId ?? ""}
-                      presetId={field.connectionTypeId}
-                      onCreateNew={() =>
-                        openConnectionStage(
-                          field.key,
-                          connectionTypeById(field.connectionTypeId ?? ""),
-                        )
-                      }
-                    />
-                  ) : field.control === "select" ? (
-                    <Select
-                      value={options[field.key] ?? ""}
-                      options={(field.options ?? []).map((o) => ({
-                        value: o.value,
-                        label: t(o.labelKey),
-                      }))}
-                      onChange={(value) => setOption(field.key, value ?? "")}
-                    />
-                  ) : (
-                    <Input
-                      type={
-                        field.control === "password" ? "password" : undefined
-                      }
-                      value={options[field.key] ?? ""}
-                      placeholder={
-                        field.placeholderKey
-                          ? t(field.placeholderKey)
-                          : undefined
-                      }
-                      onChange={(e) => setOption(field.key, e.target.value)}
-                    />
-                  )}
-                </FormField>
-              ))}
+                  <div className="portal-source-modal__advanced-fields">
+                    {advancedFields.map((field) => renderField(field))}
+                  </div>
+                </Collapsible>
+              )}
 
               {editingWebhookId && (
                 <FormField
