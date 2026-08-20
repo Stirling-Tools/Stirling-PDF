@@ -6,7 +6,6 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Menu, Progress, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -32,7 +31,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
-import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
@@ -54,12 +52,11 @@ import {
 } from "@app/types/workbenchBar";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import PrintIcon from "@mui/icons-material/Print";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
+import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
+import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
+import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
+import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
 
@@ -79,24 +76,6 @@ interface WorkbenchBarProps {
   viewerToolbarCollapsed?: boolean;
   /** Setter for the viewer tool-row retract state (owned by Workbench). */
   onCollapseViewerToolbar?: (collapsed: boolean) => void;
-}
-
-function renderWithTooltip(
-  node: React.ReactNode,
-  tooltip: React.ReactNode | undefined,
-) {
-  if (!tooltip) return node;
-  return (
-    <Tooltip
-      content={tooltip}
-      position="bottom"
-      offset={6}
-      arrow
-      portalTarget={typeof document !== "undefined" ? document.body : undefined}
-    >
-      <div className="workbench-bar-tooltip-wrapper">{node}</div>
-    </Tooltip>
-  );
 }
 
 export default function WorkbenchBar({
@@ -172,32 +151,6 @@ export default function WorkbenchBar({
     enforcingRun?.currentStep != null && enforcingRun.stepCount
       ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
       : undefined;
-  const makeEnforcingTooltip = (action: string): React.ReactNode => (
-    <Stack gap={6} py={2} w={200}>
-      <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
-        <Text size="xs" fw={600}>
-          {t(
-            "policy.blockingAction",
-            "{{action}} blocked while enforcing policy, please wait",
-            { action },
-          )}
-        </Text>
-      </Group>
-      {enforcingProgress != null ? (
-        <Progress
-          w="100%"
-          size="xs"
-          radius="xl"
-          value={enforcingProgress}
-          striped
-          animated
-        />
-      ) : (
-        <Loader size="xs" />
-      )}
-    </Stack>
-  );
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount =
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
@@ -368,6 +321,33 @@ export default function WorkbenchBar({
     if (selectedCount > 0) return terminology.downloadSelected;
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
+
+  const actionsDisabled =
+    totalItems === 0 || allButtonsDisabled || disableForFullscreen;
+
+  // Shared by the mobile overflow menu and the desktop icon cluster so the two
+  // stay in step; each renders the same actions in its own shape.
+  const globalActionProps: WorkbenchBarActionsProps = {
+    currentView,
+    isCustomView,
+    actionsDisabled,
+    policyEnforcing,
+    downloadLabel: downloadTooltip,
+    downloadIconName: icons.downloadIconName,
+    saveAsIconName: icons.saveAsIconName,
+    onPrint: handlePrint,
+    onExport: handleExportAll,
+    onClose: handleClose,
+  };
+
+  const toggleMobileTools = useCallback(
+    () => setMobileToolsExpanded((v) => !v),
+    [],
+  );
+  const handleRetractToolbar = useCallback(
+    () => onCollapseViewerToolbar?.(true),
+    [onCollapseViewerToolbar],
+  );
 
   const renderButton = useCallback(
     (btn: WorkbenchBarButtonConfig) => {
@@ -592,44 +572,16 @@ export default function WorkbenchBar({
                 ),
               )}
             </div>
-            {isMobile
-              ? sectionsWithButtons.some((s) => s.buttons.length > 0) && (
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    size="lg"
-                    className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-expand"
-                    onClick={() => setMobileToolsExpanded((v) => !v)}
-                    aria-expanded={mobileToolsExpanded}
-                    aria-label={
-                      mobileToolsExpanded
-                        ? t("workbenchBar.showFewerTools", "Collapse toolbar")
-                        : t("workbenchBar.showAllTools", "Show all tools")
-                    }
-                    leftSection={
-                      mobileToolsExpanded ? (
-                        <KeyboardArrowUpIcon sx={{ fontSize: "1.25rem" }} />
-                      ) : (
-                        <KeyboardArrowDownIcon sx={{ fontSize: "1.25rem" }} />
-                      )
-                    }
-                  />
-                )
-              : isViewer &&
-                onCollapseViewerToolbar && (
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
-                    onClick={() => onCollapseViewerToolbar(true)}
-                    aria-expanded
-                    aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
-                    title={t("workbenchBar.hideToolbar", "Hide toolbar")}
-                    leftSection={
-                      <KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />
-                    }
-                  />
-                )}
+            <WorkbenchBarToolbarHandle
+              isMobile={isMobile}
+              expanded={mobileToolsExpanded}
+              onToggleExpanded={toggleMobileTools}
+              onRetract={
+                isViewer && onCollapseViewerToolbar
+                  ? handleRetractToolbar
+                  : undefined
+              }
+            />
           </div>
         )}
 
@@ -637,212 +589,17 @@ export default function WorkbenchBar({
       <div className="workbench-bar-globals">
         {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
         {currentView === "viewer" && sharingEnabled && (
-          <ViewerShareButton
-            disabled={
-              totalItems === 0 || allButtonsDisabled || disableForFullscreen
-            }
+          <ViewerShareButton disabled={actionsDisabled} />
+        )}
+
+        {isMobile ? (
+          <WorkbenchBarMobileActions {...globalActionProps} />
+        ) : (
+          <WorkbenchBarDesktopActions
+            {...globalActionProps}
+            enforcingProgress={enforcingProgress}
           />
         )}
-
-        {isMobile && (
-          <Menu shadow="md" width={230} position="bottom-end">
-            <Menu.Target>
-              <ActionIcon
-                variant="tertiary"
-                hover={false}
-                className="workbench-bar-action-icon"
-                aria-label={t("workbenchBar.moreActions", "More actions")}
-              >
-                <MoreVertIcon sx={{ fontSize: "1.25rem" }} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              {currentView === "viewer" && (
-                <Menu.Item
-                  leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}
-                  disabled={
-                    totalItems === 0 ||
-                    allButtonsDisabled ||
-                    disableForFullscreen ||
-                    policyEnforcing
-                  }
-                  onClick={handlePrint}
-                >
-                  {t("workbenchBar.print", "Print PDF")}
-                </Menu.Item>
-              )}
-              {!isCustomView && (
-                <Menu.Item
-                  leftSection={
-                    <LocalIcon
-                      icon={icons.downloadIconName}
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
-                  }
-                  disabled={
-                    disableForFullscreen ||
-                    totalItems === 0 ||
-                    allButtonsDisabled ||
-                    policyEnforcing
-                  }
-                  onClick={() => void handleExportAll()}
-                >
-                  {downloadTooltip}
-                </Menu.Item>
-              )}
-              {!isCustomView && icons.saveAsIconName && (
-                <Menu.Item
-                  leftSection={
-                    <LocalIcon
-                      icon={icons.saveAsIconName}
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
-                  }
-                  disabled={
-                    disableForFullscreen ||
-                    totalItems === 0 ||
-                    allButtonsDisabled ||
-                    policyEnforcing
-                  }
-                  onClick={() => void handleExportAll(true)}
-                >
-                  {t("workbenchBar.saveAs", "Save As")}
-                </Menu.Item>
-              )}
-              {!isCustomView && (
-                <>
-                  <Menu.Divider />
-                  <Menu.Item
-                    leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
-                    disabled={
-                      totalItems === 0 ||
-                      allButtonsDisabled ||
-                      disableForFullscreen
-                    }
-                    onClick={() => void handleClose()}
-                  >
-                    {currentView === "fileEditor"
-                      ? t("workbenchBar.closeAll", "Close All")
-                      : t("workbenchBar.closePdf", "Close PDF")}
-                  </Menu.Item>
-                </>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-
-        {/* Print */}
-        {!isMobile &&
-          currentView === "viewer" &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={handlePrint}
-              disabled={
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                disableForFullscreen ||
-                policyEnforcing
-              }
-              aria-label={t("workbenchBar.print", "Print PDF")}
-            >
-              <PrintIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(t("workbenchBar.print", "Print PDF"))
-              : t("workbenchBar.print", "Print PDF"),
-          )}
-
-        {/* Download (file-level action — not relevant in custom views) */}
-        {!isMobile &&
-          !isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll()}
-              disabled={
-                disableForFullscreen ||
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                policyEnforcing
-              }
-              aria-label={downloadTooltip}
-            >
-              <LocalIcon
-                icon={icons.downloadIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(downloadTooltip)
-              : downloadTooltip,
-          )}
-
-        {/* Save As */}
-        {!isMobile &&
-          !isCustomView &&
-          icons.saveAsIconName &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll(true)}
-              disabled={
-                disableForFullscreen ||
-                totalItems === 0 ||
-                allButtonsDisabled ||
-                policyEnforcing
-              }
-              aria-label={t("workbenchBar.saveAs", "Save As")}
-            >
-              <LocalIcon
-                icon={icons.saveAsIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            policyEnforcing
-              ? makeEnforcingTooltip(t("workbenchBar.saveAs", "Save As"))
-              : t("workbenchBar.saveAs", "Save As"),
-          )}
-
-        {/* Separator: export group | close */}
-        {!isMobile && !isCustomView && (
-          <div className="workbench-bar-divider workbench-bar-globals-sep" />
-        )}
-
-        {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {!isMobile &&
-          !isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="tertiary"
-              hover={false}
-              className="workbench-bar-action-icon"
-              onClick={handleClose}
-              disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
-              }
-              aria-label={
-                currentView === "fileEditor"
-                  ? t("workbenchBar.closeAll", "Close All")
-                  : t("workbenchBar.closePdf", "Close PDF")
-              }
-            >
-              <CloseIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            currentView === "fileEditor"
-              ? t("workbenchBar.closeAll", "Close All")
-              : t("workbenchBar.closePdf", "Close PDF"),
-          )}
       </div>
     </div>
   );

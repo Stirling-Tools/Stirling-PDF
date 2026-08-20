@@ -1,15 +1,16 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Group, Modal, Text } from "@mantine/core";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { useMediaQuery } from "@mantine/hooks";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
+import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsMobileNavHeader";
+import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { consumePendingSettingsNav } from "@app/utils/appSettings";
@@ -48,7 +49,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   extraSections,
   hiddenSectionKeys,
 }) => {
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useIsMobile();
 
   const { signOut, user } = useAuth();
   const { t } = useTranslation();
@@ -241,26 +242,12 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                 : { borderRight: `1px solid ${colors.headerBorder}` }),
             }}
           >
-            {isMobile && (
-              <div
-                className="modal-header modal-nav-header"
-                style={{
-                  background: colors.navBg,
-                  borderBottom: `1px solid ${colors.headerBorder}`,
-                }}
-              >
-                <Text fw={700} size="lg">
-                  {t("settings.title", "Settings")}
-                </Text>
-                <ActionIcon
-                  variant="tertiary"
-                  onClick={onClose}
-                  aria-label={t("common.close", "Close")}
-                >
-                  <LocalIcon icon="close-rounded" width={18} height={18} />
-                </ActionIcon>
-              </div>
-            )}
+            <SettingsMobileNavHeader
+              show={isMobile}
+              onClose={onClose}
+              background={colors.navBg}
+              borderColor={colors.headerBorder}
+            />
             <div className="modal-nav-scroll">
               {configNavSections.map((section) => (
                 <div key={section.title} className="modal-nav-section">
@@ -308,12 +295,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                           >
                             {item.label}
                           </Text>
-                          {isMobile && (
-                            <ChevronRightRoundedIcon
-                              className="modal-nav-chevron"
-                              sx={{ fontSize: "1.25rem" }}
-                            />
-                          )}
+                          <SettingsNavChevron show={isMobile} />
                         </div>
                       );
                     })}
@@ -342,15 +324,10 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                 }}
               >
                 <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                  {isMobile && (
-                    <ActionIcon
-                      variant="tertiary"
-                      onClick={() => setMobilePane("nav")}
-                      aria-label={t("settings.backToSections", "All settings")}
-                    >
-                      <ArrowBackRoundedIcon sx={{ fontSize: "1.25rem" }} />
-                    </ActionIcon>
-                  )}
+                  <SettingsMobileBackButton
+                    show={isMobile}
+                    onClick={() => setMobilePane("nav")}
+                  />
                   <Text fw={700} size="lg" truncate>
                     {activeLabel}
                     {active === "plan" && notice ? (

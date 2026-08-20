@@ -6,9 +6,10 @@ import React, {
   useRef,
 } from "react";
 import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
+import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsMobileNavHeader";
+import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -355,26 +356,12 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
               : { borderRight: `1px solid ${colors.headerBorder}` }),
           }}
         >
-          {isMobile && (
-            <div
-              className="modal-header modal-nav-header"
-              style={{
-                background: colors.navBg,
-                borderBottom: `1px solid ${colors.headerBorder}`,
-              }}
-            >
-              <Text fw={700} size="lg">
-                {t("settings.title", "Settings")}
-              </Text>
-              <ActionIcon
-                variant="tertiary"
-                onClick={handleClose}
-                aria-label={t("settings.close", "Close")}
-              >
-                <LocalIcon icon="close-rounded" width={18} height={18} />
-              </ActionIcon>
-            </div>
-          )}
+          <SettingsMobileNavHeader
+            show={isMobile}
+            onClose={handleClose}
+            background={colors.navBg}
+            borderColor={colors.headerBorder}
+          />
           <div className="modal-nav-scroll">
             {configNavSections.map((section) => (
               <div key={section.title} className="modal-nav-section">
@@ -460,12 +447,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             />
                           )}
                         </Group>
-                        {isMobile && (
-                          <ChevronRightRoundedIcon
-                            className="modal-nav-chevron"
-                            sx={{ fontSize: "1.25rem" }}
-                          />
-                        )}
+                        <SettingsNavChevron show={isMobile} />
                       </div>
                     );
 
@@ -511,15 +493,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
               }}
             >
               <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-                {isMobile && (
-                  <ActionIcon
-                    variant="tertiary"
-                    onClick={() => void handleMobileBack()}
-                    aria-label={t("settings.backToSections", "All settings")}
-                  >
-                    <ArrowBackRoundedIcon sx={{ fontSize: "1.25rem" }} />
-                  </ActionIcon>
-                )}
+                <SettingsMobileBackButton
+                  show={isMobile}
+                  onClick={() => void handleMobileBack()}
+                />
                 <Text fw={700} size="lg" truncate>
                   {activeLabel}
                 </Text>
