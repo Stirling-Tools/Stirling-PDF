@@ -1,5 +1,5 @@
-/* Slim strip at the top of the main column hosting the shared search bar.
-   Deliberately unpainted: only the input itself shows, on the page ground. */
+/* Unpainted strip at the top of the main column. Height matches the sidebar's
+   logo row (.portal-sidebar__logo, 56px) so the search lines up with the brand. */
 .portal-searchbar {
   display: flex;
   align-items: center;
