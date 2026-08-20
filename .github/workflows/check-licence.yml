@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   check-licence:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner

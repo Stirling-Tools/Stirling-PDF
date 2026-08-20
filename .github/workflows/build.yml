@@ -37,6 +37,7 @@ jobs:
     timeout-minutes: 3
     outputs:
       build: ${{ steps.changes.outputs.build }}
+      backend: ${{ steps.changes.outputs.backend }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
@@ -61,8 +62,11 @@ jobs:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     name: Prime shared Gradle cache
+    if: needs.files-changed.outputs.project == 'true'
     needs: [files-changed]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -116,6 +120,7 @@ jobs:
           key: ${{ steps.gradle-cache-key.outputs.key }}
 
   build:
+    if: needs.files-changed.outputs.backend == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
@@ -194,7 +199,7 @@ jobs:
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, build, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/check-licence.yml
@@ -213,7 +218,14 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      needs.files-changed.outputs.project == 'true' &&
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.build.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-generateOpenApiDocs.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-licence.result)
     needs:
       [
         files-changed,
@@ -319,6 +331,7 @@ jobs:
     if: always()
     needs:
       - files-changed
+      - gradle-cache-prime
       - build
       - db-migration-test
       - check-generateOpenApiDocs
@@ -346,6 +359,7 @@ jobs:
         env:
           RESULTS: |
             files-changed=${{ needs.files-changed.result }}
+            gradle-cache-prime=${{ needs.gradle-cache-prime.result }}
             build=${{ needs.build.result }}
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}

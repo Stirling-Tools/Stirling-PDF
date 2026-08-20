@@ -462,7 +462,10 @@ jobs:
             });
 
   cleanup-v2-deployment:
-    environment: pr-preview
+    # Tearing a preview down is not a deployment - no deployment object.
+    environment:
+      name: pr-preview
+      deployment: false
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
@@ -557,5 +560,5 @@ jobs:
       - name: Cleanup temporary files
         if: always()
         run: |
-          rm -f ../private.key
+          rm -f ../private.key docker-compose.yml storybook.tgz
         continue-on-error: true
