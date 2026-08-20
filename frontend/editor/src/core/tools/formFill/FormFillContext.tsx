@@ -60,8 +60,22 @@ class FormValuesStore {
 
   private _values: Record<string, string> = {};
 
+  /**
+   * Snapshot for useSyncExternalStore. `_values` is mutated in place to keep
+   * per-keystroke writes cheap, so returning it directly would hand React a
+   * reference that never changes — subscribers would never re-render and any
+   * memo keyed on it would stay stale. Copy lazily instead: the cost is paid
+   * once per change, and only by the components that read all values.
+   */
+  private _snapshot: Record<string, string> = {};
+  private _snapshotVersion = -1;
+
   get values(): Record<string, string> {
-    return this._values;
+    if (this._snapshotVersion !== this._version) {
+      this._snapshot = { ...this._values };
+      this._snapshotVersion = this._version;
+    }
+    return this._snapshot;
   }
 
   private _version = 0;
