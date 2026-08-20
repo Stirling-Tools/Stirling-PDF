@@ -9,12 +9,29 @@ ci: &ci
 
 build: &build
   - *ci
+  - buildSrc/**
   - build.gradle
   - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
   - .github/workflows/check-licence.yml
+
+# Backend build inputs. This is intentionally broader than `build`: Java and
+# backend resource changes must exercise the backend matrix even when Gradle
+# build scripts themselves are unchanged.
+backend: &backend
+  - *ci
+  - *build
+  - gradle/**
+  - gradle.properties
+  - gradlew
+  - gradlew.bat
+  - settings.gradle
+  - app/(common|core|proprietary|saas)/src/(main|test)/java/**
+  - "app/(common|core|proprietary|saas)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - scripts/db-migration/**
+  - .github/workflows/backend-build.yml
 
 openapi: &openapi
   - *ci
