@@ -54,6 +54,9 @@ class FileRunEventServiceTest {
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
+        // A leader unless a test says otherwise: most of these are about team scoping, which is
+        // what a leader sees. The member narrowing has its own tests.
+        lenient().when(authority.canEditPolicies()).thenReturn(true);
     }
 
     private FileRunEvent given(FailureKind kind, Long teamId, String fileId) {
@@ -291,7 +294,7 @@ class FileRunEventServiceTest {
     }
 
     @Nested
-    @DisplayName("team scoping")
+    @DisplayName("read scoping")
     class Scoping {
 
         @Test
@@ -302,6 +305,68 @@ class FileRunEventServiceTest {
             assertThat(service.list(null, null, 50))
                     .extracting(FileRunEvent::fileId)
                     .containsExactly("mine");
+        }
+
+        @Test
+        void aMemberReadsOnlyTheFailuresTheyCaused() {
+            // Reporting is open to a member, so reading their own back is what lets us tell them
+            // anything at all. A colleague's must not come with it.
+            store.record(RecordFailure.forEditor(FailureKind.UNKNOWN, TEAM, ACTOR, "mine", "boom"));
+            store.record(
+                    RecordFailure.forEditor(
+                            FailureKind.UNKNOWN, TEAM, "colleague@example.com", "theirs", "boom"));
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThat(service.list(null, null, 50))
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactly("mine");
+        }
+
+        @Test
+        void aMemberWithNoResolvableNameReadsNothingRatherThanEverything() {
+            // Narrowing to "mine" needs a name to narrow by. Dropping the filter would hand the
+            // whole team to someone who may not have it.
+            given(FailureKind.UNKNOWN, TEAM, "mine");
+            when(authority.canEditPolicies()).thenReturn(false);
+            when(userService.getCurrentUsername()).thenReturn(null);
+
+            assertThat(service.list(null, null, 50)).isEmpty();
+        }
+
+        @Test
+        void aMemberCannotActOnAColleaguesRowEvenKnowingItsId() {
+            // Refusing the read is not enough on its own: an id learned any other way must not work
+            // either. Reported as not-found, so trying does not confirm the row exists.
+            FileRunEvent theirs =
+                    store.record(
+                            RecordFailure.forEditor(
+                                    FailureKind.UNKNOWN,
+                                    TEAM,
+                                    "colleague@example.com",
+                                    "theirs",
+                                    "boom"));
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "DISMISS", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+
+            assertThat(store.find(theirs.id(), TEAM).orElseThrow().status())
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void aMemberMayCloseTheirOwn() {
+            // Someone who fixes their own problem should not have to ask a leader to clear the row.
+            FileRunEvent mine =
+                    store.record(
+                            RecordFailure.forEditor(
+                                    FailureKind.UNKNOWN, TEAM, ACTOR, "mine", "boom"));
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThat(service.dispatch(mine.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
         }
 
         @Test
@@ -399,7 +464,7 @@ class FileRunEventServiceTest {
             service.report(
                     new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
 
-            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            FileRunEvent event = store.list(TEAM, null, null, null, 10).getFirst();
             assertThat(event.kind()).isEqualTo(FailureKind.INPUT_PASSWORD_PROTECTED);
             assertThat(event.origin()).isEqualTo(FailureOrigin.TOOL);
             assertThat(event.fileId()).isEqualTo("f-1");
@@ -412,16 +477,32 @@ class FileRunEventServiceTest {
             // session.
             service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
 
-            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            FileRunEvent event = store.list(TEAM, null, null, null, 10).getFirst();
             assertThat(event.teamId()).isEqualTo(TEAM);
             assertThat(event.actor()).isEqualTo(ACTOR);
+        }
+
+        @Test
+        void stillFilesTheRowUnderTheTeamWhenTheReporterCannotBeNamed() {
+            // Recording is open to everyone and takes the caller's team, not their read scope: a
+            // reporter who cannot be named reads nothing back, but the row is still the team's
+            // rather than dropping into the unteamed bucket every team shares. No role stub either,
+            // since recording never asks.
+            when(userService.getCurrentUsername()).thenReturn(null);
+
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+
+            assertThat(store.list(TEAM, null, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::teamId)
+                    .isEqualTo(TEAM);
         }
 
         @Test
         void recordsAnUnrecognisedCodeAsUnknownRatherThanDroppingIt() {
             service.report(new EditorFailureReport("ocr", "E999", List.of("f-1"), "no idea"));
 
-            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+            assertThat(store.list(TEAM, null, null, null, 10).getFirst().kind())
                     .isEqualTo(FailureKind.UNKNOWN);
         }
 
@@ -429,7 +510,7 @@ class FileRunEventServiceTest {
         void recordsAnAbsentCodeAsUnknown() {
             service.report(new EditorFailureReport("ocr", null, List.of("f-1"), "network died"));
 
-            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+            assertThat(store.list(TEAM, null, null, null, 10).getFirst().kind())
                     .isEqualTo(FailureKind.UNKNOWN);
         }
 
@@ -439,7 +520,7 @@ class FileRunEventServiceTest {
                     new EditorFailureReport(
                             "compress", "E004", List.of("f-1", "f-2", "f-3"), "boom"));
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .hasSize(3)
                     .extracting(FileRunEvent::fileId)
                     .containsExactlyInAnyOrder("f-1", "f-2", "f-3");
@@ -451,7 +532,7 @@ class FileRunEventServiceTest {
             service.report(
                     new EditorFailureReport("compress", "E004", List.of("f-1"), "boom again"));
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .singleElement()
                     .extracting(FileRunEvent::occurrences)
                     .isEqualTo(2);
@@ -461,7 +542,7 @@ class FileRunEventServiceTest {
         void recordsOneUnattributedIncidentWhenNoFileWasNamed() {
             service.report(new EditorFailureReport("compress", "E004", List.of(), "boom"));
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .singleElement()
                     .extracting(FileRunEvent::fileId)
                     .isNull();
@@ -476,7 +557,7 @@ class FileRunEventServiceTest {
 
             service.report(new EditorFailureReport("compress", "E004", many, "boom"));
 
-            assertThat(store.list(TEAM, null, null, 200)).hasSize(60);
+            assertThat(store.list(TEAM, null, null, null, 200)).hasSize(60);
         }
 
         @Test
@@ -486,7 +567,7 @@ class FileRunEventServiceTest {
             service.report(
                     new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
 
-            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            FileRunEvent event = store.list(TEAM, null, null, null, 10).getFirst();
             assertThat(event.detail()).contains("remove-password");
             assertThat(event.fileId()).isEqualTo("f-1");
         }
@@ -499,7 +580,7 @@ class FileRunEventServiceTest {
                     new EditorFailureReport(
                             "compress", "E004", List.of("f-1"), "Failed on Q4 report.pdf"));
 
-            assertThat(store.list(TEAM, null, null, 10).getFirst().detail())
+            assertThat(store.list(TEAM, null, null, null, 10).getFirst().detail())
                     .isEqualTo("compress: Failed on Q4 report.pdf");
         }
 
@@ -540,7 +621,7 @@ class FileRunEventServiceTest {
             reportedBy("alice@example.com", "a-1");
             reportedBy("bob@example.com", "b-1");
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .extracting(FileRunEvent::actor)
                     .containsExactlyInAnyOrder("alice@example.com", "bob@example.com");
         }
@@ -550,7 +631,7 @@ class FileRunEventServiceTest {
             reportedBy("alice@example.com", "a-1");
             reportedBy("alice@example.com", "a-2");
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .extracting(FileRunEvent::fileId)
                     .containsExactlyInAnyOrder("a-1", "a-2");
         }
@@ -560,7 +641,7 @@ class FileRunEventServiceTest {
             reportedBy("alice@example.com", "a-1");
             reportedBy("alice@example.com", "a-1");
 
-            assertThat(store.list(TEAM, null, null, 10))
+            assertThat(store.list(TEAM, null, null, null, 10))
                     .singleElement()
                     .extracting(FileRunEvent::occurrences)
                     .isEqualTo(2);
@@ -612,8 +693,11 @@ class FileRunEventServiceTest {
         }
 
         @Test
-        void aColleaguesIncidentIsUntouched() {
-            // File ids come from the client, so naming one must not close someone else's row.
+        void aColleaguesIncidentIsUntouchedEvenForALeader() {
+            // File ids come from the client, so naming one must not close someone else's row. The
+            // caller here is a leader, who reads the whole team: this path narrows to their own
+            // rows
+            // regardless, since a null actor would otherwise match every unattributed row.
             store.record(
                     RecordFailure.forEditor(
                             FailureKind.UNKNOWN, TEAM, "employee@example.com", "f-1", "theirs"));

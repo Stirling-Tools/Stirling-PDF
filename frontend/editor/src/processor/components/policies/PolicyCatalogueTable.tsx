@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
+import { column, DataTable, type DataTableColumn } from "@app/ui";
 import type { CatalogueEntry } from "@processor/api/policies";
-import { PolicyCategoryBadge } from "@processor/components/policies/PolicyCategoryIcon";
-import "@processor/views/Policies.css";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 
 interface PolicyCatalogueTableProps {
   entries: CatalogueEntry[];
@@ -15,10 +14,9 @@ interface PolicyCatalogueTableProps {
 }
 
 /**
- * The policy catalogue as a proper data table (Policy / Enforces / Applies to /
- * Docs / Status), replacing the stacked full-width cards that read as "blocky".
- * Same shared Table + StatusBadge + Chip primitives the Sources, Documents and
- * Home policy tables use, so every list page in the processor now reads alike.
+ * The policy catalogue as a data table (Policy / Enforces / Applies to / Docs /
+ * Status). The status column resolves per row to a state badge, an info chip
+ * (coming soon / requires AI), or a "Set up" call to action.
  */
 export function PolicyCatalogueTable({
   entries,
@@ -28,109 +26,82 @@ export function PolicyCatalogueTable({
 }: PolicyCatalogueTableProps) {
   const { t } = useTranslation();
 
-  const columns = useMemo<TableColumn<CatalogueEntry>[]>(
+  const columns = useMemo<DataTableColumn<CatalogueEntry>[]>(
     () => [
-      {
+      column.entity({
         key: "policy",
         header: t("processor.policies.table.policy", "Policy"),
-        render: (entry) => (
-          <div className="processor-policies__cell">
-            <PolicyCategoryBadge category={entry.category} />
-            <strong className="processor-policies__cell-name">
-              {t(entry.category.label)}
-            </strong>
-          </div>
-        ),
-      },
-      {
+        sortable: true,
+        icon: (entry) => policyCategoryIcon(entry.category.id),
+        primary: (entry) => t(entry.category.label),
+      }),
+      column.text({
         key: "enforces",
         header: t("processor.policies.table.enforces", "Enforces"),
-        render: (entry) => (
-          <div className="processor-policies__rulechips">
-            {entry.config.rules.map((r) => (
-              <Chip key={r} accent="neutral" size="sm">
-                {t(r)}
-              </Chip>
-            ))}
-          </div>
-        ),
-      },
-      {
+        get: (entry) => entry.config.rules.map((r) => t(r)).join(", "),
+      }),
+      column.muted({
         key: "scope",
         header: t("processor.policies.table.appliesTo", "Applies to"),
-        render: (entry) => (
-          <span className="processor-policies__muted">
-            {t(entry.config.scopeLabel)}
-          </span>
-        ),
-      },
-      {
+        sortable: true,
+        get: (entry) => t(entry.config.scopeLabel),
+      }),
+      column.number({
         key: "docs",
         header: t("processor.policies.table.docs", "Docs enforced"),
-        align: "right",
-        width: "8rem",
-        render: (entry) => (
-          <span className="processor-policies__docs">
-            {entry.policy ? entry.policy.stats.enforced.toLocaleString() : "—"}
-          </span>
-        ),
-      },
-      {
+        sortable: true,
+        get: (entry) => (entry.policy ? entry.policy.stats.enforced : null),
+        format: (n) => n.toLocaleString(),
+      }),
+      column.badge({
         key: "status",
         header: t("processor.policies.table.status", "Status"),
-        align: "right",
-        width: "8.5rem",
-        render: (entry) => {
+        sortable: true,
+        // Every state reads as one badge; the "set up" affordance is the row
+        // itself (click + chevron), so there's no bespoke button in the cell.
+        get: (entry) => {
           if (entry.category.comingSoon) {
-            // One consistent neutral chip for every "Upgrade to Enterprise" —
-            // the same action should read the same on every row.
-            return (
-              <Chip accent="neutral" size="sm">
-                {t("processor.policies.card.comingSoon")}
-              </Chip>
-            );
+            return {
+              tone: "neutral",
+              label: t("processor.policies.card.comingSoon"),
+            };
           }
           if (isLocked?.(entry)) {
-            return (
-              <Chip accent="neutral" size="sm">
-                {lockedLabel ?? t("processor.policies.card.requiresAiEngine")}
-              </Chip>
-            );
+            return {
+              tone: "neutral",
+              label:
+                lockedLabel ?? t("processor.policies.card.requiresAiEngine"),
+            };
           }
           if (entry.policy) {
             const paused = entry.policy.state.status === "paused";
-            return (
-              <StatusBadge tone={paused ? "warning" : "success"} size="sm">
-                {paused
-                  ? t("processor.policies.status.paused")
-                  : t("processor.policies.status.active")}
-              </StatusBadge>
-            );
+            return {
+              tone: paused ? "warning" : "success",
+              label: paused
+                ? t("processor.policies.status.paused")
+                : t("processor.policies.status.active"),
+            };
           }
-          return (
-            <Button size="sm" variant="secondary" onClick={() => onOpen(entry)}>
-              {t("processor.policySummary.action.setUp")}
-            </Button>
-          );
+          return {
+            tone: "neutral",
+            label: t("processor.policySummary.action.setUp"),
+          };
         },
-      },
+      }),
     ],
     [t, onOpen, isLocked, lockedLabel],
   );
 
   return (
-    <Table<CatalogueEntry>
-      className="processor-policies__table"
+    <DataTable<CatalogueEntry>
       columns={columns}
       rows={entries}
       rowKey={(e) => e.category.id}
-      onRowClick={(entry) =>
-        entry.category.comingSoon || isLocked?.(entry)
-          ? undefined
-          : onOpen(entry)
+      onRowClick={onOpen}
+      isRowInteractive={(e) =>
+        !(e.category.comingSoon || (isLocked?.(e) ?? false))
       }
-      // A category with no policy yet renders a "set up" button, which opens the same thing.
-      rowsContainControls
+      rowAffordance="chevron"
     />
   );
 }

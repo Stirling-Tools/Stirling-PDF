@@ -57,16 +57,57 @@ tasks:
       - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
         platforms: [linux, darwin]
 
+  # SaaS backend. dev:saas -> the PR's preview branch, staging:saas -> shared v3,
+  # PROFILES=none -> production against your own SAAS_DB_*. Production has no named
+  # task on purpose. Use `none`, not an empty value: Go template `default` treats ""
+  # as absent and would resolve back to dev.
+
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase"
-    # `dotenv:` reads from the root Taskfile's directory (".") because this
-    # subtaskfile is included with `dir: .`.
+    desc: "Start SaaS backend against the current PR's Supabase preview branch"
+    dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    vars:
+      PROFILES: '{{.PROFILES | default "dev"}}'
+    cmds:
+      # Don't move this check into a `sh:` var: dotenv is visible in cmds but not
+      # during var evaluation, so the test would always see an empty value.
+      - cmd: |
+          if [ "{{.PROFILES}}" = "dev" ] && [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
+            echo ">> SAAS_DEV_PROJECT_REF is not set."
+            echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
+            echo ">> Wanted the shared v3 project? Use 'task backend:staging:saas' instead."
+            exit 1
+          fi
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: '{{.PROFILES}}'
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  staging:saas:
+    desc: "Start SaaS backend against the shared v3 staging project"
+    cmds:
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: staging
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  _run:saas:
+    internal: true
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
-      # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
       PROFILES: '{{.PROFILES | default "dev"}}'
+      # Built here rather than inline in the cmds below: the Windows line is an
+      # unquoted YAML scalar wrapping a cmd.exe string, so a nested {{if ne .X
+      # "none"}} needs escaped quotes that reach the Go template as literal
+      # backslashes and fail with `unexpected "\" in operand`.
+      PROFILE_ARGS: '{{if ne .PROFILES "none"}}--spring.profiles.include={{.PROFILES}}{{end}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
@@ -77,9 +118,11 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
+      # PROFILE_ARGS is empty when PROFILES=none, i.e. the bare `saas` profile
+      # against SAAS_DB_* (production).
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args=\"{{.PROFILE_ARGS}}\"{{end}}"
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
+      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args='{{.PROFILE_ARGS}}'{{end}}
         platforms: [linux, darwin]
 
   build:

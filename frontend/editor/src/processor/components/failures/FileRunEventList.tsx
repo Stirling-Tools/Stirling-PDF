@@ -72,7 +72,7 @@ export function FileRunEventList() {
   const debugPanel = !import.meta.env.DEV ? null : (
     <div className="processor-failures__debug">
       <Button variant="secondary" size="sm" onClick={() => void refresh()}>
-        Refresh failures
+        {t("processor.failures.debug.refresh", "Refresh failures")}
       </Button>
       <Button
         variant="secondary"
@@ -80,14 +80,36 @@ export function FileRunEventList() {
         disabled={clearing || (events?.length ?? 0) === 0}
         onClick={() => void dismissAll()}
       >
-        {clearing ? "Dismissing..." : `Dismiss all (${events?.length ?? 0})`}
+        {clearing
+          ? t("processor.failures.debug.dismissing", "Dismissing...")
+          : t(
+              "processor.failures.debug.dismissAll",
+              "Dismiss all ({{total}})",
+              {
+                total: events?.length ?? 0,
+              },
+            )}
       </Button>
       <Button
         variant="secondary"
         size="sm"
         onClick={() => setShowJson((shown) => !shown)}
       >
-        {showJson ? "Hide" : "Show"} raw JSON ({events?.length ?? 0})
+        {showJson
+          ? t(
+              "processor.failures.debug.hideJson",
+              "Hide raw JSON ({{total}})",
+              {
+                total: events?.length ?? 0,
+              },
+            )
+          : t(
+              "processor.failures.debug.showJson",
+              "Show raw JSON ({{total}})",
+              {
+                total: events?.length ?? 0,
+              },
+            )}
       </Button>
       <Button
         variant="secondary"
@@ -98,7 +120,7 @@ export function FileRunEventList() {
           )
         }
       >
-        Copy JSON
+        {t("processor.failures.debug.copyJson", "Copy JSON")}
       </Button>
       {showJson && (
         <pre className="processor-failures__debug-json">

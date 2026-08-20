@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook as baseRenderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
@@ -20,10 +22,28 @@ function meReturning(processorAccess: boolean) {
   return { data: { user: { processorAccess } } };
 }
 
+// A fresh client per render, so one test's cached answer can't satisfy the
+// next — each case exercises a cold cache unless it deliberately shares one.
+let client: QueryClient;
+
+function renderHook<T>(cb: () => T) {
+  return baseRenderHook(cb, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+}
+
 describe("useProcessorAccess", () => {
   beforeEach(() => {
+    // The hook now remembers the last answer across mounts, so without this a
+    // prior test's result seeds the next one.
+    localStorage.clear();
     get.mockReset();
     currentUserId = null;
+    client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
+    });
   });
 
   it("reports the backend's answer for the signed-in user", async () => {
@@ -82,10 +102,29 @@ describe("useProcessorAccess", () => {
     expect(first.result.current).toBe(false);
     first.unmount();
 
-    // The failure isn't sticky.
+    // The failure isn't sticky — a cold cache asks again.
+    client.clear();
     get.mockResolvedValue(meReturning(true));
     const second = renderHook(() => useProcessorAccess());
     await waitFor(() => expect(second.result.current).toBe(true));
+  });
+
+  it("shows the last known answer at first paint, then revalidates", async () => {
+    // What stops the switcher and the footer's "Open ..." row popping in a
+    // request late on every mount.
+    currentUserId = "admin-1";
+    get.mockResolvedValue(meReturning(true));
+    const first = renderHook(() => useProcessorAccess());
+    await waitFor(() => expect(first.result.current).toBe(true));
+    first.unmount();
+
+    client.clear();
+    get.mockResolvedValue(meReturning(false));
+    const second = renderHook(() => useProcessorAccess());
+    // Seeded from the remembered answer before the request lands...
+    expect(second.result.current).toBe(true);
+    // ...and corrected once the backend disagrees.
+    await waitFor(() => expect(second.result.current).toBe(false));
   });
 
   it("ignores a response that lands after unmount", async () => {

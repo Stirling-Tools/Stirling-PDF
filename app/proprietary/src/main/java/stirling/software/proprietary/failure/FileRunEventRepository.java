@@ -20,26 +20,33 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
      * As {@link #findByTeamAndStatus} but for a set of statuses, e.g. the open ones. The kind
      * filter is in the query, before the limit: filtering an already-limited page could return
      * nothing while matching rows exist.
+     *
+     * <p>{@code actor} narrows to one person's own failures. Null means the whole team, which only
+     * a leader ever asks for: see {@code FileRunEventService#readScope}.
      */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.status in :statuses"
-                    + " and (:kindId is null or e.kindId = :kindId) order by e.lastSeenAt desc")
+                    + " and (:kindId is null or e.kindId = :kindId)"
+                    + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatusIn(
             @Param("teamId") Long teamId,
             @Param("statuses") List<FileRunEventStatus> statuses,
             @Param("kindId") String kindId,
+            @Param("actor") String actor,
             Pageable pageable);
 
     /** As {@link #findByTeamAndStatusIn} but for exactly one status, for the surface's filters. */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.status = :status"
-                    + " and (:kindId is null or e.kindId = :kindId) order by e.lastSeenAt desc")
+                    + " and (:kindId is null or e.kindId = :kindId)"
+                    + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatus(
             @Param("teamId") Long teamId,
             @Param("status") FileRunEventStatus status,
             @Param("kindId") String kindId,
+            @Param("actor") String actor,
             Pageable pageable);
 
     /**

@@ -163,6 +163,10 @@ export const mantineTheme = createTheme({
     CloseButton: { defaultProps: { "aria-label": "Close" } },
     Modal: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
     Drawer: { defaultProps: { closeButtonProps: { "aria-label": "Close" } } },
+    // The processor's md default radius (8px) is right for cards and buttons but
+    // rounds a 20px checkbox into a circle. Pin it to the smaller radius the
+    // editor's checkboxes use so the box reads as a checkbox.
+    Checkbox: { styles: { input: { borderRadius: "var(--radius-sm)" } } },
   },
   fontFamily: "var(--font-sans)",
   fontFamilyMonospace: "var(--font-mono)",

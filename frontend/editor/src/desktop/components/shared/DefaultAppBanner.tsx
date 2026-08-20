@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
 
 export const DefaultAppBanner: React.FC = () => {
@@ -15,7 +15,7 @@ export const DefaultAppBanner: React.FC = () => {
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   return (
-    <InfoBanner
+    <AppBanner
       icon="picture-as-pdf-rounded"
       message={t(
         "defaultApp.prompt.message",

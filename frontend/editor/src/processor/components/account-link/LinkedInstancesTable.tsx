@@ -1,13 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import {
-  Button,
-  Card,
-  EmptyState,
-  StatusBadge,
-  Table,
-  type TableColumn,
-} from "@app/ui";
+import { column, DataTable, type DataTableColumn, EmptyState } from "@app/ui";
 import type { LinkedInstanceRow } from "@processor/api/link";
 
 interface Props {
@@ -53,81 +46,71 @@ export function LinkedInstancesTable({
   revokingId,
 }: Props) {
   const { t } = useTranslation();
-  const cols: TableColumn<LinkedInstanceRow>[] = [
-    {
+  const cols: DataTableColumn<LinkedInstanceRow>[] = [
+    column.entity({
       key: "name",
       header: t("processor.accountLink.instances.columns.instance", "Instance"),
-      render: (i) => (
-        <div className="processor-link__cell-stack">
-          <span className="processor-link__cell-strong">
-            {i.name ??
-              t("processor.accountLink.instances.unnamed", "Unnamed instance")}
-          </span>
-          <code className="processor-link__device-id">{i.deviceId}</code>
-        </div>
-      ),
-    },
-    {
+      sortable: true,
+      primary: (i) =>
+        i.name ??
+        t("processor.accountLink.instances.unnamed", "Unnamed instance"),
+      note: (i) => i.deviceId,
+    }),
+    column.badge({
       key: "status",
       header: t("processor.accountLink.instances.columns.status", "Status"),
-      render: (i) =>
-        i.revoked ? (
-          <StatusBadge tone="danger" size="sm">
-            {t("processor.accountLink.instances.revoked", "Revoked")}
-          </StatusBadge>
-        ) : (
-          <StatusBadge tone="success" size="sm">
-            {t("processor.accountLink.instances.active", "Active")}
-          </StatusBadge>
-        ),
-    },
-    {
+      sortable: true,
+      get: (i) =>
+        i.revoked
+          ? {
+              tone: "danger",
+              label: t("processor.accountLink.instances.revoked", "Revoked"),
+            }
+          : {
+              tone: "success",
+              label: t("processor.accountLink.instances.active", "Active"),
+            },
+    }),
+    column.muted({
       key: "lastSeen",
       header: t(
         "processor.accountLink.instances.columns.lastSeen",
         "Last seen",
       ),
-      render: (i) => (
-        <span className="processor-link__muted">
-          {relativeTime(i.lastSeenAt, t)}
-        </span>
-      ),
-    },
-    {
+      sortable: true,
+      // Sort on the real ISO timestamp, not the "3d ago" label.
+      sortBy: (i) => i.lastSeenAt ?? undefined,
+      get: (i) => relativeTime(i.lastSeenAt, t),
+    }),
+    column.muted({
       key: "created",
       header: t("processor.accountLink.instances.columns.linked", "Linked"),
-      render: (i) => (
-        <span className="processor-link__muted">
-          {relativeTime(i.createdAt, t)}
-        </span>
-      ),
-    },
-    {
+      sortable: true,
+      sortBy: (i) => i.createdAt ?? undefined,
+      get: (i) => relativeTime(i.createdAt, t),
+    }),
+    column.actions({
       key: "actions",
-      header: (
-        <span className="sr-only">
-          {t("processor.accountLink.instances.columns.actions", "Actions")}
-        </span>
-      ),
-      align: "right",
-      render: (i) =>
-        i.revoked ? null : (
-          <Button
-            variant="secondary"
-            accent="danger"
-            size="sm"
-            loading={revokingId === i.instanceId}
-            onClick={() => onRevoke(i)}
-          >
-            {t("processor.accountLink.instances.revoke", "Revoke")}
-          </Button>
-        ),
-    },
+      get: (i) =>
+        i.revoked
+          ? []
+          : [
+              {
+                label: t("processor.accountLink.instances.revoke", "Revoke"),
+                tone: "danger",
+                loading: revokingId === i.instanceId,
+                onClick: () => onRevoke(i),
+              },
+            ],
+    }),
   ];
 
   return (
-    <Card padding="none">
-      {instances.length === 0 ? (
+    <DataTable<LinkedInstanceRow>
+      columns={cols}
+      rows={instances}
+      rowKey={(i) => String(i.instanceId)}
+      empty={
         <EmptyState
           size="compact"
           title={t(
@@ -139,13 +122,7 @@ export function LinkedInstancesTable({
             "Link this org's account, then register your self-hosted instances to see them here.",
           )}
         />
-      ) : (
-        <Table
-          columns={cols}
-          rows={instances}
-          rowKey={(i) => String(i.instanceId)}
-        />
-      )}
-    </Card>
+      }
+    />
   );
 }

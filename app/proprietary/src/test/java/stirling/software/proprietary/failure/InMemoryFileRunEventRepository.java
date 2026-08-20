@@ -54,9 +54,18 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         return kindId == null || kindId.equals(entity.getKindId());
     }
 
+    /** Null means the whole team, matching the JPQL's {@code :actor is null} branch. */
+    private static boolean sameActor(FileRunEventEntity entity, String actor) {
+        return actor == null || actor.equals(entity.getActor());
+    }
+
     @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
-            Long teamId, FileRunEventStatus status, String kindId, Pageable pageable) {
+            Long teamId,
+            FileRunEventStatus status,
+            String kindId,
+            String actor,
+            Pageable pageable) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -64,7 +73,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                         e ->
                                                 sameTeam(e, teamId)
                                                         && e.getStatus() == status
-                                                        && sameKind(e, kindId))
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
                                 .toList()),
                 pageable);
     }
@@ -142,7 +152,11 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
 
     @Override
     public List<FileRunEventEntity> findByTeamAndStatusIn(
-            Long teamId, List<FileRunEventStatus> statuses, String kindId, Pageable pageable) {
+            Long teamId,
+            List<FileRunEventStatus> statuses,
+            String kindId,
+            String actor,
+            Pageable pageable) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -150,7 +164,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                         e ->
                                                 sameTeam(e, teamId)
                                                         && statuses.contains(e.getStatus())
-                                                        && sameKind(e, kindId))
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
                                 .toList()),
                 pageable);
     }

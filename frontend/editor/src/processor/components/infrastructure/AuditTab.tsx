@@ -2,15 +2,14 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
-  Card,
+  column,
+  DataTable,
+  type DataTableColumn,
   EmptyState,
   MetricCard,
   MetricStrip,
-  StatusBadge,
-  Table,
   Tabs,
   type TabItem,
-  type TableColumn,
 } from "@app/ui";
 import { useTier } from "@processor/contexts/TierContext";
 import { useSectionFlags } from "@processor/hooks/useAsync";
@@ -22,10 +21,8 @@ import {
 } from "@processor/api/infrastructure";
 import { AuditExportModal } from "@processor/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
-import { TableSkeleton } from "@processor/components/infrastructure/TableSkeleton";
 import {
   AUDIT_CAT_LABEL,
-  AUDIT_CAT_TONE,
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
 } from "@processor/components/infrastructure/infraFormat";
@@ -63,57 +60,52 @@ export function AuditTab() {
     },
   ];
 
-  const cols: TableColumn<AuditEvent>[] = [
-    {
+  const cols: DataTableColumn<AuditEvent>[] = [
+    column.mono({
       key: "timestamp",
       header: t("processor.infrastructure.audit.columns.timestamp"),
-      render: (e) => (
-        <span className="processor-infra__mono">{e.timestamp}</span>
-      ),
-    },
-    {
+      sortable: true,
+      get: (e) => e.timestamp,
+    }),
+    column.text({
       key: "event",
       header: t("processor.infrastructure.audit.columns.event"),
-      render: (e) => (
-        <div className="processor-infra__event">
-          <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
-            {t(AUDIT_CAT_LABEL[e.category])}
-          </StatusBadge>
-          <span>{e.action}</span>
-        </div>
-      ),
-    },
-    {
+      sortable: true,
+      // "Category: action" on one line - the category as a bold label, no
+      // status-coloured dot. Colour is reserved for the Status column, where it
+      // actually signals an outcome.
+      label: (e) => t(AUDIT_CAT_LABEL[e.category]),
+      get: (e) => e.action,
+    }),
+    column.mono({
       key: "actor",
       header: t("processor.infrastructure.audit.columns.actor"),
-      render: (e) => <span className="processor-infra__mono">{e.actor}</span>,
-    },
-    {
+      sortable: true,
+      get: (e) => e.actor,
+    }),
+    column.text({
       key: "target",
       header: t("processor.infrastructure.audit.columns.target"),
-      render: (e) => e.target,
-    },
-    {
+      sortable: true,
+      get: (e) => e.target,
+    }),
+    column.badge({
       key: "status",
       header: t("processor.infrastructure.audit.columns.status"),
-      render: (e) => (
-        <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {t(AUDIT_STATUS_LABEL[e.status])}
-        </StatusBadge>
-      ),
-    },
-    {
+      sortable: true,
+      get: (e) => ({
+        tone: AUDIT_TONE[e.status],
+        label: t(AUDIT_STATUS_LABEL[e.status]),
+      }),
+    }),
+    column.number({
       key: "latency",
       header: t("processor.infrastructure.audit.columns.latency"),
-      align: "right",
-      render: (e) => (
-        <span className="processor-infra__mono">
-          {t("processor.infrastructure.audit.latencyValue", {
-            value: e.latencyMs,
-          })}
-        </span>
-      ),
-    },
+      sortable: true,
+      get: (e) => e.latencyMs,
+      format: (n) =>
+        t("processor.infrastructure.audit.latencyValue", { value: n }),
+    }),
   ];
 
   const state = useAuditLog(tier);
@@ -179,33 +171,33 @@ export function AuditTab() {
         />
       )}
 
-      <Card padding="none">
-        {isLoading && <TableSkeleton rows={6} cols={6} />}
-        {!isLoading && forbidden && (
-          <EmptyState
-            size="compact"
-            title={t("processor.infrastructure.audit.forbidden.title")}
-            description={t(
-              "processor.infrastructure.audit.forbidden.description",
-            )}
-          />
-        )}
-        {!isLoading && !forbidden && isEmpty && (
-          <EmptyState
-            size="compact"
-            title={t("processor.infrastructure.audit.empty.title")}
-            description={t("processor.infrastructure.audit.empty.description")}
-          />
-        )}
-        {!isEmpty && data && (
-          <Table
-            columns={cols}
-            rows={rows}
-            rowKey={(e) => e.id}
-            empty={t("processor.infrastructure.audit.noEventsInCategory")}
-          />
-        )}
-      </Card>
+      <DataTable
+        columns={cols}
+        rows={rows}
+        rowKey={(e) => e.id}
+        loading={isLoading}
+        empty={
+          forbidden ? (
+            <EmptyState
+              size="compact"
+              title={t("processor.infrastructure.audit.forbidden.title")}
+              description={t(
+                "processor.infrastructure.audit.forbidden.description",
+              )}
+            />
+          ) : isEmpty ? (
+            <EmptyState
+              size="compact"
+              title={t("processor.infrastructure.audit.empty.title")}
+              description={t(
+                "processor.infrastructure.audit.empty.description",
+              )}
+            />
+          ) : (
+            t("processor.infrastructure.audit.noEventsInCategory")
+          )
+        }
+      />
     </div>
   );
 }
