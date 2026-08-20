@@ -42,9 +42,10 @@ runs:
           curl --fail --silent --show-error --location --http1.1 \
             --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
             "${release_url}/task_checksums.txt" --output "${checksums}"
-          grep "  ${task_file}$" "${checksums}" \
-            | sed "s#  ${task_file}$#  ${archive}#" \
-            | sha256sum -c -
+          (
+            cd "${RUNNER_TEMP}"
+            grep "  ${task_file}$" "${checksums}" | sha256sum -c -
+          )
           tar -xzf "${archive}" -C "${install_dir}" task
         fi
         echo "${install_dir}" >> "${GITHUB_PATH}"
