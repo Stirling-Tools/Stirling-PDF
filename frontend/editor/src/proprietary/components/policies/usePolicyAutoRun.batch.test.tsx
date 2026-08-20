@@ -63,6 +63,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       // by the orchestrator; Security (order 1) therefore runs first.
       classification: {
         configured: true,
+        runsOnEditor: true,
         status: "active",
         backendId: "backend-classification",
         runOn: "upload",
@@ -72,6 +73,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       },
       security: {
         configured: true,
+        runsOnEditor: true,
         status: "active",
         backendId: "backend-security",
         runOn: "upload",

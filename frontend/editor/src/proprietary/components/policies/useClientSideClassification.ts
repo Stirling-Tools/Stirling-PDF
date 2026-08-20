@@ -65,9 +65,7 @@ export function useClientSideClassification(): void {
     policy?.configured &&
     policy.status === "active" &&
     policy.backendId &&
-    (!policy.sources ||
-      policy.sources.length === 0 ||
-      policy.sources.includes("editor")),
+    policy.runsOnEditor,
   );
 
   useEffect(() => {

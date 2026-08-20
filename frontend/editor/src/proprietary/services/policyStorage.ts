@@ -19,6 +19,7 @@ function defaultState(categoryId: string): PolicyState {
     configured: false,
     status: "default",
     sources: ["editor"],
+    runsOnEditor: true,
     scopeTypes: [],
     // Empty by default; the wizard defaults the reviewer to the signed-in user.
     reviewerEmail: "",
@@ -64,6 +65,12 @@ export function loadPolicies(): PoliciesByCategory {
     if (merged.order == null) merged.order = index;
     out[cat.id] = merged;
   });
+  // Builder-made pipelines key by their own id, so the catalogue walk above misses them. They only
+  // ever arrive from the backend reconcile, so they are carried through as stored - seeding them
+  // with a tile's defaults would mark them built-in and put them on the editor uninvited.
+  for (const [key, state] of Object.entries(parsed)) {
+    if (!out[key] && state) out[key] = state as PolicyState;
+  }
   return out;
 }
 

@@ -153,4 +153,47 @@ describe("usePolicies", () => {
     });
     expect(result.current.policies.ingestion.folderId).toBeTruthy();
   });
+
+  // A pipeline built on the Pipelines page has no category tile. The reconcile used to walk only
+  // the catalogue, so one set to run on the editor never reached the map the auto-run iterates.
+  it("reconciles a builder pipeline that has no category", async () => {
+    api.store.set("be-pipeline", {
+      id: "be-pipeline",
+      name: "My pipeline",
+      enabled: true,
+      inputs: [],
+      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+      output: { type: "inline", options: { sources: ["editor"] } },
+      outputIds: [],
+    } as unknown as { id: string });
+
+    const { result } = renderHook(() => usePolicies());
+
+    await waitFor(() =>
+      expect(result.current.policies["be-pipeline"]?.configured).toBe(true),
+    );
+    const pipeline = result.current.policies["be-pipeline"];
+    expect(pipeline.runsOnEditor).toBe(true);
+    // Not a catalogue tile, so it is deletable rather than a built-in default.
+    expect(pipeline.isDefault).toBe(false);
+  });
+
+  it("does not put a builder pipeline on the editor unless it names it", async () => {
+    api.store.set("be-s3", {
+      id: "be-s3",
+      name: "S3 sweep",
+      enabled: true,
+      inputs: [],
+      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+      output: { type: "inline", options: {} },
+      outputIds: [],
+    } as unknown as { id: string });
+
+    const { result } = renderHook(() => usePolicies());
+
+    await waitFor(() =>
+      expect(result.current.policies["be-s3"]?.configured).toBe(true),
+    );
+    expect(result.current.policies["be-s3"].runsOnEditor).toBe(false);
+  });
 });
