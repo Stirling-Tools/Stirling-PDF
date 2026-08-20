@@ -123,15 +123,21 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             accent="neutral"
             shape="circle"
             className={styles.clearButton}
-            style={{
-              "--ai-size": "1.25rem",
-              width: "1.25rem",
-              height: "1.25rem",
-            }}
+            style={
+              {
+                "--ai-size": "1.25rem",
+                width: "1.25rem",
+                height: "1.25rem",
+              } as React.CSSProperties
+            }
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
           >
-            <LocalIcon icon="close-rounded" width="0.875rem" height="0.875rem" />
+            <LocalIcon
+              icon="close-rounded"
+              width="0.875rem"
+              height="0.875rem"
+            />
           </ActionIcon>
         )}
       </div>
