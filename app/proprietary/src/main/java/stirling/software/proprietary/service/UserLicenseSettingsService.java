@@ -544,7 +544,7 @@ public class UserLicenseSettingsService {
         appendIfPresent(builder, applicationProperties.getAutomaticallyGenerated().getUUID());
         appendIfPresent(builder, applicationProperties.getPremium().getKey());
 
-        if (builder.length() == 0) {
+        if (builder.isEmpty()) {
             builder.append(DEFAULT_INTEGRITY_SECRET);
         }
 
@@ -553,7 +553,7 @@ public class UserLicenseSettingsService {
 
     private void appendIfPresent(StringBuilder builder, String value) {
         if (value != null && !value.isBlank()) {
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 builder.append(SIGNATURE_SEPARATOR);
             }
             builder.append(value);

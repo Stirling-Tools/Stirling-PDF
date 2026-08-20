@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.context.annotation.Primary;
+
 import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;

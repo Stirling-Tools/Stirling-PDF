@@ -64,12 +64,17 @@ public class MobileScannerController {
     }
 
     /**
-     * Check if mobile scanner feature is enabled
+     * Check if any feature backed by these transfer sessions is enabled. The mobile scanner and
+     * mobile signature drawing share this session/upload API, so the endpoints stay available while
+     * either feature is on; each flag independently controls only its own UI.
      *
      * @return Error response if disabled, null if enabled
      */
     private Response checkFeatureEnabled() {
-        if (!applicationProperties.getSystem().isEnableMobileScanner()) {
+        boolean anyEnabled =
+                applicationProperties.getSystem().isEnableMobileScanner()
+                        || applicationProperties.getSystem().isEnableMobileSignature();
+        if (!anyEnabled) {
             return Response.status(Response.Status.FORBIDDEN)
                     .entity(
                             Map.of(
@@ -301,7 +306,8 @@ public class MobileScannerController {
             @Parameter(description = "Filename to download", required = true) @PathParam("filename")
                     String filename) {
 
-        if (!applicationProperties.getSystem().isEnableMobileScanner()) {
+        if (!applicationProperties.getSystem().isEnableMobileScanner()
+                && !applicationProperties.getSystem().isEnableMobileSignature()) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 

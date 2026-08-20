@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -12,6 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -33,9 +35,8 @@ import stirling.software.common.model.io.Resource;
 // fall through to Quarkus' static-resource handler (META-INF/resources), which serves them with the
 // correct Content-Type. This precedence detail is critical: a matching JAX-RS route is answered
 // BEFORE the static handler runs, so an unconstrained {path} catch-all would shadow every asset and
-// return index.html (text/html) for .js/.css - exactly the "white screen / wrong MIME" bug. Only
-// single- and two-segment SPA routes are matched here; a deeper dot-less SPA route would need an
-// explicit template or a low-priority Vert.x fallback route (none currently required).
+// return index.html (text/html) for .js/.css - exactly the "white screen / wrong MIME" bug. One-,
+// two- and (via forwardDeepPaths) three-or-more-segment dot-less SPA routes are matched here.
 @Path("")
 @ApplicationScoped
 public class ReactRoutingController {
@@ -44,6 +45,29 @@ public class ReactRoutingController {
             org.slf4j.LoggerFactory.getLogger(ReactRoutingController.class);
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
+
+    // First path segments owned by the backend or static assets, never SPA routes.
+    // Mirrors the exclusion regexes on forwardRootPaths/forwardNestedPaths below.
+    private static final Set<String> NON_SPA_FIRST_SEGMENTS =
+            Set.of(
+                    "api",
+                    "static",
+                    "pipeline",
+                    "pdfjs",
+                    "pdfjs-legacy",
+                    "pdfium",
+                    "vendor",
+                    "fonts",
+                    "images",
+                    "css",
+                    "js",
+                    "assets",
+                    "locales",
+                    "modern-logo",
+                    "classic-logo",
+                    "Login",
+                    "og_images",
+                    "samples");
 
     // server.servlet.context-path has no direct Quarkus equivalent (it maps to
     // quarkus.http.root-path
@@ -61,6 +85,8 @@ public class ReactRoutingController {
     private boolean saasLandingExists = false;
     private String cachedMobileUploadHtml;
     private boolean mobileUploadHtmlExists = false;
+    private String cachedMobileSignHtml;
+    private boolean mobileSignHtmlExists = false;
 
     @PostConstruct
     public void init() {
@@ -84,10 +110,12 @@ public class ReactRoutingController {
         }
 
         // Desktop (Tauri) serves the SPA from its bundled webview, so a phone scanning the QR can't
-        // load the React /mobile-scanner route from the local backend. Cache the self-contained
-        // static upload page to serve at that route in desktop mode instead.
+        // load the React /mobile-scanner or /mobile-sign routes from the local backend. Cache the
+        // self-contained static pages to serve at those routes in desktop mode instead.
         this.cachedMobileUploadHtml = readStaticHtml("mobile-upload.html");
         this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
+        this.cachedMobileSignHtml = readStaticHtml("mobile-sign.html");
+        this.mobileSignHtmlExists = this.cachedMobileSignHtml != null;
 
         // Check for external index.html first (customFiles/static/)
         java.nio.file.Path externalIndexPath =
@@ -280,6 +308,21 @@ public class ReactRoutingController {
         return serveIndexHtml();
     }
 
+    // Same reason as /mobile-scanner: the phone that scans the QR cannot load the React
+    // /mobile-sign route from the desktop build, so serve the self-contained static page.
+    @GET
+    @Path("/mobile-sign")
+    @Produces(MediaType.TEXT_HTML)
+    public Response serveMobileSign() {
+        if (isDesktopMode() && mobileSignHtmlExists) {
+            return Response.ok(cachedMobileSignHtml)
+                    .cacheControl(noCacheMustRevalidate())
+                    .type(MediaType.TEXT_HTML)
+                    .build();
+        }
+        return serveIndexHtml();
+    }
+
     @GET
     @Path("/auth/callback/tauri")
     @Produces(MediaType.TEXT_HTML)
@@ -315,6 +358,36 @@ public class ReactRoutingController {
             @PathParam("path") String path, @PathParam("subpath") String subpath)
             throws IOException {
         return serveIndexHtml();
+    }
+
+    // The two routes above only cover 1- and 2-segment paths, so deep SPA links like
+    // /processor/pipelines/new 404d on direct navigation. Unlike Spring path variables, a JAX-RS
+    // template regex may span '/', so one catch-all covers the rest. The regex requires two
+    // separators, so it never overlaps with the 1- and 2-segment templates, and JAX-RS sorts it
+    // behind every literal route. The denylist is what keeps backend-owned first segments
+    // (/api/..., /assets/...) from being answered with index.html; anything it rejects becomes a
+    // 404 so the static handler and the error pages still win.
+    @GET
+    @Path("/{path:[^./]+/[^./]+/[^.]+}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response forwardDeepPaths(@PathParam("path") String path) throws IOException {
+        if (!isSpaFallbackRoute("/" + path)) {
+            throw new NotFoundException();
+        }
+        return serveIndexHtml();
+    }
+
+    // Dot-free paths only, so requests for real files still fall through to the resource
+    // handlers. This is a denylist, so it is only safe because the template above is the
+    // lowest-priority route in this resource - see forwardDeepPaths.
+    static boolean isSpaFallbackRoute(String path) {
+        if (path == null || path.isEmpty() || "/".equals(path) || path.indexOf('.') >= 0) {
+            return false;
+        }
+        String[] segments = (path.startsWith("/") ? path.substring(1) : path).split("/");
+        return segments.length > 0
+                && !segments[0].isEmpty()
+                && !NON_SPA_FIRST_SEGMENTS.contains(segments[0]);
     }
 
     private String buildFallbackHtml() {

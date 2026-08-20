@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.access.model.PrincipalRef;

@@ -6,17 +6,19 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import io.quarkus.arc.profile.IfBuildProfile;
-import stirling.software.common.security.SecurityContextHolder;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.security.SecurityContextHolder;
 
 /**
  * Authenticates a linked self-hosted instance by its device credential (combined-billing "Mode A").

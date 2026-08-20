@@ -13,9 +13,9 @@ import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
-import stirling.software.common.model.MultipartFile;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.saas.payg.policy.PricingPolicy;

@@ -31,6 +31,7 @@ import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.io.Resource;
 import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -48,12 +49,13 @@ class FileStorageControllerMoreTest {
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
+    @Mock private AuditService auditService;
 
     private FileStorageController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new FileStorageController(fileStorageService, storageProvider);
+        controller = new FileStorageController(fileStorageService, storageProvider, auditService);
     }
 
     private User user() {

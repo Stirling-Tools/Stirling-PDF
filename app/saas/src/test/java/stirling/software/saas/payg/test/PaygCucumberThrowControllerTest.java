@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import stirling.software.common.model.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Tests for the cucumber-only force-500 stub {@link PaygCucumberThrowController}. The endpoint must

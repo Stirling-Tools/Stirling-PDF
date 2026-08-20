@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.6.1-jdk25@sha256:934a520ae0cc1f46764c2e6e1f6510d2fcdf6a7e12328b6aee34192d14f171a2 AS build
+FROM gradle:9.6.1-jdk25@sha256:e8aeffb8197b17151ce24607811f60e91125f0018f7a3b08dc504ba9168a9c4f AS build
 
 # Install Node.js and npm for frontend build
 ARG TASK_VERSION=3.49.1
@@ -23,6 +23,8 @@ WORKDIR /app
 # Copy gradle files for dependency resolution
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
+COPY buildSrc/build.gradle                 buildSrc/
+COPY buildSrc/src/main/                    buildSrc/src/main/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
@@ -55,7 +57,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
 
 # Stage 2: Runtime image
 # glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
-FROM eclipse-temurin:25-jre-noble@sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \

@@ -1,12 +1,13 @@
 package stirling.software.saas.payg.charge;
 
 import io.quarkus.arc.profile.IfBuildProfile;
-import stirling.software.common.security.Authentication;
-import stirling.software.common.security.SecurityContextHolder;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.classification.ClassificationRunBiller;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;

@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.storage.model.StorageCleanupEntry;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 
@@ -26,6 +27,7 @@ public class StorageCleanupService {
 
     private final StorageProvider storageProvider;
     private final StorageCleanupEntryRepository cleanupEntryRepository;
+    private final FileShareAccessRepository fileShareAccessRepository;
     private final FileShareRepository fileShareRepository;
 
     @Scheduled(every = "24h")
@@ -71,6 +73,8 @@ public class StorageCleanupService {
         if (expired.isEmpty()) {
             return;
         }
+        // Access rows reference the share, so they go first.
+        expired.forEach(fileShareAccessRepository::deleteByFileShare);
         for (stirling.software.proprietary.storage.model.FileShare share : expired) {
             fileShareRepository.delete(share);
         }

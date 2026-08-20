@@ -11,7 +11,7 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { saveOperationResults } from "@app/services/operationResultsSaveService";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { useFileActions, useFileSelectors } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/fileContext";
 import i18n from "@app/i18n";
 
@@ -40,7 +40,7 @@ function ReviewStepContent<TParams = unknown>({
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
 
   const handleUndo = async () => {
     try {

@@ -241,7 +241,7 @@ public class UserController {
                     .entity(Map.of("error", "usernameExists", "message", "Username already exists"))
                     .build();
         }
-        if (newUsername != null && newUsername.length() > 0) {
+        if (newUsername != null && !newUsername.isEmpty()) {
             try {
                 userService.changeUsername(user, newUsername);
             } catch (IllegalArgumentException e) {

@@ -113,6 +113,12 @@ public class ToolIOOperationCustomizer implements OASFilter {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("param", condition.param());
         entry.put("matches", List.copyOf(condition.matches()));
+        // The default the endpoint uses when this parameter is absent, so a step that never sends
+        // it still resolves. Omitted when the parameter is required with none - the registry
+        // resolves it off the handler method when it builds the spec.
+        if (condition.paramDefault() != null) {
+            entry.put("default", condition.paramDefault());
+        }
         return entry;
     }
 

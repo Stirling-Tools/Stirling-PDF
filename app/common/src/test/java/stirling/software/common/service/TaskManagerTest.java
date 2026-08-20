@@ -256,7 +256,7 @@ class TaskManagerTest {
                         .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
 
-        when(fileStorage.deleteFile("file-id")).thenReturn(true);
+        when(fileStorage.deleteFileAsSystem("file-id")).thenReturn(true);
 
         // Obtain access to the private jobResults map
         Map<String, JobResult> jobResultsMap =
@@ -279,7 +279,7 @@ class TaskManagerTest {
         assertFalse(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
-        verify(fileStorage).deleteFile("file-id");
+        verify(fileStorage).deleteFileAsSystem("file-id");
     }
 
     @Test
@@ -306,7 +306,7 @@ class TaskManagerTest {
         // Assert: nothing was removed locally, and no jobStore.delete was issued.
         assertTrue(jobResultsMap.containsKey(oldJobId));
         verify(jobStore, never()).delete(anyString());
-        verify(fileStorage, never()).deleteFile(anyString());
+        verify(fileStorage, never()).deleteFileAsSystem(anyString());
     }
 
     @Test

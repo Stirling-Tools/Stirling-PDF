@@ -3,11 +3,8 @@ package stirling.software.saas.accountlink;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import jakarta.annotation.security.RolesAllowed;
-import stirling.software.common.security.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -152,7 +151,7 @@ public class AccountLinkController {
         if (rows.isEmpty()) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
-        TeamMembership m = rows.get(0);
+        TeamMembership m = rows.getFirst();
         if (m.getRole() != TeamRole.LEADER) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }

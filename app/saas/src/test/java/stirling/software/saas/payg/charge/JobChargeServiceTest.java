@@ -29,8 +29,8 @@ import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import stirling.software.common.model.MultipartFile;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;

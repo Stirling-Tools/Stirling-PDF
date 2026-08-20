@@ -13,7 +13,12 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 public class UploadLimitService {
 
-    @Inject ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    @Inject
+    public UploadLimitService(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     public long getUploadLimit() {
         String raw =

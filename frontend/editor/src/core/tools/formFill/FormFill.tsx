@@ -35,7 +35,7 @@ import {
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
@@ -124,7 +124,7 @@ const _MODE_TABS: ModeTabDef[] = [
 const FormFill = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedTool } = useNavigation();
-  const { selectors, state: fileState } = useFileState();
+  const { state: fileState } = useFileState();
 
   const {
     state: formState,
@@ -178,7 +178,9 @@ const FormFill = (_props: BaseToolProps) => {
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
 
-  const activeFiles = selectors.getFiles();
+  // Subscribing read: getFiles() during render doesn't re-run when the workbench
+  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
+  const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
@@ -436,7 +438,7 @@ const FormFill = (_props: BaseToolProps) => {
                 >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
-                    Analysing form fields...
+                    {t("formFill.analyzingFields", "Analysing form fields...")}
                   </Text>
                 </div>
                 <Skeleton height={48} radius="sm" />
@@ -464,10 +466,12 @@ const FormFill = (_props: BaseToolProps) => {
                 <div>
                   <div className={styles.progressRow}>
                     <span className={styles.progressLabel}>
-                      {filledCount} / {fillableCount} filled
+                      {filledCount} / {fillableCount}{" "}
+                      {t("formFill.filled", "filled")}
                       {requiredCount > 0 && (
                         <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
-                          ({filledRequiredCount}/{requiredCount} req.)
+                          ({filledRequiredCount}/{requiredCount}{" "}
+                          {t("formFill.requiredAbbreviation", "req")}.)
                         </span>
                       )}
                     </span>
@@ -588,7 +592,10 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.emptyState}>
                   <DescriptionIcon className={styles.emptyStateIcon} />
                   <span className={styles.emptyStateText}>
-                    No fillable form fields found in this PDF.
+                    {t(
+                      "formFill.noFields",
+                      "No fillable form fields found in this PDF.",
+                    )}
                   </span>
                 </div>
               )}
@@ -605,7 +612,7 @@ const FormFill = (_props: BaseToolProps) => {
                       style={i === 0 ? { marginTop: 0 } : undefined}
                     >
                       <Text className={styles.pageDividerLabel}>
-                        Page {pageIdx + 1}
+                        {t("page", "Page")} {pageIdx + 1}
                       </Text>
                     </div>
 

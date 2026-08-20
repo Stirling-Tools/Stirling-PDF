@@ -1,6 +1,7 @@
 package stirling.software.saas.procurement.config;
 
 import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;

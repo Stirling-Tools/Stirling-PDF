@@ -72,6 +72,33 @@ class MobileScannerControllerTest {
         return upload;
     }
 
+    // --- shared-endpoint gating: scanner and mobile signature share this API ---
+
+    @Test
+    void createSession_whenOnlyMobileSignatureEnabled_returnsOk() {
+        // The signature feature must work with the scanner switched off.
+        when(applicationProperties.getSystem()).thenReturn(systemProps);
+        when(systemProps.isEnableMobileScanner()).thenReturn(false);
+        when(systemProps.isEnableMobileSignature()).thenReturn(true);
+        SessionInfo sessionInfo = new SessionInfo("test-session", 1000L, 601000L, 600000L);
+        when(mobileScannerService.createSession("test-session")).thenReturn(sessionInfo);
+
+        Response response = controller.createSession("test-session");
+
+        assertEquals(OK, response.getStatus());
+    }
+
+    @Test
+    void createSession_whenBothFeaturesDisabled_returnsForbidden() {
+        when(applicationProperties.getSystem()).thenReturn(systemProps);
+        when(systemProps.isEnableMobileScanner()).thenReturn(false);
+        when(systemProps.isEnableMobileSignature()).thenReturn(false);
+
+        Response response = controller.createSession("test-session");
+
+        assertEquals(FORBIDDEN, response.getStatus());
+    }
+
     // --- createSession tests ---
 
     @Test

@@ -40,6 +40,8 @@ import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FilePurpose;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -467,10 +469,23 @@ public class WorkflowSessionService {
                     "No processed file available for this session", Response.Status.NOT_FOUND);
         }
 
-        String storageKey = session.getProcessedFile().getStorageKey();
-        Resource resource = storageProvider.load(storageKey);
-        try (java.io.InputStream in = resource.getInputStream()) {
-            return in.readAllBytes();
+        return readBlob(session.getProcessedFile().getStorageKey());
+    }
+
+    /**
+     * Reads a stored blob, translating a revoked encryption key into 403 the same way {@code
+     * FileStorageService} does. Without this the callers' {@code IOException} handling would report
+     * an administrator's deliberate revocation as a server error.
+     */
+    private byte[] readBlob(String storageKey) throws IOException {
+        try {
+            Resource resource = storageProvider.load(storageKey);
+            try (java.io.InputStream in = resource.getInputStream()) {
+                return in.readAllBytes();
+            }
+        } catch (StorageKeyRevokedException e) {
+            log.warn("Access to workflow blob {} denied: {}", storageKey, e.getMessage());
+            throw StorageEncryptionErrors.revoked(e);
         }
     }
 
@@ -485,11 +500,7 @@ public class WorkflowSessionService {
                     "Original file no longer available (session may be finalized)",
                     Response.Status.NOT_FOUND);
         }
-        String storageKey = session.getOriginalFile().getStorageKey();
-        Resource resource = storageProvider.load(storageKey);
-        try (java.io.InputStream in = resource.getInputStream()) {
-            return in.readAllBytes();
-        }
+        return readBlob(session.getOriginalFile().getStorageKey());
     }
 
     /** Deletes a workflow session and associated files. */
@@ -693,10 +704,7 @@ public class WorkflowSessionService {
         }
 
         try {
-            Resource resource = storageProvider.load(fileToServe.getStorageKey());
-            try (java.io.InputStream in = resource.getInputStream()) {
-                return in.readAllBytes();
-            }
+            return readBlob(fileToServe.getStorageKey());
         } catch (IOException e) {
             log.error("Failed to retrieve document for session {}", sessionId, e);
             throw new WebApplicationException(

@@ -132,6 +132,12 @@ public class JpaPolicyStore implements PolicyStore {
 
     @Override
     @Transactional
+    public boolean anyPolicyReferences(String assetId) {
+        return assetId != null && !assetId.isBlank() && repository.anyMentioning(assetId);
+    }
+
+    @Override
+    @Transactional
     public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
         List<Policy> enabled =
                 repository.findByEnabledTrue().stream()

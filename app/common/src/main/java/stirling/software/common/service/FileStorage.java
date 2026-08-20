@@ -184,6 +184,21 @@ public class FileStorage {
         return fileStore.delete(fileId);
     }
 
+    /**
+     * Delete a stored file without the per-file ownership check.
+     *
+     * <p>Job cleanup authorises at the job level and then deletes that job's own files, so the
+     * deleter is legitimately not their owner - an admin sweeping every user's jobs, or the
+     * unauthenticated scheduled task. Routing those through {@link #deleteFile(String)} makes the
+     * ownership check throw and silently orphans the files on disk.
+     *
+     * <p>Only ever pass file ids read back off a job that the caller has already been authorised
+     * for; never a caller-supplied id.
+     */
+    public boolean deleteFileAsSystem(String fileId) {
+        return fileStore.delete(fileId);
+    }
+
     public boolean fileExists(String fileId) {
         enforceOwnership(fileId);
         return fileStore.exists(fileId);

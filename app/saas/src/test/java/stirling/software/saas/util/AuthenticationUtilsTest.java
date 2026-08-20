@@ -17,10 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import stirling.software.common.security.Authentication;
-import stirling.software.common.security.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;

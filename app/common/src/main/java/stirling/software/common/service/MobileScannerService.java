@@ -227,19 +227,21 @@ public class MobileScannerService {
                 Path sessionDir = getSafeSessionDirectory(sessionId);
                 if (Files.exists(sessionDir)) {
                     // Delete all files in session directory
-                    Files.walk(sessionDir)
-                            .sorted(
-                                    (a, b) ->
-                                            -a.compareTo(b)) // Reverse order to delete files before
-                            // directory
-                            .forEach(
-                                    path -> {
-                                        try {
-                                            Files.deleteIfExists(path);
-                                        } catch (IOException e) {
-                                            log.warn("Failed to delete file: {}", path, e);
-                                        }
-                                    });
+                    try (var paths = Files.walk(sessionDir)) {
+                        paths.sorted(
+                                        (a, b) ->
+                                                -a.compareTo(
+                                                        b)) // Reverse order to delete files before
+                                // directory
+                                .forEach(
+                                        path -> {
+                                            try {
+                                                Files.deleteIfExists(path);
+                                            } catch (IOException e) {
+                                                log.warn("Failed to delete file: {}", path, e);
+                                            }
+                                        });
+                    }
                 }
                 log.info("Deleted session: {}", sessionId);
             } catch (IllegalArgumentException e) {

@@ -3,6 +3,7 @@ package stirling.software.saas.accountlink;
 import java.util.List;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+
 import stirling.software.common.security.SimpleGrantedAuthority;
 
 /**

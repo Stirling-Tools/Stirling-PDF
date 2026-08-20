@@ -9,9 +9,9 @@ plugins {
     // per Quarkus multi-module guidance.
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.8.0"
-    id "com.github.jk1.dependency-license-report" version "3.1.2"
+    id "com.github.jk1.dependency-license-report"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "7.2.3.7755"
+    id "org.sonarqube" version "7.3.1.8318"
 }
 
 import com.github.jk1.license.render.*
@@ -21,6 +21,7 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import stirling.software.gradle.ModuleLicenseOverrideFilter
 
 ext {
     springBootVersion = "4.0.6"
@@ -28,11 +29,11 @@ ext {
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.85"
-    springSecuritySamlVersion = "7.0.5"
+    springSecuritySamlVersion = "7.1.0"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.35.0"
-    logback = "1.5.32"
+    logback = "1.6.1"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
@@ -44,11 +45,11 @@ ext {
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.2"
+    jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
-    awsSdkVersion = "2.44.12"
-    jschVersion = "0.2.23"
-    commonsNetVersion = "3.11.1"
+    awsSdkVersion = "2.51.3"
+    jschVersion = "2.28.6"
+    commonsNetVersion = "3.13.0"
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
@@ -97,6 +98,12 @@ jar {
 // Under Quarkus the runnable artifact is produced by the io.quarkus plugin's quarkusBuild task
 // in the :stirling-pdf module. The Quarkus main class is configured via
 // quarkus.package.main-class / a @QuarkusMain class instead of springBoot{}.
+
+// :saas is only included for SaaS builds, but a default-flavor clean must still remove artifacts
+// left behind by an earlier SaaS build.
+tasks.named('clean') {
+    delete layout.projectDirectory.dir('app/saas/build')
+}
 
 allprojects {
     group = 'stirling.software'
@@ -389,8 +396,17 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
         systemProperty 'java.awt.headless', 'true'
         systemProperty 'apple.awt.UIElement', 'true'
+
+        testLogging {
+            events "started", "failed"
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat "full"
+        }
         finalizedBy(jacocoReport)
     }
 
@@ -552,6 +568,7 @@ gradle.taskGraph.whenReady { graph ->
 }
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
 
 licenseReport {
     projects = allProjects
@@ -559,6 +576,15 @@ licenseReport {
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
+    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+}
+
+tasks.named('generateLicenseReport') {
+    inputs.file(moduleLicenseOverridesFile)
+}
+
+tasks.named('checkLicensePreparation') {
+    inputs.file(moduleLicenseOverridesFile)
 }
 
 // REMOVED: forkedSpringBootRun delegation - that task came from the springdoc openapi-gradle

@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,6 +47,10 @@ public class TaskManager {
 
     @ConfigProperty(name = "stirling.jobResultExpiryMinutes", defaultValue = "30")
     int jobResultExpiryMinutes;
+
+    /** Maximum age of a task that never reached a terminal state. */
+    @ConfigProperty(name = "stirling.job.pendingExpiryMinutes", defaultValue = "1440")
+    int pendingJobExpiryMinutes;
 
     private final FileStorage fileStorage;
     private final JobStore jobStore;
@@ -229,6 +234,24 @@ public class TaskManager {
         return false;
     }
 
+    /**
+     * Record a persistent input copy against a job so cleanup deletes it with the results.
+     *
+     * @param jobId The job ID
+     * @param fileId The FileStorage id of the input copy
+     * @return true if the job exists and the id was recorded
+     */
+    public boolean registerInputFile(String jobId, String fileId) {
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult == null) {
+            log.warn("Attempted to register an input file against non-existent job ID: {}", jobId);
+            return false;
+        }
+        jobResult.addInputFileId(fileId);
+        log.debug("Registered input file {} for job {}", fileId, jobId);
+        return true;
+    }
+
     /** Attach metadata to a job and write it through to the shared store for cluster peers. */
     public boolean putMetadata(String jobId, String key, String value) {
         JobResult jobResult = jobResults.get(jobId);
@@ -324,26 +347,73 @@ public class TaskManager {
         return jobResults.computeIfAbsent(jobId, JobResult::createNew);
     }
 
+    /**
+     * What a cleanup pass removed. Returned by the on-demand cleanup so callers can assert on it.
+     */
+    public record CleanupSummary(int jobsRemoved, int filesDeleted, int jobsRetained) {}
+
     /** Clean up old completed job results. No-op in cluster mode; the backplane TTL owns expiry. */
-    public void cleanupOldJobs() {
+    public CleanupSummary cleanupOldJobs() {
         if (clusterBackplane != null && !clusterBackplane.shouldRunLocalCleanup()) {
-            return;
+            return new CleanupSummary(0, 0, jobResults.size());
         }
+        return cleanupJobs(false, jobId -> true);
+    }
+
+    /**
+     * Force-expire this node's finished jobs now, ignoring the age threshold. Jobs still running
+     * are left alone - deleting their files mid-flight would break them - and are reported as
+     * retained.
+     *
+     * <p>Unlike {@link #cleanupOldJobs()} this always runs locally: it is an explicit request to
+     * release this node's storage, not the scheduled sweep the backplane TTL owns.
+     *
+     * @param jobIdFilter Only jobs whose id passes this predicate are considered, so a caller can
+     *     restrict the sweep to jobs the requester is allowed to touch
+     * @return What was removed
+     */
+    public CleanupSummary cleanupFinishedJobsNow(Predicate<String> jobIdFilter) {
+        return cleanupJobs(true, jobIdFilter);
+    }
+
+    private CleanupSummary cleanupJobs(boolean force, Predicate<String> filter) {
         LocalDateTime expiryThreshold =
                 LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime pendingExpiryThreshold =
+                LocalDateTime.now().minus(pendingJobExpiryMinutes, ChronoUnit.MINUTES);
         int removedCount = 0;
+        int filesDeleted = 0;
+        int retainedCount = 0;
 
         try {
             for (Map.Entry<String, JobResult> entry : jobResults.entrySet()) {
                 JobResult result = entry.getValue();
 
-                // Remove completed jobs that are older than the expiry threshold
-                if (result.isComplete()
-                        && result.getCompletedAt() != null
-                        && result.getCompletedAt().isBefore(expiryThreshold)) {
+                if (!filter.test(entry.getKey())) {
+                    retainedCount++;
+                    continue;
+                }
+
+                boolean expiredCompletedJob =
+                        result.isComplete()
+                                && (force
+                                        || (result.getCompletedAt() != null
+                                                && result.getCompletedAt()
+                                                        .isBefore(expiryThreshold)));
+                boolean abandonedPendingJob =
+                        !result.isComplete()
+                                && result.getCreatedAt() != null
+                                && result.getCreatedAt().isBefore(pendingExpiryThreshold);
+
+                // Remove old terminal results and abandoned pending jobs. Without the second
+                // branch, a client that starts a task and never completes it keeps its result in
+                // memory forever.
+                if (expiredCompletedJob || abandonedPendingJob) {
 
                     // Clean up file results
-                    cleanupJobFiles(result, entry.getKey());
+                    if (expiredCompletedJob) {
+                        filesDeleted += cleanupJobFiles(result, entry.getKey());
+                    }
 
                     // Remove the job result
                     jobResults.remove(entry.getKey());
@@ -351,15 +421,22 @@ public class TaskManager {
                         jobStore.delete(entry.getKey());
                     }
                     removedCount++;
+                } else {
+                    retainedCount++;
                 }
             }
 
             if (removedCount > 0) {
-                log.info("Cleaned up {} expired job results", removedCount);
+                log.info(
+                        "Cleaned up {} {} job results ({} files deleted)",
+                        removedCount,
+                        force ? "finished" : "expired",
+                        filesDeleted);
             }
         } catch (Exception e) {
             log.error("Error during job cleanup: {}", e.getMessage(), e);
         }
+        return new CleanupSummary(removedCount, filesDeleted, retainedCount);
     }
 
     /** Mirror the in-memory {@code JobResult} into the cluster-visible {@link JobStore}. */
@@ -510,21 +587,42 @@ public class TaskManager {
         }
     }
 
-    /** Clean up files associated with a job result */
-    private void cleanupJobFiles(JobResult result, String jobId) {
+    /**
+     * Clean up files associated with a job result: both the results and the persistent input copy
+     * an async submit made of the upload.
+     *
+     * @return The number of files actually deleted
+     */
+    private int cleanupJobFiles(JobResult result, String jobId) {
+        int deleted = 0;
         // Clean up all result files
         if (result.hasFiles()) {
             for (ResultFile resultFile : result.getAllResultFiles()) {
-                try {
-                    fileStorage.deleteFile(resultFile.getFileId());
-                } catch (Exception e) {
-                    log.warn(
-                            "Failed to delete file {} for job {}: {}",
-                            resultFile.getFileId(),
-                            jobId,
-                            e.getMessage());
+                if (deleteJobFile(resultFile.getFileId(), jobId)) {
+                    deleted++;
                 }
             }
+        }
+        for (String inputFileId : result.getInputFileIds()) {
+            if (deleteJobFile(inputFileId, jobId)) {
+                deleted++;
+            }
+        }
+        return deleted;
+    }
+
+    /**
+     * Deletes as the system, not as the caller: an admin sweeping another user's jobs, or the
+     * scheduled task running with no security context, is not the file's owner, and the
+     * ownership-checked delete would throw and leave the file orphaned on disk. The job itself is
+     * already authorised by the time we get here, and these ids come off that job, not the request.
+     */
+    private boolean deleteJobFile(String fileId, String jobId) {
+        try {
+            return fileStorage.deleteFileAsSystem(fileId);
+        } catch (Exception e) {
+            log.warn("Failed to delete file {} for job {}: {}", fileId, jobId, e.getMessage());
+            return false;
         }
     }
 

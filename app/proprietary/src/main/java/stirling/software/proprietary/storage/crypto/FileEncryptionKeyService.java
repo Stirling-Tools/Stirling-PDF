@@ -4,7 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -39,6 +43,7 @@ public class FileEncryptionKeyService {
 
     private final FileEncryptionKeyRepository repository;
     private final FileEncryptionMasterKey masterKey;
+    private final StorageEncryptionAuditListener auditListener;
 
     /**
      * Runs key-row creation in its own committed transaction (REQUIRES_NEW in production). Callers
@@ -83,16 +88,36 @@ public class FileEncryptionKeyService {
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
-        this(repository, masterKey, withoutTransaction());
+        this(repository, masterKey, StorageEncryptionAuditListener.NOOP, withoutTransaction());
+    }
+
+    public FileEncryptionKeyService(
+            FileEncryptionKeyRepository repository,
+            FileEncryptionMasterKey masterKey,
+            StorageEncryptionAuditListener auditListener) {
+        this(repository, masterKey, auditListener, withoutTransaction());
     }
 
     public FileEncryptionKeyService(
             FileEncryptionKeyRepository repository,
             FileEncryptionMasterKey masterKey,
             KeyCreationTx keyCreationTx) {
+        this(repository, masterKey, StorageEncryptionAuditListener.NOOP, keyCreationTx);
+    }
+
+    public FileEncryptionKeyService(
+            FileEncryptionKeyRepository repository,
+            FileEncryptionMasterKey masterKey,
+            StorageEncryptionAuditListener auditListener,
+            KeyCreationTx keyCreationTx) {
         this.repository = repository;
         this.masterKey = masterKey;
+        this.auditListener = auditListener;
         this.keyCreationTx = keyCreationTx;
+    }
+
+    public FileEncryptionMasterKey masterKey() {
+        return masterKey;
     }
 
     public record ScopeKek(UUID keyId, byte[] key) {}
@@ -129,14 +154,17 @@ public class FileEncryptionKeyService {
                 repository
                         .findByIdOptional(keyId)
                         .orElseThrow(
-                                () ->
-                                        new StorageEncryptionException(
-                                                "No encryption key "
-                                                        + keyId
-                                                        + " — the key registry does not match the"
-                                                        + " stored data (restored from an older"
-                                                        + " database backup?)"));
+                                () -> {
+                                    auditListener.decryptDenied(keyId, "key not found");
+                                    return new StorageEncryptionException(
+                                            "No encryption key "
+                                                    + keyId
+                                                    + " — the key registry does not match the"
+                                                    + " stored data (restored from an older"
+                                                    + " database backup?)");
+                                });
         if (row.getStatus() == FileEncryptionKey.Status.DISABLED) {
+            auditListener.decryptDenied(keyId, "key disabled");
             throw new StorageKeyRevokedException(
                     "Encryption key " + keyId + " is disabled; access to this content is revoked");
         }
@@ -144,42 +172,164 @@ public class FileEncryptionKeyService {
     }
 
     /**
-     * Startup self-check: proves the resolved master key can unwrap an existing row, so a wrong key
-     * fails fast instead of silently writing new files under a second key hierarchy.
+     * Flips a key's status (the kill switch) and invalidates the local caches so the change is
+     * immediate on this node; other cluster nodes converge within the cache TTL.
+     */
+    public FileEncryptionKey setKeyStatus(UUID keyId, FileEncryptionKey.Status status, String actor)
+            throws StorageEncryptionException {
+        FileEncryptionKey row =
+                repository
+                        .findByIdOptional(keyId)
+                        .orElseThrow(
+                                () -> new StorageEncryptionException("No encryption key " + keyId));
+        row.setStatus(status);
+        row.setStatusChangedAt(LocalDateTime.now());
+        row.setStatusChangedBy(actor);
+        FileEncryptionKey saved = repository.save(row);
+        invalidate(keyId);
+        return saved;
+    }
+
+    /**
+     * Reverses the kill switch. Returns the key to ACTIVE only while its scope has no other ACTIVE
+     * key, otherwise to RETIRED — which unwraps existing content just the same, and keeps exactly
+     * one key wrapping new writes per scope.
+     *
+     * <p>The second case is reached whenever the scope uploaded anything while revoked: those
+     * writes minted a fresh ACTIVE key, since revoking a key blocks reads of existing content
+     * rather than stopping the scope from storing new files.
+     */
+    public FileEncryptionKey enable(UUID keyId, String actor) throws StorageEncryptionException {
+        FileEncryptionKey row =
+                repository
+                        .findByIdOptional(keyId)
+                        .orElseThrow(
+                                () -> new StorageEncryptionException("No encryption key " + keyId));
+        boolean scopeHasAnotherActiveKey =
+                activeForScope(row.getScopeType(), row.getScopeId())
+                        .filter(other -> !other.getKeyId().equals(keyId))
+                        .isPresent();
+        FileEncryptionKey.Status target =
+                scopeHasAnotherActiveKey
+                        ? FileEncryptionKey.Status.RETIRED
+                        : FileEncryptionKey.Status.ACTIVE;
+        if (scopeHasAnotherActiveKey) {
+            log.info(
+                    "Enabling key {} as RETIRED: {}:{} already has an active key wrapping new"
+                            + " writes. Existing content under {} is readable again.",
+                    keyId,
+                    row.getScopeType(),
+                    row.getScopeId(),
+                    keyId);
+        }
+        return setKeyStatus(keyId, target, actor);
+    }
+
+    /**
+     * Drops cached material for a key so status changes take effect without waiting out the TTL.
+     */
+    public void invalidate(UUID keyId) {
+        unwrapCache.invalidate(keyId);
+        activeScopeCache.asMap().values().removeIf(keyId::equals);
+    }
+
+    /**
+     * Re-wraps every KEK row below the configured master-key version under the primary master key.
+     * Cheap by design: touches only this small table, never file contents. Returns the number of
+     * rows re-wrapped.
+     */
+    public int rotateMasterKey() throws StorageEncryptionException {
+        int rewrapped = 0;
+        for (FileEncryptionKey row :
+                repository.findByMasterKeyVersionLessThan(masterKey.currentVersion())) {
+            byte[] kek = unwrapRow(row);
+            row.setWrappedKey(
+                    Base64.getEncoder()
+                            .encodeToString(masterKey.wrap(kek, aadFor(row.getKeyId()))));
+            row.setMasterKeyVersion(masterKey.currentVersion());
+            repository.save(row);
+            invalidate(row.getKeyId());
+            rewrapped++;
+        }
+        return rewrapped;
+    }
+
+    /**
+     * Startup self-check: proves the configured master key can unwrap <em>every</em> KEK row, so a
+     * wrong or half-rotated key fails fast instead of silently writing new files under a second key
+     * hierarchy — or leaving some scopes' files unreadable while the rest of the app looks healthy.
+     * Checking all rows rather than a sample matters because rotation can stop part-way; the table
+     * holds one row per scope per rotation, so this stays cheap.
      */
     public void verifyMasterKey() {
-        repository
-                .findFirstByStatus(FileEncryptionKey.Status.ACTIVE)
-                .or(() -> repository.findFirstByStatus(FileEncryptionKey.Status.RETIRED))
-                .ifPresent(
-                        row -> {
-                            try {
-                                unwrapRow(row);
-                            } catch (StorageEncryptionException e) {
-                                throw new IllegalStateException(
-                                        "The configured file encryption key (fingerprint "
-                                                + masterKey.fingerprint()
-                                                + ") cannot unwrap existing key "
-                                                + row.getKeyId()
-                                                + ". Refusing to start with a mismatched key —"
-                                                + " restore the original"
-                                                + " STIRLING_FILE_ENCRYPTION_KEY /"
-                                                + " file-encryption.key.",
-                                        e);
-                            }
-                        });
+        long pending = repository.countByMasterKeyVersionLessThan(masterKey.currentVersion());
+        if (pending > 0) {
+            log.warn(
+                    "{} encryption key row(s) are still wrapped by the previous master key. Run"
+                            + " POST /api/v1/admin/storage-encryption/master/rotate, then remove"
+                            + " stirling.security.fileEncryptionKeyPrevious.",
+                    pending);
+        }
+        long stranded = repository.countByMasterKeyVersionGreaterThan(masterKey.currentVersion());
+        if (stranded > 0) {
+            log.warn(
+                    "{} encryption key row(s) are wrapped by a master-key version newer than the"
+                            + " configured stirling.security.fileEncryptionKeyVersion={}. Rotation"
+                            + " only re-wraps rows below the configured version, so these rows can"
+                            + " never be re-wrapped while it stays this low.",
+                    stranded,
+                    masterKey.currentVersion());
+        }
+        List<FileEncryptionKey> unreadable = new ArrayList<>();
+        StorageEncryptionException firstFailure = null;
+        // DISABLED rows are included: revocation is meant to be reversible, and a row that cannot
+        // be unwrapped would not come back on enable.
+        for (FileEncryptionKey row : repository.listAll()) {
+            try {
+                unwrapRow(row);
+            } catch (StorageEncryptionException e) {
+                unreadable.add(row);
+                if (firstFailure == null) {
+                    firstFailure = e;
+                }
+            }
+        }
+        if (!unreadable.isEmpty()) {
+            throw new IllegalStateException(
+                    "The configured file encryption key (fingerprint "
+                            + masterKey.fingerprint()
+                            + ") cannot unwrap "
+                            + unreadable.size()
+                            + " of "
+                            + repository.count()
+                            + " encryption key row(s), starting with "
+                            + unreadable.get(0).getKeyId()
+                            + " ("
+                            + unreadable.get(0).getScopeType()
+                            + ":"
+                            + unreadable.get(0).getScopeId()
+                            + ", master key version "
+                            + unreadable.get(0).getMasterKeyVersion()
+                            + "). Files under those keys would be unreadable. Refusing to start —"
+                            + " restore the original key as"
+                            + " stirling.security.fileEncryptionKeyPrevious (or as"
+                            + " STIRLING_FILE_ENCRYPTION_KEY) and re-run the rotation.",
+                    firstFailure);
+        }
     }
 
     private FileEncryptionKey findOrCreateActive(
             FileEncryptionKey.ScopeType scopeType, long scopeId) throws StorageEncryptionException {
-        return repository
-                .findFirstByScopeTypeAndScopeIdAndStatus(
-                        scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
-                .orElseGet(() -> createActive(scopeType, scopeId));
+        return activeForScope(scopeType, scopeId).orElseGet(() -> createActive(scopeType, scopeId));
     }
 
-    // Package-private so the @DataJpaTest can drive the duplicate-insert recovery
-    // deterministically.
+    private Optional<FileEncryptionKey> activeForScope(
+            FileEncryptionKey.ScopeType scopeType, long scopeId) {
+        return repository.findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
+                scopeType, scopeId, FileEncryptionKey.Status.ACTIVE);
+    }
+
+    // Package-private so the @DataJpaTest can drive duplicate-insert recovery deterministically.
     FileEncryptionKey createActive(FileEncryptionKey.ScopeType scopeType, long scopeId) {
         byte[] kek = new byte[EncryptedFileFormat.DEK_LENGTH_BYTES];
         RANDOM.nextBytes(kek);
@@ -197,7 +347,7 @@ public class FileEncryptionKeyService {
         row.setKeyVersion(version);
         row.setWrappedKey(
                 Base64.getEncoder().encodeToString(masterKey.wrap(kek, aadFor(row.getKeyId()))));
-        row.setMasterKeyVersion(FileEncryptionMasterKey.CURRENT_VERSION);
+        row.setMasterKeyVersion(masterKey.currentVersion());
         row.setStatus(FileEncryptionKey.Status.ACTIVE);
         try {
             // saveAndFlush inside a fresh transaction so a unique-constraint violation surfaces
@@ -209,13 +359,11 @@ public class FileEncryptionKeyService {
                     scopeType,
                     scopeId);
             unwrapCache.put(saved.getKeyId(), kek);
+            auditListener.keyCreated(saved.getKeyId(), scopeType + ":" + scopeId, version);
             return saved;
         } catch (PersistenceException raced) {
             // Another node created the scope key concurrently; use theirs.
-            return repository
-                    .findFirstByScopeTypeAndScopeIdAndStatus(
-                            scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
-                    .orElseThrow(() -> raced);
+            return activeForScope(scopeType, scopeId).orElseThrow(() -> raced);
         }
     }
 

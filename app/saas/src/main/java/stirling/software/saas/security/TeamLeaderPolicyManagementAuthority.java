@@ -27,6 +27,11 @@ public class TeamLeaderPolicyManagementAuthority implements PolicyManagementAuth
     }
 
     @Override
+    public boolean canTriggerPolicies() {
+        return teamSecurity.isCurrentUserTeamLeader();
+    }
+
+    @Override
     public Long currentUserTeamId() {
         return teamSecurity.currentUserTeamId();
     }

@@ -278,7 +278,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -319,7 +319,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -359,7 +359,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {

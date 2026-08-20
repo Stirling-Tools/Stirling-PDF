@@ -6,9 +6,11 @@ import static org.mockito.Mockito.*;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -396,5 +398,53 @@ class JobControllerTest {
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         verify(fileStorage, never()).getFileSize(eq(fileId));
+    }
+
+    @Test
+    void testCleanupFinishedJobs_ReportsWhatWasReleased() {
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(2, 5, 1));
+
+        Response response = controller.cleanupFinishedJobs();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertEquals(2, body.get("jobsRemoved"));
+        assertEquals(5, body.get("filesDeleted"));
+        assertEquals(1, body.get("jobsRetained"));
+    }
+
+    @Test
+    void testCleanupFinishedJobs_OnlySweepsJobsTheCallerOwns() {
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", resolvableOwnership());
+        when(jobOwnershipService.validateJobAccess("me:job")).thenReturn(true);
+        when(jobOwnershipService.validateJobAccess("someone-else:job"))
+                .thenThrow(new SecurityException("not yours"));
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(1, 1, 1));
+
+        controller.cleanupFinishedJobs();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Predicate<String>> filter = ArgumentCaptor.forClass(Predicate.class);
+        verify(taskManager).cleanupFinishedJobsNow(filter.capture());
+        assertTrue(filter.getValue().test("me:job"));
+        assertFalse(
+                filter.getValue().test("someone-else:job"),
+                "A job the caller cannot access must be left in place");
+    }
+
+    @Test
+    void testCleanupFinishedJobs_SweepsEverythingWhenSecurityIsDisabled() {
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(3, 3, 0));
+
+        controller.cleanupFinishedJobs();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Predicate<String>> filter = ArgumentCaptor.forClass(Predicate.class);
+        verify(taskManager).cleanupFinishedJobsNow(filter.capture());
+        assertTrue(filter.getValue().test("any-job-id"));
     }
 }

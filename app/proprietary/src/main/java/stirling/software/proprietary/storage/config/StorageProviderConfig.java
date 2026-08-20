@@ -21,10 +21,14 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.cluster.s3.S3Clients;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
+import stirling.software.proprietary.service.AuditService;
+import stirling.software.proprietary.storage.crypto.AuditingStorageEncryptionListener;
 import stirling.software.proprietary.storage.crypto.EncryptingStorageProvider;
 import stirling.software.proprietary.storage.crypto.FileEncryptionKeyService;
 import stirling.software.proprietary.storage.crypto.FileEncryptionMasterKey;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionAuditListener;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
@@ -42,13 +46,15 @@ public class StorageProviderConfig {
     private final StoredFileBlobRepository storedFileBlobRepository;
     private final FileEncryptionKeyRepository fileEncryptionKeyRepository;
     private final LicenseKeyChecker licenseKeyChecker;
+    private final AuditService auditService;
 
     /**
-     * The encryption state behind the always-installed decorator. Key machinery is created eagerly
-     * when the write flag is on (licence-gated) or key rows already exist — so a wrong master key
-     * fails startup, not the first download — and lazily if encrypted content shows up later
-     * (config drift on one cluster node must fail loudly, never stream ciphertext). Turning the
-     * flag off or losing the licence only stops encrypting new writes; decryption stays available.
+     * The encryption state behind the always-installed decorator, shared with the admin API and
+     * migration job. Key machinery is created eagerly when the write flag is on (licence-gated) or
+     * key rows already exist — so a wrong master key fails startup, not the first download — and
+     * lazily if encrypted content shows up later (config drift on one cluster node must fail
+     * loudly, never stream ciphertext). Turning the flag off or losing the licence only stops
+     * encrypting new writes; decryption stays available.
      */
     @Produces
     @Singleton
@@ -57,13 +63,23 @@ public class StorageProviderConfig {
             // then fails to convert it to String.
             @ConfigProperty(name = "stirling.security.fileEncryptionKey")
                     Optional<String> fileEncryptionKey,
+            @ConfigProperty(name = "stirling.security.fileEncryptionKeyPrevious")
+                    Optional<String> fileEncryptionKeyPrevious,
+            @ConfigProperty(name = "stirling.security.fileEncryptionKeyVersion", defaultValue = "1")
+                    int fileEncryptionKeyVersion,
             @ConfigProperty(name = "cluster.enabled", defaultValue = "false")
                     boolean clusterEnabled) {
         String configuredFileEncryptionKey = fileEncryptionKey.orElse("");
+        String previousFileEncryptionKey = fileEncryptionKeyPrevious.orElse("");
         boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
         if (writeEnabled) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");
+            warnIfAuditUnavailable();
         }
+        StorageEncryptionAuditListener listener =
+                new AuditingStorageEncryptionListener(
+                        auditService,
+                        applicationProperties.getStorage().getEncryption().isAuditReads());
         // Key creation must commit independently of any caller transaction (see
         // FileEncryptionKeyService#createActive).
         StorageEncryptionState state =
@@ -72,9 +88,13 @@ public class StorageProviderConfig {
                         () ->
                                 createKeyService(
                                         configuredFileEncryptionKey,
+                                        previousFileEncryptionKey,
+                                        fileEncryptionKeyVersion,
                                         clusterEnabled,
+                                        listener,
                                         FileEncryptionKeyService.requiringNewTransaction()),
-                        fileEncryptionKeyRepository);
+                        fileEncryptionKeyRepository,
+                        listener);
         // The registry table may not exist when storage is unused, so only probe if it is on.
         boolean probeForExistingKeys =
                 !writeEnabled && applicationProperties.getStorage().isEnabled();
@@ -87,14 +107,33 @@ public class StorageProviderConfig {
         return state;
     }
 
+    /**
+     * Encryption at rest is available on Pro, but {@code AuditService} only records events on an
+     * Enterprise licence. Without this warning a Pro operator would enable encryption, be told it
+     * is audited, and silently get no encrypt/decrypt/revocation trail at all.
+     */
+    private void warnIfAuditUnavailable() {
+        if (licenseKeyChecker.getPremiumLicenseEnabledResult() != License.ENTERPRISE) {
+            log.warn(
+                    "Storage encryption at rest is enabled, but audit events require an Enterprise"
+                            + " licence: encrypt/decrypt, revocation and plaintext-export events"
+                            + " will NOT be recorded on this licence tier. Encryption itself is"
+                            + " unaffected. See devGuide/STORAGE_ENCRYPTION_AT_REST.md");
+        }
+    }
+
     private FileEncryptionKeyService createKeyService(
             String configuredKey,
+            String previousKey,
+            int keyVersion,
             boolean clusterEnabled,
+            StorageEncryptionAuditListener listener,
             FileEncryptionKeyService.KeyCreationTx keyCreationTx) {
         FileEncryptionMasterKey masterKey =
-                new FileEncryptionMasterKey(configuredKey, clusterEnabled);
+                new FileEncryptionMasterKey(configuredKey, previousKey, keyVersion, clusterEnabled);
         FileEncryptionKeyService keyService =
-                new FileEncryptionKeyService(fileEncryptionKeyRepository, masterKey, keyCreationTx);
+                new FileEncryptionKeyService(
+                        fileEncryptionKeyRepository, masterKey, listener, keyCreationTx);
         // Wrong key must fail fast, not silently start a second key hierarchy.
         keyService.verifyMasterKey();
         return keyService;

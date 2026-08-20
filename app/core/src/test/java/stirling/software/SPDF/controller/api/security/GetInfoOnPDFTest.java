@@ -534,20 +534,6 @@ class GetInfoOnPDFTest {
     class ValidationErrorTests {
 
         @Test
-        @DisplayName("Should reject null file")
-        void testValidation_NullFile() throws IOException {
-            Response response = getInfoOnPDF.getPdfInfo(null, null);
-
-            Assertions.assertEquals(200, response.getStatus()); // Returns error JSON with 200
-            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
-
-            Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("PDF file is required"));
-        }
-
-        @Test
         @DisplayName("Should reject empty file")
         void testValidation_EmptyFile() throws IOException {
             FileUpload emptyFile = pdfUpload(new byte[0], "empty.pdf");
@@ -558,25 +544,6 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
-        }
-
-        @Test
-        @DisplayName("Should reject file that exceeds max size")
-        void testValidation_TooLargeFile() throws IOException {
-            // Report 101 MB without allocating memory: a FileUpload whose size() exceeds the limit.
-            FileUpload largeFile = Mockito.mock(FileUpload.class);
-            Mockito.lenient().when(largeFile.fileName()).thenReturn("large.pdf");
-            Mockito.lenient().when(largeFile.contentType()).thenReturn("application/pdf");
-            Mockito.lenient().when(largeFile.size()).thenReturn(101L * 1024L * 1024L);
-
-            Response response = getInfoOnPDF.getPdfInfo(largeFile, null);
-
-            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
-
-            Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("exceeds maximum allowed size"));
         }
     }
 

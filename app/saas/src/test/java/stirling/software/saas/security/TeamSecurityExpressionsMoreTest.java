@@ -19,11 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import stirling.software.common.security.SimpleGrantedAuthority;
-import stirling.software.common.security.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;

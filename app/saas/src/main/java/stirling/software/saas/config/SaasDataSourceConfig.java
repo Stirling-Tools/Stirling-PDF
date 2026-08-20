@@ -6,9 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * SaaS-profile Postgres datasource configuration.
- */
+/** SaaS-profile Postgres datasource configuration. */
 @Slf4j
 @ApplicationScoped
 @IfBuildProfile("saas")

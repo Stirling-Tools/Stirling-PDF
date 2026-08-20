@@ -4,20 +4,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.quarkus.arc.profile.IfBuildProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import jakarta.annotation.security.RolesAllowed;
-import stirling.software.common.security.Authentication;
-import jakarta.transaction.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -85,7 +85,7 @@ public class PaygPaymentMethodController {
         if (rows.isEmpty()) {
             return ResponseEntity.ok(PaymentMethodResponse.absent());
         }
-        Long teamId = rows.get(0).getTeam().getId();
+        Long teamId = rows.getFirst().getTeam().getId();
 
         Optional<PaygTeamExtensions> ext = extRepo.findById(teamId);
         if (ext.isEmpty() || ext.get().getStripeCustomerId() == null) {

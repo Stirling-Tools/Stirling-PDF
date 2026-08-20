@@ -5,6 +5,11 @@ dependencies {
     implementation project(':common')
     implementation project(':proprietary')
 
+    // Markdown -> HTML for rendering versioned legal documents (agreement) to PDF via the
+    // shared FileToPdf/WeasyPrint path in :common. Same library the core Markdown-to-PDF tool uses.
+    implementation "org.commonmark:commonmark:$commonmarkVersion"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
+
     // Spring -> Quarkus extension mapping (full native migration):
     api 'io.quarkus:quarkus-security'                 // spring-boot-starter-security
     api 'io.quarkus:quarkus-hibernate-orm-panache'    // spring-boot-starter-data-jpa

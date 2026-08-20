@@ -12,6 +12,7 @@ Feature: API Validation
             | verticalDivisions   | <verticalDivisions>   |
             | merge               | true                  |
         When I send the API request to the endpoint "/api/v1/general/split-pdf-by-sections"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 200
         And the response status code should be 200
@@ -33,6 +34,7 @@ Feature: API Validation
             | parameter   | value         |
             | pageNumbers | <pageNumbers> |
         When I send the API request to the endpoint "/api/v1/general/split-pages"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/octet-stream"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -55,6 +57,7 @@ Feature: API Validation
             | splitType  | <splitType>  |
             | splitValue | <splitValue> |
         When I send the API request to the endpoint "/api/v1/general/split-by-size-or-count"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/octet-stream"
         And the response status code should be 200
         And the response file should have size greater than 200

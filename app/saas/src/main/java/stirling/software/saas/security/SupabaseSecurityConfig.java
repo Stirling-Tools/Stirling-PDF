@@ -28,13 +28,10 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
-/**
- * Stateless Supabase-JWT security chain.
- */
+/** Stateless Supabase-JWT security chain. */
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -57,8 +54,6 @@ public class SupabaseSecurityConfig {
     /** Clock skew tolerance (seconds) applied to the {@code exp} claim. */
     @ConfigProperty(name = "app.supabase.clock-skew-seconds", defaultValue = "120")
     long clockSkewSeconds;
-
-
 
     /** Returns {@code null} if the issuer URL is usable, otherwise a short reason string. */
     static String validateIssuer(String issuer) {
@@ -84,9 +79,7 @@ public class SupabaseSecurityConfig {
         return null;
     }
 
-    /**
-     * Validates iss, exp (with clock-skew) and optionally aud on a decoded Supabase JWT.
-     */
+    /** Validates iss, exp (with clock-skew) and optionally aud on a decoded Supabase JWT. */
     static final class SupabaseTokenValidator {
         private final String expectedIssuer;
         private final String expectedAudienceOrNull;

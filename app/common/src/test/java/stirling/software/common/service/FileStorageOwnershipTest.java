@@ -2,6 +2,7 @@ package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -76,6 +77,24 @@ class FileStorageOwnershipTest {
         assertThrows(SecurityException.class, () -> fs.getFileSize(id));
         assertThrows(SecurityException.class, () -> fs.fileExists(id));
         assertThrows(SecurityException.class, () -> fs.deleteFile(id));
+    }
+
+    @Test
+    void systemDeleteOfAnotherUsersFile_allowed_soJobCleanupDoesNotOrphanIt(@TempDir Path tempDir)
+            throws IOException {
+        // An admin sweeping every user's finished jobs is not the owner of their files. The
+        // ownership-checked delete throws there, which used to drop the job record and leave the
+        // files stranded on disk with nothing left able to reference them.
+        AtomicReference<String> user = new AtomicReference<>("alice");
+        FileStorage fs = newStorageWithCurrentUser(tempDir, user);
+        String id = fs.storeBytes("alice's file".getBytes(), "x.bin");
+        user.set("admin");
+
+        assertThrows(SecurityException.class, () -> fs.deleteFile(id));
+        assertTrue(fs.deleteFileAsSystem(id), "System delete must not be blocked by ownership");
+
+        user.set("alice");
+        assertThrows(IOException.class, () -> fs.retrieveBytes(id), "File should really be gone");
     }
 
     @Test

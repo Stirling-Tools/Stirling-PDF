@@ -6,6 +6,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +41,9 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.multipart.FileUploadMultipartFile;
+import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateShareLinkRequest;
@@ -70,6 +73,7 @@ public class FileStorageController {
     @Inject FileStorageService fileStorageService;
     @Inject StorageProvider storageProvider;
     @Inject FolderService folderService;
+    @Inject AuditService auditService;
 
     @Inject SecurityIdentity securityIdentity;
 
@@ -333,6 +337,21 @@ public class FileStorageController {
     private Response buildFileResponse(StoredFile file, boolean inline) {
         final stirling.software.common.model.io.Resource resource =
                 fileStorageService.loadFile(file);
+        if (file.getEncryptionKeyId() != null) {
+            // Compliance marker: a plaintext copy of encrypted-at-rest content left the platform
+            // (inline=true is an in-app view; false is a saved download).
+            auditService.audit(
+                    AuditEventType.STORAGE_ENCRYPTION,
+                    Map.of(
+                            "action",
+                            "plaintextExport",
+                            "fileId",
+                            file.getId(),
+                            "inline",
+                            inline,
+                            "keyId",
+                            file.getEncryptionKeyId()));
+        }
         String contentType =
                 file.getContentType() == null
                         ? MediaType.APPLICATION_OCTET_STREAM

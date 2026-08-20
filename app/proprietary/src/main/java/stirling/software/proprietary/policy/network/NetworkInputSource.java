@@ -103,8 +103,9 @@ public class NetworkInputSource implements InputSource {
                 continue;
             }
             work.add(
-                    new ResolvedInput(
+                    ResolvedInput.forFile(
                             PolicyInputs.of(List.of(resource(config, file))),
+                            identity,
                             success ->
                                     completeConsumed(ctx, config, file, identity, gate, success)));
         }

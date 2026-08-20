@@ -1,60 +1,50 @@
-import type { Tier } from "@portal/contexts/TierContext";
+import { useEffect } from "react";
+import { Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
-import { WelcomeBanner } from "@portal/components/WelcomeBanner";
 import { EditorStatusCard } from "@portal/components/EditorStatusCard";
-import { SetupChecklist } from "@portal/components/SetupChecklist";
-import { useOnboardingProgress } from "@portal/hooks/useOnboardingProgress";
 import { ControlledDealStatusHero } from "@portal/components/procurement/ProcurementBanner";
 import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
 import { useProcurement } from "@portal/components/procurement/useProcurement";
 
 /**
- * The Home hero, composed with a procurement-aware, progress-aware footer:
- *
- *  - no live deployment  → welcome header (+ setup steps until complete)
- *  - deployment live     → deployed-Editor status header (+ steps until complete)
- *  - onboarding complete → header only; the setup steps collapse away
- *  - enterprise          → status header with chips hidden (the deal hero owns invite)
- *
- * The footer is the deal-status hero while a procurement deal is underway
- * (procurement is a bolt-on to any tier); otherwise the setup checklist, until
- * every step is done — then it collapses to just the header, matching the
- * deployed-status card. The procurement takeover modals render alongside.
+ * The Home hero: always the Editor deployment rail, carrying the deal-status hero as its footer
+ * while a procurement deal is underway (procurement is a bolt-on to any tier). The rail states its
+ * own deployment status and deploy ask, so there is nothing for a tier to choose between. The
+ * procurement takeover modals render alongside.
  */
-export function HomeHero({ tier }: { tier: Tier }) {
-  const { openLinkModal } = useUI();
+export function HomeHero() {
   const procurement = useProcurement();
-  const progress = useOnboardingProgress();
+  const { trialSetupRequested, clearTrialSetupRequest } = useUI();
   const dealActive =
     procurement.isLinked && procurement.started && !!procurement.data;
 
-  // Start the enterprise flow right here on Home: open the trial-setup modal when the account is
-  // linked, otherwise prompt to link first — no navigating off to the procurement view.
-  const onStartEnterprise = () => {
-    if (procurement.isLinked) procurement.onStartTrial();
-    else openLinkModal();
-  };
-
-  // Steps collapse once onboarding is complete; a live deal always keeps its
-  // hero. Otherwise the setup checklist carries the (progress-aware) steps.
-  const footer = dealActive ? (
-    <ControlledDealStatusHero controller={procurement} />
-  ) : progress.allComplete ? undefined : (
-    <SetupChecklist progress={progress} onStartEnterprise={onStartEnterprise} />
-  );
-
-  // The live-status header (EditorStatusCard) needs a real deployment to show;
-  // without one it renders nothing, so route to it only when actually deployed.
-  // Everything else — including a step completed via the local download flag —
-  // keeps the always-present welcome header, so the card never vanishes.
-  const showStatus = progress.deployed;
+  // Someone said yes to enterprise elsewhere (the billing upsell, a sales link). Open trial setup
+  // once the snapshot has landed, so a buyer who already has a deal is not asked to start another.
+  useEffect(() => {
+    if (!trialSetupRequested || procurement.loading) return;
+    clearTrialSetupRequest();
+    if (!procurement.started) procurement.onExploreEnterprise();
+  }, [trialSetupRequested, procurement, clearTrialSetupRequest]);
 
   return (
     <>
-      {showStatus ? (
-        <EditorStatusCard footer={footer} hideChips={tier === "enterprise"} />
+      {procurement.loading ? (
+        // Hold the rail's shape rather than committing to a footer: branching before the snapshot
+        // lands paints the no-deal rail first, flashing on every refresh of an active deal.
+        <section className="portal-surface portal-editor-hero" aria-busy>
+          <div className="portal-editor-hero__row">
+            <Skeleton width="2rem" height="2rem" />
+            <Skeleton width="12rem" height="1rem" />
+          </div>
+        </section>
       ) : (
-        <WelcomeBanner footer={footer} />
+        <EditorStatusCard
+          footer={
+            dealActive ? (
+              <ControlledDealStatusHero controller={procurement} />
+            ) : undefined
+          }
+        />
       )}
       <ProcurementFlow controller={procurement} />
     </>

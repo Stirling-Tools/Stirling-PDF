@@ -25,10 +25,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import stirling.software.common.security.Authentication;
-import stirling.software.common.security.SecurityContextHolder;
 
 import jakarta.servlet.ServletException;
+
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class DeviceCredentialAuthenticationFilterTest {

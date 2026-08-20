@@ -30,6 +30,7 @@ import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
@@ -630,5 +631,43 @@ class WorkflowSessionServiceTest {
                 .thenReturn(List.of());
 
         assertThat(service.listUserSessions(owner)).isEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // revoked encryption keys (storage encryption kill switch)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getOriginalFile_revokedEncryptionKey_isForbiddenNotServerError() throws Exception {
+        WorkflowSession session = new WorkflowSession();
+        StoredFile original = new StoredFile();
+        original.setStorageKey("1/original");
+        session.setOriginalFile(original);
+        when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(session));
+        when(storageProvider.load("1/original"))
+                .thenThrow(new StorageKeyRevokedException("key disabled"));
+
+        assertThatThrownBy(() -> service.getOriginalFile("s1"))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.FORBIDDEN.getStatusCode());
+    }
+
+    @Test
+    void getSignRequestDocument_revokedEncryptionKey_isForbiddenNotServerError() throws Exception {
+        User participantUser = user("bob");
+        WorkflowSession session = sessionWithParticipant("s2", pendingParticipant(participantUser));
+        StoredFile original = new StoredFile();
+        original.setStorageKey("1/sign-me");
+        session.setOriginalFile(original);
+        when(storageProvider.load("1/sign-me"))
+                .thenThrow(new StorageKeyRevokedException("key disabled"));
+
+        // This path wraps the read in catch(IOException) -> 500; the revocation must not be
+        // swallowed by it, because StorageKeyRevokedException IS an IOException.
+        assertThatThrownBy(() -> service.getSignRequestDocument("s2", participantUser))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.FORBIDDEN.getStatusCode());
     }
 }

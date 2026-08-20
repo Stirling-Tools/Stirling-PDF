@@ -49,9 +49,7 @@ import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 import stirling.software.saas.util.LogRedactionUtils;
 
-/**
- * Stateless JWT authentication filter for the saas profile.
- */
+/** Stateless JWT authentication filter for the saas profile. */
 @Slf4j
 public class SupabaseAuthenticationFilter {
 
@@ -69,7 +67,6 @@ public class SupabaseAuthenticationFilter {
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
-
 
     public SupabaseAuthenticationFilter(
             TeamService teamService,
@@ -296,7 +293,7 @@ public class SupabaseAuthenticationFilter {
             if (!(raw instanceof List<?> amrList) || amrList.isEmpty()) {
                 return WEB;
             }
-            Object first = amrList.get(0);
+            Object first = amrList.getFirst();
             if (!(first instanceof Map<?, ?> entry)) {
                 return WEB;
             }

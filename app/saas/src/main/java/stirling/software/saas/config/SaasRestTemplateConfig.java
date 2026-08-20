@@ -9,9 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
-/**
- * HTTP client for talking to Supabase Edge Functions, with a bounded connect timeout.
- */
+/** HTTP client for talking to Supabase Edge Functions, with a bounded connect timeout. */
 @ApplicationScoped
 @IfBuildProfile("saas")
 public class SaasRestTemplateConfig {

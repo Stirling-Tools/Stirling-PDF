@@ -15,6 +15,7 @@ import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
@@ -158,7 +159,7 @@ public class JobController {
         if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
                 List<ResultFile> files = result.getAllResultFiles();
-                ResultFile singleFile = files.get(0);
+                ResultFile singleFile = files.getFirst();
 
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return Response.ok(fileContent)
@@ -238,6 +239,37 @@ public class JobController {
                         .build();
             }
         }
+    }
+
+    /**
+     * Self-service counterpart to the admin-only {@code POST /api/v1/admin/job/cleanup}: that one
+     * sweeps every user's jobs and needs ROLE_ADMIN, this one releases only the caller's own and so
+     * is safe for any authenticated user. Both run the same sweep inside {@link TaskManager}.
+     */
+    @POST
+    @Path("/jobs/cleanup")
+    @Operation(
+            summary = "Release finished jobs and their stored files now",
+            description =
+                    "Force-expires this node's finished jobs instead of waiting out the retention"
+                            + " window, deleting their result files and the persistent copies made of"
+                            + " their inputs. Only jobs the caller may access are touched, and jobs"
+                            + " still running are left alone. Admins can sweep every user's jobs"
+                            + " with POST /api/v1/admin/job/cleanup?force=true.")
+    public Response cleanupFinishedJobs() {
+        TaskManager.CleanupSummary summary =
+                taskManager.cleanupFinishedJobsNow(this::validateJobAccess);
+        log.info(
+                "On-demand job cleanup removed {} job(s) and {} file(s), retained {} job(s)",
+                summary.jobsRemoved(),
+                summary.filesDeleted(),
+                summary.jobsRetained());
+        return Response.ok(
+                        Map.of(
+                                "jobsRemoved", summary.jobsRemoved(),
+                                "filesDeleted", summary.filesDeleted(),
+                                "jobsRetained", summary.jobsRetained()))
+                .build();
     }
 
     @GET

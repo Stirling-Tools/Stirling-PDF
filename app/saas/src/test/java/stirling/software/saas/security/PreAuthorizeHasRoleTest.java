@@ -11,6 +11,7 @@ import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
+
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.SimpleGrantedAuthority;
 

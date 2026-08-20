@@ -73,6 +73,15 @@ public class EncryptingStorageProvider implements StorageProvider {
         this(delegate, StorageEncryptionState.of(writeEnabled, keys), null);
     }
 
+    /** Test convenience with an explicit audit listener. */
+    public EncryptingStorageProvider(
+            StorageProvider delegate,
+            FileEncryptionKeyService keys,
+            boolean writeEnabled,
+            StorageEncryptionAuditListener auditListener) {
+        this(delegate, StorageEncryptionState.of(writeEnabled, keys, auditListener), null);
+    }
+
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
         if (!state.isWriteEnabled()) {
@@ -117,6 +126,7 @@ public class EncryptingStorageProvider implements StorageProvider {
                     stored.getStorageKey(),
                     kek.keyId(),
                     file.getSize());
+            state.auditListener().encrypted(stored.getStorageKey(), kek.keyId());
             return stored.toBuilder()
                     .sizeBytes(file.getSize())
                     .encryptionKeyId(kek.keyId().toString())
@@ -138,9 +148,9 @@ public class EncryptingStorageProvider implements StorageProvider {
     public Resource load(String storageKey) throws IOException {
         Resource raw = delegate.load(storageKey);
         if (raw.isOpen()) {
-            return wrapOneShot(raw);
+            return wrapOneShot(storageKey, raw);
         }
-        return wrapReopenable(raw);
+        return wrapReopenable(storageKey, raw);
     }
 
     @Override
@@ -259,7 +269,7 @@ public class EncryptingStorageProvider implements StorageProvider {
     // ---- load helpers --------------------------------------------------------------------
 
     /** Re-openable delegate (local file, DB byte array): sniff via a throwaway stream. */
-    private Resource wrapReopenable(Resource raw) throws IOException {
+    private Resource wrapReopenable(String storageKey, Resource raw) throws IOException {
         byte[] prefix;
         try (InputStream in = raw.getInputStream()) {
             prefix = in.readNBytes(EncryptedFileFormat.HEADER_LENGTH);
@@ -269,6 +279,7 @@ public class EncryptingStorageProvider implements StorageProvider {
             return raw;
         }
         byte[] dek = unwrapDek(header);
+        state.auditListener().decrypted(storageKey, header.keyId());
         return new ReopenableDecryptedResource(raw, header, dek);
     }
 
@@ -278,7 +289,7 @@ public class EncryptingStorageProvider implements StorageProvider {
      * tampered wrap) must close it — leaking here would starve the S3 connection pool precisely
      * when the kill switch is being exercised.
      */
-    private Resource wrapOneShot(Resource raw) throws IOException {
+    private Resource wrapOneShot(String storageKey, Resource raw) throws IOException {
         InputStream in = raw.getInputStream();
         try {
             byte[] prefix = in.readNBytes(EncryptedFileFormat.HEADER_LENGTH);
@@ -304,6 +315,7 @@ public class EncryptingStorageProvider implements StorageProvider {
             } catch (GeneralSecurityException e) {
                 throw new StorageEncryptionException("Failed to open decrypting stream", e);
             }
+            state.auditListener().decrypted(storageKey, header.keyId());
             return new OneShotResource(decrypting, header.plaintextLength(), raw.getFilename());
         } catch (IOException | RuntimeException e) {
             try {

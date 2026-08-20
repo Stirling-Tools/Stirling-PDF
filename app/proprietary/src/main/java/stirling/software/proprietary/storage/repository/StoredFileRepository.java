@@ -111,6 +111,67 @@ public class StoredFileRepository implements PanacheRepository<StoredFile> {
                 user);
     }
 
+    // ---- storage encryption at rest ----------------------------------------------------
+
+    public long countByEncryptionKeyIdIsNull() {
+        return count("encryptionKeyId is null");
+    }
+
+    public long countByEncryptionKeyIdIsNotNull() {
+        return count("encryptionKeyId is not null");
+    }
+
+    /**
+     * Next batch of plaintext files for the encrypt-existing migration. Cursor-based ({@code id >
+     * lastId}) so per-file failures don't wedge the loop, and owner is fetched eagerly because the
+     * job re-stores blobs under the owner's scope key outside a web transaction.
+     */
+    public List<StoredFile> findMigratableAfter(long lastId, int limit) {
+        return find(
+                        "SELECT f FROM StoredFile f JOIN FETCH f.owner "
+                                + "WHERE f.encryptionKeyId IS NULL AND f.id > ?1 ORDER BY f.id ASC",
+                        lastId)
+                .page(0, limit)
+                .list();
+    }
+
+    /**
+     * Compare-and-swap updates for the migration: each blob's storage key only flips if it still
+     * holds the value the job read, so a user replacing the file mid-migration wins and the job
+     * discards its own copy. The main-blob swap also stamps the key id, which is what removes the
+     * row from the migration's selection.
+     */
+    @Transactional
+    public int swapMainBlob(Long id, String oldKey, String newKey, String keyId) {
+        return update(
+                "UPDATE StoredFile f SET f.storageKey = ?1, f.encryptionKeyId = ?2 "
+                        + "WHERE f.id = ?3 AND f.storageKey = ?4",
+                newKey,
+                keyId,
+                id,
+                oldKey);
+    }
+
+    @Transactional
+    public int swapHistoryBlob(Long id, String oldKey, String newKey) {
+        return update(
+                "UPDATE StoredFile f SET f.historyStorageKey = ?1 "
+                        + "WHERE f.id = ?2 AND f.historyStorageKey = ?3",
+                newKey,
+                id,
+                oldKey);
+    }
+
+    @Transactional
+    public int swapAuditLogBlob(Long id, String oldKey, String newKey) {
+        return update(
+                "UPDATE StoredFile f SET f.auditLogStorageKey = ?1 "
+                        + "WHERE f.id = ?2 AND f.auditLogStorageKey = ?3",
+                newKey,
+                id,
+                oldKey);
+    }
+
     // --- Spring Data CRUD shims kept so collaborating services compile unchanged ---
 
     /**

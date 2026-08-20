@@ -197,7 +197,7 @@ class ConvertPDFToPDFAMoreTest {
                             // qpdf normalize/clean writes its (last-arg) output file
                             if (command.contains("--normalize-content=y")) {
                                 // qpdf produced file is the last argument
-                                Path out = Path.of(command.get(command.size() - 1));
+                                Path out = Path.of(command.getLast());
                                 Files.write(out, simplePdfBytes());
                             }
                             return okResult;

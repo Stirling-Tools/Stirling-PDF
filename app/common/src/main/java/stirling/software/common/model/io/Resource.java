@@ -11,8 +11,8 @@ import java.io.InputStream;
  * public method signatures across the codebase that accept or return {@code Resource}, this
  * interface mirrors the subset of Spring's API the codebase actually uses ({@code
  * getInputStream/exists/getFile/getFilename/contentLength/isFile/isOpen}) together with the {@link
- * FileSystemResource}, {@link InputStreamResource} and {@link ClassPathResource} implementations.
- * Converting a file is then just an import swap.
+ * FileSystemResource}, {@link InputStreamResource}, {@link ByteArrayResource} and {@link
+ * ClassPathResource} implementations. Converting a file is then just an import swap.
  */
 public interface Resource {
 

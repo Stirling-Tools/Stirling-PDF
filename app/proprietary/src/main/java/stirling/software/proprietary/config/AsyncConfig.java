@@ -2,16 +2,21 @@ package stirling.software.proprietary.config;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.slf4j.MDC;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 
 @ApplicationScoped
 public class AsyncConfig {
+
+    private ExecutorService auditExecutorService;
+    private ExecutorService aiStreamExecutorService;
 
     /**
      * Wraps a delegate {@link Executor} so that the caller thread's MDC context is propagated to
@@ -43,7 +48,8 @@ public class AsyncConfig {
     @Named("auditExecutor")
     @ApplicationScoped
     public Executor auditExecutor() {
-        return mdcPropagating(Executors.newVirtualThreadPerTaskExecutor());
+        auditExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+        return mdcPropagating(auditExecutorService);
     }
 
     /** Propagates the request's SecurityContext onto background AI-orchestration threads. */
@@ -51,6 +57,20 @@ public class AsyncConfig {
     @Named("aiStreamExecutor")
     @ApplicationScoped
     public Executor aiStreamExecutor() {
-        return mdcPropagating(Executors.newVirtualThreadPerTaskExecutor());
+        aiStreamExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+        return mdcPropagating(aiStreamExecutorService);
+    }
+
+    /** Close the underlying executors because the produced wrappers do not own their lifecycle. */
+    @PreDestroy
+    void shutdown() {
+        shutdownExecutor(auditExecutorService);
+        shutdownExecutor(aiStreamExecutorService);
+    }
+
+    private void shutdownExecutor(ExecutorService executor) {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
     }
 }

@@ -12,7 +12,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -73,6 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
@@ -430,7 +430,7 @@ public class CertSignController {
                 PDAcroForm acroForm = new PDAcroForm(doc);
                 doc.getDocumentCatalog().setAcroForm(acroForm);
                 PDSignatureField signatureField = new PDSignatureField(acroForm);
-                PDAnnotationWidget widget = signatureField.getWidgets().get(0);
+                PDAnnotationWidget widget = signatureField.getWidgets().getFirst();
                 List<PDField> acroFormFields = acroForm.getFields();
                 acroForm.setSignaturesExist(true);
                 acroForm.setAppendOnly(true);

@@ -25,7 +25,12 @@ import stirling.software.SPDF.controller.web.UploadLimitService;
 @Slf4j
 public class MultipartConfiguration {
 
-    @Inject UploadLimitService uploadLimitService;
+    private final UploadLimitService uploadLimitService;
+
+    @Inject
+    public MultipartConfiguration(UploadLimitService uploadLimitService) {
+        this.uploadLimitService = uploadLimitService;
+    }
 
     /**
      * Produces a MultipartConfigElement that respects fileUploadLimit from settings.yml or

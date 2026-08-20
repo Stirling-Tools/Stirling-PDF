@@ -21,8 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import stirling.software.common.security.Authentication;
 
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;

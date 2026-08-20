@@ -175,6 +175,10 @@ public class InternalApiClient {
             }
         }
 
+        // Note: a no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string
+        // params. encodeMultipart above always writes multipart/form-data, so unlike RestTemplate
+        // this client never falls back to urlencoded for those and needs no special case.
+
         try {
             HttpResponse<InputStream> response =
                     httpClient.send(

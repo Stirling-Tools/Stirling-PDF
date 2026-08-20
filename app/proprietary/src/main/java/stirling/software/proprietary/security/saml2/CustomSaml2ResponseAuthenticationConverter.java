@@ -101,6 +101,6 @@ public class CustomSaml2ResponseAuthenticationConverter {
 
     private String getFirstAttributeValue(Map<String, List<Object>> attributes, String name) {
         List<Object> values = attributes.get(name);
-        return values != null && !values.isEmpty() ? values.get(0).toString() : null;
+        return values != null && !values.isEmpty() ? values.getFirst().toString() : null;
     }
 }

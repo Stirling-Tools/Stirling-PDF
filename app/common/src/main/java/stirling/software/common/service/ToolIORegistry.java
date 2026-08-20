@@ -92,7 +92,9 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
             if (annotation == null) {
                 continue;
             }
-            ToolIOSpec spec = ToolIOSpec.from(annotation);
+            ToolIOSpec spec =
+                    ToolIOSpec.from(
+                            annotation, param -> ToolIOParameterDefaults.resolve(method, param));
             for (String pattern : extractPatterns(classPath, method)) {
                 target.put(pattern, spec);
             }

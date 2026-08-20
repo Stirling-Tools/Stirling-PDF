@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -97,10 +98,10 @@ class ReactRoutingControllerTest {
     void serveMobileScanner_webMode_servesSpaNotUploadPage() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveMobileScanner(request);
+        Response response = controller.serveMobileScanner();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertFalse(body.contains("Take Photo"));
     }
@@ -110,11 +111,11 @@ class ReactRoutingControllerTest {
         controller.init();
         System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
         try {
-            ResponseEntity<String> response = controller.serveMobileScanner(request);
+            Response response = controller.serveMobileScanner();
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-            String body = response.getBody();
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+            assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+            String body = (String) response.getEntity();
             assertNotNull(body);
             assertTrue(body.contains("Mobile Upload"));
             assertTrue(body.contains("Take Photo"));
@@ -169,6 +170,54 @@ class ReactRoutingControllerTest {
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertNotNull(response.getEntity());
+    }
+
+    // --- deep-link SPA fallback ---
+
+    @Test
+    void isSpaFallbackRoute_acceptsDeepSpaPaths() {
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/123/runs/456"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/workflow/sign/some-token"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new/"));
+        // "pipelines" must not be swallowed by the "pipeline" exclusion
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/pipelines"));
+    }
+
+    @Test
+    void isSpaFallbackRoute_rejectsBackendStaticAndFilePaths() {
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/api/v1/some/endpoint"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline/anything"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/assets/deep/path"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/file.js"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/branding/sub/logo.png"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(""));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(null));
+    }
+
+    @Test
+    void forwardDeepPaths_servesIndexForDeepRoute() throws Exception {
+        controller.init();
+
+        Response response = controller.forwardDeepPaths("processor/pipelines/new");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
+        assertNotNull(body);
+        assertTrue(body.contains("Stirling PDF"));
+    }
+
+    @Test
+    void forwardDeepPaths_rejectsBackendAndFilePaths() {
+        controller.init();
+
+        assertThrows(
+                NotFoundException.class, () -> controller.forwardDeepPaths("api/v1/policies/run"));
+        assertThrows(
+                NotFoundException.class,
+                () -> controller.forwardDeepPaths("branding/sub/logo.png"));
     }
 
     // --- context path handling ---
