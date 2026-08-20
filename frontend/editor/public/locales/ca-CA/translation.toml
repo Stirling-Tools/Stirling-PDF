@@ -1879,6 +1879,9 @@ width = "Amplada"
 [app]
 description = "L'alternativa gratuïta a Adobe Acrobat (més de 10 M de descàrregues)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Converteix a PDF/A-3b"
 convertToPdfA3bDescription = "Crea un PDF d'arxiu amb fitxers adjunts incrustats"
@@ -2933,12 +2936,16 @@ text = "Per fer que aquests permisos no es puguin canviar, utilitzeu l’eina Af
 [chat.actions]
 copy = "Copia el missatge"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opcions de l'agent Stirling"
+assistant = "AI Assistant"
 clearChat = "Neteja el xat"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Aquesta operació utilitzarà els vostres crèdits del núvol"
 tooltip = "Tria el color de la pantalla"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Tria el color"
 
 [common]
+actions = "Actions"
 back = "Enrere"
 cancel = "Cancel·la"
 close = "Tanca"
+codeSample = "Code sample"
 collapse = "Replega"
 confirm = "Confirma"
 continue = "Continua"
 copied = "Copiat!"
 copy = "Copia"
 done = "Fet"
+enterValue = "Enter value"
 error = "Error"
 expand = "Desplega"
 loading = "Carregant..."
 next = "Següent"
+open = "Open"
 preview = "Vista prèvia"
 previous = "Anterior"
 refresh = "Actualitza"
 remaining = "Restant"
 retry = "Reintenta"
 save = "Desa"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Esborra la selecció"
@@ -3185,6 +3199,7 @@ title = "Mètode de compressió"
 [compress.settings]
 desiredSize = "Mida de fitxer desitjada"
 desiredSizePlaceholder = "Introdueix la mida"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "La compressió és una manera fàcil de reduir la mida del fitxer. Trieu Mida de fitxer per introduir una mida objectiu i que ajustem la qualitat per vosaltres. Trieu Qualitat per establir manualment la intensitat de la compressió."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Cerca..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edita"
@@ -3824,11 +3843,13 @@ shareSelected = "Comparteix els seleccionats"
 sharing = "Compartició"
 showAll = "Mostra-ho tot"
 showHistory = "Mostra l'historial"
+sortBy = "Sort files"
 sortByDate = "Ordena per data"
 sortByName = "Ordena per nom"
 sortBySize = "Ordena per mida"
 storage = "Emmagatzematge"
 storageState = "Emmagatzematge"
+storageUsed = "Storage used"
 synced = "Sincronitzat"
 title = "Puja fitxers PDF"
 toolChain = "Eines aplicades"
@@ -3874,6 +3895,8 @@ addFiles = "Afegeix fitxers"
 addingFiles = "S'estan afegint fitxers…"
 collapse = "Redueix la barra lateral"
 customizeGroups = "Personalitza els grups"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Obre fitxers per començar"
 dropToAdd = "Drop files to add"
 expand = "Amplia la barra lateral"
@@ -3888,12 +3911,12 @@ openFromComputer = "Obre des de l’ordinador"
 openSettings = "Obre la configuració"
 other = "Altres"
 recent = "Recents"
-search = "Cerca"
-searchPlaceholder = "Cerca fitxers..."
 viewAll = "Mostra tots els {{count}} fitxers"
 
 [fileSidebar.fileItem]
 closeViewer = "Tanca el visor"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Obre al visor"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Torna a Els meus fitxers"
 breadcrumbs = "Ruta de la carpeta"
 cancel = "Cancel·la"
 classification = "Classificació"
-clearSearch = "Neteja la cerca"
 clearSelection = "Neteja la selecció"
 closeDetails = "Tanca els detalls"
 create = "Crea"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Canvia la mida de l'arbre de carpetes (tecles de fletxa, Maj
 save = "Desa"
 saveToServer = "Desa al servidor"
 saveToServerDisabledHint = "Desar al servidor no està habilitat en aquest servidor. Demana a l'administrador que ho activi."
-search = "Cerca"
-searchPlaceholder = "Cerca en aquesta carpeta i subcarpetes"
 selectAll = "Selecciona-ho tot"
 selectAllHint = "Fes clic per seleccionar-ho tot. Consell: mantén Ctrl (o Cmd) per afegir fitxers d'un en un, Maj per seleccionar un interval."
 selectedCount = "{{count}} seleccionats"
@@ -4043,6 +4063,10 @@ title = "Encara no hi ha fitxers al núvol"
 [filesPage.empty.local]
 hint = "Els fitxers desats sense pujar es queden aquí. Deixa anar un fitxer per afegir-ne un."
 title = "Sense fitxers només locals"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Els fitxers que obris o editis apareixeran aquí."
@@ -4113,6 +4137,11 @@ localHint = "Només emmagatzemat en aquest navegador"
 shared = "Compartit"
 sharedHint = "Compartit amb tu mitjançant enllaç"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "Més antic primer"
 modifiedDesc = "Més recent primer"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "No hi ha fitxers disponibles a l'emmagatzematge. Obre al
 open = "Obre"
 openFile = "Obre fitxer"
 openFiles = "Obre fitxers"
+selectFile = "Select {{name}}"
 selectFromStorage = "Seleccioneu de l'emmagatzematge"
 upload = "Puja"
 uploadFile = "Puja fitxer"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Tot desat"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "No s'ha pogut extreure el CSV"
 extractXlsxError = "No s'ha pogut extreure l'XLSX"
+filled = "filled"
 flattenAfterFilling = "Aplana després d'emplenar"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "obl."
 requiredFieldsError = "Emplena tots els camps obligatoris"
 rescanFields = "Torna a analitzar els camps"
@@ -4795,9 +4830,6 @@ title = "Imatge a PDF"
 [imageToPdf]
 tags = "conversió,img,jpg,imatge,foto"
 
-[infoBanner]
-dismiss = "Descarta"
-
 [invite]
 acceptError = "No s’ha pogut crear el compte"
 accountFor = "Creant compte per a"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Pujada correcta!"
 uploadSuccessMessage = "Les imatges s'han transferit."
 validating = "Validant la sessió..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Escaneja per pujar fotos. Les imatges es converteixen automàticament a PDF."
 descriptionNoConvert = "Escaneja per pujar fotos des del dispositiu mòbil."
@@ -4997,8 +5057,13 @@ title = "Puja des del mòbil"
 tags = "Eina Multifunció,operacions múltiples,UI,clic i arrossega,costat frontal,client"
 title = "Eina multifunció de PDF"
 
-[navbar]
-search = "Cerca"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "L'autenticació no ha estat correcta. Pots tancar aquesta finestra i tornar-ho a provar."
@@ -5127,6 +5192,7 @@ activeFiles = "La vista de <strong>Fitxers actius</strong> mostra tots els PDF q
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Tanca"
 cropSettings = "Ara que hem seleccionat el fitxer que volem retallar, podem configurar l’eina Retalla per triar l’àrea a la qual volem retallar el PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Si feu clic en un dels fitxers, es selecciona per al processament. Podeu seleccionar diversos fitxers per a operacions en lot."
 fileReplacement = "El fitxer modificat substituirà automàticament l’original a la Taula de treball, cosa que us permetrà passar-lo fàcilment per més eines."
 filesButton = "El botó de <strong>Fitxers</strong> a la barra d’accés ràpid us permet pujar PDF per utilitzar les eines."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 crèdits"
 xsmall = "100 crèdits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Trieu el pla que s’adapta a les vostres necessitats"
 title = "Plans disponibles"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "S'ha assolit el límit de despesa mensual"
 title = "No s'ha pogut obrir el portal de Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "de {{allowance}} PDF gratuïts utilitzats"
 capSuffix_other = "de {{allowance}} PDF gratuïts utilitzats"
 eyebrow = "Prova de Processor"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Envia un document o una notificació per correu electrònic quan s'executi una política."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Arxiva documents processats a Nextcloud."
@@ -7077,11 +7173,6 @@ title = "SDK oficials"
 beta = "Beta"
 deprecated = "Obsolet"
 
-[portal.docs.search]
-empty = "No hi ha documentació coincident"
-placeholder = "Cerca a la documentació"
-results = "{{count}} resultats"
-
 [portal.docs.skills]
 eyebrow = "HABILITATS"
 lead = "Capacitats incloses i amb nom que el teu agent invoca com una sola eina. Cada habilitat és una cadena d'operacions determinista amb avaluacions associades."
@@ -7180,11 +7271,11 @@ editorAction = "Editor"
 empty = "Cap document coincideix amb aquest filtre."
 rowActions = "Accions de fila"
 sensitiveLabel = "Sensible"
-sensitiveTitle = "Sensible — cal accés"
 
 [portal.documents.table.columns]
 action = "Canalització / Acció"
 document = "Document"
+labels = "Labels"
 product = "Producte"
 status = "Estat"
 time = "Hora"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "Vist per última vegada"
 region = "Regió"
 status = "Estat"
+target = "Target"
 version = "Versió"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "En execució"
 description = "Aquesta vista ha trobat un error inesperat. Torna-ho a provar o tria una altra secció de la barra lateral."
 retry = "Torna-ho a provar"
 title = "Alguna cosa ha anat malament en aquesta pàgina"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Enrere"
@@ -7380,11 +7522,6 @@ cancel = "Cancel·la"
 confirm = "Revoca la clau"
 title = "Revoca la clau API"
 
-[portal.infrastructure.attestationLabel]
-attested = "Atestat"
-inScope = "Dins de l'abast"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtra esdeveniments d'auditoria per categoria"
 heading = "Registres d'auditoria"
@@ -7456,11 +7593,6 @@ info = "Info"
 success = "Correcte"
 warning = "Advertiment"
 
-[portal.infrastructure.certLabel]
-certified = "Certificat"
-inProgress = "En curs"
-notStarted = "No iniciat"
-
 [portal.infrastructure.createKey]
 cancel = "Cancel·la"
 createKey = "Crea una clau"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Copia aquest secret ara — no es tornarà a mostrar."
 title = "Crea una clau API"
 titleCreated = "Clau creada"
 
-[portal.infrastructure.deployLabel]
-live = "En directe"
-queued = "A la cua"
-rolledBack = "Revertit"
-rolling = "Desplegant"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Desplegat per"
-environment = "Entorn"
-product = "Producte"
-status = "Estat"
-version = "Versió"
-when = "Quan"
-
-[portal.infrastructure.deployments.recent]
-heading = "Desplegaments recents"
-subheading = "Els darrers desplegaments en productes i entorns."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instàncies"
-latency = "Latència"
-load = "Càrrega"
-p99 = "P99"
-region = "Regió"
-status = "Estat"
-throughput = "Rendiment"
-uptime = "Temps d'activitat"
-version = "Versió"
-
-[portal.infrastructure.deployments.regions]
-heading = "Regions"
-subheading = "Salut en directe de cada regió Stirling desplegada — latència, càrrega i versió del desplegament."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Les regions desplegades apareixen aquí un cop s'hagi proveït el teu espai de treball."
-title = "No hi ha regions desplegades"
-
 [portal.infrastructure.keyLabel]
 active = "Activa"
 revoked = "Revocada"
-
-[portal.infrastructure.modelLabel]
-active = "Actiu"
-degraded = "Degradat"
-disabled = "Desactivat"
-
-[portal.infrastructure.models]
-heading = "Models"
-msValue = "{{value}} ms"
-subheading = "El catàleg de models i l'encaminament que impulsen el processament de documents al teu espai de treball."
-
-[portal.infrastructure.models.byom]
-description = "Registra un model on-prem o self-hosted i fixa'l a una regió per a processament subjecte a residència de dades."
-title = "Porta el teu propi model"
-
-[portal.infrastructure.models.catalogue]
-heading = "Catàleg"
-sub = "Models gestionats disponibles al teu espai de treball, amb latència i cost en directe."
-subEnterprise = "Models gestionats, porta-el-teu-propi i on-prem — amb fixació per regió disponible."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Els models del catàleg del teu espai de treball apareixen aquí."
-title = "No hi ha models disponibles"
-
-[portal.infrastructure.models.columns]
-cost = "Cost"
-latency = "Latència"
-load = "Càrrega"
-model = "Model"
-status = "Estat"
-type = "Tipus"
-version = "Versió"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/crida"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Models actius"
-avgLatency = "Latència mitjana"
-included = "Inclòs"
-monthlySpend = "Despesa mensual en models"
-
-[portal.infrastructure.models.routing]
-empty = "No hi ha regles d'encaminament configurades."
-heading = "Regles d'encaminament"
-sub = "Quin model gestiona cada operació. El valor predeterminat s'aplica quan no coincideix cap regla més específica."
-subLocked = "Encamina operacions a models específics — disponible en plans de pagament."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Actualitza a Pro per controlar quin model gestiona cada operació i tipus de document."
-title = "L'encaminament de models és una funció de pagament"
-
-[portal.infrastructure.models.routingColumns]
-default = "Predeterminat"
-docType = "Tipus de document"
-modelForAria = "Model per a {{operation}}"
-operation = "Operació"
-routedTo = "Encaminat a"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Classificació"
-extraction = "Extracció"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Degradat"
-down = "Caigut"
-healthy = "Correcte"
-
-[portal.infrastructure.security.access.byok]
-description = "Proporciona una clau del teu propi KMS. Stirling hi xifra però encara pot llegir."
-label = "Porta la teva pròpia clau (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Les claus no surten mai del teu KMS. Stirling només conserva text xifrat."
-label = "Conserva la teva pròpia clau (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling gestiona les claus de xifratge. El més senzill — zero operacions de claus per part teva."
-label = "Claus conservades per Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Política d'accés a documents"
-subheading = "Controla qui pot desxifrar documents processats en repòs."
-
-[portal.infrastructure.security.attestations]
-heading = "Atestacions de compliment"
-noReport = "No hi ha cap informe disponible"
-subheading = "Postura d'auditoria per marc, amb informes disponibles sobre controls atestats."
-viewReport = "Mostra l'informe →"
-
-[portal.infrastructure.security.compliance]
-heading = "Compliment"
-subheading = "Atestacions i certificacions que cobreixen la plataforma Stirling."
-
-[portal.infrastructure.security.empty]
-description = "La configuració de seguretat del teu espai de treball apareixerà aquí."
-title = "Postura de seguretat no disponible"
-
-[portal.infrastructure.security.hyokBanner]
-description = "Amb HYOK, les claus de xifratge no surten mai del teu KMS. Stirling emmagatzema i processa només text xifrat que pots revocar en qualsevol moment."
-title = "Stirling no pot desxifrar els teus documents"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "No hi ha intervals IP configurats — es permeten totes les IP."
-heading = "Llista d'IP permeses"
-sub = "L'accés API està restringit a aquests intervals CIDR."
-subLocked = "Restringeix l'accés API a intervals IP coneguts — disponible en plans de pagament."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Actualitza a Pro per restringir l'accés API a xarxes específiques."
-title = "La llista d'IP permeses és una funció de pagament"
-
-[portal.infrastructure.security.ipColumns]
-added = "Afegit"
-addedBy = "Afegit per"
-cidr = "CIDR"
-label = "Etiqueta"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorisme"
-heading = "Gestió de claus de xifratge"
-keyId = "Identificador de clau"
-lastRotated = "Rotada per última vegada"
-rotateKey = "Rota la clau"
-rotationPolicy = "Política de rotació"
-subheading = "Custòdia de les claus que xifren documents en repòs — qui pot desxifrar i com roten les claus."
-
-[portal.infrastructure.security.managedBanner]
-description = "La custòdia porta-la-teva-pròpia-clau (BYOK) i conserva-la-teva-pròpia-clau (HYOK) està disponible a Enterprise. Actualitza per proporcionar claus del teu propi KMS."
-title = "Les claus les gestiona Stirling al teu pla"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Àsia-Pacífic"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · límit de dades GDPR"
-label = "Unió Europea"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Estats Units"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Residència de dades"
-subheading = "On s'emmagatzemen i es processen els documents."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} utilitzat"
-
-[portal.infrastructure.storage.empty]
-description = "L'emmagatzematge connectat i l'ús apareixen aquí."
-title = "No hi ha emmagatzematge configurat"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Actiu"
-activeRange = "0–{{value}}d"
-archived = "Arxivat"
-coldStorage = "emmagatzematge fred"
-deleted = "Eliminat"
-never = "mai"
-purged = "purgat"
-
-[portal.infrastructure.storage.providers]
-connect = "Connecta"
-connected = "Connectat"
-heading = "Proveïdors connectats"
-subheading = "On s'escriuen els artefactes processats."
-
-[portal.infrastructure.storage.retention]
-heading = "Retenció"
-subheading = "Quant de temps es conserven els artefactes abans de l'eliminació del cicle de vida."
-windowLabel = "Finestra de retenció predeterminada"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} dia"
-days_other = "{{count}} dies"
-never = "No eliminis mai"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Ús total"
-progressLabel = "Emmagatzematge utilitzat"
-subheading = "Emmagatzematge consumit a tots els proveïdors connectats."
 
 [portal.infrastructure.tabs]
 apiKeys = "Claus API"
@@ -7715,11 +7619,9 @@ security = "Seguretat"
 storage = "Emmagatzematge"
 
 [portal.integrations]
-addAnother = "Afegeix-ne una altra"
 availableHeading = "Disponibles"
 comingSoonHeading = "Properament"
 connect = "Connecta"
-connectedHeading = "Connectades"
 connectionCount_one = "{{count}} connexió"
 connectionCount_other = "{{count}} connexions"
 customApi = "API personalitzada"
@@ -7736,6 +7638,10 @@ notify = "Notifica"
 security = "Seguretat"
 signing = "Signatura"
 storage = "Emmagatzematge"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Connectada"
@@ -7767,7 +7673,6 @@ integrations = "Integracions"
 pipelines = "Canalitzacions"
 policies = "Polítiques"
 procurement = "Compres"
-settings = "Configuració"
 sources = "Fonts"
 usage = "Ús i facturació"
 users = "Usuaris"
@@ -7784,7 +7689,7 @@ title = "Canalitzacions"
 newPipeline = "Canalització nova"
 
 [portal.pipelines.builder]
-addStep = "Afegeix una eina"
+activate = "Activate"
 back = "Torna a les canalitzacions"
 cannotFollow = "No es pot prendre {{produced}}"
 chooseAccount = "Tria un compte"
@@ -7792,28 +7697,38 @@ chooseDestination = "Tria una destinació"
 chooseOperation = "Tria què fa aquest pas"
 chooseSource = "Tria una font"
 discard = "Descarta els canvis"
-enabled = "Activat"
 inputs = "Entrada"
 inputSource = "Font d'entrada"
 inputTrigger = "Activador"
 keepEditing = "Continua editant"
+moreActions = "More actions"
 needsConfiguring = "Cal configurar-ho"
-needsUpload = "Cal un fitxer pujat"
-noSources = "Encara no hi ha cap font connectada. Crea'n una per utilitzar-la com a entrada."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Cap eina coincideix amb la cerca."
-pipelineSettings = "Configuració de la canalització"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Cerca eines"
-selectToolBody = "Afegeix una eina per construir la teva canalització."
-selectToolTitle = "Encara no hi ha eines"
 sendToSystem = "Envia a un altre sistema"
 stepsIncompatible = "Aquests passos no es poden executar amb el que produeix el pas anterior: {{tools}}."
 stepsNeedSetup = "Aquests passos encara s'han de configurar abans de desar: {{tools}}."
-toolSettings = "Configuració de l'eina"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Operació no reconeguda, conservada tal com està."
 unsavedBody = "Tens canvis sense desar. Desa'ls abans de sortir o els vols descartar?"
 unsavedTitle = "Canvis sense desar"
-uploadUnsupported = "Els fitxers pujats encara no són compatibles amb les canalitzacions, així que aquests passos no es poden desar: {{tools}}."
 usesDefaults = "S'executa amb la configuració predeterminada"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Combina tots els fitxers del pas anterior"
@@ -7825,30 +7740,35 @@ undeclared-operation = "No es pot comprovar què accepta aquest pas"
 
 [portal.pipelines.composer]
 addTool = "Afegeix una eina"
-cancel = "Cancel·la"
-chainEmpty = "Afegeix una eina per començar a construir la teva canalització."
 create = "Crea una canalització"
+createPaused = "Create paused"
 editingUnsupported = "Encara no és compatible mostrar aquests paràmetres d'eina per editar-los."
-moveDown = "Mou avall"
-moveUp = "Mou amunt"
+editSource = "Edit source"
 name = "Nom"
 namePlaceholder = "p. ex. Revisió de redacció"
 noToolSettings = "Aquesta eina no té configuració ajustable."
-operations_one = "Operació ({{count}})"
-operations_other = "Operacions ({{count}})"
 output = "Sortida"
-removeStep = "Elimina l'operació"
 save = "Desa els canvis"
 scheduleEvery = "Executa cada"
-sources = "Fonts"
-sourcesLoading = "Carregant fonts..."
 trigger = "Disparador"
 triggerManual = "Només manual"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "dies"
 hours = "hores"
 minutes = "minuts"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Vols eliminar \"{{name}}\"? Això no es pot desfer."
@@ -7867,6 +7787,37 @@ connectSource = "Connecta una font"
 description = "Crea la teva primera canalització: tria les fonts sobre les quals s'executa, encadena les operacions i tria on va la sortida."
 title = "Encara no hi ha canalitzacions"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Actives"
 paused = "En pausa"
@@ -7879,7 +7830,6 @@ completed_one = "Execució completada."
 completed_other = "Totes les {{count}} execucions completades."
 empty = "No hi ha res per executar: les fonts no tenien documents per processar."
 failed = "L'execució ha fallat: {{error}}"
-historyCleared = "Historial esborrat. La propera execució tornarà a processar tot el que hi hagi actualment a les fonts."
 inFlight = "No hi ha res nou per executar: encara s'estan processant documents d'una execució anterior."
 parked_one = "No hi ha res per executar: {{count}} document ha fallat anteriorment i està aparcat. Corregeix-ne la causa i després esborra l'historial per tornar-ho a provar."
 parked_other = "No hi ha res per executar: {{count}} documents han fallat anteriorment i estan aparcats. Corregeix-ne la causa i després esborra l'historial per tornar-ho a provar."
@@ -7895,6 +7845,7 @@ name = "Canalització"
 sources = "Fonts"
 status = "Estat"
 steps = "Passos"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Supervisió de carpeta"
@@ -8208,6 +8159,24 @@ label = "Adjunta a una incidència de Jira"
 [portal.policies.operations.mailgunEmail]
 description = "Envia el document processat com a fitxer adjunt."
 label = "Envia el document per correu electrònic (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Escriu el document processat en una carpeta."
@@ -8683,16 +8652,6 @@ maxed = "Límit assolit"
 subtitle = "La teva prova gratuïta dura fins al {{date}}. No cal targeta."
 title = "Prova Enterprise"
 
-[portal.search]
-ariaLabel = "Cerca"
-placeholder = "Cerca a Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "Les accions ràpides apareixeran aquí quan estiguin disponibles."
-noActionsTitle = "No hi ha accions ràpides"
-noMatches = "No hi ha coincidències per a \"{{query}}\""
-noMatchesDescription = "Prova una paraula clau diferent o navega pel catàleg."
-
 [portal.settings.groups]
 admin = "Administració"
 
@@ -8743,10 +8702,6 @@ cancel = "Cancel·la"
 confirm = "Suprimeix"
 title = "Vols suprimir la font?"
 
-[portal.sources.empty]
-description = "Connecta una carpeta (i, aviat, emmagatzematge al núvol) perquè les teves polítiques tinguin un lloc d'on obtenir documents."
-title = "Encara no hi ha fonts connectades"
-
 [portal.sources.kpi]
 inUse = "En ús"
 total = "Connexions"
@@ -8785,6 +8740,7 @@ unused = "Sense utilitzar"
 documents = "Documents"
 source = "Font"
 status = "Estat"
+type = "Type"
 usedBy = "Polítiques"
 
 [portal.sources.types.box]
@@ -9980,9 +9936,6 @@ title = "Polítiques i privadesa"
 [settings.preferences]
 title = "Preferències"
 
-[settings.search]
-placeholder = "Cerca a les pàgines de configuració..."
-
 [settings.security]
 description = "Actualitza la contrasenya per mantenir segur el compte."
 title = "Seguretat"
@@ -10128,6 +10081,7 @@ last = "Última pàgina"
 maintainRatio = "Activa/desactiva mantenir la relació d'aspecte"
 next = "Pàgina següent"
 noSavedSigs = "No s'han trobat signatures desades"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Signatures Personals"
 previous = "Pàgina anterior"
 redo = "Refer"
@@ -10166,6 +10120,7 @@ backgroundRemovalFailedTitle = "No s'ha pogut eliminar el fons"
 hint = "Carrega una imatge PNG o JPG de la teva signatura"
 label = "Carrega la imatge de la signatura"
 placeholder = "Selecciona el fitxer d'imatge"
+previewAlt = "Current image signature"
 processing = "Processant la imatge..."
 removeBackground = "Elimina el fons blanc (fes-lo transparent)"
 
@@ -10178,6 +10133,17 @@ resumeHint = "Reprèn la col·locació per poder fer clic i afegir la signatura.
 saved = "Selecciona una signatura desada a dalt i fes clic a qualsevol lloc del PDF per col·locar-la."
 text = "Després d'introduir el teu nom a dalt, fes clic en qualsevol lloc del PDF per col·locar la signatura."
 title = "Com afegir la signatura"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Mou la signatura"
@@ -10625,6 +10591,23 @@ title = "Pujar al servidor"
 updateButton = "Actualitza al servidor"
 uploadButton = "Puja al servidor"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10757,6 @@ goBack = "Torna enrere"
 pdfTools = "Eines PDF"
 placeholder = "Tria una eina per començar"
 premiumFeature = "Funció premium:"
-searchTools = "Cerca eines"
 toolsHeader = "Eines"
 viewAllTools = "Mostra totes les eines"
 
@@ -10821,6 +10803,9 @@ pageFormatting = "Format de pàgina"
 removal = "Eliminació"
 signing = "Signatura"
 verification = "Verificació"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "No s’han trobat eines"
@@ -10979,6 +10964,13 @@ approver = "Aprova la política"
 editor = "Editor"
 processor = "Processador"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Vols cancel·lar la invitació a {{email}}? No es podrà unir amb l'enllaç actual."
 cancelInviteTitle = "Cancel·la la invitació"
@@ -10998,10 +10990,8 @@ title = "Encara no hi ha membres"
 addToTeam = "Afegeix a l'equip"
 guestCount = "{{count}} convidat"
 guests = "Convidats"
-guestsDesc = "Col·laboradors externs, limitats al que has compartit. Només Editor."
 ledBy = "dirigit per {{owner}}"
 org = "Organització"
-orgDesc = "Propietaris amb autoritat a tota l'organització i aprovació de polítiques"
 owners = "{{count}} propietari"
 team = "Equip {{name}}"
 teamMeta = "{{count}} persones"
@@ -11041,12 +11031,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Convidat per {{who}}"
 cancel = "Cancel·la"
-count = "{{count}} pendents"
-desc = "Persones convidades que encara no s'han unit. Ocupen una plaça fins que acceptin."
 expiresInDays_one = "Caduca d'aquí a {{count}} dia"
 expiresInDays_other = "Caduca d'aquí a {{count}} dies"
 expiresToday = "Caduca avui"
 title = "Invitacions pendents"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "S'ha produït un error en contactar amb el backend, o no hi tens accés. Torna-ho a provar."
@@ -11237,12 +11229,15 @@ searchPlaceholder = "Cerca adjunts"
 title = "Adjunts"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Títol del marcador"
 bookmarkTitleRequired = "El títol del marcador és obligatori"
 closeSidebar = "Tanca la barra lateral de marcadors"
 collapseAll = "Replega tots els marcadors"
+empty = "No bookmarks in this document"
 expandAll = "Desplega tots els marcadors"
 searchPlaceholder = "Cerca marcadors"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Afegeix un comentari"
@@ -11264,10 +11259,12 @@ locateAnnotation = "Localitza al document"
 moreActions = "Més accions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Pàgina {{page}}"
 placingHint = "Feu clic a una pàgina per col·locar… (cancel·la)"
 removeCommentOnly = "Elimina només el comentari"
 saveReply = "Desa la resposta"
+searchPlaceholder = "Search comments"
 title = "Comentaris"
 typeComment = "Comentari"
 typeInsertText = "Insereix text"
@@ -11290,6 +11287,7 @@ unsavedDesc = "Tens canvis no desats"
 closeSidebar = "Tanca la barra lateral de capes"
 hideAll = "Amaga totes les capes"
 showAll = "Mostra totes les capes"
+title = "Layers"
 
 [viewer.link]
 delete = "Suprimeix l'enllaç"
@@ -11646,6 +11644,7 @@ exitRedaction = "Surt del mode de censura"
 exportAll = "Exporta el PDF"
 exportSelected = "Exporta les pàgines seleccionades"
 formFill = "Omple el formulari"
+hideToolbar = "Hide toolbar"
 multiTool = "Eina múltiple"
 panMode = "Mode de desplaçament"
 print = "Imprimeix el PDF"
@@ -11666,6 +11665,7 @@ selectAll = "Selecciona-ho tot"
 selectByNumber = "Selecciona per números de pàgina"
 selectLanguage = "Selecciona l’idioma"
 share = "Comparteix"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Mostra/oculta les anotacions"
 toggleAttachments = "Mostra/oculta els adjunts"
 toggleBookmarks = "Mostra/oculta els marcadors"

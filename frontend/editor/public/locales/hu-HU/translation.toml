@@ -1879,6 +1879,9 @@ width = "Szélesség"
 [app]
 description = "Az ingyenes Adobe Acrobat alternatíva (10M+ letöltés)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Átalakítás PDF/A-3b formátumba"
 convertToPdfA3bDescription = "Beágyazott mellékleteket tartalmazó archiválási PDF-et hoz létre"
@@ -2933,12 +2936,16 @@ text = "Ezeket a jogosultságokat tegye megváltoztathatatlanná a \"Jelszó hoz
 [chat.actions]
 copy = "Üzenet másolása"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling ügynök beállításai"
+assistant = "AI Assistant"
 clearChat = "Csevegés törlése"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Ez a művelet a felhőkrediteket használja"
 tooltip = "Szín kiválasztása a képernyőről"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Szín kiválasztása"
 
 [common]
+actions = "Actions"
 back = "Vissza"
 cancel = "Mégse"
 close = "Bezárás"
+codeSample = "Code sample"
 collapse = "Összecsukás"
 confirm = "Megerősítés"
 continue = "Folytatás"
 copied = "Másolva!"
 copy = "Másolás"
 done = "Kész"
+enterValue = "Enter value"
 error = "Hiba"
 expand = "Kibontás"
 loading = "Betöltés..."
 next = "Következő"
+open = "Open"
 preview = "Előnézet"
 previous = "Előző"
 refresh = "Frissítés"
 remaining = "Hátralévő"
 retry = "Újra"
 save = "Mentés"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Kijelöltek törlése"
@@ -3185,6 +3199,7 @@ title = "Tömörítési mód"
 [compress.settings]
 desiredSize = "Kívánt fájlméret"
 desiredSizePlaceholder = "Méret megadása"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "A tömörítés egyszerű módja a fájlméret csökkentésének. Válassza a Fájlméret lehetőséget a célméret megadásához, és mi ehhez igazítjuk a minőséget. Válassza a Minőség lehetőséget a tömörítés erősségének kézi beállításához."
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Keresés..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Szerkesztés"
@@ -3824,11 +3843,13 @@ shareSelected = "Kijelöltek megosztása"
 sharing = "Megosztás"
 showAll = "Összes megjelenítése"
 showHistory = "Előzmények megjelenítése"
+sortBy = "Sort files"
 sortByDate = "Rendezés dátum szerint"
 sortByName = "Rendezés név szerint"
 sortBySize = "Rendezés méret szerint"
 storage = "Tárhely"
 storageState = "Tárhely"
+storageUsed = "Storage used"
 synced = "Szinkronizálva"
 title = "PDF fájlok feltöltése"
 toolChain = "Alkalmazott eszközök"
@@ -3874,6 +3895,8 @@ addFiles = "Fájlok hozzáadása"
 addingFiles = "Fájlok hozzáadása…"
 collapse = "Oldalsáv összecsukása"
 customizeGroups = "Csoportok testreszabása"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "A kezdéshez nyisson meg fájlokat"
 dropToAdd = "Drop files to add"
 expand = "Oldalsáv kinyitása"
@@ -3888,12 +3911,12 @@ openFromComputer = "Megnyitás a számítógépről"
 openSettings = "Beállítások megnyitása"
 other = "Egyéb"
 recent = "Legutóbbi"
-search = "Keresés"
-searchPlaceholder = "Fájlok keresése..."
 viewAll = "Mind a(z) {{count}} fájl megtekintése"
 
 [fileSidebar.fileItem]
 closeViewer = "Megjelenítő bezárása"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Megnyitás a megjelenítőben"
@@ -3918,7 +3941,6 @@ backToMyFiles = "Vissza a Saját fájlokhoz"
 breadcrumbs = "Mappaútvonal"
 cancel = "Mégse"
 classification = "Besorolás"
-clearSearch = "Keresés törlése"
 clearSelection = "Kijelölés törlése"
 closeDetails = "Részletek bezárása"
 create = "Létrehozás"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "Mappafa átméretezése (nyilak, Shift a nagyobb lépésekhe
 save = "Mentés"
 saveToServer = "Mentés a szerverre"
 saveToServerDisabledHint = "A mentés a szerverre ezen a szerveren nincs engedélyezve. Kérje meg az adminisztrátort, hogy engedélyezze."
-search = "Keresés"
-searchPlaceholder = "Keresés ebben a mappában és almappáiban"
 selectAll = "Összes kijelölése"
 selectAllHint = "Kattintson az összes kijelöléséhez. Tipp: tartsa lenyomva a Ctrl-t (vagy Cmd-et) az egyenkénti hozzáadáshoz, a Shiftet a tartomány kijelöléséhez."
 selectedCount = "{{count}} kijelölve"
@@ -4043,6 +4063,10 @@ title = "Még nincsenek felhőfájlok"
 [filesPage.empty.local]
 hint = "A feltöltés nélkül mentett fájlok itt maradnak. Húzzon ide egy fájlt a hozzáadáshoz."
 title = "Nincsenek csak helyi fájlok"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Az Ön által megnyitott vagy szerkesztett fájlok itt jelennek meg."
@@ -4113,6 +4137,11 @@ localHint = "Csak ebben a böngészőben tárolva"
 shared = "Megosztott"
 sharedHint = "Önnel linken keresztül megosztva"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "Legrégebbi elöl"
 modifiedDesc = "Legújabb elöl"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "Nincsenek fájlok a tárhelyen. Először nyisson meg n�
 open = "Megnyitás"
 openFile = "Fájl megnyitása"
 openFiles = "Fájlok megnyitása"
+selectFile = "Select {{name}}"
 selectFromStorage = "Kiválasztás a tárhelyről"
 upload = "Feltöltés"
 uploadFile = "Fájl feltöltése"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Minden mentve"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV kinyerése sikertelen"
 extractXlsxError = "XLSX kinyerése sikertelen"
+filled = "filled"
 flattenAfterFilling = "Kitöltés után lapítás"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "kötelező"
 requiredFieldsError = "Kérjük, töltse ki az összes kötelező mezőt"
 rescanFields = "Mezők újraolvasása"
@@ -4795,9 +4830,6 @@ title = "Kép PDF-be"
 [imageToPdf]
 tags = "konverzió,kép,jpg,fotó,fénykép"
 
-[infoBanner]
-dismiss = "Bezárás"
-
 [invite]
 acceptError = "Nem sikerült létrehozni a fiókot"
 accountFor = "Fiók létrehozása ehhez:"
@@ -4979,6 +5011,34 @@ uploadSuccess = "Sikeres feltöltés!"
 uploadSuccessMessage = "A képei átkerültek."
 validating = "Munkamenet ellenőrzése..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Szkenneljen a fotók feltöltéséhez. A képek automatikusan PDF-be konvertálódnak."
 descriptionNoConvert = "Szkenneljen a fotók feltöltéséhez a mobileszközéről."
@@ -4997,8 +5057,13 @@ title = "Feltöltés mobilról"
 tags = "Többfunkciós eszköz,Több művelet,UI,húzd és ejtsd,frontend,kliens oldali,interaktív,kezelhető,mozgatás"
 title = "PDF többfunkciós eszköz"
 
-[navbar]
-search = "Keresés"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "A hitelesítés nem volt sikeres. Bezárhatja ezt az ablakot, és megpróbálhatja újra."
@@ -5127,6 +5192,7 @@ activeFiles = "Az <strong>Aktív fájlok</strong> nézet megmutatja az összes o
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Bezárás"
 cropSettings = "Most, hogy kiválasztottuk a vágandó fájlt, beállíthatjuk a Vágás eszközt, hogy megadjuk a PDF kivágandó területét."
+dialogLabel = "Onboarding"
 fileCheckbox = "Egy fájlra kattintva kijelöli azt feldolgozásra. Több fájlt is kijelölhet kötegelt műveletekhez."
 fileReplacement = "A módosított fájl automatikusan felülírja az eredetit a Munkaterületen, így könnyen további eszközökön futtathatja."
 filesButton = "A Gyors hozzáférés sávon lévő <strong>Fájlok</strong> gombbal tölthet fel PDF-eket az eszközök használatához."
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 kredit"
 xsmall = "100 kredit"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Válassza ki az igényeinek megfelelő csomagot"
 title = "Elérhető csomagok"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "Havi költési limit elérve"
 title = "Nem sikerült megnyitni a Stripe portált"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "felhasználva a(z) {{allowance}} ingyenes PDF-ből"
 capSuffix_other = "felhasználva a(z) {{allowance}} ingyenes PDF-ből"
 eyebrow = "Processor próbaidőszak"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "Dokumentum vagy értesítés küldése emailben, amikor egy szabály fut."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Feldolgozott dokumentumok elhelyezése a Nextcloudban."
@@ -7077,11 +7173,6 @@ title = "Hivatalos SDK-k"
 beta = "Beta"
 deprecated = "Elavult"
 
-[portal.docs.search]
-empty = "Nincs egyező dokumentáció"
-placeholder = "Dokumentáció keresése"
-results = "{{count}} találat"
-
 [portal.docs.skills]
 eyebrow = "KÉSZSÉGEK"
 lead = "Csomagolt, névvel ellátott képességek, amelyeket az ügynöke egyetlen eszközként hív meg. Minden készség determinisztikus műveletlánc, csatolt evalokkal."
@@ -7180,11 +7271,11 @@ editorAction = "Szerkesztő"
 empty = "Egy dokumentum sem felel meg ennek a szűrőnek."
 rowActions = "Sorműveletek"
 sensitiveLabel = "Érzékeny"
-sensitiveTitle = "Érzékeny — hozzáférés szükséges"
 
 [portal.documents.table.columns]
 action = "Pipeline / művelet"
 document = "Dokumentum"
+labels = "Labels"
 product = "Termék"
 status = "Állapot"
 time = "Idő"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "Utoljára látható"
 region = "Régió"
 status = "Állapot"
+target = "Target"
 version = "Verzió"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "Fut"
 description = "Ez a nézet váratlan hibába ütközött. Próbálja újra, vagy válasszon másik szakaszt az oldalsávból."
 retry = "Próbálja újra"
 title = "Valami hiba történt ezen az oldalon"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Vissza"
@@ -7380,11 +7522,6 @@ cancel = "Mégse"
 confirm = "Kulcs visszavonása"
 title = "API-kulcs visszavonása"
 
-[portal.infrastructure.attestationLabel]
-attested = "Hitelesítve"
-inScope = "Hatókörben"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Audit események szűrése kategória szerint"
 heading = "Auditnaplók"
@@ -7456,11 +7593,6 @@ info = "Információ"
 success = "Sikeres"
 warning = "Figyelmeztetés"
 
-[portal.infrastructure.certLabel]
-certified = "Tanúsított"
-inProgress = "Folyamatban"
-notStarted = "Nincs elkezdve"
-
 [portal.infrastructure.createKey]
 cancel = "Mégse"
 createKey = "Kulcs létrehozása"
@@ -7474,237 +7606,9 @@ subtitleCreated = "Másolja ki most ezt a titkot — többé nem jelenik meg."
 title = "API kulcs létrehozása"
 titleCreated = "Kulcs létrehozva"
 
-[portal.infrastructure.deployLabel]
-live = "Élő"
-queued = "Sorban áll"
-rolledBack = "Visszagörgetve"
-rolling = "Kiterítés folyamatban"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/perc"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Telepítette"
-environment = "Környezet"
-product = "Termék"
-status = "Állapot"
-version = "Verzió"
-when = "Mikor"
-
-[portal.infrastructure.deployments.recent]
-heading = "Legutóbbi telepítések"
-subheading = "A legújabb bevezetések termékek és környezetek szerint."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Példányok"
-latency = "Késleltetés"
-load = "Terhelés"
-p99 = "P99"
-region = "Régió"
-status = "Állapot"
-throughput = "Átbocsátás"
-uptime = "Üzemidő"
-version = "Verzió"
-
-[portal.infrastructure.deployments.regions]
-heading = "Régiók"
-subheading = "Élő állapot minden telepített Stirling régióhoz — késleltetés, terhelés és bevezetési verzió."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "A telepített régiók itt jelennek meg, amint a munkaterülete ki van építve."
-title = "Nincsenek telepített régiók"
-
 [portal.infrastructure.keyLabel]
 active = "Aktív"
 revoked = "Visszavonva"
-
-[portal.infrastructure.modelLabel]
-active = "Aktív"
-degraded = "Leromlott"
-disabled = "Letiltva"
-
-[portal.infrastructure.models]
-heading = "Modellek"
-msValue = "{{value}} ms"
-subheading = "A modellkatalógus és az útválasztás, amely a dokumentumfeldolgozást működteti a munkaterületén."
-
-[portal.infrastructure.models.byom]
-description = "Regisztráljon egy on-prem vagy self-hosted modellt, és rögzítse egy régióhoz adatrezidencia-kötött feldolgozáshoz."
-title = "Hozza saját modelljét"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalógus"
-sub = "A munkaterületéhez elérhető kezelt modellek élő késleltetéssel és költséggel."
-subEnterprise = "Kezelt, saját és on-prem modellek — régiónkénti rögzítéssel."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "A munkaterület katalógusában lévő modellek itt jelennek meg."
-title = "Nincsenek elérhető modellek"
-
-[portal.infrastructure.models.columns]
-cost = "Költség"
-latency = "Késleltetés"
-load = "Terhelés"
-model = "Modell"
-status = "Állapot"
-type = "Típus"
-version = "Verzió"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/hívás"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Aktív modellek"
-avgLatency = "Átlagos késleltetés"
-included = "Tartalmazza"
-monthlySpend = "Havi modellköltség"
-
-[portal.infrastructure.models.routing]
-empty = "Nincsenek konfigurált útválasztási szabályok."
-heading = "Útválasztási szabályok"
-sub = "Melyik modell kezeli az egyes műveleteket. Az alapértelmezett akkor érvényes, ha nincs szűkebb egyező szabály."
-subLocked = "Műveletek irányítása adott modellekhez — fizetős csomagokban érhető el."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Frissítsen Pro csomagra annak szabályozásához, hogy melyik modell kezelje az egyes műveleteket és dokumentumtípusokat."
-title = "A modellútválasztás fizetős funkció"
-
-[portal.infrastructure.models.routingColumns]
-default = "Alapértelmezett"
-docType = "Dokumentumtípus"
-modelForAria = "Modell ehhez: {{operation}}"
-operation = "Művelet"
-routedTo = "Ide irányítva"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Osztályozás"
-extraction = "Kinyerés"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Leromlott"
-down = "Nem elérhető"
-healthy = "Egészséges"
-
-[portal.infrastructure.security.access.byok]
-description = "Adjon meg egy kulcsot a saját KMS-éből. A Stirling ezzel titkosít, de továbbra is olvasni tud."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "A kulcsok soha nem hagyják el a KMS-ét. A Stirling csak titkosított szöveget tárol."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "A Stirling kezeli a titkosítási kulcsokat. A legegyszerűbb — nincs kulcsművelet az Ön oldalán."
-label = "Stirling által tárolt kulcsok"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Dokumentum-hozzáférési szabályzat"
-subheading = "Szabályozza, hogy ki fejtheti vissza a feldolgozott dokumentumokat nyugalmi állapotban."
-
-[portal.infrastructure.security.attestations]
-heading = "Megfelelőségi tanúsítások"
-noReport = "Nincs elérhető jelentés"
-subheading = "Keretrendszerenkénti auditállapot, jelentésekkel a tanúsított kontrollokról."
-viewReport = "Jelentés megtekintése →"
-
-[portal.infrastructure.security.compliance]
-heading = "Megfelelőség"
-subheading = "A Stirling platformot lefedő tanúsítások és minősítések."
-
-[portal.infrastructure.security.empty]
-description = "A munkaterület biztonsági konfigurációja itt fog megjelenni."
-title = "A biztonsági állapot nem érhető el"
-
-[portal.infrastructure.security.hyokBanner]
-description = "HYOK esetén a titkosítási kulcsok soha nem hagyják el a KMS-ét. A Stirling csak olyan titkosított szöveget tárol és dolgoz fel, amelyet bármikor visszavonhat."
-title = "A Stirling nem tudja visszafejteni a dokumentumait"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Nincsenek konfigurált IP tartományok — minden IP engedélyezett."
-heading = "IP allowlist"
-sub = "Az API hozzáférés ezekre a CIDR tartományokra van korlátozva."
-subLocked = "API hozzáférés korlátozása ismert IP tartományokra — fizetős csomagokban érhető el."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Frissítsen Pro csomagra az API hozzáférés adott hálózatokra korlátozásához."
-title = "Az IP allowlist fizetős funkció"
-
-[portal.infrastructure.security.ipColumns]
-added = "Hozzáadva"
-addedBy = "Hozzáadta"
-cidr = "CIDR"
-label = "Címke"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algoritmus"
-heading = "Titkosítási kulcsok kezelése"
-keyId = "Kulcsazonosító"
-lastRotated = "Utolsó rotálás"
-rotateKey = "Kulcs rotálása"
-rotationPolicy = "Rotálási szabályzat"
-subheading = "A dokumentumokat nyugalmi állapotban titkosító kulcsok felügyelete — ki fejthet vissza, és hogyan rotálódnak a kulcsok."
-
-[portal.infrastructure.security.managedBanner]
-description = "A bring-your-own-key (BYOK) és hold-your-own-key (HYOK) kulcsfelügyelet Enterprise csomagban érhető el. Frissítsen, hogy kulcsokat adjon meg a saját KMS-éből."
-title = "A kulcsokat a Stirling kezeli az Ön csomagjában"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Ázsia és Csendes-óceáni térség"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR adatperem"
-label = "Európai Unió"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Egyesült Államok"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Adatrezidencia"
-subheading = "Ahol a dokumentumok tárolása és feldolgozása történik."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} felhasználva"
-
-[portal.infrastructure.storage.empty]
-description = "A csatlakoztatott tárhely és használat itt jelenik meg."
-title = "Nincs konfigurált tárhely"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktív"
-activeRange = "0–{{value}} nap"
-archived = "Archiválva"
-coldStorage = "hideg tároló"
-deleted = "Törölve"
-never = "soha"
-purged = "véglegesen törölve"
-
-[portal.infrastructure.storage.providers]
-connect = "Csatlakozás"
-connected = "Csatlakoztatva"
-heading = "Csatlakoztatott szolgáltatók"
-subheading = "Ahol a feldolgozott artefaktumok íródnak."
-
-[portal.infrastructure.storage.retention]
-heading = "Megőrzés"
-subheading = "Meddig maradnak meg az artefaktumok az életciklus szerinti törlés előtt."
-windowLabel = "Alapértelmezett megőrzési időszak"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} nap"
-days_other = "{{count}} nap"
-never = "Soha ne törölje"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Teljes használat"
-progressLabel = "Felhasznált tárhely"
-subheading = "Az összes csatlakoztatott szolgáltatónál felhasznált tárhely."
 
 [portal.infrastructure.tabs]
 apiKeys = "API kulcsok"
@@ -7715,11 +7619,9 @@ security = "Biztonság"
 storage = "Tárhely"
 
 [portal.integrations]
-addAnother = "Másik hozzáadása"
 availableHeading = "Elérhető"
 comingSoonHeading = "Hamarosan"
 connect = "Csatlakoztatás"
-connectedHeading = "Csatlakoztatva"
 connectionCount_one = "{{count}} kapcsolat"
 connectionCount_other = "{{count}} kapcsolat"
 customApi = "Egyéni API"
@@ -7736,6 +7638,10 @@ notify = "Értesítés"
 security = "Biztonság"
 signing = "Aláírás"
 storage = "Tárolás"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Csatlakoztatva"
@@ -7767,7 +7673,6 @@ integrations = "Integrációk"
 pipelines = "Pipeline-ok"
 policies = "Szabályzatok"
 procurement = "Beszerzés"
-settings = "Beállítások"
 sources = "Források"
 usage = "Használat és számlázás"
 users = "Felhasználók"
@@ -7784,7 +7689,7 @@ title = "Pipeline-ok"
 newPipeline = "Új pipeline"
 
 [portal.pipelines.builder]
-addStep = "Eszköz hozzáadása"
+activate = "Activate"
 back = "Vissza a pipeline-okhoz"
 cannotFollow = "Nem tudja fogadni ezt: {{produced}}"
 chooseAccount = "Válasszon fiókot"
@@ -7792,28 +7697,38 @@ chooseDestination = "Válasszon célhelyet"
 chooseOperation = "Válassza ki, mit végezzen ez a lépés"
 chooseSource = "Válasszon forrást"
 discard = "Módosítások elvetése"
-enabled = "Engedélyezve"
 inputs = "Bemenet"
 inputSource = "Bemeneti forrás"
 inputTrigger = "Trigger"
 keepEditing = "Szerkesztés folytatása"
+moreActions = "More actions"
 needsConfiguring = "Beállítás szükséges"
-needsUpload = "Feltöltött fájl szükséges"
-noSources = "Még nincs csatlakoztatott forrás. Hozzon létre egyet, hogy bemenetként használhassa."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Nincs a keresésnek megfelelő eszköz."
-pipelineSettings = "Pipeline beállításai"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Eszközök keresése"
-selectToolBody = "Adjon hozzá egy eszközt a pipeline felépítéséhez."
-selectToolTitle = "Még nincsenek eszközök"
 sendToSystem = "Küldés másik rendszerbe"
 stepsIncompatible = "Ezek a lépések nem futtathatók azon, amit az előző lépés előállít: {{tools}}."
 stepsNeedSetup = "Ezeket a lépéseket mentés előtt még be kell állítani: {{tools}}."
-toolSettings = "Eszköz beállításai"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Ismeretlen művelet, változatlanul megtartva."
 unsavedBody = "Nem mentett módosításai vannak. Mentse őket kilépés előtt, vagy elveti őket?"
 unsavedTitle = "Nem mentett módosítások"
-uploadUnsupported = "A feltöltött fájlok még nem támogatottak pipeline-okban, ezért ezek a lépések nem menthetők: {{tools}}."
 usesDefaults = "Alapértelmezett beállításokkal fut"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Az előző lépés összes fájlját egyesíti"
@@ -7825,30 +7740,35 @@ undeclared-operation = "Nem ellenőrizhető, hogy ez a lépés mit fogad el"
 
 [portal.pipelines.composer]
 addTool = "Eszköz hozzáadása"
-cancel = "Mégse"
-chainEmpty = "Adjon hozzá egy eszközt a pipeline építésének megkezdéséhez."
 create = "Pipeline létrehozása"
+createPaused = "Create paused"
 editingUnsupported = "Ezeknek az eszközparamétereknek a szerkesztésre való megjelenítése még nem támogatott."
-moveDown = "Mozgatás le"
-moveUp = "Mozgatás fel"
+editSource = "Edit source"
 name = "Név"
 namePlaceholder = "pl. Kitakarítási átvizsgálás"
 noToolSettings = "Ennek az eszköznek nincsenek konfigurálható beállításai."
-operations_one = "Művelet ({{count}})"
-operations_other = "Műveletek ({{count}})"
 output = "Kimenet"
-removeStep = "Művelet eltávolítása"
 save = "Módosítások mentése"
 scheduleEvery = "Futtatás minden"
-sources = "Források"
-sourcesLoading = "Források betöltése..."
 trigger = "Trigger"
 triggerManual = "Csak manuális"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "nap"
 hours = "óra"
 minutes = "perc"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Törli ezt: \"{{name}}\"? Ez nem vonható vissza."
@@ -7867,6 +7787,37 @@ connectSource = "Forrás csatlakoztatása"
 description = "Hozza létre első pipeline-ját: válassza ki a forrásokat, amelyeken fut, fűzze össze a műveleteket, és adja meg, hová kerüljön a kimenet."
 title = "Még nincsenek pipeline-ok"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktív"
 paused = "Szüneteltetve"
@@ -7879,7 +7830,6 @@ completed_one = "Futtatás befejezve."
 completed_other = "Mind a(z) {{count}} futtatás befejeződött."
 empty = "Nincs mit futtatni: a forrásoknak nem voltak feldolgozandó dokumentumaik."
 failed = "A futtatás sikertelen: {{error}}"
-historyCleared = "Az előzmények törölve. A következő futtatás újrafeldolgoz mindent, ami jelenleg a forrásokban van."
 inFlight = "Nincs új futtatnivaló: a dokumentumok feldolgozása még folyamatban van egy korábbi futtatásból."
 parked_one = "Nincs mit futtatni: {{count}} dokumentum korábban meghiúsult és félre lett téve. Javítsa ki az okot, majd törölje az előzményeket az újrapróbálkozáshoz."
 parked_other = "Nincs mit futtatni: {{count}} dokumentum korábban meghiúsult és félre lett téve. Javítsa ki az okot, majd törölje az előzményeket az újrapróbálkozáshoz."
@@ -7895,6 +7845,7 @@ name = "Pipeline"
 sources = "Források"
 status = "Állapot"
 steps = "Lépések"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Mappafigyelés"
@@ -8208,6 +8159,24 @@ label = "Csatolás Jira issue-hoz"
 [portal.policies.operations.mailgunEmail]
 description = "Elküldi a feldolgozott dokumentumot mellékletként."
 label = "Dokumentum küldése e-mailben (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "A feldolgozott dokumentumot egy mappába írja."
@@ -8683,16 +8652,6 @@ maxed = "Elérte a maximumot"
 subtitle = "Az ingyenes próbaidőszak {{date}} dátumig tart. Kártya nem szükséges."
 title = "Enterprise próbaidőszak"
 
-[portal.search]
-ariaLabel = "Keresés"
-placeholder = "Keresés a Stirlingben — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "A gyorsműveletek itt jelennek meg, amint elérhetők."
-noActionsTitle = "Nincsenek gyorsműveletek"
-noMatches = "Nincs találat erre: \"{{query}}\""
-noMatchesDescription = "Próbáljon másik kulcsszót, vagy böngéssze a katalógust."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8743,10 +8702,6 @@ cancel = "Mégse"
 confirm = "Törlés"
 title = "Törli a forrást?"
 
-[portal.sources.empty]
-description = "Csatlakoztasson egy mappát (és hamarosan felhőtárhelyet), hogy a házirendeknek legyen honnan dokumentumokat beolvasniuk."
-title = "Még nincs csatlakoztatott forrás"
-
 [portal.sources.kpi]
 inUse = "Használatban"
 total = "Kapcsolatok"
@@ -8785,6 +8740,7 @@ unused = "Nem használt"
 documents = "Dokumentumok"
 source = "Forrás"
 status = "Állapot"
+type = "Type"
 usedBy = "Házirendek"
 
 [portal.sources.types.box]
@@ -9980,9 +9936,6 @@ title = "Irányelvek és adatvédelem"
 [settings.preferences]
 title = "Beállítások"
 
-[settings.search]
-placeholder = "Keresés a beállítások között..."
-
 [settings.security]
 description = "Frissítse jelszavát fiókja biztonságáért."
 title = "Biztonság"
@@ -10128,6 +10081,7 @@ last = "Utolsó oldal"
 maintainRatio = "Képarány fenntartása váltása"
 next = "Következő oldal"
 noSavedSigs = "Nincsenek mentett aláírások"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Személyes aláírások"
 previous = "Előző oldal"
 redo = "Újra"
@@ -10166,6 +10120,7 @@ backgroundRemovalFailedTitle = "A háttér eltávolítása nem sikerült"
 hint = "Töltse fel az aláírását tartalmazó PNG vagy JPG képet"
 label = "Aláíráskép feltöltése"
 placeholder = "Képfájl kiválasztása"
+previewAlt = "Current image signature"
 processing = "Kép feldolgozása..."
 removeBackground = "Fehér háttér eltávolítása (átlátszóvá tétel)"
 
@@ -10178,6 +10133,17 @@ resumeHint = "Folytassa az elhelyezést, majd kattintson az aláírás hozzáad�
 saved = "Válasszon ki fent egy mentett aláírást, majd kattintson a PDF bármely pontjára az elhelyezéshez."
 text = "Miután megadta a nevét fent, kattintson bárhová a PDF-ben az aláírás elhelyezéséhez."
 title = "Hogyan adjon hozzá aláírást"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Aláírás mozgatása"
@@ -10625,6 +10591,23 @@ title = "Feltöltés a szerverre"
 updateButton = "Frissítés a szerveren"
 uploadButton = "Feltöltés a szerverre"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10757,6 @@ goBack = "Vissza"
 pdfTools = "PDF-eszközök"
 placeholder = "Válasszon egy eszközt a kezdéshez"
 premiumFeature = "Prémium funkció:"
-searchTools = "Eszközök keresése"
 toolsHeader = "Eszközök"
 viewAllTools = "Összes eszköz megtekintése"
 
@@ -10821,6 +10803,9 @@ pageFormatting = "Oldalformázás"
 removal = "Eltávolítás"
 signing = "Aláírás"
 verification = "Ellenőrzés"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Nem találhatók eszközök"
@@ -10979,6 +10964,13 @@ approver = "Jóváhagyja a házirendet"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Visszavonja a(z) {{email}} címre küldött meghívást? A jelenlegi hivatkozással nem fog tudni csatlakozni."
 cancelInviteTitle = "Meghívás visszavonása"
@@ -10998,10 +10990,8 @@ title = "Még nincsenek tagok"
 addToTeam = "Hozzáadás csapathoz"
 guestCount = "{{count}} vendég"
 guests = "Vendégek"
-guestsDesc = "Külső együttműködők, a megosztott tartalomra korlátozva. Csak Editor."
 ledBy = "vezeti: {{owner}}"
 org = "Szervezet"
-orgDesc = "Tulajdonosok szervezetszintű jogosultsággal és házirend-jóváhagyással"
 owners = "{{count}} tulajdonos"
 team = "{{name}} csapat"
 teamMeta = "{{count}} ember"
@@ -11041,12 +11031,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Meghívta: {{who}}"
 cancel = "Visszavonás"
-count = "{{count}} függőben"
-desc = "Meghívott személyek, akik még nem csatlakoztak. Helyet foglalnak, amíg el nem fogadják."
 expiresInDays_one = "{{count}} nap múlva lejár"
 expiresInDays_other = "{{count}} nap múlva lejár"
 expiresToday = "Ma lejár"
 title = "Függőben lévő meghívások"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Hiba történt a backend elérésekor, vagy nincs hozzáférésed. Próbáld újra."
@@ -11237,12 +11229,15 @@ searchPlaceholder = "Mellékletek keresése"
 title = "Mellékletek"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Könyvjelző címe"
 bookmarkTitleRequired = "A könyvjelző címe kötelező"
 closeSidebar = "Könyvjelzők oldalsávjának bezárása"
 collapseAll = "Összes könyvjelző összecsukása"
+empty = "No bookmarks in this document"
 expandAll = "Összes könyvjelző kibontása"
 searchPlaceholder = "Könyvjelzők keresése"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Megjegyzés hozzáadása"
@@ -11264,10 +11259,12 @@ locateAnnotation = "Megkeresés a dokumentumban"
 moreActions = "További műveletek"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Oldal {{page}}"
 placingHint = "Kattintson egy oldalra az elhelyezéshez… (mégse)"
 removeCommentOnly = "Csak a megjegyzés eltávolítása"
 saveReply = "Válasz mentése"
+searchPlaceholder = "Search comments"
 title = "Megjegyzések"
 typeComment = "Megjegyzés"
 typeInsertText = "Szöveg beszúrása"
@@ -11290,6 +11287,7 @@ unsavedDesc = "Mentetlen módosításai vannak"
 closeSidebar = "Rétegek oldalsávjának bezárása"
 hideAll = "Összes réteg elrejtése"
 showAll = "Összes réteg megjelenítése"
+title = "Layers"
 
 [viewer.link]
 delete = "Hivatkozás törlése"
@@ -11646,6 +11644,7 @@ exitRedaction = "Kilépés a kitakarási módból"
 exportAll = "PDF exportálása"
 exportSelected = "Kijelölt oldalak exportálása"
 formFill = "Űrlap kitöltése"
+hideToolbar = "Hide toolbar"
 multiTool = "Többfunkciós eszköz"
 panMode = "Mozgatás mód"
 print = "PDF nyomtatása"
@@ -11666,6 +11665,7 @@ selectAll = "Összes kijelölése"
 selectByNumber = "Kiválasztás oldalszámok szerint"
 selectLanguage = "Nyelv kiválasztása"
 share = "Megosztás"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Annotációk láthatóságának be-/kikapcsolása"
 toggleAttachments = "Mellékletek be-/kikapcsolása"
 toggleBookmarks = "Könyvjelzők be-/kikapcsolása"

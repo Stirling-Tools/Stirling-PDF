@@ -1879,6 +1879,9 @@ width = "寬度"
 [app]
 description = "免費的 Adobe Acrobat 替代方案（下載量 10M+）"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "轉換為 PDF/A-3b"
 convertToPdfA3bDescription = "建立含內嵌附件的封存用 PDF"
@@ -2933,12 +2936,16 @@ text = "若要使這些權限無法被變更，請使用「新增密碼」工具
 [chat.actions]
 copy = "複製訊息"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling 代理選項"
+assistant = "AI Assistant"
 clearChat = "清除聊天"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "此操作會使用您的雲端點數"
 tooltip = "從畫面取色"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "選擇顏色"
 
 [common]
+actions = "Actions"
 back = "返回"
 cancel = "取消"
 close = "關閉"
+codeSample = "Code sample"
 collapse = "收合"
 confirm = "確認"
 continue = "繼續"
 copied = "已複製！"
 copy = "複製"
 done = "完成"
+enterValue = "Enter value"
 error = "錯誤"
 expand = "展開"
 loading = "正在載入..."
 next = "下一步"
+open = "Open"
 preview = "預覽"
 previous = "上一步"
 refresh = "重新整理"
 remaining = "剩餘"
 retry = "重試"
 save = "儲存"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "清除所選"
@@ -3185,6 +3199,7 @@ title = "壓縮方法"
 [compress.settings]
 desiredSize = "期望檔案大小"
 desiredSizePlaceholder = "輸入大小"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "壓縮是減少檔案大小的簡單方法。選擇『檔案大小』可輸入目標大小，系統會為您調整品質。選擇『品質』可手動設定壓縮強度。"
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "搜尋..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "編輯"
@@ -3824,11 +3843,13 @@ shareSelected = "共用已選取項"
 sharing = "共用"
 showAll = "顯示全部"
 showHistory = "顯示歷史"
+sortBy = "Sort files"
 sortByDate = "依日期排序"
 sortByName = "依名稱排序"
 sortBySize = "依大小排序"
 storage = "儲存空間"
 storageState = "儲存狀態"
+storageUsed = "Storage used"
 synced = "已同步"
 title = "上傳 PDF 檔案"
 toolChain = "已套用的工具"
@@ -3874,6 +3895,8 @@ addFiles = "新增檔案"
 addingFiles = "正在新增檔案…"
 collapse = "收合側邊欄"
 customizeGroups = "自訂群組"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "開啟檔案以開始使用"
 dropToAdd = "Drop files to add"
 expand = "展開側邊欄"
@@ -3888,12 +3911,12 @@ openFromComputer = "從電腦開啟"
 openSettings = "開啟設定"
 other = "其他"
 recent = "最近"
-search = "搜尋"
-searchPlaceholder = "搜尋檔案…"
 viewAll = "檢視全部 {{count}} 個檔案"
 
 [fileSidebar.fileItem]
 closeViewer = "關閉檢視器"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "在檢視器中開啟"
@@ -3918,7 +3941,6 @@ backToMyFiles = "返回我的檔案"
 breadcrumbs = "資料夾路徑"
 cancel = "取消"
 classification = "分類"
-clearSearch = "清除搜尋"
 clearSelection = "清除選取"
 closeDetails = "關閉詳細資料"
 create = "建立"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "調整資料夾樹狀結構大小（方向鍵，按住 Shift
 save = "儲存"
 saveToServer = "儲存到伺服器"
 saveToServerDisabledHint = "此伺服器未啟用儲存到伺服器。請聯絡管理員啟用。"
-search = "搜尋"
-searchPlaceholder = "搜尋此資料夾與子資料夾"
 selectAll = "全選"
 selectAllHint = "按一下以全選。提示：按住 Ctrl（或 Cmd）可逐一新增檔案，按住 Shift 可選取範圍。"
 selectedCount = "已選取 {{count}} 個"
@@ -4043,6 +4063,10 @@ title = "尚無雲端檔案"
 [filesPage.empty.local]
 hint = "未上傳而儲存的檔案會留在此處。拖放檔案以新增。"
 title = "沒有僅存在本機的檔案"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "您開啟或編輯的檔案會出現在這裡。"
@@ -4113,6 +4137,11 @@ localHint = "僅儲存在此瀏覽器"
 shared = "已分享"
 sharedHint = "透過連結與您分享"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "由舊到新"
 modifiedDesc = "最近優先"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "儲存空間中沒有可用檔案。請先開啟一些�
 open = "開啟"
 openFile = "開啟檔案"
 openFiles = "開啟多個檔案"
+selectFile = "Select {{name}}"
 selectFromStorage = "從儲存空間選取"
 upload = "上傳"
 uploadFile = "上傳檔案"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "全部已儲存"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "擷取 CSV 失敗"
 extractXlsxError = "擷取 XLSX 失敗"
+filled = "filled"
 flattenAfterFilling = "填寫後扁平化"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "必填"
 requiredFieldsError = "請填寫所有必填欄位"
 rescanFields = "重新掃描欄位"
@@ -4795,9 +4830,6 @@ title = "圖片轉 PDF"
 [imageToPdf]
 tags = "轉換,img,jpg,圖片,照片"
 
-[infoBanner]
-dismiss = "關閉"
-
 [invite]
 acceptError = "建立帳號失敗"
 accountFor = "正在為以下對象建立帳號："
@@ -4979,6 +5011,34 @@ uploadSuccess = "上傳成功！"
 uploadSuccessMessage = "您的影像已傳送完成。"
 validating = "正在驗證工作階段…"
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "掃描即可上傳相片。影像會自動轉換為 PDF。"
 descriptionNoConvert = "掃描即可從行動裝置上傳相片。"
@@ -4997,8 +5057,13 @@ title = "從行動裝置上傳"
 tags = "複合工具,多功能,UI,點選拖曳,前端,客戶端,互動,互動式,移動"
 title = "PDF 複合工具"
 
-[navbar]
-search = "搜尋"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "驗證未成功。您可以關閉此視窗後再試一次。"
@@ -5127,6 +5192,7 @@ activeFiles = "<strong>使用中檔案</strong> 檢視會顯示您載入工具�
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "關閉"
 cropSettings = "選好要裁切的檔案後，我們可以設定裁切工具，選擇要裁切的區域。"
+dialogLabel = "Onboarding"
 fileCheckbox = "點選其中一個檔案即可將其選取以進行處理。您可以選取多個檔案以批次操作。"
 fileReplacement = "修改後的檔案會自動在工作區取代原檔，讓您能輕鬆再用其他工具處理。"
 filesButton = "快速存取列上的 <strong>檔案</strong> 按鈕可讓您上傳 PDF 以使用各種工具。"
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 點"
 xsmall = "100 點"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "選擇符合您需求的方案"
 title = "可用方案"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "已達每月支出限制"
 title = "無法開啟 Stripe 入口網站"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 個免費 PDFs"
 capSuffix_other = "已使用 {{allowance}} 個免費 PDFs"
 eyebrow = "Processor 試用"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "當 policy 執行時，透過 Email 傳送文件或通知。"
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "將處理後的文件存入 Nextcloud。"
@@ -7077,11 +7173,6 @@ title = "官方 SDKs"
 beta = "Beta"
 deprecated = "已淘汰"
 
-[portal.docs.search]
-empty = "沒有相符文件"
-placeholder = "搜尋文件"
-results = "{{count}} 個結果"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "代理程式以單一工具呼叫的內建命名能力。每項 skill 都是附有 evals 的確定性操作鏈。"
@@ -7180,11 +7271,11 @@ editorAction = "編輯器"
 empty = "沒有符合此篩選條件的文件。"
 rowActions = "列動作"
 sensitiveLabel = "敏感"
-sensitiveTitle = "敏感 — 需要存取權"
 
 [portal.documents.table.columns]
 action = "管線 / 動作"
 document = "文件"
+labels = "Labels"
 product = "產品"
 status = "狀態"
 time = "時間"
@@ -7200,6 +7291,7 @@ host = "主機"
 lastSeen = "上次出現"
 region = "區域"
 status = "狀態"
+target = "Target"
 version = "版本"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "執行中"
 description = "此檢視發生未預期的錯誤。請再試一次，或從側邊欄選擇其他區段。"
 retry = "再試一次"
 title = "此頁面發生問題"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "返回"
@@ -7380,11 +7522,6 @@ cancel = "取消"
 confirm = "撤銷金鑰"
 title = "撤銷 API 金鑰"
 
-[portal.infrastructure.attestationLabel]
-attested = "已證明"
-inScope = "範圍內"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "依類別篩選稽核事件"
 heading = "稽核記錄"
@@ -7456,11 +7593,6 @@ info = "資訊"
 success = "成功"
 warning = "警告"
 
-[portal.infrastructure.certLabel]
-certified = "已認證"
-inProgress = "進行中"
-notStarted = "尚未開始"
-
 [portal.infrastructure.createKey]
 cancel = "取消"
 createKey = "建立金鑰"
@@ -7474,237 +7606,9 @@ subtitleCreated = "立即複製此秘密 — 之後不會再顯示。"
 title = "建立 API 金鑰"
 titleCreated = "金鑰已建立"
 
-[portal.infrastructure.deployLabel]
-live = "上線"
-queued = "已排隊"
-rolledBack = "已復原"
-rolling = "推出中"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "部署者"
-environment = "環境"
-product = "產品"
-status = "狀態"
-version = "版本"
-when = "時間"
-
-[portal.infrastructure.deployments.recent]
-heading = "最近部署"
-subheading = "各產品與環境的最新推出。"
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "執行個體"
-latency = "延遲"
-load = "負載"
-p99 = "P99"
-region = "區域"
-status = "狀態"
-throughput = "輸送量"
-uptime = "正常運作時間"
-version = "版本"
-
-[portal.infrastructure.deployments.regions]
-heading = "區域"
-subheading = "每個已部署 Stirling 區域的即時健康狀態 — 延遲、負載與推出版本。"
-
-[portal.infrastructure.deployments.regions.empty]
-description = "工作區佈建後，已部署區域會顯示在這裡。"
-title = "尚未部署區域"
-
 [portal.infrastructure.keyLabel]
 active = "啟用"
 revoked = "已撤銷"
-
-[portal.infrastructure.modelLabel]
-active = "啟用"
-degraded = "效能降低"
-disabled = "已停用"
-
-[portal.infrastructure.models]
-heading = "模型"
-msValue = "{{value}} ms"
-subheading = "支援您工作區文件處理的模型目錄與路由。"
-
-[portal.infrastructure.models.byom]
-description = "註冊 on-prem 或自託管模型，並將其固定到某個區域，以進行受資料駐留限制的處理。"
-title = "帶入您自己的模型"
-
-[portal.infrastructure.models.catalogue]
-heading = "目錄"
-sub = "工作區可用的代管模型，包含即時延遲與成本。"
-subEnterprise = "代管、自備與 on-prem 模型 — 可使用按區域固定。"
-
-[portal.infrastructure.models.catalogue.empty]
-description = "工作區目錄中的模型會顯示在這裡。"
-title = "沒有可用模型"
-
-[portal.infrastructure.models.columns]
-cost = "成本"
-latency = "延遲"
-load = "負載"
-model = "模型"
-status = "狀態"
-type = "類型"
-version = "版本"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/次呼叫"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "活躍模型"
-avgLatency = "平均延遲"
-included = "已包含"
-monthlySpend = "每月模型支出"
-
-[portal.infrastructure.models.routing]
-empty = "未設定路由規則。"
-heading = "路由規則"
-sub = "哪個模型處理每個操作。沒有符合更精確規則時會套用預設值。"
-subLocked = "將操作路由到特定模型 — 付費方案可用。"
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "升級到 Pro 以控制每個操作和文件類型由哪個模型處理。"
-title = "模型路由是付費功能"
-
-[portal.infrastructure.models.routingColumns]
-default = "預設"
-docType = "文件類型"
-modelForAria = "{{operation}} 的模型"
-operation = "操作"
-routedTo = "路由至"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "分類"
-extraction = "擷取"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "效能降低"
-down = "停止運作"
-healthy = "健全"
-
-[portal.infrastructure.security.access.byok]
-description = "提供來自您自己 KMS 的金鑰。Stirling 會使用它加密，但仍可讀取。"
-label = "帶入您自己的金鑰 (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "金鑰永不離開您的 KMS。Stirling 只持有密文。"
-label = "保留您自己的金鑰 (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling 管理加密金鑰。最簡單 — 您這邊無需金鑰操作。"
-label = "Stirling 持有的金鑰"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "文件存取政策"
-subheading = "控制誰可以解密靜態儲存的已處理文件。"
-
-[portal.infrastructure.security.attestations]
-heading = "合規性證明"
-noReport = "沒有可用報告"
-subheading = "逐框架的稽核狀態，並提供已證明控制項的報告。"
-viewReport = "檢視報告 →"
-
-[portal.infrastructure.security.compliance]
-heading = "合規性"
-subheading = "涵蓋 Stirling 平台的證明與認證。"
-
-[portal.infrastructure.security.empty]
-description = "工作區的安全性設定會顯示在這裡。"
-title = "安全狀態無法使用"
-
-[portal.infrastructure.security.hyokBanner]
-description = "使用 HYOK 時，加密金鑰永不離開您的 KMS。Stirling 只儲存和處理您可隨時撤銷的密文。"
-title = "Stirling 無法解密您的文件"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "未設定 IP 範圍 — 允許所有 IP。"
-heading = "IP 允許清單"
-sub = "API 存取僅限於這些 CIDR 範圍。"
-subLocked = "將 API 存取限制為已知 IP 範圍 — 付費方案可用。"
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "升級到 Pro 以將 API 存取限制為特定網路。"
-title = "IP 允許清單是付費功能"
-
-[portal.infrastructure.security.ipColumns]
-added = "已新增"
-addedBy = "新增者"
-cidr = "CIDR"
-label = "標籤"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "演算法"
-heading = "加密金鑰管理"
-keyId = "金鑰識別碼"
-lastRotated = "上次輪換"
-rotateKey = "輪換金鑰"
-rotationPolicy = "輪換政策"
-subheading = "加密靜態儲存文件的金鑰保管 — 誰可以解密，以及金鑰如何輪換。"
-
-[portal.infrastructure.security.managedBanner]
-description = "帶入您自己的金鑰 (BYOK) 和保留您自己的金鑰 (HYOK) 保管可於 Enterprise 使用。升級以提供來自您自己 KMS 的金鑰。"
-title = "在您的方案中，金鑰由 Stirling 管理"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "亞太地區"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR 資料邊界"
-label = "歐盟"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "美國"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "資料駐留"
-subheading = "文件儲存與處理的位置。"
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "已使用 {{value}}"
-
-[portal.infrastructure.storage.empty]
-description = "已連接的儲存空間和用量會顯示在這裡。"
-title = "未設定儲存空間"
-
-[portal.infrastructure.storage.lifecycle]
-active = "啟用中"
-activeRange = "0–{{value}}d"
-archived = "已封存"
-coldStorage = "冷儲存"
-deleted = "已刪除"
-never = "永不"
-purged = "已清除"
-
-[portal.infrastructure.storage.providers]
-connect = "連接"
-connected = "已連接"
-heading = "已連接提供者"
-subheading = "已處理成品寫入的位置。"
-
-[portal.infrastructure.storage.retention]
-heading = "保留"
-subheading = "成品在生命週期刪除前保留的時間。"
-windowLabel = "預設保留期間"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} 天"
-days_other = "{{count}} 天"
-never = "永不刪除"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "總用量"
-progressLabel = "已使用儲存空間"
-subheading = "所有已連接提供者消耗的儲存空間。"
 
 [portal.infrastructure.tabs]
 apiKeys = "API 金鑰"
@@ -7715,11 +7619,9 @@ security = "安全性"
 storage = "儲存空間"
 
 [portal.integrations]
-addAnother = "新增另一個"
 availableHeading = "可用"
 comingSoonHeading = "即將推出"
 connect = "連線"
-connectedHeading = "已連線"
 connectionCount_one = "{{count}} 個連線"
 connectionCount_other = "{{count}} 個連線"
 customApi = "自訂 API"
@@ -7736,6 +7638,10 @@ notify = "通知"
 security = "安全性"
 signing = "簽署"
 storage = "儲存"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "已連線"
@@ -7767,7 +7673,6 @@ integrations = "整合"
 pipelines = "管線"
 policies = "政策"
 procurement = "採購"
-settings = "設定"
 sources = "來源"
 usage = "用量與帳單"
 users = "使用者"
@@ -7784,7 +7689,7 @@ title = "管線"
 newPipeline = "新增管線"
 
 [portal.pipelines.builder]
-addStep = "新增工具"
+activate = "Activate"
 back = "返回管線"
 cannotFollow = "無法接收 {{produced}}"
 chooseAccount = "選擇帳戶"
@@ -7792,28 +7697,38 @@ chooseDestination = "選擇目的地"
 chooseOperation = "選擇此步驟的作用"
 chooseSource = "選擇來源"
 discard = "捨棄變更"
-enabled = "已啟用"
 inputs = "輸入"
 inputSource = "輸入來源"
 inputTrigger = "觸發器"
 keepEditing = "繼續編輯"
+moreActions = "More actions"
 needsConfiguring = "需要設定"
-needsUpload = "需要上傳的檔案"
-noSources = "尚未連線任何來源。建立一個來源以作為輸入。"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "沒有工具符合您的搜尋。"
-pipelineSettings = "管線設定"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "搜尋工具"
-selectToolBody = "新增工具以建立您的管線。"
-selectToolTitle = "尚無工具"
 sendToSystem = "傳送到另一個系統"
 stepsIncompatible = "這些步驟無法在其前一步產生的內容上執行：{{tools}}。"
 stepsNeedSetup = "儲存前仍需設定這些步驟：{{tools}}。"
-toolSettings = "工具設定"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "無法辨識的操作，已原樣保留。"
 unsavedBody = "您有未儲存的變更。離開前要儲存，還是捨棄？"
 unsavedTitle = "未儲存的變更"
-uploadUnsupported = "管線尚不支援上傳的檔案，因此無法儲存這些步驟：{{tools}}。"
 usesDefaults = "使用預設設定執行"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "合併前一步的每個檔案"
@@ -7825,30 +7740,35 @@ undeclared-operation = "無法檢查此步驟接受的內容"
 
 [portal.pipelines.composer]
 addTool = "新增工具"
-cancel = "取消"
-chainEmpty = "新增工具以開始建立您的管線。"
 create = "建立管線"
+createPaused = "Create paused"
 editingUnsupported = "尚不支援顯示這些工具參數進行編輯。"
-moveDown = "下移"
-moveUp = "上移"
+editSource = "Edit source"
 name = "名稱"
 namePlaceholder = "例如：Redaction sweep"
 noToolSettings = "此工具沒有可設定的選項。"
-operations_one = "操作（{{count}}）"
-operations_other = "操作（{{count}}）"
 output = "輸出"
-removeStep = "移除操作"
 save = "儲存變更"
 scheduleEvery = "執行間隔"
-sources = "來源"
-sourcesLoading = "正在載入來源..."
 trigger = "觸發器"
 triggerManual = "僅手動"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "天"
 hours = "小時"
 minutes = "分鐘"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "要刪除 \"{{name}}\" 嗎？此操作無法復原。"
@@ -7867,6 +7787,37 @@ connectSource = "連線來源"
 description = "建立您的第一個管線：選擇執行來源、串接操作，並選擇輸出位置。"
 title = "尚無管線"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "啟用中"
 paused = "已暫停"
@@ -7879,7 +7830,6 @@ completed_one = "執行已完成。"
 completed_other = "全部 {{count}} 次執行已完成。"
 empty = "沒有可執行的內容：來源沒有要處理的文件。"
 failed = "執行失敗：{{error}}"
-historyCleared = "歷程記錄已清除。下次執行會重新處理目前來源中的所有項目。"
 inFlight = "沒有新項目可執行：文件仍在從先前的執行中處理。"
 parked_one = "沒有可執行項目：{{count}} 份文件先前失敗且已暫停。修正原因後，清除歷程記錄以重試。"
 parked_other = "沒有可執行項目：{{count}} 份文件先前失敗且已暫停。修正原因後，清除歷程記錄以重試。"
@@ -7895,6 +7845,7 @@ name = "管線"
 sources = "來源"
 status = "狀態"
 steps = "步驟"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "資料夾監看"
@@ -8208,6 +8159,24 @@ label = "附加到 Jira 議題"
 [portal.policies.operations.mailgunEmail]
 description = "將處理後的文件作為附件傳送。"
 label = "以電子郵件傳送文件（Mailgun）"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "將處理後的文件寫入資料夾。"
@@ -8683,16 +8652,6 @@ maxed = "已達上限"
 subtitle = "您的免費試用持續到 {{date}}。不需要卡片。"
 title = "Enterprise 試用"
 
-[portal.search]
-ariaLabel = "搜尋"
-placeholder = "搜尋 Stirling — endpoints、pipelines、文件…"
-
-[portal.search.empty]
-noActionsDescription = "快速動作可用後會顯示在這裡。"
-noActionsTitle = "沒有快速動作"
-noMatches = "找不到「{{query}}」的相符項目"
-noMatchesDescription = "請嘗試不同關鍵字或瀏覽目錄。"
-
 [portal.settings.groups]
 admin = "管理員"
 
@@ -8743,10 +8702,6 @@ cancel = "取消"
 confirm = "刪除"
 title = "刪除來源？"
 
-[portal.sources.empty]
-description = "連接資料夾（雲端儲存即將推出），讓您的政策有地方擷取文件。"
-title = "尚未連接任何來源"
-
 [portal.sources.kpi]
 inUse = "使用中"
 total = "連線"
@@ -8785,6 +8740,7 @@ unused = "未使用"
 documents = "文件"
 source = "來源"
 status = "狀態"
+type = "Type"
 usedBy = "政策"
 
 [portal.sources.types.box]
@@ -9980,9 +9936,6 @@ title = "政策與隱私"
 [settings.preferences]
 title = "偏好設定"
 
-[settings.search]
-placeholder = "搜尋設定頁面..."
-
 [settings.security]
 description = "更新您的密碼以保護帳號安全。"
 title = "安全性"
@@ -10128,6 +10081,7 @@ last = "最後一頁"
 maintainRatio = "切換維持長寬比"
 next = "下一頁"
 noSavedSigs = "尚未儲存任何簽章"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "個人簽章"
 previous = "上一頁"
 redo = "重做"
@@ -10166,6 +10120,7 @@ backgroundRemovalFailedTitle = "背景移除失敗"
 hint = "上傳您的簽名 PNG 或 JPG 影像"
 label = "上傳簽名影像"
 placeholder = "選擇影像檔"
+previewAlt = "Current image signature"
 processing = "正在處理影像…"
 removeBackground = "移除白色背景（設為透明）"
 
@@ -10178,6 +10133,17 @@ resumeHint = "恢復放置後，點選即可加入簽名。"
 saved = "在上方選擇已儲存的簽名，然後在 PDF 任意位置點選以放置。"
 text = "在上方輸入您的姓名後，於 PDF 任意位置點選以放置簽名。"
 title = "如何加入簽名"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "移動簽名"
@@ -10625,6 +10591,23 @@ title = "上傳至伺服器"
 updateButton = "更新至伺服器"
 uploadButton = "上傳至伺服器"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10757,6 @@ goBack = "返回"
 pdfTools = "PDF 工具"
 placeholder = "選擇一個工具以開始"
 premiumFeature = "進階功能："
-searchTools = "搜尋工具"
 toolsHeader = "工具"
 viewAllTools = "檢視所有工具"
 
@@ -10821,6 +10803,9 @@ pageFormatting = "頁面格式"
 removal = "移除"
 signing = "簽章"
 verification = "驗證"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "找不到工具"
@@ -10979,6 +10964,13 @@ approver = "核准政策"
 editor = "編輯器"
 processor = "處理器"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "要取消對 {{email}} 的邀請嗎？他們將無法使用目前的連結加入。"
 cancelInviteTitle = "取消邀請"
@@ -10998,10 +10990,8 @@ title = "尚無成員"
 addToTeam = "新增至團隊"
 guestCount = "{{count}} 位訪客"
 guests = "訪客"
-guestsDesc = "外部協作者，範圍限於您分享的內容。僅限編輯器。"
 ledBy = "由 {{owner}} 領導"
 org = "組織"
-orgDesc = "擁有組織範圍權限與政策核准權的擁有者"
 owners = "{{count}} 位擁有者"
 team = "{{name}} 團隊"
 teamMeta = "{{count}} 人"
@@ -11041,12 +11031,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "由 {{who}} 邀請"
 cancel = "取消"
-count = "{{count}} 個待處理"
-desc = "已受邀但尚未加入的人員。在他們接受前會佔用一個席位。"
 expiresInDays_one = "{{count}} 天後到期"
 expiresInDays_other = "{{count}} 天後到期"
 expiresToday = "今天到期"
 title = "待處理邀請"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "連線至後端時發生錯誤，或您沒有存取權限。請再試一次。"
@@ -11237,12 +11229,15 @@ searchPlaceholder = "搜尋附件"
 title = "附件"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "書籤標題"
 bookmarkTitleRequired = "必須輸入書籤標題"
 closeSidebar = "關閉書籤側邊欄"
 collapseAll = "收合所有書籤"
+empty = "No bookmarks in this document"
 expandAll = "展開所有書籤"
 searchPlaceholder = "搜尋書籤"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "新增評論"
@@ -11264,10 +11259,12 @@ locateAnnotation = "在文件中定位"
 moreActions = "更多動作"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "第 {{page}} 頁"
 placingHint = "按一下頁面以放置…（取消）"
 removeCommentOnly = "僅移除評論"
 saveReply = "儲存回覆"
+searchPlaceholder = "Search comments"
 title = "評論"
 typeComment = "評論"
 typeInsertText = "插入文字"
@@ -11290,6 +11287,7 @@ unsavedDesc = "您有未儲存的變更"
 closeSidebar = "關閉圖層側邊欄"
 hideAll = "隱藏所有圖層"
 showAll = "顯示所有圖層"
+title = "Layers"
 
 [viewer.link]
 delete = "刪除連結"
@@ -11646,6 +11644,7 @@ exitRedaction = "離開遮蔽模式"
 exportAll = "匯出 PDF"
 exportSelected = "匯出所選頁面"
 formFill = "填寫表單"
+hideToolbar = "Hide toolbar"
 multiTool = "多功能工具"
 panMode = "平移模式"
 print = "列印 PDF"
@@ -11666,6 +11665,7 @@ selectAll = "全選"
 selectByNumber = "依頁碼選取"
 selectLanguage = "選擇語言"
 share = "分享"
+showToolbar = "Show toolbar"
 toggleAnnotations = "切換註解顯示"
 toggleAttachments = "切換附件"
 toggleBookmarks = "切換書籤"

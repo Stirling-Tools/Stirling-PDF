@@ -1879,6 +1879,9 @@ width = "ความกว้าง"
 [app]
 description = "ทางเลือกแทน Adobe Acrobat ฟรี (ดาวน์โหลด 10M+)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "แปลงเป็น PDF/A-3b"
 convertToPdfA3bDescription = "สร้าง PDF สำหรับเก็บถาวรพร้อมฝังไฟล์แนบ"
@@ -2933,12 +2936,16 @@ text = "เพื่อให้สิทธิ์เหล่านี้ไม
 [chat.actions]
 copy = "คัดลอกข้อความ"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
+assistant = "AI Assistant"
 clearChat = "ล้างแชต"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "การดำเนินการนี้จะใช้เคร
 tooltip = "เลือกสีจากหน้าจอ"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "เลือกสี"
 
 [common]
+actions = "Actions"
 back = "ย้อนกลับ"
 cancel = "ยกเลิก"
 close = "ปิด"
+codeSample = "Code sample"
 collapse = "ยุบ"
 confirm = "ยืนยัน"
 continue = "ดำเนินการต่อ"
 copied = "คัดลอกแล้ว!"
 copy = "คัดลอก"
 done = "เสร็จสิ้น"
+enterValue = "Enter value"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
 loading = "กำลังโหลด..."
 next = "ถัดไป"
+open = "Open"
 preview = "แสดงตัวอย่าง"
 previous = "ก่อนหน้า"
 refresh = "รีเฟรช"
 remaining = "คงเหลือ"
 retry = "ลองใหม่"
 save = "บันทึก"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "ล้างที่เลือก"
@@ -3185,6 +3199,7 @@ title = "วิธีการบีบอัด"
 [compress.settings]
 desiredSize = "ขนาดไฟล์ที่ต้องการ"
 desiredSizePlaceholder = "ป้อนขนาด"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "การบีบอัดเป็นวิธีง่าย ๆ ในการลดขนาดไฟล์ เลือก ขนาดไฟล์ เพื่อป้อนขนาดเป้าหมายและให้เราปรับคุณภาพให้คุณ เลือก คุณภาพ เพื่อกำหนดความแรงการบีบอัดด้วยตนเอง"
@@ -3565,7 +3580,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "ค้นหา..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "แก้ไข"
@@ -3824,11 +3843,13 @@ shareSelected = "แชร์ที่เลือก"
 sharing = "การแชร์"
 showAll = "แสดงทั้งหมด"
 showHistory = "แสดงประวัติ"
+sortBy = "Sort files"
 sortByDate = "เรียงตามวันที่"
 sortByName = "เรียงตามชื่อ"
 sortBySize = "เรียงตามขนาด"
 storage = "ที่เก็บ"
 storageState = "ที่เก็บข้อมูล"
+storageUsed = "Storage used"
 synced = "ซิงค์แล้ว"
 title = "อัปโหลดไฟล์ PDF"
 toolChain = "เครื่องมือที่ใช้"
@@ -3874,6 +3895,8 @@ addFiles = "เพิ่มไฟล์"
 addingFiles = "กำลังเพิ่มไฟล์…"
 collapse = "ยุบแถบข้าง"
 customizeGroups = "ปรับแต่งกลุ่ม"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "เปิดไฟล์เพื่อเริ่มต้น"
 dropToAdd = "Drop files to add"
 expand = "ขยายแถบข้าง"
@@ -3888,12 +3911,12 @@ openFromComputer = "เปิดจากคอมพิวเตอร์"
 openSettings = "เปิดการตั้งค่า"
 other = "อื่นๆ"
 recent = "ล่าสุด"
-search = "ค้นหา"
-searchPlaceholder = "ค้นหาไฟล์..."
 viewAll = "ดูไฟล์ทั้งหมด {{count}} ไฟล์"
 
 [fileSidebar.fileItem]
 closeViewer = "ปิดตัวแสดงผล"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "เปิดในตัวแสดงผล"
@@ -3918,7 +3941,6 @@ backToMyFiles = "ย้อนกลับไปยังไฟล์ของฉ
 breadcrumbs = "เส้นทางโฟลเดอร์"
 cancel = "ยกเลิก"
 classification = "การจัดประเภท"
-clearSearch = "ล้างการค้นหา"
 clearSelection = "ล้างการเลือก"
 closeDetails = "ปิดรายละเอียด"
 create = "สร้าง"
@@ -3983,8 +4005,6 @@ resizeFolderTree = "ปรับขนาดต้นไม้โฟลเดอ
 save = "บันทึก"
 saveToServer = "บันทึกไปยังเซิร์ฟเวอร์"
 saveToServerDisabledHint = "การบันทึกไปยังเซิร์ฟเวอร์ไม่ได้เปิดใช้งานบนเซิร์ฟเวอร์นี้ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน."
-search = "ค้นหา"
-searchPlaceholder = "ค้นหาโฟลเดอร์นี้และโฟลเดอร์ย่อย"
 selectAll = "เลือกทั้งหมด"
 selectAllHint = "คลิกเพื่อเลือกทั้งหมด เคล็ดลับ: กด Ctrl (หรือ Cmd) เพื่อเพิ่มทีละไฟล์ กด Shift เพื่อเลือกช่วง."
 selectedCount = "เลือกแล้ว {{count}}"
@@ -4043,6 +4063,10 @@ title = "ยังไม่มีไฟล์คลาวด์"
 [filesPage.empty.local]
 hint = "ไฟล์ที่บันทึกโดยไม่อัปโหลดจะอยู่ที่นี่ ปล่อยไฟล์เพื่อเพิ่ม."
 title = "ไม่มีไฟล์เฉพาะในเครื่อง"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "ไฟล์ที่คุณเปิดหรือแก้ไขจะปรากฏที่นี่."
@@ -4113,6 +4137,11 @@ localHint = "เก็บไว้เฉพาะในเบราว์เซ�
 shared = "แชร์"
 sharedHint = "แชร์กับคุณผ่านลิงก์"
 
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
+
 [filesPage.sort]
 modifiedAsc = "เก่าสุดก่อน"
 modifiedDesc = "ล่าสุดก่อน"
@@ -4168,6 +4197,7 @@ noFilesInStorageOpen = "ไม่มีไฟล์ในที่เก็บ �
 open = "เปิด"
 openFile = "เปิดไฟล์"
 openFiles = "เปิดไฟล์หลายไฟล์"
+selectFile = "Select {{name}}"
 selectFromStorage = "เลือกจากที่เก็บ"
 upload = "อัปโหลด"
 uploadFile = "อัปโหลดไฟล์"
@@ -4241,9 +4271,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "บันทึกทั้งหมดแล้ว"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "ดึง CSV ไม่สำเร็จ"
 extractXlsxError = "ดึง XLSX ไม่สำเร็จ"
+filled = "filled"
 flattenAfterFilling = "ทำให้แบนหลังจากกรอก"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "จำเป็น"
 requiredFieldsError = "โปรดกรอกช่องที่จำเป็นทั้งหมด"
 rescanFields = "สแกนฟิลด์อีกครั้ง"
@@ -4795,9 +4830,6 @@ title = "รูปภาพเป็น PDF"
 [imageToPdf]
 tags = "การแปลง, รูปภาพ, JPG, ภาพ, รูปถ่าย"
 
-[infoBanner]
-dismiss = "ปิด"
-
 [invite]
 acceptError = "ไม่สามารถสร้างบัญชี"
 accountFor = "กำลังสร้างบัญชีสำหรับ"
@@ -4979,6 +5011,34 @@ uploadSuccess = "อัปโหลดสำเร็จ!"
 uploadSuccessMessage = "ถ่ายโอนรูปภาพของคุณเรียบร้อยแล้ว"
 validating = "กำลังตรวจสอบเซสชัน..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "สแกนเพื่ออัปโหลดรูปภาพ รูปภาพจะแปลงเป็น PDF อัตโนมัติ"
 descriptionNoConvert = "สแกนเพื่ออัปโหลดรูปภาพจากอุปกรณ์มือถือของคุณ"
@@ -4997,8 +5057,13 @@ title = "อัปโหลดจากมือถือ"
 tags = "เครื่องมือหลายตัว, หลายการดำเนินการ, UI, คลิกและลาก, ส่วนหน้า, ฝั่งไคลเอนต์, อินเตอร์แอคทีฟ, เคลื่อนย้าย"
 title = "เครื่องมือ PDF หลายตัว"
 
-[navbar]
-search = "ค้นหา"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "การยืนยันตัวตนไม่สำเร็จ คุณสามารถปิดหน้าต่างนี้และลองอีกครั้ง"
@@ -5127,6 +5192,7 @@ activeFiles = "มุมมอง <strong>ไฟล์ที่ใช้งา�
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "ปิด"
 cropSettings = "เมื่อเราเลือกไฟล์ที่ต้องการครอบตัดแล้ว เราสามารถกำหนดค่าเครื่องมือครอบตัดเพื่อเลือกพื้นที่ที่ต้องการครอบตัด PDF"
+dialogLabel = "Onboarding"
 fileCheckbox = "การคลิกที่หนึ่งในไฟล์จะเลือกไฟล์นั้นเพื่อประมวลผล คุณสามารถเลือกหลายไฟล์เพื่อทำแบบชุดได้"
 fileReplacement = "ไฟล์ที่แก้ไขจะมาแทนที่ไฟล์เดิมใน Workbench โดยอัตโนมัติ ช่วยให้คุณรันเครื่องมืออื่นต่อได้ง่าย"
 filesButton = "ปุ่ม <strong>ไฟล์</strong> ในแถบเข้าถึงด่วนช่วยให้คุณอัปโหลด PDF เพื่อใช้เครื่องมือต่างๆ ได้"
@@ -5563,6 +5629,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5709,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6045,6 +6113,7 @@ small = "500 เครดิต"
 xsmall = "100 เครดิต"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "เลือกแผนที่เหมาะกับความต้องการของคุณ"
 title = "แผนที่มีให้"
 
@@ -6624,6 +6693,7 @@ reachedTitle = "ถึงขีดจำกัดค่าใช้จ่าย�
 title = "ไม่สามารถเปิดพอร์ทัล Stripe ได้"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
 capSuffix_other = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
 eyebrow = "ทดลองใช้ Processor"
@@ -6873,6 +6943,32 @@ label = "Jira"
 description = "ส่งอีเมลเอกสารหรือการแจ้งเตือนเมื่อ policy ทำงาน"
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "จัดเก็บเอกสารที่ประมวลผลแล้วลงใน Nextcloud"
@@ -7077,11 +7173,6 @@ title = "SDKs อย่างเป็นทางการ"
 beta = "Beta"
 deprecated = "เลิกใช้แล้ว"
 
-[portal.docs.search]
-empty = "ไม่มีเอกสารที่ตรงกัน"
-placeholder = "ค้นหาเอกสาร"
-results = "{{count}} ผลลัพธ์"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "ความสามารถที่รวมมาและตั้งชื่อไว้ ซึ่งเอเจนต์ของคุณเรียกใช้เป็นเครื่องมือเดียว แต่ละ skill เป็นสายการดำเนินการแบบกำหนดแน่นอนพร้อมการประเมินแนบอยู่"
@@ -7180,11 +7271,11 @@ editorAction = "Editor"
 empty = "ไม่มีเอกสารที่ตรงกับตัวกรองนี้"
 rowActions = "การดำเนินการของแถว"
 sensitiveLabel = "ละเอียดอ่อน"
-sensitiveTitle = "ละเอียดอ่อน — ต้องมีสิทธิ์เข้าถึง"
 
 [portal.documents.table.columns]
 action = "Pipeline / การดำเนินการ"
 document = "เอกสาร"
+labels = "Labels"
 product = "ผลิตภัณฑ์"
 status = "สถานะ"
 time = "เวลา"
@@ -7200,6 +7291,7 @@ host = "Host"
 lastSeen = "เห็นล่าสุด"
 region = "ภูมิภาค"
 status = "สถานะ"
+target = "Target"
 version = "เวอร์ชัน"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7365,56 @@ running = "กำลังทำงาน"
 description = "มุมมองนี้พบข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้ง หรือเลือกส่วนอื่นจากแถบด้านข้าง"
 retry = "ลองอีกครั้ง"
 title = "มีบางอย่างผิดพลาดในหน้านี้"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "กลับ"
@@ -7380,11 +7522,6 @@ cancel = "ยกเลิก"
 confirm = "เพิกถอนคีย์"
 title = "เพิกถอน API key"
 
-[portal.infrastructure.attestationLabel]
-attested = "รับรองแล้ว"
-inScope = "อยู่ในขอบเขต"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "กรองเหตุการณ์ตรวจสอบตามหมวดหมู่"
 heading = "Audit logs"
@@ -7456,11 +7593,6 @@ info = "ข้อมูล"
 success = "สำเร็จ"
 warning = "คำเตือน"
 
-[portal.infrastructure.certLabel]
-certified = "ผ่านการรับรอง"
-inProgress = "กำลังดำเนินการ"
-notStarted = "ยังไม่เริ่ม"
-
 [portal.infrastructure.createKey]
 cancel = "ยกเลิก"
 createKey = "สร้างคีย์"
@@ -7474,237 +7606,9 @@ subtitleCreated = "คัดลอก secret นี้ตอนนี้ — จ
 title = "สร้าง API key"
 titleCreated = "สร้างคีย์แล้ว"
 
-[portal.infrastructure.deployLabel]
-live = "ใช้งานจริง"
-queued = "เข้าคิวแล้ว"
-rolledBack = "ย้อนกลับแล้ว"
-rolling = "กำลังเผยแพร่"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/นาที"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "ปรับใช้โดย"
-environment = "Environment"
-product = "ผลิตภัณฑ์"
-status = "สถานะ"
-version = "เวอร์ชัน"
-when = "เมื่อใด"
-
-[portal.infrastructure.deployments.recent]
-heading = "การปรับใช้ล่าสุด"
-subheading = "การ rollout ล่าสุดในผลิตภัณฑ์และ environments"
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "อินสแตนซ์"
-latency = "เวลาแฝง"
-load = "โหลด"
-p99 = "P99"
-region = "ภูมิภาค"
-status = "สถานะ"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "เวอร์ชัน"
-
-[portal.infrastructure.deployments.regions]
-heading = "ภูมิภาค"
-subheading = "สุขภาพแบบสดสำหรับทุกภูมิภาค Stirling ที่ปรับใช้ — เวลาแฝง โหลด และเวอร์ชัน rollout"
-
-[portal.infrastructure.deployments.regions.empty]
-description = "ภูมิภาคที่ปรับใช้จะแสดงที่นี่เมื่อ workspace ของคุณได้รับการจัดสรรแล้ว"
-title = "ยังไม่มีภูมิภาคที่ปรับใช้"
-
 [portal.infrastructure.keyLabel]
 active = "ใช้งานอยู่"
 revoked = "ถูกเพิกถอน"
-
-[portal.infrastructure.modelLabel]
-active = "ใช้งานอยู่"
-degraded = "เสื่อมประสิทธิภาพ"
-disabled = "ปิดใช้งาน"
-
-[portal.infrastructure.models]
-heading = "Models"
-msValue = "{{value}} ms"
-subheading = "แค็ตตาล็อก model และ routing ที่ขับเคลื่อนการประมวลผลเอกสารทั่ว workspace ของคุณ"
-
-[portal.infrastructure.models.byom]
-description = "ลงทะเบียน model แบบ on-prem หรือโฮสต์เอง และปักหมุดกับภูมิภาคสำหรับการประมวลผลที่ผูกกับถิ่นที่อยู่ของข้อมูล"
-title = "นำ model ของคุณมาเอง"
-
-[portal.infrastructure.models.catalogue]
-heading = "แค็ตตาล็อก"
-sub = "Managed models ที่พร้อมใช้งานสำหรับ workspace ของคุณ พร้อมเวลาแฝงและค่าใช้จ่ายแบบสด"
-subEnterprise = "Managed, bring-your-own และ on-prem models — พร้อมการปักหมุดรายภูมิภาค"
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Models ในแค็ตตาล็อกของ workspace ของคุณจะแสดงที่นี่"
-title = "ไม่มี models ที่พร้อมใช้งาน"
-
-[portal.infrastructure.models.columns]
-cost = "ค่าใช้จ่าย"
-latency = "เวลาแฝง"
-load = "โหลด"
-model = "Model"
-status = "สถานะ"
-type = "ประเภท"
-version = "เวอร์ชัน"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/ครั้ง"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Models ที่ใช้งานอยู่"
-avgLatency = "เวลาแฝงเฉลี่ย"
-included = "รวมแล้ว"
-monthlySpend = "ค่าใช้จ่าย model รายเดือน"
-
-[portal.infrastructure.models.routing]
-empty = "ยังไม่ได้กำหนดค่ากฎ routing"
-heading = "กฎ routing"
-sub = "Model ใดจัดการแต่ละการดำเนินการ ค่าเริ่มต้นจะใช้เมื่อไม่มีกฎที่แคบกว่าตรงกัน"
-subLocked = "Route การดำเนินการไปยัง models เฉพาะ — พร้อมใช้งานในแผนแบบชำระเงิน"
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "อัปเกรดเป็น Pro เพื่อควบคุมว่า model ใดจัดการแต่ละการดำเนินการและประเภทเอกสาร"
-title = "Model routing เป็นฟีเจอร์แบบชำระเงิน"
-
-[portal.infrastructure.models.routingColumns]
-default = "ค่าเริ่มต้น"
-docType = "ประเภทเอกสาร"
-modelForAria = "Model สำหรับ {{operation}}"
-operation = "การดำเนินการ"
-routedTo = "Route ไปยัง"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "การจัดประเภท"
-extraction = "การดึงข้อมูล"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "เสื่อมประสิทธิภาพ"
-down = "ล่ม"
-healthy = "ปกติ"
-
-[portal.infrastructure.security.access.byok]
-description = "ระบุคีย์จาก KMS ของคุณเอง Stirling เข้ารหัสด้วยคีย์นั้นแต่ยังอ่านได้"
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "คีย์ไม่ออกจาก KMS ของคุณ Stirling ถือเฉพาะ ciphertext"
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling จัดการคีย์เข้ารหัส ง่ายที่สุด — ไม่ต้องทำ key ops ฝั่งคุณ"
-label = "คีย์ที่ Stirling ถือไว้"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "นโยบายการเข้าถึงเอกสาร"
-subheading = "ควบคุมว่าใครสามารถถอดรหัสเอกสารที่ประมวลผลแล้วเมื่อจัดเก็บอยู่ได้"
-
-[portal.infrastructure.security.attestations]
-heading = "การรับรองการปฏิบัติตามข้อกำหนด"
-noReport = "ไม่มีรายงาน"
-subheading = "สถานะการตรวจสอบตามแต่ละ framework พร้อมรายงานสำหรับ controls ที่ได้รับการรับรอง"
-viewReport = "ดูรายงาน →"
-
-[portal.infrastructure.security.compliance]
-heading = "การปฏิบัติตามข้อกำหนด"
-subheading = "การรับรองและใบรับรองที่ครอบคลุมแพลตฟอร์ม Stirling"
-
-[portal.infrastructure.security.empty]
-description = "การกำหนดค่าความปลอดภัยของ workspace ของคุณจะแสดงที่นี่"
-title = "ไม่พร้อมใช้งานสถานะความปลอดภัย"
-
-[portal.infrastructure.security.hyokBanner]
-description = "ด้วย HYOK คีย์เข้ารหัสจะไม่ออกจาก KMS ของคุณ Stirling จัดเก็บและประมวลผลเฉพาะ ciphertext ที่คุณสามารถเพิกถอนได้ทุกเมื่อ"
-title = "Stirling ไม่สามารถถอดรหัสเอกสารของคุณได้"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "ยังไม่ได้กำหนดค่าช่วง IP — อนุญาตทุก IP"
-heading = "IP allowlist"
-sub = "การเข้าถึง API ถูกจำกัดไว้ที่ช่วง CIDR เหล่านี้"
-subLocked = "จำกัดการเข้าถึง API ให้กับช่วง IP ที่รู้จัก — พร้อมใช้งานในแผนแบบชำระเงิน"
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "อัปเกรดเป็น Pro เพื่อจำกัดการเข้าถึง API ให้กับเครือข่ายเฉพาะ"
-title = "IP allowlisting เป็นฟีเจอร์แบบชำระเงิน"
-
-[portal.infrastructure.security.ipColumns]
-added = "เพิ่มเมื่อ"
-addedBy = "เพิ่มโดย"
-cidr = "CIDR"
-label = "ป้ายกำกับ"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "การจัดการคีย์เข้ารหัส"
-keyId = "ตัวระบุคีย์"
-lastRotated = "หมุนเวียนล่าสุด"
-rotateKey = "หมุนเวียนคีย์"
-rotationPolicy = "นโยบายการหมุนเวียน"
-subheading = "การดูแลคีย์ที่เข้ารหัสเอกสารเมื่อจัดเก็บอยู่ — ใครสามารถถอดรหัสได้ และคีย์หมุนเวียนอย่างไร"
-
-[portal.infrastructure.security.managedBanner]
-description = "การดูแลคีย์แบบ bring-your-own-key (BYOK) และ hold-your-own-key (HYOK) พร้อมใช้งานใน Enterprise อัปเกรดเพื่อระบุคีย์จาก KMS ของคุณเอง"
-title = "คีย์ถูกจัดการโดย Stirling ในแผนของคุณ"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "เอเชียแปซิฟิก"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR data boundary"
-label = "สหภาพยุโรป"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "สหรัฐอเมริกา"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "ถิ่นที่อยู่ของข้อมูล"
-subheading = "ตำแหน่งที่เอกสารถูกจัดเก็บและประมวลผล"
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "ใช้แล้ว {{value}}"
-
-[portal.infrastructure.storage.empty]
-description = "พื้นที่จัดเก็บที่เชื่อมต่อและการใช้งานจะแสดงที่นี่"
-title = "ยังไม่ได้กำหนดค่าพื้นที่จัดเก็บ"
-
-[portal.infrastructure.storage.lifecycle]
-active = "ใช้งานอยู่"
-activeRange = "0–{{value}}d"
-archived = "เก็บถาวรแล้ว"
-coldStorage = "cold storage"
-deleted = "ลบแล้ว"
-never = "ไม่เคย"
-purged = "ล้างแล้ว"
-
-[portal.infrastructure.storage.providers]
-connect = "เชื่อมต่อ"
-connected = "เชื่อมต่อแล้ว"
-heading = "ผู้ให้บริการที่เชื่อมต่อ"
-subheading = "ตำแหน่งที่เขียน artifacts ที่ประมวลผลแล้ว"
-
-[portal.infrastructure.storage.retention]
-heading = "การเก็บรักษา"
-subheading = "ระยะเวลาที่เก็บ artifacts ก่อนการลบตาม lifecycle"
-windowLabel = "หน้าต่างการเก็บรักษาเริ่มต้น"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} วัน"
-days_other = "{{count}} วัน"
-never = "ไม่ลบ"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "การใช้งานรวม"
-progressLabel = "พื้นที่จัดเก็บที่ใช้"
-subheading = "พื้นที่จัดเก็บที่ใช้รวมทุกผู้ให้บริการที่เชื่อมต่อ"
 
 [portal.infrastructure.tabs]
 apiKeys = "API Keys"
@@ -7715,11 +7619,9 @@ security = "ความปลอดภัย"
 storage = "พื้นที่จัดเก็บ"
 
 [portal.integrations]
-addAnother = "เพิ่มอีกหนึ่ง"
 availableHeading = "พร้อมใช้งาน"
 comingSoonHeading = "เร็ว ๆ นี้"
 connect = "เชื่อมต่อ"
-connectedHeading = "เชื่อมต่อแล้ว"
 connectionCount_one = "การเชื่อมต่อ {{count}} รายการ"
 connectionCount_other = "การเชื่อมต่อ {{count}} รายการ"
 customApi = "API แบบกำหนดเอง"
@@ -7736,6 +7638,10 @@ notify = "แจ้งเตือน"
 security = "ความปลอดภัย"
 signing = "การลงนาม"
 storage = "พื้นที่จัดเก็บ"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "เชื่อมต่อแล้ว"
@@ -7767,7 +7673,6 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "นโยบาย"
 procurement = "การจัดซื้อ"
-settings = "การตั้งค่า"
 sources = "แหล่งที่มา"
 usage = "การใช้งานและการเรียกเก็บเงิน"
 users = "ผู้ใช้"
@@ -7784,7 +7689,7 @@ title = "Pipelines"
 newPipeline = "Pipeline ใหม่"
 
 [portal.pipelines.builder]
-addStep = "เพิ่มเครื่องมือ"
+activate = "Activate"
 back = "กลับไปที่ pipelines"
 cannotFollow = "รับ {{produced}} ไม่ได้"
 chooseAccount = "เลือกบัญชี"
@@ -7792,28 +7697,38 @@ chooseDestination = "เลือกปลายทาง"
 chooseOperation = "เลือกสิ่งที่ขั้นตอนนี้ทำ"
 chooseSource = "เลือกแหล่งที่มา"
 discard = "ละทิ้งการเปลี่ยนแปลง"
-enabled = "เปิดใช้งาน"
 inputs = "อินพุต"
 inputSource = "แหล่งที่มาของอินพุต"
 inputTrigger = "Trigger"
 keepEditing = "แก้ไขต่อ"
+moreActions = "More actions"
 needsConfiguring = "ต้องตั้งค่า"
-needsUpload = "ต้องมีไฟล์ที่อัปโหลด"
-noSources = "ยังไม่มีแหล่งที่มาเชื่อมต่อ สร้างแหล่งที่มาเพื่อใช้เป็นอินพุต"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "ไม่มีเครื่องมือที่ตรงกับการค้นหาของคุณ"
-pipelineSettings = "การตั้งค่า pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "ค้นหาเครื่องมือ"
-selectToolBody = "เพิ่มเครื่องมือเพื่อสร้าง pipeline ของคุณ"
-selectToolTitle = "ยังไม่มีเครื่องมือ"
 sendToSystem = "ส่งไปยังระบบอื่น"
 stepsIncompatible = "ขั้นตอนเหล่านี้ไม่สามารถทำงานกับผลลัพธ์จากขั้นตอนก่อนหน้าได้: {{tools}}"
 stepsNeedSetup = "ขั้นตอนเหล่านี้ยังต้องตั้งค่าก่อนบันทึก: {{tools}}"
-toolSettings = "การตั้งค่าเครื่องมือ"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "การดำเนินการที่ไม่รู้จัก เก็บไว้ตามเดิม"
 unsavedBody = "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก บันทึกก่อนออก หรือจะละทิ้ง?"
 unsavedTitle = "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
-uploadUnsupported = "ไฟล์ที่อัปโหลดยังไม่รองรับใน pipelines ดังนั้นขั้นตอนเหล่านี้จึงไม่สามารถบันทึกได้: {{tools}}"
 usesDefaults = "ทำงานด้วยการตั้งค่าเริ่มต้น"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "รวมทุกไฟล์จากขั้นตอนก่อนหน้า"
@@ -7825,30 +7740,35 @@ undeclared-operation = "ตรวจสอบไม่ได้ว่าขั�
 
 [portal.pipelines.composer]
 addTool = "เพิ่มเครื่องมือ"
-cancel = "ยกเลิก"
-chainEmpty = "เพิ่มเครื่องมือเพื่อเริ่มสร้าง pipeline ของคุณ"
 create = "สร้าง pipeline"
+createPaused = "Create paused"
 editingUnsupported = "ยังไม่รองรับการแสดง params ของเครื่องมือเหล่านี้เพื่อแก้ไข"
-moveDown = "ย้ายลง"
-moveUp = "ย้ายขึ้น"
+editSource = "Edit source"
 name = "ชื่อ"
 namePlaceholder = "เช่น Redaction sweep"
 noToolSettings = "เครื่องมือนี้ไม่มีการตั้งค่าที่กำหนดค่าได้"
-operations_one = "การดำเนินการ ({{count}})"
-operations_other = "การดำเนินการ ({{count}})"
 output = "ผลลัพธ์"
-removeStep = "ลบการดำเนินการ"
 save = "บันทึกการเปลี่ยนแปลง"
 scheduleEvery = "รันทุก"
-sources = "แหล่งที่มา"
-sourcesLoading = "กำลังโหลดแหล่งที่มา..."
 trigger = "Trigger"
 triggerManual = "Manual เท่านั้น"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "วัน"
 hours = "ชั่วโมง"
 minutes = "นาที"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "ลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ย้อนกลับไม่ได้"
@@ -7867,6 +7787,37 @@ connectSource = "เชื่อมต่อแหล่งที่มา"
 description = "สร้าง pipeline แรกของคุณ: เลือกแหล่งที่มาที่จะรัน เชื่อมโยงการดำเนินการ และเลือกตำแหน่งผลลัพธ์"
 title = "ยังไม่มี pipelines"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "ใช้งานอยู่"
 paused = "หยุดชั่วคราว"
@@ -7879,7 +7830,6 @@ completed_one = "การรันเสร็จสมบูรณ์"
 completed_other = "การรันทั้งหมด {{count}} รายการเสร็จสมบูรณ์"
 empty = "ไม่มีอะไรให้รัน: แหล่งที่มาไม่มีเอกสารให้ประมวลผล"
 failed = "การรันล้มเหลว: {{error}}"
-historyCleared = "ล้างประวัติแล้ว การรันครั้งถัดไปจะประมวลผลทุกอย่างที่อยู่ในแหล่งที่มาอีกครั้ง"
 inFlight = "ไม่มีรายการใหม่ให้รัน: เอกสารยังคงกำลังถูกประมวลผลจากการรันก่อนหน้า"
 parked_one = "ไม่มีอะไรให้รัน: เอกสาร {{count}} รายการล้มเหลวก่อนหน้านี้และถูกพักไว้ แก้ไขสาเหตุ จากนั้นล้างประวัติเพื่อลองใหม่"
 parked_other = "ไม่มีอะไรให้รัน: เอกสาร {{count}} รายการล้มเหลวก่อนหน้านี้และถูกพักไว้ แก้ไขสาเหตุ จากนั้นล้างประวัติเพื่อลองใหม่"
@@ -7895,6 +7845,7 @@ name = "Pipeline"
 sources = "แหล่งที่มา"
 status = "สถานะ"
 steps = "ขั้นตอน"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "เฝ้าดูโฟลเดอร์"
@@ -8208,6 +8159,24 @@ label = "แนบไปยัง Jira issue"
 [portal.policies.operations.mailgunEmail]
 description = "ส่งเอกสารที่ประมวลผลแล้วเป็นไฟล์แนบ"
 label = "ส่งเอกสารทางอีเมล (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "เขียนเอกสารที่ประมวลผลแล้วลงในโฟลเดอร์"
@@ -8683,16 +8652,6 @@ maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
 title = "Enterprise trial"
 
-[portal.search]
-ariaLabel = "ค้นหา"
-placeholder = "ค้นหา Stirling — endpoints, pipelines, docs…"
-
-[portal.search.empty]
-noActionsDescription = "การดำเนินการด่วนจะปรากฏที่นี่เมื่อพร้อมใช้งาน"
-noActionsTitle = "ไม่มีการดำเนินการด่วน"
-noMatches = "ไม่พบรายการที่ตรงกับ \"{{query}}\""
-noMatchesDescription = "ลองใช้คำค้นอื่นหรือเรียกดู catalogue"
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8743,10 +8702,6 @@ cancel = "ยกเลิก"
 confirm = "ลบ"
 title = "ลบแหล่งที่มาหรือไม่?"
 
-[portal.sources.empty]
-description = "เชื่อมต่อโฟลเดอร์ (และเร็ว ๆ นี้ cloud storage) เพื่อให้นโยบายของคุณมีที่สำหรับดึงเอกสาร"
-title = "ยังไม่มีแหล่งที่มาที่เชื่อมต่อ"
-
 [portal.sources.kpi]
 inUse = "กำลังใช้งาน"
 total = "การเชื่อมต่อ"
@@ -8785,6 +8740,7 @@ unused = "ไม่ได้ใช้งาน"
 documents = "เอกสาร"
 source = "แหล่งที่มา"
 status = "สถานะ"
+type = "Type"
 usedBy = "นโยบาย"
 
 [portal.sources.types.box]
@@ -9980,9 +9936,6 @@ title = "นโยบายและความเป็นส่วนตั�
 [settings.preferences]
 title = "ค่ากำหนด"
 
-[settings.search]
-placeholder = "ค้นหาหน้าการตั้งค่า..."
-
 [settings.security]
 description = "อัปเดตรหัสผ่านของคุณเพื่อให้บัญชีปลอดภัย"
 title = "ความปลอดภัย"
@@ -10128,6 +10081,7 @@ last = "หน้าสุดท้าย"
 maintainRatio = "สลับคงอัตราส่วนภาพ"
 next = "หน้าถัดไป"
 noSavedSigs = "ไม่พบลายเซ็นที่บันทึกไว้"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "ลายเซ็นส่วนตัว"
 previous = "หน้าก่อนหน้า"
 redo = "ทำซ้ำ"
@@ -10166,6 +10120,7 @@ backgroundRemovalFailedTitle = "ลบพื้นหลังไม่สำเ
 hint = "อัปโหลดภาพลายเซ็นเป็น PNG หรือ JPG"
 label = "อัปโหลดภาพลายเซ็น"
 placeholder = "เลือกไฟล์รูปภาพ"
+previewAlt = "Current image signature"
 processing = "กำลังประมวลผลภาพ..."
 removeBackground = "ลบพื้นหลังสีขาว (ทำให้โปร่งใส)"
 
@@ -10178,6 +10133,17 @@ resumeHint = "ทำต่อการวางเพื่อคลิกแล
 saved = "เลือกหนึ่งลายเซ็นที่บันทึกไว้ด้านบน แล้วคลิกที่ใดก็ได้บน PDF เพื่อวาง"
 text = "หลังจากป้อนชื่อของคุณด้านบนแล้ว ให้คลิกที่ใดก็ได้บน PDF เพื่อวางลายเซ็น"
 title = "วิธีเพิ่มลายเซ็น"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "ย้ายลายเซ็น"
@@ -10625,6 +10591,23 @@ title = "อัปโหลดไปยังเซิร์ฟเวอร์"
 updateButton = "อัปเดตบนเซิร์ฟเวอร์"
 uploadButton = "อัปโหลดไปยังเซิร์ฟเวอร์"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10757,6 @@ goBack = "ย้อนกลับ"
 pdfTools = "เครื่องมือ PDF"
 placeholder = "เลือกเครื่องมือเพื่อเริ่มต้น"
 premiumFeature = "ฟีเจอร์พรีเมียม:"
-searchTools = "ค้นหาเครื่องมือ"
 toolsHeader = "เครื่องมือ"
 viewAllTools = "ดูเครื่องมือทั้งหมด"
 
@@ -10821,6 +10803,9 @@ pageFormatting = "การจัดรูปแบบหน้า"
 removal = "การลบ"
 signing = "การลงนาม"
 verification = "การตรวจสอบ"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ไม่พบเครื่องมือ"
@@ -10979,6 +10964,13 @@ approver = "อนุมัตินโยบาย"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "ยกเลิกคำเชิญไปยัง {{email}}? พวกเขาจะไม่สามารถเข้าร่วมด้วยลิงก์ปัจจุบันได้"
 cancelInviteTitle = "ยกเลิกคำเชิญ"
@@ -10998,10 +10990,8 @@ title = "ยังไม่มีสมาชิก"
 addToTeam = "เพิ่มเข้าทีม"
 guestCount = "{{count}} guest"
 guests = "Guests"
-guestsDesc = "ผู้ร่วมงานภายนอก จำกัดตามสิ่งที่คุณแชร์ Editor เท่านั้น"
 ledBy = "นำโดย {{owner}}"
 org = "องค์กร"
-orgDesc = "เจ้าของที่มีอำนาจทั่วทั้งองค์กรและการอนุมัตินโยบาย"
 owners = "เจ้าของ {{count}} คน"
 team = "ทีม {{name}}"
 teamMeta = "{{count}} คน"
@@ -11041,12 +11031,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "เชิญโดย {{who}}"
 cancel = "ยกเลิก"
-count = "รอดำเนินการ {{count}} รายการ"
-desc = "ผู้ที่ได้รับเชิญแต่ยังไม่ได้เข้าร่วม พวกเขาจะถูกนับเป็นหนึ่งที่นั่งจนกว่าจะยอมรับ"
 expiresInDays_one = "หมดอายุใน {{count}} วัน"
 expiresInDays_other = "หมดอายุใน {{count}} วัน"
 expiresToday = "หมดอายุวันนี้"
 title = "คำเชิญที่รอดำเนินการ"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "เกิดข้อผิดพลาดในการติดต่อ backend หรือคุณไม่มีสิทธิ์เข้าถึง ลองอีกครั้ง"
@@ -11237,12 +11229,15 @@ searchPlaceholder = "ค้นหาไฟล์แนบ"
 title = "ไฟล์แนบ"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "ชื่อบุ๊กมาร์ก"
 bookmarkTitleRequired = "จำเป็นต้องมีชื่อบุ๊กมาร์ก"
 closeSidebar = "ปิดแถบด้านข้างบุ๊กมาร์ก"
 collapseAll = "ยุบบุ๊กมาร์กทั้งหมด"
+empty = "No bookmarks in this document"
 expandAll = "ขยายบุ๊กมาร์กทั้งหมด"
 searchPlaceholder = "ค้นหาบุ๊กมาร์ก"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "เพิ่มความคิดเห็น"
@@ -11264,10 +11259,12 @@ locateAnnotation = "ค้นหาตำแหน่งในเอกสาร
 moreActions = "การดำเนินการเพิ่มเติม"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "หน้า {{page}}"
 placingHint = "คลิกที่หน้ากระดาษเพื่อวาง… (ยกเลิก)"
 removeCommentOnly = "ลบเฉพาะความคิดเห็น"
 saveReply = "บันทึกการตอบกลับ"
+searchPlaceholder = "Search comments"
 title = "ความคิดเห็น"
 typeComment = "ความคิดเห็น"
 typeInsertText = "แทรกข้อความ"
@@ -11290,6 +11287,7 @@ unsavedDesc = "คุณมีการเปลี่ยนแปลงที�
 closeSidebar = "ปิดแถบด้านข้างเลเยอร์"
 hideAll = "ซ่อนเลเยอร์ทั้งหมด"
 showAll = "แสดงเลเยอร์ทั้งหมด"
+title = "Layers"
 
 [viewer.link]
 delete = "ลบลิงก์"
@@ -11646,6 +11644,7 @@ exitRedaction = "ออกจากโหมดปกปิดข้อมูล
 exportAll = "ส่งออก PDF"
 exportSelected = "ส่งออกหน้าที่เลือก"
 formFill = "กรอกแบบฟอร์ม"
+hideToolbar = "Hide toolbar"
 multiTool = "เครื่องมือหลายฟังก์ชัน"
 panMode = "โหมดเลื่อน"
 print = "พิมพ์ PDF"
@@ -11666,6 +11665,7 @@ selectAll = "เลือกทั้งหมด"
 selectByNumber = "เลือกตามหมายเลขหน้า"
 selectLanguage = "เลือกภาษา"
 share = "แชร์"
+showToolbar = "Show toolbar"
 toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
 toggleAttachments = "สลับไฟล์แนบ"
 toggleBookmarks = "สลับที่คั่นหน้า"
