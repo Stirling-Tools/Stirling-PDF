@@ -21,7 +21,7 @@ engine = [
     "pydantic-settings>=2.15.0",
     "python-dotenv>=1.2.2",
     "sqlite-vec>=0.1.9",
-    "uvicorn>=0.52.1",
+    "uvicorn>=0.52.3",
 ]
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
