@@ -421,7 +421,9 @@ describe("useNotificationActions", () => {
   it("replaces the encrypted original in place when it is open in the workbench", async () => {
     // The failed document is on screen, so the unlock versions it rather than adding a second copy.
     openFileIds = ["f-1"];
-    openFilesById = { "f-1": { id: "f-1", name: "invoice.pdf", versionNumber: 1 } };
+    openFilesById = {
+      "f-1": { id: "f-1", name: "invoice.pdf", versionNumber: 1 },
+    };
     unlockLocalDocument.mockResolvedValue({
       ok: true,
       files: [
@@ -446,6 +448,30 @@ describe("useNotificationActions", () => {
     expect(
       (stubs as Array<{ derivedFromTool?: boolean }>)[0].derivedFromTool,
     ).toBe(true);
+  });
+
+  it("versions a document the workbench has closed, rather than adding a copy of it", async () => {
+    // Closed in the sidebar but still on the device: adding here left the user holding both.
+    openFileIds = [];
+    openFilesById = {};
+
+    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+
+    expect(addFiles).not.toHaveBeenCalled();
+    expect(consumeFiles.mock.calls[0][0]).toEqual(["f-1"]);
+  });
+
+  it("adds the unlocked document when nothing on this device holds the original", async () => {
+    // No stub anywhere: there is no version chain to extend, so adding is all that is left.
+    h.getStirlingFileStub.mockResolvedValue(null);
+
+    await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
+
+    expect(consumeFiles).not.toHaveBeenCalled();
+    expect(addFiles.mock.calls[0][1]).toEqual({
+      selectFiles: true,
+      derivedFromTool: true,
+    });
   });
 
   it("closes the incident only once the document is safely in", async () => {
@@ -555,6 +581,52 @@ describe("useNotificationActions", () => {
     registry().VIEW_IN_PROCESSOR?.run(context());
 
     expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+  });
+
+  it("opens a new tab rather than costing the reader a loaded workbench", () => {
+    // Navigating away would unload their files, costing them every upload again.
+    openFileIds = ["f-1"];
+    const openTab = vi.spyOn(window, "open").mockReturnValue({} as Window);
+
+    registry().VIEW_IN_PROCESSOR?.run(context());
+
+    expect(openTab).toHaveBeenCalledWith(
+      "/processor/documents#failures",
+      "_blank",
+      "noopener",
+    );
+    expect(navigate).not.toHaveBeenCalled();
+    openTab.mockRestore();
+  });
+
+  it("navigates in place when the tab would be refused", () => {
+    openFileIds = ["f-1"];
+    const openTab = vi.spyOn(window, "open").mockReturnValue(null);
+
+    registry().VIEW_IN_PROCESSOR?.run(context());
+
+    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    openTab.mockRestore();
+  });
+
+  it("navigates in place from an empty workbench, which costs the reader nothing", () => {
+    const openTab = vi.spyOn(window, "open");
+
+    registry().VIEW_IN_PROCESSOR?.run(context());
+
+    expect(openTab).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    openTab.mockRestore();
+  });
+
+  it("navigates in place from the processor, which has no workbench to lose", () => {
+    const openTab = vi.spyOn(window, "open");
+
+    registry(inProcessor).VIEW_IN_PROCESSOR?.run(context());
+
+    expect(openTab).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/processor/documents#failures");
+    openTab.mockRestore();
   });
 
   it("offers the processor link whenever the server did", () => {
@@ -692,9 +764,9 @@ describe("retrying an attended policy run", () => {
 
   it("unlocks, takes the document in, runs the policy again, then closes the incident", async () => {
     const order: string[] = [];
-    addFiles.mockImplementation(async () => {
+    consumeFiles.mockImplementation(async () => {
       order.push("adopt");
-      return [{ fileId: "f-unlocked" }];
+      return ["f-unlocked"];
     });
     rechainPolicyOnDocument.mockImplementation(async () => {
       order.push("rerun");
@@ -713,14 +785,17 @@ describe("retrying an attended policy run", () => {
     expect(outcome).toEqual({ ok: true });
     // The unlock is the remove-password call on the document the row names, not a stashed endpoint.
     expect(unlockLocalDocument).toHaveBeenCalledWith("f-1", "hunter2");
-    // Added and selected, so the unlocked document is what is on screen once the panel closes. The
-    // encrypted original is left alone: the user never asked to lose it.
-    const [files, options] = addFiles.mock.calls[0];
+    // Versioned onto the encrypted original, so there is one document rather than two.
+    expect(addFiles).not.toHaveBeenCalled();
+    const [inputIds, files, stubs] = consumeFiles.mock.calls[0];
+    expect(inputIds).toEqual(["f-1"]);
     expect((files as File[]).map((file) => file.name)).toEqual(["invoice.pdf"]);
     // derivedFromTool is what stops the adoption starting a SECOND run of this same policy: the
     // dispatch effect in usePolicyAutoRun treats a plain upload as work to enforce. A policy run is
     // a billed automation run, so a double dispatch double-charges and can open a second incident.
-    expect(options).toEqual({ selectFiles: true, derivedFromTool: true });
+    expect(
+      (stubs as Array<{ derivedFromTool?: boolean }>)[0].derivedFromTool,
+    ).toBe(true);
     // Re-submitted under the ORIGINAL reference, so a second failure folds onto this same incident
     // instead of opening a new one about the same document - while the run's output is attributed to
     // the ADOPTED document, which is the one now in front of the user.
@@ -744,13 +819,15 @@ describe("retrying an attended policy run", () => {
     // derivedFromTool above; see the gate's own test in usePolicyAutoRun.chain.test.tsx.
     expect(rechainPolicyOnDocument).toHaveBeenCalledTimes(1);
     expect(rerunPolicy).not.toHaveBeenCalled();
-    expect(addFiles.mock.calls[0][1]).toMatchObject({ derivedFromTool: true });
+    expect(consumeFiles.mock.calls[0][2][0]).toMatchObject({
+      derivedFromTool: true,
+    });
   });
 
   it("still runs when the adoption reports no workspace id, rather than guessing one", async () => {
     // Nothing to attribute the output to, so the run goes untracked rather than being filed against
     // the encrypted original, which would version the wrong document.
-    addFiles.mockResolvedValue([]);
+    consumeFiles.mockResolvedValue([]);
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
@@ -778,7 +855,7 @@ describe("retrying an attended policy run", () => {
         "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open.",
     });
     // Adopted regardless: the password bought them the unlocked document either way.
-    expect(addFiles).toHaveBeenCalled();
+    expect(consumeFiles).toHaveBeenCalled();
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 
@@ -811,7 +888,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("neither re-runs nor closes the incident when the document cannot be taken in", async () => {
-    addFiles.mockRejectedValue(new Error("quota"));
+    consumeFiles.mockRejectedValue(new Error("quota"));
 
     expect(
       await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2"),
@@ -839,7 +916,7 @@ describe("retrying an attended policy run", () => {
         "The document was unlocked and opened here, but the policy could not be run on it again.",
     });
     // Adopted anyway: the password bought them the unlocked document, and that is theirs to keep.
-    expect(addFiles).toHaveBeenCalled();
+    expect(consumeFiles).toHaveBeenCalled();
     // But nothing is fixed server-side, so the incident stays open.
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });

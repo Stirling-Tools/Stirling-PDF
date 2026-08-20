@@ -5067,7 +5067,7 @@ label = "Free credits"
 
 [notifications]
 adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
-empty = "Nothing to report."
+empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
 noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
@@ -5082,15 +5082,11 @@ unlockedRerunUndelivered = "The document was unlocked and the policy re-run star
 unread = "Unread"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "That did not work. Try again in a moment."
 more = "More options"
 unavailable = "Not available for this notification."
-
-[notifications.detail]
-copied = "Copied"
-copy = "Copy error"
-less = "Show less"
-more = "Show full message"
 
 [notifications.section]
 earlier = "Earlier"
@@ -7434,11 +7430,11 @@ description = "Policy runs that fail will appear here with the actions you can t
 title = "No failures recorded"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
 
 [portal.failures.kind.unknown]
-description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+description = "Something went wrong that Stirling does not recognise yet."
 title = "Unrecognised failure"
 
 [portal.failures.origin]

@@ -86,6 +86,11 @@ function takeSelection(): string | null {
   }
 }
 
+/** False when the browser refused it, so the caller can fall back to navigating in place. */
+function openInNewTab(path: string): boolean {
+  return window.open(withBasePath(path), "_blank", "noopener") !== null;
+}
+
 /**
  * Not the router's `navigate`: the editor reads its tool from the URL on mount and on a history pop,
  * and a router push is neither, so the address would change and the workbench would not.
@@ -415,13 +420,15 @@ export function useNotificationActions(): ClientActionRegistry {
         // It unlocked, so the user must end up holding it. A failed adoption fails the whole action:
         // claiming success and dropping the result leaves them nothing for the password they typed.
         const unlocked = asFiles(outcome.files ?? []);
-        // The original to version in place, when it is open here. Only a policy names one: a tool
-        // retry has no single input to replace, so it keeps adding its output.
+        // Only a policy names an original to version; a tool retry keeps adding its output.
         const originalId =
           target.kind === "policy" ? (target.policy.fileId as FileId) : null;
-        const parentStub =
-          (originalId && fileStore?.getState().files.byId?.[originalId]) ||
-          null;
+        // Storage too, or a file merely closed in the sidebar ends up decrypted twice over.
+        const parentStub = originalId
+          ? (fileStore?.getState().files.byId?.[originalId] ??
+            (await fileStorage.getStirlingFileStub(originalId)) ??
+            null)
+          : null;
         let adopted: FileId[] = [];
         try {
           adopted = await adopt(fileContext.actions, parentStub, unlocked);
@@ -478,7 +485,14 @@ export function useNotificationActions(): ClientActionRegistry {
       // is in portal/views/Documents, and both lift together.
       available: () => import.meta.env.DEV,
       closesPanel: true,
-      run: () => navigate(FAILURES_DESTINATION),
+      run: () => {
+        // Leaving would cost them a loaded workbench, and every file in it a re-upload.
+        const holdsFiles = (fileStore?.getState().files.ids.length ?? 0) > 0;
+        if (canOpenHere && holdsFiles && openInNewTab(FAILURES_DESTINATION)) {
+          return;
+        }
+        navigate(FAILURES_DESTINATION);
+      },
     };
 
     return {
@@ -487,5 +501,5 @@ export function useNotificationActions(): ClientActionRegistry {
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
-  }, [canOpenHere, openInWorkbench, fileContext, navigate, t]);
+  }, [canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
 }

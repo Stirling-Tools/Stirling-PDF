@@ -65,6 +65,8 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     // A string fallback, or an options object with defaultValue plus what it interpolates.
     t: (key: string, fallback?: unknown) => {
+      // The kinds' sentences live in the locale files, so one stands in here.
+      if (key.endsWith(".description")) return "Kind description";
       if (typeof fallback === "string") return fallback;
       if (fallback && typeof fallback === "object") {
         const options = fallback as Record<string, unknown>;
@@ -603,25 +605,43 @@ describe("NotificationBell", () => {
     expect(screen.getByLabelText("PDF password")).toBeTruthy();
   });
 
-  it("expands the message without touching the row's actions", async () => {
+  it("reads the kind's own words rather than the raw failure", async () => {
+    // A bell is not a log: the row gets a sentence, the message goes in the menu.
+    const stack = "org.apache.pdfbox.InvalidPasswordException";
     fetchNotifications.mockResolvedValue([
-      notification("a", "Unrecognised failure", {
-        detail: "org.apache.pdfbox.InvalidPasswordException",
+      notification("a", "Password-protected document", {
+        titleKey: "portal.failures.kind.inputPasswordProtected.title",
+        detail: stack,
       }),
     ]);
     render(<NotificationBell />);
     await openPanel();
 
-    const expand = screen.getByRole("button", {
-      name: "Show full message: Unrecognised failure",
-    });
-    fireEvent.click(expand);
+    expect(await screen.findByText("Kind description")).toBeTruthy();
+    expect(screen.queryByText(stack)).toBeNull();
+  });
 
-    expect(
-      screen.getByRole("button", { name: "Show less: Unrecognised failure" }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Copy error: Unrecognised failure" }),
-    ).toBeTruthy();
+  it("keeps the log one click away, for a row whose only extra is the log", async () => {
+    h.specs = { VIEW_FILE: { available: () => true, run: vi.fn() } };
+    const stack = "org.apache.pdfbox.InvalidPasswordException";
+    const clipboard = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText: clipboard } });
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Unrecognised failure", {
+        detail: stack,
+        actions: [offer("VIEW_FILE", "SECONDARY")],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    );
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Copy log" }));
+
+    await waitFor(() => expect(clipboard).toHaveBeenCalledWith(stack));
   });
 });

@@ -142,60 +142,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Expanded, the message is the point of the row, so let it run and scroll rather than clamp. */
-.notification-bell__detail--full {
-  display: block;
-  max-height: 10rem;
-  overflow-y: auto;
-  -webkit-line-clamp: none;
-}
-
-/* The message in its own box; copy and expand are corner glyphs, not buttons rivalling the row's actions. */
-.notification-bell__detailbox {
-  grid-column: 1 / -1;
-  position: relative;
-  margin-top: var(--sp-1, 0.25rem);
-  padding: 0.375rem 0.5rem;
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-sm, 0.25rem);
-  background: var(--c-surface-sunken, var(--c-bg-raised));
-}
-
-/* Inside the box: drop the row grid placement, and keep the two-line clamp clear of the icons. */
-.notification-bell__detailbox .notification-bell__detail {
-  grid-column: auto;
-  margin: 0;
-  padding-right: 2.75rem;
-}
-
-.notification-bell__detailbox-actions {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  display: flex;
-  gap: 0.125rem;
-}
-
-.notification-bell__iconbtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm, 0.25rem);
-  background: transparent;
-  color: var(--c-text-subtle);
-  cursor: pointer;
-}
-
-.notification-bell__iconbtn:hover,
-.notification-bell__iconbtn:focus-visible {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
 /* Why the actions this row could have had are absent. Muted: it explains, it does not warn. */
 .notification-bell__note {
   grid-column: 2;

@@ -189,7 +189,7 @@ export function NotificationBell() {
 
           {notifications.length === 0 ? (
             <p className="notification-bell__empty">
-              {t("notifications.empty", "Nothing to report.")}
+              {t("notifications.empty", "You're all caught up.")}
             </p>
           ) : (
             <ul className="notification-bell__list">
@@ -262,6 +262,11 @@ interface PasswordPrompt {
  * The server's reason wins, being about the failure rather than this browser. Otherwise only what we
  * actually looked up, so a row we never probed is never called absent.
  */
+/** The kind's own sentence, sharing the portal's copy. Empty for a kind this build has none for. */
+function summaryKeyOf(titleKey: string): string {
+  return titleKey.replace(/\.title$/, ".description");
+}
+
 function noteFor(
   notification: AppNotification,
   documentState: NotificationDocumentState,
@@ -300,7 +305,7 @@ interface NotificationItemProps {
   onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
-/** Its own component because the last attempt's message and its expanded state are per-row. */
+/** Its own component because the last attempt's message and the copy state are per-row. */
 function NotificationItem({
   notification,
   unread,
@@ -312,7 +317,6 @@ function NotificationItem({
   const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const title = t(notification.titleKey, notification.defaultTitle);
@@ -376,6 +380,7 @@ function NotificationItem({
   };
 
   const note = noteFor(notification, documentState, withheldReasonKey, t);
+  const summary = t(summaryKeyOf(notification.titleKey), { defaultValue: "" });
 
   return (
     <li
@@ -398,54 +403,7 @@ function NotificationItem({
         </span>
       )}
 
-      {notification.detail && (
-        <div className="notification-bell__detailbox">
-          {/* Copy and expand sit in the corner of the message, not as buttons of their own, so reading
-              the failure and acting on it do not crowd each other out. */}
-          <span className="notification-bell__detailbox-actions">
-            <button
-              type="button"
-              className="notification-bell__iconbtn"
-              aria-label={`${t("notifications.detail.copy", "Copy error")}: ${title}`}
-              title={
-                copied
-                  ? t("notifications.detail.copied", "Copied")
-                  : t("notifications.detail.copy", "Copy error")
-              }
-              onClick={() => void copyDetail()}
-            >
-              {copied ? <CheckIcon /> : <CopyIcon />}
-            </button>
-            <button
-              type="button"
-              className="notification-bell__iconbtn"
-              aria-expanded={expanded}
-              aria-label={`${
-                expanded
-                  ? t("notifications.detail.less", "Show less")
-                  : t("notifications.detail.more", "Show full message")
-              }: ${title}`}
-              title={
-                expanded
-                  ? t("notifications.detail.less", "Show less")
-                  : t("notifications.detail.more", "Show full message")
-              }
-              onClick={() => setExpanded((wasExpanded) => !wasExpanded)}
-            >
-              {expanded ? <CollapseIcon /> : <ExpandIcon />}
-            </button>
-          </span>
-          <span
-            className={
-              expanded
-                ? "notification-bell__detail notification-bell__detail--full"
-                : "notification-bell__detail"
-            }
-          >
-            {notification.detail}
-          </span>
-        </div>
-      )}
+      {summary && <span className="notification-bell__detail">{summary}</span>}
 
       {note && <span className="notification-bell__note">{note}</span>}
 
@@ -469,7 +427,7 @@ function NotificationItem({
               onRun={() => void run(secondary)}
             />
           )}
-          {overflow.length > 0 && (
+          {(overflow.length > 0 || notification.detail) && (
             <Menu withinPortal position="bottom-end" shadow="md" width={180}>
               <Menu.Target>
                 <Tooltip
@@ -496,6 +454,16 @@ function NotificationItem({
                     {labelOf(offer)}
                   </Menu.Item>
                 ))}
+                {notification.detail && (
+                  <Menu.Item
+                    closeMenuOnClick={false}
+                    onClick={() => void copyDetail()}
+                  >
+                    {copied
+                      ? t("notifications.action.copiedLog", "Copied")
+                      : t("notifications.action.copyLog", "Copy log")}
+                  </Menu.Item>
+                )}
               </Menu.Dropdown>
             </Menu>
           )}
@@ -543,7 +511,6 @@ function ActionButton({
   );
 }
 
-/* Inline so the message box needs no icon dependency: two small glyphs for copy and expand. */
 const ICON_PROPS = {
   width: 14,
   height: 14,
@@ -555,41 +522,6 @@ const ICON_PROPS = {
   strokeLinejoin: "round" as const,
   "aria-hidden": true,
 };
-
-function CopyIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function ExpandIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="m7 15 5 5 5-5" />
-      <path d="m7 9 5-5 5 5" />
-    </svg>
-  );
-}
-
-function CollapseIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="m7 20 5-5 5 5" />
-      <path d="m7 4 5 5 5-5" />
-    </svg>
-  );
-}
 
 function MoreIcon() {
   return (
