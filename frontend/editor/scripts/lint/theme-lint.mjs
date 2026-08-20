@@ -642,7 +642,6 @@ const CODE_EXEMPT_PATH = [
   /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
-  /UpgradeBanner|AdminPlanSection/,
   // Stories are checked like app code; colour-as-data lines opt out with
   // `theme-allow-color`.
   /\.test\.[jt]sx?$|\/types\//,

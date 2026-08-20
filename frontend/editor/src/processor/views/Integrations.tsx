@@ -2,8 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Banner, Button, Skeleton } from "@app/ui";
+import {
+  Banner,
+  Button,
+  column,
+  DataTable,
+  type DataTableColumn,
+  type DataTableGroup,
+  EmptyState,
+} from "@app/ui";
 import { errorMessage } from "@processor/api/http";
 import {
   deleteIntegration,
@@ -30,12 +37,11 @@ import "@processor/views/Integrations.css";
 /**
  * The integrations catalogue: everything Stirling can talk to, in one place.
  *
- * Three bands in one list. Connected first — stored connections grouped by
- * vendor, expandable when a vendor has several (two S3 buckets is normal, not
- * an error), each instance editable and one click from "add another". Then
- * Available — the supported vendors, each saying what it works with (sources,
- * policies, pipelines) so it's obvious whether a vendor feeds documents in or
- * receives them. Coming-soon source connectors close the list greyed out, so
+ * Three bands, one grouped table. Connected first - stored connections grouped
+ * by vendor (two S3 buckets is normal, not an error), every instance a row you
+ * can edit or remove, with "add another" on the vendor's group header. Then
+ * Available - the supported vendors, each saying what it works with (sources,
+ * policies, pipelines). Coming-soon source connectors close the list so
  * "do you support X?" is answered honestly instead of hidden.
  *
  * Setup itself stays in the shared {@link ConnectionModal}; every entry point
@@ -72,6 +78,20 @@ interface TypeGroup {
   connections: IntegrationConfig[];
 }
 
+/** One normalized row across the three bands, so a single grouped table renders
+ *  connected instances, available vendors, and coming-soon vendors alike. */
+type IntegrationRow = {
+  key: string;
+  brandId: string;
+  title: string;
+  subtitle: string;
+  worksWith: WorksWith[];
+} & (
+  | { kind: "instance"; connection: IntegrationConfig; canManage: boolean }
+  | { kind: "available"; typeId: string }
+  | { kind: "soon" }
+);
+
 export function Integrations() {
   const { t } = useTranslation();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
@@ -82,13 +102,13 @@ export function Integrations() {
   >(undefined);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<{
     open: boolean;
     editing: IntegrationConfig | null;
     fixedTypeId?: string;
   }>({ open: false, editing: null });
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -192,44 +212,153 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
-  function toggleExpand(typeId: string) {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(typeId)) next.delete(typeId);
-      else next.add(typeId);
-      return next;
-    });
-  }
-
-  function openCreate(typeId: string) {
+  const openCreate = useCallback((typeId: string) => {
     setModal({ open: true, editing: null, fixedTypeId: typeId });
-  }
+  }, []);
 
-  function openEdit(connection: IntegrationConfig) {
+  const openEdit = useCallback((connection: IntegrationConfig) => {
     setModal({ open: true, editing: connection });
-  }
+  }, []);
 
-  async function remove(connection: IntegrationConfig) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteIntegration(connection.id);
-      await refresh();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
+  const remove = useCallback(
+    async (connection: IntegrationConfig) => {
+      if (busy) return;
+      setBusy(true);
+      setDeletingId(connection.id);
+      setError(null);
+      try {
+        await deleteIntegration(connection.id);
+        await refresh();
+      } catch (e) {
+        setError(errorMessage(e));
+      } finally {
+        setBusy(false);
+        setDeletingId(null);
+      }
+    },
+    [busy, refresh],
+  );
 
   const isLoading = connections === null;
 
-  const chip = (kind: WorksWith) => (
-    <span key={kind} className="processor-integrations__chip">
-      {t(`processor.integrations.worksWith.${kind}`)}
-    </span>
+  const worksWithText = useCallback(
+    (list: WorksWith[]) =>
+      list.map((w) => t(`processor.integrations.worksWith.${w}`)).join(", "),
+    [t],
   );
+
+  const columns = useMemo<DataTableColumn<IntegrationRow>[]>(
+    () => [
+      column.entity({
+        key: "integration",
+        header: t("processor.integrations.table.integration"),
+        icon: (r) => <BrandMark id={r.brandId} size={22} />,
+        primary: (r) => r.title,
+        note: (r) => r.subtitle || undefined,
+      }),
+      column.text({
+        key: "worksWith",
+        header: t("processor.integrations.table.worksWith"),
+        get: (r) => worksWithText(r.worksWith),
+      }),
+      column.actions({
+        key: "actions",
+        get: (r) => {
+          if (r.kind === "instance") {
+            return r.canManage
+              ? [
+                  {
+                    label: t("processor.connections.edit"),
+                    disabled: busy,
+                    onClick: () => openEdit(r.connection),
+                  },
+                  {
+                    label: t("processor.connections.delete"),
+                    tone: "danger",
+                    loading: busy && deletingId === r.connection.id,
+                    disabled: busy,
+                    onClick: () => void remove(r.connection),
+                  },
+                ]
+              : [];
+          }
+          if (r.kind === "available") {
+            return [
+              {
+                label: t("processor.integrations.connect"),
+                onClick: () => openCreate(r.typeId),
+              },
+            ];
+          }
+          return [];
+        },
+      }),
+    ],
+    [t, busy, deletingId, remove, openEdit, openCreate, worksWithText],
+  );
+
+  const tableGroups = useMemo<DataTableGroup<IntegrationRow>[]>(() => {
+    const gs: DataTableGroup<IntegrationRow>[] = [];
+    for (const { type, connections: list } of connectedGroups) {
+      gs.push({
+        key: `connected-${type.id}`,
+        title: t(type.labelKey),
+        meta:
+          list.length > 1
+            ? t("processor.integrations.connectionCount", {
+                count: list.length,
+              })
+            : t("processor.integrations.status.connected"),
+        actions: [
+          {
+            label: t("processor.integrations.connect"),
+            onClick: () => openCreate(type.id),
+          },
+        ],
+        rows: list.map((c) => ({
+          kind: "instance" as const,
+          key: `i-${c.id}`,
+          brandId: type.id,
+          title: c.name,
+          subtitle: connectionDetail(c),
+          worksWith: worksWith(type),
+          connection: c,
+          canManage: !!c.canManage,
+        })),
+      });
+    }
+    if (availableTypes.length > 0) {
+      gs.push({
+        key: "available",
+        title: t("processor.integrations.availableHeading"),
+        rows: availableTypes.map((type) => ({
+          kind: "available" as const,
+          key: `a-${type.id}`,
+          brandId: type.id,
+          title: t(type.labelKey),
+          subtitle: t(type.descriptionKey),
+          worksWith: worksWith(type),
+          typeId: type.id,
+        })),
+      });
+    }
+    if (comingSoon.length > 0) {
+      gs.push({
+        key: "soon",
+        title: t("processor.integrations.comingSoonHeading"),
+        muted: true,
+        rows: comingSoon.map((entry) => ({
+          kind: "soon" as const,
+          key: `s-${entry.type}`,
+          brandId: entry.type,
+          title: t(entry.labelKey),
+          subtitle: t(entry.descriptionKey),
+          worksWith: ["sources"],
+        })),
+      });
+    }
+    return gs;
+  }, [connectedGroups, availableTypes, comingSoon, t, openCreate]);
 
   return (
     <div className="processor-integrations">
@@ -301,188 +430,23 @@ export function Integrations() {
 
       {error && <Banner tone="danger" description={error} />}
 
-      {isLoading ? (
-        <div className="processor-integrations__skeleton" aria-hidden>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} height="3.25rem" />
-          ))}
-        </div>
+      {!isLoading && tableGroups.length === 0 ? (
+        <EmptyState
+          size="compact"
+          title={t("processor.integrations.noResults.title", "No matches")}
+          description={t(
+            "processor.integrations.noResults.description",
+            "No integrations match your filters. Try a different category or search.",
+          )}
+        />
       ) : (
-        <div className="processor-surface processor-integrations__table">
-          <div className="processor-integrations__cols" aria-hidden>
-            <span>{t("processor.integrations.table.integration")}</span>
-            <span>{t("processor.integrations.table.worksWith")}</span>
-            <span />
-          </div>
-
-          {connectedGroups.length > 0 && (
-            <div className="processor-integrations__section">
-              {t("processor.integrations.connectedHeading")} ·{" "}
-              {connectedGroups.length}
-            </div>
-          )}
-          {connectedGroups.map(({ type, connections: list }) => {
-            const open = expanded.has(type.id);
-            return (
-              <div key={type.id} className="processor-integrations__group">
-                <button
-                  type="button"
-                  className="processor-integrations__row processor-integrations__row--connected"
-                  aria-expanded={open}
-                  onClick={() => toggleExpand(type.id)}
-                >
-                  <span className="processor-integrations__name">
-                    <BrandMark id={type.id} size={22} />
-                    <span className="processor-integrations__name-text">
-                      <span className="processor-integrations__label">
-                        {t(type.labelKey)}
-                      </span>
-                      <span className="processor-integrations__detail">
-                        {list.length === 1
-                          ? list[0].name
-                          : t("processor.integrations.connectionCount", {
-                              count: list.length,
-                            })}
-                      </span>
-                    </span>
-                  </span>
-                  <span className="processor-integrations__chips">
-                    {worksWith(type).map(chip)}
-                  </span>
-                  <span className="processor-integrations__status">
-                    <span className="processor-integrations__status-dot" />
-                    {t("processor.integrations.status.connected")}
-                    <ExpandMoreRoundedIcon
-                      fontSize="inherit"
-                      className={
-                        "processor-integrations__chevron" +
-                        (open ? " is-open" : "")
-                      }
-                    />
-                  </span>
-                </button>
-                {open && (
-                  <div className="processor-integrations__instances">
-                    {list.map((connection) => (
-                      <div
-                        key={connection.id}
-                        className="processor-integrations__instance"
-                      >
-                        <span className="processor-integrations__instance-name">
-                          {connection.name}
-                        </span>
-                        <span className="processor-integrations__instance-detail">
-                          {connectionDetail(connection)}
-                        </span>
-                        {connection.canManage && (
-                          <span className="processor-integrations__instance-actions">
-                            <Button
-                              variant="tertiary"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => openEdit(connection)}
-                            >
-                              {t("processor.connections.edit")}
-                            </Button>
-                            <Button
-                              variant="tertiary"
-                              size="sm"
-                              accent="danger"
-                              disabled={busy}
-                              onClick={() => void remove(connection)}
-                            >
-                              {t("processor.connections.delete")}
-                            </Button>
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                    <div className="processor-integrations__instance processor-integrations__instance--add">
-                      <Button
-                        variant="tertiary"
-                        size="sm"
-                        onClick={() => openCreate(type.id)}
-                        leftSection={
-                          <AddRoundedIcon style={{ fontSize: "1rem" }} />
-                        }
-                      >
-                        {t("processor.integrations.addAnother")}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {availableTypes.length > 0 && (
-            <div className="processor-integrations__section">
-              {t("processor.integrations.availableHeading")} ·{" "}
-              {availableTypes.length}
-            </div>
-          )}
-          {availableTypes.map((type) => (
-            <div key={type.id} className="processor-integrations__row">
-              <span className="processor-integrations__name">
-                <BrandMark id={type.id} size={22} />
-                <span className="processor-integrations__name-text">
-                  <span className="processor-integrations__label">
-                    {t(type.labelKey)}
-                  </span>
-                  <span className="processor-integrations__detail">
-                    {t(type.descriptionKey)}
-                  </span>
-                </span>
-              </span>
-              <span className="processor-integrations__chips">
-                {worksWith(type).map(chip)}
-              </span>
-              <span className="processor-integrations__status">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => openCreate(type.id)}
-                >
-                  {t("processor.integrations.connect")}
-                </Button>
-              </span>
-            </div>
-          ))}
-
-          {comingSoon.length > 0 && (
-            <div className="processor-integrations__section">
-              {t("processor.integrations.comingSoonHeading")} ·{" "}
-              {comingSoon.length}
-            </div>
-          )}
-          {comingSoon.map((entry) => (
-            <div
-              key={entry.type}
-              className="processor-integrations__row processor-integrations__row--soon"
-              aria-disabled
-            >
-              <span className="processor-integrations__name">
-                <BrandMark id={entry.type} size={22} />
-                <span className="processor-integrations__name-text">
-                  <span className="processor-integrations__label">
-                    {t(entry.labelKey)}
-                  </span>
-                  <span className="processor-integrations__detail">
-                    {t(entry.descriptionKey)}
-                  </span>
-                </span>
-              </span>
-              <span className="processor-integrations__chips">
-                {chip("sources")}
-              </span>
-              <span className="processor-integrations__status">
-                <span className="processor-integrations__soon-badge">
-                  {t("processor.sources.builder.comingSoon")}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
+        <DataTable<IntegrationRow>
+          columns={columns}
+          groups={tableGroups}
+          rowKey={(r) => r.key}
+          loading={isLoading}
+          skeletonRows={5}
+        />
       )}
 
       <ConnectionModal

@@ -37,7 +37,7 @@ describe("PendingInvitations", () => {
     expect(screen.getByText("sam@acme.com")).toBeInTheDocument();
     expect(screen.getByText("dana@acme.com")).toBeInTheDocument();
     expect(screen.getByText("Invited by leader@acme.com")).toBeInTheDocument();
-    expect(screen.getByText("2 pending")).toBeInTheDocument();
+    expect(screen.getByText("Pending invitations")).toBeInTheDocument();
   });
 
   it("cancelling an invite calls back with that invitation", () => {

@@ -462,7 +462,10 @@ jobs:
             });
 
   cleanup-v2-deployment:
-    environment: pr-preview
+    # Tearing a preview down is not a deployment - no deployment object.
+    environment:
+      name: pr-preview
+      deployment: false
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:

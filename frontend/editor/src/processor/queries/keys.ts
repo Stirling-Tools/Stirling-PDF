@@ -21,6 +21,8 @@ export const qk = {
   // serve the unlinked (null) snapshot back from cache.
   procurement: (linked: boolean) =>
     ["processor", "procurement", linked] as const,
+  // Same reasoning: an unlinked instance has no wallet in the cloud.
+  wallet: (linked: boolean) => ["processor", "wallet", linked] as const,
 
   // Tier-dependent
   documents: (tier: Tier) => ["processor", "documents", tier] as const,
