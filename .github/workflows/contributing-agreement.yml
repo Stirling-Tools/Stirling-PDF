@@ -15,7 +15,6 @@ jobs:
     permissions:
       contents: write
       issues: write
-      pull-requests: write
     name: Check CONTRIBUTING.md agreement
     if: github.event.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
@@ -47,13 +46,6 @@ jobs:
                 if (error.status !== 404) {
                   throw error;
                 }
-                await github.rest.issues.createLabel({
-                  owner,
-                  repo,
-                  name: process.env.AGREEMENT_LABEL,
-                  color: 'B60205',
-                  description: 'Pull request author must agree to CONTRIBUTING.md',
-                });
               }
             }
 
@@ -109,7 +101,7 @@ jobs:
               .find((line) => line.startsWith(`| @${login} |`));
             const alreadyAgreed = existingEntry?.includes(contributingHash) === true;
             const agreementPattern = new RegExp(
-              `${process.env.AGREEMENT_MARKER}\\s*\\r?\\n\\s*- \\[xX\\]\\s*I have read and agree to the \\[Contribution Guidelines\\]`,
+              `${process.env.AGREEMENT_MARKER}\\s*\\r?\\n\\s*- \\[[xX]\\]\\s*I have read and agree to the \\[Contribution Guidelines\\]`,
               'i',
             );
             // Only the PR's opening description is authoritative for the agreement.
@@ -126,7 +118,7 @@ jobs:
                 labels: [process.env.AGREEMENT_LABEL],
               });
               await updateAgreementComment(
-                `A current agreement to [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/${branch}/CONTRIBUTING.md) is required before this Pull Request can be merged. Please check **"I have read and agree to the Contribution Guidelines"** in the PR description.\n\nThe required CONTRIBUTING.md SHA-256 is `${contributingHash}`.`,
+                `A current agreement to [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/${branch}/CONTRIBUTING.md) is required before this Pull Request can be merged. Please check **"I have read and agree to the Contribution Guidelines"** in the PR description.\n\nThe required CONTRIBUTING.md SHA-256 is \`${contributingHash}\`.`,
               );
               core.setFailed(
                 `A current agreement is required. Check the Contribution Guidelines checkbox in the PR description (CONTRIBUTING.md SHA-256: ${contributingHash}).`,
