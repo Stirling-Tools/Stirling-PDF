@@ -689,7 +689,7 @@ cucumber = [
     { name = "opencv-python-headless", specifier = ">=5.0.0.93" },
     { name = "pdf2image", specifier = ">=1.17.0" },
     { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pypdf", extras = ["crypto"], specifier = ">=6.15.0" },
+    { name = "pypdf", extras = ["crypto"], specifier = ">=6.16.0" },
     { name = "qrcode", extras = ["pil"], specifier = ">=8.2" },
     { name = "reportlab", specifier = ">=5.0.0" },
     { name = "requests", specifier = ">=2.34.2" },
@@ -2490,11 +2490,11 @@ crypto = [
 
 [[package]]
 name = "pypdf"
-version = "6.15.0"
+version = "6.16.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/17/17/ee75a92718ec7212de831e71454d702225aa5e474a805cce169806044453/pypdf-6.15.0.tar.gz", hash = "sha256:d39c4d955a76409284a905e2d65b40076d77ab76129e0faaeeb6612403ecfc79", size = 6993794, upload-time = "2026-08-06T13:06:49.929Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/7f/5bc369dedae6750e23fc9ce82f6396258f92ed80ae0137732738a6d4ffce/pypdf-6.16.0.tar.gz", hash = "sha256:dfc5b0afeb5e02e9ee1dce71c09071f062d1a4030d2925f03a5daee0ee975ed8", size = 7002332, upload-time = "2026-08-13T14:54:41.586Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/72/ce3067ac31e214a66388159f8462ddb8c13dd00170f24d555a1f1ae8ee91/pypdf-6.15.0-py3-none-any.whl", hash = "sha256:14e001d6504822cb1ca9c7ed9a69bccb320f59b320730f55af804361abe4d5ee", size = 378123, upload-time = "2026-08-06T13:06:47.709Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/83/2b04a77f8de3c6d295e2687228b21152cb65a406511373ed06fd757634af/pypdf-6.16.0-py3-none-any.whl", hash = "sha256:8c47581faa1cba7006ac269da30075c929c251cc4ffbafb2bcbe260306631118", size = 382160, upload-time = "2026-08-13T14:54:39.734Z" },
 ]
 
 [package.optional-dependencies]
