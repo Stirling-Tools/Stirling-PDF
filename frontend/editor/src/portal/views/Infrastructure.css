@@ -122,27 +122,7 @@
   gap: 0.75rem;
 }
 
-/* Two-column split */
-.portal-infra__split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: start;
-}
-
-@media (max-width: 60rem) {
-  .portal-infra__split {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Shared cell styles */
-.portal-infra__cell-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
 .portal-infra__cell-strong {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -163,26 +143,6 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--c-text-muted);
-}
-
-.portal-infra__muted {
-  font-size: 0.75rem;
-  color: var(--c-text-subtle);
-}
-
-/* Region load cell */
-.portal-infra__load {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.portal-infra__load-pct {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-  min-width: 2.25rem;
-  text-align: right;
 }
 
 /* ── API keys ───────────────────────────────────────────────────────────── */
@@ -252,10 +212,6 @@
   }
 }
 
-.portal-infra__kv-wide {
-  grid-column: 1 / -1;
-}
-
 .portal-infra__kv dt {
   font-size: 0.6875rem;
   text-transform: uppercase;
@@ -270,12 +226,6 @@
   color: var(--c-text-muted);
 }
 
-.portal-infra__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
 /* Modal form */
 .portal-infra__form {
   display: flex;
@@ -283,215 +233,10 @@
   gap: 1rem;
 }
 
-.portal-infra__perm-row {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
 .portal-infra__modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.625rem;
-}
-
-/* ── Security ───────────────────────────────────────────────────────────── */
-.portal-infra__banner {
-  margin-top: 1rem;
-}
-
-.portal-infra__certs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 60rem) {
-  .portal-infra__certs {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.portal-infra__cert-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.375rem;
-}
-
-.portal-infra__cert-detail {
-  margin: 0;
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-  line-height: 1.4;
-}
-
-/* Encryption key management */
-.portal-infra__keymgmt-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.portal-infra__keymgmt-title {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  min-width: 0;
-}
-
-/* Compliance attestations — same grid rhythm as certs, but each card stacks
-   a framework chip + report link, so it needs a little more vertical room. */
-.portal-infra__attestations {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 60rem) {
-  .portal-infra__attestations {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 36rem) {
-  .portal-infra__attestations {
-    grid-template-columns: 1fr;
-  }
-}
-
-.portal-infra__attestation {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.portal-infra__attestation-link {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--c-accent-text);
-  text-decoration: none;
-}
-
-.portal-infra__attestation-link:hover {
-  text-decoration: underline;
-}
-
-/* ── Storage ────────────────────────────────────────────────────────────── */
-.portal-infra__usage-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.625rem;
-}
-
-.portal-infra__usage-value {
-  font-size: 1.25rem;
-  font-weight: 650;
-  color: var(--c-text);
-}
-
-.portal-infra__usage-value .portal-infra__muted {
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-
-.portal-infra__providers {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-infra__provider {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.portal-infra__provider-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-md);
-  background: var(--c-primary-tint);
-  color: var(--c-accent-text);
-  font-size: 0.875rem;
-}
-
-.portal-infra__provider-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
-}
-
-.portal-infra__provider-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-
-/* Lifecycle timeline */
-.portal-infra__lifecycle {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.portal-infra__lifecycle-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.625rem 0.75rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.portal-infra__lifecycle-stage.is-active {
-  background: var(--color-green-light);
-  border-color: var(--color-green-border);
-}
-
-.portal-infra__lifecycle-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--c-text-subtle);
-}
-
-.portal-infra__lifecycle-stage.is-active .portal-infra__lifecycle-dot {
-  background: var(--color-green);
-}
-
-.portal-infra__lifecycle-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--c-text);
-}
-
-.portal-infra__lifecycle-arrow {
-  display: flex;
-  align-items: center;
-  color: var(--c-text-subtle);
-  font-size: 0.875rem;
 }
 
 /* ── Audit ──────────────────────────────────────────────────────────────── */

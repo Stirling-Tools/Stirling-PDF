@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Alert,
-  Avatar,
   Divider,
   Group,
   Image,
@@ -11,10 +10,12 @@ import {
   TextInput,
   Modal,
 } from "@mantine/core";
+import { Avatar } from "@app/ui/Avatar";
 import { Button as DSButton } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
+import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import {
   isUserAnonymous,
   linkEmailIdentity,
@@ -46,6 +47,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
     refreshProfilePicture,
     refreshProfilePictureMetadata,
   } = useAuth();
+  // Same name + initials the sidebar footer draws, so the two discs agree.
+  const { displayName } = useAccountIdentity();
 
   const PROFILE_BUCKET = "profile-pictures";
 
@@ -67,7 +70,6 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const provider = profilePictureMetadata?.provider;
 
   const profilePath = user ? `${user.id}/avatar` : null;
-  const profileInitial = user?.email?.trim()?.charAt(0)?.toUpperCase() || "U";
 
   const handleProfileUpload = async (file: File | null) => {
     if (!file || !user || !profilePath) {
@@ -410,12 +412,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           <Group align="center" gap="md">
             <Avatar
               src={profilePictureUrl || undefined}
-              radius="xl"
-              size={72}
-              color="blue"
-            >
-              {profileInitial}
-            </Avatar>
+              name={displayName}
+              size="xl"
+            />
             <div
               style={{
                 display: "flex",
@@ -450,12 +449,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           <Group align="center" gap="md">
             <Avatar
               src={profilePictureUrl || undefined}
-              radius="xl"
-              size={72}
-              color="blue"
-            >
-              {profileInitial}
-            </Avatar>
+              name={displayName}
+              size="xl"
+            />
             <div
               style={{
                 display: "flex",

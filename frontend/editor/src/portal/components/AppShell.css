@@ -42,8 +42,8 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0 0.625rem;
-  background: var(--color-sidebar-bg);
-  border-bottom: 1px solid var(--color-sidebar-border);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-shell__topbar-wordmark {

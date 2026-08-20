@@ -293,6 +293,29 @@ export function computeBundleQuote(
 
 export type MeterState = "FULL" | "WARNED" | "DEGRADED";
 
+/**
+ * Meter for a balance that is spent DOWN — a free grant, a prepaid pool. The
+ * bar shows what is LEFT, so full reads as "plenty" and empty as "none", which
+ * is how the sidebar footer's credits row reads and the only direction that
+ * matches a figure quoting the remainder.
+ *
+ * The state bands still key on consumption, so the tone is unchanged: amber
+ * once 80% is gone, red once it's exhausted. Meters for money SPENT against a
+ * cap keep using {@link meterState} directly — there a full bar correctly means
+ * "at your ceiling".
+ */
+export function remainingMeter(
+  remaining: number,
+  total: number,
+): { state: MeterState; pct: number } {
+  const { state } = meterState(Math.max(0, total - remaining), total);
+  const pct =
+    total > 0
+      ? Math.min(100, Math.max(0, (Math.max(0, remaining) / total) * 100))
+      : 0;
+  return { state, pct };
+}
+
 /** Warn (≥80%) / degrade (≥100%) band for a usage meter; mirrors the BE thresholds. */
 export function meterState(
   used: number,

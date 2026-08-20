@@ -9,6 +9,7 @@ import {
 } from "@portal/api/integrations";
 import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
 import { connectionTypeOf } from "@portal/components/sources/connectionTypes";
+import "@portal/components/sources/connections.css";
 
 /**
  * Selects a stored connection of one type by id — an S3 bucket for a source, a Purview tenant for a

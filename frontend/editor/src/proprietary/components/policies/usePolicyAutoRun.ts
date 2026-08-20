@@ -124,6 +124,21 @@ function failRun(runId: string, message: string): void {
 const FILE_WAIT_TRIES = 20;
 const FILE_WAIT_MS = 250;
 
+/**
+ * A policy that changed nothing (redaction matched no text, say) completes with no
+ * output: nothing to deliver, but finished. Left unimported, the file's badge and
+ * its blocking overlay spin forever.
+ */
+export function finishedWithNothingToDeliver(run: PolicyRunRecord): boolean {
+  return (
+    run.status === "COMPLETED" &&
+    !run.imported &&
+    (run.outputs?.length ?? 0) === 0 &&
+    // Classification has its own settle path: labels, no output file.
+    !isClassificationCategory(run.categoryId)
+  );
+}
+
 function isTerminal(status: PolicyRunStatus): boolean {
   return (
     status === "COMPLETED" || status === "FAILED" || status === "CANCELLED"
@@ -351,11 +366,12 @@ export function usePolicyAutoRun(): void {
       if (
         run.status !== "COMPLETED" ||
         run.imported ||
-        importing.current.has(run.runId) ||
-        // Classification settles even with no outputs (nothing to tag); other
-        // policies need an output to import.
-        (!run.outputs?.length && !classification)
+        importing.current.has(run.runId)
       ) {
+        continue;
+      }
+      if (finishedWithNothingToDeliver(run)) {
+        updateRun(run.runId, { imported: true });
         continue;
       }
       importing.current.add(run.runId);

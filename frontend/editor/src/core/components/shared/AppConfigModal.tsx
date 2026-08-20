@@ -29,7 +29,6 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
@@ -46,6 +45,8 @@ interface AppConfigModalProps {
   /** Section to land on when opening. Only honoured when urlSync is off (URL
    *  deep links win otherwise). */
   initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
   /** Registry section keys to drop, for hosts a section can't run in. */
@@ -67,6 +68,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   onClose,
   urlSync = true,
   initialSection,
+  initialFocus,
   extraSections,
   hiddenSectionKeys,
 }) => {
@@ -150,6 +152,35 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     [navigate, urlSync],
   );
 
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, initialFocus, location.search, urlSync]);
+
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.
   useEffect(() => {
@@ -185,9 +216,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  /** Resolves false when a dirty-state confirm kept the modal open. */
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
+    if (!canProceed) return false;
 
     // Only unwind history if settings was opened via the URL; opened via state
     // there's no /settings entry to pop and navigate(-1) would jump to /files.
@@ -200,6 +232,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       }
     }
     onClose();
+    return true;
   }, [
     confirmIfDirty,
     location.key,
@@ -213,6 +246,24 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const handleCloseSync = useCallback(() => {
     void handleClose();
   }, [handleClose]);
+
+  // Cmd/Ctrl+K: hand over to the global super search. The bar's own shortcut
+  // is inert while a dialog traps focus, so the modal closes itself (through
+  // the same dirty-check as any other close) and asks the bar to take focus.
+  // Settings results deep-link straight back into this modal.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo || e.code !== "KeyK") return;
+      e.preventDefault();
+      void handleClose().then((closed) => {
+        if (closed) window.dispatchEvent(new Event("superSearch:focus"));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opened, handleClose]);
 
   // Left navigation structure and icons
   const registrySections = useConfigNavSections(
@@ -413,11 +464,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
                 <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"

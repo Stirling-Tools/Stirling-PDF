@@ -54,12 +54,11 @@ test.describe("13. Language / Localization", () => {
         // Step 5: Wait for page reload (language change triggers window.location.reload())
         await page.waitForLoadState("domcontentloaded");
 
-        // Step 6: Verify the UI text is in English. The tool search is a
-        // header toggle, so assert its English label rather than the field,
-        // which only mounts once the toggle is pressed.
-        await expect(
-          page.getByRole("button", { name: /search tools/i }).first(),
-        ).toBeVisible({ timeout: 10000 });
+        // Step 6: Verify the UI text is in English via the always-mounted
+        // super search bar's placeholder.
+        await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
+          timeout: 10000,
+        });
       }
     });
   });

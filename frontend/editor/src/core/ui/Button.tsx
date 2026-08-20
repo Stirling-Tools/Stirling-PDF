@@ -42,6 +42,7 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  fat?: boolean;
   /** Label size relative to `size`. Defaults to the `size`-derived value. */
   fontSize?: ButtonFontSize;
   /** Padding override for both axes */
@@ -103,6 +104,9 @@ function ButtonGroup({
   );
 }
 
+const FAT_HEIGHT = "2.75rem";
+const FAT_PADDING_X = "lg" satisfies ControlPadding;
+
 const MANTINE_VARIANT: Record<ButtonVariant, string> = {
   primary: "filled",
   secondary: "outline",
@@ -123,6 +127,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       accent = "default",
       size = "sm",
+      fat = false,
       fontSize,
       p,
       px,
@@ -161,7 +166,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         : undefined;
 
     // px/py override p for their axis; each stays undefined (= size default) if unset.
-    const padX = px ?? p;
+    const padX = px ?? p ?? (fat ? FAT_PADDING_X : undefined);
     const padY = py ?? p;
 
     // Sections flank a label → spread them without requiring justify="between".
@@ -175,6 +180,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       `sui-acc-${accent}`,
       `sui-btn--${variant}`,
       iconOnly ? "sui-btn--icon" : "",
+      fat ? "sui-btn--fat" : "",
       shape !== "default" ? `sui-btn--${shape}` : "",
       overflow === "wrap" ? "sui-btn--wrap" : "",
       !hover ? "sui-btn--no-hover" : "",
@@ -238,7 +244,9 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         className={classes}
         style={{
           ...(accentVars as CSSProperties),
-          ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          ...({
+            "--button-height": fat ? FAT_HEIGHT : CONTROL_HEIGHT[size],
+          } as CSSProperties),
           // Relative label size, scaled off the `size` base (unset → Mantine default).
           ...(fontSize
             ? ({
@@ -252,6 +260,10 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
             : {}),
           ...(padY
             ? ({ "--sui-btn-py": CONTROL_PADDING[padY] } as CSSProperties)
+            : {}),
+          // mantineTheme writes font-weight inline on every button root, so this must be inline too.
+          ...(fat
+            ? ({ fontWeight: "var(--font-weight-semibold)" } as CSSProperties)
             : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),

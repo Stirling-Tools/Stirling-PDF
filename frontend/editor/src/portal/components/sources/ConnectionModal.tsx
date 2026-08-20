@@ -11,6 +11,7 @@ import {
 } from "@portal/api/integrations";
 import { ConnectionTypePicker } from "@portal/components/sources/ConnectionTypePicker";
 import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
+import "@portal/components/sources/connections.css";
 import {
   CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,

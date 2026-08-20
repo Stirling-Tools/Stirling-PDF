@@ -21,7 +21,14 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     // Faithful to i18next: a known key resolves, an unknown key falls back to
     // defaultValue. That is what exercises the server-key-then-generic chain.
-    t: (key: string, options?: { defaultValue?: string } | string) => {
+    // i18next's real signature: t(key, options) or t(key, defaultValue, options).
+    t: (
+      key: string,
+      second?: { defaultValue?: string } | string,
+      third?: Record<string, unknown>,
+    ) => {
+      const options = typeof second === "string" ? third : second;
+      const fallback = typeof second === "string" ? second : undefined;
       const known: Record<string, string> = {
         "portal.failures.kind.inputPasswordProtected.title":
           "Password-protected document",
@@ -30,11 +37,20 @@ vi.mock("react-i18next", () => ({
         "portal.failures.occurrences": "occurrences",
         "portal.failures.runReference": "Run r1",
         "portal.failures.stage.input": "Input",
+        "portal.failures.origin.tool": "Tool run",
+        "portal.failures.origin.policy": "Policy",
       };
+      if (key === "portal.failures.fromSource") {
+        return `From source ${(options as { source?: string })?.source ?? ""}`;
+      }
+      if (key === "portal.failures.reportedBy") {
+        return `Hit by ${(options as { actor?: string })?.actor ?? ""}`;
+      }
       if (known[key]) return known[key];
-      if (typeof options === "string") return options;
-      if (options?.defaultValue) return options.defaultValue;
-      return key;
+      if ((options as { defaultValue?: string })?.defaultValue) {
+        return (options as { defaultValue: string }).defaultValue;
+      }
+      return fallback ?? key;
     },
   }),
 }));
@@ -61,6 +77,7 @@ function event(overrides: Partial<FileRunEvent> = {}): FileRunEvent {
     detail: "The PDF Document is passworded",
     policyId: "p1",
     runId: "r1",
+    sourceId: null,
     fileId: "f-1",
     actor: "dana@example.com",
     occurrences: 1,
@@ -100,6 +117,29 @@ describe("FileRunEventList", () => {
     // The raw message is shown, not swallowed: for an unclassified failure it is
     // the only diagnostic available.
     expect(screen.getByText("The PDF Document is passworded")).toBeTruthy();
+  });
+
+  it("names the person whose editor hit it, and marks it a tool run", async () => {
+    // The point of reporting editor failures: a reviewer needs the person, since a
+    // run reference means nothing for a failure that never had a run.
+    fetchFileRunEvents.mockResolvedValue([
+      event({ origin: "TOOL", actor: "dana@example.com", runId: null }),
+    ]);
+
+    render(<FileRunEventList />);
+
+    expect(await screen.findByText("Tool run")).toBeTruthy();
+    expect(screen.getByText("Hit by dana@example.com")).toBeTruthy();
+  });
+
+  it("names the source when no user was involved, since that is the only attribution", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event({ origin: "POLICY", actor: null, sourceId: "src-s3-invoices" }),
+    ]);
+
+    render(<FileRunEventList />);
+
+    expect(await screen.findByText("From source src-s3-invoices")).toBeTruthy();
   });
 
   it("shows the occurrence count only once a failure has repeated", async () => {

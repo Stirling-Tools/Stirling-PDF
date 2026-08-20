@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { MethodBadge, Tabs, type HttpMethod, type TabItem } from "@app/ui";
 import { VERTICALS, ALL_ENDPOINTS } from "@portal/data/endpoints";
 import { DocsSection } from "@portal/components/docs/DocsSection";
+import "@portal/theme/surface.css";
 
 type VerticalFilter = "all" | (typeof VERTICALS)[number]["key"];
 
@@ -46,7 +47,10 @@ export function EndpointReferenceSection() {
       />
       <div className="portal-docs__endpoints">
         {shown.map((v) => (
-          <div key={v.key} className="portal-docs__endpoint-group">
+          <div
+            key={v.key}
+            className="portal-surface portal-docs__endpoint-group"
+          >
             <div className="portal-docs__endpoint-grouphead">
               <span
                 className="portal-docs__endpoint-dot"

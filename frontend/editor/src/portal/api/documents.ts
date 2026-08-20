@@ -95,12 +95,6 @@ export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, StatusTone> = {
   error: "danger",
 };
 
-export const PRODUCT_CHIP_TONE: Record<ProductType, ChipAccent> = {
-  API: "brand",
-  Editor: "success",
-  Automation: "warning",
-};
-
 /** Classification chip accent: danger when unclassified, warning when it needs a look. */
 export function classificationTone(doc: ReviewDocument): ChipAccent {
   if (doc.classification === "Unclassified") return "danger";

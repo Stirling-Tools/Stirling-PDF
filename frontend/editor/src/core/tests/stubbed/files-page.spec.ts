@@ -565,25 +565,6 @@ test.describe("Files page", () => {
   test.describe("Side-rail integration with /files", () => {
     test.use({ autoGoto: false });
 
-    test("Rail Search focuses the central search field, no navigation", async ({
-      page,
-    }) => {
-      await stubStorageApis(page);
-      await seedFiles(page, [
-        { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
-      ]);
-      await gotoFilesPage(page);
-      // Click the search row in the rail.
-      await page.locator(".file-sidebar-search-row").click();
-      // The central search input should be focused.
-      const focused = await page.evaluate(
-        () => document.activeElement?.getAttribute("aria-label") ?? "",
-      );
-      expect(focused).toMatch(/Search/i);
-      // And we must still be on /files (i.e. didn't navigate home).
-      await expect(page).toHaveURL(/\/files/);
-    });
-
     test("Rail New folder button visible on /files", async ({ page }) => {
       await stubStorageApis(page);
       await seedFiles(page, [

@@ -12,6 +12,7 @@ import {
 import { DownloadIcon } from "@portal/components/icons";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { useAsync } from "@portal/hooks/useAsync";
+import "@portal/theme/surface.css";
 import "@portal/views/Procurement.css";
 
 /**
@@ -154,7 +155,7 @@ export function ProcurementAgreement({
         role="group"
         aria-label={t("portal.procurement.agreement.docName")}
       >
-        <div className="portal-agreement__doc">
+        <div className="portal-surface portal-agreement__doc">
           {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
           {!loading && !doc && (
             <p>{t("portal.procurement.agreement.loadError")}</p>
