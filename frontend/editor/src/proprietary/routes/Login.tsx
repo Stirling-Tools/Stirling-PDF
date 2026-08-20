@@ -6,18 +6,19 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Button } from "@app/ui/Button";
+import { isSafePostLoginRedirect } from "@app/auth";
 import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
@@ -28,17 +29,27 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
+  // Reuses the shared guard rather than re-deriving one: same-origin relative
+  // paths only, rejecting "//host", "/\host" (browsers normalise the backslash)
+  // and auth routes (a ?from=/login would cost a pointless hop back here).
+  const safePath = (path: unknown): string | null =>
+    isSafePostLoginRedirect(path) ? path : null;
+
+  // Where to return to after signing in. Router state first (set when Landing
+  // bounces an unauthenticated visitor), then the query, which is what survives
+  // a reload of /login. Null means "no specific destination" and the caller
+  // falls back to role-based landing.
   const resolveReturnPath = (): string | null => {
     const fromState = (
       location.state as { from?: { pathname?: string } } | null
     )?.from?.pathname;
-    if (fromState) return fromState;
+    if (fromState) return safePath(fromState);
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {
-      return decodeURIComponent(fromQuery);
+      return safePath(decodeURIComponent(fromQuery));
     } catch {
-      return fromQuery;
+      return safePath(fromQuery);
     }
   };
   const { refetch } = useAppConfig();
@@ -54,9 +65,6 @@ export default function Login() {
     backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
-  // True once we've observed a signed-out state on this page, so we can tell a
-  // fresh login (arrived signed-out, then signed in) from an already-authed visit.
-  const sawSignedOutRef = useRef(false);
 
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
@@ -150,8 +158,8 @@ export default function Login() {
     onConfigLoaded: (data) => {
       // If login is disabled, redirect to home (anonymous mode)
       if (data.enableLogin === false) {
-        console.debug("[Login] Login disabled, redirecting to home");
-        navigate("/");
+        console.debug("[Login] Login disabled, going to the editor");
+        navigate(EDITOR_BASENAME);
         return;
       }
       setEnableLogin(data.enableLogin ?? true);
@@ -178,7 +186,7 @@ export default function Login() {
       if (result.status === "up") {
         await refetch();
         if (loginDisabled) {
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         }
       }
     };
@@ -198,28 +206,35 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (loading) return;
-    if (!session) {
-      sawSignedOutRef.current = true;
+    if (!session) return;
+    const returnPath = resolveReturnPath();
+    if (returnPath) {
+      navigate(returnPath, { replace: true });
       return;
     }
-    const returnPath = resolveReturnPath();
-    // Fresh form login (we were signed out on this page) with no explicit
-    // destination: let the role-based landing route processor users. An
-    // already-authed visit to /login never sets the flag.
-    if (sawSignedOutRef.current && !returnPath) {
-      markLoginLandingPending();
-    }
-    console.debug("[Login] User already authenticated, redirecting to home", {
-      returnPath,
+    // No explicit destination: land processor users on the processor and
+    // everyone else on the editor. Resolved here rather than by bouncing
+    // through "/" so the app isn't torn down and remounted on the way.
+    let active = true;
+    void resolveLandingPath().then((path) => {
+      if (!active) return;
+      console.debug("[Login] Authenticated, landing on", path);
+      navigate(path, { replace: true });
     });
-    navigate(returnPath || "/", { replace: true });
+    return () => {
+      active = false;
+    };
   }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
     if (backendProbe.loginDisabled) {
-      // Slight delay to allow state updates before redirecting
-      const id = setTimeout(() => navigate("/", { replace: true }), 0);
+      // Straight to the editor, not "/": with login disabled there is no role
+      // to route on, and "/" would just bounce back here.
+      const id = setTimeout(
+        () => navigate(EDITOR_BASENAME, { replace: true }),
+        0,
+      );
       return () => clearTimeout(id);
     }
   }, [backendProbe.loginDisabled, navigate]);
@@ -385,7 +400,7 @@ export default function Login() {
 
   // If login is disabled, short-circuit to home (avoids rendering the form after retry)
   if (loginDisabled) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
   // Show logged in state if authenticated
@@ -469,7 +484,7 @@ export default function Login() {
                 border:
                   "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "var(--c-success)",
+                color: "var(--color-green-dark)",
               }}
             >
               <p
@@ -485,14 +500,9 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          <>
-            {isFirstTimeSetup &&
-              showDefaultCredentials &&
-              isUserPassAllowed && <AuthDefaultCredentials />}
-            {isUserPassAllowed && (
-              <AuthSignupPrompt onSignUp={() => navigate("/signup")} />
-            )}
-          </>
+          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
+            <AuthDefaultCredentials />
+          ) : undefined
         }
       />
     </AuthLayout>

@@ -74,21 +74,14 @@ const modernGlobals: OxlintGlobals = {
 
 // Folders not yet conformant to the stricter no-explicit-any rule
 const noExplicitAnyExcludes = [
-  "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/pdfTextEditor/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/tools/annotate/useAnnotationSelection.ts",
   "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",

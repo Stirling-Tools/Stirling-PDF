@@ -15,7 +15,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
       <div className="portal-docs__playbook-grid">
         {playbooks.map((p) => (
           <Card key={p.title} accent={p.accent} padding="loose" interactive>
-            <h3 className="portal-docs__playbook-title">{p.title}</h3>
+            <h2 className="portal-docs__playbook-title">{p.title}</h2>
             <p className="portal-docs__playbook-blurb">{p.blurb}</p>
             <div className="portal-docs__playbook-flow">
               {p.steps.map((step, i) => (

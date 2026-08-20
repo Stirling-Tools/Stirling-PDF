@@ -219,7 +219,20 @@ export function VersionTimeline({
                     align="center"
                     style={{ flex: 1, minWidth: 0, flexWrap: "nowrap" }}
                   >
-                    <Badge size="xs" variant={isActive ? "filled" : "light"}>
+                    <Badge
+                      size="xs"
+                      variant={isActive ? "filled" : "light"}
+                      styles={
+                        isActive
+                          ? {
+                              root: {
+                                backgroundColor: "var(--c-accent-solid)",
+                              },
+                              label: { color: "var(--c-text-on-primary)" },
+                            }
+                          : undefined
+                      }
+                    >
                       v{v.versionNumber ?? 1}
                     </Badge>
                     <Text

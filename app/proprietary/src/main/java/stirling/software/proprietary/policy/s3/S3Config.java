@@ -19,7 +19,9 @@ public record S3Config(
         String endpoint,
         String accessKeyId,
         String secretAccessKey,
-        boolean snapshot) {
+        boolean snapshot,
+        String objectLockMode,
+        Integer retentionDays) {
 
     private static final String BUCKET_OPTION = "bucket";
     private static final String REGION_OPTION = "region";
@@ -28,6 +30,12 @@ public record S3Config(
     private static final String ACCESS_KEY_ID_OPTION = "accessKeyId";
     private static final String SECRET_ACCESS_KEY_OPTION = "secretAccessKey";
     private static final String MODE_OPTION = "mode";
+    private static final String OBJECT_LOCK_MODE_OPTION = "objectLockMode";
+    private static final String RETENTION_DAYS_OPTION = "retentionDays";
+
+    private static final String LOCK_GOVERNANCE = "GOVERNANCE";
+    private static final String LOCK_COMPLIANCE = "COMPLIANCE";
+    private static final int MAX_RETENTION_DAYS = 36525;
     private static final String MODE_CONSUME = "consume";
     private static final String MODE_SNAPSHOT = "snapshot";
 
@@ -52,6 +60,41 @@ public record S3Config(
         if (mode != null && !MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {
             throw new IllegalArgumentException("s3 config 'mode' must be 'consume' or 'snapshot'");
         }
+        // Object Lock: write-once retention, for records that must survive an administrator.
+        // COMPLIANCE cannot be shortened or deleted by anyone (not even the account root) before
+        // the retain-until date; GOVERNANCE can be bypassed with a specific IAM permission, so
+        // only COMPLIANCE is the answer to SEC 17a-4(f) / FINRA. The bucket must already have
+        // Object Lock enabled - it cannot be turned on per-object - and that in turn requires
+        // versioning, which can then never be suspended.
+        String objectLockMode = trimmed(options.get(OBJECT_LOCK_MODE_OPTION));
+        if (objectLockMode != null) {
+            objectLockMode = objectLockMode.toUpperCase(java.util.Locale.ROOT);
+            if (!LOCK_GOVERNANCE.equals(objectLockMode)
+                    && !LOCK_COMPLIANCE.equals(objectLockMode)) {
+                throw new IllegalArgumentException(
+                        "s3 config 'objectLockMode' must be 'GOVERNANCE' or 'COMPLIANCE'");
+            }
+        }
+        Integer retentionDays = null;
+        Object rawRetention = options.get(RETENTION_DAYS_OPTION);
+        if (rawRetention != null && !rawRetention.toString().isBlank()) {
+            try {
+                retentionDays = Integer.valueOf(rawRetention.toString().trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("s3 config 'retentionDays' must be a number");
+            }
+            if (retentionDays < 1 || retentionDays > MAX_RETENTION_DAYS) {
+                throw new IllegalArgumentException(
+                        "s3 config 'retentionDays' must be between 1 and " + MAX_RETENTION_DAYS);
+            }
+        }
+        // S3 rejects one without the other, so catch it here where the operator can still fix it
+        // rather than at upload time on a worker thread.
+        if ((objectLockMode == null) != (retentionDays == null)) {
+            throw new IllegalArgumentException(
+                    "s3 config 'objectLockMode' and 'retentionDays' must be set together");
+        }
+
         return new S3Config(
                 bucket,
                 region == null ? "us-east-1" : region,
@@ -59,7 +102,9 @@ public record S3Config(
                 endpoint,
                 accessKeyId,
                 secretAccessKey,
-                MODE_SNAPSHOT.equals(mode));
+                MODE_SNAPSHOT.equals(mode),
+                objectLockMode,
+                retentionDays);
     }
 
     private static String validEndpoint(String endpoint) {
