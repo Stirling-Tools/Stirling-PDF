@@ -1,6 +1,4 @@
 .sui-collapsible {
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 0.5625rem;
   overflow: hidden;
 }
 

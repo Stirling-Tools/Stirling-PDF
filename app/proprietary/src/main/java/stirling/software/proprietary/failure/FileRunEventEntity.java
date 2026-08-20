@@ -84,6 +84,10 @@ public class FileRunEventEntity implements Serializable {
     @Column(name = "run_id")
     private String runId;
 
+    /** Which folder, bucket or webhook fed the run. Null when a user supplied the file. */
+    @Column(name = "source_id")
+    private String sourceId;
+
     @Column(name = "file_id")
     private String fileId;
 
