@@ -5,6 +5,7 @@
 ci: &ci
   - .github/workflows/build.yml
   - .github/config/.files.yaml
+  - .github/workflows/test-build-docker.yml
 
 build: &build
   - *ci
