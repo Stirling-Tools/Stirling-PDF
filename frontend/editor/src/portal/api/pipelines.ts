@@ -1,5 +1,8 @@
 import { apiClient } from "@portal/api/http";
-import { type ToolApiStep } from "@app/hooks/tools/shared/toolAutomation";
+import {
+  type SupportingFileBindings,
+  type ToolApiStep,
+} from "@app/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -15,7 +18,7 @@ import { type ToolApiStep } from "@app/hooks/tools/shared/toolAutomation";
 export interface PipelineStep {
   operation: string;
   parameters: Record<string, unknown>;
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** When a policy input fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
@@ -218,13 +221,27 @@ export interface TestRunDefinition {
 }
 
 /**
+ * A fresh, in-memory supporting file sent inline with a test run, bound to the run key a test step's
+ * `fileParameters` references. Only unsaved picks ride along here; a stored file keeps its
+ * `asset:<id>` binding, which the backend resolves from the saved policy (see `runPipelineTest`).
+ */
+export interface TestRunAsset {
+  key: string;
+  file: File;
+}
+
+/**
  * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
  * path - callers force an inline output so nothing reaches the pipeline's real destination, and
- * the pipeline need not be saved first.
+ * the pipeline need not be saved first. Fresh supporting files travel as keyed `assets[i]` parts;
+ * a stored file keeps its `asset:<id>` binding, and `policyId` lets the backend resolve it from that
+ * saved policy (so its bytes need not be re-sent).
  */
 export async function runPipelineTest(
   definition: TestRunDefinition,
   file: File,
+  assets: TestRunAsset[] = [],
+  policyId?: string,
 ): Promise<{ runId: string }> {
   const form = new FormData();
   form.append(
@@ -232,6 +249,11 @@ export async function runPipelineTest(
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
   form.append("fileInput", file);
+  if (policyId) form.append("policyId", policyId);
+  assets.forEach((asset, i) => {
+    form.append(`assets[${i}].key`, asset.key);
+    form.append(`assets[${i}].file`, asset.file);
+  });
   // The POST returns the identifier as `jobId`, but it is the same run id every other endpoint
   // (fetchRun, fetchRunOutput) calls `runId`; normalise to that here so callers see one name.
   const res = await apiClient.local.multipart<{ jobId: string }>(

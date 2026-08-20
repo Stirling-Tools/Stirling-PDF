@@ -62,6 +62,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -120,6 +121,7 @@ public class PolicyController {
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
     private final PolicyAssetCleaner assetCleaner;
+    private final PolicyAssetResolver assetResolver;
     private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
@@ -145,6 +147,7 @@ public class PolicyController {
             PolicyTriggerManager policyTriggerManager,
             PolicyOverviewService policyOverviewService,
             PolicyAssetCleaner assetCleaner,
+            PolicyAssetResolver assetResolver,
             ProcessedLedger processedLedger,
             @All List<PolicyTrigger> policyTriggers,
             ApplicationProperties applicationProperties,
@@ -164,6 +167,7 @@ public class PolicyController {
         this.policyTriggerManager = policyTriggerManager;
         this.policyOverviewService = policyOverviewService;
         this.assetCleaner = assetCleaner;
+        this.assetResolver = assetResolver;
         this.processedLedger = processedLedger;
         this.policyTriggers = policyTriggers;
         this.applicationProperties = applicationProperties;
@@ -187,12 +191,13 @@ public class PolicyController {
                             + " endpoint and download outputs via /api/v1/general/files/{id}.")
     public Response run(
             @RestForm("json") @PartType(MediaType.APPLICATION_JSON) PipelineDefinition definition,
+            @RestForm("policyId") String policyId,
             MultipartFormDataInput parts)
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = toInputs(toRunFiles(parts));
+        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(toRunFiles(parts)));
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
         recordEditorDocs(inputs);
@@ -211,6 +216,7 @@ public class PolicyController {
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public void runStream(
             @RestForm("json") @PartType(MediaType.APPLICATION_JSON) PipelineDefinition definition,
+            @RestForm("policyId") String policyId,
             MultipartFormDataInput parts,
             @Context Sse sse,
             @Context SseEventSink sink)
@@ -218,7 +224,7 @@ public class PolicyController {
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = toInputs(toRunFiles(parts));
+        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(toRunFiles(parts)));
 
         // JAX-RS has no per-sink deadline (Spring's SseEmitter timeout) or error callback; a stream
         // whose run never finishes is bounded by the container's HTTP idle timeout instead.
@@ -517,10 +523,7 @@ public class PolicyController {
      * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
      */
     private void requirePolicyEditingAllowed() {
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            return;
-        }
-        if (!policyManagementAuthority.canEditPolicies()) {
+        if (!policyEditingAllowed()) {
             throw new WebApplicationException(
                     "Policies may only be created or modified by a team leader",
                     Response.Status.FORBIDDEN);
@@ -544,6 +547,15 @@ public class PolicyController {
                     "Not permitted to run this policy against its configured sources",
                     Response.Status.FORBIDDEN);
         }
+    }
+
+    /**
+     * Whether the caller may create/modify policies (a team leader, or any operator when login is
+     * off).
+     */
+    private boolean policyEditingAllowed() {
+        return !applicationProperties.getSecurity().isEnableLogin()
+                || policyManagementAuthority.canEditPolicies();
     }
 
     @GET
@@ -786,6 +798,25 @@ public class PolicyController {
         docCounter.record(
                 EditorSource.counterKey(sourceAccessGuard.currentTeamId()),
                 inputs.primary().size());
+    }
+
+    /**
+     * Resolve a test run's stored {@code asset:<id>} bindings from the saved policy the builder is
+     * editing, so their bytes need not be re-uploaded. Scoped to that policy (the resolver loads
+     * only the assets it references, in its own team) and gated to policy editors - the same
+     * authority that can read asset bytes - so a member can't rebind a policy's stored asset into
+     * an ad-hoc step to read it back. A blank id (an unsaved pipeline has no stored bindings) or an
+     * inaccessible policy leaves the run-supplied inputs untouched.
+     */
+    private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
+        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
+            return inputs;
+        }
+        return policyStore
+                .get(policyId)
+                .filter(policyAccessGuard::canAccess)
+                .map(policy -> assetResolver.resolve(policy, inputs))
+                .orElse(inputs);
     }
 
     /**
