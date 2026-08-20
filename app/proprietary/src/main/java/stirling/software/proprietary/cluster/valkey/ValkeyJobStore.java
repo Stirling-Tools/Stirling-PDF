@@ -69,7 +69,9 @@ public class ValkeyJobStore implements JobStore {
         if (ttlMs <= 0) {
             if (entry.fileIds() != null) {
                 for (String fileId : entry.fileIds()) {
-                    template.delete(FILE_INDEX_PREFIX + fileId);
+                    // Value-guarded like delete(): never drop a row a newer job already owns.
+                    template.execute(
+                            DEL_INDEX_IF_OWNER, List.of(FILE_INDEX_PREFIX + fileId), entry.jobId());
                 }
             }
             template.delete(key);

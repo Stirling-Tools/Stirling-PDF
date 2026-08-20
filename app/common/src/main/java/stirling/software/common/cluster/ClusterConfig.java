@@ -31,11 +31,8 @@ public class ClusterConfig {
         }
         String backplane = cluster.getBackplane();
         if ("valkey".equalsIgnoreCase(backplane)) {
+            // getValkey() re-seeds a null block, so an absent 'valkey:' reads as a missing url.
             ApplicationProperties.Cluster.Valkey valkey = cluster.getValkey();
-            if (valkey == null) {
-                // The whole valkey block can be absent; report it as the missing url.
-                throw new IllegalStateException(MISSING_URL_MESSAGE);
-            }
             // resolvedMode() throws on an unknown/ambiguous mode; let it propagate so the
             // operator sees the property name rather than a later missing-bean error.
             ApplicationProperties.Cluster.Valkey.ValkeyMode mode = valkey.resolvedMode();
@@ -83,8 +80,7 @@ public class ClusterConfig {
             ApplicationProperties.Cluster.Valkey valkey,
             ApplicationProperties.Cluster.Valkey.ValkeyMode mode) {
         var sentinel = valkey.getSentinel();
-        boolean sentinelNodesSet =
-                sentinel != null && sentinel.getNodes() != null && !sentinel.getNodes().isEmpty();
+        boolean sentinelNodesSet = !sentinel.getNodes().isEmpty();
         if (sentinelNodesSet && mode != ApplicationProperties.Cluster.Valkey.ValkeyMode.SENTINEL) {
             throw new IllegalStateException(
                     "cluster.valkey.sentinel.nodes is set but the resolved mode is "
@@ -94,8 +90,7 @@ public class ClusterConfig {
                             + " monitored primary name, e.g. mymaster) or"
                             + " cluster.valkey.mode=sentinel.");
         }
-        if (valkey.getNodes() != null
-                && !valkey.getNodes().isEmpty()
+        if (!valkey.getNodes().isEmpty()
                 && mode != ApplicationProperties.Cluster.Valkey.ValkeyMode.CLUSTER) {
             throw new IllegalStateException(
                     "cluster.valkey.nodes is set but the resolved mode is "
@@ -113,19 +108,14 @@ public class ClusterConfig {
                     "cluster.valkey.mode=sentinel requires cluster.valkey.sentinel.master to be"
                             + " set (the monitored primary name, e.g. mymaster).");
         }
-        if (sentinel.getNodes() == null || sentinel.getNodes().isEmpty()) {
+        if (sentinel.getNodes().isEmpty()) {
             throw new IllegalStateException(
                     "cluster.valkey.mode=sentinel requires cluster.valkey.sentinel.nodes to list"
                             + " at least one sentinel (e.g."
                             + " sentinel-1:26379,sentinel-2:26379,sentinel-3:26379).");
         }
         for (String entry : sentinel.getNodes()) {
-            if (!isHostPort(entry)) {
-                throw new IllegalStateException(
-                        "cluster.valkey.sentinel.nodes entry '"
-                                + entry
-                                + "' is not host:port (e.g. sentinel-1:26379).");
-            }
+            HostPort.parse(entry, "cluster.valkey.sentinel.nodes", "sentinel-1:26379");
         }
         // Sentinel AUTH is separate from data-node AUTH; only warn, some sentinels are open.
         if ((sentinel.getPassword() == null || sentinel.getPassword().isBlank())
@@ -139,18 +129,13 @@ public class ClusterConfig {
     }
 
     private static void validateCluster(ApplicationProperties.Cluster.Valkey valkey) {
-        if (valkey.getNodes() == null || valkey.getNodes().isEmpty()) {
+        if (valkey.getNodes().isEmpty()) {
             throw new IllegalStateException(
                     "cluster.valkey.mode=cluster requires cluster.valkey.nodes to list at least"
                             + " one seed node (e.g. valkey-1:6379,valkey-2:6379,valkey-3:6379).");
         }
         for (String entry : valkey.getNodes()) {
-            if (!isHostPort(entry)) {
-                throw new IllegalStateException(
-                        "cluster.valkey.nodes entry '"
-                                + entry
-                                + "' is not host:port (e.g. valkey-1:6379).");
-            }
+            HostPort.parse(entry, "cluster.valkey.nodes", "valkey-1:6379");
         }
         if (valkey.getMaxRedirects() < 1) {
             throw new IllegalStateException(
@@ -194,23 +179,6 @@ public class ClusterConfig {
                     mode == ApplicationProperties.Cluster.Valkey.ValkeyMode.SENTINEL
                             ? "cluster.valkey.sentinel.nodes"
                             : "cluster.valkey.nodes");
-        }
-    }
-
-    // host:port only - a full URL here would silently bind the whole string as the hostname.
-    private static boolean isHostPort(String entry) {
-        if (entry == null) {
-            return false;
-        }
-        int colon = entry.lastIndexOf(':');
-        if (colon <= 0 || colon == entry.length() - 1) {
-            return false;
-        }
-        try {
-            int port = Integer.parseInt(entry.substring(colon + 1).trim());
-            return port >= 1 && port <= 65535 && !entry.substring(0, colon).isBlank();
-        } catch (NumberFormatException ex) {
-            return false;
         }
     }
 }

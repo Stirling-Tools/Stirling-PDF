@@ -180,4 +180,41 @@ class ClusterPropertiesTest {
             assertEquals(ValkeyMode.STANDALONE, v.resolvedMode());
         }
     }
+
+    /** A bare 'valkey:'/'sentinel:'/'tls:'/'pool:'/'nodes:' key in settings.yml binds null. */
+    @Nested
+    @DisplayName("bare yaml keys bind null")
+    class BareYamlKeys {
+
+        @Test
+        @DisplayName("a null nested block is re-seeded with its defaults, never handed back")
+        void nullNestedBlocksAreReSeeded() {
+            Cluster cluster = new ApplicationProperties().getCluster();
+            cluster.setValkey(null);
+            Valkey valkey = cluster.getValkey();
+            assertNotNull(valkey);
+
+            valkey.setSentinel(null);
+            valkey.setTls(null);
+            valkey.setPool(null);
+            valkey.setNodes(null);
+            assertNotNull(valkey.getSentinel());
+            assertNotNull(valkey.getTls());
+            assertNotNull(valkey.getPool());
+            assertEquals(16, valkey.getPool().getMaxActive());
+            assertTrue(valkey.getNodes().isEmpty());
+
+            valkey.getSentinel().setNodes(null);
+            assertTrue(valkey.getSentinel().getNodes().isEmpty());
+        }
+
+        @Test
+        @DisplayName("resolvedMode() survives null sentinel and nodes blocks")
+        void resolvedModeSurvivesNullBlocks() {
+            Valkey valkey = new ApplicationProperties().getCluster().getValkey();
+            valkey.setSentinel(null);
+            valkey.setNodes(null);
+            assertEquals(ValkeyMode.STANDALONE, valkey.resolvedMode());
+        }
+    }
 }

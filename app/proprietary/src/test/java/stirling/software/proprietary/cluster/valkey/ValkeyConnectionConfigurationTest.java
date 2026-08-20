@@ -345,76 +345,6 @@ class ValkeyConnectionConfigurationTest {
     }
 
     @Nested
-    @DisplayName("parseNode()")
-    class ParseNode {
-
-        @Test
-        @DisplayName("host:port splits into host and port")
-        void hostAndPort() {
-            Endpoint e =
-                    ValkeyConnectionConfiguration.parseNode(
-                            "valkey-1:6379", "cluster.valkey.nodes", 6379);
-            assertEquals("valkey-1", e.host());
-            assertEquals(6379, e.port());
-        }
-
-        @Test
-        @DisplayName("a bare host takes the caller's default port (26379 for sentinels)")
-        void bareHostTakesDefaultPort() {
-            Endpoint e =
-                    ValkeyConnectionConfiguration.parseNode(
-                            "sentinel-1", "cluster.valkey.sentinel.nodes", 26379);
-            assertEquals("sentinel-1", e.host());
-            assertEquals(26379, e.port());
-        }
-
-        @Test
-        @DisplayName("surrounding whitespace is trimmed (comma-separated env vars keep spaces)")
-        void trimsWhitespace() {
-            Endpoint e =
-                    ValkeyConnectionConfiguration.parseNode(
-                            "  valkey-2:6380  ", "cluster.valkey.nodes", 6379);
-            assertEquals("valkey-2", e.host());
-            assertEquals(6380, e.port());
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"valkey-1:abc", "valkey-1:0", "valkey-1:70000", ":6379"})
-        @DisplayName("a bad port or a missing host throws, naming the property and the entry")
-        void badEntriesThrow(String entry) {
-            assertRejected(entry);
-        }
-
-        @Test
-        @DisplayName("blank entry throws with a host:port example")
-        void blankEntryThrows() {
-            IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () ->
-                                    ValkeyConnectionConfiguration.parseNode(
-                                            "  ", "cluster.valkey.nodes", 6379));
-            assertTrue(ex.getMessage().contains("cluster.valkey.nodes"));
-            assertTrue(ex.getMessage().contains("host:port"));
-        }
-
-        private void assertRejected(String entry) {
-            IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () ->
-                                    ValkeyConnectionConfiguration.parseNode(
-                                            entry, "cluster.valkey.nodes", 6379));
-            assertTrue(
-                    ex.getMessage().contains("cluster.valkey.nodes"),
-                    "message must name the property; got: " + ex.getMessage());
-            assertTrue(
-                    ex.getMessage().contains(entry),
-                    "message must echo the offending entry; got: " + ex.getMessage());
-        }
-    }
-
-    @Nested
     @DisplayName("buildClientConfiguration()")
     class BuildClientConfiguration {
 
@@ -634,13 +564,20 @@ class ValkeyConnectionConfigurationTest {
         }
 
         @Test
-        @DisplayName("a bare sentinel host defaults to 26379, not 6379")
-        void bareSentinelHostDefaultsToSentinelPort() {
+        @DisplayName("a bare sentinel host is rejected - the port is never defaulted silently")
+        void bareSentinelHostIsRejected() {
             Valkey v = sentinelProps();
             v.getSentinel().setNodes(List.of("sentinel-1"));
-            RedisSentinelConfiguration cfg =
-                    ValkeyConnectionConfiguration.sentinelConfiguration(v, null, null);
-            assertEquals(Integer.valueOf(26379), cfg.getSentinels().iterator().next().getPort());
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () ->
+                                    ValkeyConnectionConfiguration.sentinelConfiguration(
+                                            v, null, null));
+            assertTrue(ex.getMessage().contains("cluster.valkey.sentinel.nodes"));
+            assertTrue(
+                    ex.getMessage().contains("sentinel-1:26379"),
+                    "message must show the sentinel port in the example; got: " + ex.getMessage());
         }
 
         @Test

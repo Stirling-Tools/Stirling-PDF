@@ -48,8 +48,8 @@ public class ValkeyKeyValueCache implements KeyValueCache {
                 keys.add(cursor.next());
             }
         }
-        // Bulk unlink in 500-key batches - ceil(n/500) round trips, not n: Lettuce partitions
-        // del/unlink by slot and fans out per node, so multi-key is legitimate here on Cluster.
+        // Batched UNLINK, 500 keys a call. On Cluster spring-data splits a cross-slot batch
+        // into one command per key (fanned out per node), so expect n commands there, not n/500.
         for (int i = 0; i < keys.size(); i += 500) {
             template.unlink(keys.subList(i, Math.min(i + 500, keys.size())));
         }

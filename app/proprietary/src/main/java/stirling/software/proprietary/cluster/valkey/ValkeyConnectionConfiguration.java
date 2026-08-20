@@ -32,6 +32,7 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.HostPort;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
 import stirling.software.common.model.ApplicationProperties.Cluster.Valkey;
@@ -58,10 +59,9 @@ public class ValkeyConnectionConfiguration {
         // Only standalone reads the URL; sentinel/cluster take endpoints and credentials from
         // their own properties so there is one obvious source of truth per mode.
         Endpoint endpoint = mode == Valkey.ValkeyMode.STANDALONE ? parseUrl(valkey.getUrl()) : null;
-        // A hand-edited settings.yml with a bare 'tls:' key binds null, so guard the dereference.
         Valkey.Tls tlsProps = valkey.getTls();
-        boolean tls =
-                (tlsProps != null && tlsProps.isEnabled()) || (endpoint != null && endpoint.tls());
+        // tls.enabled is OR-ed with the url scheme, never overridden by it.
+        boolean tls = tlsProps.isEnabled() || (endpoint != null && endpoint.tls());
         guardIgnoredUrl(valkey, mode, tls);
         String username =
                 firstNonBlank(valkey.getUsername(), endpoint == null ? null : endpoint.username());
@@ -72,7 +72,7 @@ public class ValkeyConnectionConfiguration {
         LettuceClientConfiguration clientConfig =
                 buildClientConfiguration(
                         tls,
-                        tlsProps != null && tlsProps.isSkipCertVerification(),
+                        tlsProps.isSkipCertVerification(),
                         clientName,
                         Duration.ofMillis(valkey.getCommandTimeoutMs()),
                         valkey.getPool(),
@@ -154,7 +154,7 @@ public class ValkeyConnectionConfiguration {
         RedisSentinelConfiguration cfg = new RedisSentinelConfiguration();
         cfg.master(valkey.getSentinel().getMaster().trim());
         for (String node : valkey.getSentinel().getNodes()) {
-            Endpoint e = parseNode(node, "cluster.valkey.sentinel.nodes", 26379);
+            HostPort e = HostPort.parse(node, "cluster.valkey.sentinel.nodes", "sentinel-1:26379");
             cfg.sentinel(e.host(), e.port());
         }
         applyAuth(cfg, username, password);
@@ -172,7 +172,7 @@ public class ValkeyConnectionConfiguration {
             Valkey valkey, String username, String password) {
         RedisClusterConfiguration cfg = new RedisClusterConfiguration();
         for (String node : valkey.getNodes()) {
-            Endpoint e = parseNode(node, "cluster.valkey.nodes", 6379);
+            HostPort e = HostPort.parse(node, "cluster.valkey.nodes", "valkey-1:6379");
             cfg.clusterNode(e.host(), e.port());
         }
         cfg.setMaxRedirects(valkey.getMaxRedirects());
@@ -231,77 +231,6 @@ public class ValkeyConnectionConfiguration {
             }
         }
         return new Endpoint(host, port, tls, username, password);
-    }
-
-    /**
-     * Parses a {@code host:port} list entry; a bare host takes {@code defaultPort}. IPv6 literals
-     * must be bracketed ({@code [::1]:6379}) - a bare {@code ::1} is ambiguous and is rejected.
-     */
-    static Endpoint parseNode(String entry, String propertyName, int defaultPort) {
-        String trimmed = entry == null ? "" : entry.trim();
-        if (trimmed.isEmpty()) {
-            throw new IllegalStateException(
-                    propertyName
-                            + " contains a blank entry (expected host:port, e.g. valkey-1:6379).");
-        }
-        if (trimmed.charAt(0) == '[') {
-            return parseBracketedNode(trimmed, entry, propertyName, defaultPort);
-        }
-        int colon = trimmed.lastIndexOf(':');
-        if (colon < 0) {
-            return new Endpoint(trimmed, defaultPort, false, null, null);
-        }
-        if (trimmed.indexOf(':') != colon) {
-            throw new IllegalStateException(
-                    propertyName
-                            + " entry '"
-                            + entry
-                            + "' has more than one ':' - bracket IPv6 literals as [::1]:6379.");
-        }
-        return node(trimmed.substring(0, colon), trimmed.substring(colon + 1), entry, propertyName);
-    }
-
-    /** Handles {@code [::1]} and {@code [::1]:6379}; the returned host keeps no brackets. */
-    private static Endpoint parseBracketedNode(
-            String trimmed, String entry, String propertyName, int defaultPort) {
-        int close = trimmed.indexOf(']');
-        if (close < 0) {
-            throw new IllegalStateException(
-                    propertyName
-                            + " entry '"
-                            + entry
-                            + "' has an unclosed '[' (expected [::1]:6379).");
-        }
-        String host = trimmed.substring(1, close);
-        String rest = trimmed.substring(close + 1);
-        if (rest.isEmpty()) {
-            if (host.isBlank()) {
-                throw new IllegalStateException(
-                        propertyName + " entry '" + entry + "' has no host (expected [::1]:6379).");
-            }
-            return new Endpoint(host, defaultPort, false, null, null);
-        }
-        if (rest.charAt(0) != ':') {
-            throw new IllegalStateException(
-                    propertyName + " entry '" + entry + "' is not [host]:port (e.g. [::1]:6379).");
-        }
-        return node(host, rest.substring(1), entry, propertyName);
-    }
-
-    private static Endpoint node(String host, String rawPort, String entry, String propertyName) {
-        int port;
-        try {
-            port = Integer.parseInt(rawPort);
-        } catch (NumberFormatException ex) {
-            throw new IllegalStateException(
-                    propertyName + " entry '" + entry + "' is not host:port (e.g. valkey-1:6379).",
-                    ex);
-        }
-        if (host.isBlank() || port < 1 || port > 65535) {
-            throw new IllegalStateException(
-                    propertyName + " entry '" + entry + "' is not host:port (e.g. valkey-1:6379).");
-        }
-        return new Endpoint(host, port, false, null, null);
     }
 
     /**

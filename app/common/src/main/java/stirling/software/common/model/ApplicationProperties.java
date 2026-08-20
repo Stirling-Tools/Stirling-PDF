@@ -557,6 +557,14 @@ public class ApplicationProperties {
         private Valkey valkey = new Valkey();
         private Node node = new Node();
 
+        // A bare 'valkey:' key in settings.yml binds null; re-seed rather than hand one back.
+        public Valkey getValkey() {
+            if (valkey == null) {
+                valkey = new Valkey();
+            }
+            return valkey;
+        }
+
         private transient String cachedNodeId;
         private transient String cachedNodeName;
 
@@ -667,6 +675,36 @@ public class ApplicationProperties {
             private Tls tls = new Tls();
             private Pool pool = new Pool();
 
+            // A bare 'sentinel:'/'tls:'/'pool:'/'nodes:' key in settings.yml binds null. Re-seed
+            // the default here so no call site has to guard, and none can forget to.
+            public Sentinel getSentinel() {
+                if (sentinel == null) {
+                    sentinel = new Sentinel();
+                }
+                return sentinel;
+            }
+
+            public Tls getTls() {
+                if (tls == null) {
+                    tls = new Tls();
+                }
+                return tls;
+            }
+
+            public Pool getPool() {
+                if (pool == null) {
+                    pool = new Pool();
+                }
+                return pool;
+            }
+
+            public List<String> getNodes() {
+                if (nodes == null) {
+                    nodes = new ArrayList<>();
+                }
+                return nodes;
+            }
+
             /**
              * Explicit {@link #mode} wins; blank infers SENTINEL from sentinel.master, CLUSTER from
              * nodes, else STANDALONE, and throws when both are set (ambiguous).
@@ -683,11 +721,9 @@ public class ApplicationProperties {
                                 ex);
                     }
                 }
-                boolean sentinelConfigured =
-                        sentinel != null
-                                && sentinel.getMaster() != null
-                                && !sentinel.getMaster().isBlank();
-                boolean clusterConfigured = nodes != null && !nodes.isEmpty();
+                String master = getSentinel().getMaster();
+                boolean sentinelConfigured = master != null && !master.isBlank();
+                boolean clusterConfigured = !getNodes().isEmpty();
                 if (sentinelConfigured && clusterConfigured) {
                     throw new IllegalStateException(
                             "cluster.valkey.mode is not set but both"
@@ -726,13 +762,21 @@ public class ApplicationProperties {
                  * setting only {@code cluster.valkey.password} does NOT authenticate to sentinels.
                  */
                 @ToString.Exclude private String password = "";
+
+                // A bare 'nodes:' key binds null.
+                public List<String> getNodes() {
+                    if (nodes == null) {
+                        nodes = new ArrayList<>();
+                    }
+                    return nodes;
+                }
             }
 
             @Data
             public static class Tls {
                 /**
-                 * Force TLS in sentinel/cluster mode, where there is no {@code rediss://} URL to
-                 * carry the scheme. Ignored in standalone mode, which takes TLS from the URL.
+                 * Force TLS. Required in sentinel/cluster mode, which have no {@code rediss://} URL
+                 * to carry the scheme; in standalone it is OR-ed with the scheme, never overridden.
                  */
                 private boolean enabled = false;
 
@@ -752,8 +796,8 @@ public class ApplicationProperties {
                 private boolean enabled = true;
 
                 /**
-                 * Max pooled connections. One is permanently held by the shared native connection,
-                 * so this must be at least 2.
+                 * Max pooled connections; at least 2, one is held by the shared native connection.
+                 * A hard ceiling - borrows past it fail after {@link #maxWaitMillis}, not queue.
                  */
                 private int maxActive = 16;
 

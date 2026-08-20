@@ -281,6 +281,73 @@ class ClusterConfigValidationTest {
         }
     }
 
+    /** A bare 'valkey:'/'sentinel:'/'pool:' key binds null; validation must not NPE on it. */
+    @Nested
+    @DisplayName("null config blocks give the operator message, never an NPE")
+    class BareYamlKeys {
+
+        private ApplicationProperties props;
+
+        @Test
+        void nullValkeyBlockReportsTheMissingUrl() {
+            enabled();
+            props.getCluster().setValkey(null);
+            assertMessage("cluster.valkey.url");
+        }
+
+        @Test
+        void nullSentinelBlockReportsTheMissingMaster() {
+            Valkey v = enabled();
+            v.setMode("sentinel");
+            v.setSentinel(null);
+            assertMessage("cluster.valkey.sentinel.master");
+        }
+
+        @Test
+        void nullSentinelNodesReportsTheMissingNodeList() {
+            Valkey v = enabled();
+            v.setMode("sentinel");
+            v.getSentinel().setMaster("mymaster");
+            v.getSentinel().setNodes(null);
+            assertMessage("cluster.valkey.sentinel.nodes");
+        }
+
+        @Test
+        void nullNodesBlockReportsTheMissingSeedList() {
+            Valkey v = enabled();
+            v.setMode("cluster");
+            v.setNodes(null);
+            assertMessage("cluster.valkey.nodes");
+        }
+
+        @Test
+        @DisplayName("null pool and tls blocks fall back to defaults and validate")
+        void nullPoolAndTlsBlocksValidate() {
+            Valkey v = enabled();
+            v.setUrl("redis://valkey:6379");
+            v.setPool(null);
+            v.setTls(null);
+            ClusterConfig config = new ClusterConfig(props);
+            assertDoesNotThrow(() -> invokeValidate(config));
+        }
+
+        private Valkey enabled() {
+            props = new ApplicationProperties();
+            props.getCluster().setEnabled(true);
+            props.getCluster().setBackplane("valkey");
+            return props.getCluster().getValkey();
+        }
+
+        private void assertMessage(String expected) {
+            ClusterConfig config = new ClusterConfig(props);
+            IllegalStateException ex =
+                    assertThrows(IllegalStateException.class, () -> invokeValidate(config));
+            assertTrue(
+                    ex.getMessage().contains(expected),
+                    "message must contain '" + expected + "'; got: " + ex.getMessage());
+        }
+    }
+
     private void invokeValidate(ClusterConfig config) throws Exception {
         Method m = ClusterConfig.class.getDeclaredMethod("validate");
         m.setAccessible(true);

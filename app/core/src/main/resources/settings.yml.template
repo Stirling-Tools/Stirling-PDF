@@ -470,7 +470,7 @@ cluster:
     nodes: [] # Valkey Cluster seed nodes, e.g. ['valkey-1:6379','valkey-2:6379','valkey-3:6379']. Required when mode=cluster.
     maxRedirects: 3 # Cluster mode only: max MOVED/ASK redirects followed before a command fails.
     topologyRefreshMs: 30000 # Cluster mode only: periodic topology refresh backstop (ms). Adaptive refresh on MOVED/ASK/reconnect is always enabled.
-    clientName: "" # CLIENT SETNAME applied to every connection so Valkey monitoring can attribute load per node. Blank (default) = 'stirling-<cluster.node.id>' - stable for the life of the process; set cluster.node.id to get a name that survives restarts (a blank node id is a fresh UUID every boot). Set to 'off' to send no CLIENT SETNAME at all, for locked-down ACL users denied the CLIENT command.
+    clientName: "" # CLIENT SETNAME applied to every connection so Valkey monitoring can attribute load per node. Blank (default) = 'stirling-' + cluster.node.id, falling back to the hostname (the container name under Docker/Kubernetes) and only then to the per-boot UUID. Set to 'off' to send no CLIENT SETNAME at all, for locked-down ACL users denied the CLIENT command.
     commandTimeoutMs: 2000 # Per-command timeout (ms). Bounds every backplane call so a slow Valkey cannot stall request threads.
     sentinel:
       master: "" # Monitored primary name, i.e. the name in 'sentinel monitor <name> ...'. Required when mode=sentinel.
@@ -478,11 +478,11 @@ cluster:
       username: "" # Username used when connecting to the SENTINELS (separate from the data-node username).
       password: "" # Password used when connecting to the SENTINELS. Separate from 'password' - setting only that one does NOT authenticate to sentinels.
     tls:
-      enabled: false # The ONLY way to get TLS in sentinel/cluster mode - the url and its 'rediss://' scheme are ignored there. Ignored in standalone mode (the URL scheme decides).
+      enabled: false # The ONLY way to get TLS in sentinel/cluster mode - the url and its 'rediss://' scheme are ignored there. In standalone mode it is OR-ed with the url scheme: 'true' forces TLS even on a 'redis://' url, and 'false' still honours 'rediss://'.
       skipCertVerification: false # set to 'true' to skip TLS certificate verification on Valkey connections (dev/test only)
     pool:
       enabled: true # Pool dedicated connections. Turning this off makes every transactional/blocking call open and tear down a TCP connection.
-      maxActive: 16 # Max pooled connections. Must be >= 2 - one is permanently held by the shared native connection.
+      maxActive: 16 # Max pooled connections. Must be >= 2 - one is permanently held by the shared native connection. This is a HARD ceiling; dedicated connections were unbounded before pooling existed, so a borrow past it now fails after maxWaitMillis with "Could not get a resource from the pool". Raise it (or set enabled: false) if that appears under load.
       maxIdle: 16 # Max idle pooled connections. Keep equal to maxActive so idle connections are not churned.
       minIdle: 0 # Connections kept warm. 0 (default): backplane traffic runs on the shared native connection, so warm pooled sockets would sit idle on every node. Raise it only to pre-pay the connect cost for bursty job traffic.
       maxWaitMillis: 2000 # Max wait for a pooled connection (ms). Must be > 0 - a non-positive value blocks forever.

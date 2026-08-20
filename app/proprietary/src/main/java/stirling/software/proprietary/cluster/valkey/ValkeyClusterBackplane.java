@@ -21,8 +21,8 @@ public class ValkeyClusterBackplane implements ClusterBackplane {
     @Override
     public boolean isHealthy() {
         try {
-            // Single-key EXISTS, not PING: on Valkey Cluster spring-data fans PING out to every
-            // node and returns failure if any one is down, restarting healthy pods on every probe.
+            // Single-key EXISTS, not PING: on Cluster spring-data fans PING to every node and
+            // fails if any is down. The key need not exist; a completed round trip is the signal.
             return template.hasKey("stirling:health:" + localNodeId()) != null;
         } catch (RuntimeException ex) {
             log.warn("Valkey backplane health check failed: {}", ex.getMessage());
