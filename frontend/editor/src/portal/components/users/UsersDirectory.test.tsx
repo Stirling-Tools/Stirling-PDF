@@ -133,6 +133,7 @@ describe("UsersDirectory - member avatars", () => {
     renderDirectory(selfHostedCaps);
 
     expect(pictureOf()).toBeNull();
-    expect(screen.getByText("PR")).toBeInTheDocument();
+    // A one-word name renders a single initial.
+    expect(screen.getByText("P")).toBeInTheDocument();
   });
 });

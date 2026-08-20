@@ -38,17 +38,40 @@ public record RecordFailure(
         detail = truncate(detail);
     }
 
-    /** A processor-side failure with no file or source context, e.g. a run that failed outright. */
+    /**
+     * A processor-side run failure. {@code sourceId} says which folder, bucket or webhook fed the
+     * run, and is the only attribution an unattended failure has: there is no user to name. {@code
+     * fileId} is the source's opaque reference to the document, already hashed upstream.
+     */
     public static RecordFailure forRun(
             FailureKind kind,
             Long teamId,
             String actor,
             String policyId,
             String runId,
+            String sourceId,
             String fileId,
             String detail) {
         return new RecordFailure(
-                kind, FailureOrigin.POLICY, teamId, actor, policyId, runId, null, fileId, detail);
+                kind,
+                FailureOrigin.POLICY,
+                teamId,
+                actor,
+                policyId,
+                runId,
+                sourceId,
+                fileId,
+                detail);
+    }
+
+    /**
+     * A failure a user hit in their own editor. There is no policy, run or source: the user is the
+     * attribution, and {@code fileId} may be null when the report named no file.
+     */
+    public static RecordFailure forEditor(
+            FailureKind kind, Long teamId, String actor, String fileId, String detail) {
+        return new RecordFailure(
+                kind, FailureOrigin.TOOL, teamId, actor, null, null, null, fileId, detail);
     }
 
     /**
@@ -56,14 +79,21 @@ public record RecordFailure(
      * reference are the same incident; see {@link #dedupKey()}.
      */
     public String scopeRef() {
-        return switch (kind.getScope()) {
-            case FILE -> nullToEmpty(policyId) + "|" + fileOrRun();
-            case RUN -> nullToEmpty(runId);
-            case POLICY -> nullToEmpty(policyId);
-            case SOURCE -> nullToEmpty(sourceId);
-            // One server-wide condition is one incident regardless of which run tripped over it.
-            case SERVER -> "";
-        };
+        String about =
+                switch (kind.getScope()) {
+                    case FILE -> nullToEmpty(policyId) + "|" + fileOrRun();
+                    // An editor report has no run, so a RUN-scoped kind would otherwise put every
+                    // such failure in a team into one incident: fall back to the document.
+                    case RUN -> isBlank(runId) ? fileOrRun() : nullToEmpty(runId);
+                    case POLICY -> nullToEmpty(policyId);
+                    case SOURCE -> nullToEmpty(sourceId);
+                    // One server-wide condition is one incident regardless of which run hit it.
+                    case SERVER -> "";
+                };
+        // An editor failure belongs to the person who hit it, so two colleagues hitting the same
+        // thing are two incidents. Folding them would credit one actor for both and offer the
+        // wrong person the row. Unattended runs have no such owner and are unaffected.
+        return origin == FailureOrigin.TOOL ? nullToEmpty(actor) + "|" + about : about;
     }
 
     /**

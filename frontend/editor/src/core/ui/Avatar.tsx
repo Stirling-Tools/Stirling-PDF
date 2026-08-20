@@ -24,10 +24,12 @@ export interface AvatarProps {
   className?: string;
 }
 
-function initialsOf(name: string): string {
+function avatarInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  // Single word (a username or an email) reads as one letter — two letters of
+  // "admin" ("AD") looks like a different person's initials, not a truncation.
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
@@ -44,9 +46,12 @@ export function Avatar({
   ariaLabel,
   className,
 }: AvatarProps) {
-  // A signed avatar URL can expire between render and load; fall back rather than show a broken icon.
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
+  // A picture URL that 404s (expired signed URL, deleted upload) must not leave
+  // an empty disc — fall back to the same initials the no-picture case shows, so
+  // every surface rendering this identity agrees on what it draws.
+  const [srcFailed, setSrcFailed] = useState(false);
+  useEffect(() => setSrcFailed(false), [src]);
+  const showImage = Boolean(src) && !srcFailed;
 
   const classes = [
     "sui-avatar",
@@ -58,20 +63,19 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
-  const content =
-    src && !failed ? (
-      // The wrapper already carries the accessible name, so the image itself is decorative.
-      <img
-        src={src}
-        alt=""
-        className="sui-avatar__img"
-        onError={() => setFailed(true)}
-      />
-    ) : (
-      <span className="sui-avatar__initials" aria-hidden>
-        {initialsOf(name)}
-      </span>
-    );
+  const content = showImage ? (
+    // The wrapper already carries the accessible name, so the image is decorative.
+    <img
+      src={src}
+      alt=""
+      className="sui-avatar__img"
+      onError={() => setSrcFailed(true)}
+    />
+  ) : (
+    <span className="sui-avatar__initials" aria-hidden>
+      {avatarInitials(name)}
+    </span>
+  );
 
   if (onClick) {
     return (
