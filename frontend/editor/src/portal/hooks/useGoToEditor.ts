@@ -13,11 +13,17 @@ function joinEditorPath(base: string, path: string): string {
  * (e.g. "/automate"). Editor and portal are one SPA when the editor serves this
  * origin's root, so the switch stays client-side; an absolute EDITOR_URL (dev
  * cross-app setup) needs a full page load.
+ *
+ * Tool routes are origin-relative and must NOT be joined to EDITOR_BASENAME:
+ * getToolUrlPath() emits "/automate", parseToolRoute() strips only BASE_PATH
+ * when matching, and My Files is found with startsWith("/files"). Prefixing the
+ * basename yields "/editor/automate", which matches no tool and lands on the
+ * editor's default view instead. The basename is where a bare switch goes.
  */
 export function useGoToEditor(): (toolPath?: string) => void {
   const navigate = useNavigate();
   return (toolPath = "") => {
-    if (EDITOR_IS_SAME_APP) navigate(joinEditorPath(EDITOR_BASENAME, toolPath));
+    if (EDITOR_IS_SAME_APP) navigate(toolPath || EDITOR_BASENAME);
     else window.location.href = joinEditorPath(EDITOR_URL, toolPath);
   };
 }

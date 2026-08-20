@@ -39,9 +39,11 @@ export function useQuickNavSurfaces(): {
       icon: <BrandTile size={SIZE} />,
       kind: "destination",
       // Files and reader mode are both inside the editor app, so the app stays
-      // current while you're in them. It also stays clickable: My Files
-      // suppresses the workbench bar, making this the only way back out.
+      // current while you're in them - as the current app, not the current page,
+      // which the entry for the place you're in claims. It also stays clickable:
+      // My Files suppresses the workbench bar, making this the only way back out.
       isActive: true,
+      currentKind: "app",
       onClick: () =>
         inFiles ? navigate(EDITOR_BASENAME) : handleBackToTools(),
     },

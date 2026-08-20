@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import "@app/components/shared/quickNav/QuickNavRail.css";
 
@@ -14,6 +15,13 @@ export interface QuickNavEntry {
    * to a screen reader even when they sit in the same group.
    */
   kind: "destination" | "action";
+  /**
+   * What an active destination is current *for*. A whole app ("app") and a place
+   * inside it ("page", the default) can both be active at once - in My Files the
+   * editor tile and the Files entry are both lit - and marking both as the
+   * current page makes a screen reader announce two current pages in one nav.
+   */
+  currentKind?: "app" | "page";
   isActive?: boolean;
   /**
    * Rendered but not operable, with `reason` as the tooltip. Preferred over
@@ -43,6 +51,7 @@ function RailButton({
   label,
   icon,
   kind,
+  currentKind = "page",
   isActive,
   disabled,
   reason,
@@ -62,7 +71,13 @@ function RailButton({
         type="button"
         className="quick-nav-rail-item"
         data-current={isActive || undefined}
-        aria-current={kind === "destination" && isActive ? "page" : undefined}
+        aria-current={
+          kind === "destination" && isActive
+            ? currentKind === "app"
+              ? "true"
+              : "page"
+            : undefined
+        }
         aria-pressed={kind === "action" ? Boolean(isActive) : undefined}
         aria-label={label}
         // aria-disabled, not `disabled`: a disabled button drops out of the tab
@@ -94,9 +109,13 @@ function RailButton({
  * but slots never appear or vanish, so position stays meaningful.
  */
 export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
+  const { t } = useTranslation();
   const populated = groups.filter((group) => group.length > 0);
   return (
-    <nav className="quick-nav-rail" aria-label="Quick navigation">
+    <nav
+      className="quick-nav-rail"
+      aria-label={t("quickNav.landmark", "Quick navigation")}
+    >
       {populated.map((group, index) => (
         <div className="quick-nav-rail-group" key={group[0].id}>
           {index > 0 && <hr className="quick-nav-rail-divider" />}

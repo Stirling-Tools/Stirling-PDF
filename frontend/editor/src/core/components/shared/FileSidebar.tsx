@@ -100,6 +100,11 @@ export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The workspace renders the brand header itself, above the quick nav rail. */
   brandHoisted?: boolean;
+  /**
+   * The quick nav rail owns the account control, so the footer drops its account
+   * row and keeps the rest (credits, plan, app switch).
+   */
+  accountHoisted?: boolean;
   /** Accessible name override for the toggle button. */
   toggleAriaLabel?: string;
   /** Icon override for the toggle button (e.g. back-arrow on /files). */
@@ -158,6 +163,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onToggleCollapse,
       onOpenSettings,
       brandHoisted = false,
+      accountHoisted = false,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
@@ -1370,6 +1376,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           displayName={displayName}
           profilePictureUrl={profilePictureUrl}
           onOpenSettings={onOpenSettings}
+          showAccount={!accountHoisted}
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
           otherApp={otherApp}

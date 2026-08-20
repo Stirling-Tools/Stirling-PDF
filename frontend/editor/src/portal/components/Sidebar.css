@@ -34,6 +34,9 @@
 .portal-sidebar__close {
   display: none;
   flex-shrink: 0;
+  /* Pushed to the trailing edge on its own: the only other thing in this row on
+     mobile is the brand, since collapsing is hidden at that width. */
+  margin-left: auto;
 }
 
 .portal-sidebar__collapse {

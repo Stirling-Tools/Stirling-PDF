@@ -17,8 +17,10 @@ export interface QuickNavRailContainerProps extends Omit<
 > {
   /**
    * Opens the config modal. Passing it also opts this rail into owning the
-   * account control - the editor does, having given that footer up from the
-   * bottom of its file sidebar.
+   * account control, which means the sidebar beside it must drop its own account
+   * row (FileSidebar's accountHoisted) so one user isn't drawn twice. The editor
+   * does this; the processor leaves the account in its sidebar footer and passes
+   * nothing here.
    */
   onOpenSettings?: () => void;
 }

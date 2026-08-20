@@ -9189,6 +9189,7 @@ files = "Files"
 
 [quickNav]
 editor = "Editor"
+landmark = "Quick navigation"
 noProcessorAccess = "Ask an admin for processor access"
 processor = "Processor"
 reader = "Reader"

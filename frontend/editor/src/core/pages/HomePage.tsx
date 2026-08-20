@@ -559,6 +559,7 @@ export default function HomePage() {
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}
                 brandHoisted
+                accountHoisted
                 active={navigationState.workbench === "myFiles"}
                 // /files always shows the rail collapsed - force it here so a
                 // deep-link/reload onto /files (no workbench transition) still

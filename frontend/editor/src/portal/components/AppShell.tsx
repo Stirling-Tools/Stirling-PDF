@@ -107,7 +107,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       // The Stirling mark, not a feature glyph - see the editor's variant.
       icon: <BrandMark height="1.125rem" />,
       kind: "destination",
+      // Current app, not current page: the entry for wherever you are inside the
+      // processor is what claims the page.
       isActive: true,
+      currentKind: "app",
       onClick: () => {},
     },
   ];

@@ -106,35 +106,36 @@ export function Sidebar({ brandHoisted = false }: SidebarProps) {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* With the brand hoisted into the workspace frame, this row's only job is
-          hosting the mobile drawer's close button - which is hidden on desktop.
-          Rendering it anyway would still reserve --nav-brand-h there, starting
-          the nav 3rem below the quick nav rail beside it. */}
+      {/* Skipped entirely when the brand is hoisted into the workspace frame and
+          this is not the mobile drawer: the row would still reserve
+          --nav-brand-h, starting the nav 3rem below the quick nav rail beside
+          it. The drawer keeps it, because the hoisted row is hidden at that
+          width and the brand has to come from somewhere. */}
       {(!brandHoisted || isMobile) && (
         <div className="portal-sidebar__logo">
-          {!brandHoisted && (
-            <>
-              <BrandSwitcher
-                current="processor"
-                // Wrapped, not passed by reference: onSwitch hands over the target
-                // app id, which goToEditor would take as a tool path.
-                onSwitch={() => goToEditor()}
-                collapsed={collapsed}
-              />
+          <BrandSwitcher
+            current="processor"
+            // Wrapped, not passed by reference: onSwitch hands over the target
+            // app id, which goToEditor would take as a tool path.
+            onSwitch={() => goToEditor()}
+            collapsed={collapsed}
+          />
 
-              <ActionIcon
-                variant="tertiary"
-                className="portal-sidebar__collapse"
-                aria-label={
-                  collapsed
-                    ? t("fileSidebar.expand", "Expand sidebar")
-                    : t("fileSidebar.collapse", "Collapse sidebar")
-                }
-                onClick={toggleSidebarCollapsed}
-              >
-                <SidebarToggleIcon size={18} />
-              </ActionIcon>
-            </>
+          {/* Collapsing is a desktop affordance; the drawer is opened and closed
+              instead, so its header carries the brand and the close button. */}
+          {!brandHoisted && (
+            <ActionIcon
+              variant="tertiary"
+              className="portal-sidebar__collapse"
+              aria-label={
+                collapsed
+                  ? t("fileSidebar.expand", "Expand sidebar")
+                  : t("fileSidebar.collapse", "Collapse sidebar")
+              }
+              onClick={toggleSidebarCollapsed}
+            >
+              <SidebarToggleIcon size={18} />
+            </ActionIcon>
           )}
 
           <ActionIcon

@@ -13,13 +13,16 @@
   width: 100%;
 }
 
-/* A group of related icons within the single bar. */
+/* A group of related icons within the single bar. Full width because the bar
+   centres its children, which would otherwise leave the group shrink-to-fit and
+   give its buttons no width to fill. */
 .quick-nav-rail-group {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  width: 100%;
 }
 
 /* Padded well past the glyph: the icon stays 18px to match the sidebar, but the
@@ -30,7 +33,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
+  /* The bar is one target wide, so the button takes the full inner width rather
+     than a fixed size that would spill past the surface's border. */
+  width: 100%;
   height: 2.25rem;
   padding: 0;
   border: none;
@@ -123,11 +128,15 @@
 
 /* Divides the core landing zones from the destinations and actions inside them.
    Full-width of the bar's inner area so it reads as one continuous rule rather
-   than a floating dash. */
+   than a floating dash.
+
+   The bottom margin is short by one group gap: the rule is the first child of the
+   group below it, so that gap stacks underneath and an even margin would sit the
+   rule closer to the group above than the one below. */
 .quick-nav-rail-divider {
   width: 100%;
   height: 0;
-  margin: var(--space-2) 0;
+  margin: var(--space-2) 0 calc(var(--space-2) - var(--space-1));
   border: 0;
   border-top: 1px solid var(--c-border);
 }

@@ -31,14 +31,29 @@ export function QuickNavRailAccount({
         withinPortal
         events={{ hover: true, focus: true, touch: true }}
       >
-        <Avatar
-          src={profilePictureUrl ?? undefined}
-          name={displayName}
-          size="sm"
-          onClick={onOpenSettings}
-          ariaLabel={label}
-          className="quick-nav-rail-avatar"
-        />
+        {/* Tooltip clones its child to attach the hover/focus handlers and its
+            floating reference, so the child has to accept them. Avatar takes a
+            fixed prop set and spreads nothing, so handed the Avatar directly the
+            tooltip silently never opened - this span is what Tooltip binds to. */}
+        {/* Carries the config-button hooks because this rail, not the sidebar
+            footer, is the account control wherever it renders: the admin
+            onboarding tour anchors a step to data-tour, and the end-to-end suites
+            click data-testid. On the wrapper rather than the Avatar, which takes
+            a fixed prop set - a click lands on the button filling it. */}
+        <span
+          className="quick-nav-rail-avatar-target"
+          data-testid="config-button"
+          data-tour="config-button"
+        >
+          <Avatar
+            src={profilePictureUrl ?? undefined}
+            name={displayName}
+            size="sm"
+            onClick={onOpenSettings}
+            ariaLabel={label}
+            className="quick-nav-rail-avatar"
+          />
+        </span>
       </Tooltip>
     </div>
   );

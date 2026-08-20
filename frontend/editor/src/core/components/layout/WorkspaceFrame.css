@@ -46,7 +46,9 @@
     display: block;
     height: auto;
   }
-  .workspace-frame__brand {
+  /* Child selector to match the base rule above: a single-class rule loses on
+     specificity, and a media query adds no weight of its own. */
+  .workspace-frame > .workspace-frame__brand {
     display: none;
   }
 }
