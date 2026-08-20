@@ -522,12 +522,7 @@ export function SourceModal({
 
           {!loading && (
             <>
-              <FormField
-                label={t("portal.integrations.typedName", {
-                  tool: t(type.labelKey),
-                })}
-                required
-              >
+              <FormField label={t("portal.sources.wizard.name")} required>
                 <Input
                   value={name}
                   placeholder={t("portal.sources.wizard.namePlaceholder")}
