@@ -41,17 +41,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Build base image locally
-        run: docker build --platform linux/amd64 -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Export base image
-        run: docker save stirling-pdf-base:pr-test | gzip -1 > stirling-pdf-base-pr-test.tar.gz
+      - name: Build and export base image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: docker/base
+          file: docker/base/Dockerfile
+          platforms: linux/amd64
+          tags: stirling-pdf-base:pr-test
+          outputs: type=docker,dest=/tmp/stirling-pdf-base-pr-test.tar
+          cache-from: type=gha,scope=stirling-pdf-base
+          cache-to: type=gha,mode=max,scope=stirling-pdf-base
+
+      - name: Compress base image
+        run: gzip -1 /tmp/stirling-pdf-base-pr-test.tar
 
       - name: Upload base image
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: docker-base-pr-test
-          path: stirling-pdf-base-pr-test.tar.gz
+          path: /tmp/stirling-pdf-base-pr-test.tar.gz
           retention-days: 1
           if-no-files-found: error
 
