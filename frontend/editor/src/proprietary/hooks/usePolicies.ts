@@ -114,6 +114,12 @@ export function usePolicies() {
               backendId: undefined,
             };
       }
+      // Builder-made pipelines have no category tile, so the catalogue loop above skips them.
+      // They are still policies: one set to run on the editor has to reach the auto-run.
+      for (const [key, decoded] of byCategory) {
+        if (reconciled[key]) continue;
+        reconciled[key] = decodedToState(decoded, local[key]?.folderId);
+      }
       for (const [id, state] of Object.entries(reconciled)) {
         updatePolicy(id, state);
       }

@@ -18,6 +18,9 @@ import {
 } from "@app/services/policyPipeline";
 import type { PolicyState } from "@app/types/policies";
 
+/** The editor's id in a policy's source list; it is client-driven, not a swept source. */
+const EDITOR_SOURCE_ID = "editor";
+
 /**
  * Fetch every stored policy and decode it, keyed by its catalog category. If two
  * stored policies share a category (shouldn't happen — one per category), the
@@ -32,8 +35,10 @@ export async function fetchPoliciesByCategory(): Promise<
   const byCategory = new Map<string, DecodedPolicy>();
   stored.forEach((policy, index) => {
     const decoded = fromBackendPolicy(policy);
-    if (decoded.categoryId)
-      byCategory.set(decoded.categoryId, { ...decoded, order: index });
+    // A pipeline built on the Pipelines page has no category tile, so it keys by its own id
+    // rather than being dropped - one set to run on the editor still has to reach the auto-run.
+    const key = decoded.categoryId || decoded.id;
+    if (key) byCategory.set(key, { ...decoded, order: index });
   });
   return byCategory;
 }
@@ -51,6 +56,7 @@ export function decodedToState(
     configured: true,
     status: decoded.enabled ? "active" : "paused",
     sources: decoded.sources,
+    runsOnEditor: runsOnEditor(decoded),
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -62,9 +68,23 @@ export function decodedToState(
     backendId: decoded.id,
     // Server-side run-order position (team-wide); drives the settings reorder list.
     order: decoded.order,
-    // Catalog-category policies are built-in defaults (not deletable).
-    isDefault: true,
+    // Catalog-category policies are built-in defaults (not deletable); a builder pipeline is not.
+    isDefault: Boolean(decoded.categoryId),
   };
+}
+
+/**
+ * Whether the policy runs in the editor as each file passes through.
+ *
+ * Blank sources reads differently either side of that line, so it is resolved here once rather
+ * than at each call site: a catalogue tile is blank because nobody has narrowed it yet and still
+ * runs everywhere, while a builder pipeline is blank because nothing stamped it - it has to name
+ * the editor outright, or an S3 or folder pipeline would fire on every upload.
+ */
+function runsOnEditor(decoded: DecodedPolicy): boolean {
+  const sources = decoded.sources ?? [];
+  if (sources.includes(EDITOR_SOURCE_ID)) return true;
+  return Boolean(decoded.categoryId) && sources.length === 0;
 }
 
 /**

@@ -21,6 +21,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
+        runsOnEditor: true,
         status: "active",
         backendId: "backend-sec",
         runOn: "upload",
@@ -28,6 +29,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       },
       classification: {
         configured: true,
+        runsOnEditor: true,
         status: "active",
         backendId: "backend-cls",
         runOn: "upload",
