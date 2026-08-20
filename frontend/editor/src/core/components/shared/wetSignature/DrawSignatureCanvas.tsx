@@ -129,6 +129,13 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
             onChange={setPenColor}
             format="hex"
             size="xs"
+            // The saturation area and hue bar are role="slider" divs; these are
+            // their only accessible names.
+            saturationLabel={t(
+              "colorPicker.saturation",
+              "Saturation and brightness",
+            )}
+            hueLabel={t("colorPicker.hue", "Hue")}
           />
         </div>
         <div style={{ flex: 2 }}>
@@ -144,6 +151,12 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
             max={10}
             step={1}
             disabled={disabled}
+            // The thumb is a div, so the heading above cannot name it.
+            thumbLabel={t(
+              "certSign.collab.signRequest.penSize",
+              "Pen Size: {{size}}px",
+              { size: penSize },
+            )}
             marks={[
               { value: 1, label: "1" },
               { value: 5, label: "5" },

@@ -335,6 +335,11 @@ export default defineConfig(async ({ mode, command }) => {
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
+    // so without this `@app/*` resolves in the app and fails in a worker.
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
