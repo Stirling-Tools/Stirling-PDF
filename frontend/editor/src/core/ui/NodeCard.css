@@ -8,10 +8,6 @@
   display: flex;
   align-items: stretch;
   box-sizing: border-box;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast),

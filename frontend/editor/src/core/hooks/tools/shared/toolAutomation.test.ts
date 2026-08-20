@@ -10,11 +10,14 @@ import {
   asRegistryConfig,
   ToolType,
 } from "@app/hooks/tools/shared/toolOperationTypes";
+import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
 import {
+  activeFileFields,
   deserializeToolStep,
+  extractStepFiles,
   getExecutableTools,
   serializeToolStep,
-  stepRequiresUpload,
+  stepNeedsConfiguring,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
@@ -28,6 +31,10 @@ import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddP
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
+import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { defaultParameters as overlayDefaults } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { defaultParameters as certSignDefaults } from "@app/hooks/tools/certSign/useCertSignParameters";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -465,18 +472,167 @@ describe("convert (format-routed custom tool)", () => {
   });
 });
 
-describe("stepRequiresUpload", () => {
-  const step = (params: Record<string, unknown>): WorkingToolStep => ({
-    toolId: "compress" as ToolId,
-    operation: "/api/v1/misc/compress-pdf",
-    params,
+describe("supporting files", () => {
+  const fileRegistry: Partial<ToolRegistry> = {
+    overlayPdfs: entry({
+      name: "Overlay",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(overlayPdfsOperationConfig),
+    }),
+    certSign: entry({
+      name: "Cert sign",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(certSignOperationConfig),
+    }),
+  };
+
+  const overlayStep = (
+    params: Record<string, unknown>,
+    fileParameters?: Record<string, string>,
+  ): WorkingToolStep => ({
+    toolId: "overlayPdfs" as ToolId,
+    operation: "/api/v1/general/overlay-pdfs",
+    params: { ...overlayDefaults, ...params },
     support: "editable",
+    fileParameters,
   });
 
-  test("detects a File (or list of Files) among the parameters", () => {
-    const image = new File(["x"], "logo.png", { type: "image/png" });
-    expect(stepRequiresUpload(step({ level: 5 }))).toBe(false);
-    expect(stepRequiresUpload(step({ watermarkImage: image }))).toBe(true);
-    expect(stepRequiresUpload(step({ attachments: [image] }))).toBe(true);
+  const certStep = (
+    params: Record<string, unknown>,
+    fileParameters?: Record<string, string>,
+  ): WorkingToolStep => ({
+    toolId: "certSign" as ToolId,
+    operation: "/api/v1/security/cert-sign",
+    params: { ...certSignDefaults, signMode: "MANUAL", ...params },
+    support: "editable",
+    fileParameters,
+  });
+
+  test("extractStepFiles groups fresh picks by their backend file field", () => {
+    const a = new File(["1"], "a.pdf", { type: "application/pdf" });
+    const b = new File(["2"], "b.pdf", { type: "application/pdf" });
+    expect(
+      extractStepFiles(overlayStep({ overlayFiles: [a, b] }), fileRegistry),
+    ).toEqual({ overlayFiles: [a, b] });
+  });
+
+  test("extractStepFiles respects a tool's file selection (certSign by certType)", () => {
+    const p12 = new File(["k"], "key.p12");
+    expect(
+      extractStepFiles(
+        certStep({ certType: "PKCS12", p12File: p12 }),
+        fileRegistry,
+      ),
+    ).toEqual({ p12File: [p12] });
+  });
+
+  test("serialize/deserialize round-trips fileParameters", () => {
+    const step = certStep({ certType: "PKCS12" }, { p12File: "asset:abc" });
+    const api = serializeToolStep(step, fileRegistry);
+    expect(api.fileParameters).toEqual({ p12File: "asset:abc" });
+    expect(deserializeToolStep(api, fileRegistry).fileParameters).toEqual({
+      p12File: "asset:abc",
+    });
+  });
+
+  test("stepNeedsConfiguring: a stored binding satisfies the file requirement", () => {
+    expect(
+      stepNeedsConfiguring(
+        certStep({ certType: "PKCS12" }, { p12File: "asset:abc" }),
+        fileRegistry,
+      ),
+    ).toBe(false);
+    // Without the binding the keystore is still owed.
+    expect(
+      stepNeedsConfiguring(certStep({ certType: "PKCS12" }), fileRegistry),
+    ).toBe(true);
+  });
+
+  test("activeFileFields drops a stored binding the tool no longer emits", () => {
+    // Still PKCS12: the p12File binding is what the tool sends.
+    expect(
+      activeFileFields(
+        certStep({ certType: "PKCS12" }, { p12File: "asset:abc" }),
+        fileRegistry,
+      ),
+    ).toEqual(["p12File"]);
+    // Switched to PEM: certSign wants privateKeyFile/certFile, so the p12File binding is stale.
+    expect(
+      activeFileFields(
+        certStep({ certType: "PEM" }, { p12File: "asset:abc" }),
+        fileRegistry,
+      ),
+    ).toEqual([]);
+  });
+
+  test("activeFileFields is null (not empty) when the tool can't be probed", () => {
+    // A buildFormData that throws can't be probed; returning null (vs []) tells callers to keep the
+    // step's stored bindings rather than drop them and let the server GC the assets.
+    const config = asRegistryConfig<{ signingCert?: File }>({
+      toolType: ToolType.singleFile,
+      operationType: "certSign",
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      buildFormData: () => {
+        throw new Error("cannot build");
+      },
+    });
+    const registry: Partial<ToolRegistry> = {
+      certSign: entry({ name: "Boom", operationConfig: config }),
+    };
+    const step: WorkingToolStep = {
+      toolId: "certSign" as ToolId,
+      operation: "/api/v1/security/cert-sign",
+      params: {},
+      support: "editable",
+      fileParameters: { certFile: "asset:x" },
+    };
+    expect(activeFileFields(step, registry)).toBeNull();
+  });
+
+  test("the overlay sentinel is sized to the binding's asset count", () => {
+    // Two ids -> two files, matching two counts, so FixedRepeat validation passes.
+    const step = overlayStep(
+      { overlayMode: "FixedRepeatOverlay", counts: [1, 2] },
+      { overlayFiles: "asset:one,two" },
+    );
+    expect(activeFileFields(step, fileRegistry)).toEqual(["overlayFiles"]);
+    expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
+  });
+
+  test("a rename override binds a backend field to a differently-named param", () => {
+    // The cert-sign endpoint's `certFile` is held by a frontend param named `signingCert`.
+    const config = asRegistryConfig<{ signingCert?: File }>({
+      toolType: ToolType.singleFile,
+      operationType: "certSign",
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      validateParams: (p) => p.signingCert !== undefined,
+      // Sends the File under the backend field `certFile`, like real tools do via objectToFormData
+      // (which sends a param's File or File[] under a named field, iterating arrays).
+      buildFormData: (p, file) =>
+        objectToFormData({}, { fileInput: file, certFile: p.signingCert }),
+      fileParamOverrides: [{ field: "certFile", param: "signingCert" }],
+    });
+    const registry: Partial<ToolRegistry> = {
+      certSign: entry({ name: "Sign", operationConfig: config }),
+    };
+    const step = (
+      fileParameters?: Record<string, string>,
+    ): WorkingToolStep => ({
+      toolId: "certSign" as ToolId,
+      operation: "/api/v1/security/cert-sign",
+      params: {},
+      support: "editable",
+      fileParameters,
+    });
+    // The stored binding is keyed by the backend field, but satisfies the frontend param on reload.
+    expect(stepNeedsConfiguring(step({ certFile: "asset:x" }), registry)).toBe(
+      false,
+    );
+    expect(stepNeedsConfiguring(step(), registry)).toBe(true);
+    expect(activeFileFields(step({ certFile: "asset:x" }), registry)).toEqual([
+      "certFile",
+    ]);
   });
 });
