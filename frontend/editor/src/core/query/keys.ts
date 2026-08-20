@@ -6,6 +6,9 @@ export const qk = {
     ["editor", "endpointEnabled", endpoint] as const,
   footerInfo: () => ["editor", "footerInfo"] as const,
   groupEnabled: (group: string) => ["editor", "groupEnabled", group] as const,
+  /** Keyed on the asking identity: two users must never share one answer. */
+  portalAccess: (userId: string | null) =>
+    ["editor", "portalAccess", userId] as const,
   toolRecommendations: (context: string, limit: number) =>
     ["editor", "toolRecommendations", context, limit] as const,
   users: () => ["editor", "users"] as const,

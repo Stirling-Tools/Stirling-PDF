@@ -71,6 +71,8 @@ vi.mock("../../services/toolUsageTracker", () => ({
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
+  // FileContext subscribes to this to drop files whose bytes are unreadable.
+  onRecordUnreadable: () => () => {},
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {

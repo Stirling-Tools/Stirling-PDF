@@ -21,6 +21,7 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
+import { reportToolFailure } from "@app/services/failureReporting";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -617,6 +618,14 @@ export const useToolOperation = <TParams>(
         } catch (_e) {
           void _e;
         }
+
+        // Report it so a leader sees the failure too, then carry on with the user's
+        // own error handling. Fire-and-forget: the reporter swallows its own errors.
+        void reportToolFailure({
+          operation: config.operationType,
+          error,
+          fileIds: validFiles.map((file) => file.fileId),
+        });
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);

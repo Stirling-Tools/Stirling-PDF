@@ -70,6 +70,7 @@ function event(actions: FailureActionOffer[]): FileRunEvent {
     detail: "boom",
     policyId: "p1",
     runId: "r1",
+    sourceId: null,
     fileId: "f-1",
     actor: "someone@example.com",
     occurrences: 1,

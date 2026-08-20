@@ -23,6 +23,7 @@ const FULL_CAPS: UsersCapabilities = {
   seats: false,
   manageGrants: true,
   removeScope: "org",
+  listingRequiresAdmin: true,
 };
 
 /** SaaS team-leader: invite / rename / remove-member only, no org group. */
@@ -44,6 +45,7 @@ const SAAS_CAPS: UsersCapabilities = {
   seats: true,
   manageGrants: false,
   removeScope: "team",
+  listingRequiresAdmin: false,
 };
 
 /** A full org: one org owner and two teams, each with a leader. */
@@ -92,7 +94,7 @@ const MEMBERS: Member[] = [
     name: "Priya Patel",
     email: "priya@stirlingpdf.com",
     role: "member",
-    status: "active",
+    status: "suspended",
     lastActive: "Never",
     username: "priya",
     teamId: 2,
@@ -124,6 +126,7 @@ const MEMBERS: Member[] = [
     teamName: "Compliance",
     portalAccess: "granted",
     portalGrantId: 11,
+    locked: true,
   },
 ];
 

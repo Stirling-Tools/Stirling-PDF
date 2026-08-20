@@ -47,6 +47,12 @@ const REGISTRY: Partial<Record<ToolId, ToolRegistryEntry>> = {
   ocr: entry("OCR"),
   addPassword: entry("Add Password"),
   merge: entry("Merge"),
+  // Workbench-only: no component, but still openable.
+  multiTool: {
+    name: "Multi Tool",
+    icon: null,
+    component: null,
+  } as ToolRegistryEntry,
   // No component and no link - nothing to open.
   automate: {
     name: "Automate",
@@ -99,12 +105,21 @@ describe("useSuggestedTools", () => {
     ]);
   });
 
-  it("skips tools that are unknown or cannot open", () => {
+  it("skips tools that are unknown or still coming soon", () => {
     expect(setup(["automate", "nonsense" as ToolId, "merge"])).toEqual([
       "merge",
       "compress",
       "convert",
       "sanitize",
+    ]);
+  });
+
+  it("keeps workbench-only tools, which have no component by design", () => {
+    expect(setup(["multiTool", "merge"])).toEqual([
+      "multiTool",
+      "merge",
+      "compress",
+      "convert",
     ]);
   });
 

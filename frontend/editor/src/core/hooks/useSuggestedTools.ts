@@ -3,6 +3,7 @@ import { useNavigationState } from "@app/contexts/NavigationContext";
 import { useToolNavigation } from "@app/hooks/useToolNavigation";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
+import { isComingSoonTool } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 
 export interface SuggestedTool {
@@ -50,7 +51,7 @@ export function useSuggestedTools(): SuggestedTool[] {
       if (id === selectedTool || seen.has(id)) continue;
       const tool = getSelectedTool(id);
       // A card that cannot open anything is worse than a shorter list.
-      if (!tool || (tool.component === null && !tool.link)) continue;
+      if (!tool || isComingSoonTool(id, tool)) continue;
 
       seen.add(id);
       suggestions.push({
