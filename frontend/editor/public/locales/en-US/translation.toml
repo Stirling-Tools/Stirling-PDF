@@ -8722,11 +8722,11 @@ placeholder = "Login home or share root"
 
 [portal.sources.networkFields.mode]
 helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
-label = "Read mode"
+label = "After processing"
 
 [portal.sources.networkFields.mode.options]
-consume = "Consume: process each file once"
-snapshot = "Snapshot: re-read the folder every run"
+consume = "Delete the file"
+snapshot = "Leave it in place"
 
 [portal.sources.networkFields.recursive]
 helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
@@ -8779,16 +8779,16 @@ helperText = "Using the file contents for change detection is slower but more ac
 label = "Change detection"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "Size, date and content check"
-stat = "Size and date modified"
+hash = "File Metadata & Content"
+stat = "File Metadata"
 
 [portal.sources.types.folder.fields.mode]
 helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
-label = "Read mode"
+label = "After processing"
 
 [portal.sources.types.folder.fields.mode.options]
-consume = "Consume: process each file once"
-snapshot = "Snapshot: re-read the folder every run"
+consume = "Delete the file"
+snapshot = "Leave it in place"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
@@ -8824,11 +8824,11 @@ label = "Connection"
 
 [portal.sources.types.s3.fields.mode]
 helperText = "Whether to leave the original object in place after it has been processed. If the original object is left in place, it will be re-processed next time the pipeline scans the source."
-label = "Read mode"
+label = "After processing"
 
 [portal.sources.types.s3.fields.mode.options]
-consume = "Consume: process each object once"
-snapshot = "Snapshot: re-read the bucket every run"
+consume = "Delete the object"
+snapshot = "Leave it in place"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "The folder (key prefix) within the bucket to watch."
