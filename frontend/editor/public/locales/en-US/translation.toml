@@ -1879,6 +1879,9 @@ width = "Width"
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Convert to PDF/A-3b"
 convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
@@ -3010,6 +3013,7 @@ saturation = "Saturation and brightness"
 title = "Choose color"
 
 [common]
+actions = "Actions"
 back = "Back"
 cancel = "Cancel"
 close = "Close"
@@ -3025,6 +3029,7 @@ error = "Error"
 expand = "Expand"
 loading = "Loading..."
 next = "Next"
+open = "Open"
 preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
@@ -4825,9 +4830,6 @@ title = "Image to PDF"
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo"
 
-[infoBanner]
-dismiss = "Dismiss"
-
 [invite]
 acceptError = "Failed to create account"
 accountFor = "Creating account for"
@@ -5054,6 +5056,14 @@ title = "Upload from Mobile"
 [multiTool]
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side,interactive,intractable,move,delete,migrate,divide"
 title = "PDF Multi Tool"
+
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
@@ -5619,8 +5629,8 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
-barAria = "Free PDFs used"
-capSuffix = "/ {{limit}} free PDFs"
+barAria = "Free PDFs remaining"
+capSuffix = "of {{limit}} free PDFs left"
 metaCategories = "Automation · AI · API requests"
 
 [payg.free.member]
@@ -6542,7 +6552,6 @@ revoked = "Revoked"
 unnamed = "Unnamed instance"
 
 [portal.accountLink.instances.columns]
-actions = "Actions"
 instance = "Instance"
 lastSeen = "Last seen"
 linked = "Linked"
@@ -6887,12 +6896,12 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
-barAria = "Free PDFs used"
-capSuffix_one = "of {{allowance}} free PDFs used"
-capSuffix_other = "of {{allowance}} free PDFs used"
+barAria = "Free PDFs remaining"
+capSuffix_one = "of {{allowance}} free PDF left"
+capSuffix_other = "of {{allowance}} free PDFs left"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} left"
-statusLabel_other = "{{remaining}} left"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
 title_one = "Process {{allowance}} PDFs free"
 title_other = "Process {{allowance}} PDFs free"
@@ -7465,12 +7474,11 @@ editorAction = "Editor"
 empty = "No documents match this filter."
 rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
-sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
-actions = "Actions"
 document = "Document"
+labels = "Labels"
 product = "Product"
 status = "Status"
 time = "Time"
@@ -7486,6 +7494,7 @@ host = "Host"
 lastSeen = "Last seen"
 region = "Region"
 status = "Status"
+target = "Target"
 version = "Version"
 
 [portal.editorAdmin.health.empty]
@@ -7573,6 +7582,14 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7805,11 +7822,9 @@ security = "Security"
 storage = "Storage"
 
 [portal.integrations]
-addAnother = "Add another"
 availableHeading = "Available"
 comingSoonHeading = "Coming soon"
 connect = "Connect"
-connectedHeading = "Connected"
 connectionCount_one = "{{count}} connection"
 connectionCount_other = "{{count}} connections"
 customApi = "Custom API"
@@ -7826,6 +7841,10 @@ notify = "Notify"
 security = "Security"
 signing = "Signing"
 storage = "Storage"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Connected"
@@ -7857,7 +7876,6 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
-settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
@@ -7890,7 +7908,6 @@ moreActions = "More actions"
 needsConfiguring = "Needs setting up"
 needsDestination = "No destination chosen"
 needsSource = "No source chosen"
-needsUpload = "Needs an uploaded file"
 noToolMatches = "No tools match your search."
 pause = "Pause"
 rename = "Rename pipeline"
@@ -7898,11 +7915,11 @@ searchTools = "Search tools"
 sendToSystem = "Send to another system"
 stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
 stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
+supportingFiles = "Supporting files"
 testRun = "Test with a file"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
 unsavedTitle = "Unsaved changes"
-uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
@@ -7915,7 +7932,6 @@ saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
-upload = "Remove steps that need an uploaded file: {{tools}}"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Combines every incoming file"
@@ -8029,10 +8045,10 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
-open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Folder watch"
@@ -8925,9 +8941,9 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
-open = "Open"
 source = "Source"
 status = "Status"
+type = "Type"
 usedBy = "Policies"
 
 [portal.sources.types.box]
@@ -11151,6 +11167,13 @@ approver = "Approves policy"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
 cancelInviteTitle = "Cancel invitation"
@@ -11170,10 +11193,8 @@ title = "No members yet"
 addToTeam = "Add to team"
 guestCount = "{{count}} guest"
 guests = "Guests"
-guestsDesc = "External collaborators, scoped to what you shared. Editor only."
 ledBy = "led by {{owner}}"
 org = "Organization"
-orgDesc = "Owners with org-wide authority and policy approval"
 owners = "{{count}} owner"
 team = "{{name}} team"
 teamMeta = "{{count}} people"
@@ -11213,12 +11234,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Invited by {{who}}"
 cancel = "Cancel"
-count = "{{count}} pending"
-desc = "Invited people who haven't joined yet. They hold a seat until they accept."
 expiresInDays_one = "Expires in {{count}} day"
 expiresInDays_other = "Expires in {{count}} days"
 expiresToday = "Expires today"
 title = "Pending invitations"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@core/constants/routes";
 import { useCheckout } from "@app/contexts/CheckoutContext";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
@@ -300,7 +300,7 @@ const UpgradeBanner: React.FC = () => {
         );
 
     return (
-      <InfoBanner
+      <AppBanner
         icon="warning-rounded"
         tone="warning"
         title={t(
@@ -312,13 +312,6 @@ const UpgradeBanner: React.FC = () => {
         buttonIcon="info-rounded"
         onButtonClick={buttonText ? handleSeeInfo : undefined}
         dismissible={false}
-        minHeight={60}
-        background="#FFF4E6"
-        borderColor="var(--mantine-color-orange-7)"
-        textColor="#9A3412"
-        iconColor="#EA580C"
-        buttonVariant="filled"
-        buttonColor="orange.7"
       />
     );
   };
@@ -341,7 +334,7 @@ const UpgradeBanner: React.FC = () => {
   return (
     <>
       {friendlyVisible && (
-        <InfoBanner
+        <AppBanner
           icon="stars-rounded"
           title={t("upgradeBanner.title", "Upgrade to Server Plan")}
           message={t(
@@ -353,14 +346,7 @@ const UpgradeBanner: React.FC = () => {
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}
           show={friendlyVisible}
-          background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-          borderColor="transparent"
-          textColor="#fff"
-          iconColor="#fff"
-          closeIconColor="#fff"
-          buttonVariant="filled"
-          buttonColor="blue"
-          minHeight={48}
+          tone="promo"
           compact
         />
       )}
