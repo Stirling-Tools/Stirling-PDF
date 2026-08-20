@@ -56,10 +56,17 @@
 
 .sui-modal__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.125rem 0.75rem;
   border-bottom: 1px solid var(--c-border-subtle);
+}
+
+/* A lone title centres against the back/close controls. With a subtitle the
+   header text is two lines, so top-align it and let the controls sit on the
+   title line rather than the middle of the taller block. */
+.sui-modal__header:has(.sui-modal__sub) {
+  align-items: flex-start;
 }
 
 .sui-modal__header-text {
@@ -79,9 +86,10 @@
   color: var(--c-text-subtle);
 }
 
-/* Sizing/background/hover are owned by the Button; this just keeps it from
- * stretching. */
-.sui-modal__close {
+/* Sizing/background/hover are owned by the Button; this just keeps them from
+ * stretching. The back arrow leads the header; the close button trails it. */
+.sui-modal__close,
+.sui-modal__back {
   flex: 0 0 auto;
 }
 

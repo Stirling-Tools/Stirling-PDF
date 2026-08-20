@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import {
   Banner,
   Button,
@@ -8,6 +7,7 @@ import {
   FormField,
   Input,
   Modal,
+  type ModalWidth,
   Select,
   Spinner,
 } from "@app/ui";
@@ -72,6 +72,13 @@ function optionsFor(
 }
 
 type Stage = "type" | "configure" | "reveal" | "delete" | "connection";
+
+/** The picker grid wants room; a delete confirm wants little; forms sit between. */
+function stageWidth(stage: Stage): ModalWidth {
+  if (stage === "type") return "lg";
+  if (stage === "delete") return "sm";
+  return "md";
+}
 
 /** The S3 catalogue entry, for creating a connection in-place (no stacked modal). */
 const S3_CONNECTION_TYPE = CREATABLE_CONNECTION_TYPES.find(
@@ -288,29 +295,61 @@ export function SourceModal({
     void navigator.clipboard?.writeText(text);
   }
 
-  const title =
-    stage === "type"
-      ? t("portal.sources.builder.createTitle")
-      : stage === "connection"
-        ? t("portal.connections.createTitleFor", {
-            name: t(connType.labelKey),
-          })
-        : stage === "reveal"
-          ? t("portal.sources.types.webhook.reveal.title")
-          : stage === "delete"
-            ? t("portal.sources.delete.title")
-            : isEdit
-              ? name || t("portal.sources.builder.editTitle")
-              : t("portal.sources.builder.createTitle");
+  // Once a type is chosen the header carries its identity (icon + name), so the
+  // configure body is just the form - no title/summary block in it.
+  const showTypeHeader = stage === "configure" && !loading;
 
-  return (
-    <Modal
-      open={open}
-      onClose={stage === "reveal" ? finish : onClose}
-      width={stage === "type" ? "lg" : stage === "delete" ? "sm" : "md"}
-      title={title}
-      footer={
-        stage === "configure" ? (
+  function renderTitle(): ReactNode {
+    if (showTypeHeader) {
+      return (
+        <span className="portal-source-modal__title">
+          <BrandMark id={type.type} size={18} />
+          {t(type.labelKey)}
+        </span>
+      );
+    }
+    switch (stage) {
+      case "connection":
+        return t("portal.connections.createTitleFor", {
+          name: t(connType.labelKey),
+        });
+      case "reveal":
+        return t("portal.sources.types.webhook.reveal.title");
+      case "delete":
+        return t("portal.sources.delete.title");
+      default:
+        // The picker, or an edit whose record is still loading.
+        return t(
+          isEdit
+            ? "portal.sources.builder.editTitle"
+            : "portal.sources.builder.createTitle",
+        );
+    }
+  }
+
+  // The header back arrow only has somewhere to step to from the two staged
+  // steps: the connection sub-form returns to the source form, and a fresh
+  // source's form returns to the type picker.
+  function stageBack(): { onBack?: () => void; backLabel: string } {
+    if (stage === "connection") {
+      return {
+        onBack: () => setStage("configure"),
+        backLabel: t("portal.sources.builder.backToSource"),
+      };
+    }
+    if (stage === "configure" && !isEdit) {
+      return {
+        onBack: () => setStage("type"),
+        backLabel: t("portal.sources.builder.backToTypes"),
+      };
+    }
+    return { backLabel: t("portal.sources.builder.backToTypes") };
+  }
+
+  function renderFooter(): ReactNode {
+    switch (stage) {
+      case "configure":
+        return (
           <div className="portal-source-modal__footer">
             <Checkbox
               checked={enabled}
@@ -349,16 +388,10 @@ export function SourceModal({
               </Button>
             </span>
           </div>
-        ) : stage === "connection" ? (
+        );
+      case "connection":
+        return (
           <div className="portal-source-modal__footer-actions">
-            <Button
-              variant="tertiary"
-              size="sm"
-              disabled={connSaving}
-              onClick={() => setStage("configure")}
-            >
-              {t("portal.connections.picker.cancel")}
-            </Button>
             <Button
               size="sm"
               loading={connSaving}
@@ -368,13 +401,17 @@ export function SourceModal({
               {t("portal.connections.picker.save")}
             </Button>
           </div>
-        ) : stage === "reveal" ? (
+        );
+      case "reveal":
+        return (
           <div className="portal-source-modal__footer-actions">
             <Button size="sm" onClick={finish}>
               {t("portal.sources.types.webhook.reveal.done")}
             </Button>
           </div>
-        ) : stage === "delete" ? (
+        );
+      case "delete":
+        return (
           <div className="portal-source-modal__footer-actions">
             <Button
               variant="tertiary"
@@ -393,8 +430,23 @@ export function SourceModal({
               {t("portal.sources.delete.confirm")}
             </Button>
           </div>
-        ) : undefined
-      }
+        );
+      default:
+        return undefined; // "type" - the picker commits on click, so no footer.
+    }
+  }
+
+  const back = stageBack();
+
+  return (
+    <Modal
+      open={open}
+      onClose={stage === "reveal" ? finish : onClose}
+      width={stageWidth(stage)}
+      title={renderTitle()}
+      onBack={back.onBack}
+      backLabel={back.backLabel}
+      footer={renderFooter()}
     >
       {stage === "type" && (
         <div className="portal-source-modal__catalog">
@@ -470,30 +522,6 @@ export function SourceModal({
 
           {!loading && (
             <>
-              {!isEdit && (
-                <Button
-                  variant="quiet"
-                  size="sm"
-                  className="portal-source-modal__back"
-                  leftSection={<ArrowBackRoundedIcon fontSize="inherit" />}
-                  onClick={() => setStage("type")}
-                >
-                  {t("portal.sources.builder.backToTypes")}
-                </Button>
-              )}
-
-              <div className="portal-source-modal__type-summary">
-                <BrandMark id={type.type} size={22} />
-                <span className="portal-source-modal__card-text">
-                  <span className="portal-source-modal__card-name">
-                    {t(type.labelKey)}
-                  </span>
-                  <span className="portal-source-modal__card-desc">
-                    {t(type.descriptionKey)}
-                  </span>
-                </span>
-              </div>
-
               <FormField
                 label={t("portal.integrations.typedName", {
                   tool: t(type.labelKey),

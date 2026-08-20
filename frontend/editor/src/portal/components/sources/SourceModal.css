@@ -113,18 +113,11 @@ button.portal-source-modal__card:focus-visible {
   padding: 2rem 0;
 }
 
-.portal-source-modal__back {
-  align-self: flex-start;
-}
-
-.portal-source-modal__type-summary {
-  display: flex;
+/* Type identity in the modal header: brand icon beside the connector name. */
+.portal-source-modal__title {
+  display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
-  background: var(--c-surface-sunken);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md);
+  gap: 0.5rem;
 }
 
 .portal-source-modal__muted {

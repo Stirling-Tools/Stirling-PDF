@@ -8681,6 +8681,7 @@ connectSource = "Connect source"
 
 [portal.sources.builder]
 back = "Back to sources"
+backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
