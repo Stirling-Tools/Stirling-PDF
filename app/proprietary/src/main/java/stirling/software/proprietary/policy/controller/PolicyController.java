@@ -680,13 +680,9 @@ public class PolicyController {
     }
 
     /**
-     * The document reference to record against a failure of this run: the caller's own opaque id,
-     * but only when the run carries exactly one primary document. A recorded incident has a single
-     * file reference, so naming one document out of several would attribute the failure to
-     * whichever happened to be bound first, which is worse than naming none.
-     *
-     * <p>Counted off the resolved inputs rather than the raw multipart list, so an empty part
-     * cannot make a single-document run look like two.
+     * Only for a single-document run: an incident holds one file reference, so naming one of
+     * several would attribute the failure to whichever bound first. Counted off resolved inputs,
+     * not parts.
      */
     private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
         String fileId = files.getFileId();

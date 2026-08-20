@@ -11,14 +11,8 @@ import stirling.software.proprietary.failure.FileRunEventService;
 import stirling.software.proprietary.failure.FileRunEventView;
 
 /**
- * Assembles the caller's notifications from whatever produces them, and routes a client's report of
- * its own fix back to whichever source produced the row. Derived on read rather than stored: there
- * is one source today, and a table would need a write path, a retention story and a per-user read
- * model before it earned itself.
- *
- * <p>Who sees what is decided by each source rather than here. {@link FileRunEventService} already
- * scopes its reads and resolves each row's actions against that reader, so this cannot widen either
- * by accident.
+ * Derived on read rather than stored: one source today, and a table would need a write path,
+ * retention and a per-user read model first. Each source scopes its own rows, so this cannot widen.
  */
 @Service
 @RequiredArgsConstructor
@@ -26,10 +20,7 @@ public class NotificationService {
 
     private final FileRunEventService fileRunEvents;
 
-    /**
-     * The caller's notifications, newest first. Only open failures: a dismissed or resolved one has
-     * been dealt with and is not news.
-     */
+    /** Newest first, and only open failures: one already dealt with is not news. */
     public List<NotificationView> list(int limit) {
         return fileRunEvents.list(null, null, limit).stream().map(this::fromFailure).toList();
     }
@@ -43,10 +34,8 @@ public class NotificationService {
     }
 
     /**
-     * Record that the client's own retry of this notification worked, and return it as it now
-     * stands. Takes the prefixed id even though nobody pressed a button: it is still a call made
-     * from the bell, and the bell holds no raw failure id, so it cannot reach a failure endpoint
-     * even by accident.
+     * Record that the client's own retry of this notification worked. Takes the prefixed id, so the
+     * bell cannot reach a failure endpoint even by accident.
      *
      * @throws IllegalArgumentException if the id names no source this build has
      * @throws stirling.software.proprietary.failure.FailureActionException if the source refuses,
@@ -68,9 +57,7 @@ public class NotificationService {
                                         "Not a notification id: " + notificationId));
     }
 
-    /**
-     * One failure as a notification, with its row id prefixed on the way out and never sent bare.
-     */
+    /** Prefixes the row id on the way out, so it is never sent bare. */
     private NotificationView fromFailure(FileRunEvent event) {
         return new NotificationView(
                 NotificationSource.FAILURE.qualify(event.id()),
@@ -89,7 +76,6 @@ public class NotificationService {
                 event.occurrences(),
                 event.createdAt(),
                 event.lastSeenAt(),
-                // The failure surface's own offers, filtered to the ones the client itself runs.
                 // A disposition such as Dismiss belongs to the review surface, not the bell.
                 fileRunEvents.availableActions(event).stream()
                         .filter(action -> !action.id().runsOnServer())

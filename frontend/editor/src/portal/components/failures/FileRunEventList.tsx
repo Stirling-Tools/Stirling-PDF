@@ -35,10 +35,8 @@ export function FileRunEventList() {
   const section = useRef<HTMLElement>(null);
   const { hash, key } = useLocation();
 
-  // Arriving from a notification, which links to this section by fragment. The browser only
-  // honours a fragment on a real page load, and this is a client-side route change, so scroll
-  // it into view here. Keyed on the navigation as well as the fragment: clicking a second
-  // notification while already parked here changes neither the path nor the hash.
+  // A fragment is only honoured on a real page load, not a client-side route change. Keyed on the
+  // navigation too: a second notification changes neither the path nor the hash.
   useEffect(() => {
     if (hash !== `#${PORTAL_FAILURES_ANCHOR}`) return;
     section.current?.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -23,9 +23,8 @@ import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 
 /**
- * What the bell is given to render. Lives beside the failure tests because the invariants are
- * failure invariants: the bell is never handed a raw event id, and it is offered only the actions
- * the client itself runs, resolved for this reader by the same service that scopes the queue.
+ * What the bell is given to render: never a raw event id, and only the actions the client itself
+ * runs, resolved for this reader by the same service that scopes the queue.
  */
 @ExtendWith(MockitoExtension.class)
 class NotificationProjectionTest {
@@ -96,12 +95,10 @@ class NotificationProjectionTest {
             assertThat(notification.status()).isEqualTo(FileRunEventStatus.NEW);
             assertThat(notification.fileId()).isEqualTo("f-1");
             assertThat(notification.policyId()).isNull();
-            // No source fed it, which is how the client knows the fileId above is one of its own
-            // references and worth looking up locally.
+            // How the client knows the fileId above is one of its own and worth looking up.
             assertThat(notification.sourceId()).isNull();
             assertThat(notification.defaultTitle()).isNotBlank();
-            // The failure queue's own resolved offers, minus the ones the server runs: a bell
-            // offering different client actions from the queue would be a bell that lies.
+            // The queue's own offers minus the server's: a bell offering different ones would lie.
             assertThat(notification.actions())
                     .containsExactlyElementsOf(
                             FileRunEventView.of(mine, failures.availableActions(mine))
@@ -116,8 +113,7 @@ class NotificationProjectionTest {
 
         @Test
         void offersNoActionTheServerRunsBecauseDispositionsBelongToTheQueue() {
-            // The bell routes the user to the right surface; deciding a failure's fate (dismissing
-            // it) happens on the review surface, so no disposition button reaches the panel.
+            // Deciding a failure's fate belongs to the review surface, not the panel.
             given(FailureKind.INPUT_PASSWORD_PROTECTED, ACTOR, "f-1");
 
             assertThat(controller.list(null).notifications().getFirst().actions())
@@ -127,8 +123,8 @@ class NotificationProjectionTest {
 
         @Test
         void namesTheSourceThatFedAnUnattendedRunSoItsFileIdIsNotMistakenForAClientsOwn() {
-            // Only a source-fed run's fileId is a hash, so the source is the discriminator: without
-            // it a client would look up a hash it can never resolve and call the document missing.
+            // Without the source a client looks up a hash it can never resolve and calls it
+            // missing.
             store.record(
                     RecordFailure.forRun(
                             FailureKind.INPUT_PASSWORD_PROTECTED,
@@ -148,8 +144,7 @@ class NotificationProjectionTest {
 
         @Test
         void aColleaguesNotificationOffersTheReviewersActionsOnly() {
-            // The bell shows a leader their team's failures, so the audience filtering has to reach
-            // it: no offering someone a document they do not have.
+            // A leader sees the team's failures, so audience filtering has to reach the bell too.
             given(FailureKind.INPUT_PASSWORD_PROTECTED, "colleague@example.com", "f-1");
 
             assertThat(controller.list(null).notifications().getFirst().actions())

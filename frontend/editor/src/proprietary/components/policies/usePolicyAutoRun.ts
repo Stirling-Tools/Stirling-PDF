@@ -251,8 +251,7 @@ export function usePolicyAutoRun(): void {
           dispatchKey(finished.categoryId, finished.fileId),
         );
       }
-      // A run that failed has just recorded an incident against the person watching it, so read the
-      // list rather than leaving them to wait out a poll interval for news of their own upload.
+      // Read now rather than leaving them a poll interval to hear about their own upload.
       if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
@@ -933,9 +932,8 @@ async function runPolicyOnFile(
   await acquireDispatchSlot(priority);
   try {
     const target = resolvePolicyRunTarget();
-    // Hand the workspace id over with the run, so a failure of it is recorded against a document this
-    // browser can resolve and the notification can offer to open or unlock it. One file per run here,
-    // which is the only shape the server records a reference for.
+    // Recorded against a document this browser can resolve. One file per run, which is the only
+    // shape the server keeps a reference for.
     const runId = await runStoredPolicy(backendId, [file], fileId);
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({

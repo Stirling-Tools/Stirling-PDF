@@ -6,10 +6,8 @@ import type {
 } from "@app/services/notifications";
 
 /**
- * The bell is mounted several times over (floated over an empty workbench, inside the workbench bar,
- * again in the portal shell) and all of them show the same thing, so what is pinned here is that
- * they share one read of it: one poll, one set of document lookups, one read marker, and no timer
- * left running once the last of them has gone.
+ * The bell is mounted several times over, so what is pinned here is that they share one read: one
+ * poll, one set of lookups, one marker, and no timer left running once the last has gone.
  */
 
 const fetchNotifications = vi.fn();
@@ -18,8 +16,7 @@ vi.mock("@app/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
 }));
 
-// The document lookups read IndexedDB, which jsdom has none of. Counted here so that "resolved once
-// per list, not once per row" is observable.
+// Counted here so "resolved once per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
 const loadRetryPayload = vi.fn((_fileId: string) => Promise.resolve(null));
 
@@ -215,8 +212,7 @@ describe("useNotifications", () => {
     await waitFor(() => expect(first.result.current.unreadCount).toBe(2));
     expect(second.result.current.unreadCount).toBe(2);
 
-    // Async, because the store tells its subscribers on a microtask: a bell marks the list read
-    // from inside its own state updater, so it cannot re-render its neighbours from there.
+    // Async because subscribers are told on a microtask: a bell marks the list read while rendering.
     await act(async () => first.result.current.markAllSeen());
 
     expect(first.result.current.unreadCount).toBe(0);

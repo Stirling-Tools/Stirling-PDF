@@ -28,14 +28,8 @@ import lombok.Getter;
  * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
- * <p>Actions are declared here but run elsewhere: a server action in a {@link FailureAction} bean
- * resolved by id, a client action in the browser that holds the document. Either way a new kind
- * ships as a registry entry plus copy. Two members today: {@link #UNKNOWN} gives every failed run a
- * record, and kinds get promoted out of it as production shows what occurs.
- *
- * <p>Each offer also says who it is for and where the kind wants it, because the same incident is
- * read by the person who hit it and by whoever reviews after them: only the owner can supply a
- * password, only a reviewer wants the run.
+ * <p>A new kind ships as a registry entry plus copy. Each offer says who it is for and where the
+ * kind wants it, since one incident is read both by whoever hit it and by whoever reviews after.
  */
 @Getter
 public enum FailureKind {
@@ -114,9 +108,8 @@ public enum FailureKind {
     }
 
     /**
-     * One action this kind offers: who it is for, where it wants to sit, and the key to label it
-     * by. One ordered list rather than ids plus parallel maps of audiences, slots and label
-     * overrides, which could disagree with each other.
+     * One ordered list rather than ids plus parallel maps of audiences, slots and labels, which
+     * could disagree with each other.
      *
      * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
      *     label

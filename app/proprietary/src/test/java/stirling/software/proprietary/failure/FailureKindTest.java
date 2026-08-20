@@ -35,10 +35,7 @@ import stirling.software.common.util.ExceptionUtils;
  */
 class FailureKindTest {
 
-    /**
-     * One expected offer in full, rather than four separate extracting() assertions, so a
-     * declaration that pairs the right action with the wrong audience cannot pass.
-     */
+    /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
     private static FailureKind.OfferedAction offered(
             FailureActionId id,
             FailureAudience audience,
@@ -123,8 +120,8 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void offersEachActionAtMostOnce(FailureKind kind) {
-            // Declaration order is the client's tie-break, so the same action twice would be two
-            // buttons with one meaning, and labelKeyFor would silently answer for the first.
+            // The same action twice would be two buttons with one meaning, and labelKeyFor would
+            // answer for the first.
             assertThat(kind.getActions()).doesNotHaveDuplicates();
         }
 
@@ -320,8 +317,8 @@ class FailureKindTest {
 
         @Test
         void noKindOffersAcknowledgeAnyMore() {
-            // Kept in the vocabulary because rows are already ACKNOWLEDGED, and those must stay
-            // readable. Nothing offers it, so nothing can dispatch it either.
+            // Kept in the vocabulary for rows already ACKNOWLEDGED; offered by nothing, so
+            // dispatchable by nothing.
             for (FailureKind kind : FailureKind.values()) {
                 assertThat(kind.declares(FailureActionId.ACKNOWLEDGE))
                         .as("%s offers ACKNOWLEDGE", kind.getId())
@@ -331,8 +328,7 @@ class FailureKindTest {
 
         @Test
         void everyKindLabelsItsActionsWithTheSharedWordingToday() {
-            // The per-kind override still exists for wording that reads badly in context; nothing
-            // needs it now that Dismiss sits in an overflow menu, where the shared word is right.
+            // The per-kind override still exists for wording that reads badly in context.
             for (FailureKind kind : FailureKind.values()) {
                 for (FailureActionId action : kind.getActions()) {
                     assertThat(kind.labelKeyFor(action))

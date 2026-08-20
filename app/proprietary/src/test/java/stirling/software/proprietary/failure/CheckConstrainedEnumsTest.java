@@ -9,11 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Pins the five enums that {@code file_run_events} stores as strings behind CHECK constraints. The
- * shipped migration spells out the permitted values, so adding one to {@code status}, {@code
- * origin}, {@code stage}, {@code severity} or {@code scope} is a schema change dressed up as a Java
- * change: it compiles, then fails against a real database on the row that most needed recording.
- * Reordering is free, since values are persisted by name.
+ * Pins the five enums {@code file_run_events} stores behind CHECK constraints: adding a value is a
+ * schema change dressed as a Java one, compiling here and failing against a real database.
  */
 class CheckConstrainedEnumsTest {
 
@@ -36,8 +33,7 @@ class CheckConstrainedEnumsTest {
     @Test
     @DisplayName("the facets added since are derived, not stored")
     void nothingAddedToTheModelReachedTheTable() throws Exception {
-        // Audience, slot, execution and ownership are resolved per reader, so a column for any of
-        // them would hold the wrong answer for everybody but one person.
+        // Resolved per reader, so a column would hold the wrong answer for all but one person.
         List<Class<?>> persisted =
                 Arrays.stream(FileRunEventEntity.class.getDeclaredFields())
                         .filter(field -> !field.isSynthetic())
@@ -51,8 +47,7 @@ class CheckConstrainedEnumsTest {
                         FailureActionId.class,
                         FailureActionId.Execution.class,
                         Ownership.class);
-        // kind_id stays a plain varchar with no CHECK, which is what lets a new kind ship without a
-        // migration while the five columns above cannot.
+        // A plain varchar with no CHECK, which is what lets a new kind ship without a migration.
         assertThat(FileRunEventEntity.class.getDeclaredField("kindId").getType())
                 .isEqualTo(String.class);
     }

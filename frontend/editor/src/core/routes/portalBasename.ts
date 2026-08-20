@@ -7,9 +7,7 @@
 export const PORTAL_BASENAME = "/processor";
 
 /**
- * Fragment identifying the recorded-failures section of the portal's Documents
- * view. Here for the same reason as the basename: whoever links to that section
- * and whoever renders it are in different layers, and neither should have to
- * import the other to agree on the anchor.
+ * The recorded-failures section of the portal's Documents view. Here because whoever links to it and
+ * whoever renders it are in different layers.
  */
 export const PORTAL_FAILURES_ANCHOR = "failures";

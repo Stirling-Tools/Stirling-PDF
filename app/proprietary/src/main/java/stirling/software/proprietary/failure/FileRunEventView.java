@@ -61,10 +61,8 @@ public record FileRunEventView(
     }
 
     /**
-     * One button, as offered to this caller about this row. {@code defaultLabel} and {@code
-     * execution} are here for the reason {@code defaultTitle} is on the row: a client can then
-     * render, and route, an action it was never built with. {@code slot} is placement intent; see
-     * {@link FailureActionSlot}.
+     * {@code defaultLabel} and {@code execution} let a client render and route an action it was
+     * never built with. {@code slot} is placement intent; see {@link FailureActionSlot}.
      */
     public record ActionView(
             String id,
@@ -75,7 +73,6 @@ public record FileRunEventView(
             boolean enabled,
             String disabledReasonKey) {
 
-        /** Public because the notification bell projects the same resolved offers. */
         public static ActionView of(FileRunEventService.AvailableAction action) {
             return new ActionView(
                     action.id().name(),

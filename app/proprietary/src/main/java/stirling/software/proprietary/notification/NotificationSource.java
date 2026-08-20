@@ -5,26 +5,18 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Which subsystem produced a notification. One member today; the point of the field is that a
- * client already branches on it, so a second source needs no client change to be ignorable.
- *
- * <p>Also the routing table for a notification id: every id is prefixed with its source, so an id
- * handed back to a notification endpoint says which subsystem to ask, and a client never holds the
- * producing row's own id.
+ * Which subsystem produced a notification. Every id is prefixed with it, so a client never holds
+ * the producing row's own id and cannot reach that source's endpoints by accident.
  */
 public enum NotificationSource {
-
-    /** A recorded run failure: see {@code stirling.software.proprietary.failure}. */
     FAILURE;
 
     private static final char SEPARATOR = ':';
 
-    /** The prefix an id from this source carries, including the separator. */
     public String prefix() {
         return name().toLowerCase(Locale.ROOT) + SEPARATOR;
     }
 
-    /** One of this source's own row ids, as the client sees it. */
     public String qualify(String sourceRowId) {
         return prefix() + sourceRowId;
     }

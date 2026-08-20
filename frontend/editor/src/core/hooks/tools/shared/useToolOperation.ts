@@ -611,8 +611,7 @@ export const useToolOperation = <TParams>(
 
         // Report it so a leader sees the failure too, then carry on with the user's
         // own error handling. Fire-and-forget: the reporter swallows its own errors.
-        // Chained rather than fired alongside: the re-read has to happen after the row exists, or
-        // it finds the list exactly as it was.
+        // Chained, not fired alongside: the re-read must happen after the row exists.
         void reportToolFailure({
           operation: config.operationType,
           error,

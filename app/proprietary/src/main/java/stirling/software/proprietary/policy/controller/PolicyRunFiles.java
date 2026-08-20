@@ -31,14 +31,8 @@ public class PolicyRunFiles {
     private List<NamedAsset> assets = new ArrayList<>();
 
     /**
-     * The caller's own opaque reference to the document it is running on, recorded against any
-     * failure of this run so the client that filed it can resolve the row back to that document.
-     * Without it an attended failure names no document, and every action that needs the bytes is
-     * unreachable for the one person holding them.
-     *
-     * <p>Opaque by contract and never a name: the server stores it, hands it back and reads nothing
-     * out of it. Only honoured for a single-document run, see {@code
-     * PolicyController#documentReferenceFor}.
+     * Recorded against any failure of this run, so the client can resolve the row back to its
+     * document. Opaque by contract, never a name, and only honoured for a single-document run.
      */
     @Schema(
             description =

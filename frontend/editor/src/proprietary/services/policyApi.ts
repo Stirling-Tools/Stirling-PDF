@@ -61,11 +61,8 @@ export async function reorderPolicies(orderedIds: string[]): Promise<void> {
 }
 
 /**
- * Run a stored policy by id on the supplied files; returns the run id.
- *
- * `fileId` is this workspace's own opaque id for the document being run. The server records it against
- * any failure of the run, which is the only way an attended failure can name a document this browser can
- * resolve. Only honoured for a single-document run, and never a filename.
+ * Run a stored policy by id; returns the run id. `fileId` is this workspace's own opaque id, recorded
+ * against any failure of the run. Only honoured for a single-document run, and never a filename.
  */
 export async function runStoredPolicy(
   id: string,

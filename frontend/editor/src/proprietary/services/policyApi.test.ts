@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * What the run request puts on the wire. Only the document reference is pinned, because it is the one
- * field with a rule attached: the server records it against any failure of the run, so a filename here
- * would put a document name into a table that deliberately has nowhere to keep one.
+ * Only the document reference is pinned, being the one field with a rule attached: a filename here
+ * would reach a table that deliberately has nowhere to keep one.
  */
 
 const post = vi.fn().mockResolvedValue({ data: { jobId: "run-1" } });

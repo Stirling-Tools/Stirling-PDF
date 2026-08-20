@@ -55,15 +55,9 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * What a reader is offered on a real recorded row, with every collaborator between the failing tool
- * call and the offered actions being the real one. That {@code actor} names whoever triggered the
- * run is settled upstream by {@code PolicyFailureAttributionTest}; what is pinned here is what the
- * reader's relationship to that actor then entitles them to.
- *
- * <p>Ownership is derived per reader rather than stored, so the same row answers differently to the
- * person holding the document and to whoever reviews after them. Both directions are asserted,
- * because an action offered to the wrong one is either a button that cannot work or a document
- * handed to someone who should not have it.
+ * What a reader is offered on a real recorded row, every collaborator being the real one. Both
+ * directions are asserted: offered to the wrong reader is either a dead button or a leaked
+ * document.
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyFailureOwnershipTest {
@@ -150,9 +144,7 @@ class PolicyFailureOwnershipTest {
                 TEAM);
     }
 
-    /**
-     * Run the shared policy so its single tool step fails, as {@code triggeredBy} (null = sweep).
-     */
+    /** Fails the policy's single tool step as {@code triggeredBy} (null = sweep). */
     private void runAndFail(String triggeredBy, String sourceId, String fileIdentity)
             throws Exception {
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
@@ -183,10 +175,8 @@ class PolicyFailureOwnershipTest {
     }
 
     /**
-     * Read the single recorded row as {@code reader}, who is a plain member of the team. Lenient
-     * because a leader's read scope and an UNOWNED ownership check both answer without asking who
-     * is reading, so whether the name is consulted is the behaviour under test rather than a
-     * mistake.
+     * Lenient because a leader's scope and an UNOWNED check both answer without asking who reads,
+     * so whether the name is consulted is the behaviour under test.
      */
     private FileRunEvent asMember(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
@@ -231,9 +221,7 @@ class PolicyFailureOwnershipTest {
         void thePolicyOwnerIsNotHandedADocumentSheNeverTouched() throws Exception {
             runAndFail("bob", null, "bob-doc-1");
 
-            // Alice owns the policy and pays for the run, but her browser has no copy of Bob's
-            // file. Offering her the document produced a button that vanished client-side with no
-            // explanation.
+            // She owns the policy and pays for the run, and still has no copy of Bob's file.
             FileRunEvent theirs = asReviewer("alice");
             assertThat(service.ownershipOf(theirs)).isEqualTo(Ownership.THEIRS);
             assertThat(offeredTo(theirs)).doesNotContain(FailureActionId.VIEW_FILE);
@@ -243,8 +231,7 @@ class PolicyFailureOwnershipTest {
         void theReviewerIsStillOfferedWhatReviewingNeeds() throws Exception {
             runAndFail("bob", null, "bob-doc-1");
 
-            // Not her document, but still her team's incident: she gets the run and a way to close
-            // the row.
+            // Not her document, still her team's incident.
             assertThat(offeredTo(asReviewer("alice")))
                     .contains(FailureActionId.VIEW_IN_PROCESSOR, FailureActionId.DISMISS);
         }
@@ -260,9 +247,7 @@ class PolicyFailureOwnershipTest {
 
             FileRunEvent unattended = asReviewer("alice");
             assertThat(service.ownershipOf(unattended)).isEqualTo(Ownership.UNOWNED);
-            // The inheritance and its copy are reachable for the exact scenario they exist for: no
-            // browser holds this document, so the offer is stated and disabled rather than silently
-            // dropped.
+            // No browser holds this document, so the offer is stated and disabled, not dropped.
             assertThat(offeredTo(unattended)).contains(FailureActionId.VIEW_FILE);
             assertThat(service.availableActions(unattended))
                     .filteredOn(action -> action.id() == FailureActionId.VIEW_FILE)
@@ -277,8 +262,8 @@ class PolicyFailureOwnershipTest {
 
         @Test
         void thePolicyOwnerDoesNotInheritItAsHerOwn() throws Exception {
-            // Alice is billed for the sweep, and that must not become ownership: she is offered the
-            // owner actions here only as the team's reviewer, and disabled, not as MINE.
+            // Being billed for the sweep must not become ownership: she gets these as reviewer
+            // only.
             runAndFail(null, "src-watched-folder", "file-hash-1");
 
             assertThat(service.ownershipOf(asReviewer("alice"))).isNotEqualTo(Ownership.MINE);

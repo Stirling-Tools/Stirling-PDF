@@ -20,13 +20,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.failure.FailureActionException;
 
 /**
- * The caller's notifications. Open to any authenticated user, unlike the failure endpoints it draws
- * on: each source scopes its own rows and resolves its own actions, so a member is told about their
- * own failures and a leader about their team's.
- *
- * <p>Every action a notification offers is one the client runs on its own device, so the only write
- * here is the client reporting that its own retry worked. Ids are prefixed with their source, so
- * the bell is never given the producing row's id; see {@link NotificationSource}.
+ * Open to any authenticated user, unlike the failure endpoints it draws on: each source scopes its
+ * own rows. Every action runs on the client's own device, so the only write is it reporting a fix.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -35,7 +30,6 @@ import stirling.software.proprietary.failure.FailureActionException;
 @Tag(name = "Notifications", description = "Things worth telling the caller about")
 public class NotificationController {
 
-    /** One page of a bell. Enough to fill a panel; the badge counts what it is given. */
     private static final int DEFAULT_LIMIT = 20;
 
     private static final int MAX_LIMIT = 100;
@@ -81,9 +75,8 @@ public class NotificationController {
     }
 
     /**
-     * Wrapped rather than a bare array so paging or a total can be added without breaking clients.
-     * {@code viewerReviewsTeam} lets the client filter a member's list; see {@link
-     * NotificationService#callerReviewsTeam()}.
+     * Wrapped so paging or a total can be added without breaking clients. {@code viewerReviewsTeam}
+     * is what lets the client filter a member's list.
      */
     public record NotificationsResponse(
             List<NotificationView> notifications, boolean viewerReviewsTeam) {}

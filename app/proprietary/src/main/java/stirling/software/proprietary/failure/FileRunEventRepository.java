@@ -98,16 +98,8 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
      * Close the incidents about documents their owner deleted from the editor: the queue is what
      * needs attention, and a document that no longer exists needs none.
      *
-     * <p>Restricted to that owner's own rows. File ids are minted by the client, so scoping on team
-     * alone would let one caller close a colleague's incidents by naming ids.
-     *
-     * <p>Scoped by the ABSENCE OF A SOURCE rather than by origin, which is what tells the two id
-     * spaces in {@code fileId} apart. An editor report and an attended policy run both carry the id
-     * the client minted for its own document, so both are closable by the client that holds it; a
-     * source-fed run carries a one-way hash of a path or key that was never on any device, so no
-     * client can legitimately name it. Keying on {@code origin = TOOL} instead left a user's own
-     * policy failures in the queue after they deleted the very document those failures were about,
-     * because the run had been recorded by the processor rather than reported by the editor.
+     * <p>Scoped by the absence of a source rather than by origin: a source-fed run's {@code fileId}
+     * is a hash no client can name. Narrowed to the owner's own rows, since clients mint the ids.
      */
     @Modifying(clearAutomatically = true)
     @Transactional

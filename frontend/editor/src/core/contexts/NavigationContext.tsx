@@ -133,9 +133,8 @@ const NavigationStateContext = createContext<
   NavigationContextStateValue | undefined
 >(undefined);
 /**
- * Exported for the same reason as {@link FileActionsContext}: a component that
- * mounts in both shells has to ask whether these actions are available rather
- * than assume it, and {@link useNavigationActions} throws when they are not.
+ * Exported like {@link FileActionsContext}: a component mounting in both shells must ask whether
+ * these exist, and {@link useNavigationActions} throws when they do not.
  */
 export const NavigationActionsContext = createContext<
   NavigationContextActionsValue | undefined

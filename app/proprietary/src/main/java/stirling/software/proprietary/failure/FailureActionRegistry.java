@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * point: because kinds declare action ids as data, one could name an action nobody implements,
  * which would otherwise show up as a button that 400s rather than as a failed boot.
  *
- * <p>Only {@link FailureActionId.Execution#SERVER} ids belong here. A client action has no bean by
- * design, and a bean for one is refused outright because dispatch could never reach it.
+ * <p>Only {@link FailureActionId.Execution#SERVER} ids belong here: a bean for a client action is
+ * refused, because dispatch could never reach it.
  */
 @Slf4j
 @Service
@@ -49,10 +49,7 @@ public class FailureActionRegistry {
         }
     }
 
-    /**
-     * Fail fast if any kind declares a server action with no handler, naming every gap rather than
-     * the first, so one boot tells you everything that is missing.
-     */
+    /** Names every gap rather than the first, so one boot tells you everything that is missing. */
     @PostConstruct
     void verifyEveryDeclaredActionHasAHandler() {
         List<String> gaps =

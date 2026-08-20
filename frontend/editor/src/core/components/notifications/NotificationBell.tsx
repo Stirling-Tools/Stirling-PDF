@@ -33,11 +33,8 @@ import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import "@app/components/notifications/NotificationBell.css";
 
 /**
- * The bell and its panel. Lives in core because both shells mount it and the dependency only runs
- * one way: the portal may import from core, never the reverse.
- *
- * <p>Renders whatever the server sends without knowing which subsystem produced it, or what any of its
- * actions mean, so a new source or failure kind needs no change here.
+ * Renders whatever the server sends without knowing which subsystem produced it or what its actions
+ * mean, so a new source or failure kind needs no change here. In core because both shells mount it.
  */
 export function NotificationBell() {
   const { t } = useTranslation();
@@ -48,16 +45,12 @@ export function NotificationBell() {
   const container = useRef<HTMLDivElement>(null);
   const headingId = useId();
   /**
-   * The first notification the user had already seen when they opened the panel, which is where the
-   * new ones stop. Held as an id rather than a count because opening marks everything read, so a
-   * live count would collapse to zero and take the divider with it while they were reading.
-   *
-   * An id also survives the list changing underneath: one arriving on a poll lands above the
-   * divider, where it belongs, instead of shifting a frozen index onto the wrong row.
+   * Where the new ones stop, frozen on open. An id rather than a count because opening marks
+   * everything read, and because one arriving on a poll must land above the divider, not shift it.
    */
   const [firstSeenId, setFirstSeenId] = useState<string | null>(null);
-  // Fixed to the viewport, positioned from the trigger. The workbench bar clips its overflow, so
-  // an absolutely positioned panel is cut off by its own toolbar.
+  // Fixed to the viewport: the workbench bar clips its overflow, so an absolutely positioned panel
+  // would be cut off by its own toolbar.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
@@ -121,12 +114,11 @@ export function NotificationBell() {
     };
   }, [open]);
 
-  // Opening is what marks them read, not closing: the user has seen them by then, and waiting
-  // until close would leave the badge lit while they are looking at the list.
+  // Opening marks them read, not closing: waiting would leave the badge lit while they read.
   const toggle = () => {
     setOpen((wasOpen) => {
       if (!wasOpen) {
-        // Read the boundary before marking, or there is nothing left to read.
+        // Before marking, or there is nothing left to read.
         setFirstSeenId(notifications[unreadCount]?.id ?? null);
         markAllSeen();
       }
@@ -135,12 +127,8 @@ export function NotificationBell() {
   };
 
   /**
-   * How many of the listed notifications count as new, for this reading of the panel. Everything
-   * above it is new, everything from it down is earlier.
-   *
-   * No boundary id means everything was new when the panel opened, so the whole list is. A boundary
-   * that has since left the list (dismissed elsewhere, its document deleted) leaves nothing to
-   * divide on, and reads as "none new" rather than guessing at a row.
+   * How many count as new. No boundary id means all of them were; one that has since left the list
+   * leaves nothing to divide on, so it reads as none rather than guessing at a row.
    */
   const boundaryIndex = firstSeenId
     ? notifications.findIndex((notification) => notification.id === firstSeenId)
@@ -215,8 +203,8 @@ export function NotificationBell() {
                       />
                     </li>
                   )}
-                  {/* Only where there is something on both sides of it: a lone "Earlier" heading
-                      over the whole list says nothing the empty badge has not already said. */}
+                  {/* Only with something on both sides: a lone "Earlier" over everything says
+                      nothing the empty badge has not. */}
                   {index === dividedAt && dividedAt > 0 && (
                     <li aria-hidden>
                       <DividerWithText
@@ -271,9 +259,8 @@ interface PasswordPrompt {
 }
 
 /**
- * The row's one line of explanation, if it has earned one. The server's reason for what it withheld
- * wins, being about this failure rather than this browser; otherwise only what we actually know, so a
- * row we never look up is never called absent.
+ * The server's reason wins, being about the failure rather than this browser. Otherwise only what we
+ * actually looked up, so a row we never probed is never called absent.
  */
 function noteFor(
   notification: AppNotification,
@@ -313,10 +300,7 @@ interface NotificationItemProps {
   onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
-/**
- * One row. Its own component because the message its last attempt came back with and whether that
- * message is expanded are per-row state the panel cannot hold.
- */
+/** Its own component because the last attempt's message and its expanded state are per-row. */
 function NotificationItem({
   notification,
   unread,
@@ -387,7 +371,7 @@ function NotificationItem({
       await navigator.clipboard.writeText(notification.detail);
       setCopied(true);
     } catch {
-      // No clipboard permission. The message is on screen and selectable, so this needs no error.
+      // No clipboard permission, and the message is on screen and selectable anyway.
     }
   };
 
@@ -463,7 +447,6 @@ function NotificationItem({
         </div>
       )}
 
-      {/* Actions were taken away from this row, so say why rather than leaving a bare row. */}
       {note && <span className="notification-bell__note">{note}</span>}
 
       {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
@@ -551,8 +534,7 @@ function ActionButton({
       fontSize="xs"
       className="notification-bell__cta"
       disabled={busy}
-      // Every row's buttons say the same thing, so the label alone would not tell a screen reader which
-      // failure it acts on.
+      // Every row's buttons read alike, so the label alone would not say which failure this acts on.
       aria-label={`${label}: ${rowTitle}`}
       onClick={onRun}
     >
