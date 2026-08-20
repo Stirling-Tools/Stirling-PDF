@@ -19,10 +19,6 @@ jobs:
     # avoiding three concurrent `playwright install --with-deps` runs.
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
-    # GitHub Actions overrides HOME inside the container. Playwright's
-    # browsers in the official image require the root home directory.
-    env:
-      HOME: /root
     strategy:
       # One browser breaking must not mask a failure in another - report all.
       fail-fast: false
@@ -55,6 +51,10 @@ jobs:
         run: task frontend:build
       - name: Run stubbed E2E tests (${{ matrix.browser }})
         env:
+          # The official Playwright image expects its browser runtime under
+          # the root home directory. Keep this scoped to Playwright so Docker
+          # and GitHub Actions continue using their normal HOME/config path.
+          HOME: /root
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
           NPM_CONFIG_PREFER_OFFLINE: "true"
           NPM_CONFIG_FETCH_RETRIES: "5"
