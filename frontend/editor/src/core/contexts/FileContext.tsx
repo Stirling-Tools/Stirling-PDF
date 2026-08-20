@@ -67,6 +67,7 @@ import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import apiClient from "@app/services/apiClient";
+import { reportFilesRemoved } from "@app/services/failureReporting";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -609,6 +610,10 @@ function FileContextInner({
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
+
+        // Any failure recorded against these stops needing attention: the document is gone.
+        // Fire-and-forget, so a server that cannot be told never blocks the delete.
+        void reportFilesRemoved(fileIds);
 
         // Remove from IndexedDB if enabled
         if (indexedDB && enablePersistence && deleteFromStorage !== false) {
