@@ -131,7 +131,15 @@ public class PolicyEngine {
         // worker.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
-                principal, principal, policyId, definition, inputs, listener, null, null);
+                principal,
+                principal,
+                principal,
+                policyId,
+                definition,
+                inputs,
+                listener,
+                null,
+                null);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
@@ -159,6 +167,10 @@ public class PolicyEngine {
         // they can download their enforced file; otherwise an org-wide policy's output is owned by
         // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
         // the owner owns those outputs.
+        //
+        // The triggering user is also carried on the run, as the actor of any failure it records:
+        // null for a trigger-fired run, which is what makes an unattended incident ownerless rather
+        // than the owner's problem. Three identities, deliberately not interchangeable.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
         // Stored supporting files (certificates, watermark images, ...) load here, before the
@@ -173,6 +185,7 @@ public class PolicyEngine {
         return submitForPrincipal(
                 policy.owner(),
                 fileOwner,
+                triggeringUser,
                 policy.id(),
                 definition,
                 // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
@@ -186,6 +199,7 @@ public class PolicyEngine {
     private PolicyRunHandle submitForPrincipal(
             String billingPrincipal,
             String fileOwner,
+            String triggeringUser,
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
@@ -200,7 +214,8 @@ public class PolicyEngine {
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
-        PolicyRun run = new PolicyRun(runId, policyId, definition, sourceId, fileIdentity);
+        PolicyRun run =
+                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -365,12 +380,14 @@ public class PolicyEngine {
             taskManager.setError(run.getRunId(), message);
             // No exception to classify here: nothing was thrown by a tool, the run simply was not
             // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
+            // Attributed like any other failure: a user whose run was refused is still the person
+            // holding that document, and an unattended sweep's run carries no triggering user.
             failureRecorder.recordRunFailureAs(
                     FailureKind.UNKNOWN,
                     run.getRunId(),
                     run.getPolicyId(),
                     run.getSourceId(),
-                    null,
+                    run.getTriggeringUser(),
                     message);
             completion.complete(run);
         }
@@ -389,6 +406,11 @@ public class PolicyEngine {
     /**
      * Record why a run failed. Called after the run's own state transition and task-manager update,
      * so a recording problem cannot change the outcome the caller observes.
+     *
+     * <p>The actor is the run's triggering user, not the MDC audit principal: that carries the
+     * BILLING identity, which for a stored policy is always its owner. Reading it here filed every
+     * failure under the owner — hiding an attended failure from the member who caused it and holds
+     * the document, and leaving an unattended sweep's failure looking attended.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
         failureRecorder.recordRunFailure(
@@ -396,7 +418,7 @@ public class PolicyEngine {
                 run.getPolicyId(),
                 run.getSourceId(),
                 run.getFileIdentity(),
-                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                run.getTriggeringUser(),
                 message,
                 cause);
     }
