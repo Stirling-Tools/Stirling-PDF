@@ -2,6 +2,13 @@
  * Everything specific to the built-in Classification policy, in one module. The generic policy
  * runner asks the capability questions below instead of naming classification itself, so a second
  * annotating policy needs a change here rather than in the runner.
+ *
+ * These are still keyed on the category id rather than a property each policy declares. That is
+ * deliberate for now: policies are becoming pipelines with labels behind a separate enforcement
+ * layer, which removes the category concept these would be declared against. Classification also
+ * stays genuinely privileged - it is the only policy with a browser-side implementation, so it can
+ * answer without the server. Ordering and output shape belong in that rework (an in-place output
+ * mode, and a run result that can carry findings as well as files), not in a flag added here first.
  */
 
 import type {
