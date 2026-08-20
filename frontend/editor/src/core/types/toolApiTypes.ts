@@ -7,7 +7,7 @@ export interface AddAttachmentRequest {
   /**
    * The image file to be overlaid onto the PDF.
    */
-  attachments: string[];
+  attachments: File[];
   /**
    * Convert the resulting PDF to PDF/A-3b format after adding attachments
    */
@@ -148,7 +148,7 @@ export interface AddStampRequest {
    * The rotation of the stamp in degrees
    */
   rotation?: number;
-  stampImage?: string;
+  stampImage?: File;
   /**
    * The stamp text
    */
@@ -187,7 +187,7 @@ export interface AddWatermarkRequest {
    * The rotation of the watermark in degrees
    */
   rotation?: number;
-  watermarkImage?: string;
+  watermarkImage?: File;
   /**
    * The watermark text
    */
@@ -528,9 +528,7 @@ export interface FlattenRequest {
    */
   renderDpi?: number;
 }
-export interface GeneralExtractBookmarksRequest {
-  file: string;
-}
+export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
@@ -791,7 +789,7 @@ export interface OverlayImageRequest {
    * Whether to overlay the image onto every page of the PDF.
    */
   everyPage?: boolean;
-  imageFile: string;
+  imageFile: File;
   /**
    * The x-coordinate at which to place the top-left corner of the image.
    */
@@ -809,7 +807,7 @@ export interface OverlayPdfsRequest {
   /**
    * An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.
    */
-  overlayFiles: string[];
+  overlayFiles: File[];
   /**
    * The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
    */
@@ -1279,7 +1277,6 @@ export interface ScannerEffectRequest {
   yellowish?: boolean;
 }
 export interface SecurityCertSignSessionsRequest {
-  file: string;
   request?: WorkflowCreationRequest;
 }
 export interface WorkflowCreationRequest {
@@ -1294,8 +1291,8 @@ export interface WorkflowCreationRequest {
 }
 export interface SecurityCertSignValidateCertificateRequest {
   certType: string;
-  jksFile?: string;
-  p12File?: string;
+  jksFile?: File;
+  p12File?: File;
   password?: string;
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
@@ -1305,7 +1302,7 @@ export interface SignPDFWithCertRequest {
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
    */
   alias?: string;
-  certFile?: string;
+  certFile?: File;
   /**
    * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
    */
@@ -1317,7 +1314,7 @@ export interface SignPDFWithCertRequest {
     | "SERVER"
     | "WINDOWS_STORE"
     | "PKCS11";
-  jksFile?: string;
+  jksFile?: File;
   /**
    * The location where the PDF is signed
    */
@@ -1326,7 +1323,7 @@ export interface SignPDFWithCertRequest {
    * The name of the signer
    */
   name?: string;
-  p12File?: string;
+  p12File?: File;
   /**
    * The page number where the signature should be visible. This is required if showSignature is set to true
    */
@@ -1343,7 +1340,7 @@ export interface SignPDFWithCertRequest {
    * Optional PKCS#11 slot index. When omitted the first slot with a token is used.
    */
   pkcs11Slot?: number;
-  privateKeyFile?: string;
+  privateKeyFile?: File;
   /**
    * The reason for signing the PDF
    */
@@ -1358,7 +1355,7 @@ export interface SignPDFWithCertRequest {
   showSignature?: boolean;
 }
 export interface SignatureValidationRequest {
-  certFile?: string;
+  certFile?: File;
 }
 export interface SplitPagesRequest {
   /**
@@ -1746,6 +1743,23 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];
+
+/** The supporting-file parameters each endpoint accepts beyond its primary fileInput, by name. */
+export const TOOL_FILE_FIELDS = {
+  "/api/v1/general/overlay-pdfs": ["overlayFiles"],
+  "/api/v1/misc/add-attachments": ["attachments"],
+  "/api/v1/misc/add-image": ["imageFile"],
+  "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/security/add-watermark": ["watermarkImage"],
+  "/api/v1/security/cert-sign": [
+    "privateKeyFile",
+    "certFile",
+    "p12File",
+    "jksFile",
+  ],
+  "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
+  "/api/v1/security/validate-signature": ["certFile"],
+} as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;
 
 /** Union of every generated tool request model. */
 export type ToolApiRequest = ToolApiParams[ToolEndpoint];
