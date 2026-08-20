@@ -52,6 +52,8 @@ const meta = {
     step: editableStep,
     registry,
     onChange: () => {},
+    assetNames: {},
+    onClearBinding: () => {},
   },
 } satisfies Meta<typeof PipelineStepSettings>;
 export default meta;
