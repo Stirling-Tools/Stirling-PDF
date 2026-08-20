@@ -41,7 +41,9 @@ interface FilesModalContextType {
   setOnModalClose: (callback: () => void) => void;
 }
 
-const FilesModalContext = createContext<FilesModalContextType | null>(null);
+export const FilesModalContext = createContext<FilesModalContextType | null>(
+  null,
+);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

@@ -125,8 +125,6 @@
 }
 .portal-sidebar[data-collapsed] .portal-sidebar__footer {
   margin-inline: 0.375rem;
-  padding-inline: 0;
-  align-items: center;
 }
 
 .portal-sidebar__logo {
@@ -183,10 +181,8 @@
   gap: 0.125rem;
 }
 
+/* The shared <NavFooter> brings its own boxes, padding and gap; the sidebar
+   only positions it. */
 .portal-sidebar__footer {
   margin: 0 0.625rem 0.75rem;
-  padding: 0.5rem 0.375rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }

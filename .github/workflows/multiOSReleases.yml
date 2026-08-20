@@ -38,7 +38,9 @@ permissions:
 
 jobs:
   determine-matrix:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
@@ -52,22 +54,19 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle User Home
+      - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
+          key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -119,7 +118,9 @@ jobs:
         env:
           INPUT_PLATFORM: ${{ github.event.inputs.platform }}
   build-jars:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     needs: determine-matrix
     runs-on: ubuntu-latest
     strategy:
@@ -145,22 +146,19 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle User Home
+      - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
+          key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
@@ -238,6 +236,14 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: Cache Gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
       # x86_64 JDK is set up first so the aarch64 step below can leave its
       # JAVA_HOME as the active one. The macOS universal JRE build needs
       # jmods from both arches; the x64 path is captured into the env
@@ -260,17 +266,6 @@ jobs:
         with:
           java-version: "25"
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
-
-      - name: Cache Gradle User Home
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
