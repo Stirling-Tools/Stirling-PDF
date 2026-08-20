@@ -5020,7 +5020,7 @@ title = "Authentication Successful"
 [oauthConsent]
 approve = "Allow access"
 approving = "Allowing..."
-decisionFailed = "Could not submit your decision. Please try again."
+decisionFailed = "Could not complete this authorisation. It may already have been used or expired - start the connection again from your app."
 deny = "Deny"
 denying = "Denying..."
 loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."

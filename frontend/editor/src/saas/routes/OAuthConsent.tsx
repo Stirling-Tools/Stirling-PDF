@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { List, Paper, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -20,8 +20,9 @@ import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg"
  * the user's approve/deny decision back to Supabase, which then redirects to
  * the requesting app with an authorization code (or an error).
  *
- * The installed supabase-js does not yet wrap these endpoints, so the GoTrue
- * REST API is called directly with the user's session token.
+ * The GoTrue REST API is called directly with the user's session token.
+ * supabase-js does now wrap these as `supabase.auth.oauth.*`; moving over would
+ * get the response union typed for us, but the shapes are identical either way.
  */
 
 interface AuthorizationDetails {
@@ -34,6 +35,23 @@ interface AuthorizationDetails {
     logo_uri?: string;
   };
 }
+
+/**
+ * Second shape GoTrue returns from the same endpoint: when this user has already
+ * granted this client, the grant auto-approves and the code is issued up front.
+ * See supabase-js `AuthOAuthAuthorizationDetailsResponse`, a union of the two.
+ */
+interface AuthorizationRedirect {
+  redirect_url: string;
+}
+
+const needsConsent = (body: unknown): body is AuthorizationDetails =>
+  typeof body === "object" && body !== null && "authorization_id" in body;
+
+const alreadyGranted = (body: unknown): body is AuthorizationRedirect =>
+  typeof body === "object" &&
+  body !== null &&
+  typeof (body as AuthorizationRedirect).redirect_url === "string";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_KEY = import.meta.env
@@ -79,12 +97,27 @@ export default function OAuthConsent() {
     title: `${t("oauthConsent.title", "Authorize access")} - Stirling PDF`,
   });
 
+  // The GET below CONSUMES the pending authorization server-side, so it must run
+  // exactly once per id - a second run (StrictMode double-invoke) gets a 404, and
+  // discarding the first response would strand the user on "Loading...".
+  const loadedIdRef = useRef<string | null>(null);
+
   // Load the pending authorization once a session is available.
   useEffect(() => {
     if (sessionLoading || !session || !authorizationId) {
       return;
     }
-    let cancelled = false;
+    if (loadedIdRef.current === authorizationId) return;
+    loadedIdRef.current = authorizationId;
+
+    const loadFailed = () =>
+      setError(
+        t(
+          "oauthConsent.loadFailed",
+          "This authorization request is invalid or has expired. Close this tab and try connecting again from the app.",
+        ),
+      );
+
     (async () => {
       try {
         setLoadingDetails(true);
@@ -93,35 +126,37 @@ export default function OAuthConsent() {
           session.access_token,
         );
         const body = await response.json().catch(() => ({}));
-        if (cancelled) return;
         if (!response.ok) {
           console.error("[OAuthConsent] Failed to load authorization:", body);
-          setError(
-            t(
-              "oauthConsent.loadFailed",
-              "This authorization request is invalid or has expired. Close this tab and try connecting again from the app.",
-            ),
-          );
-        } else {
-          setDetails(body as AuthorizationDetails);
+          loadFailed();
+          return;
         }
+        // Reconnect of an already-granted client: the code is already issued, so
+        // follow it. Rendering consent here would discard the code and the later
+        // approve would 400 as "no longer pending".
+        if (alreadyGranted(body)) {
+          setRedirecting(true);
+          window.location.assign(body.redirect_url);
+          return;
+        }
+        // A 2xx that is neither shape must not render a consent screen that
+        // cannot say who is asking for access.
+        if (!needsConsent(body)) {
+          console.error(
+            "[OAuthConsent] Unrecognised authorization response:",
+            body,
+          );
+          loadFailed();
+          return;
+        }
+        setDetails(body);
       } catch (err) {
         console.error("[OAuthConsent] Unexpected error:", err);
-        if (!cancelled) {
-          setError(
-            t(
-              "oauthConsent.loadFailed",
-              "This authorization request is invalid or has expired. Close this tab and try connecting again from the app.",
-            ),
-          );
-        }
+        loadFailed();
       } finally {
-        if (!cancelled) setLoadingDetails(false);
+        setLoadingDetails(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [sessionLoading, session, authorizationId, t]);
 
   const decide = useCallback(
@@ -141,7 +176,7 @@ export default function OAuthConsent() {
           setError(
             t(
               "oauthConsent.decisionFailed",
-              "Could not submit your decision. Please try again.",
+              "Could not complete this authorization. It may already have been used or expired - start the connection again from your app.",
             ),
           );
           setDeciding(null);
@@ -155,7 +190,7 @@ export default function OAuthConsent() {
         setError(
           t(
             "oauthConsent.decisionFailed",
-            "Could not submit your decision. Please try again.",
+            "Could not complete this authorization. It may already have been used or expired - start the connection again from your app.",
           ),
         );
         setDeciding(null);
