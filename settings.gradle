@@ -1,4 +1,9 @@
 pluginManagement {
+    def catalogText = file('gradle/libs.versions.toml').getText('UTF-8')
+    def foojayVersion = (catalogText =~ /(?m)^foojay\s*=\s*"([^"]+)"/)[0][1]
+    plugins {
+        id 'org.gradle.toolchains.foojay-resolver-convention' version foojayVersion
+    }
     repositories {
         var gradlePluginPortalUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
         if (!gradlePluginPortalUrl.isEmpty()){
@@ -20,7 +25,7 @@ pluginManagement {
 
 plugins {
     // Apply the foojay-resolver plugin to allow automatic download of JDKs
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+    id 'org.gradle.toolchains.foojay-resolver-convention'
 }
 
 rootProject.name = 'Stirling PDF'

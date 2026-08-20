@@ -8,8 +8,8 @@ spotless {
         }
 
         // licenseHeaderFile(file('config/license-header.txt')).updateYearWithLatest(true).yearStringFormat('%s')
-        removeUnusedImports()
-        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
+        removeUnusedImports('cleanthat-javaparser-unnecessaryimport')
+        googleJavaFormat(libs.versions.googleJavaFormat.get()).aosp().reorderImports(false)
 
         importOrder('java', 'javax', 'org', 'com', 'net', 'io', 'jakarta', 'lombok', 'me', 'stirling')
         trimTrailingWhitespace()
