@@ -22,14 +22,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.FileShare;

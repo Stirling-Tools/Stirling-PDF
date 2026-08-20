@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,18 +15,20 @@ import stirling.software.SPDF.model.json.PdfJsonFontConversionCandidate;
 import stirling.software.SPDF.model.json.PdfJsonFontConversionStatus;
 
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class Type3FontConversionService {
 
-    private final List<Type3ConversionStrategy> strategies;
+    // CDI injects all Type3ConversionStrategy beans via Instance<T> (Spring auto-collected
+    // them into a List). Iteration/empty checks below adapted to the Instance API.
+    private final Instance<Type3ConversionStrategy> strategies;
     private final Type3GlyphExtractor glyphExtractor;
 
     public List<PdfJsonFontConversionCandidate> synthesize(Type3ConversionRequest request) {
         if (request == null || request.getFont() == null) {
             return Collections.emptyList();
         }
-        if (strategies == null || strategies.isEmpty()) {
+        if (strategies == null || strategies.isUnsatisfied()) {
             log.debug(
                     "[TYPE3] No conversion strategies registered for font {}", request.getFontId());
             return Collections.emptyList();

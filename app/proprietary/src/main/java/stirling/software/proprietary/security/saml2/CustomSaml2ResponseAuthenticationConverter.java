@@ -11,11 +11,8 @@ import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.AuthnStatement;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider.ResponseToken;
-import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +21,9 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
-@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
+@ApplicationScoped
 @RequiredArgsConstructor
-public class CustomSaml2ResponseAuthenticationConverter
-        implements Converter<ResponseToken, Saml2Authentication> {
+public class CustomSaml2ResponseAuthenticationConverter {
 
     private final UserService userService;
 
@@ -59,9 +55,7 @@ public class CustomSaml2ResponseAuthenticationConverter
         return attributes;
     }
 
-    @Override
-    public Saml2Authentication convert(ResponseToken responseToken) {
-        Assertion assertion = responseToken.getResponse().getAssertions().getFirst();
+    public CustomSaml2AuthenticatedPrincipal convert(Assertion assertion) {
         Map<String, List<Object>> attributes = extractAttributes(assertion);
 
         // Debug log with actual values
@@ -85,30 +79,20 @@ public class CustomSaml2ResponseAuthenticationConverter
 
         // Rest of your existing code...
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(userIdentifier);
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority("ROLE_USER");
+        String authority = "ROLE_USER";
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            simpleGrantedAuthority =
-                    new SimpleGrantedAuthority(userService.findRole(user).getAuthority());
+            authority = userService.findRole(user).getAuthority();
         }
+        log.debug("Resolved SAML authority: {}", authority);
 
         List<String> sessionIndexes = new ArrayList<>();
         for (AuthnStatement authnStatement : assertion.getAuthnStatements()) {
             sessionIndexes.add(authnStatement.getSessionIndex());
         }
 
-        CustomSaml2AuthenticatedPrincipal principal =
-                new CustomSaml2AuthenticatedPrincipal(
-                        userIdentifier,
-                        attributes,
-                        userIdentifier,
-                        sessionIndexes,
-                        responseToken.getToken().getSaml2Response());
-
-        return new Saml2Authentication(
-                principal,
-                responseToken.getToken().getSaml2Response(),
-                List.of(simpleGrantedAuthority));
+        return new CustomSaml2AuthenticatedPrincipal(
+                userIdentifier, attributes, userIdentifier, sessionIndexes);
     }
 
     private boolean hasAttribute(Map<String, List<Object>> attributes, String name) {

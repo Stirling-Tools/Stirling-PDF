@@ -1,43 +1,34 @@
 package stirling.software.proprietary.security.supabase;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Produces a {@link JwtDecoder} bean for the proprietary Supabase login path. Only registered when
+ * Produces the JWKS configuration for the proprietary Supabase login path. Only relevant when
  * {@code security.supabase.user-login.enabled=true}.
  */
 @Slf4j
-@Configuration
-@ConditionalOnProperty(
-        prefix = "security.supabase.user-login",
-        name = "enabled",
-        havingValue = "true")
-@RequiredArgsConstructor
+@ApplicationScoped
 public class SupabaseJwtDecoderFactory {
 
-    private final SupabaseUserLoginProperties properties;
+    @Inject SupabaseUserLoginProperties properties;
 
-    @Bean
-    public JwtDecoder supabaseUserLoginJwtDecoder() {
+    /**
+     * Computes the Supabase JWKS endpoint, or returns {@code null} when no issuer is configured (in
+     * which case token verification must fail closed - reject every token).
+     */
+    public String jwksUri() {
         if (!properties.isJwtConfigured()) {
             log.warn(
                     "security.supabase.user-login.enabled=true but issuer URL is not set;"
-                            + " producing a fail-closed JwtDecoder that rejects every token."
+                            + " token verification must fail closed and reject every token."
                             + " Set security.supabase.user-login.issuer to enable real verification.");
-            return token -> {
-                throw new org.springframework.security.oauth2.jwt.JwtException(
-                        "Supabase user-login issuer not configured");
-            };
+            return null;
         }
         String jwks = properties.getIssuer() + "/.well-known/jwks.json";
-        log.info("Configuring proprietary-mode Supabase JwtDecoder with JWKS: {}", jwks);
-        return NimbusJwtDecoder.withJwkSetUri(jwks).build();
+        log.info("Configuring proprietary-mode Supabase JWKS: {}", jwks);
+        return jwks;
     }
 }

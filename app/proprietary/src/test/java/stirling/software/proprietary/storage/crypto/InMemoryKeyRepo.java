@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.data.domain.Sort;
+import io.quarkus.panache.common.Sort;
 
 import stirling.software.proprietary.storage.model.FileEncryptionKey;
 import stirling.software.proprietary.storage.repository.FileEncryptionKeyRepository;
@@ -40,7 +40,9 @@ public final class InMemoryKeyRepo {
                             rows.put(row.getKeyId(), row);
                             return row;
                         });
-        when(mock.findById(any(UUID.class)))
+        // findByIdOptional, not findById: Panache's inherited findById returns a nullable entity,
+        // so the service uses the Optional-returning variant.
+        when(mock.findByIdOptional(any(UUID.class)))
                 .thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
         when(mock.findFirstByScopeTypeAndScopeIdAndStatusOrderByKeyVersionDesc(
                         any(), anyLong(), any()))
@@ -69,7 +71,7 @@ public final class InMemoryKeyRepo {
                                         .filter(r -> r.getStatus() == inv.getArgument(0))
                                         .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
-        when(mock.findAll()).thenAnswer(inv -> List.copyOf(rows.values()));
+        when(mock.listAll()).thenAnswer(inv -> List.copyOf(rows.values()));
         when(mock.countByMasterKeyVersionLessThan(anyInt()))
                 .thenAnswer(
                         inv ->
@@ -97,6 +99,6 @@ public final class InMemoryKeyRepo {
                                                         r.getMasterKeyVersion()
                                                                 > inv.<Integer>getArgument(0))
                                         .count());
-        when(mock.findAll(any(Sort.class))).thenAnswer(inv -> List.copyOf(rows.values()));
+        when(mock.listAll(any(Sort.class))).thenAnswer(inv -> List.copyOf(rows.values()));
     }
 }

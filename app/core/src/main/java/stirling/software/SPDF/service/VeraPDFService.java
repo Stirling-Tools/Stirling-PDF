@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
@@ -20,12 +19,13 @@ import org.verapdf.pdfa.results.TestAssertion;
 import org.verapdf.pdfa.results.ValidationResult;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class VeraPDFService {
 

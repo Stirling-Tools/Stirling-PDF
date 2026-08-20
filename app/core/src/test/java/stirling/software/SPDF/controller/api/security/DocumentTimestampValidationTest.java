@@ -11,13 +11,13 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 /**

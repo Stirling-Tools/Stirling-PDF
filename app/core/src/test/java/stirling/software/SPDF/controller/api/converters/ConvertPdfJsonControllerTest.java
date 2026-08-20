@@ -12,27 +12,26 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.service.PdfJsonConversionService;
-import stirling.software.common.model.api.GeneralFile;
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -41,11 +40,18 @@ class ConvertPdfJsonControllerTest {
 
     @Mock private PdfJsonConversionService pdfJsonConversionService;
     @Mock private TempFileManager tempFileManager;
+    @Mock private Instance<JobOwnershipService> jobOwnershipService;
 
     @InjectMocks private ConvertPdfJsonController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // jobOwnershipService is an @Inject field (not a ctor arg), so @InjectMocks' constructor
+        // strategy skips it - wire it manually. Not resolvable -> job-key scoping/access checks are
+        // skipped (security disabled), matching single-node behaviour. Lenient: not every endpoint
+        // reaches it.
+        controller.jobOwnershipService = jobOwnershipService;
+        lenient().when(jobOwnershipService.isResolvable()).thenReturn(false);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -60,30 +66,15 @@ class ConvertPdfJsonControllerTest {
                         });
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (java.io.InputStream in = response.getBody().getInputStream()) {
-            in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
-
     @Test
     void convertPdfToJson_nullFileInputThrows() {
-        PDFFile request = new PDFFile();
-        request.setFileInput(null);
-
-        assertThrows(Exception.class, () -> controller.convertPdfToJson(request, false));
+        assertThrows(Exception.class, () -> controller.convertPdfToJson(null, false));
     }
 
     @Test
     void convertPdfToJson_success() throws Exception {
         byte[] jsonBytes = "{\"pages\":[]}".getBytes();
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
-        PDFFile request = new PDFFile();
-        request.setFileInput(pdfFile);
+        FileUpload pdfFile = TestFileUploads.of("content".getBytes(), "doc.pdf", "application/pdf");
 
         // Service writes directly to the OutputStream passed by the controller
         doAnswer(
@@ -93,22 +84,18 @@ class ConvertPdfJsonControllerTest {
                             return null;
                         })
                 .when(pdfJsonConversionService)
-                .convertPdfToJson(eq(pdfFile), eq(false), any(OutputStream.class));
+                .convertPdfToJson(any(MultipartFile.class), eq(false), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.convertPdfToJson(request, false);
+        Response response = controller.convertPdfToJson(pdfFile, false);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
     void convertPdfToJson_lightweightMode() throws Exception {
         byte[] jsonBytes = "{\"pages\":[]}".getBytes();
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
-        PDFFile request = new PDFFile();
-        request.setFileInput(pdfFile);
+        FileUpload pdfFile = TestFileUploads.of("content".getBytes(), "doc.pdf", "application/pdf");
 
         doAnswer(
                         inv -> {
@@ -117,31 +104,25 @@ class ConvertPdfJsonControllerTest {
                             return null;
                         })
                 .when(pdfJsonConversionService)
-                .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
+                .convertPdfToJson(any(MultipartFile.class), eq(true), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.convertPdfToJson(request, true);
+        Response response = controller.convertPdfToJson(pdfFile, true);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
         verify(pdfJsonConversionService)
-                .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
+                .convertPdfToJson(any(MultipartFile.class), eq(true), any(OutputStream.class));
     }
 
     @Test
     void convertJsonToPdf_nullFileInputThrows() {
-        GeneralFile request = new GeneralFile();
-        request.setFileInput(null);
-
-        assertThrows(Exception.class, () -> controller.convertJsonToPdf(request));
+        assertThrows(Exception.class, () -> controller.convertJsonToPdf(null));
     }
 
     @Test
     void convertJsonToPdf_success() throws Exception {
         byte[] pdfBytes = "pdf-content".getBytes();
-        MockMultipartFile jsonFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.json", "application/json", "{\"pages\":[]}".getBytes());
-        GeneralFile request = new GeneralFile();
-        request.setFileInput(jsonFile);
+        FileUpload jsonFile =
+                TestFileUploads.of("{\"pages\":[]}".getBytes(), "doc.json", "application/json");
 
         doAnswer(
                         inv -> {
@@ -150,30 +131,23 @@ class ConvertPdfJsonControllerTest {
                             return null;
                         })
                 .when(pdfJsonConversionService)
-                .convertJsonToPdf(eq(jsonFile), any(OutputStream.class));
+                .convertJsonToPdf(any(MultipartFile.class), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.convertJsonToPdf(request);
+        Response response = controller.convertJsonToPdf(jsonFile);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
     void extractPdfMetadata_nullFileInputThrows() {
-        PDFFile request = new PDFFile();
-        request.setFileInput(null);
-
-        assertThrows(Exception.class, () -> controller.extractPdfMetadata(request));
+        assertThrows(Exception.class, () -> controller.extractPdfMetadata(null));
     }
 
     @Test
     void extractPdfMetadata_success() throws Exception {
         byte[] jsonBytes = "{\"metadata\":{}}".getBytes();
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
-        PDFFile request = new PDFFile();
-        request.setFileInput(pdfFile);
+        FileUpload pdfFile = TestFileUploads.of("content".getBytes(), "doc.pdf", "application/pdf");
 
         doAnswer(
                         inv -> {
@@ -182,22 +156,23 @@ class ConvertPdfJsonControllerTest {
                             return null;
                         })
                 .when(pdfJsonConversionService)
-                .extractDocumentMetadata(eq(pdfFile), any(String.class), any(OutputStream.class));
+                .extractDocumentMetadata(
+                        any(MultipartFile.class), any(String.class), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.extractPdfMetadata(request);
+        Response response = controller.extractPdfMetadata(pdfFile);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
-        assertNotNull(response.getHeaders().getFirst("X-Job-Id"));
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertNotNull(response.getHeaderString("X-Job-Id"));
     }
 
     @Test
     void clearCache_success() {
         String jobId = "test-job-id";
 
-        ResponseEntity<Void> response = controller.clearCache(jobId);
+        Response response = controller.clearCache(jobId);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
         verify(pdfJsonConversionService).clearCachedDocument(jobId);
     }
 
@@ -215,10 +190,10 @@ class ConvertPdfJsonControllerTest {
                 .when(pdfJsonConversionService)
                 .extractSinglePage(eq(jobId), anyInt(), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.extractSinglePage(jobId, 1);
+        Response response = controller.extractSinglePage(jobId, 1);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
@@ -235,9 +210,9 @@ class ConvertPdfJsonControllerTest {
                 .when(pdfJsonConversionService)
                 .extractPageFonts(eq(jobId), anyInt(), any(OutputStream.class));
 
-        ResponseEntity<Resource> response = controller.extractPageFonts(jobId, 1);
+        Response response = controller.extractPageFonts(jobId, 1);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 }

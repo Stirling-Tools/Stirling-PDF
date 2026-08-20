@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ import stirling.software.saas.procurement.pricing.QuoteLineItem;
  * exactly what was rendered.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class AgreementAssembler {
 

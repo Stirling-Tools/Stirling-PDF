@@ -8,6 +8,8 @@
 build/
 */build/
 **/build/
+# ...but re-include the Quarkus runner-jar so docker/quarkus/Dockerfile can layer it on the base image
+!app/core/build/*-runner.jar
 out/
 target/
 **/target/

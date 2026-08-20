@@ -8,25 +8,29 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
@@ -36,20 +40,22 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
  * Admin controller for license management. Provides installation ID for Stripe checkout metadata
  * and endpoints for managing license keys.
  */
-@RestController
+@ApplicationScoped
 @Slf4j
-@RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@jakarta.ws.rs.Path("/api/v1/admin")
+@RolesAllowed("ADMIN")
 @Tag(name = "Admin License Management", description = "Admin-only License Management APIs")
 public class AdminLicenseController {
 
-    @Autowired(required = false)
-    private LicenseKeyChecker licenseKeyChecker;
+    @Inject Instance<LicenseKeyChecker> licenseKeyCheckerInstance;
 
-    @Autowired(required = false)
-    private KeygenLicenseVerifier keygenLicenseVerifier;
+    @Inject Instance<KeygenLicenseVerifier> keygenLicenseVerifierInstance;
 
-    @Autowired private ApplicationProperties applicationProperties;
+    @Inject ApplicationProperties applicationProperties;
+
+    private LicenseKeyChecker licenseKeyChecker() {
+        return licenseKeyCheckerInstance.isResolvable() ? licenseKeyCheckerInstance.get() : null;
+    }
 
     /**
      * Get the installation ID (machine fingerprint) for this self-hosted instance. This ID is used
@@ -57,21 +63,24 @@ public class AdminLicenseController {
      *
      * @return Map containing the installation ID
      */
-    @GetMapping("/installation-id")
+    @GET
+    @jakarta.ws.rs.Path("/installation-id")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Get installation ID",
             description =
                     "Returns the unique installation ID (MAC-based fingerprint) for this"
                             + " self-hosted instance")
-    public ResponseEntity<Map<String, String>> getInstallationId() {
+    public Response getInstallationId() {
         try {
             String installationId = GeneralUtils.generateMachineFingerprint();
             log.info("Admin requested installation ID: {}", installationId);
-            return ResponseEntity.ok(Map.of("installationId", installationId));
+            return Response.ok(Map.of("installationId", installationId)).build();
         } catch (Exception e) {
             log.error("Failed to generate installation ID", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to generate installation ID"));
+            return Response.serverError()
+                    .entity(Map.of("error", "Failed to generate installation ID"))
+                    .build();
         }
     }
 
@@ -82,26 +91,31 @@ public class AdminLicenseController {
      * @param request Map containing the license key
      * @return Response with success status, license type, and whether restart is required
      */
-    @PostMapping("/license-key")
+    @POST
+    @jakarta.ws.rs.Path("/license-key")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Save and activate license key",
             description =
                     "Accepts a license key and activates it on the backend. Returns the activated"
                             + " license type.")
-    public ResponseEntity<Map<String, Object>> saveLicenseKey(
-            @RequestBody Map<String, String> request) {
+    public Response saveLicenseKey(Map<String, String> request) {
         String licenseKey = request.get("licenseKey");
 
         // Reject null but allow empty string to clear license
         if (licenseKey == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "License key is required"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("success", false, "error", "License key is required"))
+                    .build();
         }
 
         try {
+            LicenseKeyChecker licenseKeyChecker = licenseKeyChecker();
             if (licenseKeyChecker == null) {
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("success", false, "error", "License checker not available"));
+                return Response.serverError()
+                        .entity(Map.of("success", false, "error", "License checker not available"))
+                        .build();
             }
             // assume premium enabled when setting license key
             applicationProperties.getPremium().setEnabled(true);
@@ -138,16 +152,17 @@ public class AdminLicenseController {
 
             log.info("License key saved and activated: type={}", license.name());
 
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
         } catch (Exception e) {
             log.error("Failed to save license key", e);
-            return ResponseEntity.badRequest()
-                    .body(
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Failed to activate license: " + e.getMessage()));
+                                    "Failed to activate license: " + e.getMessage()))
+                    .build();
         }
     }
 
@@ -158,23 +173,28 @@ public class AdminLicenseController {
      *
      * @return Response with updated license information
      */
-    @PostMapping("/license/resync")
+    @POST
+    @jakarta.ws.rs.Path("/license/resync")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Resync license with Keygen",
             description =
                     "Re-validates the existing license key with Keygen and updates local settings."
                             + " Used after subscription upgrades.")
-    public ResponseEntity<Map<String, Object>> resyncLicense() {
+    public Response resyncLicense() {
         try {
+            LicenseKeyChecker licenseKeyChecker = licenseKeyChecker();
             if (licenseKeyChecker == null) {
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("success", false, "error", "License checker not available"));
+                return Response.serverError()
+                        .entity(Map.of("success", false, "error", "License checker not available"))
+                        .build();
             }
 
             String currentKey = applicationProperties.getPremium().getKey();
             if (currentKey == null || currentKey.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "No license key configured"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("success", false, "error", "No license key configured"))
+                        .build();
             }
 
             log.info("Resyncing license with Keygen");
@@ -198,16 +218,17 @@ public class AdminLicenseController {
                     license.name(),
                     premium.getMaxUsers());
 
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
         } catch (Exception e) {
             log.error("Failed to resync license", e);
-            return ResponseEntity.internalServerError()
-                    .body(
+            return Response.serverError()
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Failed to resync license: " + e.getMessage()));
+                                    "Failed to resync license: " + e.getMessage()))
+                    .build();
         }
     }
 
@@ -217,16 +238,19 @@ public class AdminLicenseController {
      *
      * @return Map containing license information
      */
-    @GetMapping("/license-info")
+    @GET
+    @jakarta.ws.rs.Path("/license-info")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Get license information",
             description =
                     "Returns information about the current license including type, enabled status,"
                             + " and max users")
-    public ResponseEntity<Map<String, Object>> getLicenseInfo() {
+    public Response getLicenseInfo() {
         try {
             Map<String, Object> response = new HashMap<>();
 
+            LicenseKeyChecker licenseKeyChecker = licenseKeyChecker();
             if (licenseKeyChecker != null) {
                 License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
                 response.put("licenseType", license.name());
@@ -244,11 +268,12 @@ public class AdminLicenseController {
                 response.put("licenseKey", premium.getKey());
             }
 
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
         } catch (Exception e) {
             log.error("Failed to get license info", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to retrieve license information"));
+            return Response.serverError()
+                    .entity(Map.of("error", "Failed to retrieve license information"))
+                    .build();
         }
     }
 
@@ -256,55 +281,69 @@ public class AdminLicenseController {
      * Upload a license certificate file for offline activation. Accepts .lic or .cert files,
      * validates the certificate format, saves to configs directory, and activates the license.
      *
-     * @param file The license certificate file to upload
+     * @param fileUpload The license certificate file to upload
      * @return Response with success status, license type, and file information
      */
-    @PostMapping(value = "/license-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/license-file")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Upload license certificate file",
             description =
                     "Upload a license certificate file (.lic, .cert) for offline activation."
                             + " Validates the file format and activates the license.")
-    public ResponseEntity<Map<String, Object>> uploadLicenseFile(
-            @RequestParam("file") MultipartFile file) {
+    public Response uploadLicenseFile(@RestForm("file") FileUpload fileUpload) {
+
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
 
         // Validate file exists
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "File is empty"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("success", false, "error", "File is empty"))
+                    .build();
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null || filename.trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "Invalid filename"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("success", false, "error", "Invalid filename"))
+                    .build();
         }
         // Prevent path traversal and enforce single filename component
         if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            return ResponseEntity.badRequest()
-                    .body(
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Filename must not contain path separators or '..'"));
+                                    "Filename must not contain path separators or '..'"))
+                    .build();
         }
 
         // Validate file extension
         if (!isValidLicenseFile(filename)) {
-            return ResponseEntity.badRequest()
-                    .body(
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Invalid file type. Expected .lic or .cert"));
+                                    "Invalid file type. Expected .lic or .cert"))
+                    .build();
         }
 
         // Check file size (max 1MB for license files)
         if (file.getSize() > 1_048_576) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "File too large. Maximum 1MB allowed"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "File too large. Maximum 1MB allowed"))
+                    .build();
         }
 
         try {
@@ -318,13 +357,14 @@ public class AdminLicenseController {
             String content = new String(fileBytes, StandardCharsets.UTF_8);
             if (!content.trim().startsWith("-----BEGIN LICENSE FILE-----")) {
                 log.warn("License upload rejected: invalid certificate header");
-                return ResponseEntity.badRequest()
-                        .body(
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
                                 Map.of(
                                         "success",
                                         false,
                                         "error",
-                                        "Invalid license certificate format"));
+                                        "Invalid license certificate format"))
+                        .build();
             }
 
             // Get config directory and target path
@@ -338,8 +378,9 @@ public class AdminLicenseController {
             // Prevent directory traversal: ensure targetPath is inside configPath
             if (!targetPath.startsWith(configPathAbs)) {
                 log.warn("License upload rejected: target path outside config path");
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "Invalid file path"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("success", false, "error", "Invalid file path"))
+                        .build();
             }
 
             // Backup existing file if present
@@ -363,6 +404,7 @@ public class AdminLicenseController {
 
             // Update settings with file reference (relative path)
             String fileReference = "file:configs/" + filename;
+            LicenseKeyChecker licenseKeyChecker = licenseKeyChecker();
             licenseKeyChecker.updateLicenseKey(fileReference);
 
             // Get license status after activation
@@ -382,26 +424,28 @@ public class AdminLicenseController {
                     filename,
                     license.name());
 
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
 
         } catch (IOException e) {
             log.error("Failed to save license file", e);
-            return ResponseEntity.internalServerError()
-                    .body(
+            return Response.serverError()
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Failed to save license file: " + e.getMessage()));
+                                    "Failed to save license file: " + e.getMessage()))
+                    .build();
         } catch (Exception e) {
             log.error("Failed to activate license from file", e);
-            return ResponseEntity.badRequest()
-                    .body(
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(
                             Map.of(
                                     "success",
                                     false,
                                     "error",
-                                    "Failed to activate license: " + e.getMessage()));
+                                    "Failed to activate license: " + e.getMessage()))
+                    .build();
         }
     }
 

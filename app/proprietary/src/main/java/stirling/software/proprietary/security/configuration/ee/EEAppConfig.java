@@ -2,52 +2,78 @@ package stirling.software.proprietary.security.configuration.ee;
 
 import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;
 
-@Configuration
-@Order(Ordered.HIGHEST_PRECEDENCE)
+/**
+ * Enterprise/Premium CDI producers (migrated from a Spring {@code @Configuration} class).
+ *
+ * <p>MIGRATION NOTES (Spring -> Quarkus CDI):
+ *
+ * <ul>
+ *   <li>{@code @Configuration} -> {@code @ApplicationScoped}; {@code @Bean(name="x")} ->
+ *       {@code @Produces @Named("x")}. These producers deliberately omit {@code @DefaultBean} so
+ *       they OVERRIDE the {@code @DefaultBean} producers declared in {@code
+ *       stirling.software.common.configuration.AppConfig} whenever the :proprietary module is on
+ *       the classpath - this is the Quarkus idiom for Spring's profile-based bean override.
+ *   <li>{@code @Profile("security & !saas")} -> {@code @IfBuildProfile("security")}. Spring's
+ *       composite expression {@code security & !saas} cannot be expressed directly; the build-time
+ *       profile gates "security".
+ */
+@ApplicationScoped
+@IfBuildProfile("security")
 public class EEAppConfig {
 
     private final ApplicationProperties applicationProperties;
 
     private final LicenseKeyChecker licenseKeyChecker;
 
+    @Inject
     public EEAppConfig(
             ApplicationProperties applicationProperties, LicenseKeyChecker licenseKeyChecker) {
         this.applicationProperties = applicationProperties;
         this.licenseKeyChecker = licenseKeyChecker;
+    }
+
+    @PostConstruct
+    void init() {
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
     }
 
-    @Profile("security & !saas")
-    @Bean(name = "runningProOrHigher")
+    @Produces
+    @Dependent
+    @Named("runningProOrHigher")
     public boolean runningProOrHigher() {
         License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
         return license == License.SERVER || license == License.ENTERPRISE;
     }
 
-    @Profile("security & !saas")
-    @Bean(name = "license")
+    @Produces
+    @Named("license")
     public String licenseType() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
     }
 
-    @Profile("security & !saas")
-    @Bean(name = "runningEE")
+    @Produces
+    @Dependent
+    @Named("runningEE")
     public boolean runningEnterprise() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
     }
 
-    @Profile("security & !saas")
-    @Bean(name = "SSOAutoLogin")
+    @Produces
+    @Dependent
+    @Named("SSOAutoLogin")
     public boolean ssoAutoLogin() {
         boolean enabled = applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
         if (enabled) {

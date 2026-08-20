@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,22 +22,19 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToExcelControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock private stirling.software.common.util.TempFileManager tempFileManager;
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
@@ -48,7 +47,8 @@ class ConvertPDFToExcelControllerTest {
                             File f =
                                     Files.createTempFile("test", inv.<String>getArgument(0))
                                             .toFile();
-                            TempFile tf = mock(TempFile.class);
+                            stirling.software.common.util.TempFile tf =
+                                    mock(stirling.software.common.util.TempFile.class);
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
@@ -57,19 +57,14 @@ class ConvertPDFToExcelControllerTest {
 
     @Test
     void pdfToExcel_noTablesReturnsNoContent() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "data.pdf", "application/pdf", "pdf-content".getBytes());
-
-        PDFWithPageNums request = new PDFWithPageNums();
-        request.setFileInput(pdfFile);
-        request.setPageNumbers("all");
+        FileUpload pdfFile =
+                TestFileUploads.of("pdf-content".getBytes(), "data.pdf", "application/pdf");
 
         // Create a real empty PDDocument for tabula to process
         PDDocument emptyDoc = new PDDocument();
         emptyDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
 
-        when(pdfDocumentFactory.load(request)).thenReturn(emptyDoc);
+        when(pdfDocumentFactory.load(any(PDFWithPageNums.class))).thenReturn(emptyDoc);
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class)) {
             guMock.when(() -> GeneralUtils.removeExtension("data.pdf")).thenReturn("data");
@@ -81,14 +76,12 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            Response response = controller.pdfToExcel(pdfFile, null, "all");
 
             // tabula may or may not find tables in an empty page
             assertNotNull(response);
-            // Either NO_CONTENT (no tables) or OK (empty tables found)
-            assertTrue(
-                    response.getStatusCode() == HttpStatus.NO_CONTENT
-                            || response.getStatusCode() == HttpStatus.OK);
+            // Either NO_CONTENT (204, no tables) or OK (200, empty tables found)
+            assertTrue(response.getStatus() == 204 || response.getStatus() == 200);
         }
     }
 

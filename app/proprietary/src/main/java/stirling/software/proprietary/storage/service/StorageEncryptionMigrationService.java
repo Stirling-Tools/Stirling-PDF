@@ -8,12 +8,11 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.core.io.Resource;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -34,7 +33,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
  * never a lost file, and re-runs are idempotent because selection is {@code encryptionKeyId IS
  * NULL} (only stamped by the final main-blob swap).
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class StorageEncryptionMigrationService {
 
@@ -140,8 +139,7 @@ public class StorageEncryptionMigrationService {
     private State migratePages(Run run) throws InterruptedException {
         long lastId = 0;
         while (true) {
-            List<StoredFile> page =
-                    storedFileRepository.findMigratableAfter(lastId, PageRequest.of(0, PAGE_SIZE));
+            List<StoredFile> page = storedFileRepository.findMigratableAfter(lastId, PAGE_SIZE);
             if (page.isEmpty()) {
                 return State.COMPLETED;
             }

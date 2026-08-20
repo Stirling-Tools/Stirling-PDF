@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.s3;
 import java.net.URI;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * operator opt-in - the same rules {@link S3ConnectionPool} enforces before signing, moved to save
  * time so a bad connection fails in the form rather than in a sweep.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class S3IntegrationValidator implements IntegrationConfigValidator {
 

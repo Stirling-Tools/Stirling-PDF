@@ -32,13 +32,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.model.AiCreateSessionStatus;

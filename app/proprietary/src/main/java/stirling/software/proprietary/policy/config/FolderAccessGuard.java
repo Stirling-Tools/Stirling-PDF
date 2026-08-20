@@ -2,12 +2,16 @@ package stirling.software.proprietary.policy.config;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.Config;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.smallrye.config.SmallRyeConfig;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -32,7 +36,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * <p>Compared after normalisation so {@code ..} cannot escape a root. Symlink escape is not
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
-@Component
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
@@ -51,12 +56,15 @@ public class FolderAccessGuard {
     private final List<Path> protectedRoots;
     private final SourceStore sourceStore;
 
+    @Inject
     public FolderAccessGuard(
             ApplicationProperties applicationProperties,
             RuntimePathConfig runtimePathConfig,
-            Environment environment,
+            Config config,
             SourceStore sourceStore) {
-        this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        // Spring's Environment.getActiveProfiles() maps to SmallRye's profile list; the "saas"
+        // build/runtime profile is matched the same way Spring matched the "saas" Spring profile.
+        this.saasActive = config.unwrap(SmallRyeConfig.class).getProfiles().contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);

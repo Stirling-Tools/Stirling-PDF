@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,28 +26,30 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class AutoRenameControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+    private static byte[] drainBody(Response response) throws IOException {
+        Object entity = response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }
@@ -70,8 +75,7 @@ class AutoRenameControllerTest {
                         });
     }
 
-    private MockMultipartFile createPdfWithText(String text, float fontSize) throws IOException {
-        Path path = tempDir.resolve("test.pdf");
+    private byte[] createPdfBytesWithText(String text, float fontSize) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
@@ -82,84 +86,74 @@ class AutoRenameControllerTest {
                 cs.showText(text);
                 cs.endText();
             }
-            doc.save(path.toFile());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
-    }
-
-    private ExtractHeaderRequest createRequest(MockMultipartFile file, boolean fallback) {
-        ExtractHeaderRequest req = new ExtractHeaderRequest();
-        req.setFileInput(file);
-        req.setUseFirstTextAsFallback(fallback);
-        return req;
     }
 
     @Test
     void extractHeader_withLargeTitle() throws Exception {
-        MockMultipartFile file = createPdfWithText("My Document Title", 24f);
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = createPdfBytesWithText("My Document Title", 24f);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         assertThat(drainBody(response)).isNotEmpty();
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertThat(contentDisposition).contains(".pdf");
     }
 
     @Test
     void extractHeader_emptyDocument() throws Exception {
-        Path path = tempDir.resolve("empty.pdf");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
-            doc.save(path.toFile());
+            doc.save(baos);
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "empty.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = baos.toByteArray();
+        FileUpload file = TestFileUploads.of(bytes, "empty.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void extractHeader_useFirstTextAsFallback() throws Exception {
-        MockMultipartFile file = createPdfWithText("Some body text", 12f);
-        ExtractHeaderRequest request = createRequest(file, true);
+        byte[] bytes = createPdfBytesWithText("Some body text", 12f);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, true);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void extractHeader_ioException() throws Exception {
-        MockMultipartFile file = createPdfWithText("test", 12f);
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = createPdfBytesWithText("test", 12f);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        when(pdfDocumentFactory.load(file)).thenThrow(new IOException("corrupt"));
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenThrow(new IOException("corrupt"));
 
-        assertThatThrownBy(() -> controller.extractHeader(request)).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> controller.extractHeader(file, null, false))
+                .isInstanceOf(IOException.class);
     }
 
     @Test
     void extractHeader_multipleFontSizes() throws Exception {
-        Path path = tempDir.resolve("multi_font.pdf");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
@@ -177,24 +171,19 @@ class AutoRenameControllerTest {
                 cs.showText("Big Title");
                 cs.endText();
             }
-            doc.save(path.toFile());
+            doc.save(baos);
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "multi.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = baos.toByteArray();
+        FileUpload file = TestFileUploads.of(bytes, "multi.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         // The largest font text should be used as title (URL-encoded in Content-Disposition)
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertThat(contentDisposition).contains("Big%20Title");
     }
 
@@ -202,56 +191,51 @@ class AutoRenameControllerTest {
     void extractHeader_longTitle_fallsBackToOriginalFilename() throws Exception {
         // Create text longer than 255 chars
         String longText = "A".repeat(300);
-        MockMultipartFile file = createPdfWithText(longText, 24f);
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = createPdfBytesWithText(longText, 24f);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         // Should fallback to original filename since header is too long
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertThat(contentDisposition).contains("test.pdf");
     }
 
     @Test
     void extractHeader_withSpecialCharacters() throws Exception {
-        MockMultipartFile file = createPdfWithText("Title: Test/Doc*File", 24f);
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = createPdfBytesWithText("Title: Test/Doc*File", 24f);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         // Special characters should be sanitized
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertThat(contentDisposition).contains(".pdf");
     }
 
     @Test
     void extractHeader_fallbackDisabled_noTitle_usesOriginalFilename() throws Exception {
-        Path path = tempDir.resolve("notitle.pdf");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
-            doc.save(path.toFile());
+            doc.save(baos);
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "original_name.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
-        ExtractHeaderRequest request = createRequest(file, false);
+        byte[] bytes = baos.toByteArray();
+        FileUpload file = TestFileUploads.of(bytes, "original_name.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.extractHeader(request);
+        Response response = controller.extractHeader(file, null, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 }

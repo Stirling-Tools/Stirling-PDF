@@ -21,7 +21,8 @@ import org.apache.xmpbox.type.PDFAPropertyType;
 import org.apache.xmpbox.type.PDFASchemaType;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ import stirling.software.proprietary.pdf.ua.TaggingResult;
  * Raises a PDF/A file from conformance level B to level A, which adds the tagging the PDF/UA tagger
  * already does. Must run after Ghostscript, which discards any structure tree it is given.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {

@@ -1,16 +1,21 @@
 package stirling.software.SPDF.model.api.converters;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
+
 @Data
 @EqualsAndHashCode
 public class ConvertEbookToPdfRequest {
 
+    @RestForm("fileInput")
     @Schema(
             description =
                     "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2,"
@@ -20,8 +25,9 @@ public class ConvertEbookToPdfRequest {
                             + " text/xml, text/plain,"
                             + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private MultipartFile fileInput;
+    private FileUpload fileUpload;
 
+    @RestForm("embedAllFonts")
     @Schema(
             description = "Embed all fonts from the eBook into the generated PDF",
             allowableValues = {"true", "false"},
@@ -29,6 +35,7 @@ public class ConvertEbookToPdfRequest {
             defaultValue = "false")
     private Boolean embedAllFonts;
 
+    @RestForm("includeTableOfContents")
     @Schema(
             description = "Add a generated table of contents to the resulting PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
@@ -36,6 +43,7 @@ public class ConvertEbookToPdfRequest {
             defaultValue = "false")
     private Boolean includeTableOfContents;
 
+    @RestForm("includePageNumbers")
     @Schema(
             description = "Add page numbers to the generated PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
@@ -43,6 +51,7 @@ public class ConvertEbookToPdfRequest {
             defaultValue = "false")
     private Boolean includePageNumbers;
 
+    @RestForm("optimizeForEbook")
     @Schema(
             description =
                     "Optimize the PDF for eBook reading (smaller file size, better rendering on"
@@ -50,4 +59,12 @@ public class ConvertEbookToPdfRequest {
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean optimizeForEbook;
+
+    /**
+     * Adapts the multipart {@link FileUpload} bound by RESTEasy Reactive to the common {@link
+     * MultipartFile} shim expected by the conversion services.
+     */
+    public MultipartFile getFileInput() {
+        return FileUploadMultipartFile.of(fileUpload);
+    }
 }

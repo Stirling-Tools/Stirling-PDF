@@ -2,9 +2,10 @@ package stirling.software.saas.service;
 
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,8 @@ import stirling.software.saas.model.SupabaseUser;
 import stirling.software.saas.util.LogRedactionUtils;
 
 /** Saas user lifecycle operations driven by Stripe/Supabase webhooks. */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class SaasUserAccountService {

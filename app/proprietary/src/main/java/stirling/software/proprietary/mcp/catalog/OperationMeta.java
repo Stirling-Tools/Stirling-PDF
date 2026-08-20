@@ -1,6 +1,6 @@
 package stirling.software.proprietary.mcp.catalog;
 
-import org.springframework.web.method.HandlerMethod;
+import java.lang.reflect.Method;
 
 import tools.jackson.databind.node.ObjectNode;
 
@@ -13,7 +13,7 @@ public record OperationMeta(
         String requiredScope,
         Target target,
         String endpointPath,
-        HandlerMethod handlerMethod) {
+        Method handlerMethod) {
 
     public enum Target {
         JAVA_ENDPOINT,

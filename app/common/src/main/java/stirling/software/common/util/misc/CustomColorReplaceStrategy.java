@@ -19,13 +19,13 @@ import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.TextPosition;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
 
 @Slf4j
 public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {

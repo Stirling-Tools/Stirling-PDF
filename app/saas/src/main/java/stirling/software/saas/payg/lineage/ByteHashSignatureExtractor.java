@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.proprietary.billing.ContentHasher;
 
@@ -18,8 +19,8 @@ import stirling.software.proprietary.billing.ContentHasher;
  * PdfMetadataSignatureExtractor} would be a separate bean and add its own signature type — composed
  * at the detector layer, no interaction needed here.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class ByteHashSignatureExtractor implements LineageSignatureExtractor {
 
     private static final String SIGNATURE_TYPE = "sha256";

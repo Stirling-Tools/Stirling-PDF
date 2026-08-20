@@ -8,15 +8,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.web.multipart.MultipartFile;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
@@ -56,8 +58,8 @@ import stirling.software.saas.payg.wallet.WalletLedgerEntry;
  * credit engine has been removed, so there is no legacy debit to compare against and {@code
  * diffPct} stays {@code 0}. The shadow row captures the PAYG units only.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class JobChargeService {
 
@@ -70,6 +72,7 @@ public class JobChargeService {
     private final PaygMeterReportingService meterReportingService;
     private final WalletLedgerRepository ledgerRepository;
     private final PrepaidBundleService prepaidBundleService;
+    private final TransactionSynchronizationRegistry txSyncRegistry;
 
     public JobChargeService(
             JobService jobService,
@@ -81,6 +84,31 @@ public class JobChargeService {
             PaygMeterReportingService meterReportingService,
             WalletLedgerRepository ledgerRepository,
             PrepaidBundleService prepaidBundleService) {
+        this(
+                jobService,
+                policyService,
+                classifier,
+                shadowRepository,
+                jobRepository,
+                teamExtensionsRepository,
+                meterReportingService,
+                ledgerRepository,
+                prepaidBundleService,
+                null);
+    }
+
+    @jakarta.inject.Inject
+    public JobChargeService(
+            JobService jobService,
+            PricingPolicyService policyService,
+            DocumentClassifier classifier,
+            PaygShadowChargeRepository shadowRepository,
+            ProcessingJobRepository jobRepository,
+            PaygTeamExtensionsRepository teamExtensionsRepository,
+            PaygMeterReportingService meterReportingService,
+            WalletLedgerRepository ledgerRepository,
+            PrepaidBundleService prepaidBundleService,
+            TransactionSynchronizationRegistry txSyncRegistry) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -93,6 +121,7 @@ public class JobChargeService {
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
+        this.txSyncRegistry = txSyncRegistry;
     }
 
     /**
@@ -422,7 +451,7 @@ public class JobChargeService {
             }
         }
 
-        ProcessingJob job = jobRepository.findById(jobId).orElse(null);
+        ProcessingJob job = jobRepository.findByIdOptional(jobId).orElse(null);
         if (job == null) {
             log.warn("markFirstStepFailed: no ProcessingJob with id {}", jobId);
             return;
@@ -430,7 +459,7 @@ public class JobChargeService {
         if (job.getStatus() == JobStatus.OPEN) {
             job.setStatus(JobStatus.CLOSED);
             job.setClosedAt(now);
-            jobRepository.save(job);
+            jobRepository.persist(job);
         }
     }
 
@@ -452,24 +481,32 @@ public class JobChargeService {
         Objects.requireNonNull(jobId, "jobId");
         ProcessingJob closed = jobService.close(jobId);
 
-        // The afterCommit hook only fires if there's an active transaction (Spring's
-        // @Transactional ensures that). If we're called outside one — e.g. a test using the raw
-        // bean — fall through with a debug log: the close() above already happened in a
-        // sub-transaction created by JobService, but the surrounding scope has no synchronization.
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+        // The afterCommit hook only fires if there's an active JTA transaction. If we're called
+        // outside one — e.g. a test using the raw bean, or no sync registry injected — fall through
+        // with a debug log; the close() above already happened, but there's no commit to hook.
+        if (txSyncRegistry == null
+                || txSyncRegistry.getTransactionStatus() != Status.STATUS_ACTIVE) {
             log.debug("close({}): no active synchronization; skipping meter POST", jobId);
             return closed;
         }
 
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
+        txSyncRegistry.registerInterposedSynchronization(
+                new Synchronization() {
                     @Override
-                    public void afterCommit() {
+                    public void beforeCompletion() {
+                        // no-op
+                    }
+
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != Status.STATUS_COMMITTED) {
+                            return;
+                        }
                         try {
                             meterJobUsage(jobId);
                         } catch (RuntimeException e) {
                             // PaygMeterReportingService should already swallow; defence in depth so
-                            // a thrown exception out of afterCommit doesn't leak past the
+                            // a thrown exception out of afterCompletion doesn't leak past the
                             // synchronization boundary and bubble into the caller.
                             log.warn(
                                     "afterCommit meter post for job {} threw unexpectedly: {}",
@@ -525,7 +562,7 @@ public class JobChargeService {
         if (teamId == null) {
             return;
         }
-        PaygTeamExtensions ext = teamExtensionsRepository.findById(teamId).orElse(null);
+        PaygTeamExtensions ext = teamExtensionsRepository.findByIdOptional(teamId).orElse(null);
         if (ext == null) {
             return;
         }
@@ -585,7 +622,7 @@ public class JobChargeService {
     @Transactional
     public void decrementStepCount(UUID jobId) {
         Objects.requireNonNull(jobId, "jobId");
-        ProcessingJob job = jobRepository.findById(jobId).orElse(null);
+        ProcessingJob job = jobRepository.findByIdOptional(jobId).orElse(null);
         if (job == null) {
             log.warn("decrementStepCount: no ProcessingJob with id {}", jobId);
             return;
@@ -599,7 +636,7 @@ public class JobChargeService {
             return;
         }
         job.setStepCount(current - 1);
-        jobRepository.save(job);
+        jobRepository.persist(job);
     }
 
     private static String trimReason(String reason) {

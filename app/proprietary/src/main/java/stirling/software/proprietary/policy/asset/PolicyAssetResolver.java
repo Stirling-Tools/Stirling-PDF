@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.ByteArrayResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -34,7 +34,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * the executor's existing missing-supporting-file error, rather than running the step short a file.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PolicyAssetResolver {
 
@@ -102,11 +102,6 @@ public class PolicyAssetResolver {
 
     /** The asset bytes as a Resource carrying its original filename (tools read the extension). */
     private static Resource named(byte[] content, String fileName) {
-        return new ByteArrayResource(content) {
-            @Override
-            public String getFilename() {
-                return fileName;
-            }
-        };
+        return new ByteArrayResource(content, fileName);
     }
 }

@@ -5,26 +5,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
+import io.quarkus.panache.common.Sort;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.crypto.FileEncryptionKeyService;
@@ -41,9 +42,9 @@ import stirling.software.proprietary.storage.service.StorageEncryptionMigrationS
  * switch, the encrypt-existing migration, and master-key rotation. Deliberately no delete endpoint
  * — key material can be disabled but never destroyed through the API.
  */
-@RestController
-@RequestMapping("/api/v1/admin/storage-encryption")
-@PreAuthorize("hasRole('ADMIN')")
+@ApplicationScoped
+@Path("/api/v1/admin/storage-encryption")
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin: Storage Encryption", description = "Encryption-at-rest administration")
@@ -61,25 +62,27 @@ public class StorageEncryptionAdminController {
      * than reading the registry when storage is off, because a deployment that never stores files
      * may not have the table at all — the same reason the decorator's boot probe is gated.
      */
-    @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Path("/status")
+    @Produces(MediaType.APPLICATION_JSON)
     public StorageEncryptionStatusResponse status() {
         if (!applicationProperties.getStorage().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+            throw new WebApplicationException("Storage is disabled", Response.Status.FORBIDDEN);
         }
         try {
             return buildStatus();
-        } catch (DataAccessException e) {
+        } catch (PersistenceException e) {
             log.warn("Could not read storage encryption status: {}", e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
+            throw new WebApplicationException(
                     "The storage encryption key registry could not be read",
-                    e);
+                    e,
+                    Response.Status.SERVICE_UNAVAILABLE);
         }
     }
 
     private StorageEncryptionStatusResponse buildStatus() {
         List<StorageEncryptionStatusResponse.KeyInfo> keys =
-                keyRepository.findAll(Sort.by("createdAt")).stream()
+                keyRepository.listAll(Sort.by("createdAt")).stream()
                         .map(
                                 k ->
                                         new StorageEncryptionStatusResponse.KeyInfo(
@@ -115,8 +118,10 @@ public class StorageEncryptionAdminController {
     }
 
     /** Kill switch: content under this key fails closed (403) until re-enabled. Reversible. */
-    @PostMapping("/keys/{keyId}/disable")
-    public StorageEncryptionStatusResponse.KeyInfo disableKey(@PathVariable UUID keyId) {
+    @POST
+    @Path("/keys/{keyId}/disable")
+    @Produces(MediaType.APPLICATION_JSON)
+    public StorageEncryptionStatusResponse.KeyInfo disableKey(@PathParam("keyId") UUID keyId) {
         FileEncryptionKey row = setStatus(keyId, FileEncryptionKey.Status.DISABLED);
         auditService.audit(
                 AuditEventType.STORAGE_ENCRYPTION,
@@ -130,26 +135,29 @@ public class StorageEncryptionAdminController {
      * readable, but not a second key wrapping new writes. The response carries the resulting
      * status.
      */
-    @PostMapping("/keys/{keyId}/enable")
-    public StorageEncryptionStatusResponse.KeyInfo enableKey(@PathVariable UUID keyId) {
+    @POST
+    @Path("/keys/{keyId}/enable")
+    @Produces(MediaType.APPLICATION_JSON)
+    public StorageEncryptionStatusResponse.KeyInfo enableKey(@PathParam("keyId") UUID keyId) {
         FileEncryptionKey existing =
                 keyRepository
-                        .findById(keyId)
+                        .findByIdOptional(keyId)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "No such encryption key"));
+                                        new WebApplicationException(
+                                                "No such encryption key",
+                                                Response.Status.NOT_FOUND));
         if (existing.getStatus() != FileEncryptionKey.Status.DISABLED) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Key is not disabled (status: " + existing.getStatus() + ")");
+            throw new WebApplicationException(
+                    "Key is not disabled (status: " + existing.getStatus() + ")",
+                    Response.Status.CONFLICT);
         }
         FileEncryptionKeyService keyService = requireKeyService();
         FileEncryptionKey row;
         try {
             row = keyService.enable(keyId, currentUsername());
         } catch (StorageEncryptionException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+            throw new WebApplicationException(e.getMessage(), e, Response.Status.NOT_FOUND);
         }
         auditService.audit(
                 AuditEventType.STORAGE_ENCRYPTION,
@@ -163,16 +171,20 @@ public class StorageEncryptionAdminController {
         return toKeyInfo(row);
     }
 
-    @PostMapping("/migrate")
+    @POST
+    @Path("/migrate")
+    @Produces(MediaType.APPLICATION_JSON)
     public MigrationStatusResponse startMigration() {
         try {
             return MigrationStatusResponse.from(migrationService.start());
         } catch (IllegalStateException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+            throw new WebApplicationException(e.getMessage(), e, Response.Status.CONFLICT);
         }
     }
 
-    @GetMapping(value = "/migrate/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Path("/migrate/status")
+    @Produces(MediaType.APPLICATION_JSON)
     public MigrationStatusResponse migrationStatus() {
         return migrationService
                 .status()
@@ -185,15 +197,17 @@ public class StorageEncryptionAdminController {
      * material is never accepted over HTTP — new keys arrive via config/env and a restart; this
      * endpoint only performs the re-wrap step of the rotation runbook.
      */
-    @PostMapping("/master/rotate")
+    @POST
+    @Path("/master/rotate")
+    @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> rotateMasterKey() {
         FileEncryptionKeyService keyService = requireKeyService();
         int rewrapped;
         try {
             rewrapped = keyService.rotateMasterKey();
         } catch (StorageEncryptionException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Rotation failed: " + e.getMessage(), e);
+            throw new WebApplicationException(
+                    "Rotation failed: " + e.getMessage(), e, Response.Status.INTERNAL_SERVER_ERROR);
         }
         auditService.audit(
                 AuditEventType.STORAGE_ENCRYPTION,
@@ -216,7 +230,7 @@ public class StorageEncryptionAdminController {
         try {
             return keyService.setKeyStatus(keyId, status, currentUsername());
         } catch (StorageEncryptionException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+            throw new WebApplicationException(e.getMessage(), e, Response.Status.NOT_FOUND);
         }
     }
 
@@ -224,10 +238,10 @@ public class StorageEncryptionAdminController {
         try {
             return encryptionState.keyService();
         } catch (StorageEncryptionException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+            throw new WebApplicationException(
                     "Storage encryption is not configured: " + e.getMessage(),
-                    e);
+                    e,
+                    Response.Status.CONFLICT);
         }
     }
 

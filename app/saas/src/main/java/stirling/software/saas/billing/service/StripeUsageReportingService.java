@@ -8,11 +8,13 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,15 +25,15 @@ import stirling.software.saas.config.SupabaseConfigurationProperties;
  * Function. Only credits consumed above the free tier flow through {@link #reportUsageToStripe}.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class StripeUsageReportingService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final SupabaseConfigurationProperties supabaseConfig;
 
-    @Value("${supabase.url:}")
-    private String supabaseUrl;
+    @ConfigProperty(name = "supabase.url", defaultValue = "")
+    String supabaseUrl;
 
     private final HttpClient httpClient =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();

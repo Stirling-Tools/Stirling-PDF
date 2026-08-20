@@ -5,18 +5,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.scheduler.Scheduled;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ import stirling.software.common.util.TempFileRegistry;
  * and directories.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class TempFileCleanupService {
 
@@ -40,9 +39,9 @@ public class TempFileCleanupService {
     private final TempFileManager tempFileManager;
     private final ApplicationProperties applicationProperties;
 
-    @Autowired
-    @Qualifier("machineType")
-    private String machineType;
+    @Inject
+    @Named("machineType")
+    String machineType;
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
@@ -128,10 +127,7 @@ public class TempFileCleanupService {
     }
 
     /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
-    @Scheduled(
-            fixedDelayString =
-                    "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
-            timeUnit = TimeUnit.MINUTES)
+    @Scheduled(every = "{stirling.temp.cleanup-interval:30m}")
     public void scheduledCleanup() {
         log.info("Running scheduled temporary file cleanup");
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();

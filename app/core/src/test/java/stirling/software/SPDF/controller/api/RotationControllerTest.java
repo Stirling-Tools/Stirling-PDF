@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -14,19 +15,19 @@ import java.nio.file.Files;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -56,48 +57,37 @@ public class RotationControllerTest {
 
     @Test
     public void testRotatePDF() throws IOException {
-        // Create a mock file
-        MockMultipartFile mockFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
-        RotatePDFRequest request = new RotatePDFRequest();
-        request.setFileInput(mockFile);
-        request.setAngle(90);
+        // The controller binds @RestForm FileUpload and rebuilds the RotatePDFRequest internally.
+        FileUpload fileUpload = TestFileUploads.pdf(new byte[] {1, 2, 3});
 
         PDDocument mockDocument = mock(PDDocument.class);
         PDPageTree mockPages = mock(PDPageTree.class);
         PDPage mockPage = mock(PDPage.class);
 
-        when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
+        when(pdfDocumentFactory.load(any(RotatePDFRequest.class))).thenReturn(mockDocument);
         when(mockDocument.getPages()).thenReturn(mockPages);
         when(mockPages.iterator())
                 .thenReturn(java.util.Collections.singletonList(mockPage).iterator());
         when(mockPage.getRotation()).thenReturn(0);
 
         // Act
-        ResponseEntity<Resource> response = rotationController.rotatePDF(request);
+        Response response = rotationController.rotatePDF(fileUpload, null, 90);
 
         // Assert
         verify(mockPage).setRotation(90);
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     public void testRotatePDFInvalidAngle() {
-        // Create a mock file
-        MockMultipartFile mockFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
-        RotatePDFRequest request = new RotatePDFRequest();
-        request.setFileInput(mockFile);
-        request.setAngle(45); // Invalid angle
+        FileUpload fileUpload = TestFileUploads.pdf(new byte[] {1, 2, 3});
 
-        // Act & Assert: Controller direkt aufrufen und Exception erwarten
+        // Act & Assert: call the controller directly and expect the validation exception.
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> rotationController.rotatePDF(request));
+                        () -> rotationController.rotatePDF(fileUpload, null, 45));
         assertEquals("Angle must be a multiple of 90", exception.getMessage());
     }
 }

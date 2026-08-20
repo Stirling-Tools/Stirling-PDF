@@ -10,58 +10,30 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.RequestUriUtils;
+import stirling.software.common.security.AbstractAuthenticationToken;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
 /** Stateless Supabase-JWT security chain. */
 @Slf4j
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
-@Profile("saas")
-@Order(1)
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SupabaseSecurityConfig {
 
@@ -72,128 +44,16 @@ public class SupabaseSecurityConfig {
     private final ApplicationProperties applicationProperties;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
-    @Value("${app.supabase.issuer:}")
-    private String issuer;
+    @ConfigProperty(name = "app.supabase.issuer", defaultValue = "")
+    String issuer;
 
     /** Optional audience claim to enforce. Empty means do not validate the {@code aud} claim. */
-    @Value("${app.supabase.expected-aud:}")
-    private String expectedAud;
+    @ConfigProperty(name = "app.supabase.expected-aud", defaultValue = "")
+    String expectedAud;
 
     /** Clock skew tolerance (seconds) applied to the {@code exp} claim. */
-    @Value("${app.supabase.clock-skew-seconds:120}")
-    private long clockSkewSeconds;
-
-    @Bean
-    SecurityFilterChain saasSecurityFilterChain(
-            HttpSecurity http,
-            JwtDecoder jwtDecoder,
-            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider)
-            throws Exception {
-        // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
-        // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
-        // cookie- or session-bound credential a cross-site request could ride on. Re-enabling CSRF
-        // would require synchronizer tokens which don't make sense for a stateless JSON API.
-        // lgtm[java/spring-disabled-csrf-protection]
-        http.csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                                        .permitAll()
-                                        .requestMatchers("/actuator/health", "/api/v1/config/**")
-                                        .permitAll()
-                                        .requestMatchers(
-                                                req ->
-                                                        RequestUriUtils.isStaticResource(
-                                                                        req.getContextPath(),
-                                                                        req.getRequestURI())
-                                                                || RequestUriUtils
-                                                                        .isPublicAuthEndpoint(
-                                                                                req.getRequestURI(),
-                                                                                req
-                                                                                        .getContextPath())
-                                                                || RequestUriUtils.isFrontendRoute(
-                                                                        req.getContextPath(),
-                                                                        req.getRequestURI()))
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
-                .addFilterBefore(
-                        new SupabaseAuthenticationFilter(
-                                teamService,
-                                userService,
-                                supabaseUserService,
-                                saasTeamService,
-                                jwtDecoder,
-                                apiKeyAuthenticationService),
-                        BearerTokenAuthenticationFilter.class)
-                .exceptionHandling(
-                        ex ->
-                                ex.authenticationEntryPoint(
-                                                new BearerTokenAuthenticationEntryPoint())
-                                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
-                .oauth2ResourceServer(
-                        oauth ->
-                                oauth.jwt(
-                                        jwt ->
-                                                jwt.decoder(jwtDecoder)
-                                                        .jwtAuthenticationConverter(
-                                                                SupabaseSecurityConfig
-                                                                        ::toAuthentication)));
-
-        // Device-credential auth for linked self-hosted instances (combined-billing Mode A).
-        // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
-        // is absent here, so the instance surface cannot authenticate at all until release.
-        DeviceCredentialAuthenticationFilter deviceFilter =
-                deviceCredentialFilterProvider.getIfAvailable();
-        if (deviceFilter != null) {
-            http.addFilterBefore(deviceFilter, BearerTokenAuthenticationFilter.class);
-        }
-
-        return http.build();
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder() {
-        String issuerError = validateIssuer(issuer);
-        if (issuerError != null) {
-            log.warn(
-                    "{} saas profile is active but JWTs cannot be validated. Set SAAS_DB_PROJECT_REF"
-                            + " (or app.supabase.issuer) in application-saas.properties or via env.",
-                    issuerError);
-            // Build a decoder that will reject every token; failing closed is safer than failing
-            // open when configuration is incomplete.
-            final String reason = issuerError;
-            return token -> {
-                throw new org.springframework.security.oauth2.jwt.JwtException(reason);
-            };
-        }
-        String jwks = issuer + "/.well-known/jwks.json";
-        log.info("Configuring JWT decoder with JWKS: {}", jwks);
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwks).build();
-        // Defence-in-depth: signature verification already binds the token to this Supabase
-        // project's JWKS, but enforcing iss/exp/aud explicitly catches tokens that smuggle
-        // through (e.g. JWKS reuse across projects, clock-skew abuse, missing aud).
-        decoder.setJwtValidator(
-                new SupabaseTokenValidator(
-                        issuer, expectedAud, Duration.ofSeconds(clockSkewSeconds)));
-        if (expectedAud == null || expectedAud.isBlank()) {
-            log.info(
-                    "JWT validation: enforcing issuer='{}' and exp (skew={}s); aud check disabled",
-                    issuer,
-                    clockSkewSeconds);
-        } else {
-            log.info(
-                    "JWT validation: enforcing issuer='{}', aud='{}', and exp (skew={}s)",
-                    issuer,
-                    expectedAud,
-                    clockSkewSeconds);
-        }
-        return decoder;
-    }
+    @ConfigProperty(name = "app.supabase.clock-skew-seconds", defaultValue = "120")
+    long clockSkewSeconds;
 
     /** Returns {@code null} if the issuer URL is usable, otherwise a short reason string. */
     static String validateIssuer(String issuer) {
@@ -220,7 +80,7 @@ public class SupabaseSecurityConfig {
     }
 
     /** Validates iss, exp (with clock-skew) and optionally aud on a decoded Supabase JWT. */
-    static final class SupabaseTokenValidator implements OAuth2TokenValidator<Jwt> {
+    static final class SupabaseTokenValidator {
         private final String expectedIssuer;
         private final String expectedAudienceOrNull;
         private final Duration skew;
@@ -235,42 +95,36 @@ public class SupabaseSecurityConfig {
             this.skew = Objects.requireNonNull(skew, "skew");
         }
 
-        @Override
-        public OAuth2TokenValidatorResult validate(Jwt token) {
-            List<OAuth2Error> errors = new ArrayList<>();
+        List<String> validate(JsonWebToken token) {
+            List<String> errors = new ArrayList<>();
 
-            String iss = token.getIssuer() != null ? token.getIssuer().toString() : null;
+            String iss = token.getIssuer();
             if (iss == null || !iss.equals(expectedIssuer)) {
-                errors.add(new OAuth2Error("invalid_token", "Invalid issuer: " + iss, null));
+                errors.add("Invalid issuer: " + iss);
             }
 
-            Instant exp = token.getExpiresAt();
-            if (exp == null) {
-                errors.add(new OAuth2Error("invalid_token", "Missing exp claim", null));
-            } else if (exp.isBefore(Instant.now().minus(skew))) {
-                errors.add(new OAuth2Error("invalid_token", "Token expired at " + exp, null));
-            }
-
-            if (expectedAudienceOrNull != null) {
-                List<String> aud = token.getAudience();
-                if (aud == null || !aud.contains(expectedAudienceOrNull)) {
-                    errors.add(
-                            new OAuth2Error(
-                                    "invalid_token",
-                                    "Missing/invalid audience: " + expectedAudienceOrNull,
-                                    null));
+            long expSeconds = token.getExpirationTime();
+            if (expSeconds <= 0) {
+                errors.add("Missing exp claim");
+            } else {
+                Instant exp = Instant.ofEpochSecond(expSeconds);
+                if (exp.isBefore(Instant.now().minus(skew))) {
+                    errors.add("Token expired at " + exp);
                 }
             }
 
-            return errors.isEmpty()
-                    ? OAuth2TokenValidatorResult.success()
-                    : OAuth2TokenValidatorResult.failure(errors);
+            if (expectedAudienceOrNull != null) {
+                java.util.Set<String> aud = token.getAudience();
+                if (aud == null || !aud.contains(expectedAudienceOrNull)) {
+                    errors.add("Missing/invalid audience: " + expectedAudienceOrNull);
+                }
+            }
+
+            return errors;
         }
     }
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cfg = new CorsConfiguration();
+    List<String> resolveCorsOrigins() {
         boolean operatorOverride =
                 applicationProperties.getSystem() != null
                         && applicationProperties.getSystem().getCorsAllowedOrigins() != null
@@ -285,11 +139,12 @@ public class SupabaseSecurityConfig {
                                 "https://stirling.com",
                                 "https://app.stirling.com",
                                 "https://api.stirling.com");
-        // Always allow the desktop (Tauri) app's webview origins so the bundled
-        // desktop client can reach the cloud backend regardless of the operator's
-        // configured web origins. A browser can never present a tauri:// (or
-        // tauri.localhost) origin, so these are desktop-app identities — safe to
-        // allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
+        // Always allow the desktop (Tauri) app's webview origins so the bundled desktop client can
+        // reach the cloud backend regardless of the operator's configured web origins. A browser
+        // can
+        // never present a tauri:// (or tauri.localhost) origin, so these are desktop-app identities
+        // -
+        // safe to allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
         List<String> origins = new ArrayList<>(configuredOrigins);
         for (String desktopOrigin :
                 List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")) {
@@ -305,47 +160,31 @@ public class SupabaseSecurityConfig {
                             + " specific hostnames.",
                     origins);
         }
-        cfg.setAllowedOriginPatterns(origins);
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        cfg.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type",
-                        "X-Requested-With",
-                        "Accept",
-                        "Origin",
-                        "X-API-KEY",
-                        "X-Browser-Id"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate"));
-        cfg.setAllowCredentials(true);
-        cfg.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
+        return origins;
     }
 
     /**
-     * Maps Supabase JWT claims onto Spring Security authorities. Package-private static so unit
-     * tests can call it directly without instantiating the full security config.
+     * Maps Supabase JWT claims onto authorities. Package-private static so unit tests can call it
+     * directly without instantiating the full security config.
      */
-    static AbstractAuthenticationToken toAuthentication(Jwt jwt) {
+    static AbstractAuthenticationToken toAuthentication(JsonWebToken jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         // Transient (non-persisted) authorities for the JWT principal. Use
         // SimpleGrantedAuthority rather than the @Entity Authority class.
-        boolean isAnonymous = Boolean.TRUE.equals(jwt.getClaimAsBoolean("is_anonymous"));
-        String supabaseRole = jwt.getClaimAsString("role");
+        boolean isAnonymous = Boolean.TRUE.equals(jwt.<Boolean>getClaim("is_anonymous"));
+        String supabaseRole = jwt.getClaim("role");
         if (supabaseRole != null && !supabaseRole.isBlank()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + supabaseRole));
         }
-        String appRole = jwt.getClaimAsString("app_role");
+        String appRole = jwt.getClaim("app_role");
         if (appRole != null && !appRole.isBlank()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + appRole.toUpperCase(Locale.ROOT)));
         }
         authorities.add(
                 new SimpleGrantedAuthority(isAnonymous ? "ROLE_LIMITED_API_USER" : "ROLE_USER"));
 
-        List<String> perms = jwt.getClaimAsStringList("permissions");
+        List<String> perms = jwt.getClaim("permissions");
         if (perms != null) {
             perms.stream()
                     .filter(p -> p != null && !p.isBlank())
@@ -353,7 +192,7 @@ public class SupabaseSecurityConfig {
                     .forEach(authorities::add);
         }
 
-        String email = jwt.getClaimAsString("email");
+        String email = jwt.getClaim("email");
         String supabaseId = jwt.getSubject();
         if (log.isDebugEnabled()) {
             log.debug(
@@ -364,8 +203,8 @@ public class SupabaseSecurityConfig {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
         }
-        // BearerTokenAuthenticationFilter overwrites the context SupabaseAuthenticationFilter
-        // built; carry its resolved User across so instanceof-User authorization keeps working.
+        // Carry the resolved User (built by SupabaseAuthenticationFilter) across so
+        // instanceof-User authorization keeps working when this token is rebuilt.
         User user = null;
         Authentication existing = SecurityContextHolder.getContext().getAuthentication();
         if (existing instanceof EnhancedJwtAuthenticationToken enhanced

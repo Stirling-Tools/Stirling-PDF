@@ -3,7 +3,7 @@ package stirling.software.proprietary.failure;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * reads nothing; see {@link #readScope()}.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FileRunEventService {
 

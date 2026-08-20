@@ -2,8 +2,6 @@ package stirling.software.proprietary.policy.ledger;
 
 import java.io.Serializable;
 
-import org.springframework.data.domain.Persistable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,9 +19,9 @@ import lombok.Setter;
 /**
  * One processed-file ledger row: the version a policy last settled a file at, and where it is in
  * the claim lifecycle. Keyed by SHA-256 of the source-owned identity so any identity length fits a
- * fixed-width index. {@code isNew} is always true: the entity is only saved for fresh inserts
- * (everything else is a conditional update), so a lost insert race surfaces as a constraint
- * violation rather than a silent merge.
+ * fixed-width index. Rows are only ever inserted, never merged: the entity is saved for fresh
+ * inserts alone (everything else is a conditional update), so a lost insert race surfaces as a
+ * constraint violation rather than a silent merge.
  */
 @Entity
 @Table(
@@ -39,7 +37,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class ProcessedFileEntity implements Serializable, Persistable<ProcessedFileId> {
+public class ProcessedFileEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -92,15 +90,8 @@ public class ProcessedFileEntity implements Serializable, Persistable<ProcessedF
         this.updatedAt = nowMillis;
     }
 
-    @Override
     @Transient
     public ProcessedFileId getId() {
         return new ProcessedFileId(policyId, identityHash);
-    }
-
-    @Override
-    @Transient
-    public boolean isNew() {
-        return true;
     }
 }

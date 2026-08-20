@@ -37,7 +37,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +46,7 @@ import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 /**

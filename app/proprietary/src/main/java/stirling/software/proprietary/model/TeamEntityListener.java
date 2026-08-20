@@ -1,26 +1,31 @@
 package stirling.software.proprietary.model;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
+import io.quarkus.runtime.Startup;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import jakarta.persistence.PostPersist;
 
-/** Publishes {@link TeamCreatedEvent} on insert; Spring bridges the publisher via a static. */
-@Component
+/**
+ * Publishes {@link TeamCreatedEvent} on insert. JPA owns the listener instance it invokes, so the
+ * CDI publisher is bridged via a static, set when the bean is created eagerly at startup.
+ */
+@Startup
+@ApplicationScoped
 public class TeamEntityListener {
 
-    private static ApplicationEventPublisher publisher;
+    private static Event<TeamCreatedEvent> publisher;
 
-    @Autowired
-    void setPublisher(ApplicationEventPublisher applicationEventPublisher) {
-        TeamEntityListener.publisher = applicationEventPublisher;
+    @Inject
+    void setPublisher(Event<TeamCreatedEvent> teamCreatedEvent) {
+        TeamEntityListener.publisher = teamCreatedEvent;
     }
 
     @PostPersist
     public void onCreate(Team team) {
         if (publisher != null) {
-            publisher.publishEvent(new TeamCreatedEvent(team.getId(), team.getName()));
+            publisher.fire(new TeamCreatedEvent(team.getId(), team.getName()));
         }
     }
 }

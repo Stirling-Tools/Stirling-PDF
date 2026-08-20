@@ -4,22 +4,23 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
@@ -48,7 +49,7 @@ import stirling.software.saas.payg.policy.PricingPolicyService;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/instance")
-@Profile("saas")
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class InstanceController {
 
@@ -95,7 +96,7 @@ public class InstanceController {
             LocalDateTime periodEnd) {}
 
     @GetMapping("/whoami")
-    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    @RolesAllowed("LINKED_INSTANCE")
     public ResponseEntity<WhoAmIResponse> whoami(Authentication auth) {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             // Belt-and-braces: hasRole already guarantees this, but never leak a non-instance
@@ -111,7 +112,7 @@ public class InstanceController {
      * gets {@code revoked_at} set; idempotent (already-revoked → still 204).
      */
     @PostMapping("/revoke-self")
-    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    @RolesAllowed("LINKED_INSTANCE")
     public ResponseEntity<Void> revokeSelf(Authentication auth) {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -121,7 +122,7 @@ public class InstanceController {
     }
 
     @GetMapping("/entitlement")
-    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    @RolesAllowed("LINKED_INSTANCE")
     @Transactional(readOnly = true)
     public ResponseEntity<EntitlementResponse> entitlement(Authentication auth) {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
@@ -147,7 +148,7 @@ public class InstanceController {
      * state.
      */
     @PostMapping("/sync")
-    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    @RolesAllowed("LINKED_INSTANCE")
     @Transactional
     public ResponseEntity<EntitlementResponse> sync(
             Authentication auth, @RequestBody UsageSyncRequest req) {

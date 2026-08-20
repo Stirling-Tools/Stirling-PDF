@@ -1,10 +1,10 @@
 package stirling.software.proprietary.workflow.dto;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Request DTO for submitting a signature (wet signature or certificate). Used when a participant

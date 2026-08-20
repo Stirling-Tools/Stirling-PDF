@@ -2,8 +2,10 @@ package stirling.software.proprietary.mcp.tools;
 
 import java.io.IOException;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,13 +22,14 @@ import tools.jackson.databind.node.ObjectNode;
  * most operations accept the file inline via their {@code file} argument.
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class StirlingUploadTool implements McpTool {
 
     private final ObjectMapper mapper;
     private final FileStorage fileStorage;
 
+    @Inject
     public StirlingUploadTool(ObjectMapper mapper, FileStorage fileStorage) {
         this.mapper = mapper;
         this.fileStorage = fileStorage;

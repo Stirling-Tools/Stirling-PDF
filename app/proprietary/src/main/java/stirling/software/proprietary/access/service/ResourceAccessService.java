@@ -5,9 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,18 +24,19 @@ import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.security.model.User;
 
 /** Resolves access to gated resources: owner, then admin, then grant, then default policy. */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class ResourceAccessService {
 
     private final ResourceGrantRepository grantRepository;
     private final TeamLeadLookup teamLeadLookup;
     private final PrincipalResolver principalResolver;
 
-    @Value("${security.portal.defaultAccess:ADMINS_AND_TEAM_LEADS}")
-    private DefaultAccessPolicy portalDefaultPolicy;
+    @ConfigProperty(name = "security.portal.defaultAccess", defaultValue = "ADMINS_AND_TEAM_LEADS")
+    DefaultAccessPolicy portalDefaultPolicy;
 
     // ---- public checks ----
 

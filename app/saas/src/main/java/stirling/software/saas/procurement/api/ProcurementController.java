@@ -4,13 +4,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -54,7 +54,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/procurement")
-@Profile("saas")
+@IfBuildProfile("saas")
 public class ProcurementController {
 
     // Local mapper to parse the stored line-items JSON; the saas context exposes no injectable
@@ -485,7 +485,7 @@ public class ProcurementController {
      * stays in the payment step until the invoice settles. Idempotent.
      */
     @PostMapping("/provision")
-    @PreAuthorize("hasRole('ADMIN')")
+    @RolesAllowed("ADMIN")
     public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
         try {
             procurement.provisionLicense(teamId);

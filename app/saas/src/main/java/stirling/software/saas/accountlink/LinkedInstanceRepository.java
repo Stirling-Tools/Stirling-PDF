@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.transaction.Transactional;
 
 /**
  * Data access for {@link LinkedInstance}. Plain Spring Data JPA against {@code stirling_pdf} —

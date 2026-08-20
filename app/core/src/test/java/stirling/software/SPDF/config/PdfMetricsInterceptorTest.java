@@ -10,12 +10,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.SPDF.service.PdfMetricsService;
+import stirling.software.common.model.MultipartFile;
 
 class PdfMetricsInterceptorTest {
 

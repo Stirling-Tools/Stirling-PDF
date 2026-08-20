@@ -3,8 +3,7 @@ package stirling.software.saas.payg.docs;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
+import stirling.software.common.model.MultipartFile;
 import stirling.software.saas.payg.policy.PricingPolicy;
 
 /**

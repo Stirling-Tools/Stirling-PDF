@@ -12,8 +12,9 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,8 +43,8 @@ import stirling.software.common.util.TempFileManager;
  * by the wrapper and is NOT in the returned list when extraction takes the direct-PDF path.
  */
 @Slf4j
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PaygOutputExtractor {
 
     /** {@code %PDF-} in ASCII. */

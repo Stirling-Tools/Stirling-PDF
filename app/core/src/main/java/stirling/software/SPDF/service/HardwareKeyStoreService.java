@@ -25,10 +25,10 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ import stirling.software.common.util.ExceptionUtils;
  * native code execution, so PKCS#11 libraries are additionally restricted to an allowlist of
  * detected / configured driver paths.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class HardwareKeyStoreService {
 
@@ -65,12 +65,12 @@ public class HardwareKeyStoreService {
     /** Same as {@link #PKCS11_LIBRARIES_ENV} but as a JVM system property. */
     private static final String PKCS11_LIBRARIES_PROP = "stirling.pkcs11.libraries";
 
-    private final String machineType;
-
-    public HardwareKeyStoreService(
-            @Autowired(required = false) @Qualifier("machineType") String machineType) {
-        this.machineType = machineType;
-    }
+    // MIGRATION: was @Autowired(required=false) ctor injection of the @Named("machineType") bean.
+    // AppConfig always produces it, so this is plain field injection (matches
+    // TempFileCleanupService).
+    @Inject
+    @Named("machineType")
+    String machineType;
 
     // ---------------------------------------------------------------------
     // Gating

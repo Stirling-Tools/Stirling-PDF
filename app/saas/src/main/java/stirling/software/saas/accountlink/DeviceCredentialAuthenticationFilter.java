@@ -6,17 +6,19 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.security.SecurityContextHolder;
 
 /**
  * Authenticates a linked self-hosted instance by its device credential (combined-billing "Mode A").
@@ -33,8 +35,8 @@ import lombok.extern.slf4j.Slf4j;
  * {@code SupabaseSecurityConfig} never wires it in.
  */
 @Slf4j
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class DeviceCredentialAuthenticationFilter extends OncePerRequestFilter {
 

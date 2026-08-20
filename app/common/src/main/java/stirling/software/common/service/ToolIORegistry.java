@@ -1,23 +1,25 @@
 package stirling.software.common.service;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
@@ -26,58 +28,84 @@ import stirling.software.common.model.tool.ToolIOSpec;
  * Reads every {@link ToolIO} declaration off its handler method at startup and serves it by
  * endpoint path. Replaces parsing the same information out of the description prose, which meant
  * fetching our own {@code /v1/api-docs} over HTTP first.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): discovery previously enumerated Spring MVC's {@code
+ * RequestMappingHandlerMapping} beans and read each {@code RequestMappingInfo}'s direct paths.
+ * Quarkus/RESTEasy Reactive has no runtime handler-mapping registry, so the paths are rebuilt from
+ * the JAX-RS annotations on the CDI beans instead: the resource class's {@code @Path} joined with
+ * the method's {@code @Path} (falling back to {@link AutoJobPostMapping#value()} for a method that
+ * only declares its route there).
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
 
-    private final ApplicationContext applicationContext;
+    private final BeanManager beanManager;
 
-    // Written on the startup thread, read on request threads. Spring's lifecycle establishes
-    // happens-before, so no volatile (same as AiEngineEndpointResolver).
+    // Written on the startup thread, read on request threads. The container's lifecycle
+    // establishes happens-before, so no volatile (same as AiEngineEndpointResolver).
     private Map<String, ToolIOSpec> specsByPath = Map.of();
+    private boolean discovered = false;
 
-    // Keep this the only constructor: with two, Spring falls back to a no-arg one that isn't here.
-    public ToolIORegistry(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    // Keep this the only constructor: with two, Arc cannot pick an injection point.
+    @Inject
+    public ToolIORegistry(BeanManager beanManager) {
+        this.beanManager = beanManager;
     }
 
-    /** A registry over known declarations rather than ones discovered from the context. */
+    /** A registry over known declarations rather than ones discovered from the container. */
     static ToolIORegistry forSpecs(Map<String, ToolIOSpec> specs) {
         ToolIORegistry registry = new ToolIORegistry(null);
         registry.specsByPath = Map.copyOf(specs);
+        registry.discovered = true;
         return registry;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
-    public void discoverToolIO() {
-        Map<String, ToolIOSpec> discovered = new TreeMap<>();
-        for (RequestMappingHandlerMapping mapping :
-                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
-            mapping.getHandlerMethods()
-                    .forEach((info, handler) -> register(discovered, info, handler));
+    void onStart(@Observes StartupEvent event) {
+        discoverToolIO();
+    }
+
+    /**
+     * Idempotent, and also called lazily on first read: the OpenAPI filter that publishes these
+     * declarations runs at its own point in startup, which is not ordered against this observer.
+     */
+    public synchronized void discoverToolIO() {
+        if (discovered || beanManager == null) {
+            return;
         }
-        specsByPath = Map.copyOf(discovered);
+        Map<String, ToolIOSpec> specs = new TreeMap<>();
+        for (Bean<?> bean : beanManager.getBeans(Object.class, Any.Literal.INSTANCE)) {
+            register(specs, bean.getBeanClass());
+        }
+        specsByPath = Map.copyOf(specs);
+        discovered = true;
         log.debug("Discovered {} endpoints declaring @ToolIO", specsByPath.size());
     }
 
-    private static void register(
-            Map<String, ToolIOSpec> target, RequestMappingInfo info, HandlerMethod handler) {
-        ToolIO annotation = handler.getMethodAnnotation(ToolIO.class);
-        if (annotation == null) {
+    private static void register(Map<String, ToolIOSpec> target, Class<?> resourceClass) {
+        jakarta.ws.rs.Path classPath = resourceClass.getAnnotation(jakarta.ws.rs.Path.class);
+        if (classPath == null) {
             return;
         }
-        Method method = handler.getMethod();
-        ToolIOSpec spec =
-                ToolIOSpec.from(
-                        annotation, param -> ToolIOParameterDefaults.resolve(method, param));
-        for (String pattern : extractPatterns(info)) {
-            target.put(pattern, spec);
+        for (Method method : resourceClass.getMethods()) {
+            ToolIO annotation = method.getAnnotation(ToolIO.class);
+            if (annotation == null) {
+                continue;
+            }
+            ToolIOSpec spec =
+                    ToolIOSpec.from(
+                            annotation, param -> ToolIOParameterDefaults.resolve(method, param));
+            for (String pattern : extractPatterns(classPath, method)) {
+                target.put(pattern, spec);
+            }
         }
     }
 
     @Override
     public Optional<ToolIOSpec> find(String operationPath) {
+        if (!discovered) {
+            discoverToolIO();
+        }
         return Optional.ofNullable(specsByPath.get(operationPath));
     }
 
@@ -109,22 +137,44 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
                 .orElse(false);
     }
 
-    private static Set<String> extractPatterns(RequestMappingInfo info) {
-        try {
-            Method getDirectPaths = info.getClass().getMethod("getDirectPaths");
-            Object result = getDirectPaths.invoke(info);
-            if (result instanceof Set<?> set) {
-                Set<String> patterns = new HashSet<>();
-                for (Object value : set) {
-                    if (value instanceof String s) {
-                        patterns.add(s);
-                    }
-                }
-                return patterns;
-            }
-        } catch (Exception e) {
-            log.trace("getDirectPaths unavailable on RequestMappingInfo", e);
+    private static Set<String> extractPatterns(jakarta.ws.rs.Path classPath, Method handlerMethod) {
+        Set<String> patterns = new LinkedHashSet<>();
+        jakarta.ws.rs.Path methodPath = handlerMethod.getAnnotation(jakarta.ws.rs.Path.class);
+        if (methodPath != null) {
+            patterns.add(join(classPath.value(), methodPath.value()));
+            return patterns;
         }
-        return Set.of();
+        // Routing lives on @AutoJobPostMapping for endpoints that never got their own @Path.
+        AutoJobPostMapping autoJob = handlerMethod.getAnnotation(AutoJobPostMapping.class);
+        if (autoJob != null) {
+            for (String value : autoJob.value()) {
+                patterns.add(join(classPath.value(), value));
+            }
+        }
+        return patterns;
+    }
+
+    private static String join(String base, String suffix) {
+        String head = normalise(base);
+        String tail = normalise(suffix);
+        if (tail.isEmpty()) {
+            return head;
+        }
+        return head.isEmpty() ? tail : head + tail;
+    }
+
+    /** Leading slash, no trailing one, so the two halves concatenate cleanly. */
+    private static String normalise(String path) {
+        if (path == null || path.isBlank() || "/".equals(path)) {
+            return "";
+        }
+        String trimmed = path.trim();
+        if (!trimmed.startsWith("/")) {
+            trimmed = "/" + trimmed;
+        }
+        while (trimmed.length() > 1 && trimmed.endsWith("/")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        return trimmed;
     }
 }

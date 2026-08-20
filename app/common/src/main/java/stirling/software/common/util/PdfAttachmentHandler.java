@@ -38,13 +38,14 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.ws.rs.core.MediaType;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @UtilityClass
@@ -120,7 +121,7 @@ public class PdfAttachmentHandler {
             public String getContentType() {
                 return attachment.getContentType() != null
                         ? attachment.getContentType()
-                        : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                        : MediaType.APPLICATION_OCTET_STREAM;
             }
 
             @Override

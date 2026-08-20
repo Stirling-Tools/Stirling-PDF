@@ -2,10 +2,9 @@ package stirling.software.saas.payg.filter;
 
 import java.io.IOException;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import io.quarkus.arc.profile.IfBuildProfile;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.FilterChain;
@@ -32,9 +31,9 @@ import stirling.software.common.util.TempFileManager;
  * idempotent so a defensive call by the interceptor's {@code afterCompletion} is harmless.
  */
 @Slf4j
-@Component
-@Profile("saas")
-public class PaygResponseBodyWrapperFilter extends OncePerRequestFilter {
+@ApplicationScoped
+@IfBuildProfile("saas")
+public class PaygResponseBodyWrapperFilter {
 
     /** Request-attribute key under which the wrapper is exposed to the interceptor. */
     public static final String REQUEST_ATTRIBUTE =
@@ -49,7 +48,6 @@ public class PaygResponseBodyWrapperFilter extends OncePerRequestFilter {
         this.properties = properties;
     }
 
-    @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

@@ -10,12 +10,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.model.User;
 
 @RequiredArgsConstructor

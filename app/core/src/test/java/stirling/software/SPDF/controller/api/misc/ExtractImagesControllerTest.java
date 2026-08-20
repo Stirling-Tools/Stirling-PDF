@@ -1,9 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,18 +19,19 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,8 +46,7 @@ class ExtractImagesControllerTest {
         return Files.createTempFile(tempDir, "test", suffix).toFile();
     }
 
-    private MockMultipartFile createPdfWithImage() throws IOException {
-        Path path = tempDir.resolve("withimage.pdf");
+    private byte[] createPdfWithImageBytes() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
@@ -52,104 +55,92 @@ class ExtractImagesControllerTest {
             try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
                 cs.drawImage(pdImage, 50, 600, 100, 100);
             }
-            doc.save(path.toFile());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 
-    private MockMultipartFile createEmptyPdf() throws IOException {
-        Path path = tempDir.resolve("empty.pdf");
+    private byte[] createEmptyPdfBytes() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
-            doc.save(path.toFile());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
-        return new MockMultipartFile(
-                "fileInput",
-                "empty.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                Files.readAllBytes(path));
     }
 
     @Test
     void extractImages_withImage_returnsZip() throws IOException {
-        MockMultipartFile file = createPdfWithImage();
-        PDFExtractImagesRequest request = new PDFExtractImagesRequest();
-        request.setFileInput(file);
-        request.setFormat("png");
+        byte[] bytes = createPdfWithImageBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
         when(tempFileManager.createTempFile(anyString()))
                 .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
-        var response = controller.extractImages(request);
+        Response response = controller.extractImages(file, null, "png");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void extractImages_emptyPdf_returnsZip() throws IOException {
-        MockMultipartFile file = createEmptyPdf();
-        PDFExtractImagesRequest request = new PDFExtractImagesRequest();
-        request.setFileInput(file);
-        request.setFormat("png");
+        byte[] bytes = createEmptyPdfBytes();
+        FileUpload file = TestFileUploads.of(bytes, "empty.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
         when(tempFileManager.createTempFile(anyString()))
                 .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
-        var response = controller.extractImages(request);
+        Response response = controller.extractImages(file, null, "png");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void extractImages_jpegFormat() throws IOException {
-        MockMultipartFile file = createPdfWithImage();
-        PDFExtractImagesRequest request = new PDFExtractImagesRequest();
-        request.setFileInput(file);
-        request.setFormat("jpeg");
+        byte[] bytes = createPdfWithImageBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
         when(tempFileManager.createTempFile(anyString()))
                 .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
-        var response = controller.extractImages(request);
+        Response response = controller.extractImages(file, null, "jpeg");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void extractImages_ioException() throws IOException {
-        MockMultipartFile file = createPdfWithImage();
-        PDFExtractImagesRequest request = new PDFExtractImagesRequest();
-        request.setFileInput(file);
-        request.setFormat("png");
+        byte[] bytes = createPdfWithImageBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        when(pdfDocumentFactory.load(file)).thenThrow(new IOException("load error"));
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenThrow(new IOException("load error"));
         when(tempFileManager.createTempFile(anyString()))
                 .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
-        assertThatThrownBy(() -> controller.extractImages(request)).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> controller.extractImages(file, null, "png"))
+                .isInstanceOf(IOException.class);
     }
 
     @Test
     void extractImages_gifFormat() throws IOException {
-        MockMultipartFile file = createPdfWithImage();
-        PDFExtractImagesRequest request = new PDFExtractImagesRequest();
-        request.setFileInput(file);
-        request.setFormat("gif");
+        byte[] bytes = createPdfWithImageBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
         when(tempFileManager.createTempFile(anyString()))
                 .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
-        var response = controller.extractImages(request);
+        Response response = controller.extractImages(file, null, "gif");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 }

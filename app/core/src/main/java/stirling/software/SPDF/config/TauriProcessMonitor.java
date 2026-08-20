@@ -7,13 +7,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import io.quarkus.arc.lookup.LookupIfProperty;
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 /**
  * Monitor for Tauri parent process to detect orphaned Java backend processes. When running in Tauri
@@ -21,23 +22,17 @@ import jakarta.annotation.PreDestroy;
  * parent process terminates unexpectedly, this will trigger a graceful shutdown of the Java backend
  * to prevent orphaned processes.
  */
-@Component
-@ConditionalOnProperty(name = "STIRLING_PDF_TAURI_MODE", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "STIRLING_PDF_TAURI_MODE", stringValue = "true")
 public class TauriProcessMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(TauriProcessMonitor.class);
 
-    private final ApplicationContext applicationContext;
     private String parentProcessId;
     private ScheduledExecutorService scheduler;
     private volatile boolean monitoring = false;
 
-    public TauriProcessMonitor(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-    @PostConstruct
-    public void init() {
+    void onStart(@Observes StartupEvent event) {
         parentProcessId = System.getenv("TAURI_PARENT_PID");
 
         if (parentProcessId != null && !parentProcessId.trim().isEmpty()) {
@@ -113,14 +108,9 @@ public class TauriProcessMonitor {
                                 // Give a small delay to ensure logging completes
                                 Thread.sleep(1000);
 
-                                if (applicationContext instanceof ConfigurableApplicationContext) {
-                                    ((ConfigurableApplicationContext) applicationContext).close();
-                                } else {
-                                    // Fallback to system exit
-                                    logger.warn(
-                                            "Unable to shutdown Spring context gracefully, using System.exit");
-                                    System.exit(0);
-                                }
+                                // Trigger a graceful Quarkus shutdown (fires ShutdownEvent /
+                                // @PreDestroy); equivalent to closing the Spring context.
+                                Quarkus.asyncExit(0);
                             } catch (Exception e) {
                                 logger.error("Error during graceful shutdown", e);
                                 System.exit(1);
@@ -128,8 +118,7 @@ public class TauriProcessMonitor {
                         });
     }
 
-    @PreDestroy
-    public void cleanup() {
+    void cleanup(@Observes ShutdownEvent event) {
         monitoring = false;
 
         if (scheduler != null && !scheduler.isShutdown()) {

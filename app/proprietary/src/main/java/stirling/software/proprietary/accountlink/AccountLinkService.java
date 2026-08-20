@@ -3,9 +3,9 @@ package stirling.software.proprietary.accountlink;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,10 +16,11 @@ import lombok.extern.slf4j.Slf4j;
  * JWT to the SaaS register endpoint, then persists the returned device credential secure-at-rest.
  * The credential — not the JWT — authenticates all later unattended entitlement calls.
  */
+// Arc cannot gate a bean on a runtime property, so the account-link flag no longer removes this
+// bean; only the flag-gated link endpoints reach it, so nothing links while the flag is off.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class AccountLinkService {
 
     private final AccountLinkClient client;

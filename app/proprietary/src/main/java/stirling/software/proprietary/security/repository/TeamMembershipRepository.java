@@ -3,129 +3,107 @@ package stirling.software.proprietary.security.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
-public interface TeamMembershipRepository extends JpaRepository<TeamMembership, Long> {
+@ApplicationScoped
+public class TeamMembershipRepository implements PanacheRepositoryBase<TeamMembership, Long> {
+
+    /** Find team membership by team ID and user ID */
+    public Optional<TeamMembership> findByTeamIdAndUserId(Long teamId, Long userId) {
+        return find("team.id = ?1 and user.id = ?2", teamId, userId).firstResultOptional();
+    }
+
+    /** Find all memberships for a team */
+    public List<TeamMembership> findByTeamId(Long teamId) {
+        return find("team.id = ?1", teamId).list();
+    }
+
+    /** Find all memberships for a user */
+    public List<TeamMembership> findByUserId(Long userId) {
+        return find("user.id = ?1", userId).list();
+    }
 
     /**
-     * Find team membership by team ID and user ID
-     *
-     * @param teamId the team ID
-     * @param userId the user ID
-     * @return Optional of TeamMembership if found
+     * Resolve the single membership a user belongs to, earliest-created first. In steady state
+     * there is exactly one; ordering picks the primary row deterministically if multiple exist.
      */
-    Optional<TeamMembership> findByTeamIdAndUserId(Long teamId, Long userId);
+    public List<TeamMembership> findPrimaryMembership(Long userId) {
+        return find("user.id = ?1 order by createdAt asc", userId).list();
+    }
 
-    /**
-     * Find all memberships for a team
-     *
-     * @param teamId the team ID
-     * @return List of team memberships
-     */
-    @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId")
-    List<TeamMembership> findByTeamId(@Param("teamId") Long teamId);
+    /** Find all members with a specific role in a team */
+    public List<TeamMembership> findByTeamIdAndRole(Long teamId, TeamRole role) {
+        return find("team.id = ?1 and role = ?2", teamId, role).list();
+    }
 
-    /**
-     * Find all memberships for a user (typically just one for personal team, but can be multiple if
-     * invited to other teams)
-     *
-     * @param userId the user ID
-     * @return List of team memberships
-     */
-    @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.team WHERE tm.user.id = :userId")
-    List<TeamMembership> findByUserId(@Param("userId") Long userId);
+    /** Count members with a specific role in a team. */
+    public long countByTeamIdAndRole(Long teamId, TeamRole role) {
+        return count("team.id = ?1 and role = ?2", teamId, role);
+    }
 
-    /**
-     * Resolve the single membership a user belongs to. In the PAYG design every user is owned by
-     * exactly one team — personal-team-for-new-signups, then optionally migrated when they accept
-     * an invite (the old personal team is deleted on accept). For diagnostic safety this picks the
-     * earliest-created row if multiple exist, but in steady state there is exactly one.
-     *
-     * <p>Returns both the team and its role so the PAYG wallet endpoint can answer "what does this
-     * user see?" in a single query rather than a list-then-filter dance.
-     *
-     * @param userId the user ID
-     * @return the user's primary membership, if any
-     */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.team"
-                    + " WHERE tm.user.id = :userId"
-                    + " ORDER BY tm.createdAt ASC")
-    List<TeamMembership> findPrimaryMembership(@Param("userId") Long userId);
+    /** Check if a user is a member of a team */
+    public boolean existsByTeamIdAndUserId(Long teamId, Long userId) {
+        return find("team.id = ?1 and user.id = ?2", teamId, userId).count() > 0;
+    }
 
-    /**
-     * Find all members with a specific role in a team
-     *
-     * @param teamId the team ID
-     * @param role the team role (LEADER or MEMBER)
-     * @return List of team memberships
-     */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND tm.role = :role")
-    List<TeamMembership> findByTeamIdAndRole(
-            @Param("teamId") Long teamId, @Param("role") TeamRole role);
+    /** Count members in a team */
+    public long countByTeamId(Long teamId) {
+        return count("team.id = ?1", teamId);
+    }
 
-    /**
-     * Count members with a specific role in a team. Lighter than {@link #findByTeamIdAndRole} when
-     * only the tally is needed (e.g. last-leader checks) — avoids fetching and join-loading rows.
-     *
-     * @param teamId the team ID
-     * @param role the team role (LEADER or MEMBER)
-     * @return number of members with that role
-     */
-    long countByTeamIdAndRole(Long teamId, TeamRole role);
+    /** Spring Data {@code save}: insert a new row, merge an already-identified one. */
+    @Transactional
+    public TeamMembership save(TeamMembership membership) {
+        if (membership.getMembershipId() == null) {
+            persist(membership);
+            return membership;
+        }
+        return getEntityManager().merge(membership);
+    }
 
-    /**
-     * Check if a user is a member of a team
-     *
-     * @param teamId the team ID
-     * @param userId the user ID
-     * @return true if user is a member
-     */
-    boolean existsByTeamIdAndUserId(Long teamId, Long userId);
-
-    /**
-     * Count members in a team
-     *
-     * @param teamId the team ID
-     * @return number of members
-     */
-    long countByTeamId(Long teamId);
-
-    /**
-     * Delete membership by team ID and user ID
-     *
-     * @param teamId the team ID
-     * @param userId the user ID
-     */
-    void deleteByTeamIdAndUserId(Long teamId, Long userId);
+    /** Delete membership by team ID and user ID */
+    @Transactional
+    public void deleteByTeamIdAndUserId(Long teamId, Long userId) {
+        delete("team.id = ?1 and user.id = ?2", teamId, userId);
+    }
 
     /** Leadership checks for TeamLeadLookup. */
-    boolean existsByTeamIdAndUserIdAndRole(Long teamId, Long userId, TeamRole role);
+    public boolean existsByTeamIdAndUserIdAndRole(Long teamId, Long userId, TeamRole role) {
+        return count("team.id = ?1 and user.id = ?2 and role = ?3", teamId, userId, role) > 0;
+    }
 
-    boolean existsByUserIdAndRole(Long userId, TeamRole role);
+    public boolean existsByUserIdAndRole(Long userId, TeamRole role) {
+        return count("user.id = ?1 and role = ?2", userId, role) > 0;
+    }
 
     /** All rows holding a role, users and teams pre-fetched for out-of-session mapping. */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user JOIN FETCH tm.team"
-                    + " WHERE tm.role = :role")
-    List<TeamMembership> findByRoleFetchingUserAndTeam(@Param("role") TeamRole role);
+    public List<TeamMembership> findByRoleFetchingUserAndTeam(TeamRole role) {
+        return list(
+                "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user JOIN FETCH tm.team"
+                        + " WHERE tm.role = ?1",
+                role);
+    }
 
-    void deleteByTeamId(Long teamId);
+    @Transactional
+    public void deleteByTeamId(Long teamId) {
+        delete("team.id = ?1", teamId);
+    }
 
-    void deleteByUserId(Long userId);
+    @Transactional
+    public void deleteByUserId(Long userId) {
+        delete("user.id = ?1", userId);
+    }
 
     // Detach invitation references so deleting the inviting user does not hit the FK.
-    @Modifying
-    @Query("update TeamMembership tm set tm.invitedBy = null where tm.invitedBy = :user")
-    void clearInvitedBy(@Param("user") User user);
+    @Transactional
+    public void clearInvitedBy(User user) {
+        update("invitedBy = null where invitedBy = ?1", user);
+    }
 }

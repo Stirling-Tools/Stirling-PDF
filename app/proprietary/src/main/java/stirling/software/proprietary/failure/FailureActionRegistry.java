@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * which would otherwise show up as a button that 400s rather than as a failed boot.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class FailureActionRegistry {
 
     private final Map<FailureActionId, FailureAction> byId = new EnumMap<>(FailureActionId.class);

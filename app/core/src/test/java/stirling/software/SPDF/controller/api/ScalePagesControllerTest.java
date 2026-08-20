@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,31 +21,17 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.general.ScalePagesRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class ScalePagesControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -92,201 +79,133 @@ class ScalePagesControllerTest {
     @Test
     void testScalePages_A4ToA3() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("A3");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "A3", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
     void testScalePages_KeepSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 2);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("KEEP");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "KEEP", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_WithScaleFactor() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("A4");
-        request.setScaleFactor(0.5f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "A4", null, 0.5f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_Letter() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("LETTER");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "LETTER", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_Legal() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("LEGAL");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "LEGAL", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_InvalidPageSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("INVALID_SIZE");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        assertThrows(IllegalArgumentException.class, () -> controller.scalePages(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.scalePages(file, null, "INVALID_SIZE", null, 1.0f));
     }
 
     @Test
     void testScalePages_MultiplePages() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 5);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("A5");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "A5", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_LandscapeSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("A4");
-        request.setOrientation("LANDSCAPE");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "A4", "LANDSCAPE", 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testScalePages_KeepWithEmptyDoc() throws Exception {
         // Create a PDF then load it, but mock factory to return empty doc for KEEP check
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("KEEP");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         // Return an empty document to trigger the KEEP exception
         when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(new PDDocument());
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
 
-        assertThrows(IllegalArgumentException.class, () -> controller.scalePages(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.scalePages(file, null, "KEEP", null, 1.0f));
     }
 
     @Test
     void testScalePages_A0Size() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        ScalePagesRequest request = new ScalePagesRequest();
-        request.setFileInput(file);
-        request.setPageSize("A0");
-        request.setScaleFactor(1.0f);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
 
         setupFactory();
 
-        ResponseEntity<Resource> response = controller.scalePages(request);
+        Response response = controller.scalePages(file, null, "A0", null, 1.0f);
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
     }
 }

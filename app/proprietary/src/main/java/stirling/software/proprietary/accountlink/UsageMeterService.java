@@ -3,10 +3,10 @@ package stirling.software.proprietary.accountlink;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,12 +22,11 @@ import stirling.software.proprietary.billing.BillingCategory;
  * instance and in the cloud. Fileless ops pass a null signature and always accrue. {@link #accrue}
  * is best-effort: callers need not handle persistence errors.
  */
+// Arc cannot gate a bean on a runtime property, so the metering flag no longer removes this bean;
+// callers check AccountLinkProperties.getMetering().isEnabled() before accruing.
 @Slf4j
-@Service
-@Profile("!saas")
-@ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
+@ApplicationScoped
+@IfBuildProfile("!saas")
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;
@@ -76,7 +75,7 @@ public class UsageMeterService {
                 signatureRepo.saveAndFlush(
                         new MeteredInputSignature(periodStart, opSignature, now));
                 return true; // first sighting this period
-            } catch (DataIntegrityViolationException raced) {
+            } catch (PersistenceException raced) {
                 return false; // a concurrent op just claimed it — within window → chaining
             } catch (RuntimeException e) {
                 log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
@@ -102,7 +101,7 @@ public class UsageMeterService {
             }
             try {
                 repo.saveAndFlush(new UsageCounter(periodStart, category, units, now));
-            } catch (DataIntegrityViolationException raceLostInsert) {
+            } catch (PersistenceException raceLostInsert) {
                 // A concurrent request inserted the row first — increment the now-existing row.
                 repo.increment(periodStart, category, units, now);
             }

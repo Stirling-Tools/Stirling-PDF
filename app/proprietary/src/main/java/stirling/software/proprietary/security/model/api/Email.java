@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.model.api;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
@@ -13,7 +11,6 @@ import stirling.software.common.model.api.GeneralFile;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class Email extends GeneralFile {
 
     @Schema(

@@ -1,41 +1,25 @@
 package stirling.software.SPDF.controller.web;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.Ordered;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.function.EntityResponse;
-import org.springframework.web.servlet.function.HandlerFunction;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.ServerRequest;
-import org.springframework.web.servlet.function.ServerResponse;
-import org.springframework.web.servlet.function.support.RouterFunctionMapping;
-import org.springframework.web.util.ServletRequestPathUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 class ReactRoutingControllerTest {
 
     private ReactRoutingController controller;
-    private HttpServletRequest request;
 
     @BeforeEach
     void setUp() throws Exception {
         controller = new ReactRoutingController();
-        request = mock(HttpServletRequest.class);
 
-        // Set contextPath via reflection (normally injected by Spring @Value)
+        // Set contextPath via reflection (normally injected by @ConfigProperty)
         setField("contextPath", "/");
     }
 
@@ -52,11 +36,11 @@ class ReactRoutingControllerTest {
         // In test env, no classpath static/index.html and no external file
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Stirling PDF"));
     }
@@ -65,20 +49,20 @@ class ReactRoutingControllerTest {
     void serveIndexHtml_returnsCachedContent() {
         controller.init();
 
-        ResponseEntity<String> response1 = controller.serveIndexHtml(request);
-        ResponseEntity<String> response2 = controller.serveIndexHtml(request);
+        Response response1 = controller.serveIndexHtml();
+        Response response2 = controller.serveIndexHtml();
 
         // Both should return the same cached content
-        assertEquals(response1.getBody(), response2.getBody());
+        assertEquals(response1.getEntity(), response2.getEntity());
     }
 
     @Test
     void serveIndexHtml_contentTypeIsHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
     }
 
     // --- auth callback ---
@@ -87,22 +71,23 @@ class ReactRoutingControllerTest {
     void serveAuthCallback_returnsIndexHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveAuthCallback(request);
+        Response response = controller.serveAuthCallback();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("Stirling PDF"));
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
+        assertNotNull(body);
+        assertTrue(body.contains("Stirling PDF"));
     }
 
     @Test
     void serveShareLinkPage_returnsIndexHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveShareLinkPage(request);
+        Response response = controller.serveShareLinkPage("token123");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Stirling PDF"));
     }
@@ -113,10 +98,10 @@ class ReactRoutingControllerTest {
     void serveMobileScanner_webMode_servesSpaNotUploadPage() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveMobileScanner(request);
+        Response response = controller.serveMobileScanner();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertFalse(body.contains("Take Photo"));
     }
@@ -126,11 +111,11 @@ class ReactRoutingControllerTest {
         controller.init();
         System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
         try {
-            ResponseEntity<String> response = controller.serveMobileScanner(request);
+            Response response = controller.serveMobileScanner();
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-            String body = response.getBody();
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+            assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+            String body = (String) response.getEntity();
             assertNotNull(body);
             assertTrue(body.contains("Mobile Upload"));
             assertTrue(body.contains("Take Photo"));
@@ -145,11 +130,11 @@ class ReactRoutingControllerTest {
     void serveTauriAuthCallback_returnsCallbackHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Authentication"));
     }
@@ -158,9 +143,9 @@ class ReactRoutingControllerTest {
     void serveTauriAuthCallback_containsDeepLinkScript() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("stirlingpdf://auth/sso-complete"));
     }
@@ -171,23 +156,23 @@ class ReactRoutingControllerTest {
     void forwardRootPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardRootPaths(request);
+        Response response = controller.forwardRootPaths("tools");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
     void forwardNestedPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardNestedPaths(request);
+        Response response = controller.forwardNestedPaths("tools", "merge");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
-    // --- deep-link SPA fallback (router function) ---
+    // --- deep-link SPA fallback ---
 
     @Test
     void isSpaFallbackRoute_acceptsDeepSpaPaths() {
@@ -213,55 +198,26 @@ class ReactRoutingControllerTest {
     }
 
     @Test
-    void spaDeepLinkFallback_servesIndexForDeepRoute() throws Exception {
+    void forwardDeepPaths_servesIndexForDeepRoute() throws Exception {
         controller.init();
-        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
 
-        ServerRequest deepRequest = serverRequest("GET", "/processor/pipelines/new");
-        Optional<HandlerFunction<ServerResponse>> handler = router.route(deepRequest);
-        assertTrue(handler.isPresent());
+        Response response = controller.forwardDeepPaths("processor/pipelines/new");
 
-        ServerResponse response = handler.get().handle(deepRequest);
-        assertEquals(HttpStatus.OK, response.statusCode());
-        assertInstanceOf(EntityResponse.class, response);
-        Object body = ((EntityResponse<?>) response).entity();
-        assertTrue(body.toString().contains("Stirling PDF"));
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
+        assertNotNull(body);
+        assertTrue(body.contains("Stirling PDF"));
     }
 
     @Test
-    void spaDeepLinkFallback_ignoresApiFilesAndNonGet() {
+    void forwardDeepPaths_rejectsBackendAndFilePaths() {
         controller.init();
-        RouterFunction<ServerResponse> router = routerOf(controller.spaDeepLinkFallbackMapping());
 
-        assertTrue(router.route(serverRequest("GET", "/api/v1/policies/run")).isEmpty());
-        assertTrue(router.route(serverRequest("GET", "/branding/sub/logo.png")).isEmpty());
-        assertTrue(router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
-    }
-
-    @Test
-    void spaDeepLinkFallback_runsAfterControllersAndBeforeResources() {
-        controller.init();
-        int order = controller.spaDeepLinkFallbackMapping().getOrder();
-
-        // A catch-all denylist is only safe below every annotated controller; Spring's own
-        // RouterFunctionMapping sits at -1, which would shadow /v1/api-docs, /error and friends.
-        assertTrue(order > 0, "SPA fallback must run after annotated controllers");
-        assertTrue(
-                order < Ordered.LOWEST_PRECEDENCE - 1,
-                "SPA fallback must run before the static-resource chain");
-    }
-
-    private static RouterFunction<ServerResponse> routerOf(RouterFunctionMapping mapping) {
-        @SuppressWarnings("unchecked")
-        RouterFunction<ServerResponse> router =
-                (RouterFunction<ServerResponse>) mapping.getRouterFunction();
-        return router;
-    }
-
-    private static ServerRequest serverRequest(String method, String uri) {
-        MockHttpServletRequest servletRequest = new MockHttpServletRequest(method, uri);
-        ServletRequestPathUtils.parseAndCache(servletRequest);
-        return ServerRequest.create(servletRequest, List.of(new StringHttpMessageConverter()));
+        assertThrows(
+                NotFoundException.class, () -> controller.forwardDeepPaths("api/v1/policies/run"));
+        assertThrows(
+                NotFoundException.class,
+                () -> controller.forwardDeepPaths("branding/sub/logo.png"));
     }
 
     // --- context path handling ---
@@ -271,9 +227,9 @@ class ReactRoutingControllerTest {
         setField("contextPath", "/myapp");
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("/myapp/"));
     }
@@ -283,9 +239,9 @@ class ReactRoutingControllerTest {
         setField("contextPath", "/myapp/");
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("/myapp/"));
     }
@@ -294,9 +250,9 @@ class ReactRoutingControllerTest {
     void callbackHtml_containsBaseHref() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("<base href="));
     }

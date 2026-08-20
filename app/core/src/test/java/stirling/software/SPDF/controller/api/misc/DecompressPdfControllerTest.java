@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,28 +26,30 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.common.model.api.PDFFile;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class DecompressPdfControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+    private static byte[] drainBody(Response response) throws IOException {
+        Object entity = response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }
@@ -70,8 +75,7 @@ class DecompressPdfControllerTest {
                         });
     }
 
-    private MockMultipartFile createRealPdf(String content) throws IOException {
-        Path path = tempDir.resolve("test.pdf");
+    private byte[] createRealPdfBytes(String content) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
@@ -84,81 +88,75 @@ class DecompressPdfControllerTest {
                     cs.endText();
                 }
             }
-            doc.save(path.toFile());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 
     @Test
     void decompressPdf_basicSuccess() throws IOException {
-        MockMultipartFile file = createRealPdf("Hello World");
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes("Hello World");
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(drainBody(response)).isNotEmpty();
+        assertThat(response.getStatus()).isEqualTo(200);
+        byte[] body = drainBody(response);
+        assertThat(body).isNotEmpty();
         // Verify the result is a valid PDF
-        try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+        try (PDDocument result = Loader.loadPDF(body)) {
             assertThat(result.getNumberOfPages()).isEqualTo(1);
         }
     }
 
     @Test
     void decompressPdf_emptyPdf() throws IOException {
-        MockMultipartFile file = createRealPdf(null);
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes(null);
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
     void decompressPdf_ioException() throws IOException {
-        MockMultipartFile file = createRealPdf("test");
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes("test");
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        when(pdfDocumentFactory.load(file)).thenThrow(new IOException("corrupt"));
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenThrow(new IOException("corrupt"));
 
-        assertThatThrownBy(() -> controller.decompressPdf(request)).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> controller.decompressPdf(file, null))
+                .isInstanceOf(IOException.class);
     }
 
     @Test
     void decompressPdf_resultFilename() throws IOException {
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "mydoc.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        createRealPdf("test").getBytes());
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes("test");
+        FileUpload file = TestFileUploads.of(bytes, "mydoc.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
+        assertThat(response.getStatus()).isEqualTo(200);
+        String contentDisposition = response.getHeaderString("Content-Disposition");
         assertThat(contentDisposition).contains("_decompressed.pdf");
     }
 
     @Test
     void decompressPdf_multiPagePdf() throws IOException {
-        Path path = tempDir.resolve("multi.pdf");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PDDocument doc = new PDDocument()) {
             for (int i = 0; i < 3; i++) {
                 PDPage page = new PDPage();
@@ -171,23 +169,17 @@ class DecompressPdfControllerTest {
                     cs.endText();
                 }
             }
-            doc.save(path.toFile());
+            doc.save(baos);
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "multi.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = baos.toByteArray();
+        FileUpload file = TestFileUploads.of(bytes, "multi.pdf", "application/pdf");
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             assertThat(result.getNumberOfPages()).isEqualTo(3);
         }
@@ -195,31 +187,29 @@ class DecompressPdfControllerTest {
 
     @Test
     void decompressPdf_outputIsLargerThanInput() throws IOException {
-        MockMultipartFile file = createRealPdf("Compressed content test data");
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes("Compressed content test data");
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getEntity()).isNotNull();
         // Decompressed PDF should generally be larger or equal to compressed
         assertThat(drainBody(response).length).isGreaterThan(0);
     }
 
     @Test
     void decompressPdf_returnsOkContentType() throws IOException {
-        MockMultipartFile file = createRealPdf("test");
-        PDFFile request = new PDFFile();
-        request.setFileInput(file);
+        byte[] bytes = createRealPdfBytes("test");
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        ResponseEntity<Resource> response = controller.decompressPdf(request);
+        Response response = controller.decompressPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 }

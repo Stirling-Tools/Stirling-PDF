@@ -3,12 +3,12 @@ package stirling.software.proprietary.classification;
 import java.io.InputStream;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.classification.model.ClassificationLabels;
 
@@ -21,16 +21,16 @@ import tools.jackson.databind.ObjectMapper;
  * customization or database. Loaded once at startup.
  */
 @Slf4j
-@Component
+@ApplicationScoped
 public class ClassificationLabelProvider {
 
     private static final String RESOURCE = "classification/classification-labels.json";
 
     private final List<ClassificationLabel> labels;
 
-    // Explicit @Autowired: the class has a second (private) constructor for tests, so Spring
+    // Explicit @Inject: the class has a second (private) constructor for tests, so Spring
     // can't infer which to use without it.
-    @Autowired
+    @Inject
     public ClassificationLabelProvider(ObjectMapper objectMapper) {
         this(load(objectMapper));
     }

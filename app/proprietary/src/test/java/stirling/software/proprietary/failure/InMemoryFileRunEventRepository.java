@@ -8,23 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
-import org.springframework.data.domain.Pageable;
+import jakarta.persistence.PersistenceException;
 
 /**
- * Minimal stand-in for the JPA repository: enough to exercise the store's branching without a
+ * Minimal stand-in for the Panache repository: enough to exercise the store's branching without a
  * database. Ordering mirrors the real queries (newest first) since the rollup relies on it, and
- * {@link #save} enforces the {@code (team_id, dedup_key)} unique constraint the real table
+ * {@link #insert} enforces the {@code (team_id, dedup_key)} unique constraint the real table
  * declares.
+ *
+ * <p>Extends the real repository rather than implementing an interface (Panache repositories are
+ * classes), overriding every method the store actually calls; nothing here touches a session.
  */
-class InMemoryFileRunEventRepository implements FileRunEventRepository {
+class InMemoryFileRunEventRepository extends FileRunEventRepository {
 
     final Map<String, FileRunEventEntity> rows = new HashMap<>();
 
     /**
-     * Runs once at the start of the next {@link #save}, so a test can interleave a competing writer
-     * between the store's read and its insert.
+     * Runs once at the start of the next {@link #insert}, so a test can interleave a competing
+     * writer between the store's read and its insert.
      */
     Runnable beforeNextSave;
 
@@ -44,28 +46,22 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     }
 
     /** The real queries page in SQL, so the fake must page too or limit tests test nothing. */
-    private static List<FileRunEventEntity> page(List<FileRunEventEntity> rows, Pageable pageable) {
-        return pageable == null || pageable.isUnpaged() || rows.size() <= pageable.getPageSize()
-                ? rows
-                : rows.subList(0, pageable.getPageSize());
+    private static List<FileRunEventEntity> page(List<FileRunEventEntity> rows, int limit) {
+        return limit <= 0 || rows.size() <= limit ? rows : rows.subList(0, limit);
     }
 
     private static boolean sameKind(FileRunEventEntity entity, String kindId) {
         return kindId == null || kindId.equals(entity.getKindId());
     }
 
-    /** Null means the whole team, matching the JPQL's {@code :actor is null} branch. */
+    /** Null means the whole team, matching the JPQL's {@code ?4 is null} branch. */
     private static boolean sameActor(FileRunEventEntity entity, String actor) {
         return actor == null || actor.equals(entity.getActor());
     }
 
     @Override
     public List<FileRunEventEntity> findByTeamAndStatus(
-            Long teamId,
-            FileRunEventStatus status,
-            String kindId,
-            String actor,
-            Pageable pageable) {
+            Long teamId, FileRunEventStatus status, String kindId, String actor, int limit) {
         return page(
                 newestFirst(
                         rows.values().stream()
@@ -76,7 +72,27 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                                                         && sameKind(e, kindId)
                                                         && sameActor(e, actor))
                                 .toList()),
-                pageable);
+                limit);
+    }
+
+    @Override
+    public List<FileRunEventEntity> findByTeamAndStatusIn(
+            Long teamId,
+            List<FileRunEventStatus> statuses,
+            String kindId,
+            String actor,
+            int limit) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(
+                                        e ->
+                                                sameTeam(e, teamId)
+                                                        && statuses.contains(e.getStatus())
+                                                        && sameKind(e, kindId)
+                                                        && sameActor(e, actor))
+                                .toList()),
+                limit);
     }
 
     @Override
@@ -151,28 +167,7 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     }
 
     @Override
-    public List<FileRunEventEntity> findByTeamAndStatusIn(
-            Long teamId,
-            List<FileRunEventStatus> statuses,
-            String kindId,
-            String actor,
-            Pageable pageable) {
-        return page(
-                newestFirst(
-                        rows.values().stream()
-                                .filter(
-                                        e ->
-                                                sameTeam(e, teamId)
-                                                        && statuses.contains(e.getStatus())
-                                                        && sameKind(e, kindId)
-                                                        && sameActor(e, actor))
-                                .toList()),
-                pageable);
-    }
-
-    @Override
-    public List<FileRunEventEntity> findByTeamAndDedupKey(
-            Long teamId, String dedupKey, Pageable pageable) {
+    public List<FileRunEventEntity> findByTeamAndDedupKey(Long teamId, String dedupKey, int limit) {
         return newestFirst(
                 rows.values().stream()
                         .filter(e -> sameTeam(e, teamId) && dedupKey.equals(e.getDedupKey()))
@@ -185,7 +180,12 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     }
 
     @Override
-    public <S extends FileRunEventEntity> S save(S entity) {
+    public Optional<FileRunEventEntity> findByIdOptional(String id) {
+        return Optional.ofNullable(rows.get(id));
+    }
+
+    @Override
+    public FileRunEventEntity insert(FileRunEventEntity entity) {
         if (beforeNextSave != null) {
             Runnable hook = beforeNextSave;
             beforeNextSave = null;
@@ -193,7 +193,9 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         }
         boolean isInsert = !rows.containsKey(entity.getId());
         if (isInsert && clashesOnDedupKey(entity)) {
-            throw new org.springframework.dao.DataIntegrityViolationException(
+            // What Hibernate surfaces for a unique-constraint violation at flush, and what the
+            // store catches to fold into the winning row.
+            throw new PersistenceException(
                     "uk_file_run_events_dedup violated for " + entity.getDedupKey());
         }
         rows.put(entity.getId(), entity);
@@ -210,153 +212,5 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
                         row ->
                                 candidate.getTeamId().equals(row.getTeamId())
                                         && candidate.getDedupKey().equals(row.getDedupKey()));
-    }
-
-    // ── unused JpaRepository surface ────────────────────────────────────────
-    @Override
-    public void flush() {}
-
-    @Override
-    public <S extends FileRunEventEntity> S saveAndFlush(S entity) {
-        return save(entity);
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> List<S> saveAllAndFlush(Iterable<S> entities) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void deleteAllInBatch(Iterable<FileRunEventEntity> entities) {}
-
-    @Override
-    public void deleteAllByIdInBatch(Iterable<String> ids) {}
-
-    @Override
-    public void deleteAllInBatch() {}
-
-    @Override
-    public FileRunEventEntity getOne(String id) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FileRunEventEntity getById(String id) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FileRunEventEntity getReferenceById(String id) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> List<S> findAll(
-            org.springframework.data.domain.Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> List<S> findAll(
-            org.springframework.data.domain.Example<S> example,
-            org.springframework.data.domain.Sort sort) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> List<S> saveAll(Iterable<S> entities) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<FileRunEventEntity> findAll() {
-        return List.copyOf(rows.values());
-    }
-
-    @Override
-    public List<FileRunEventEntity> findAllById(Iterable<String> ids) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Optional<FileRunEventEntity> findById(String id) {
-        return Optional.ofNullable(rows.get(id));
-    }
-
-    @Override
-    public boolean existsById(String id) {
-        return rows.containsKey(id);
-    }
-
-    @Override
-    public long count() {
-        return rows.size();
-    }
-
-    @Override
-    public void deleteById(String id) {
-        rows.remove(id);
-    }
-
-    @Override
-    public void delete(FileRunEventEntity entity) {
-        rows.remove(entity.getId());
-    }
-
-    @Override
-    public void deleteAllById(Iterable<? extends String> ids) {}
-
-    @Override
-    public void deleteAll(Iterable<? extends FileRunEventEntity> entities) {}
-
-    @Override
-    public void deleteAll() {
-        rows.clear();
-    }
-
-    @Override
-    public List<FileRunEventEntity> findAll(org.springframework.data.domain.Sort sort) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public org.springframework.data.domain.Page<FileRunEventEntity> findAll(Pageable pageable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> Optional<S> findOne(
-            org.springframework.data.domain.Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> org.springframework.data.domain.Page<S> findAll(
-            org.springframework.data.domain.Example<S> example, Pageable pageable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> long count(
-            org.springframework.data.domain.Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity> boolean exists(
-            org.springframework.data.domain.Example<S> example) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <S extends FileRunEventEntity, R> R findBy(
-            org.springframework.data.domain.Example<S> example,
-            Function<
-                            org.springframework.data.repository.query.FluentQuery
-                                            .FetchableFluentQuery<
-                                    S>,
-                            R>
-                    queryFunction) {
-        throw new UnsupportedOperationException();
     }
 }

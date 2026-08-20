@@ -1,12 +1,13 @@
 package stirling.software.proprietary.access.security;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
@@ -17,7 +18,8 @@ import stirling.software.proprietary.security.service.UserService;
  * {@code @PreAuthorize("@resourceAccess.canUsePortal()")}; endpoints shared with the editor (e.g.
  * the policies API) must NOT be.
  */
-@Component("resourceAccess")
+@ApplicationScoped
+@Named("resourceAccess")
 @RequiredArgsConstructor
 public class ResourceAccessSecurity {
 

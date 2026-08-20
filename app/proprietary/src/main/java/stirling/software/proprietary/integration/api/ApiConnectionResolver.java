@@ -3,14 +3,14 @@ package stirling.software.proprietary.integration.api;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
@@ -31,9 +31,10 @@ import tools.jackson.databind.ObjectMapper;
  * ad-hoc run was dispatched - see {@link IntegrationStepValidator}, which is what makes that
  * assumption true rather than merely hoped for.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// jakarta.transaction.Transactional has no readOnly hint; the reads are unchanged without it.
+@Transactional
 public class ApiConnectionResolver {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -46,7 +47,7 @@ public class ApiConnectionResolver {
     public Map<String, Object> resolveConfig(Long connectionId, IntegrationType type) {
         IntegrationConfig connection =
                 connections
-                        .findById(connectionId)
+                        .findByIdOptional(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == type)
                         .filter(this::usableByCurrentUser)
                         // Existence and access collapse into one error so a caller cannot tell

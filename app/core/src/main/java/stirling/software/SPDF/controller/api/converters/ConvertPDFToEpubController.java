@@ -9,14 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.Targe
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
@@ -38,6 +42,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertPDFToEpubController {
@@ -84,16 +90,36 @@ public class ConvertPDFToEpubController {
         return command;
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/epub")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/epub",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(produces = ToolFormat.EBOOK)
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
             description = "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre.")
-    public ResponseEntity<Resource> convertPdfToEpub(
-            @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
+    public Response convertPdfToEpub(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("detectChapters") Boolean detectChaptersParam,
+            @RestForm("targetDevice") TargetDevice targetDeviceParam,
+            @RestForm("outputFormat") OutputFormat outputFormatParam)
+            throws Exception {
+
+        // The request model is rebuilt here from the individual multipart @RestForm fields.
+        ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        if (detectChaptersParam != null) {
+            request.setDetectChapters(detectChaptersParam);
+        }
+        if (targetDeviceParam != null) {
+            request.setTargetDevice(targetDeviceParam);
+        }
+        if (outputFormatParam != null) {
+            request.setOutputFormat(outputFormatParam);
+        }
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
             throw new IllegalStateException(
@@ -101,7 +127,7 @@ public class ConvertPDFToEpubController {
                             + " this feature.");
         }
 
-        MultipartFile inputFile = request.getFileInput();
+        stirling.software.common.model.MultipartFile inputFile = request.getFileInput();
         if (inputFile == null || inputFile.isEmpty()) {
             throw new IllegalArgumentException("No input file provided");
         }

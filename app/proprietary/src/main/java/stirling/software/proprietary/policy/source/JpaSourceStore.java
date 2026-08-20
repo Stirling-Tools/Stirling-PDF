@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ import tools.jackson.databind.ObjectMapper;
  * {@link SourceEntity}, with scalar columns kept in sync for querying.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class JpaSourceStore implements SourceStore {
 
@@ -51,17 +52,22 @@ public class JpaSourceStore implements SourceStore {
         return stored;
     }
 
+    // Reads need a transaction too: the background folder-watch/webhook triggers resolve sources
+    // off any request context, where Panache would otherwise throw ContextNotActiveException.
     @Override
+    @Transactional
     public Optional<Source> get(String id) {
-        return repository.findById(id).flatMap(this::toSource);
+        return repository.findByIdOptional(id).flatMap(this::toSource);
     }
 
     @Override
+    @Transactional
     public List<Source> all() {
         return repository.findAll().stream().map(this::toSource).flatMap(Optional::stream).toList();
     }
 
     @Override
+    @Transactional
     public List<Source> findByTeam(Long teamId) {
         return repository.findByTeam(teamId).stream()
                 .map(this::toSource)
@@ -70,6 +76,7 @@ public class JpaSourceStore implements SourceStore {
     }
 
     @Override
+    @Transactional
     public boolean delete(String id) {
         if (!repository.existsById(id)) {
             return false;

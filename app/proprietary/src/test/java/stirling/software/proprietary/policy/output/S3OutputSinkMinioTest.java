@@ -14,12 +14,12 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;

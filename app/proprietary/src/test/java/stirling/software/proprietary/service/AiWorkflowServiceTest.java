@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
@@ -31,6 +32,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,20 +40,22 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
@@ -89,6 +93,11 @@ class AiWorkflowServiceTest {
     @Mock private ToolMetadataService toolMetadataService;
     @Mock private FileIdStrategy fileIdStrategy;
     @Mock private AiEngineEndpointResolver endpointResolver;
+    // Optional security bean: the migrated constructor resolves it via Instance#isResolvable(), so
+    // a
+    // plain null is no longer valid. An unresolvable Instance reproduces the security-disabled
+    // path.
+    @Mock private Instance<UserServiceInterface> userServiceInstance;
 
     @TempDir Path tempDir;
 
@@ -104,11 +113,14 @@ class AiWorkflowServiceTest {
         tempFileManager = new TempFileManager(new TempFileRegistry(), props);
         objectMapper = JsonMapper.builder().build();
 
-        // Mock strategy yields the filename as id so each MockMultipartFile in a test gets a
-        // distinct collection key. Real strategy (ByteHashFileIdStrategy) hashes bytes.
+        // Mock strategy yields the filename as id so each input file in a test gets a distinct
+        // collection key. Real strategy (ByteHashFileIdStrategy) hashes bytes.
         lenient()
                 .when(fileIdStrategy.idFor(any(MultipartFile.class)))
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
+
+        // Security disabled: no UserServiceInterface bean is resolvable.
+        lenient().when(userServiceInstance.isResolvable()).thenReturn(false);
 
         PolicyExecutor policyExecutor =
                 new PolicyExecutor(
@@ -124,14 +136,14 @@ class AiWorkflowServiceTest {
                         fileIdStrategy,
                         endpointResolver,
                         policyExecutor,
-                        null,
+                        userServiceInstance,
                         new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
     @Test
     void toolCallSingleFilePreservesInputFilename() throws IOException {
-        MockMultipartFile input = pdf("input.pdf", "original-pdf-bytes");
+        FileUpload input = pdf("input.pdf", "original-pdf-bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
@@ -155,7 +167,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void toolCallZipResponseUnpacksIntoMultipleResults() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf", "original");
+        FileUpload input = pdf("doc.pdf", "original");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Splitting"}
@@ -185,8 +197,8 @@ class AiWorkflowServiceTest {
 
     @Test
     void multiInputEndpointIsCalledOnceWithAllFiles() throws IOException {
-        MockMultipartFile a = pdf("a.pdf", "a-bytes");
-        MockMultipartFile b = pdf("b.pdf", "b-bytes");
+        FileUpload a = pdf("a.pdf", "a-bytes");
+        FileUpload b = pdf("b.pdf", "b-bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Merging"}
@@ -198,7 +210,7 @@ class AiWorkflowServiceTest {
         stubFileStorage();
 
         AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
+                service.orchestrate(requestFor(new FileUpload[] {a, b}, "merge these"));
 
         assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
         assertEquals(1, result.getResultFiles().size());
@@ -209,8 +221,8 @@ class AiWorkflowServiceTest {
 
     @Test
     void singleInputEndpointIsCalledOncePerFile() throws IOException {
-        MockMultipartFile a = pdf("a.pdf", "a-bytes");
-        MockMultipartFile b = pdf("b.pdf", "b-bytes");
+        FileUpload a = pdf("a.pdf", "a-bytes");
+        FileUpload b = pdf("b.pdf", "b-bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
@@ -222,7 +234,7 @@ class AiWorkflowServiceTest {
         stubFileStorage();
 
         AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "rotate both"));
+                service.orchestrate(requestFor(new FileUpload[] {a, b}, "rotate both"));
 
         assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
         assertEquals(2, result.getResultFiles().size());
@@ -238,8 +250,8 @@ class AiWorkflowServiceTest {
 
     @Test
     void mergeOutputHasNoSourceIndex() throws IOException {
-        MockMultipartFile a = pdf("a.pdf", "a-bytes");
-        MockMultipartFile b = pdf("b.pdf", "b-bytes");
+        FileUpload a = pdf("a.pdf", "a-bytes");
+        FileUpload b = pdf("b.pdf", "b-bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Merging"}
@@ -251,7 +263,7 @@ class AiWorkflowServiceTest {
         stubFileStorage();
 
         AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
+                service.orchestrate(requestFor(new FileUpload[] {a, b}, "merge these"));
 
         // A merge draws on several inputs, so there is no single source to version in place.
         assertNull(result.getResultFiles().get(0).getSourceIndex());
@@ -259,7 +271,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void splitOutputsHaveNoSourceIndex() throws IOException {
-        MockMultipartFile input = pdf("doc.pdf", "original");
+        FileUpload input = pdf("doc.pdf", "original");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Splitting"}
@@ -286,7 +298,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void planExecutesStepsSequentially() throws IOException {
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
@@ -321,7 +333,7 @@ class AiWorkflowServiceTest {
         // from a single JSON form field via a property editor. The plan executor must
         // pre-serialize such lists rather than splitting them into repeated form fields.
         String editTextEndpoint = "/api/v1/general/edit-text";
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
@@ -343,11 +355,12 @@ class AiWorkflowServiceTest {
 
         service.orchestrate(requestFor(input, "find and replace"));
 
+        // The migrated InternalApiClient takes a Map<String, List<Object>> (replacing Spring's
+        // MultiValueMap) so the captured body is that map type.
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCaptor = ArgumentCaptor.forClass(Map.class);
         verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
-        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+        Map<String, List<Object>> body = bodyCaptor.getValue();
 
         // The structured-list field must be serialized as ONE JSON-string entry, not multiple
         // entries.
@@ -370,7 +383,7 @@ class AiWorkflowServiceTest {
         // Endpoints like /misc/ocr-pdf bind List<String> via Spring's repeated-form-field
         // convention. The executor must preserve that behavior for primitive lists.
         String ocrEndpoint = "/api/v1/misc/ocr-pdf";
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
@@ -390,8 +403,7 @@ class AiWorkflowServiceTest {
         service.orchestrate(requestFor(input, "ocr"));
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<Map<String, List<Object>>> bodyCaptor = ArgumentCaptor.forClass(Map.class);
         verify(internalApiClient).post(eq(ocrEndpoint), bodyCaptor.capture());
         List<Object> languages = bodyCaptor.getValue().get("languages");
         assertNotNull(languages);
@@ -403,7 +415,7 @@ class AiWorkflowServiceTest {
         // When an internal tool hangs, InternalApiClient throws InternalApiTimeoutException after
         // its read timeout fires. The workflow must convert that into a clean CANNOT_CONTINUE
         // outcome so the user sees an actionable message rather than the request hanging forever.
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
@@ -434,7 +446,7 @@ class AiWorkflowServiceTest {
     void planTimeoutOnLaterStepStillSurfacesCleanly() throws IOException {
         // Multi-step plans must also handle a hung tool gracefully (no partial leaks) and the
         // failure message must identify which step failed so the user can iterate.
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
@@ -469,7 +481,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void generateFileStoresContentDirectlyWithoutToolCall() throws IOException {
-        MockMultipartFile input = pdf("report.pdf", "bytes");
+        FileUpload input = pdf("report.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
@@ -493,10 +505,9 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void planWithMarkdownStepReturnsMdFile() throws IOException {
-        // PDF→Markdown is a normal tool the edit agent emits as a plan step (no bespoke
-        // outcome); the plan executor runs the converter and returns the .md file.
-        MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
+    void convertMarkdownRunsDeterministicConversionAndReturnsMdFile() throws IOException {
+        FileUpload input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
+        when(fileIdStrategy.idFor(any())).thenReturn("doc-1");
         stubOrchestrator(
                 """
                 {
@@ -522,7 +533,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
-        MockMultipartFile input = pdf("input.pdf", "bytes");
+        FileUpload input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "do something"));
@@ -534,7 +545,7 @@ class AiWorkflowServiceTest {
 
     @Test
     void needIngestExtractsPageTextAndPostsThenRetries() throws IOException {
-        MockMultipartFile input = pdf("report.pdf", "bytes");
+        FileUpload input = pdf("report.pdf", "bytes");
         when(fileIdStrategy.idFor(any())).thenReturn("report-id");
 
         PDDocument document = new PDDocument();
@@ -608,8 +619,7 @@ class AiWorkflowServiceTest {
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
-        when(internalApiClient.post(eq(endpoint), any(MultiValueMap.class)))
-                .thenReturn(ResponseEntity.ok(body));
+        when(internalApiClient.post(eq(endpoint), any())).thenReturn(Response.ok(body).build());
     }
 
     /**
@@ -628,37 +638,51 @@ class AiWorkflowServiceTest {
         return counter;
     }
 
-    private static MockMultipartFile pdf(String filename, String content) {
-        return new MockMultipartFile("fileInput", filename, "application/pdf", content.getBytes());
+    // The migrated AiWorkflowFileInput wraps a RESTEasy FileUpload (no plain byte[] setter), so
+    // each
+    // input part is built from the TestFileUploads fixture (a temp-file-backed FileUpload mock).
+    private static FileUpload pdf(String filename, String content) {
+        return TestFileUploads.of(content.getBytes(), filename, "application/pdf");
     }
 
-    private static AiWorkflowRequest requestFor(MockMultipartFile file, String message) {
-        return requestFor(new MockMultipartFile[] {file}, message);
+    private static AiWorkflowRequest requestFor(FileUpload file, String message) {
+        return requestFor(new FileUpload[] {file}, message);
     }
 
-    private static AiWorkflowRequest requestFor(MockMultipartFile[] files, String message) {
+    private static AiWorkflowRequest requestFor(FileUpload[] files, String message) {
         AiWorkflowRequest request = new AiWorkflowRequest();
         List<AiWorkflowFileInput> inputs = new ArrayList<>();
-        for (MockMultipartFile file : files) {
-            AiWorkflowFileInput fileInput = new AiWorkflowFileInput();
-            fileInput.setFileInput(file);
-            inputs.add(fileInput);
+        for (FileUpload file : files) {
+            inputs.add(new AiWorkflowFileInput(file));
         }
         request.setFileInputs(inputs);
         request.setUserMessage(message);
         return request;
     }
 
-    private static ByteArrayResource pdfResource(String content, String filename) {
-        return new ByteArrayResource(content.getBytes()) {
+    // No ByteArrayResource shim exists. Back a byte-array re-readable Resource so getInputStream()
+    // yields a fresh stream on each call (a single-input endpoint may be dispatched once per file,
+    // returning the same stubbed resource more than once). The filename drives the workflow's 1:1
+    // input/output name-preservation rule.
+    private static Resource byteResource(byte[] bytes, String filename) {
+        return new InputStreamResource(new ByteArrayInputStream(bytes), filename) {
             @Override
-            public String getFilename() {
-                return filename;
+            public InputStream getInputStream() {
+                return new ByteArrayInputStream(bytes);
+            }
+
+            @Override
+            public long contentLength() {
+                return bytes.length;
             }
         };
     }
 
-    private static ByteArrayResource zipResource(String filename, List<ZipEntryBytes> entries)
+    private static Resource pdfResource(String content, String filename) {
+        return byteResource(content.getBytes(), filename);
+    }
+
+    private static Resource zipResource(String filename, List<ZipEntryBytes> entries)
             throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -668,18 +692,7 @@ class AiWorkflowServiceTest {
                 zos.closeEntry();
             }
         }
-        byte[] zipBytes = baos.toByteArray();
-        return new ByteArrayResource(zipBytes) {
-            @Override
-            public String getFilename() {
-                return filename;
-            }
-
-            @Override
-            public InputStream getInputStream() {
-                return new ByteArrayInputStream(zipBytes);
-            }
-        };
+        return byteResource(baos.toByteArray(), filename);
     }
 
     private record ZipEntryBytes(String name, byte[] bytes) {

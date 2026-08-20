@@ -17,7 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
+
+import jakarta.persistence.PersistenceException;
 
 import stirling.software.proprietary.billing.BillingCategory;
 
@@ -59,7 +60,7 @@ class UsageMeterServiceTest {
         // First increment misses (no row); insert loses the race to a concurrent thread; the
         // second increment then succeeds against the row that thread created.
         when(repo.increment(eq(period), eq("AUTOMATION"), eq(2L), any())).thenReturn(0, 1);
-        when(repo.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("dup"));
+        when(repo.saveAndFlush(any())).thenThrow(new PersistenceException("dup"));
 
         service.accrue(period, BillingCategory.AUTOMATION, 2, null);
 
@@ -93,8 +94,7 @@ class UsageMeterServiceTest {
         // chaining, not re-charged.
         when(signatureRepo.findByPeriodStartAndSignature(period, "op-sig-race"))
                 .thenReturn(Optional.empty());
-        when(signatureRepo.saveAndFlush(any()))
-                .thenThrow(new DataIntegrityViolationException("dup"));
+        when(signatureRepo.saveAndFlush(any())).thenThrow(new PersistenceException("dup"));
 
         service.accrue(period, BillingCategory.AI, 5, "op-sig-race");
 

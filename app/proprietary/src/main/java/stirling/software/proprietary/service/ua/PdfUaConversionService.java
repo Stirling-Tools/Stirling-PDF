@@ -9,7 +9,8 @@ import java.util.Locale;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import stirling.software.proprietary.pdf.ua.TaggingResult;
  * Converts a PDF to PDF/UA. The declaration is written first and withdrawn unless validation
  * passes, so a returned file either conforms or does not claim to.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class PdfUaConversionService {

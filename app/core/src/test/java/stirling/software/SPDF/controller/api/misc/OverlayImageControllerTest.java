@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -16,6 +17,7 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,15 +25,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
+import jakarta.ws.rs.core.Response;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -39,16 +37,9 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class OverlayImageControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
+    private static Response streamingOk(byte[] bytes) {
+        return Response.ok(bytes).build();
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -57,8 +48,8 @@ class OverlayImageControllerTest {
 
     @InjectMocks private OverlayImageController controller;
 
-    private MockMultipartFile pdfFile;
-    private MockMultipartFile imageFile;
+    private FileUpload pdfFile;
+    private FileUpload imageFile;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -74,18 +65,8 @@ class OverlayImageControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
-        pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
-        imageFile =
-                new MockMultipartFile(
-                        "imageFile",
-                        "overlay.png",
-                        MediaType.IMAGE_PNG_VALUE,
-                        createValidPngBytes());
+        pdfFile = TestFileUploads.pdf("PDF content".getBytes());
+        imageFile = TestFileUploads.of(createValidPngBytes(), "overlay.png", "image/png");
     }
 
     private byte[] createValidPngBytes() throws IOException {
@@ -98,13 +79,6 @@ class OverlayImageControllerTest {
 
     @Test
     void overlayImage_success_singlePage() throws Exception {
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(imageFile);
-        request.setX(10.0f);
-        request.setY(20.0f);
-        request.setEveryPage(false);
-
         PDDocument mockDoc = new PDDocument();
         PDPage page = new PDPage(PDRectangle.A4);
         mockDoc.addPage(page);
@@ -112,7 +86,7 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
+            Response expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -120,39 +94,25 @@ class OverlayImageControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.overlayImage(request);
+            Response response = controller.overlayImage(pdfFile, imageFile, 10.0f, 20.0f, false);
 
             assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(200, response.getStatus());
         }
         mockDoc.close();
     }
 
     @Test
     void overlayImage_ioException_returnsBadRequest() throws Exception {
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(imageFile);
-        request.setX(0);
-        request.setY(0);
-        request.setEveryPage(false);
-
         when(pdfDocumentFactory.load(any(byte[].class))).thenThrow(new IOException("bad PDF"));
 
-        ResponseEntity<Resource> response = controller.overlayImage(request);
+        Response response = controller.overlayImage(pdfFile, imageFile, 0, 0, false);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     void overlayImage_everyPageFalse_onlyOverlaysFirstPage() throws Exception {
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(imageFile);
-        request.setX(0);
-        request.setY(0);
-        request.setEveryPage(false);
-
         PDDocument mockDoc = new PDDocument();
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         mockDoc.addPage(new PDPage(PDRectangle.A4));
@@ -160,7 +120,7 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
+            Response expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -168,30 +128,23 @@ class OverlayImageControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.overlayImage(request);
+            Response response = controller.overlayImage(pdfFile, imageFile, 0, 0, false);
 
             assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(200, response.getStatus());
         }
         mockDoc.close();
     }
 
     @Test
     void overlayImage_nullEveryPage_treatedAsFalse() throws Exception {
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(imageFile);
-        request.setX(0);
-        request.setY(0);
-        request.setEveryPage(null);
-
         PDDocument mockDoc = new PDDocument();
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
+            Response expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -199,10 +152,10 @@ class OverlayImageControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.overlayImage(request);
+            Response response = controller.overlayImage(pdfFile, imageFile, 0, 0, null);
 
             assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(200, response.getStatus());
         }
         mockDoc.close();
     }
@@ -222,16 +175,9 @@ class OverlayImageControllerTest {
                                 + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
                                 + "</svg>")
                         .getBytes();
-        when(svgSanitizer.sanitize(maliciousSvg)).thenReturn(sanitized);
+        when(svgSanitizer.sanitize(aryEq(maliciousSvg))).thenReturn(sanitized);
 
-        MockMultipartFile svgFile =
-                new MockMultipartFile("imageFile", "overlay.svg", "image/svg+xml", maliciousSvg);
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(svgFile);
-        request.setX(0);
-        request.setY(0);
-        request.setEveryPage(false);
+        FileUpload svgFile = TestFileUploads.of(maliciousSvg, "overlay.svg", "image/svg+xml");
 
         PDDocument mockDoc = new PDDocument();
         mockDoc.addPage(new PDPage(PDRectangle.A4));
@@ -246,29 +192,22 @@ class OverlayImageControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(streamingOk("result".getBytes()));
 
-            controller.overlayImage(request);
+            controller.overlayImage(pdfFile, svgFile, 0, 0, false);
         }
         mockDoc.close();
 
-        verify(svgSanitizer).sanitize(maliciousSvg);
+        verify(svgSanitizer).sanitize(aryEq(maliciousSvg));
     }
 
     @Test
     void overlayImage_withCoordinates_usesXY() throws Exception {
-        OverlayImageRequest request = new OverlayImageRequest();
-        request.setFileInput(pdfFile);
-        request.setImageFile(imageFile);
-        request.setX(100.5f);
-        request.setY(200.5f);
-        request.setEveryPage(false);
-
         PDDocument mockDoc = new PDDocument();
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
+            Response expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -277,10 +216,10 @@ class OverlayImageControllerTest {
                     .thenReturn(expectedResponse);
 
             // Should not throw - coordinates are passed to contentStream.drawImage
-            ResponseEntity<Resource> response = controller.overlayImage(request);
+            Response response = controller.overlayImage(pdfFile, imageFile, 100.5f, 200.5f, false);
 
             assertNotNull(response);
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(200, response.getStatus());
         }
         mockDoc.close();
     }

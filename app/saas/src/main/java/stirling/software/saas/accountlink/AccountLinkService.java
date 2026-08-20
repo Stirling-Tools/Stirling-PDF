@@ -12,9 +12,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
  * {@link AccountLinkController} (which depends on it) drops out too and its endpoints 404.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class AccountLinkService {
 

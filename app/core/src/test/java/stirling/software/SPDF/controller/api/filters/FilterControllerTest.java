@@ -1,11 +1,13 @@
 package stirling.software.SPDF.controller.api.filters;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,68 +15,40 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.PDFComparisonAndCount;
-import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
-import stirling.software.SPDF.model.api.filter.FileSizeRequest;
-import stirling.software.SPDF.model.api.filter.PageRotationRequest;
-import stirling.software.SPDF.model.api.filter.PageSizeRequest;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class FilterControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private FilterController filterController;
 
-    private MockMultipartFile mockFile;
+    private FileUpload mockFile;
+    private static final long FILE_SIZE = "PDF content".getBytes().length;
 
     @BeforeEach
     void setUp() {
-        mockFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        mockFile = TestFileUploads.pdf("PDF content".getBytes());
     }
 
     // ---- containsText tests ----
 
     @Test
     void containsText_whenTextFound_returns200() throws Exception {
-        ContainsTextRequest request = new ContainsTextRequest();
-        request.setFileInput(mockFile);
-        request.setText("hello");
-        request.setPageNumbers("all");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
 
-        ResponseEntity<Resource> expectedResponse = streamingOk(new byte[] {1, 2, 3});
+        Response expectedResponse = Response.ok(new byte[] {1, 2, 3}).build();
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
@@ -86,30 +60,25 @@ class FilterControllerTest {
                                             mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> result = filterController.containsText(request);
+            Response result = filterController.containsText(mockFile, null, "all", "hello");
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertArrayEquals(new byte[] {1, 2, 3}, drainBody(result));
+            assertEquals(200, result.getStatus());
+            assertSame(expectedResponse, result);
         }
     }
 
     @Test
     void containsText_whenTextNotFound_returns204() throws Exception {
-        ContainsTextRequest request = new ContainsTextRequest();
-        request.setFileInput(mockFile);
-        request.setText("missing");
-        request.setPageNumbers("all");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class)) {
             pdfUtilsMock.when(() -> PdfUtils.hasText(mockDoc, "all", "missing")).thenReturn(false);
 
-            ResponseEntity<Resource> result = filterController.containsText(request);
+            Response result = filterController.containsText(mockFile, null, "all", "missing");
 
-            assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
-            assertNull(result.getBody());
+            assertEquals(204, result.getStatus());
+            assertNull(result.getEntity());
         }
     }
 
@@ -117,14 +86,10 @@ class FilterControllerTest {
 
     @Test
     void containsImage_whenImageFound_returns200() throws Exception {
-        PDFWithPageNums request = new PDFWithPageNums();
-        request.setFileInput(mockFile);
-        request.setPageNumbers("all");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
 
-        ResponseEntity<Resource> expectedResponse = streamingOk(new byte[] {4, 5, 6});
+        Response expectedResponse = Response.ok(new byte[] {4, 5, 6}).build();
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
@@ -136,28 +101,24 @@ class FilterControllerTest {
                                             mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> result = filterController.containsImage(request);
+            Response result = filterController.containsImage(mockFile, null, "all");
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertArrayEquals(new byte[] {4, 5, 6}, drainBody(result));
+            assertEquals(200, result.getStatus());
+            assertSame(expectedResponse, result);
         }
     }
 
     @Test
     void containsImage_whenNoImage_returns204() throws Exception {
-        PDFWithPageNums request = new PDFWithPageNums();
-        request.setFileInput(mockFile);
-        request.setPageNumbers("1");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class)) {
             pdfUtilsMock.when(() -> PdfUtils.hasImages(mockDoc, "1")).thenReturn(false);
 
-            ResponseEntity<Resource> result = filterController.containsImage(request);
+            Response result = filterController.containsImage(mockFile, null, "1");
 
-            assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+            assertEquals(204, result.getStatus());
         }
     }
 
@@ -165,180 +126,157 @@ class FilterControllerTest {
 
     @Test
     void pageCount_greaterComparator_passes() throws Exception {
-        PDFComparisonAndCount request = new PDFComparisonAndCount();
-        request.setFileInput(mockFile);
-        request.setPageCount(3);
-        request.setComparator("Greater");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageCount(request);
+            Response result = filterController.pageCount(mockFile, null, "Greater", 3);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageCount_greaterComparator_fails() throws Exception {
-        PDFComparisonAndCount request = new PDFComparisonAndCount();
-        request.setFileInput(mockFile);
-        request.setPageCount(10);
-        request.setComparator("Greater");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<byte[]> result = filterController.pageCount(request);
+        Response result = filterController.pageCount(mockFile, null, "Greater", 10);
 
-        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+        assertEquals(204, result.getStatus());
     }
 
     @Test
     void pageCount_equalComparator_passes() throws Exception {
-        PDFComparisonAndCount request = new PDFComparisonAndCount();
-        request.setFileInput(mockFile);
-        request.setPageCount(5);
-        request.setComparator("Equal");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageCount(request);
+            Response result = filterController.pageCount(mockFile, null, "Equal", 5);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageCount_lessComparator_passes() throws Exception {
-        PDFComparisonAndCount request = new PDFComparisonAndCount();
-        request.setFileInput(mockFile);
-        request.setPageCount(10);
-        request.setComparator("Less");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageCount(request);
+            Response result = filterController.pageCount(mockFile, null, "Less", 10);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageCount_invalidComparator_throwsException() throws Exception {
-        PDFComparisonAndCount request = new PDFComparisonAndCount();
-        request.setFileInput(mockFile);
-        request.setPageCount(5);
-        request.setComparator("Invalid");
-
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        assertThrows(IllegalArgumentException.class, () -> filterController.pageCount(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> filterController.pageCount(mockFile, null, "Invalid", 5));
     }
 
     // ---- pageSize tests ----
 
     @Test
     void pageSize_equalToA4_returns200() throws Exception {
-        PageSizeRequest request = new PageSizeRequest();
-        request.setFileInput(mockFile);
-        request.setStandardPageSize("A4");
-        request.setComparator("Equal");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getMediaBox()).thenReturn(PDRectangle.A4);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.textToPageSize("A4")).thenReturn(PDRectangle.A4);
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageSize(request);
+            Response result = filterController.pageSize(mockFile, null, "Equal", "A4");
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageSize_smallerThanA4_greaterComparator_returns204() throws Exception {
-        PageSizeRequest request = new PageSizeRequest();
-        request.setFileInput(mockFile);
-        request.setStandardPageSize("A4");
-        request.setComparator("Greater");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getMediaBox()).thenReturn(PDRectangle.A5);
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class)) {
             pdfUtilsMock.when(() -> PdfUtils.textToPageSize("A4")).thenReturn(PDRectangle.A4);
 
-            ResponseEntity<byte[]> result = filterController.pageSize(request);
+            Response result = filterController.pageSize(mockFile, null, "Greater", "A4");
 
-            assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+            assertEquals(204, result.getStatus());
         }
     }
 
     @Test
     void pageSize_largerThanA4_greaterComparator_returns200() throws Exception {
-        PageSizeRequest request = new PageSizeRequest();
-        request.setFileInput(mockFile);
-        request.setStandardPageSize("A4");
-        request.setComparator("Greater");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getMediaBox()).thenReturn(PDRectangle.A3);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.textToPageSize("A4")).thenReturn(PDRectangle.A4);
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageSize(request);
+            Response result = filterController.pageSize(mockFile, null, "Greater", "A4");
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
@@ -346,172 +284,146 @@ class FilterControllerTest {
 
     @Test
     void fileSize_greaterComparator_passes() throws Exception {
-        FileSizeRequest request = new FileSizeRequest();
-        request.setFileInput(mockFile);
-        request.setFileSize(5L);
-        request.setComparator("Greater");
-
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.fileSize(request);
+            Response result = filterController.fileSize(mockFile, null, "Greater", 5L);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void fileSize_greaterComparator_fails() throws Exception {
-        FileSizeRequest request = new FileSizeRequest();
-        request.setFileInput(mockFile);
-        request.setFileSize(999999L);
-        request.setComparator("Greater");
+        Response result = filterController.fileSize(mockFile, null, "Greater", 999999L);
 
-        ResponseEntity<byte[]> result = filterController.fileSize(request);
-
-        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+        assertEquals(204, result.getStatus());
     }
 
     @Test
     void fileSize_equalComparator_passes() throws Exception {
-        FileSizeRequest request = new FileSizeRequest();
-        request.setFileInput(mockFile);
-        request.setFileSize(mockFile.getSize());
-        request.setComparator("Equal");
-
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.fileSize(request);
+            Response result = filterController.fileSize(mockFile, null, "Equal", FILE_SIZE);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void fileSize_invalidComparator_throwsException() {
-        FileSizeRequest request = new FileSizeRequest();
-        request.setFileInput(mockFile);
-        request.setFileSize(10L);
-        request.setComparator("BadValue");
-
-        assertThrows(IllegalArgumentException.class, () -> filterController.fileSize(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> filterController.fileSize(mockFile, null, "BadValue", 10L));
     }
 
     // ---- pageRotation tests ----
 
     @Test
     void pageRotation_equalComparator_passes() throws Exception {
-        PageRotationRequest request = new PageRotationRequest();
-        request.setFileInput(mockFile);
-        request.setRotation(90);
-        request.setComparator("Equal");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getRotation()).thenReturn(90);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageRotation(request);
+            Response result = filterController.pageRotation(mockFile, null, "Equal", 90);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageRotation_equalComparator_fails() throws Exception {
-        PageRotationRequest request = new PageRotationRequest();
-        request.setFileInput(mockFile);
-        request.setRotation(90);
-        request.setComparator("Equal");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getRotation()).thenReturn(0);
 
-        ResponseEntity<byte[]> result = filterController.pageRotation(request);
+        Response result = filterController.pageRotation(mockFile, null, "Equal", 90);
 
-        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+        assertEquals(204, result.getStatus());
     }
 
     @Test
     void pageRotation_greaterComparator_passes() throws Exception {
-        PageRotationRequest request = new PageRotationRequest();
-        request.setFileInput(mockFile);
-        request.setRotation(0);
-        request.setComparator("Greater");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getRotation()).thenReturn(90);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageRotation(request);
+            Response result = filterController.pageRotation(mockFile, null, "Greater", 0);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageRotation_lessComparator_passes() throws Exception {
-        PageRotationRequest request = new PageRotationRequest();
-        request.setFileInput(mockFile);
-        request.setRotation(180);
-        request.setComparator("Less");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getRotation()).thenReturn(90);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(mockFile.getBytes());
+        Response expectedResponse = Response.ok(new byte[] {1}).build();
 
         try (MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
-            webMock.when(() -> WebResponseUtils.multiPartFileToWebResponse(mockFile))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.multiPartFileToWebResponse(
+                                            any(MultipartFile.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.pageRotation(request);
+            Response result = filterController.pageRotation(mockFile, null, "Less", 180);
 
-            assertEquals(HttpStatus.OK, result.getStatusCode());
+            assertEquals(200, result.getStatus());
         }
     }
 
     @Test
     void pageRotation_invalidComparator_throwsException() throws Exception {
-        PageRotationRequest request = new PageRotationRequest();
-        request.setFileInput(mockFile);
-        request.setRotation(90);
-        request.setComparator("NotValid");
-
         PDDocument mockDoc = mock(PDDocument.class);
         PDPage mockPage = mock(PDPage.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getPage(0)).thenReturn(mockPage);
         when(mockPage.getRotation()).thenReturn(90);
 
-        assertThrows(IllegalArgumentException.class, () -> filterController.pageRotation(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> filterController.pageRotation(mockFile, null, "NotValid", 90));
     }
 }

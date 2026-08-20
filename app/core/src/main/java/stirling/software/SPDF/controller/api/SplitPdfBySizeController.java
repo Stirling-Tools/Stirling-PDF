@@ -13,13 +13,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,8 @@ import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -43,6 +48,8 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
+@jakarta.ws.rs.Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfBySizeController {
@@ -50,9 +57,12 @@ public class SplitPdfBySizeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @jakarta.ws.rs.Path("/split-by-size-or-count")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/split-by-size-or-count",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
@@ -63,8 +73,22 @@ public class SplitPdfBySizeController {
                             + " and split into 5, it does 5 documents each 4 pages\r\n if 10MB and each page"
                             + " is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts"
                             + " 1.9MB but not 2.1MB)")
-    public ResponseEntity<Resource> autoSplitPdf(
-            @ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
+    public Response autoSplitPdf(
+            @RestForm("fileInput") List<FileUpload> fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("splitType") Integer splitTypeForm,
+            @RestForm("splitValue") String splitValueForm)
+            throws Exception {
+
+        SplitPdfBySizeOrCountRequest request = new SplitPdfBySizeOrCountRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (splitTypeForm != null) {
+            request.setSplitType(splitTypeForm);
+        }
+        if (splitValueForm != null) {
+            request.setSplitValue(splitValueForm);
+        }
 
         MultipartFile file = request.getFileInput();
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");

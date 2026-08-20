@@ -2,14 +2,13 @@ package stirling.software.common.util.misc;
 
 import java.io.IOException;
 
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.web.multipart.MultipartFile;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

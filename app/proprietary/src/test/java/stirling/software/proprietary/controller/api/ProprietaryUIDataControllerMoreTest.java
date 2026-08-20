@@ -18,12 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;

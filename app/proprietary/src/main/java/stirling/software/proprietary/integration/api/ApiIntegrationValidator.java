@@ -2,7 +2,7 @@ package stirling.software.proprietary.integration.api;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * re-pointed at a private address long after save time (a check-then-use gap this validator alone
  * cannot close).
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ApiIntegrationValidator implements IntegrationConfigValidator {
 

@@ -8,12 +8,13 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 
 class ScannerEffectRequestTest {
 
@@ -49,7 +50,7 @@ class ScannerEffectRequestTest {
     void fileInput_present_noViolationForThatField() {
         ScannerEffectRequest req = new ScannerEffectRequest();
         req.setFileInput(
-                new MockMultipartFile(
+                new ByteArrayMultipartFile(
                         "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3}));
 
         Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);

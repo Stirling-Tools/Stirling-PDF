@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
@@ -32,17 +34,21 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  * InputSource} bean accepts; its optional trigger must be a known type compatible with that source.
  * A null trigger is a manual-only input and skips trigger validation.
  */
-@Service
-@RequiredArgsConstructor
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyValidator {
 
-    private final List<PolicyTrigger> triggers;
-    private final List<InputSource> inputSources;
-    private final List<PolicyOutputSink> outputSinks;
-    private final List<PipelineStepValidator> stepValidators;
-    private final SourceStore sourceStore;
-    private final PolicyAssetStore assetStore;
-    private final ToolChainValidator toolChainValidator;
+    // Spring injected a List<T> of all beans of each type; CDI collects all beans of a type
+    // via Instance<T>, which is iterable. Field injection is used (instead of constructor
+    // injection via Lombok @RequiredArgsConstructor) because Instance<T> is the CDI-native
+    // collection type and the fields cannot be final.
+    @Inject Instance<PolicyTrigger> triggers;
+    @Inject Instance<InputSource> inputSources;
+    @Inject Instance<PolicyOutputSink> outputSinks;
+    @Inject Instance<PipelineStepValidator> stepValidators;
+    @Inject SourceStore sourceStore;
+    @Inject PolicyAssetStore assetStore;
+    @Inject ToolChainValidator toolChainValidator;
 
     /**
      * @throws IllegalArgumentException if the policy has more than one input or output, any facet's

@@ -2,10 +2,11 @@ package stirling.software.proprietary.service;
 
 import java.util.List;
 
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
+import io.quarkus.panache.common.Page;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,11 +16,11 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
 /** One cached read of recent {@code audit_events} per scope, shared by all audit-derived views. */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PortalAuditReadService {
 
-    /** Cache name - registered with a short TTL in CacheConfig. */
+    /** Cache name - given its short TTL by {@code quarkus.cache.caffeine."portalAuditEvents".*}. */
     public static final String CACHE_NAME = "portalAuditEvents";
 
     /** Newest rows to scan; each surface filters this down to what it shows. */
@@ -37,25 +38,28 @@ public class PortalAuditReadService {
     private final PersistentAuditEventRepository auditRepository;
 
     /** Recent whole-server events (admins). */
-    @Cacheable(value = CACHE_NAME, key = "'server'")
+    @CacheResult(cacheName = CACHE_NAME)
     public List<PortalAuditEventRow> serverEvents() {
-        return toRows(auditRepository.findByTypeNotIn(NOISE_TYPES, recentPage()).getContent());
+        return toRows(auditRepository.findByTypeNotIn(NOISE_TYPES).page(recentPage()).list());
     }
 
     /** Recent events by the given principals (team scope). Empty principals yield an empty list. */
-    @Cacheable(value = CACHE_NAME, key = "#cacheKey")
-    public List<PortalAuditEventRow> scopedEvents(String cacheKey, List<String> principals) {
+    @CacheResult(cacheName = CACHE_NAME)
+    public List<PortalAuditEventRow> scopedEvents(
+            @CacheKey String cacheKey, List<String> principals) {
         if (principals.isEmpty()) {
             return List.of();
         }
         return toRows(
                 auditRepository
-                        .findByTypeNotInAndPrincipalIn(NOISE_TYPES, principals, recentPage())
-                        .getContent());
+                        .findByTypeNotInAndPrincipalIn(NOISE_TYPES, principals)
+                        .page(recentPage())
+                        .list());
     }
 
-    private static PageRequest recentPage() {
-        return PageRequest.of(0, SCAN_LIMIT, Sort.by(Sort.Direction.DESC, "timestamp"));
+    // The repository finders already sort newest-first, so this only bounds the scan window.
+    private static Page recentPage() {
+        return Page.of(0, SCAN_LIMIT);
     }
 
     private static List<PortalAuditEventRow> toRows(List<PersistentAuditEvent> events) {

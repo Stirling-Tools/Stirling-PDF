@@ -1,13 +1,13 @@
 package stirling.software.proprietary.policy.controller;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * A supporting file paired with the asset key a pipeline step references from its {@code

@@ -1,16 +1,14 @@
 package stirling.software.SPDF.service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +28,7 @@ import tools.jackson.databind.ObjectMapper;
  * and served by {@code ToolIORegistry}, which reads the annotations directly rather than parsing
  * them back out of the description prose.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class ApiDocService {
 
@@ -44,10 +42,10 @@ public class ApiDocService {
     public ApiDocService(
             ObjectMapper objectMapper,
             ServletContext servletContext,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.objectMapper = objectMapper;
         this.servletContext = servletContext;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
     }
 
     private String getApiDocsUrl() {
@@ -65,16 +63,16 @@ public class ApiDocService {
     private synchronized void loadApiDocumentation() {
         String apiDocsJson = "";
         try {
-            HttpHeaders headers = new HttpHeaders();
+            HttpRequest.Builder requestBuilder =
+                    HttpRequest.newBuilder().uri(URI.create(getApiDocsUrl())).GET();
             String apiKey = getApiKeyForUser();
             if (!apiKey.isEmpty()) {
-                headers.set("X-API-KEY", apiKey);
+                requestBuilder.header("X-API-KEY", apiKey);
             }
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response =
-                    restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
-            apiDocsJson = response.getBody();
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpResponse<String> response =
+                    httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            apiDocsJson = response.body();
             apiDocsJsonRootNode = objectMapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");
             paths.propertyStream()

@@ -13,18 +13,20 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.json.PdfJsonFont;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 @Slf4j
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PdfJsonFallbackFontService {
 
@@ -317,11 +319,12 @@ public class PdfJsonFallbackFontService {
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     private static final Pattern PATTERN = Pattern.compile("^[A-Z]{6}\\+");
 
-    private final ResourceLoader resourceLoader;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Value("${stirling.pdf.fallback-font:" + DEFAULT_FALLBACK_FONT_LOCATION + "}")
-    private String legacyFallbackFontLocation;
+    @ConfigProperty(
+            name = "stirling.pdf.fallback-font",
+            defaultValue = DEFAULT_FALLBACK_FONT_LOCATION)
+    String legacyFallbackFontLocation;
 
     private String fallbackFontLocation;
 
@@ -623,7 +626,7 @@ public class PdfJsonFallbackFontService {
         if (cached != null) {
             return cached;
         }
-        Resource resource = resourceLoader.getResource(spec.resourceLocation());
+        Resource resource = resolveResource(spec.resourceLocation());
         if (!resource.exists()) {
             throw new IOException("Fallback font resource not found at " + spec.resourceLocation());
         }
@@ -634,6 +637,27 @@ public class PdfJsonFallbackFontService {
             fallbackFontCache.put(fallbackId, bytes);
             return bytes;
         }
+    }
+
+    /**
+     * Resolve a resource location to the migration {@link Resource} shim.
+     *
+     * <p>MIGRATION (Spring -> Quarkus): replaces Spring's {@code ResourceLoader.getResource}.
+     * Mirrors the prefix handling used in {@code ApplicationProperties}: {@code classpath:}
+     * locations resolve via the classloader, everything else (including {@code file:} and bare
+     * paths) resolves against the filesystem.
+     */
+    private Resource resolveResource(String location) {
+        if (location == null) {
+            return new ClassPathResource("");
+        }
+        if (location.startsWith("classpath:")) {
+            return new ClassPathResource(location.substring("classpath:".length()));
+        }
+        if (location.startsWith("file:")) {
+            return new FileSystemResource(location.substring("file:".length()));
+        }
+        return new FileSystemResource(location);
     }
 
     private String inferBaseName(String location, String defaultName) {

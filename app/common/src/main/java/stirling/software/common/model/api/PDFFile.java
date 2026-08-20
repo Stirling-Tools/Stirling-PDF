@@ -1,8 +1,5 @@
 package stirling.software.common.model.api;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.AssertTrue;
@@ -11,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import stirling.software.common.model.MultipartFile;
+
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -18,7 +17,7 @@ public class PDFFile {
 
     @Schema(
             description = "The input PDF file",
-            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
+            contentMediaType = "application/pdf",
             format = "binary")
     private MultipartFile fileInput;
 

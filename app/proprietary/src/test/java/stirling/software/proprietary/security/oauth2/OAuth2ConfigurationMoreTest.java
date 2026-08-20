@@ -12,8 +12,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -21,6 +19,8 @@ import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SimpleGrantedAuthority;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.NoProviderFoundException;

@@ -2,8 +2,6 @@ package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
 
-import org.springframework.security.core.GrantedAuthority;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -26,7 +24,7 @@ import lombok.Setter;
         indexes = @Index(name = "idx_authorities_user_id", columnList = "user_id"))
 @Getter
 @Setter
-public class Authority implements GrantedAuthority, Serializable {
+public class Authority implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

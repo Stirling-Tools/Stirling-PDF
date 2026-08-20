@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +16,7 @@ import stirling.software.proprietary.integration.crypto.CredentialEncryption;
  * here rather than by an attribute converter, so the metadata reads (list, validate, clean up)
  * never decrypt - only {@link #content} does.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class JpaPolicyAssetStore implements PolicyAssetStore {
 
@@ -49,11 +49,11 @@ public class JpaPolicyAssetStore implements PolicyAssetStore {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(Transactional.TxType.SUPPORTS)
     public Optional<byte[]> content(String id) {
         // The only read of the data column, and so the only decrypt.
         return repository
-                .findById(id)
+                .findByIdOptional(id)
                 .map(entity -> CredentialEncryption.decryptBytes(entity.getData()));
     }
 
@@ -75,11 +75,9 @@ public class JpaPolicyAssetStore implements PolicyAssetStore {
     @Override
     @Transactional
     public boolean delete(String id) {
-        if (!repository.existsById(id)) {
-            return false;
-        }
-        repository.deleteById(id);
-        return true;
+        // Panache reports whether a row was actually removed, so the existence check the Spring
+        // Data version needed is part of the delete.
+        return repository.deleteById(id);
     }
 
     private static PolicyAsset toAsset(PolicyAssetEntity entity) {

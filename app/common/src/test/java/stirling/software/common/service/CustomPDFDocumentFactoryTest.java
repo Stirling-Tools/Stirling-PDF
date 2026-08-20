@@ -17,10 +17,9 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -94,8 +93,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
     void testStrategy_MultipartFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
+        ByteArrayMultipartFile multipart =
+                new ByteArrayMultipartFile("file", "doc.pdf", "application/pdf", inflated);
         factory.load(multipart);
         Assertions.assertEquals(expected, factory.lastStrategyUsed);
     }
@@ -203,8 +202,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({"5,MEMORY_ONLY", "20,MIXED", "60,TEMP_FILE"})
     void testStrategy_PDFFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
-        MockMultipartFile multipart =
-                new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, inflated);
+        ByteArrayMultipartFile multipart =
+                new ByteArrayMultipartFile("file", "doc.pdf", "application/pdf", inflated);
         PDFFile pdfFile = new PDFFile();
         pdfFile.setFileInput(multipart);
         factory.load(pdfFile);

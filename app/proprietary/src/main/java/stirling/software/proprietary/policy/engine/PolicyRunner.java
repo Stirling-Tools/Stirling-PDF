@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.input.InputSource;
@@ -33,8 +35,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * SweepKind#FULL} sweep also reconciles the processed-file ledger against what is present.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;
@@ -42,6 +44,22 @@ public class PolicyRunner {
     private final SourceStore sourceStore;
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
+
+    // Written out rather than @RequiredArgsConstructor because Lombok cannot stamp @All onto the
+    // InputSource list, which is how Arc injects every bean of a type.
+    @jakarta.inject.Inject
+    public PolicyRunner(
+            PolicyEngine policyEngine,
+            @All List<InputSource> inputSources,
+            SourceStore sourceStore,
+            SourceDocCounter docCounter,
+            ProcessedLedger processedLedger) {
+        this.policyEngine = policyEngine;
+        this.inputSources = inputSources;
+        this.sourceStore = sourceStore;
+        this.docCounter = docCounter;
+        this.processedLedger = processedLedger;
+    }
 
     /** Full-listing sweep over every input: resolve each source, then reconcile the ledger. */
     public SweepOutcome run(Policy policy) {

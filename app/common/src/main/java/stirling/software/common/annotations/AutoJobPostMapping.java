@@ -2,21 +2,27 @@ package stirling.software.common.annotations;
 
 import java.lang.annotation.*;
 
-import org.springframework.core.annotation.AliasFor;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
+import jakarta.enterprise.util.Nonbinding;
+import jakarta.interceptor.InterceptorBinding;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Shortcut for a POST endpoint that is executed through the Stirling "auto‑job" framework.
  *
+ * <p>MIGRATION (Spring -> Quarkus): this was a Spring composed meta-annotation that stamped
+ * {@code @RequestMapping(method=POST)} onto the target via {@code @AliasFor}. JAX-RS does not
+ * honour {@code @Path}/{@code @POST}/{@code @Consumes} through meta-annotations, so this annotation
+ * no longer provides routing. It is now a CDI {@link InterceptorBinding} handled by {@code
+ * AutoJobInterceptor}. <b>Controllers using {@code @AutoJobPostMapping} must additionally declare
+ * their own JAX-RS {@code @POST} + {@code @Path(value)} + {@code @Consumes(consumes)}.</b> The
+ * {@link #value()}/{@link #consumes()} members are retained so a scanner/controller can read the
+ * intended routing.
+ *
  * <p>Behaviour notes:
  *
  * <ul>
- *   <li>The endpoint is registered with {@code POST} and, by default, consumes {@code
- *       multipart/form-data} unless you override {@link #consumes()}.
  *   <li>When the client supplies {@code ?async=true} the call is handed to {@link
  *       stirling.software.common.service.JobExecutorService JobExecutorService} where it may be
  *       queued, retried, tracked and subject to time‑outs. For synchronous (default) invocations
@@ -26,22 +32,26 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
  *       GET /api/v1/general/job/{id}</code>.
  * </ul>
  *
- * <p>Unless stated otherwise an attribute only affects <em>async</em> execution.
+ * <p>Unless stated otherwise an attribute only affects <em>async</em> execution. All members are
+ * {@code @Nonbinding} so the single {@code AutoJobInterceptor} matches every annotated method; the
+ * interceptor reads the actual values reflectively from the target method.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RequestMapping(method = RequestMethod.POST)
+@InterceptorBinding
 @RequestBody(required = true)
 public @interface AutoJobPostMapping {
 
-    /** Alias for {@link RequestMapping#value} – the path mapping of the endpoint. */
-    @AliasFor(annotation = RequestMapping.class, attribute = "value")
+    /**
+     * The path mapping of the endpoint (controllers must mirror this on a JAX-RS {@code @Path}).
+     */
+    @Nonbinding
     String[] value() default {};
 
     /** MIME types this endpoint accepts. Defaults to {@code multipart/form-data}. */
-    @AliasFor(annotation = RequestMapping.class, attribute = "consumes")
-    String[] consumes() default {MediaType.MULTIPART_FORM_DATA_VALUE};
+    @Nonbinding
+    String[] consumes() default {MediaType.MULTIPART_FORM_DATA};
 
     /**
      * Maximum execution time in milliseconds before the job is aborted. A negative value means "use
@@ -49,6 +59,7 @@ public @interface AutoJobPostMapping {
      *
      * <p>Only honoured when {@code async=true}.
      */
+    @Nonbinding
     long timeout() default -1;
 
     /**
@@ -57,6 +68,7 @@ public @interface AutoJobPostMapping {
      *
      * <p>Only honoured when {@code async=true}.
      */
+    @Nonbinding
     int retryCount() default 1;
 
     /**
@@ -64,6 +76,7 @@ public @interface AutoJobPostMapping {
      *
      * <p>Only honoured when {@code async=true}.
      */
+    @Nonbinding
     boolean trackProgress() default true;
 
     /**
@@ -72,6 +85,7 @@ public @interface AutoJobPostMapping {
      *
      * <p>Only honoured when {@code async=true}.
      */
+    @Nonbinding
     boolean queueable() default false;
 
     /**
@@ -82,5 +96,6 @@ public @interface AutoJobPostMapping {
      * AutoJobPostMappingWeightTest} fails the build if any endpoint leaves it unset. Runtime
      * readers clamp the value into {@code [1, 100]}.
      */
+    @Nonbinding
     int resourceWeight() default Integer.MIN_VALUE;
 }

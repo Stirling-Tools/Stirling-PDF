@@ -9,7 +9,8 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import stirling.software.proprietary.pdf.ua.StructType;
 import stirling.software.proprietary.pdf.ua.TaggedContentExtractor;
 
 /** Produces an accessibility report without changing the document. */
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class AccessibilityAuditService {

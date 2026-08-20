@@ -111,7 +111,7 @@ tasks:
   codespell:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+      - uv run --project engine --locked --group pre-commit codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment,vertx --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
 
   toml-sort:
     deps: [install]

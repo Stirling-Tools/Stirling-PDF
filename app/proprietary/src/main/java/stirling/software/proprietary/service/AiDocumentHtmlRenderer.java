@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -9,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
-
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.JinjavaConfig;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.proprietary.model.api.ai.create.AiDocument;
 
 /** Renders an {@link AiDocument} to HTML using a Jinja template loaded from the classpath. */
-@Component
+@ApplicationScoped
 public class AiDocumentHtmlRenderer {
 
     private static final String TEMPLATE_PATH = "templates/ai/create/document.html.jinja2";
@@ -126,8 +127,8 @@ public class AiDocumentHtmlRenderer {
     }
 
     private static String loadTemplate() {
-        try {
-            return new ClassPathResource(TEMPLATE_PATH).getContentAsString(StandardCharsets.UTF_8);
+        try (InputStream in = new ClassPathResource(TEMPLATE_PATH).getInputStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

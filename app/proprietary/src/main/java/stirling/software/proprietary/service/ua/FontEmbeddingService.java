@@ -17,7 +17,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +29,7 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
  * Embeds any font the document references but does not carry, as PDF/UA-1 clause 7.21 requires.
  * Ghostscript does the embedding and discards the structure tree, so this must run before tagging.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class FontEmbeddingService {
 

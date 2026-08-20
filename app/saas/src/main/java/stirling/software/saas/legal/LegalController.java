@@ -2,24 +2,26 @@ package stirling.software.saas.legal;
 
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.security.Authenticated;
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -33,9 +35,9 @@ import stirling.software.saas.util.AuthenticationUtils;
  */
 @Slf4j
 @Hidden
-@RestController
-@RequestMapping("/api/v1/legal")
-@Profile("saas")
+@ApplicationScoped
+@Path("/api/v1/legal")
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 public class LegalController {
 
@@ -57,35 +59,42 @@ public class LegalController {
     public record ConsentRequest(String documentId, String context) {}
 
     /** Fetch a legal document's current version as markdown. 404 for an unknown document. */
-    @GetMapping("/{docId}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<LegalDocumentResponse> document(@PathVariable String docId) {
+    @GET
+    @Path("/{docId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Authenticated
+    public Response document(@PathParam("docId") String docId) {
         return registry.meta(docId)
-                .<ResponseEntity<LegalDocumentResponse>>map(
+                .map(
                         meta ->
-                                ResponseEntity.ok(
-                                        new LegalDocumentResponse(
-                                                meta.id(),
-                                                meta.version(),
-                                                meta.versionLabel(),
-                                                meta.displayName(),
-                                                meta.effectiveDate(),
-                                                meta.status(),
-                                                registry.staticMarkdown(docId))))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                                Response.ok(
+                                                new LegalDocumentResponse(
+                                                        meta.id(),
+                                                        meta.version(),
+                                                        meta.versionLabel(),
+                                                        meta.displayName(),
+                                                        meta.effectiveDate(),
+                                                        meta.status(),
+                                                        registry.staticMarkdown(docId)))
+                                        .build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     /**
      * Record a clickwrap consent (e.g. the EULA accepted at trial start or quote generation).
-     * Best-effort — a teamless caller still returns 200 so the accompanying flow is never blocked.
+     * Best-effort - a teamless caller still returns 200 so the accompanying flow is never blocked.
      */
-    @PostMapping("/consent")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> consent(
-            @RequestBody ConsentRequest request, Authentication auth, HttpServletRequest http) {
+    @POST
+    @Path("/consent")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Authenticated
+    public Response consent(ConsentRequest request, HttpServletRequest http) {
         if (request == null || request.documentId() == null || request.context() == null) {
-            return ResponseEntity.badRequest().build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
+        // Spring resolved the Authentication as a handler argument; JAX-RS has no such resolver, so
+        // it comes off the security context the same way the other saas controllers read it.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Optional<TeamMembership> membership = primaryMembership(auth);
         Long teamId = membership.map(m -> m.getTeam().getId()).orElse(null);
         Long userId = membership.map(m -> m.getUser().getId()).orElse(null);
@@ -102,7 +111,7 @@ public class LegalController {
                     request.context(),
                     e.getMessage());
         }
-        return ResponseEntity.ok().build();
+        return Response.ok().build();
     }
 
     private Optional<TeamMembership> primaryMembership(Authentication auth) {

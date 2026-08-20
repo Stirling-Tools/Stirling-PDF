@@ -6,11 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +22,12 @@ import lombok.extern.slf4j.Slf4j;
  * Distinct files keep distinct rows, so a reviewer can still act on any one of them.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FileRunEventStore {
 
     /** Only ever need the newest match; the index is ordered so this is a single-row read. */
-    private static final Pageable NEWEST = PageRequest.of(0, 1);
+    private static final int NEWEST = 1;
 
     private final FileRunEventRepository repository;
 
@@ -52,7 +50,7 @@ public class FileRunEventStore {
 
         try {
             return FileRunEvent.of(insert(command, dedupKey, now));
-        } catch (DataIntegrityViolationException e) {
+        } catch (PersistenceException e) {
             // The unique constraint fired, so a concurrent writer inserted this incident between
             // our read and our insert. Their row is the incident; fold into it instead of failing.
             return findByDedupKey(command.teamId(), dedupKey)
@@ -81,7 +79,7 @@ public class FileRunEventStore {
             return Optional.empty();
         }
         repository.reopenIfResolved(id);
-        return repository.findById(id).map(FileRunEvent::of);
+        return repository.findByIdOptional(id).map(FileRunEvent::of);
     }
 
     private FileRunEventEntity insert(RecordFailure command, String dedupKey, Instant now) {
@@ -107,9 +105,9 @@ public class FileRunEventStore {
         entity.setCreatedAt(now);
         entity.setLastSeenAt(now);
         // Flushed so a duplicate-key violation surfaces here, inside record()'s catch. A plain
-        // save() defers the INSERT to commit time once a caller is transactional, and the
+        // persist() defers the INSERT to commit time once a caller is transactional, and the
         // violation would escape the catch as a 500.
-        return repository.saveAndFlush(entity);
+        return repository.insert(entity);
     }
 
     /**
@@ -125,19 +123,19 @@ public class FileRunEventStore {
      * <p>{@code actor} narrows to one person's own failures, or reads the whole team when null. Who
      * gets which is the service's decision, not this method's.
      */
-    @Transactional(readOnly = true)
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<FileRunEvent> list(
             Long teamId, FileRunEventStatus status, String kindId, String actor, int limit) {
-        Pageable page = PageRequest.of(0, Math.max(1, limit));
+        int pageSize = Math.max(1, limit);
         List<FileRunEventEntity> rows =
                 status == null
                         ? repository.findByTeamAndStatusIn(
-                                teamId, FileRunEventStatus.open(), kindId, actor, page)
-                        : repository.findByTeamAndStatus(teamId, status, kindId, actor, page);
+                                teamId, FileRunEventStatus.open(), kindId, actor, pageSize)
+                        : repository.findByTeamAndStatus(teamId, status, kindId, actor, pageSize);
         return rows.stream().map(FileRunEvent::of).toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(Transactional.TxType.SUPPORTS)
     public Optional<FileRunEvent> find(String id, Long teamId) {
         return repository.findByIdAndTeam(id, teamId).map(FileRunEvent::of);
     }

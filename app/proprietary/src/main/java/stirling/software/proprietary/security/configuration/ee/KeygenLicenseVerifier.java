@@ -10,7 +10,8 @@ import java.util.Locale;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.bouncycastle.util.encoders.Hex;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ import stirling.software.common.util.RegexPatternUtils;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class KeygenLicenseVerifier {

@@ -12,8 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -52,6 +54,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
+    @Mock private SecurityIdentity securityIdentity;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -88,16 +91,18 @@ class ProprietaryUIDataControllerTest {
                         mfaService,
                         loginAttemptService,
                         resourceAccessService);
+        // securityIdentity is @Inject field injection - wire the mock directly (no CDI container).
+        controller.securityIdentity = securityIdentity;
     }
 
     @Test
     void loginDataFlagsFirstTimeSetupWhenNoUsers() {
         when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId())).thenReturn(0L);
 
-        ResponseEntity<LoginData> response = controller.getLoginData();
+        Response response = controller.getLoginData();
 
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        LoginData body = response.getBody();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        LoginData body = (LoginData) response.getEntity();
         assertThat(body.isFirstTimeSetup()).isTrue();
         assertThat(body.isShowDefaultCredentials()).isTrue();
         assertThat(body.getLanguages()).containsExactly("en", "de");
@@ -118,13 +123,14 @@ class ProprietaryUIDataControllerTest {
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
         when(mfaService.isMfaRequired(user)).thenReturn(false);
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        // The User entity is itself the SecurityIdentity principal (implements Principal).
+        when(securityIdentity.isAnonymous()).thenReturn(false);
+        when(securityIdentity.getPrincipal()).thenReturn(user);
 
-        ResponseEntity<AccountData> response = controller.getAccountData(authentication);
+        Response response = controller.getAccountData();
 
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        AccountData data = response.getBody();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        AccountData data = (AccountData) response.getEntity();
         assertThat(data.getUsername()).isEqualTo("user@example.com");
         assertThat(data.isMfaEnabled()).isTrue();
         assertThat(data.isMfaRequired()).isFalse();
@@ -136,10 +142,10 @@ class ProprietaryUIDataControllerTest {
         when(databaseService.getBackupList()).thenReturn(List.of());
         when(databaseService.getH2Version()).thenReturn("Unknown");
 
-        ResponseEntity<DatabaseData> response = controller.getDatabaseData();
+        Response response = controller.getDatabaseData();
 
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        DatabaseData data = response.getBody();
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        DatabaseData data = (DatabaseData) response.getEntity();
         assertThat(data.getBackupFiles()).isEmpty();
         assertThat(data.isVersionUnknown()).isTrue();
     }

@@ -9,23 +9,26 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
@@ -53,8 +56,8 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Slf4j
 @Hidden
-@RestController
-@RequestMapping("/api/v1/ai/tools")
+@ApplicationScoped
+@Path("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class ClassifyLabelController {
 
@@ -86,7 +89,7 @@ public class ClassifyLabelController {
             AiFeatureGate aiFeatureGate,
             ObjectMapper objectMapper,
             ClassificationLabelProvider labelProvider,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -95,10 +98,12 @@ public class ClassifyLabelController {
         this.aiFeatureGate = aiFeatureGate;
         this.objectMapper = objectMapper;
         this.labelProvider = labelProvider;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
     }
 
-    @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @Path("/classify-and-label")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Classify a PDF and label its metadata",
             description =
@@ -106,9 +111,10 @@ public class ClassifyLabelController {
                             + " engine, and stores the result in the StirlingPDFClassification"
                             + " metadata field. Dispatched by the Classification policy; not"
                             + " intended for direct client use.")
-    public ResponseEntity<Resource> classifyAndLabel(
-            @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+    public Response classifyAndLabel(@RestForm("fileInput") FileUpload fileInputUpload)
+            throws IOException {
         aiFeatureGate.requireClassify();
+        MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
 

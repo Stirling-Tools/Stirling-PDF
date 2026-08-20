@@ -6,12 +6,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,8 +46,8 @@ import stirling.software.saas.util.LogRedactionUtils;
  * and this service issues the annual licence. All amounts are minor units (cents).
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class ProcurementService {
 
     // Local mapper for the line-items JSON snapshot; the saas context exposes no injectable

@@ -1,36 +1,51 @@
 package stirling.software.saas.config;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import java.util.List;
+
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.config.SmallRyeConfig;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 /** Logs which Supabase project this backend is talking to, and its schema policy. */
 @Slf4j
-@Component
-@Profile({"dev", "staging"})
+@ApplicationScoped
 public class SaasProjectNotice {
 
-    private final Environment environment;
+    private final boolean dev;
+    private final boolean staging;
     private final String projectRef;
     private final String ddlAuto;
 
+    @Inject
     public SaasProjectNotice(
-            Environment environment,
-            @Value("${app.supabase.project-ref:unknown}") String projectRef,
-            @Value("${spring.jpa.hibernate.ddl-auto:none}") String ddlAuto) {
-        this.environment = environment;
+            Config config,
+            @ConfigProperty(name = "app.supabase.project-ref", defaultValue = "unknown")
+                    String projectRef,
+            @ConfigProperty(name = "spring.jpa.hibernate.ddl-auto", defaultValue = "none")
+                    String ddlAuto) {
+        // Spring's Environment.getActiveProfiles() maps to SmallRye's profile list; replaces the
+        // @Profile({"dev", "staging"}) gate, applied at the observer instead of the bean because
+        // @IfBuildProfile takes a single profile.
+        List<String> profiles = config.unwrap(SmallRyeConfig.class).getProfiles();
+        this.dev = profiles.contains("dev");
+        this.staging = profiles.contains("staging");
         this.projectRef = projectRef;
         this.ddlAuto = ddlAuto;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void announceProject() {
-        boolean staging = environment.matchesProfiles("staging");
+    /** Quarkus' StartupEvent is the ApplicationReadyEvent equivalent. */
+    void announceProject(@Observes StartupEvent event) {
+        if (!dev && !staging) {
+            return;
+        }
         if (staging) {
             log.info(
                     """

@@ -20,7 +20,9 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.http.MediaType;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.MediaType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,8 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ConvertApi
+@jakarta.ws.rs.Path("/api/v1/convert")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ConvertPdfToVideoController {
 

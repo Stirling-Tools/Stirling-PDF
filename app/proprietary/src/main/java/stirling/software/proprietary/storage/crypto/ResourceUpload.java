@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.Resource;
 
 /**
  * Presents a loaded {@link Resource} as a {@link MultipartFile} so existing blobs can be re-stored

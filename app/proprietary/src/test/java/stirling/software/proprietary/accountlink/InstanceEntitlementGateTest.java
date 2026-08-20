@@ -17,8 +17,8 @@ import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
  * Covers the gate decision matrix: flag-off, manual-free, unlinked, fail-open, grace-expired,
- * linked-free, and over-limit. The pure {@link InstanceEntitlementGate#decide} cases need no
- * Spring; the grace-window reference computation is exercised through {@link
+ * linked-free, and over-limit. The pure {@link InstanceEntitlementGate#decide} cases need no CDI
+ * container; the grace-window reference computation is exercised through {@link
  * InstanceEntitlementGate#evaluate} with mocked collaborators.
  */
 @ExtendWith(MockitoExtension.class)
@@ -241,7 +241,7 @@ class InstanceEntitlementGateTest {
     void evaluate_neverSynced_pastGraceSinceLink_blocks() {
         when(credentialStore.isLinked()).thenReturn(true);
         when(entitlementCache.current()).thenReturn(Optional.empty());
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
+        when(syncStateRepository.findByIdOptional(AccountLinkSyncState.SINGLETON_ID))
                 .thenReturn(Optional.empty());
         DeviceCredential cred = new DeviceCredential();
         cred.setLinkedAt(LocalDateTime.now().minusDays(5));
@@ -259,7 +259,7 @@ class InstanceEntitlementGateTest {
         when(entitlementCache.current()).thenReturn(Optional.empty());
         AccountLinkSyncState state = new AccountLinkSyncState();
         state.setLastSuccessAt(LocalDateTime.now().minusDays(1));
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
+        when(syncStateRepository.findByIdOptional(AccountLinkSyncState.SINGLETON_ID))
                 .thenReturn(Optional.of(state));
 
         GateDecision d = gate(props(true, 3)).evaluate(true);

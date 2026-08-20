@@ -14,7 +14,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 class ManualRedactionService {

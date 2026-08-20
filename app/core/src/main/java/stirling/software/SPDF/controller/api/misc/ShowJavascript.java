@@ -7,14 +7,18 @@ import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +26,9 @@ import stirling.software.SPDF.config.swagger.JavaScriptResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -31,14 +37,19 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@ApplicationScoped
+@Path("/api/v1/misc")
 @RequiredArgsConstructor
 public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/show-javascript")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/show-javascript",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
@@ -46,7 +57,14 @@ public class ShowJavascript {
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc.")
-    public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
+    public Response extractHeader(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("fileId") String fileId)
+            throws Exception {
+
+        PDFFile file = new PDFFile();
+        file.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        file.setFileId(fileId);
+
         MultipartFile inputFile = file.getFileInput();
         StringBuilder script = new StringBuilder();
         boolean foundScript = false;
@@ -101,7 +119,7 @@ public class ShowJavascript {
             return WebResponseUtils.fileToWebResponse(
                     tempOut,
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
-                    MediaType.TEXT_PLAIN);
+                    MediaType.TEXT_PLAIN_TYPE);
         }
     }
 }

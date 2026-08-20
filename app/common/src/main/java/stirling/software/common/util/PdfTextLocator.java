@@ -11,7 +11,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * "Total Revenue"} matches {@code "Total Revenue."}.
  */
 @Slf4j
-@Component
+@ApplicationScoped
 public class PdfTextLocator {
 
     private static final Pattern NON_ALPHANUMERIC_PATTERN = Pattern.compile("[^A-Za-z0-9]");
