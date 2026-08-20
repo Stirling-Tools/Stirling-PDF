@@ -11,6 +11,10 @@ from pydantic import Field, RootModel
 from stirling.models.base import ApiModel
 
 
+class AccessibilityReportParams(ApiModel):
+    profile: str | None = None
+
+
 class AddAttachmentsParams(ApiModel):
     attachments: list[bytes] | None = None
     convert_to_pdf_a3b: bool | None = None
@@ -293,6 +297,7 @@ class PdfToImgParams(ApiModel):
 
 class PdfToPdfaParams(ApiModel):
     output_format: str | None = None
+    pdf_ua: bool | None = None
     strict: bool | None = None
 
 
@@ -306,6 +311,17 @@ class PdfToTextEditorParams(ApiModel):
 
 class PdfToTextParams(ApiModel):
     output_format: str | None = None
+
+
+class PdfToUaParams(ApiModel):
+    alt_text: str | None = None
+    embed_fonts: bool | None = None
+    existing_tags: str | None = None
+    figure_policy: str | None = None
+    language: str | None = None
+    override_language: bool | None = None
+    profile: str | None = None
+    title: str | None = None
 
 
 class PdfToVectorParams(ApiModel):
@@ -765,6 +781,7 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
     PDF_TO_TEXT_EDITOR = "/api/v1/convert/pdf/text-editor"
+    PDF_TO_UA = "/api/v1/convert/pdf/ua"
     PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
@@ -806,6 +823,7 @@ class ToolEndpoint(StrEnum):
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
     SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
+    ACCESSIBILITY_REPORT = "/api/v1/security/accessibility-report"
     ADD_PASSWORD = "/api/v1/security/add-password"
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
@@ -835,6 +853,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
     ToolEndpoint.PDF_TO_TEXT_EDITOR: PdfToTextEditorParams,
+    ToolEndpoint.PDF_TO_UA: PdfToUaParams,
     ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
@@ -876,6 +895,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.REPLACE_INVERT_PDF: ReplaceInvertPdfParams,
     ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
+    ToolEndpoint.ACCESSIBILITY_REPORT: AccessibilityReportParams,
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,

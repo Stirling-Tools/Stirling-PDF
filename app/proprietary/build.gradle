@@ -61,6 +61,15 @@ dependencies {
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
+    // PDF/UA tagging and its validation oracle.
+    implementation 'org.verapdf:validation-model:1.30.2'
+    // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
+    implementation "org.mozilla:rhino:${rhinoVersion}"
+    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    runtimeOnly 'com.sun.xml.bind:jaxb-impl:2.3.9'
+    runtimeOnly 'com.sun.xml.bind:jaxb-core:4.0.9'
+
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
     // jinjava/jjwt transitively request older Jackson 2 versions; declare the current

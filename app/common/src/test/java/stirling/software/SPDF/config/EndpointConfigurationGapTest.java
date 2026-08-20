@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
@@ -14,9 +16,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import jakarta.enterprise.inject.Instance;
+
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 /**
  * Unit tests for {@link EndpointConfiguration}. The class wires up its endpoint/group registry in
@@ -32,7 +37,28 @@ class EndpointConfigurationGapTest {
      * Construct an EndpointConfiguration with the given pro flag and current applicationProperties.
      */
     private EndpointConfiguration build(boolean runningProOrHigher) {
-        return new EndpointConfiguration(applicationProperties, runningProOrHigher);
+        return build(runningProOrHigher, null);
+    }
+
+    /** The PDF/UA service is only present in proprietary builds, so it is injected separately. */
+    private EndpointConfiguration build(
+            boolean runningProOrHigher, PdfaLevelAServiceInterface pdfaLevelAService) {
+        return new EndpointConfiguration(
+                applicationProperties, runningProOrHigher, instanceOf(pdfaLevelAService));
+    }
+
+    /**
+     * MIGRATION: the constructor takes a CDI {@code Instance<>} (Spring's optional
+     * {@code @Autowired(required = false)}), so a null service becomes an unsatisfied handle.
+     */
+    @SuppressWarnings("unchecked")
+    private static Instance<PdfaLevelAServiceInterface> instanceOf(
+            PdfaLevelAServiceInterface service) {
+        Instance<PdfaLevelAServiceInterface> handle = mock(Instance.class);
+        when(handle.isResolvable()).thenReturn(service != null);
+        when(handle.isUnsatisfied()).thenReturn(service == null);
+        when(handle.get()).thenReturn(service);
+        return handle;
     }
 
     /** Default config: not pro, no removals, url-to-pdf disabled (default System flag is false). */
@@ -174,6 +200,28 @@ class EndpointConfigurationGapTest {
             config.disableEndpoint("merge-pdfs");
             // non-api path: key resolution returns null, so the uri itself is used as the key
             assertFalse(config.isEndpointEnabledForUri("merge-pdfs"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PDF/UA availability")
+    class PdfUaTests {
+
+        @Test
+        @DisplayName("the PDF/UA endpoints are off when the proprietary tagger is absent")
+        void disabledWithoutTagger() {
+            EndpointConfiguration config = build(false, null);
+            assertFalse(config.isEndpointEnabled("pdf-to-ua"));
+            assertFalse(config.isEndpointEnabled("accessibility-report"));
+        }
+
+        @Test
+        @DisplayName("they are on once the tagger is on the classpath")
+        void enabledWithTagger() {
+            EndpointConfiguration config =
+                    build(false, (pdfBytes, part, language, title, alsoDeclareUa) -> null);
+            assertTrue(config.isEndpointEnabled("pdf-to-ua"));
+            assertTrue(config.isEndpointEnabled("accessibility-report"));
         }
     }
 
