@@ -244,6 +244,14 @@ export default function HomePage() {
     [dismissSwipeHint],
   );
 
+  // The /files URL pins the workbench to myFiles, so changing view while the
+  // file manager is open does nothing until we navigate off it. Desktop leaves
+  // via the sidebar's back arrow; mobile renders no sidebar, so without this the
+  // bottom bar could not get out of My Files at all.
+  const leaveMyFiles = useCallback(() => {
+    if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
+  }, [navigationState.workbench, navigate]);
+
   useEffect(() => {
     if (isMobile) {
       const container = sliderRef.current;
@@ -461,6 +469,7 @@ export default function HomePage() {
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
+                  leaveMyFiles();
                   handleBackToTools();
                   if (isMobile) {
                     setActiveMobileView("tools");
@@ -478,6 +487,7 @@ export default function HomePage() {
                   className="mobile-bottom-button"
                   aria-label={t("quickAccess.automate", "Automate")}
                   onClick={() => {
+                    leaveMyFiles();
                     handleToolSelect("automate");
                     if (isMobile) {
                       setActiveMobileView("tools");
