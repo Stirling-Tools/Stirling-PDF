@@ -28,9 +28,11 @@ import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Tests for {@link PolicyOverviewService}: every policy appears once with its sources resolved to
- * names, its steps and trigger/output summarised, and the KPI strip counting active vs paused.
- * Login is disabled so the team guards pass everything through.
+ * Tests for {@link PolicyOverviewService}: every Pipelines-page policy appears once with its
+ * sources resolved to names, its steps and trigger/output summarised, and the KPI strip counting
+ * active vs paused. Frontend/catalogue policies (owned by the Policies page) are excluded, while a
+ * pipeline that uses a folder-watch trigger stays. Login is disabled so the team guards pass
+ * everything through.
  */
 class PolicyOverviewServiceTest {
 
@@ -93,6 +95,51 @@ class PolicyOverviewServiceTest {
 
         // KPI strip: total, active, paused.
         assertEquals(List.of(2L, 1L, 1L), response.kpis().stream().map(PolicyKpi::value).toList());
+    }
+
+    @Test
+    void excludesCataloguePoliciesButKeepsFolderWatchPipelines() {
+        Source inbox = source("Inbox", "/inbox");
+        // A hand-built pipeline: shows.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Compress pipeline",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline()));
+        // A folder-watch pipeline is still a pipeline: shows.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Inbox watcher",
+                        "owner",
+                        true,
+                        List.of(
+                                new PipelineInput(
+                                        inbox.id(), new TriggerConfig("folder-watch", Map.of()))),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline()));
+        // A frontend/catalogue policy (categoryId in output options): hidden.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Classification Policy",
+                        "system",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/ai/tools/classify-and-label", Map.of())),
+                        new OutputSpec("inline", Map.of("categoryId", "classification"))));
+
+        PoliciesOverviewResponse response = service.overview();
+
+        assertEquals(
+                List.of("Compress pipeline", "Inbox watcher"),
+                response.pipelines().stream().map(PolicyView::name).toList());
+        // KPIs count both visible pipelines, not the hidden catalogue policy.
+        assertEquals(List.of(2L, 2L, 0L), response.kpis().stream().map(PolicyKpi::value).toList());
     }
 
     @Test

@@ -10,6 +10,8 @@ import {
   type ConnectionCategory,
 } from "@portal/components/sources/connectionTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
+import "@portal/theme/surface.css";
+import "@portal/components/sources/connections.css";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
@@ -20,9 +22,6 @@ import {
   type ExternalApiStepParams,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
-// This component reuses the connection-picker card styles, so it must carry
-// them itself - hosts like the policy wizard don't load the Sources view.
-import "@portal/views/Sources.css";
 
 /**
  * Configures a "send the document to another system" step.
@@ -261,7 +260,7 @@ function OperationGrid({
             key={op.id}
             type="button"
             className={
-              "portal-conn-picker__card" +
+              "portal-surface portal-conn-picker__card" +
               (op.custom ? " portal-conn-picker__card--advanced" : "")
             }
             onClick={() => onPick(op)}

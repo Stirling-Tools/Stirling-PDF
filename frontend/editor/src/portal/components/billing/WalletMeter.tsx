@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@app/ui";
-import { formatMinor, MeterBar, meterState } from "@app/billing";
+import { formatMinor, MeterBar, remainingMeter } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 import type { LocalUsage } from "@portal/api/link";
 
@@ -15,8 +15,10 @@ interface Props {
 }
 
 /**
- * The free Processor-trial meter — "X / N free PDFs used" against the one-time
- * grant. Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
+ * The free Processor-trial meter — "X of N free PDFs left" against the one-time
+ * grant, with what has been used alongside as the status badge. The bar shows what
+ * is left, so it drains towards empty as the grant is spent.
+ * Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
  * cloud plan page). The subscribed spend-vs-cap meter is a separate surface
  * ({@code SpendLimitCard}); this card is only the free face.
  *
@@ -30,7 +32,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
   const pending = unsynced?.totalUnsyncedUnits ?? 0;
   const used = wallet.billableUsed + pending;
   const remaining = Math.max(0, wallet.freeRemaining - pending);
-  const { state, pct } = meterState(used, wallet.freeAllowance);
+  const { state, pct } = remainingMeter(remaining, wallet.freeAllowance);
   const rate =
     wallet.pricePerDocMinor != null && wallet.pricePerDocMinor > 0
       ? wallet.pricePerDocMinor
@@ -76,11 +78,14 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
         <MeterBar
           state={state}
           pct={pct}
-          barLabel={t("portal.billing.walletMeter.barAria", "Free PDFs used")}
-          figure={used.toLocaleString()}
+          barLabel={t(
+            "portal.billing.walletMeter.barAria",
+            "Free PDFs remaining",
+          )}
+          figure={remaining.toLocaleString()}
           capSuffix={t(
             "portal.billing.walletMeter.capSuffix",
-            "of {{allowance}} free PDFs used",
+            "of {{allowance}} free PDFs left",
             {
               count: wallet.freeAllowance,
               allowance: wallet.freeAllowance.toLocaleString(),
@@ -88,11 +93,8 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
           )}
           statusLabel={t(
             "portal.billing.walletMeter.statusLabel",
-            "{{remaining}} left",
-            {
-              count: remaining,
-              remaining: remaining.toLocaleString(),
-            },
+            "{{used}} used",
+            { count: used, used: used.toLocaleString() },
           )}
         />
       </div>
