@@ -116,6 +116,21 @@ function nextId(): string {
   return `plc_${Date.now().toString(36)}_${idCounter}`;
 }
 
+/** Stored supporting files a step binds as `asset:<id>` (PolicyAssetController), for mock mode. */
+interface StoredAsset {
+  id: string;
+  fileName: string;
+  contentType: string | null;
+  size: number;
+  createdAt: number;
+}
+let assetStore: StoredAsset[] = [];
+let assetCounter = 0;
+function nextAssetId(): string {
+  assetCounter += 1;
+  return `ast_${Date.now().toString(36)}_${assetCounter}`;
+}
+
 function deriveStatus(policy: StoredPolicy): PipelineStatus {
   return policy.enabled ? "active" : "paused";
 }
@@ -195,6 +210,33 @@ export const pipelinesHandlers = [
         supportedSourceTypes: ["folder"],
       },
     ]);
+  }),
+
+  // Supporting files. Registered before the `/policies/:id` matcher so "assets" isn't read as an id.
+  http.get("/api/v1/policies/assets", async () => {
+    await delay(80);
+    return HttpResponse.json(assetStore);
+  }),
+
+  http.post("/api/v1/policies/assets", async ({ request }) => {
+    const form = await request.formData();
+    const file = form.get("file");
+    if (!(file instanceof File)) {
+      return HttpResponse.json(
+        { detail: "Uploaded file is empty" },
+        { status: 400 },
+      );
+    }
+    await delay(120);
+    const asset: StoredAsset = {
+      id: nextAssetId(),
+      fileName: file.name || "asset",
+      contentType: file.type || null,
+      size: file.size,
+      createdAt: Date.now(),
+    };
+    assetStore = [...assetStore, asset];
+    return HttpResponse.json(asset);
   }),
 
   // Run status: the mock completes runs immediately, so polling resolves at once.
