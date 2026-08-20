@@ -165,9 +165,9 @@ export function usePolicyAutoRun(): void {
             s.configured &&
             s.status === "active" &&
             s.backendId &&
-            (!s.sources ||
-              s.sources.length === 0 ||
-              s.sources.includes("editor")) &&
+            // Resolved at decode: blank sources mean different things for a catalogue tile
+            // and for a builder pipeline (see runsOnEditor in policyBackend).
+            s.runsOnEditor &&
             (s.runOn ?? "upload") === "upload" &&
             // An escalation-only policy has nothing to do with no engine to escalate to.
             !(policyRequiresAiEngine(id) && !aiEnabled),
