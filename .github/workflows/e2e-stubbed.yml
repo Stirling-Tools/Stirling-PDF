@@ -18,7 +18,7 @@ jobs:
     # dependencies. This keeps the matrix for per-browser reporting while
     # avoiding three concurrent `playwright install --with-deps` runs.
     container:
-      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
     strategy:
       # One browser breaking must not mask a failure in another - report all.
       fail-fast: false
