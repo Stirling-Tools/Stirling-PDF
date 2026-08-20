@@ -239,12 +239,12 @@ class FailureKindTest {
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
                             offered(FailureActionId.RETRY, OWNER, SECONDARY, "retry"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
-                                    SECONDARY,
+                                    OVERFLOW,
                                     "viewInProcessor"),
-                            offered(FailureActionId.VIEW_FILE, OWNER, OVERFLOW, "viewFile"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
@@ -308,13 +308,13 @@ class FailureKindTest {
                                     OWNER,
                                     RESOLUTION,
                                     "decryptAndRetry"),
-                            offered(FailureActionId.RETRY, OWNER, OVERFLOW, "retry"),
-                            offered(FailureActionId.VIEW_FILE, OWNER, OVERFLOW, "viewFile"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
-                                    SECONDARY,
+                                    OVERFLOW,
                                     "viewInProcessor"),
+                            offered(FailureActionId.RETRY, OWNER, OVERFLOW, "retry"),
                             offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 

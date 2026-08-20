@@ -35,6 +35,14 @@ public class NotificationService {
     }
 
     /**
+     * Whether the caller sees the whole team's incidents rather than only their own. The client
+     * uses it to hide a member's rows whose document is not in this browser, which it alone knows.
+     */
+    public boolean callerReviewsTeam() {
+        return fileRunEvents.reviewsTeam();
+    }
+
+    /**
      * Record that the client's own retry of this notification worked, and return it as it now
      * stands. Takes the prefixed id even though nobody pressed a button: it is still a call made
      * from the bell, and the bell holds no raw failure id, so it cannot reach a failure endpoint

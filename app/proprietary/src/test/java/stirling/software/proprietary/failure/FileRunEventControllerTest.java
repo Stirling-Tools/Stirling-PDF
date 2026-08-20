@@ -161,7 +161,7 @@ class FileRunEventControllerTest {
                             action -> {
                                 assertThat(action.execution())
                                         .isEqualTo(FailureActionId.Execution.CLIENT);
-                                assertThat(action.slot()).isEqualTo(FailureActionSlot.SECONDARY);
+                                assertThat(action.slot()).isEqualTo(FailureActionSlot.OVERFLOW);
                                 assertThat(action.defaultLabel()).isEqualTo("View in processor");
                             });
         }

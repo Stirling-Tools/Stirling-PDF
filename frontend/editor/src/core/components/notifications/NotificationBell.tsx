@@ -8,9 +8,12 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Button, Input } from "@app/ui";
+import { Menu, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { BellIcon } from "@app/components/notifications/BellIcon";
 import DividerWithText from "@app/components/shared/DividerWithText";
+import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import {
   isResolvableHere,
   useNotifications,
@@ -18,6 +21,7 @@ import {
 import {
   useNotificationActions,
   type ClientActionRegistry,
+  type ClientActionSpec,
   type NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
 import { promoteActions } from "@app/components/notifications/notificationActionSlots";
@@ -57,6 +61,46 @@ export function NotificationBell() {
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
+  /**
+   * The action waiting on a password, held by the panel rather than the row that offered it: the
+   * panel closes on any click beyond itself, which would tear down a prompt a row owned.
+   */
+  const [prompt, setPrompt] = useState<PasswordPrompt | null>(null);
+  // Held only while the prompt is open, and dropped as soon as it closes. Never stashed, never logged.
+  const [password, setPassword] = useState("");
+  const [promptBusy, setPromptBusy] = useState(false);
+  const [promptError, setPromptError] = useState<string | null>(null);
+
+  const closePrompt = () => {
+    setPrompt(null);
+    setPassword("");
+    setPromptError(null);
+  };
+
+  const submitPrompt = async () => {
+    if (!prompt || promptBusy || password === "") return;
+    setPromptBusy(true);
+    setPromptError(null);
+    const outcome = await prompt.spec.run(prompt.context, password);
+    setPromptBusy(false);
+    // A wrong password lands here carrying the server's own words. The prompt stays open on top of
+    // them, so the next attempt costs a keystroke rather than a re-open.
+    if (outcome && !outcome.ok) {
+      setPromptError(
+        outcome.message ??
+          t(
+            "notifications.action.failed",
+            "That did not work. Try again in a moment.",
+          ),
+      );
+      return;
+    }
+    closePrompt();
+    // A password action resolves the incident server-side, so the list is re-read rather than
+    // patched here.
+    refresh();
+    if (prompt.spec.closesPanel) setOpen(false);
+  };
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -107,7 +151,11 @@ export function NotificationBell() {
     if (!open) return;
     const closeOnOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!container.current?.contains(target)) setOpen(false);
+      if (container.current?.contains(target)) return;
+      // An overflow menu is portaled outside the panel, so a click in it reads as outside; keep the
+      // panel open for it, or picking a menu action would tear the panel down before it ran.
+      if (target.closest(".notification-bell__menu")) return;
+      setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -162,6 +210,7 @@ export function NotificationBell() {
                   {index === 0 && dividedAt > 0 && (
                     <li aria-hidden>
                       <DividerWithText
+                        className="notification-bell__divider notification-bell__divider--new"
                         text={t("notifications.section.new", "New")}
                       />
                     </li>
@@ -171,6 +220,7 @@ export function NotificationBell() {
                   {index === dividedAt && dividedAt > 0 && (
                     <li aria-hidden>
                       <DividerWithText
+                        className="notification-bell__divider"
                         text={t("notifications.section.earlier", "Earlier")}
                       />
                     </li>
@@ -181,7 +231,7 @@ export function NotificationBell() {
                     documentState={documentStateFor(notification)}
                     registry={registry}
                     onDismissPanel={() => setOpen(false)}
-                    onChanged={refresh}
+                    onRequestPassword={setPrompt}
                   />
                 </Fragment>
               ))}
@@ -189,8 +239,35 @@ export function NotificationBell() {
           )}
         </div>
       )}
+
+      {/* Rendered beside the panel rather than inside it: the same modal the app uses for a locked
+          upload, and it has to outlive the panel dismissing behind it. */}
+      <EncryptedPdfUnlockModal
+        opened={prompt !== null}
+        fileName={prompt?.rowTitle}
+        password={password}
+        errorMessage={promptError}
+        isProcessing={promptBusy}
+        confirmLabel={
+          prompt
+            ? t(prompt.offer.labelKey, prompt.offer.defaultLabel)
+            : undefined
+        }
+        onPasswordChange={setPassword}
+        onUnlock={() => void submitPrompt()}
+        onSkip={closePrompt}
+      />
     </div>
   );
+}
+
+/** An action that asked for a password, with everything running it needs. */
+interface PasswordPrompt {
+  offer: NotificationActionOffer;
+  spec: ClientActionSpec;
+  context: NotificationActionContext;
+  /** The row's title, so the prompt can say which failure it is unlocking for. */
+  rowTitle: string;
 }
 
 /**
@@ -232,13 +309,13 @@ interface NotificationItemProps {
   documentState: NotificationDocumentState;
   registry: ClientActionRegistry;
   onDismissPanel: () => void;
-  /** The row changed something server-side; re-read rather than patch a local copy. */
-  onChanged: () => void;
+  /** Hand a password-collecting action to the panel, which owns the prompt. */
+  onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
 /**
- * One row. Its own component because the password it is collecting, the message its last attempt came
- * back with and whether that message is expanded are all per-row state the panel cannot hold.
+ * One row. Its own component because the message its last attempt came back with and whether that
+ * message is expanded are per-row state the panel cannot hold.
  */
 function NotificationItem({
   notification,
@@ -246,13 +323,9 @@ function NotificationItem({
   documentState,
   registry,
   onDismissPanel,
-  onChanged,
+  onRequestPassword,
 }: NotificationItemProps) {
   const { t } = useTranslation();
-  // Held only while the field is open, and dropped as soon as the row is done with it. Never stashed,
-  // never logged.
-  const [password, setPassword] = useState("");
-  const [askingFor, setAskingFor] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -285,18 +358,14 @@ function NotificationItem({
 
     const spec = registry[offer.id];
     if (!spec) return;
-    // First click on a password action opens the field, the second one runs it. An empty field means
-    // the user clicked the button again rather than filling it in, so there is nothing to send yet.
-    if (spec.needsPassword && (askingFor !== offer.id || password === "")) {
-      setAskingFor(offer.id);
+    // A password action is handed to the panel, which prompts for it and runs it from there.
+    if (spec.needsPassword) {
+      onRequestPassword({ offer, spec, context, rowTitle: title });
       return;
     }
 
     setBusy(offer.id);
-    const outcome = await spec.run(
-      context,
-      spec.needsPassword ? password : undefined,
-    );
+    const outcome = await spec.run(context);
     setBusy(null);
     if (outcome && !outcome.ok) {
       setMessage(
@@ -309,10 +378,6 @@ function NotificationItem({
       return;
     }
 
-    setPassword("");
-    setAskingFor(null);
-    // A password action resolves the incident server-side, so the row is expected to drop out.
-    if (spec.needsPassword) onChanged();
     if (spec.closesPanel) onDismissPanel();
   };
 
@@ -325,10 +390,6 @@ function NotificationItem({
       // No clipboard permission. The message is on screen and selectable, so this needs no error.
     }
   };
-
-  const asking = askingFor
-    ? (notification.actions.find((offer) => offer.id === askingFor) ?? null)
-    : null;
 
   const note = noteFor(notification, documentState, withheldReasonKey, t);
 
@@ -354,7 +415,42 @@ function NotificationItem({
       )}
 
       {notification.detail && (
-        <>
+        <div className="notification-bell__detailbox">
+          {/* Copy and expand sit in the corner of the message, not as buttons of their own, so reading
+              the failure and acting on it do not crowd each other out. */}
+          <span className="notification-bell__detailbox-actions">
+            <button
+              type="button"
+              className="notification-bell__iconbtn"
+              aria-label={`${t("notifications.detail.copy", "Copy error")}: ${title}`}
+              title={
+                copied
+                  ? t("notifications.detail.copied", "Copied")
+                  : t("notifications.detail.copy", "Copy error")
+              }
+              onClick={() => void copyDetail()}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+            </button>
+            <button
+              type="button"
+              className="notification-bell__iconbtn"
+              aria-expanded={expanded}
+              aria-label={`${
+                expanded
+                  ? t("notifications.detail.less", "Show less")
+                  : t("notifications.detail.more", "Show full message")
+              }: ${title}`}
+              title={
+                expanded
+                  ? t("notifications.detail.less", "Show less")
+                  : t("notifications.detail.more", "Show full message")
+              }
+              onClick={() => setExpanded((wasExpanded) => !wasExpanded)}
+            >
+              {expanded ? <CollapseIcon /> : <ExpandIcon />}
+            </button>
+          </span>
           <span
             className={
               expanded
@@ -364,43 +460,14 @@ function NotificationItem({
           >
             {notification.detail}
           </span>
-          {/* Chrome for the message itself, never part of the action slots: reading the failure and
-              acting on it should not crowd each other out. */}
-          <span className="notification-bell__chrome">
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-label={`${t("notifications.detail.copy", "Copy error")}: ${title}`}
-              onClick={() => void copyDetail()}
-            >
-              {copied
-                ? t("notifications.detail.copied", "Copied")
-                : t("notifications.detail.copy", "Copy error")}
-            </button>
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-expanded={expanded}
-              aria-label={`${
-                expanded
-                  ? t("notifications.detail.less", "Show less")
-                  : t("notifications.detail.more", "Show full message")
-              }: ${title}`}
-              onClick={() => setExpanded((wasExpanded) => !wasExpanded)}
-            >
-              {expanded
-                ? t("notifications.detail.less", "Show less")
-                : t("notifications.detail.more", "Show full message")}
-            </button>
-          </span>
-        </>
+        </div>
       )}
 
       {/* Actions were taken away from this row, so say why rather than leaving a bare row. */}
       {note && <span className="notification-bell__note">{note}</span>}
 
-      {/* Every action the row has, in the server's order. Three is the most any kind offers once the
-          unusable ones are dropped, so hiding the tail behind a menu would cost more than it saves. */}
+      {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
+          out of the way so a row of near-equal buttons never competes for the click. */}
       {primary && (
         <span className="notification-bell__actions">
           <ActionButton
@@ -419,62 +486,37 @@ function NotificationItem({
               onRun={() => void run(secondary)}
             />
           )}
-          {overflow.map((offer) => (
-            <ActionButton
-              key={offer.id}
-              variant="tertiary"
-              rowTitle={title}
-              label={labelOf(offer)}
-              busy={busy === offer.id}
-              onRun={() => void run(offer)}
-            />
-          ))}
+          {overflow.length > 0 && (
+            <Menu withinPortal position="bottom-end" shadow="md" width={180}>
+              <Menu.Target>
+                <Tooltip
+                  label={t("notifications.action.more", "More options")}
+                  withinPortal
+                >
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    className="notification-bell__more"
+                    aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
+                  >
+                    <MoreIcon />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown className="notification-bell__menu">
+                {overflow.map((offer) => (
+                  <Menu.Item
+                    key={offer.id}
+                    disabled={busy === offer.id}
+                    onClick={() => void run(offer)}
+                  >
+                    {labelOf(offer)}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </span>
-      )}
-
-      {asking && (
-        <form
-          className="notification-bell__password"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void run(asking);
-          }}
-        >
-          <Input
-            type="password"
-            inputSize="sm"
-            autoFocus
-            autoComplete="off"
-            value={password}
-            aria-label={`${t("notifications.password.label", "Document password")}: ${title}`}
-            placeholder={t("notifications.password.label", "Document password")}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            fontSize="xs"
-            disabled={password === "" || busy !== null}
-          >
-            {busy === asking.id
-              ? t("notifications.password.working", "Unlocking...")
-              : labelOf(asking)}
-          </Button>
-          <Button
-            type="button"
-            variant="quiet"
-            size="sm"
-            fontSize="xs"
-            onClick={() => {
-              setPassword("");
-              setAskingFor(null);
-              setMessage(null);
-            }}
-          >
-            {t("notifications.password.cancel", "Cancel")}
-          </Button>
-        </form>
       )}
 
       {message && (
@@ -516,5 +558,63 @@ function ActionButton({
     >
       {label}
     </Button>
+  );
+}
+
+/* Inline so the message box needs no icon dependency: two small glyphs for copy and expand. */
+const ICON_PROPS = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+function CopyIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function ExpandIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="m7 15 5 5 5-5" />
+      <path d="m7 9 5-5 5 5" />
+    </svg>
+  );
+}
+
+function CollapseIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="m7 20 5-5 5 5" />
+      <path d="m7 4 5 5 5-5" />
+    </svg>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <svg {...ICON_PROPS} strokeWidth={2.5}>
+      <circle cx="5" cy="12" r="0.5" />
+      <circle cx="12" cy="12" r="0.5" />
+      <circle cx="19" cy="12" r="0.5" />
+    </svg>
   );
 }

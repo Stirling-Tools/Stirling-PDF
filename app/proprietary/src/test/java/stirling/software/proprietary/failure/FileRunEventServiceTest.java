@@ -437,8 +437,8 @@ class FileRunEventServiceTest {
             assertThat(offeredFor(mine))
                     .containsExactly(
                             FailureActionId.DECRYPT_AND_RETRY,
-                            FailureActionId.RETRY,
                             FailureActionId.VIEW_FILE,
+                            FailureActionId.RETRY,
                             FailureActionId.DISMISS);
             assertThat(service.availableActions(mine))
                     .allMatch(FileRunEventService.AvailableAction::enabled);
@@ -468,9 +468,9 @@ class FileRunEventServiceTest {
             assertThat(offeredFor(unattended))
                     .containsExactly(
                             FailureActionId.DECRYPT_AND_RETRY,
-                            FailureActionId.RETRY,
                             FailureActionId.VIEW_FILE,
                             FailureActionId.VIEW_IN_PROCESSOR,
+                            FailureActionId.RETRY,
                             FailureActionId.DISMISS);
         }
 

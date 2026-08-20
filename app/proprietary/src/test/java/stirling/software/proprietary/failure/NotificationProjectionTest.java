@@ -2,6 +2,7 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -169,6 +170,25 @@ class NotificationProjectionTest {
                                 assertThat(action.execution()).isNotNull();
                                 assertThat(action.slot()).isNotNull();
                             });
+        }
+    }
+
+    @Nested
+    @DisplayName("the response says whether the caller reviews the team")
+    class ReviewerFlag {
+
+        @Test
+        void trueForAReviewerSoTheClientFiltersNothing() {
+            when(authority.canEditPolicies()).thenReturn(true);
+
+            assertThat(controller.list(null).viewerReviewsTeam()).isTrue();
+        }
+
+        @Test
+        void falseForAMemberSoTheClientHidesRowsForFilesItDoesNotHold() {
+            when(authority.canEditPolicies()).thenReturn(false);
+
+            assertThat(controller.list(null).viewerReviewsTeam()).isFalse();
         }
     }
 }

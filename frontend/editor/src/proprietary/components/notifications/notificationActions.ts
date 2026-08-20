@@ -9,6 +9,7 @@ import {
 import { NavigationActionsContext } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import {
   PORTAL_BASENAME,
   PORTAL_FAILURES_ANCHOR,
@@ -23,14 +24,22 @@ import {
 } from "@app/services/notificationRetry";
 import {
   rerunPolicy,
-  rerunPolicyOnDocument,
+  rechainPolicyOnDocument,
   type PolicyRerunOutcome,
   type PolicyRetryTarget,
 } from "@app/services/notificationPolicyRetry";
 import { reportNotificationResolved } from "@app/services/notifications";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
 import { isValidToolId } from "@app/types/toolId";
-import type { FileContextActions } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import {
+  createStirlingFile,
+  type FileContextActions,
+  type StirlingFileStub,
+} from "@app/types/fileContext";
+import type { FileId, ToolOperation } from "@app/types/file";
 import {
   type ClientActionOutcome,
   type ClientActionRegistry,
@@ -159,23 +168,53 @@ function asFiles(outputs: RetryOutputFile[]): File[] {
 
 /**
  * Take what the retry produced into the workbench, so the unlocked document is what the user is looking
- * at once the panel closes. Added and selected rather than replacing the encrypted original: the unlock
- * is a new document, and deleting their input is not this button's business.
+ * at once the panel closes.
  *
- * `derivedFromTool` is load-bearing. A plain upload is what `usePolicyAutoRun`'s dispatch effect watches
- * for, so without it this adoption would fire the whole upload policy chain by itself: BILLED automation
- * runs nobody asked for, on a document that is only here because a retry produced it. It is also simply
- * true, since the document came out of the remove-password tool.
+ * Versions the encrypted original in place rather than adding a second file. consumeFiles, not
+ * removeFiles: a delete would close the very incident this retry means to fold onto.
+ *
+ * `derivedFromTool` is load-bearing. A plain upload is what `usePolicyAutoRun` watches for, so without
+ * it this would fire the whole upload chain by itself: billed automation nobody asked for.
  */
 async function adopt(
   actions: FileContextActions,
+  parentStub: StirlingFileStub | null,
   files: File[],
 ): Promise<FileId[]> {
-  const adopted = await actions.addFiles(files, {
-    selectFiles: true,
+  const unlocked = files[0];
+  if (!unlocked) return [];
+
+  if (!parentStub) {
+    const added = await actions.addFiles([unlocked], {
+      selectFiles: true,
+      derivedFromTool: true,
+    });
+    return added.map((file) => file.fileId);
+  }
+
+  const metadata = await generateProcessedFileMetadata(unlocked);
+  const operation: ToolOperation = {
+    toolId: "removePassword",
+    timestamp: Date.now(),
+  };
+  const childStub: StirlingFileStub = {
+    ...createChildStub(
+      parentStub,
+      operation,
+      unlocked,
+      metadata?.thumbnailUrl,
+      metadata,
+    ),
     derivedFromTool: true,
-  });
-  return adopted.map((file) => file.fileId);
+  };
+  const stirlingFile = createStirlingFile(unlocked, childStub.id);
+  const outputIds = await actions.consumeFiles(
+    [parentStub.id],
+    [stirlingFile],
+    [childStub],
+  );
+  actions.setSelectedFiles(outputIds);
+  return outputIds;
 }
 
 export function useNotificationActions(): ClientActionRegistry {
@@ -189,6 +228,9 @@ export function useNotificationActions(): ClientActionRegistry {
   const navigation = useContext(NavigationActionsContext);
   const viewer = useContext(ViewerContext);
   const canOpenHere = Boolean(fileContext && fileStore && navigation && viewer);
+  // Safe without a provider (the app-config context carries a default), and needed here because the
+  // upload chain a retry rejoins excludes the Classification policy when the engine is off.
+  const aiEnabled = useAiEngineEnabled();
 
   /**
    * Open a document the way the file sidebar does, rather than merely selecting it: a selected id
@@ -404,9 +446,16 @@ export function useNotificationActions(): ClientActionRegistry {
         // It unlocked, so the user must end up holding it. A failed adoption fails the whole action:
         // claiming success and dropping the result leaves them nothing for the password they typed.
         const unlocked = asFiles(outcome.files ?? []);
+        // The original to version in place, when it is open here. Only a policy names one: a tool
+        // retry has no single input to replace, so it keeps adding its output.
+        const originalId =
+          target.kind === "policy" ? (target.policy.fileId as FileId) : null;
+        const parentStub =
+          (originalId && fileStore?.getState().files.byId?.[originalId]) ||
+          null;
         let adopted: FileId[] = [];
         try {
-          adopted = await adopt(fileContext.actions, unlocked);
+          adopted = await adopt(fileContext.actions, parentStub, unlocked);
         } catch {
           return {
             ok: false,
@@ -424,10 +473,11 @@ export function useNotificationActions(): ClientActionRegistry {
         if (target.kind === "policy") {
           const document = unlocked[0];
           const rerun: PolicyRerunOutcome = document
-            ? await rerunPolicyOnDocument(
+            ? await rechainPolicyOnDocument(
                 target.policy,
                 document,
                 adopted[0] ?? null,
+                aiEnabled,
               )
             : { ok: false, reason: "missingFile" };
           // Anything short of a tracked run stops here, untracked included. The unlocked document

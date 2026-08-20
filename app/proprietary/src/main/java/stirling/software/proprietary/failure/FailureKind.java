@@ -46,12 +46,12 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            // The password is the fix and only the owner has it, so everyone else is
-            // offered the run and a way to close the row.
+            // The password is the fix and the owner's own document the runner-up; the rest go to
+            // the overflow menu.
             resolution(DECRYPT_AND_RETRY, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(RETRY, OWNER, OVERFLOW),
-            global(VIEW_FILE, OWNER, OVERFLOW),
-            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     UNKNOWN(
@@ -61,11 +61,11 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // Nothing here is known to be fixable, so there is no resolution to declare. A plain
-            // retry is still worth offering: an unrecognised failure is often a one-off.
+            // Nothing known to be fixable, so no resolution to declare: a plain retry leads
+            // instead, an unrecognised failure often being a one-off.
             global(RETRY, OWNER, SECONDARY),
-            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
-            global(VIEW_FILE, OWNER, OVERFLOW),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";

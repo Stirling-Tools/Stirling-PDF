@@ -289,8 +289,8 @@ public class FileRunEventService {
         };
     }
 
-    /** Whether the caller triages the whole team's incidents. Login disabled has no roles. */
-    private boolean reviewsTeam() {
+    /** Whether the caller triages the whole team's incidents, rather than only their own. */
+    public boolean reviewsTeam() {
         return !enforced() || policyManagementAuthority.canEditPolicies();
     }
 

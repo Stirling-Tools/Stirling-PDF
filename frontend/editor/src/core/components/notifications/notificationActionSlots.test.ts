@@ -171,20 +171,25 @@ describe("promoteActions", () => {
 
   it("leads a password failure with the unlock, not the plain retry", () => {
     // Running it again unchanged is a second answer to the same problem, so it drops behind.
-    expect(promoted(password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE"))).toEqual(
-      {
-        primary: "DECRYPT_AND_RETRY",
-        secondary: null,
-        overflow: ["RETRY", "VIEW_FILE"],
-        withheldReasonKey: null,
-      },
-    );
+    expect(
+      promoted(password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE")),
+    ).toEqual({
+      primary: "DECRYPT_AND_RETRY",
+      secondary: null,
+      overflow: ["RETRY", "VIEW_FILE"],
+      withheldReasonKey: null,
+    });
   });
 
   it("gives a reviewer their own password failure the unlock plus the queue", () => {
     expect(
       promoted(
-        password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
+        password(
+          "DECRYPT_AND_RETRY",
+          "RETRY",
+          "VIEW_FILE",
+          "VIEW_IN_PROCESSOR",
+        ),
       ),
     ).toEqual({
       primary: "DECRYPT_AND_RETRY",

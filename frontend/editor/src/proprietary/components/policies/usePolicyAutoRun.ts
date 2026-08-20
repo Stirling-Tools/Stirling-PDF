@@ -42,6 +42,10 @@ import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 import { isClassificationCategory } from "@app/data/policyCategories";
 import {
+  nextUploadCategory,
+  orderUploadCategories,
+} from "@app/policies/uploadChain";
+import {
   acquireDispatchSlot,
   releaseDispatchSlot,
 } from "@app/components/policies/dispatchSemaphore";
@@ -185,30 +189,7 @@ export function usePolicyAutoRun(): void {
   // instead of racing to fork the same version. Mirrors the dispatch filter
   // (incl. the editor-source gate) so the chain honours the same eligibility.
   const orderedUploadCategories = useMemo(
-    () =>
-      Object.entries(policies)
-        .filter(
-          ([id, s]) =>
-            s.configured &&
-            s.status === "active" &&
-            s.backendId &&
-            (!s.sources ||
-              s.sources.length === 0 ||
-              s.sources.includes("editor")) &&
-            (s.runOn ?? "upload") === "upload" &&
-            // Non-AI systems classify in the browser (useClientSideClassification), so keep the
-            // Classification policy out of the server chain when the AI engine is off.
-            !(id === "classification" && !aiEnabled),
-        )
-        // Classification runs last: it's non-blocking, so an enforcement policy
-        // running after it would fork a new version and drop the user's edits.
-        .sort(([idA, a], [idB, b]) => {
-          const ca = isClassificationCategory(idA) ? 1 : 0;
-          const cb = isClassificationCategory(idB) ? 1 : 0;
-          if (ca !== cb) return ca - cb;
-          return (a.order ?? 0) - (b.order ?? 0);
-        })
-        .map(([id]) => id),
+    () => orderUploadCategories(policies, aiEnabled),
     [policies, aiEnabled],
   );
 
@@ -495,15 +476,6 @@ function applyOutputName(
 
 /** The next upload policy after {@code categoryId} in the chain, or undefined if
  *  it's last or no longer in the ordered set (e.g. paused since it ran). */
-function nextUploadCategory(
-  orderedUploadCategories: string[],
-  categoryId: string,
-): string | undefined {
-  const index = orderedUploadCategories.indexOf(categoryId);
-  if (index < 0) return undefined;
-  return orderedUploadCategories[index + 1];
-}
-
 async function reconcileServerRuns(
   policies: PoliciesByCategory,
 ): Promise<void> {

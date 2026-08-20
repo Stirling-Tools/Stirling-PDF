@@ -1,4 +1,8 @@
-import { recordRunStart } from "@app/components/policies/policyRunStore";
+import {
+  appliedCategoriesFor,
+  recordRunStart,
+} from "@app/components/policies/policyRunStore";
+import { orderUploadCategories } from "@app/policies/uploadChain";
 import { fileStorage } from "@app/services/fileStorage";
 import { loadPolicies } from "@app/services/policyStorage";
 import {
@@ -64,21 +68,55 @@ export async function rerunPolicy(
 }
 
 /**
- * Re-run on bytes the caller already holds: the just-unlocked document, which is not in storage under
- * the failing run's reference and never will be.
+ * Put bytes the caller already holds back through the upload chain: the just-unlocked document, which
+ * is not in storage under the failing run's reference and never will be.
  *
- * @param workspaceFileId the workspace file this run's output belongs to, which is the ADOPTED document
- *     rather than the one the failure named. Two references on purpose: the server gets the failure's,
- *     so a repeat folds onto the same incident, and the run store gets this one, so the output versions
- *     the document now in front of the user. Null when the adoption produced no id, in which case the
- *     run still goes untracked rather than being filed against the wrong document.
+ * Rejoins the chain at {@link resumePointFor} rather than re-running only what failed: the policies
+ * after it never got their chance, and the ones before it must not run twice.
+ *
+ * @param workspaceFileId the ADOPTED document, not the one the failure named, so the output versions
+ *     what the user is looking at. Null files the run untracked rather than against the wrong document.
  */
-export async function rerunPolicyOnDocument(
+export async function rechainPolicyOnDocument(
   target: PolicyRetryTarget,
   document: File,
   workspaceFileId: string | null,
+  aiEnabled: boolean,
 ): Promise<PolicyRerunOutcome> {
-  return submit(target, document, workspaceFileId);
+  return submit(
+    target,
+    document,
+    workspaceFileId,
+    resumePointFor(target, aiEnabled),
+  );
+}
+
+/** Which policy a retry should actually run, and the category to file its run under. */
+interface ChainEntry {
+  policyId: string;
+  categoryId: string;
+}
+
+/**
+ * Where the upload chain picks up for the failed document: its first policy not already applied. Not
+ * the front of the chain, or one that already succeeded runs twice. Null when nothing places it.
+ */
+function resumePointFor(
+  target: PolicyRetryTarget,
+  aiEnabled: boolean,
+): ChainEntry | null {
+  const policies = loadPolicies();
+  const chain = orderUploadCategories(policies, aiEnabled);
+  const failed = categoryForPolicy(target.policyId);
+  if (!failed || !chain.includes(failed)) return null;
+
+  const applied = appliedCategoriesFor(target.fileId);
+  const categoryId = chain.find((category) => !applied.has(category));
+  if (!categoryId) return null;
+  const policyId = Object.entries(policies).find(
+    ([id]) => id === categoryId,
+  )?.[1]?.backendId;
+  return policyId ? { policyId, categoryId } : null;
 }
 
 /**
@@ -95,14 +133,18 @@ async function submit(
   target: PolicyRetryTarget,
   document: File,
   workspaceFileId: string | null,
+  resume: ChainEntry | null = null,
 ): Promise<PolicyRerunOutcome> {
   // Resolved before the run, so a lookup that throws cannot leave a live run unrecorded.
-  const categoryId = categoryForPolicy(target.policyId);
+  const categoryId = resume?.categoryId ?? categoryForPolicy(target.policyId);
+  // The run goes to the chain's resume point where there is one, so the chaining step carries on from
+  // there and the rest of the chain applies. The failure's own reference still travels with it.
+  const policyId = resume?.policyId ?? target.policyId;
   const runTarget = resolvePolicyRunTarget();
 
   let runId: string;
   try {
-    runId = await runStoredPolicy(target.policyId, [document], target.fileId);
+    runId = await runStoredPolicy(policyId, [document], target.fileId);
   } catch (error) {
     return { ok: false, reason: "rejected", message: rejectionMessage(error) };
   }

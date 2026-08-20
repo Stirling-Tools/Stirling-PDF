@@ -5083,6 +5083,7 @@ unread = "Unread"
 
 [notifications.action]
 failed = "That did not work. Try again in a moment."
+more = "More options"
 unavailable = "Not available for this notification."
 
 [notifications.detail]
@@ -5090,11 +5091,6 @@ copied = "Copied"
 copy = "Copy error"
 less = "Show less"
 more = "Show full message"
-
-[notifications.password]
-cancel = "Cancel"
-label = "Document password"
-working = "Unlocking..."
 
 [notifications.section]
 earlier = "Earlier"

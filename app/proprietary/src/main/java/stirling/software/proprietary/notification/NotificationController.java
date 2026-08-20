@@ -50,7 +50,8 @@ public class NotificationController {
                             + " to mark read here yet: the client tracks what it has shown.")
     public NotificationsResponse list(@RequestParam(required = false) Integer limit) {
         int capped = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
-        return new NotificationsResponse(notifications.list(capped));
+        return new NotificationsResponse(
+                notifications.list(capped), notifications.callerReviewsTeam());
     }
 
     /**
@@ -81,6 +82,9 @@ public class NotificationController {
 
     /**
      * Wrapped rather than a bare array so paging or a total can be added without breaking clients.
+     * {@code viewerReviewsTeam} lets the client filter a member's list; see {@link
+     * NotificationService#callerReviewsTeam()}.
      */
-    public record NotificationsResponse(List<NotificationView> notifications) {}
+    public record NotificationsResponse(
+            List<NotificationView> notifications, boolean viewerReviewsTeam) {}
 }

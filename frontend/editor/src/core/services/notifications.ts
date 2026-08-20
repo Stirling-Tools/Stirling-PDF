@@ -79,23 +79,37 @@ export interface AppNotification {
 
 interface NotificationsResponse {
   notifications: AppNotification[];
+  viewerReviewsTeam: boolean;
+}
+
+export interface FetchedNotifications {
+  notifications: AppNotification[];
+  /**
+   * Whether the caller reviews the whole team. A member sees only their own rows, and the client
+   * hides those whose document is not in this browser; a reviewer sees everything, so it can spot a
+   * policy that needs fixing even for a file they cannot open.
+   */
+  viewerReviewsTeam: boolean;
 }
 
 /**
- * Newest first. Empty rather than throwing on a build without the endpoint, or for a caller the
- * server will not answer: a bell that cannot load is a bell with nothing in it, not an error the
- * user needs to see.
+ * Newest first. Empty rather than throwing: a bell that cannot load is an empty bell, not an error.
+ * {@code viewerReviewsTeam} defaults to true when absent, so a missing field never hides more than
+ * intended.
  */
 export async function fetchNotifications(
   limit = 20,
-): Promise<AppNotification[]> {
+): Promise<FetchedNotifications> {
   try {
     const response = await apiClient.get<NotificationsResponse>(
       `${NOTIFICATIONS_PATH}?limit=${limit}`,
     );
-    return response?.data?.notifications ?? [];
+    return {
+      notifications: response?.data?.notifications ?? [],
+      viewerReviewsTeam: response?.data?.viewerReviewsTeam ?? true,
+    };
   } catch {
-    return [];
+    return { notifications: [], viewerReviewsTeam: true };
   }
 }
 

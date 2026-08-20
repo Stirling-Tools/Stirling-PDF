@@ -25,8 +25,15 @@ const render = (ui: Parameters<typeof baseRender>[0]) =>
 
 const fetchNotifications = vi.fn();
 
+// These tests care about the rows, not the fetch envelope, so a mock that resolves a bare array is
+// wrapped as a reviewer's response (nothing filtered). Member filtering is covered in the hook test.
 vi.mock("@app/services/notifications", () => ({
-  fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
+  fetchNotifications: async (...args: unknown[]) => {
+    const value = await fetchNotifications(...args);
+    return Array.isArray(value)
+      ? { notifications: value, viewerReviewsTeam: true }
+      : value;
+  },
 }));
 
 // The document lookups read IndexedDB, which jsdom has none of. Answered here so a row's
@@ -94,6 +101,19 @@ function offer(
   };
 }
 
+// Read state is a watermark on the list's ordering time, so rows need distinct ones. "a" is the
+// newest, matching the order these tests list them in.
+const AT: Record<string, string> = {
+  a: "2026-08-05T02:00:00Z",
+  b: "2026-08-05T01:00:00Z",
+};
+
+const READ_THROUGH_KEY = "stirling.notifications.readThroughAt";
+
+function markReadThrough(iso: string): void {
+  window.localStorage.setItem(READ_THROUGH_KEY, String(Date.parse(iso)));
+}
+
 function notification(
   id: string,
   title = "Unrecognised failure",
@@ -114,8 +134,8 @@ function notification(
     sourceId: null,
     policyId: null,
     occurrences: 1,
-    createdAt: "2026-08-05T00:00:00Z",
-    lastSeenAt: "2026-08-05T00:00:00Z",
+    createdAt: AT[id] ?? "2026-08-05T00:00:00Z",
+    lastSeenAt: AT[id] ?? "2026-08-05T00:00:00Z",
     actions: [],
     ...overrides,
   };
@@ -167,7 +187,7 @@ describe("NotificationBell", () => {
 
   it("divides what is new from what the user has already seen", async () => {
     // "b" was the newest last time, so "a" is the only new one.
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    markReadThrough(AT.b);
     fetchNotifications.mockResolvedValue([
       notification("a"),
       notification("b"),
@@ -182,7 +202,7 @@ describe("NotificationBell", () => {
   it("keeps the division on screen after opening marks them read", async () => {
     // The boundary is frozen on open. Read live it would collapse the moment the badge cleared,
     // taking the divider with it while the user was still looking at the list.
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "b");
+    markReadThrough(AT.b);
     fetchNotifications.mockResolvedValue([
       notification("a"),
       notification("b"),
@@ -196,7 +216,7 @@ describe("NotificationBell", () => {
   });
 
   it("does not divide a list with nothing new in it", async () => {
-    window.localStorage.setItem("stirling.notifications.lastSeenId", "a");
+    markReadThrough(AT.a);
     fetchNotifications.mockResolvedValue([notification("a")]);
     render(<NotificationBell />);
     await openPanel();
@@ -227,30 +247,27 @@ describe("NotificationBell", () => {
     first.unmount();
 
     // A newer one arrives above the one already seen.
-    fetchNotifications.mockResolvedValue([
-      notification("b"),
-      notification("a"),
-    ]);
+    const arrived = notification("c", "Unrecognised failure", {
+      lastSeenAt: "2026-08-05T03:00:00Z",
+    });
+    fetchNotifications.mockResolvedValue([arrived, notification("a")]);
     render(<NotificationBell />);
 
     expect(await screen.findByText("1")).toBeTruthy();
   });
 
-  it("treats everything as unread when the last seen one is gone", async () => {
-    // Dismissed or expired: we cannot tell how far the user got, so show them rather than
-    // silently marking the lot read.
-    window.localStorage.setItem(
-      "stirling.notifications.lastSeenId",
-      "vanished",
-    );
-    fetchNotifications.mockResolvedValue([
-      notification("a"),
-      notification("b"),
-    ]);
+  it("leaves the rest read when the row that was newest has gone", async () => {
+    // Resolving the newest failure removes its row. Marking read by id would then find nothing to
+    // measure from and light the badge for the older one the user had already read.
+    markReadThrough(AT.a);
+    fetchNotifications.mockResolvedValue([notification("b")]);
 
     render(<NotificationBell />);
+    await openPanel();
 
-    expect(await screen.findByText("2")).toBeTruthy();
+    // Nothing is new, so nothing is labelled new: by id, this row would have counted as unread.
+    expect(await screen.findByText("Unrecognised failure")).toBeTruthy();
+    expect(screen.queryByText("New")).toBeNull();
   });
 
   it("renders the server's title and repeat count without knowing the source", async () => {
@@ -286,6 +303,49 @@ describe("NotificationBell", () => {
       expect(
         screen.getByRole("button", { name: `${id}: Unrecognised failure` }),
       ).toBeTruthy();
+  });
+
+  it("tucks overflow actions into a menu, not a row of buttons", async () => {
+    h.specs = {
+      DECRYPT_AND_RETRY: { available: () => true, run: vi.fn() },
+      VIEW_FILE: { available: () => true, run: vi.fn() },
+      VIEW_IN_PROCESSOR: { available: () => true, run: vi.fn() },
+    };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Unrecognised failure", {
+        actions: [
+          offer("DECRYPT_AND_RETRY", "RESOLUTION"),
+          offer("VIEW_FILE", "SECONDARY"),
+          offer("VIEW_IN_PROCESSOR", "OVERFLOW"),
+        ],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // Two real buttons; the overflow one is off screen until the menu is opened.
+    expect(
+      screen.getByRole("button", {
+        name: "DECRYPT_AND_RETRY: Unrecognised failure",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "VIEW_FILE: Unrecognised failure" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", {
+        name: "VIEW_IN_PROCESSOR: Unrecognised failure",
+      }),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: "VIEW_IN_PROCESSOR" }),
+    ).toBeTruthy();
   });
 
   it("runs whichever of the row's actions is pressed", async () => {
@@ -476,7 +536,7 @@ describe("NotificationBell", () => {
     expect(document.querySelector(".notification-bell__actions")).toBeNull();
   });
 
-  it("asks for the password in the row before it retries", async () => {
+  it("asks for the password in the unlock modal before it retries", async () => {
     const run = vi.fn().mockResolvedValue({ ok: true });
     h.specs = {
       DECRYPT_AND_RETRY: {
@@ -494,7 +554,7 @@ describe("NotificationBell", () => {
     render(<NotificationBell />);
     await openPanel();
 
-    // First click reveals the field rather than running anything.
+    // The click opens the app's unlock modal rather than running anything.
     fireEvent.click(
       screen.getByRole("button", {
         name: "DECRYPT_AND_RETRY: Password-protected document",
@@ -502,11 +562,10 @@ describe("NotificationBell", () => {
     );
     expect(run).not.toHaveBeenCalled();
 
-    const field = screen.getByLabelText(
-      "Document password: Password-protected document",
-    );
+    const field = await screen.findByLabelText("PDF password");
     fireEvent.change(field, { target: { value: "hunter2" } });
-    fireEvent.submit(field.closest("form") as HTMLFormElement);
+    // The modal's confirm carries the action's own wording, not a generic "unlock".
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
 
     await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
     expect(run.mock.calls[0][1]).toBe("hunter2");
@@ -518,7 +577,7 @@ describe("NotificationBell", () => {
     );
   });
 
-  it("shows a failed unlock in the row instead of leaving the user guessing", async () => {
+  it("shows a failed unlock in the modal instead of leaving the user guessing", async () => {
     h.specs = {
       DECRYPT_AND_RETRY: {
         available: () => true,
@@ -539,18 +598,16 @@ describe("NotificationBell", () => {
         name: "DECRYPT_AND_RETRY: Password-protected document",
       }),
     );
-    const field = screen.getByLabelText(
-      "Document password: Password-protected document",
-    );
+    const field = await screen.findByLabelText("PDF password");
     fireEvent.change(field, { target: { value: "nope" } });
-    fireEvent.submit(field.closest("form") as HTMLFormElement);
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT_AND_RETRY" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
       "Wrong password",
     );
-    // Still on screen, so the user can try another password.
-    expect(screen.getByText("Password-protected document")).toBeTruthy();
+    // The prompt stays up, so the next attempt is one keystroke rather than a re-open.
+    expect(screen.getByLabelText("PDF password")).toBeTruthy();
   });
 
   it("expands the message without touching the row's actions", async () => {

@@ -22,10 +22,11 @@ vi.mock("@app/services/notificationRetry", () => ({
 }));
 
 const rerunPolicy = vi.fn();
-const rerunPolicyOnDocument = vi.fn();
+const rechainPolicyOnDocument = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
   rerunPolicy: (...args: unknown[]) => rerunPolicy(...args),
-  rerunPolicyOnDocument: (...args: unknown[]) => rerunPolicyOnDocument(...args),
+  rechainPolicyOnDocument: (...args: unknown[]) =>
+    rechainPolicyOnDocument(...args),
 }));
 
 const reportNotificationResolved = vi.fn();
@@ -78,10 +79,26 @@ const { useNotificationActions } =
 const addStirlingFileStubs = vi.fn();
 const setActiveFileId = vi.fn();
 const setWorkbench = vi.fn();
+// The heavy pdf.js thumbnail step is stubbed; createChildStub is pure but stubbed too so the test
+// can name the version's id without reproducing its metadata.
+vi.mock("@app/contexts/file/fileActions", () => ({
+  generateProcessedFileMetadata: () => Promise.resolve(null),
+  createChildStub: (parent: { id: string }, _op: unknown, file: File) => ({
+    ...parent,
+    id: "f-unlocked",
+    name: file.name,
+    versionNumber: 2,
+    parentFileId: parent.id,
+  }),
+}));
+
 /** What the workbench already holds, so the "do not add it twice" path can be exercised. */
 let openFileIds: string[] = [];
+/** Stubs the workbench holds, by id, so the in-place replacement path has an original to version. */
+let openFilesById: Record<string, unknown> = {};
 const setSelectedFiles = vi.fn();
 const addFiles = vi.fn();
+const consumeFiles = vi.fn();
 
 function notification(
   overrides: Partial<AppNotification> = {},
@@ -161,14 +178,21 @@ const inEditor = ({ children }: { children: ReactNode }) => (
   <MemoryRouter>
     <FileActionsContext.Provider
       value={{
-        actions: { addStirlingFileStubs, setSelectedFiles, addFiles } as never,
+        actions: {
+          addStirlingFileStubs,
+          setSelectedFiles,
+          addFiles,
+          consumeFiles,
+        } as never,
         dispatch: vi.fn(),
       }}
     >
       <FileStoreContext.Provider
         value={
           {
-            getState: () => ({ files: { ids: openFileIds } }),
+            getState: () => ({
+              files: { ids: openFileIds, byId: openFilesById },
+            }),
             subscribe: () => () => {},
             selectors: {},
           } as never
@@ -212,7 +236,9 @@ beforeEach(() => {
   setWorkbench.mockReset();
   h.getStirlingFileStub.mockReset().mockResolvedValue(h.stub);
   openFileIds = [];
+  openFilesById = {};
   setSelectedFiles.mockReset();
+  consumeFiles.mockReset().mockResolvedValue(["f-unlocked"]);
   // The workspace's own id for the adopted document, which is what a policy re-run's output belongs
   // to - not the reference the failure was filed against.
   addFiles.mockReset().mockResolvedValue([{ fileId: "f-unlocked" }]);
@@ -232,7 +258,7 @@ beforeEach(() => {
   // Tracked by default: the run is in the store, so something is polling it and its output will
   // arrive. An untracked run is a separate case below, since it changes what the row may claim.
   rerunPolicy.mockReset().mockResolvedValue({ ok: true, tracked: true });
-  rerunPolicyOnDocument.mockReset().mockResolvedValue({
+  rechainPolicyOnDocument.mockReset().mockResolvedValue({
     ok: true,
     tracked: true,
   });
@@ -397,6 +423,36 @@ describe("useNotificationActions", () => {
     // And the incident is closed, with the prefixed id: nothing else tells the server the client
     // fixed it, so the bell would otherwise keep reporting a failure the user has dealt with.
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
+  });
+
+  it("replaces the encrypted original in place when it is open in the workbench", async () => {
+    // The failed document is on screen, so the unlock versions it rather than adding a second copy.
+    openFileIds = ["f-1"];
+    openFilesById = { "f-1": { id: "f-1", name: "invoice.pdf", versionNumber: 1 } };
+    unlockLocalDocument.mockResolvedValue({
+      ok: true,
+      files: [
+        {
+          blob: new Blob(["pdf"], { type: "application/pdf" }),
+          filename: "invoice.pdf",
+        },
+      ],
+    });
+
+    const outcome = await registry().DECRYPT_AND_RETRY?.run(
+      policyContext(),
+      "hunter2",
+    );
+
+    expect(outcome).toEqual({ ok: true });
+    // Consumed, not added: the encrypted original is versioned, so there is only ever one document.
+    expect(addFiles).not.toHaveBeenCalled();
+    const [inputIds, , stubs] = consumeFiles.mock.calls[0];
+    expect(inputIds).toEqual(["f-1"]);
+    // Still in-app, so usePolicyAutoRun does not enforce the chain on it — the rechain does that.
+    expect(
+      (stubs as Array<{ derivedFromTool?: boolean }>)[0].derivedFromTool,
+    ).toBe(true);
   });
 
   it("closes the incident only once the document is safely in", async () => {
@@ -649,7 +705,7 @@ describe("retrying an attended policy run", () => {
       order.push("adopt");
       return [{ fileId: "f-unlocked" }];
     });
-    rerunPolicyOnDocument.mockImplementation(async () => {
+    rechainPolicyOnDocument.mockImplementation(async () => {
       order.push("rerun");
       return { ok: true, tracked: true };
     });
@@ -677,10 +733,13 @@ describe("retrying an attended policy run", () => {
     // Re-submitted under the ORIGINAL reference, so a second failure folds onto this same incident
     // instead of opening a new one about the same document - while the run's output is attributed to
     // the ADOPTED document, which is the one now in front of the user.
-    expect(rerunPolicyOnDocument).toHaveBeenCalledWith(
+    expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
       { policyId: "pol-1", fileId: "f-1" },
       expect.any(File),
       "f-unlocked",
+      // No app-config above this render, so the engine reads as off and the chain excludes
+      // Classification. Which policies that leaves is the retry service's own business.
+      false,
     );
     // And with the prefixed notification id, never a raw failure id.
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
@@ -692,7 +751,7 @@ describe("retrying an attended policy run", () => {
 
     // One submission, from here. The other possible source is the adoption, which is silenced by
     // derivedFromTool above; see the gate's own test in usePolicyAutoRun.chain.test.tsx.
-    expect(rerunPolicyOnDocument).toHaveBeenCalledTimes(1);
+    expect(rechainPolicyOnDocument).toHaveBeenCalledTimes(1);
     expect(rerunPolicy).not.toHaveBeenCalled();
     expect(addFiles.mock.calls[0][1]).toMatchObject({ derivedFromTool: true });
   });
@@ -701,14 +760,15 @@ describe("retrying an attended policy run", () => {
     // Nothing to attribute the output to, so the run goes untracked rather than being filed against
     // the encrypted original, which would version the wrong document.
     addFiles.mockResolvedValue([]);
-    rerunPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
+    rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
 
-    expect(rerunPolicyOnDocument).toHaveBeenCalledWith(
+    expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
       { policyId: "pol-1", fileId: "f-1" },
       expect.any(File),
       null,
+      false,
     );
   });
 
@@ -717,7 +777,7 @@ describe("retrying an attended policy run", () => {
     // workbench. The unlocked INPUT is in, which is not what the user was after, so this may not
     // present as success. Closing the row here would retire a failure that produced nothing and
     // still billed a run.
-    rerunPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
+    rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     expect(
       await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2"),
@@ -754,7 +814,7 @@ describe("retrying an attended policy run", () => {
       await registry().DECRYPT_AND_RETRY?.run(policyContext(), "wrong"),
     ).toEqual({ ok: false, message: "The password is incorrect." });
     expect(addFiles).not.toHaveBeenCalled();
-    expect(rerunPolicyOnDocument).not.toHaveBeenCalled();
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
     // The row is still a failure, so nothing may report it fixed.
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
@@ -769,12 +829,12 @@ describe("retrying an attended policy run", () => {
       message:
         "The document was unlocked but could not be opened here. Try the tool directly.",
     });
-    expect(rerunPolicyOnDocument).not.toHaveBeenCalled();
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 
   it("says the unlock worked but the re-run did not, and leaves the row open", async () => {
-    rerunPolicyOnDocument.mockResolvedValue({
+    rechainPolicyOnDocument.mockResolvedValue({
       ok: false,
       reason: "rejected",
       message: "Queue full.",
@@ -801,12 +861,12 @@ describe("retrying an attended policy run", () => {
     // id, so nothing here can persist it.
     const downstream = [
       ...addFiles.mock.calls,
-      ...rerunPolicyOnDocument.mock.calls,
+      ...rechainPolicyOnDocument.mock.calls,
       ...reportNotificationResolved.mock.calls,
     ];
     expect(JSON.stringify(downstream)).not.toContain("hunter2");
     // Not in the file that goes back to the policy either: those are the server's unlocked bytes.
-    const [, document] = rerunPolicyOnDocument.mock.calls[0] as [
+    const [, document] = rechainPolicyOnDocument.mock.calls[0] as [
       unknown,
       File,
       unknown,

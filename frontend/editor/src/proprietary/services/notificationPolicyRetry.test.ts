@@ -23,7 +23,15 @@ vi.mock("@app/services/policyApi", () => ({
 const policies = vi.hoisted(() => ({
   value: { security: { backendId: "pol-1" } } as Record<
     string,
-    { backendId?: string }
+    {
+      backendId?: string;
+      // The rest of what the chain order is built from, so a test can make a policy eligible for it.
+      configured?: boolean;
+      status?: string;
+      runOn?: string;
+      sources?: string[];
+      order?: number;
+    }
   >,
 }));
 vi.mock("@app/services/policyStorage", () => ({
@@ -32,9 +40,9 @@ vi.mock("@app/services/policyStorage", () => ({
 
 // The REAL run store, because the point of registering is that the auto-run controller finds the run
 // there and polls it. A mock would assert the call and prove nothing about the record.
-const { getRun, isDispatched, resetPolicyRuns } =
+const { getRun, isDispatched, recordRunStart, resetPolicyRuns, updateRun } =
   await import("@app/components/policies/policyRunStore");
-const { rerunPolicy, rerunPolicyOnDocument } =
+const { rerunPolicy, rechainPolicyOnDocument } =
   await import("@app/services/notificationPolicyRetry");
 
 const target = { policyId: "pol-1", fileId: "f-1" };
@@ -133,12 +141,12 @@ describe("rerunPolicy", () => {
   });
 });
 
-describe("rerunPolicyOnDocument", () => {
+describe("rechainPolicyOnDocument", () => {
   const unlocked = new File(["%PDF-1.7"], "invoice.pdf");
 
   it("submits bytes the caller already holds, still under the original reference", async () => {
     await expect(
-      rerunPolicyOnDocument(target, unlocked, "f-unlocked"),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
     ).resolves.toEqual({
       ok: true,
       tracked: true,
@@ -152,7 +160,7 @@ describe("rerunPolicyOnDocument", () => {
     // Two references, deliberately: the server gets the failure's, so a repeat folds onto the same
     // incident; the run store gets the adopted one, so the output versions the unlocked document the
     // user is now looking at rather than the encrypted original they still have.
-    await rerunPolicyOnDocument(target, unlocked, "f-unlocked");
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
     expect(getRun("run-1")).toMatchObject({ fileId: "f-unlocked" });
@@ -165,7 +173,7 @@ describe("rerunPolicyOnDocument", () => {
     // unrecorded, and `tracked` carries that outward: the caller needs it to keep the failure open,
     // since an unpolled run delivers nothing however well the submission went.
     await expect(
-      rerunPolicyOnDocument(target, unlocked, null),
+      rechainPolicyOnDocument(target, unlocked, null, false),
     ).resolves.toEqual({ ok: true, tracked: false });
 
     expect(runStoredPolicy).toHaveBeenCalled();
@@ -178,7 +186,7 @@ describe("rerunPolicyOnDocument", () => {
     });
 
     await expect(
-      rerunPolicyOnDocument(target, unlocked, "f-unlocked"),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
@@ -192,7 +200,7 @@ describe("rerunPolicyOnDocument", () => {
     });
 
     await expect(
-      rerunPolicyOnDocument(target, unlocked, "f-unlocked"),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
@@ -204,11 +212,119 @@ describe("rerunPolicyOnDocument", () => {
     runStoredPolicy.mockRejectedValue(new Error("Network Error"));
 
     await expect(
-      rerunPolicyOnDocument(target, unlocked, "f-unlocked"),
+      rechainPolicyOnDocument(target, unlocked, "f-unlocked", false),
     ).resolves.toEqual({
       ok: false,
       reason: "rejected",
       message: null,
     });
+  });
+});
+
+/**
+ * Where the chain picks up again. The rule is "the first upload policy not already applied", which is
+ * normally the one that failed - the chain only advances on success, so everything ahead of it ran -
+ * and is an earlier one only where the chain has changed since.
+ */
+describe("rechainPolicyOnDocument rejoining the chain", () => {
+  const unlocked = new File(["%PDF-1.7"], "invoice.pdf");
+
+  /** An upload policy as the local cache holds it, eligible for the chain. */
+  function uploadPolicy(backendId: string, order: number) {
+    return {
+      backendId,
+      configured: true,
+      status: "active",
+      runOn: "upload",
+      sources: ["editor"],
+      order,
+    };
+  }
+
+  /** A completed run of `categoryId` that turned `fileId` into `outputFileId`. */
+  function completedRun(
+    runId: string,
+    categoryId: string,
+    fileId: string,
+    outputFileId: string,
+  ) {
+    recordRunStart({
+      runId,
+      categoryId,
+      fileId,
+      fileName: "invoice.pdf",
+      fileSize: 1,
+      target: "saas",
+      status: "PENDING",
+      outputs: [],
+      error: null,
+      startedAt: 1,
+    });
+    updateRun(runId, {
+      status: "COMPLETED",
+      imported: true,
+      outputFileIds: [outputFileId],
+    });
+  }
+
+  it("resumes at the policy that failed when everything ahead of it has run", async () => {
+    // watermark ran on the upload and produced f-1, which is what security then choked on. Rejoining
+    // must not re-apply watermark: the document already carries it, and a second pass would stamp it
+    // twice and bill for the privilege.
+    policies.value = {
+      watermark: uploadPolicy("pol-w", 0),
+      security: uploadPolicy("pol-1", 1),
+    };
+    completedRun("run-w", "watermark", "f-upload", "f-1");
+
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+
+    expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
+  });
+
+  it("resumes at an earlier policy that never ran, rather than skipping it", async () => {
+    // The chain gained watermark ahead of security after the failing run, so nothing has applied it to
+    // this document. Resuming at security would leave it applied to every later upload but not this
+    // one, which is the gap this rule exists to close.
+    policies.value = {
+      watermark: uploadPolicy("pol-w", 0),
+      security: uploadPolicy("pol-1", 1),
+    };
+
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+
+    // Filed under the resumed policy's own category, so the chaining step carries on from there and
+    // security still runs, on watermark's output.
+    expect(runStoredPolicy).toHaveBeenCalledWith("pol-w", [unlocked], "f-1");
+    expect(getRun("run-1")).toMatchObject({
+      categoryId: "watermark",
+      fileId: "f-unlocked",
+    });
+  });
+
+  it("leaves Classification out of the chain while the engine is off", async () => {
+    // It classifies in the browser in that build, so the server chain does not include it and it must
+    // not become a resume point either.
+    policies.value = {
+      classification: uploadPolicy("pol-c", 0),
+      security: uploadPolicy("pol-1", 1),
+    };
+
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+
+    expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
+  });
+
+  it("re-runs only what failed when the policy is not in the upload chain at all", async () => {
+    // An export-mode policy: there is no upload chain to rejoin, so the retry is the plain re-run it
+    // has always been.
+    policies.value = {
+      watermark: uploadPolicy("pol-w", 0),
+      security: { ...uploadPolicy("pol-1", 1), runOn: "export" },
+    };
+
+    await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
+
+    expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
   });
 });
