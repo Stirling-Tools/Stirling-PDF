@@ -14,21 +14,37 @@ import { accountLinkSettings } from "@portal/components/settings/accountLinkSett
 import { useUI } from "@portal/contexts/UIContext";
 
 /**
+ * Settings sections the portal cannot host. Shared with the portal's search
+ * provider so these never surface as search results either.
+ *
+ * TODO: opening Keyboard Shortcuts in the portal white-screens the app (the
+ * section expects editor-only context). Hidden here as a stopgap; fix the
+ * section properly and drop this.
+ */
+export const PORTAL_HIDDEN_SECTION_KEYS: NavKey[] = ["hotkeys"];
+
+/**
  * Mounts the editor's settings modal (the app-wide settings surface) inside the
  * portal. The portal deliberately lives outside the editor's AppProviders, so
- * this host supplies the contexts the settings tree needs: app config, user
- * preferences, the session provider the account sections read (flavor-resolved:
- * Spring on self-hosted, Supabase on SaaS — same underlying session the portal
- * is already signed in with), and the editor ThemeProvider (which also carries
- * the Mantine theme + toasts the sections expect). URL sync is off — the portal
- * owns its own route subtree, so the modal keeps its section purely in state.
+ * this host supplies the contexts the settings tree needs: user preferences,
+ * the session provider the account sections read (flavor-resolved: Spring on
+ * self-hosted, Supabase on SaaS — same underlying session the portal is
+ * already signed in with), and the editor ThemeProvider (which also carries
+ * the Mantine theme + toasts the sections expect). App config comes from
+ * PortalChrome's shared provider. URL sync is off — the portal owns its own
+ * route subtree, so the modal keeps its section purely in state.
  *
  * Everything (providers included) mounts on first open and stays mounted, so
  * the editor theme wiring never runs for portal sessions that never open
  * settings.
  */
 export function PortalSettingsHost() {
-  const { settingsOpen, settingsInitialSection, closeSettings } = useUI();
+  const {
+    settingsOpen,
+    settingsInitialSection,
+    settingsInitialFocus,
+    closeSettings,
+  } = useUI();
   const { t } = useTranslation();
   const [everOpened, setEverOpened] = useState(false);
 
@@ -74,11 +90,9 @@ export function PortalSettingsHost() {
               onClose={closeSettings}
               urlSync={false}
               initialSection={initialSection}
+              initialFocus={settingsInitialFocus}
               extraSections={extraSections}
-              // TODO: opening Keyboard Shortcuts in the portal white-screens
-              // the app (the section expects editor-only context). Hidden here
-              // as a stopgap; fix the section properly and drop this.
-              hiddenSectionKeys={["hotkeys"]}
+              hiddenSectionKeys={PORTAL_HIDDEN_SECTION_KEYS}
             />
           </ThemeProvider>
         </PreferencesProvider>

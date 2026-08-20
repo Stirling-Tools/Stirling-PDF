@@ -212,7 +212,7 @@ class ShareEgressProcessorTest {
 
     @Test
     void aFailedRunReleasesNothing() {
-        PolicyRun run = new PolicyRun("run-1", POLICY_ID, definition(), null);
+        PolicyRun run = new PolicyRun("run-1", POLICY_ID, definition(), null, null, null);
         run.fail("watermark blew up");
         when(policyEngine.runPolicy(any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("run-1", CompletableFuture.completedFuture(run)));
@@ -287,7 +287,9 @@ class ShareEgressProcessorTest {
         when(policyEngine.runPolicy(any(), any(), any()))
                 .thenAnswer(
                         invocation -> {
-                            PolicyRun run = new PolicyRun("run-1", POLICY_ID, definition(), null);
+                            PolicyRun run =
+                                    new PolicyRun(
+                                            "run-1", POLICY_ID, definition(), null, null, null);
                             run.complete(List.of(ResultFile.builder().fileId(fileId).build()));
                             return new PolicyRunHandle(
                                     "run-1", CompletableFuture.completedFuture(run));
