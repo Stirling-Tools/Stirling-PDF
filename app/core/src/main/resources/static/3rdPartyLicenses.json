@@ -17,7 +17,7 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.34",
+            "moduleVersion": "1.6.1",
             "moduleLicense": "LGPL-2.1-only",
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -31,7 +31,7 @@
         {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.34",
+            "moduleVersion": "1.6.1",
             "moduleLicense": "LGPL-2.1-only",
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -196,7 +196,7 @@
         {
             "moduleName": "com.github.mwiede:jsch",
             "moduleUrl": "https://github.com/mwiede/jsch",
-            "moduleVersion": "0.2.23",
+            "moduleVersion": "2.28.6",
             "moduleLicense": "Revised BSD",
             "moduleLicenseUrl": "https://github.com/mwiede/jsch/blob/master/LICENSE.txt"
         },
@@ -765,7 +765,7 @@
         {
             "moduleName": "commons-net:commons-net",
             "moduleUrl": "https://commons.apache.org/proper/commons-net/",
-            "moduleVersion": "3.11.1",
+            "moduleVersion": "3.13.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1221,6 +1221,18 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "net.shibboleth:shib-networking",
+            "moduleVersion": "9.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "net.shibboleth:shib-security",
+            "moduleVersion": "9.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "net.shibboleth:shib-security",
             "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
@@ -1228,6 +1240,18 @@
         },
         {
             "moduleName": "net.shibboleth:shib-support",
+            "moduleVersion": "9.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "net.shibboleth:shib-support",
+            "moduleVersion": "9.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "net.shibboleth:shib-velocity",
             "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -1324,13 +1348,6 @@
             "moduleVersion": "5.4.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.apache.httpcomponents:httpclient",
-            "moduleUrl": "http://hc.apache.org/httpcomponents-client",
-            "moduleVersion": "4.5.13",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.httpcomponents:httpclient",
@@ -1464,11 +1481,25 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.santuario:xmlsec",
+            "moduleUrl": "https://www.apache.org/",
+            "moduleVersion": "3.0.6",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.tomcat.embed:tomcat-embed-el",
             "moduleUrl": "https://tomcat.apache.org/",
             "moduleVersion": "11.0.22",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.velocity:velocity-engine-core",
+            "moduleUrl": "https://www.apache.org/",
+            "moduleVersion": "2.4.1",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.velocity:velocity-engine-core",
@@ -1639,6 +1670,13 @@
             "moduleVersion": "0.28.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "org.cryptacular:cryptacular",
+            "moduleUrl": "https://www.cryptacular.org",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "GNU Lesser General Public License",
+            "moduleLicenseUrl": "https://www.gnu.org/licenses/lgpl-3.0.txt"
         },
         {
             "moduleName": "org.cryptacular:cryptacular",
@@ -2017,7 +2055,25 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.opensaml:opensaml-core-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.opensaml:opensaml-core-impl",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-core-impl",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-messaging-api",
             "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -2035,7 +2091,25 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.opensaml:opensaml-profile-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.opensaml:opensaml-saml-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-saml-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-saml-impl",
             "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -2053,7 +2127,25 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.opensaml:opensaml-security-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.opensaml:opensaml-security-impl",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-security-impl",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-soap-api",
             "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -2071,6 +2163,18 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.opensaml:opensaml-soap-impl",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-storage-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.opensaml:opensaml-storage-api",
             "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
@@ -2078,6 +2182,18 @@
         },
         {
             "moduleName": "org.opensaml:opensaml-xmlsec-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-xmlsec-api",
+            "moduleVersion": "5.2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.opensaml:opensaml-xmlsec-impl",
             "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -2565,6 +2681,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.security:spring-security-core",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.security:spring-security-crypto",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "7.1.0",
@@ -2594,6 +2717,13 @@
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-resource-server",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
@@ -2812,207 +2942,207 @@
         },
         {
             "moduleName": "software.amazon.awssdk:annotations",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
-            "moduleName": "software.amazon.awssdk:apache-client",
-            "moduleVersion": "2.44.12",
+            "moduleName": "software.amazon.awssdk:apache5-client",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:arns",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:auth",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:aws-core",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:aws-query-protocol",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:aws-xml-protocol",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:checksums",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:checksums-spi",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:crt-core",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:endpoints-spi",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:http-auth",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:http-auth-aws",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:http-auth-aws-eventstream",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:http-auth-spi",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:http-client-spi",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:identity-spi",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:json-utils",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:metrics-spi",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:netty-nio-client",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:profiles",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:protocol-core",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:regions",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:retries",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:retries-spi",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:s3",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:sdk-core",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:third-party-jackson-core",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:url-connection-client",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:utils",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },
         {
             "moduleName": "software.amazon.awssdk:utils-lite",
             "moduleUrl": "https://aws.amazon.com/sdkforjava",
-            "moduleVersion": "2.44.12",
+            "moduleVersion": "2.51.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://aws.amazon.com/apache2.0"
         },

@@ -209,6 +209,11 @@ export const TOOL_IO: ToolIOTable = {
       },
     ],
   },
+  "/api/v1/convert/pdf/ua": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/convert/pdf/vector": {
     accepts: ["PDF"],
     produces: "IMAGE",
@@ -539,6 +544,11 @@ export const TOOL_IO: ToolIOTable = {
   "/api/v1/misc/update-metadata": {
     accepts: ["PDF"],
     produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/security/accessibility-report": {
+    accepts: ["PDF"],
+    produces: "JSON",
     arity: "SISO",
   },
   "/api/v1/security/add-password": {

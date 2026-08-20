@@ -27,29 +27,22 @@ jobs:
     name: Label conflicted PRs
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      issues: write
-      pull-requests: read
+      contents: read # actions/checkout
+      issues: write # get/create the repo-level conflict label
+      pull-requests: write # pulls.get/list plus add/remove the label on PRs
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up stirling-bot token
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Apply conflict label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const conflictLabel = process.env.CONFLICT_LABEL;
             const owner = context.repo.owner;
