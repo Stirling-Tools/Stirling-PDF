@@ -15,7 +15,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import jakarta.persistence.EntityManager;
 
 import stirling.software.proprietary.model.ToolChainStat;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
@@ -35,7 +34,6 @@ class ToolUsageErasureDeletesUserTest {
     @Autowired private UserRepository userRepository;
     @Autowired private ToolUsageStatRepository usageRepository;
     @Autowired private ToolChainStatRepository chainRepository;
-    @Autowired private ToolRecommendationDismissalRepository dismissalRepository;
     @Autowired private EntityManager entityManager;
 
     private Long seedUser(String username) {
@@ -49,7 +47,6 @@ class ToolUsageErasureDeletesUserTest {
         usageRepository.save(new ToolUsageStat(username, NONE, "ocr", DAY, 1));
         usageRepository.save(new ToolUsageStat(username, "compare", "merge", DAY - 5, 2));
         chainRepository.save(new ToolChainStat(username, "compare>merge", DAY, 2, 2));
-        dismissalRepository.save(new ToolRecommendationDismissal(username, "compare", "ocr"));
         entityManager.flush();
         entityManager.clear();
         return user.getId();
@@ -75,7 +72,6 @@ class ToolUsageErasureDeletesUserTest {
 
         usageRepository.deleteByPrincipal("tracked");
         chainRepository.deleteByPrincipal("tracked");
-        dismissalRepository.deleteByPrincipal("tracked");
 
         // The erasures must leave the user managed, or delete() merges (and cascades) instead
         assertThat(entityManager.contains(user)).isTrue();
@@ -100,11 +96,9 @@ class ToolUsageErasureDeletesUserTest {
         assertThat(chainRepository.findAll())
                 .extracting(ToolChainStat::getPrincipal)
                 .containsOnly("bystander");
-        assertThat(dismissalRepository.findByPrincipal("tracked")).isEmpty();
 
         // The bystander is untouched by any of it
         assertThat(userRepository.findByUsernameIgnoreCase("bystander")).isPresent();
-        assertThat(dismissalRepository.findByPrincipal("bystander")).hasSize(1);
         assertThat(countSettings(keptId)).isEqualTo(1);
     }
 
@@ -118,7 +112,6 @@ class ToolUsageErasureDeletesUserTest {
 
         usageRepository.deleteByPrincipal("tracked");
         chainRepository.deleteByPrincipal("tracked");
-        dismissalRepository.deleteByPrincipal("tracked");
 
         assertThat(entityManager.contains(user)).isTrue();
         assertThat(before).isNotEmpty();

@@ -18,8 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import stirling.software.proprietary.model.ToolChainStat;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
-import stirling.software.proprietary.model.ToolRecommendationDismissalId;
 import stirling.software.proprietary.model.ToolUsageStat;
 
 /** Exercises the windowed CASE aggregation and increment queries against H2. */
@@ -31,7 +29,6 @@ class ToolRecommendationRepositoriesTest {
 
     @Autowired private ToolUsageStatRepository usageRepository;
     @Autowired private ToolChainStatRepository chainRepository;
-    @Autowired private ToolRecommendationDismissalRepository dismissalRepository;
 
     private static Map<String, long[]> byTool(List<Object[]> rows) {
         return rows.stream()
@@ -276,35 +273,6 @@ class ToolRecommendationRepositoriesTest {
     }
 
     @Test
-    @DisplayName("saving the same dismissal twice leaves one row")
-    void dismissalsAreIdempotent() {
-        dismissalRepository.saveAndFlush(
-                new ToolRecommendationDismissal("alice", "compare", "ocr"));
-        dismissalRepository.saveAndFlush(
-                new ToolRecommendationDismissal("alice", "compare", "ocr"));
-
-        assertThat(dismissalRepository.findByPrincipal("alice")).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("dismissals are addressable by their full composite key")
-    void dismissalsAddressableByKey() {
-        dismissalRepository.saveAndFlush(
-                new ToolRecommendationDismissal("alice", "compare", "ocr"));
-        dismissalRepository.saveAndFlush(new ToolRecommendationDismissal("alice", "merge", "ocr"));
-
-        assertThat(
-                        dismissalRepository.findById(
-                                new ToolRecommendationDismissalId("alice", "compare", "ocr")))
-                .isPresent();
-        assertThat(
-                        dismissalRepository.findById(
-                                new ToolRecommendationDismissalId("alice", "split", "ocr")))
-                .isEmpty();
-        assertThat(dismissalRepository.findByPrincipal("alice")).hasSize(2);
-    }
-
-    @Test
     @DisplayName("erasure removes a principal's usage rows and leaves everyone else's")
     void deleteByPrincipalErasesUsage() {
         usageRepository.save(new ToolUsageStat("alice", NONE, "ocr", DAY, 1));
@@ -317,22 +285,6 @@ class ToolRecommendationRepositoriesTest {
                 .extracting(ToolUsageStat::getPrincipal)
                 .containsExactly("bob");
         assertThat(usageRepository.sumByPrincipal("alice", DAY - 30, DAY - 7)).isEmpty();
-    }
-
-    @Test
-    @DisplayName("erasure removes a principal's dismissals and leaves everyone else's")
-    void deleteByPrincipalErasesDismissals() {
-        dismissalRepository.saveAndFlush(
-                new ToolRecommendationDismissal("alice", "compare", "ocr"));
-        dismissalRepository.saveAndFlush(
-                new ToolRecommendationDismissal(
-                        "alice", ToolRecommendationDismissal.ANY_CONTEXT, "merge"));
-        dismissalRepository.saveAndFlush(new ToolRecommendationDismissal("bob", "compare", "ocr"));
-
-        assertThat(dismissalRepository.deleteByPrincipal("alice")).isEqualTo(2);
-
-        assertThat(dismissalRepository.findByPrincipal("alice")).isEmpty();
-        assertThat(dismissalRepository.findByPrincipal("bob")).hasSize(1);
     }
 
     @SpringBootConfiguration

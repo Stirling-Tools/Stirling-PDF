@@ -5,18 +5,15 @@ import {
   fetchToolRecommendations,
   fetchToolWorkflows,
   recordToolUsage,
-  dismissToolRecommendation,
-  undoDismissToolRecommendation,
   resetToolRecommendationsAvailabilityForTests,
 } from "@app/api/toolRecommendations";
 
 vi.mock("@app/services/apiClient", () => ({
-  default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
+  default: { get: vi.fn(), post: vi.fn() },
 }));
 
 const mockGet = vi.mocked(apiClient.get);
 const mockPost = vi.mocked(apiClient.post);
-const mockDelete = vi.mocked(apiClient.delete);
 
 const http404 = Object.assign(new Error("not found"), {
   response: { status: 404 },
@@ -138,49 +135,6 @@ describe("toolRecommendations api", () => {
       await recordToolUsage("ocr");
 
       expect(mockPost).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("dismissals", () => {
-    it("posts a context-scoped dismissal", async () => {
-      mockPost.mockResolvedValue({});
-
-      await dismissToolRecommendation("compare", "ocr");
-
-      expect(mockPost).toHaveBeenCalledWith(
-        expect.stringContaining("/dismissals"),
-        { contextTool: "compare", dismissedTool: "ocr" },
-        expect.objectContaining({ suppressErrorToast: true }),
-      );
-    });
-
-    it("maps a null context to the any-context wildcard", async () => {
-      mockPost.mockResolvedValue({});
-
-      await dismissToolRecommendation(null, "ocr");
-
-      expect(mockPost.mock.calls[0][1]).toEqual({
-        contextTool: "*",
-        dismissedTool: "ocr",
-      });
-    });
-
-    it("undo issues a delete with the same coordinates", async () => {
-      mockDelete.mockResolvedValue({});
-
-      await undoDismissToolRecommendation("compare", "ocr");
-
-      const url = mockDelete.mock.calls[0][0] as string;
-      expect(url).toContain("contextTool=compare");
-      expect(url).toContain("dismissedTool=ocr");
-    });
-
-    it("propagates dismissal failures so the UI can warn the user", async () => {
-      mockPost.mockRejectedValue(new Error("boom"));
-
-      await expect(dismissToolRecommendation("compare", "ocr")).rejects.toThrow(
-        "boom",
-      );
     });
   });
 });

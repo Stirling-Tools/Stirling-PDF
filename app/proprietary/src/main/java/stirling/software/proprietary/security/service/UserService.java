@@ -46,7 +46,6 @@ import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.repository.ToolChainStatRepository;
-import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -101,7 +100,6 @@ public class UserService implements UserServiceInterface {
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final ToolUsageStatRepository toolUsageStatRepository;
     private final ToolChainStatRepository toolChainStatRepository;
-    private final ToolRecommendationDismissalRepository toolRecommendationDismissalRepository;
 
     @Transactional
     public void processSSOPostLogin(
@@ -269,10 +267,9 @@ public class UserService implements UserServiceInterface {
     private void deleteUserRelatedData(User user) {
         log.info("Deleting all associated data for user: {}", user.getUsername());
 
-        // Tool usage and dismissals key on the username, so a recreated name would inherit them
+        // Tool usage keys on the username, so a recreated name would inherit it
         toolUsageStatRepository.deleteByPrincipal(user.getUsername());
         toolChainStatRepository.deleteByPrincipal(user.getUsername());
-        toolRecommendationDismissalRepository.deleteByPrincipal(user.getUsername());
 
         // Drop ACL grants held by this user and detach grants they issued
         resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(

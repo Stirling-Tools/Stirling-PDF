@@ -27,7 +27,6 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.repository.ToolChainStatRepository;
-import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -77,7 +76,6 @@ class UserServiceTest {
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
     @Mock private ToolUsageStatRepository toolUsageStatRepository;
     @Mock private ToolChainStatRepository toolChainStatRepository;
-    @Mock private ToolRecommendationDismissalRepository toolRecommendationDismissalRepository;
 
     @Spy @InjectMocks private UserService userService;
 
@@ -292,7 +290,7 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUser_erasesToolUsageAndDismissals() {
+    void deleteUser_erasesToolUsage() {
         User user = new User();
         user.setId(4L);
         user.setUsername("tracked");
@@ -307,7 +305,6 @@ class UserServiceTest {
         // Every table keys on the username, so a recreated name would inherit the old profile
         verify(toolUsageStatRepository).deleteByPrincipal("tracked");
         verify(toolChainStatRepository).deleteByPrincipal("tracked");
-        verify(toolRecommendationDismissalRepository).deleteByPrincipal("tracked");
         // The erasures must not displace the user row itself
         verify(userRepository).delete(user);
     }

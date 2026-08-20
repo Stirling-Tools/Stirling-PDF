@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
@@ -49,8 +47,6 @@ public class ToolRecommendationController {
      *     excluding this run - one entry per input document, empty for a fresh upload.
      */
     public record UsageRequest(String toolKey, List<List<String>> priorChains) {}
-
-    public record DismissalRequest(String contextTool, String dismissedTool) {}
 
     @GetMapping("/tool-recommendations")
     @Operation(
@@ -115,42 +111,6 @@ public class ToolRecommendationController {
         trackingService.recordUsage(
                 resolvePrincipal(browserId), request.toolKey(), request.priorChains());
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/tool-recommendations/dismissals")
-    @Operation(
-            summary = "Dismiss a recommended tool",
-            description =
-                    "Never recommend dismissedTool again while on contextTool. Use context '*' to"
-                            + " suppress it everywhere.")
-    public ResponseEntity<Void> dismiss(
-            @RequestBody DismissalRequest request,
-            @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
-        if (request == null || !isValidDismissal(request.contextTool(), request.dismissedTool())) {
-            return ResponseEntity.badRequest().build();
-        }
-        recommendationService.dismiss(
-                resolvePrincipal(browserId), request.contextTool(), request.dismissedTool());
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/tool-recommendations/dismissals")
-    @Operation(summary = "Undo a recommendation dismissal")
-    public ResponseEntity<Void> undoDismiss(
-            @RequestParam("contextTool") String contextTool,
-            @RequestParam("dismissedTool") String dismissedTool,
-            @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
-        if (!isValidDismissal(contextTool, dismissedTool)) {
-            return ResponseEntity.badRequest().build();
-        }
-        recommendationService.undoDismiss(resolvePrincipal(browserId), contextTool, dismissedTool);
-        return ResponseEntity.noContent().build();
-    }
-
-    private static boolean isValidDismissal(String contextTool, String dismissedTool) {
-        return ToolUsageTrackingService.isValidToolKey(dismissedTool)
-                && (ToolRecommendationDismissal.ANY_CONTEXT.equals(contextTool)
-                        || ToolUsageTrackingService.isValidToolKey(contextTool));
     }
 
     /** Logged-in username, else a per-browser pseudo-identity, else a shared anonymous bucket. */

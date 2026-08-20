@@ -7,27 +7,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
-import stirling.software.proprietary.model.ToolRecommendationDismissalId;
-import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.service.ToolUsageSignalService.TeamScope;
 import stirling.software.proprietary.service.ToolUsageSignalService.ToolChainSummary;
 
 /**
  * Scores "what tool next". Transitions out of the current tool dominate, then the caller's own
- * usage, their team's, and the whole install's. Scoring is deliberately uncached - the costly
- * aggregates are cached inside {@link ToolUsageSignalService} and shared by everyone, so a
- * dismissal takes effect immediately without invalidating anyone else's data.
+ * usage, their team's, and the whole install's. Scoring itself is cheap and uncached; the costly
+ * aggregates are cached inside {@link ToolUsageSignalService} and shared by everyone.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ToolRecommendationService {
@@ -47,7 +40,6 @@ public class ToolRecommendationService {
     static final int MIN_WORKFLOW_TOOLS = 2;
 
     private final ToolUsageSignalService signals;
-    private final ToolRecommendationDismissalRepository dismissalRepository;
     private final ApplicationProperties applicationProperties;
 
     public record ToolRecommendation(String toolKey, double score) {}
@@ -162,12 +154,9 @@ public class ToolRecommendationService {
         }
         merge(scores, signals.globalFrequency(cutoff, recent), WEIGHT_FREQUENCY_GLOBAL);
 
-        Set<String> excluded = dismissedTools(principal, currentTool);
-        if (currentTool != null) {
-            excluded.add(currentTool);
-        }
+        // Never answer "what next" with the tool the user is already in.
         return scores.entrySet().stream()
-                .filter(e -> !excluded.contains(e.getKey()))
+                .filter(e -> !e.getKey().equals(currentTool))
                 .sorted(
                         Map.Entry.<String, Double>comparingByValue()
                                 .reversed()
@@ -187,41 +176,6 @@ public class ToolRecommendationService {
             return;
         }
         signal.forEach((tool, value) -> scores.merge(tool, weight * (value / max), Double::sum));
-    }
-
-    private Set<String> dismissedTools(String principal, String currentTool) {
-        Set<String> excluded = new HashSet<>();
-        for (ToolRecommendationDismissal dismissal :
-                dismissalRepository.findByPrincipal(principal)) {
-            String context = dismissal.getContextTool();
-            if (ToolRecommendationDismissal.ANY_CONTEXT.equals(context)
-                    || context.equals(currentTool)) {
-                excluded.add(dismissal.getDismissedTool());
-            }
-        }
-        return excluded;
-    }
-
-    /**
-     * Idempotent: the row is its own primary key. Two simultaneous dismissals (double click, or two
-     * nodes) can still race to insert it, and losing that race already means the desired row
-     * exists.
-     */
-    @Transactional
-    public void dismiss(String principal, String contextTool, String dismissedTool) {
-        try {
-            dismissalRepository.save(
-                    new ToolRecommendationDismissal(principal, contextTool, dismissedTool));
-        } catch (DataIntegrityViolationException e) {
-            log.debug("Dismissal {}/{} already stored", contextTool, dismissedTool);
-        }
-    }
-
-    @Transactional
-    public void undoDismiss(String principal, String contextTool, String dismissedTool) {
-        dismissalRepository
-                .findById(new ToolRecommendationDismissalId(principal, contextTool, dismissedTool))
-                .ifPresent(dismissalRepository::delete);
     }
 
     private static double round(double value) {

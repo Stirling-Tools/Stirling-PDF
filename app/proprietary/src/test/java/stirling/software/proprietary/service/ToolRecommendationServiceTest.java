@@ -14,21 +14,16 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
-import stirling.software.proprietary.model.ToolRecommendationDismissalId;
-import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
 import stirling.software.proprietary.service.ToolRecommendationService.WorkflowScope;
@@ -42,7 +37,6 @@ class ToolRecommendationServiceTest {
     private static final TeamScope TEAM = new TeamScope(7L, List.of("bob", "carol"));
 
     @Mock private ToolUsageSignalService signalService;
-    @Mock private ToolRecommendationDismissalRepository dismissalRepository;
 
     private ApplicationProperties properties;
     private ToolRecommendationService service;
@@ -51,8 +45,7 @@ class ToolRecommendationServiceTest {
     void setUp() {
         properties = new ApplicationProperties();
         properties.getSystem().setEnableAnalytics(true);
-        service = new ToolRecommendationService(signalService, dismissalRepository, properties);
-        lenient().when(dismissalRepository.findByPrincipal(anyString())).thenReturn(List.of());
+        service = new ToolRecommendationService(signalService, properties);
         lenient().when(signalService.resolveTeamScope(anyString())).thenReturn(TeamScope.none());
         lenient()
                 .when(signalService.userFrequency(anyString(), anyLong(), anyLong()))
@@ -304,7 +297,7 @@ class ToolRecommendationServiceTest {
             properties.getToolRecommendations().setEnabled(false);
 
             assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
-            verifyNoInteractions(signalService, dismissalRepository);
+            verifyNoInteractions(signalService);
         }
 
         @Test
@@ -313,7 +306,7 @@ class ToolRecommendationServiceTest {
             properties.getSystem().setEnableAnalytics(null);
 
             assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
-            verifyNoInteractions(signalService, dismissalRepository);
+            verifyNoInteractions(signalService);
         }
 
         @Test
@@ -324,111 +317,6 @@ class ToolRecommendationServiceTest {
             verify(signalService, never())
                     .userTransitions(anyString(), anyString(), anyLong(), anyLong());
             verify(signalService, never()).globalTransitions(anyString(), anyLong(), anyLong());
-        }
-    }
-
-    @Nested
-    @DisplayName("Dismissals")
-    class Dismissals {
-
-        @Test
-        @DisplayName("a dismissal for the current context hides the tool")
-        void contextDismissalFilters() {
-            when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 6.0, "merge", 5.0));
-            when(dismissalRepository.findByPrincipal(PRINCIPAL))
-                    .thenReturn(
-                            List.of(new ToolRecommendationDismissal(PRINCIPAL, "compare", "ocr")));
-
-            List<ToolRecommendation> result = service.getRecommendations(PRINCIPAL, "compare", 6);
-
-            assertThat(toolKeys(result)).containsExactly("merge");
-        }
-
-        @Test
-        @DisplayName("a dismissal for another context does not hide the tool")
-        void unrelatedContextDismissalKept() {
-            when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 6.0));
-            when(dismissalRepository.findByPrincipal(PRINCIPAL))
-                    .thenReturn(
-                            List.of(new ToolRecommendationDismissal(PRINCIPAL, "merge", "ocr")));
-
-            List<ToolRecommendation> result = service.getRecommendations(PRINCIPAL, "compare", 6);
-
-            assertThat(toolKeys(result)).containsExactly("ocr");
-        }
-
-        @Test
-        @DisplayName("an any-context dismissal hides the tool everywhere")
-        void anyContextDismissalFilters() {
-            when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 6.0));
-            when(dismissalRepository.findByPrincipal(PRINCIPAL))
-                    .thenReturn(
-                            List.of(
-                                    new ToolRecommendationDismissal(
-                                            PRINCIPAL,
-                                            ToolRecommendationDismissal.ANY_CONTEXT,
-                                            "ocr")));
-
-            assertThat(service.getRecommendations(PRINCIPAL, null, 6)).isEmpty();
-            assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
-        }
-
-        @Test
-        @DisplayName("a dismissal takes effect on the very next read (nothing cached)")
-        void dismissalAppliesImmediately() {
-            when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 6.0, "merge", 5.0));
-            when(dismissalRepository.findByPrincipal(PRINCIPAL))
-                    .thenReturn(List.of())
-                    .thenReturn(
-                            List.of(new ToolRecommendationDismissal(PRINCIPAL, "compare", "ocr")));
-
-            assertThat(toolKeys(service.getRecommendations(PRINCIPAL, "compare", 6)))
-                    .containsExactly("ocr", "merge");
-            assertThat(toolKeys(service.getRecommendations(PRINCIPAL, "compare", 6)))
-                    .containsExactly("merge");
-        }
-
-        @Test
-        @DisplayName("dismiss saves the row keyed by principal, context and tool")
-        void dismissSavesRow() {
-            service.dismiss(PRINCIPAL, "compare", "ocr");
-
-            ArgumentCaptor<ToolRecommendationDismissal> captor =
-                    ArgumentCaptor.forClass(ToolRecommendationDismissal.class);
-            verify(dismissalRepository).save(captor.capture());
-            assertThat(captor.getValue().getPrincipal()).isEqualTo(PRINCIPAL);
-            assertThat(captor.getValue().getContextTool()).isEqualTo("compare");
-            assertThat(captor.getValue().getDismissedTool()).isEqualTo("ocr");
-        }
-
-        @Test
-        @DisplayName("undoDismiss deletes the stored dismissal")
-        void undoDismissDeletes() {
-            ToolRecommendationDismissal stored =
-                    new ToolRecommendationDismissal(PRINCIPAL, "compare", "ocr");
-            when(dismissalRepository.findById(
-                            new ToolRecommendationDismissalId(PRINCIPAL, "compare", "ocr")))
-                    .thenReturn(Optional.of(stored));
-
-            service.undoDismiss(PRINCIPAL, "compare", "ocr");
-
-            verify(dismissalRepository).delete(stored);
-        }
-
-        @Test
-        @DisplayName("undoing a dismissal that was never made is a no-op")
-        void undoUnknownDismissalIsNoOp() {
-            when(dismissalRepository.findById(
-                            new ToolRecommendationDismissalId(PRINCIPAL, "compare", "ocr")))
-                    .thenReturn(Optional.empty());
-
-            service.undoDismiss(PRINCIPAL, "compare", "ocr");
-
-            verify(dismissalRepository, never()).delete(any(ToolRecommendationDismissal.class));
         }
     }
 }

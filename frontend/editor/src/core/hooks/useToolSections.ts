@@ -7,15 +7,7 @@ import {
   ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
 import { useTranslation } from "react-i18next";
-import {
-  DEFAULT_RECOMMENDATION_LIMIT,
-  useToolRecommendations,
-} from "@app/hooks/useToolRecommendations";
 import { ToolId } from "@app/types/toolId";
-
-/** Tools that can actually open: have a component, an external link, or are navigational. */
-const isReadyTool = ({ tool, id }: { tool: ToolRegistryEntry; id: ToolId }) =>
-  tool.component !== null || !!tool.link || id === "read" || id === "multiTool";
 
 type SubcategoryIdMap = {
   [subcategoryId in SubcategoryId]: Array<{
@@ -52,7 +44,6 @@ export function useToolSections(
   searchQuery?: string,
 ) {
   const { t } = useTranslation();
-  const { recommendedToolIds } = useToolRecommendations();
 
   const groupedTools = useMemo(() => {
     if (!filteredTools || !Array.isArray(filteredTools)) {
@@ -71,11 +62,45 @@ export function useToolSections(
     return grouped;
   }, [filteredTools]);
 
-  const { sections, rankedRecommendationIds } = useMemo(() => {
+  const sections: ToolSection[] = useMemo(() => {
     const getOrderIndex = (id: SubcategoryId) => {
       const idx = SUBCATEGORY_ORDER.indexOf(id);
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
     };
+
+    const quick = {} as SubcategoryIdMap;
+    const all = {} as SubcategoryIdMap;
+
+    Object.entries(groupedTools).forEach(([c, subs]) => {
+      const categoryId = c as ToolCategoryId;
+
+      Object.entries(subs).forEach(([s, tools]) => {
+        const subcategoryId = s as SubcategoryId;
+        // Build the 'all' collection without duplicating recommended tools
+        // Recommended tools are shown in the Quick section only
+        if (categoryId !== ToolCategoryId.RECOMMENDED_TOOLS) {
+          if (!all[subcategoryId]) all[subcategoryId] = [];
+          all[subcategoryId].push(...tools);
+        }
+      });
+
+      if (categoryId === ToolCategoryId.RECOMMENDED_TOOLS) {
+        Object.entries(subs).forEach(([s, tools]) => {
+          const subcategoryId = s as SubcategoryId;
+          if (!quick[subcategoryId]) quick[subcategoryId] = [];
+          // Only include ready tools (have a component or external link) in Quick Access
+          // Special case: read and multiTool are navigational tools that don't need components
+          const readyTools = tools.filter(
+            ({ tool, id }) =>
+              tool.component !== null ||
+              !!tool.link ||
+              id === "read" ||
+              id === "multiTool",
+          );
+          quick[subcategoryId].push(...readyTools);
+        });
+      }
+    });
 
     const sortSubs = (obj: SubcategoryIdMap) =>
       Object.entries(obj)
@@ -92,63 +117,6 @@ export function useToolSections(
             ({ subcategoryId, tools }) as SubcategoryGroup,
         );
 
-    // Every tool starts in 'all'; whatever Quick Access ends up showing is removed
-    // from it below, so a tool is never listed twice nor lost when the quick list changes.
-    let quick = {} as SubcategoryIdMap;
-    const all = {} as SubcategoryIdMap;
-
-    Object.entries(groupedTools).forEach(([c, subs]) => {
-      const categoryId = c as ToolCategoryId;
-
-      Object.entries(subs).forEach(([s, tools]) => {
-        const subcategoryId = s as SubcategoryId;
-        if (!all[subcategoryId]) all[subcategoryId] = [];
-        all[subcategoryId].push(...tools);
-
-        if (categoryId === ToolCategoryId.RECOMMENDED_TOOLS) {
-          if (!quick[subcategoryId]) quick[subcategoryId] = [];
-          // Only include ready tools (have a component or external link) in Quick Access
-          // Special case: read and multiTool are navigational tools that don't need components
-          quick[subcategoryId].push(...tools.filter(isReadyTool));
-        }
-      });
-    });
-
-    // Ranked tools lead, curated ones top the list back up - a couple of runs may
-    // reorder Quick Access but must never shrink it. One bucket keeps score order.
-    const ranked = new Set<ToolId>();
-    if (recommendedToolIds) {
-      const byId = new Map<ToolId, ToolRegistryEntry>();
-      filteredTools.forEach(({ item: [id, tool] }) => byId.set(id, tool));
-      const dynamicTools = recommendedToolIds
-        .filter((id) => byId.has(id))
-        .map((id) => ({ id, tool: byId.get(id)! }))
-        .filter(isReadyTool);
-      if (dynamicTools.length > 0) {
-        dynamicTools.forEach(({ id }) => ranked.add(id));
-        const topUp = sortSubs(quick)
-          .flatMap(({ tools }) => tools)
-          .filter(({ id }) => !ranked.has(id));
-        quick = {
-          [SubcategoryId.GENERAL]: [...dynamicTools, ...topUp].slice(
-            0,
-            Math.max(dynamicTools.length, DEFAULT_RECOMMENDATION_LIMIT),
-          ),
-        } as SubcategoryIdMap;
-      }
-    }
-
-    const quickIds = new Set(
-      Object.values(quick).flatMap((tools) => tools.map(({ id }) => id)),
-    );
-    Object.keys(all).forEach((key) => {
-      const subcategoryId = key as SubcategoryId;
-      all[subcategoryId] = all[subcategoryId].filter(
-        ({ id }) => !quickIds.has(id),
-      );
-      if (all[subcategoryId].length === 0) delete all[subcategoryId];
-    });
-
     const built: ToolSection[] = [
       {
         key: "quick",
@@ -162,13 +130,10 @@ export function useToolSections(
       },
     ];
 
-    return {
-      sections: built.filter((section) =>
-        section.subcategories.some((sc) => sc.tools.length > 0),
-      ),
-      rankedRecommendationIds: ranked,
-    };
-  }, [groupedTools, recommendedToolIds, filteredTools, t]);
+    return built.filter((section) =>
+      section.subcategories.some((sc) => sc.tools.length > 0),
+    );
+  }, [groupedTools]);
 
   const searchGroups: SubcategoryGroup[] = useMemo(() => {
     if (!filteredTools || !Array.isArray(filteredTools)) {
@@ -217,5 +182,5 @@ export function useToolSections(
       );
   }, [filteredTools, searchQuery]);
 
-  return { sections, searchGroups, rankedRecommendationIds };
+  return { sections, searchGroups };
 }

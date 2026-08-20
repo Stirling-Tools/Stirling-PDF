@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.proprietary.controller.api.ToolRecommendationController.DismissalRequest;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.WorkflowsResponse;
@@ -203,65 +202,6 @@ class ToolRecommendationControllerTest {
             controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
 
             verify(trackingService).recordUsage("anon:" + BROWSER_ID, "ocr", null);
-        }
-    }
-
-    @Nested
-    @DisplayName("Dismissals")
-    class Dismissals {
-
-        @Test
-        @DisplayName("a context-scoped dismissal is stored")
-        void dismissStored() {
-            when(userService.getCurrentUsername()).thenReturn("alice");
-
-            ResponseEntity<Void> response =
-                    controller.dismiss(new DismissalRequest("compare", "ocr"), null);
-
-            assertThat(response.getStatusCode().value()).isEqualTo(204);
-            verify(recommendationService).dismiss("alice", "compare", "ocr");
-        }
-
-        @Test
-        @DisplayName("the any-context wildcard is accepted")
-        void wildcardContextAccepted() {
-            when(userService.getCurrentUsername()).thenReturn("alice");
-
-            ResponseEntity<Void> response =
-                    controller.dismiss(new DismissalRequest("*", "ocr"), null);
-
-            assertThat(response.getStatusCode().value()).isEqualTo(204);
-            verify(recommendationService).dismiss("alice", "*", "ocr");
-        }
-
-        @Test
-        @DisplayName("junk context or tool is rejected with 400")
-        void junkRejected() {
-            assertThat(
-                            controller
-                                    .dismiss(new DismissalRequest("bad context!", "ocr"), null)
-                                    .getStatusCode()
-                                    .value())
-                    .isEqualTo(400);
-            assertThat(
-                            controller
-                                    .dismiss(new DismissalRequest("compare", "bad tool!"), null)
-                                    .getStatusCode()
-                                    .value())
-                    .isEqualTo(400);
-            assertThat(controller.dismiss(null, null).getStatusCode().value()).isEqualTo(400);
-            verifyNoInteractions(recommendationService);
-        }
-
-        @Test
-        @DisplayName("undo removes the stored dismissal")
-        void undoRemoves() {
-            when(userService.getCurrentUsername()).thenReturn("alice");
-
-            ResponseEntity<Void> response = controller.undoDismiss("compare", "ocr", null);
-
-            assertThat(response.getStatusCode().value()).isEqualTo(204);
-            verify(recommendationService).undoDismiss("alice", "compare", "ocr");
         }
     }
 }

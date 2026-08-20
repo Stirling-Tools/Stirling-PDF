@@ -5,9 +5,6 @@ export interface ToolRecommendationDto {
   score: number;
 }
 
-/** Dismiss in every context (used when no tool is active). */
-export const ANY_CONTEXT = "*";
-
 const BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
 // Core-only backends have no recommendations API; remember the 404 so we stop asking.
@@ -105,29 +102,4 @@ export async function fetchToolWorkflows(
     markUnavailableOn404(error);
     return null;
   }
-}
-
-export async function dismissToolRecommendation(
-  contextTool: string | null,
-  dismissedTool: string,
-): Promise<void> {
-  await apiClient.post(
-    `${BASE_PATH}/dismissals`,
-    { contextTool: contextTool ?? ANY_CONTEXT, dismissedTool },
-    { suppressErrorToast: true, skipAuthRedirect: true },
-  );
-}
-
-export async function undoDismissToolRecommendation(
-  contextTool: string | null,
-  dismissedTool: string,
-): Promise<void> {
-  const params = new URLSearchParams({
-    contextTool: contextTool ?? ANY_CONTEXT,
-    dismissedTool,
-  });
-  await apiClient.delete(`${BASE_PATH}/dismissals?${params}`, {
-    suppressErrorToast: true,
-    skipAuthRedirect: true,
-  });
 }

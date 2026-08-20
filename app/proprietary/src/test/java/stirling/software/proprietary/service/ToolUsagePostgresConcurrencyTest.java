@@ -28,10 +28,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.ToolChainStat;
-import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.repository.ToolChainStatRepository;
-import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 
 /**
@@ -69,10 +67,8 @@ class ToolUsagePostgresConcurrencyTest {
 
     @Autowired private ToolUsageStatRepository usageRepository;
     @Autowired private ToolChainStatRepository chainRepository;
-    @Autowired private ToolRecommendationDismissalRepository dismissalRepository;
 
     private ToolUsageTrackingService trackingService;
-    private ToolRecommendationService recommendationService;
 
     @BeforeEach
     void setUp() {
@@ -80,12 +76,6 @@ class ToolUsagePostgresConcurrencyTest {
         properties.getSystem().setEnableAnalytics(true);
         trackingService =
                 new ToolUsageTrackingService(usageRepository, chainRepository, properties);
-        recommendationService =
-                new ToolRecommendationService(
-                        new ToolUsageSignalService(
-                                usageRepository, chainRepository, java.util.Optional.empty()),
-                        dismissalRepository,
-                        properties);
     }
 
     /** Runs {@code task} on {@code NODES} threads at once; returns how many threw. */
@@ -187,20 +177,6 @@ class ToolUsagePostgresConcurrencyTest {
         assertThat(rows).hasSize(1);
         assertThat(rows.get(0).getCount()).isEqualTo(3);
         assertThat(rows.get(0).getChainLength()).isEqualTo(2);
-    }
-
-    @Test
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    @DisplayName("the same dismissal from several nodes at once stores one row and never throws")
-    void concurrentDismissalsAreIdempotent() throws InterruptedException {
-        dismissalRepository.deleteAll();
-
-        int failures = race(NODES, () -> recommendationService.dismiss("alice", "compare", "ocr"));
-
-        assertThat(failures).isZero();
-        assertThat(dismissalRepository.findByPrincipal("alice"))
-                .extracting(ToolRecommendationDismissal::getDismissedTool)
-                .containsExactly("ocr");
     }
 
     @Test

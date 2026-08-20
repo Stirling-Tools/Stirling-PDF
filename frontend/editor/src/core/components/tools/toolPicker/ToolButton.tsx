@@ -1,7 +1,5 @@
 import React, { memo } from "react";
 import { Badge } from "@mantine/core";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -39,8 +37,6 @@ interface ToolButtonProps {
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
   badgeCount?: number;
-  /** Shows a hover-only X that dismisses this tool from the recommended list. */
-  onDismiss?: () => void;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({
@@ -54,7 +50,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   showDescription = false,
   onUnavailableClick,
   badgeCount,
-  onDismiss,
 }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -319,46 +314,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       />
     ) : null;
 
-  const handleDismiss = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onDismiss?.();
-  };
-
-  const dismiss = onDismiss ? (
-    <ActionIcon
-      // A span (no control nesting); role="button" makes the aria-label legal
-      // and tabIndex keeps it keyboard-reachable.
-      as="span"
-      role="button"
-      tabIndex={0}
-      variant="tertiary"
-      shape="circle"
-      size="sm"
-      onClick={handleDismiss}
-      onKeyDown={(e: React.KeyboardEvent) => {
-        e.stopPropagation();
-        if (e.key === "Enter" || e.key === " ") handleDismiss(e);
-      }}
-      onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
-      className="tool-button-dismiss"
-      aria-label={t(
-        "toolPicker.recommendations.dismiss",
-        "Don't recommend this tool here",
-      )}
-      title={t(
-        "toolPicker.recommendations.dismiss",
-        "Don't recommend this tool here",
-      )}
-    >
-      <CloseRoundedIcon fontSize="inherit" style={{ fontSize: "1rem" }} />
-    </ActionIcon>
-  ) : null;
-
   return (
     <div className="tool-button-container">
       {star}
-      {dismiss}
       <Tooltip
         content={tooltipContent}
         position="left"
