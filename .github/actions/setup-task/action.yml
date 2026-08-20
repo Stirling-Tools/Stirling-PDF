@@ -34,14 +34,14 @@ runs:
           esac
           task_file="task_linux_${task_arch}.tar.gz"
           archive="${RUNNER_TEMP}/${task_file}"
-          checksums="${RUNNER_TEMP}/task-checksums.txt"
+          checksums="${RUNNER_TEMP}/task_checksums.txt"
           release_url="https://github.com/go-task/task/releases/download/v${TASK_VERSION}"
           curl --fail --silent --show-error --location --http1.1 \
             --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
             "${release_url}/${task_file}" --output "${archive}"
           curl --fail --silent --show-error --location --http1.1 \
             --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
-            "${release_url}/checksums.txt" --output "${checksums}"
+            "${release_url}/task_checksums.txt" --output "${checksums}"
           grep "  ${task_file}$" "${checksums}" | sha256sum -c -
           tar -xzf "${archive}" -C "${install_dir}" task
         fi
