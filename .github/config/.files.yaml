@@ -5,14 +5,12 @@
 ci: &ci
   - .github/workflows/build.yml
   - .github/config/.files.yaml
-  - .github/workflows/test-build-docker.yml
 
 build: &build
   - *ci
   - build.gradle
   - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
-  - .github/workflows/backend-build.yml
   - Taskfile.yml
   - .taskfiles/backend.yml
   - .github/workflows/check-licence.yml
@@ -24,14 +22,12 @@ openapi: &openapi
   - .github/workflows/check-openapi.yml
 
 docker-base: &docker-base
-  - *ci
   - docker/base/Dockerfile
 
 # Dockerfiles only (base, embedded, and unoserver). The slow multi-architecture
 # (arm64) leg of the PR Docker test build runs only when a Dockerfile changes,
 # rather than for every code PR.
 dockerfiles: &dockerfiles
-  - *ci
   - docker/**/Dockerfile*
 
 docker: &docker
