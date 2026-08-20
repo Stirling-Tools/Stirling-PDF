@@ -81,3 +81,8 @@ jobs:
           path: /tmp/stirling-migration-failed-*/app.log
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -rf /tmp/stirling-migration-failed-*
+        continue-on-error: true
