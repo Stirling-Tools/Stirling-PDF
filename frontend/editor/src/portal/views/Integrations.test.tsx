@@ -69,39 +69,35 @@ describe("Integrations view", () => {
     ).toBeInTheDocument();
   });
 
-  it("groups connections of the same type and expands to the instances", async () => {
+  it("groups connections of the same type, instances shown as rows (no expand)", async () => {
     fetchIntegrations.mockResolvedValue([
       bucket(1, "Claims"),
       bucket(2, "Archive"),
     ]);
     render(<Integrations />);
 
-    // One connected group row for S3 with the instance count, not two rows.
-    const group = await screen.findByText(
-      "portal.integrations.connectionCount",
-    );
-    expect(group).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("portal.connections.types.s3.label"));
+    // Instances are rows directly under the S3 vendor group - no expand click.
     expect(await screen.findByText("Claims")).toBeInTheDocument();
     expect(screen.getByText("Archive")).toBeInTheDocument();
+    // Vendor group header shows the instance count and the "add another" action.
     expect(
-      screen.getByText("portal.integrations.addAnother"),
+      screen.getByText("portal.integrations.connectionCount"),
     ).toBeInTheDocument();
+    // Each connected vendor group offers a Connect action (to add another).
+    expect(
+      screen.getAllByText("portal.integrations.connect").length,
+    ).toBeGreaterThan(0);
     // The available band remains for the other, unconnected vendors.
     expect(
       screen.getByText(/portal\.integrations\.availableHeading/),
     ).toBeInTheDocument();
   });
 
-  it("deletes an instance from the expanded group", async () => {
+  it("deletes an instance directly from its row", async () => {
     fetchIntegrations.mockResolvedValueOnce([bucket(5, "Claims")]);
     fetchIntegrations.mockResolvedValueOnce([]);
     render(<Integrations />);
 
-    fireEvent.click(
-      await screen.findByText("portal.connections.types.s3.label"),
-    );
     fireEvent.click(await screen.findByText("portal.connections.delete"));
 
     await waitFor(() => expect(deleteIntegration).toHaveBeenCalledWith(5));
@@ -116,9 +112,6 @@ describe("Integrations view", () => {
     );
     render(<Integrations />);
 
-    fireEvent.click(
-      await screen.findByText("portal.connections.types.s3.label"),
-    );
     fireEvent.click(await screen.findByText("portal.connections.delete"));
 
     expect(
@@ -149,48 +142,46 @@ describe("Integrations view", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("expands an available row's (i) into the tasks that integration adds", async () => {
+  it("lists the tasks an available integration unlocks once its (i) is pressed", async () => {
     fetchIntegrations.mockResolvedValue([]);
     render(<Integrations />);
     await screen.findByText("portal.connections.types.jira.label");
 
-    expect(
-      screen.queryByText("portal.policies.operations.jiraComment.label"),
-    ).not.toBeInTheDocument();
-
-    // Every step-backed vendor gets an (i); S3 (a bucket, no steps) gets none, so
-    // there are fewer (i)s than Connect buttons.
-    const infos = screen.getAllByRole("button", {
-      name: "portal.connections.picker2.tasksInfo",
-    });
-    expect(infos.length).toBeGreaterThan(0);
-    expect(infos.length).toBeLessThan(
-      screen.getAllByText("portal.integrations.connect").length,
-    );
-
-    // The Jira row's (i) reveals all three of its tasks inline.
     const jiraRow = screen
       .getByText("portal.connections.types.jira.label")
-      .closest(".portal-integrations__group") as HTMLElement;
+      .closest("tr") as HTMLElement;
+    const tasks = [
+      "portal.policies.operations.jiraAttach.label",
+      "portal.policies.operations.jiraComment.label",
+      "portal.policies.operations.jiraTransition.label",
+    ];
+
+    // The list stays behind the (i) so the table is not a wall of prose.
+    for (const task of tasks) {
+      expect(within(jiraRow).queryByText(task)).not.toBeInTheDocument();
+    }
+
     fireEvent.click(
-      within(jiraRow).getByRole("button", {
-        name: "portal.connections.picker2.tasksInfo",
-      }),
+      within(jiraRow).getByLabelText("portal.connections.picker2.tasksInfo"),
     );
+
+    // The Jira row then names all three of the tasks connecting it would add.
+    for (const task of tasks) {
+      expect(within(jiraRow).getByText(task)).toBeInTheDocument();
+    }
+
+    // S3 is a bucket, not a step - its row lists no tasks.
+    const s3Row = screen
+      .getByText("portal.connections.types.s3.label")
+      .closest("tr") as HTMLElement;
     expect(
-      await screen.findByText("portal.policies.operations.jiraAttach.label"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("portal.policies.operations.jiraComment.label"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("portal.policies.operations.jiraTransition.label"),
-    ).toBeInTheDocument();
+      within(s3Row).queryByText(/portal\.policies\.operations\./),
+    ).not.toBeInTheDocument();
   });
 
-  it("keeps the custom-call task out of a connected group when the server withholds it", async () => {
+  it("keeps the custom-call task off a connected row when the server withholds it", async () => {
     // A stored custom-API connection still lists; the task the server would refuse must not
-    // be advertised in its panel (same gate the catalogue honours).
+    // be advertised on its row (same gate the catalogue honours).
     const custom = {
       id: 3,
       integrationType: "API",
@@ -201,18 +192,19 @@ describe("Integrations view", () => {
     fetchIntegrations.mockResolvedValue([custom]);
     render(<Integrations />);
 
-    fireEvent.click(
-      await screen.findByText("portal.connections.types.api.label"),
-    );
-    expect(
-      await screen.findByText("portal.integrations.addAnother"),
-    ).toBeInTheDocument();
+    const row = (await screen.findByText("In-house API")).closest(
+      "tr",
+    ) as HTMLElement;
     expect(
       screen.queryByText("portal.policies.operations.customApiCall.label"),
     ).not.toBeInTheDocument();
+    // Nothing left to disclose, so the row gets no (i) either.
+    expect(
+      within(row).queryByLabelText("portal.connections.picker2.tasksInfo"),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows a connected group's tasks in its expanded panel", async () => {
+  it("shows a connected instance's tasks behind its row's (i)", async () => {
     const slack = {
       id: 9,
       integrationType: "API",
@@ -223,11 +215,76 @@ describe("Integrations view", () => {
     fetchIntegrations.mockResolvedValue([slack]);
     render(<Integrations />);
 
+    const row = (await screen.findByText("Ops alerts")).closest(
+      "tr",
+    ) as HTMLElement;
+    expect(
+      within(row).queryByText("portal.policies.operations.slackNotify.label"),
+    ).not.toBeInTheDocument();
+
     fireEvent.click(
-      await screen.findByText("portal.connections.types.slack.label"),
+      within(row).getByLabelText("portal.connections.picker2.tasksInfo"),
     );
     expect(
-      await screen.findByText("portal.policies.operations.slackNotify.label"),
+      within(row).getByText("portal.policies.operations.slackNotify.label"),
     ).toBeInTheDocument();
+  });
+
+  it("only claims to control the task list while that list is on screen", async () => {
+    fetchIntegrations.mockResolvedValue([]);
+    render(<Integrations />);
+    await screen.findByText("portal.connections.types.jira.label");
+
+    const jiraRow = screen
+      .getByText("portal.connections.types.jira.label")
+      .closest("tr") as HTMLElement;
+    const info = within(jiraRow).getByLabelText(
+      "portal.connections.picker2.tasksInfo",
+    );
+
+    // Collapsed: there is no region yet, so the (i) points at nothing.
+    expect(info).toHaveAttribute("aria-expanded", "false");
+    expect(info).not.toHaveAttribute("aria-controls");
+
+    fireEvent.click(info);
+
+    // Expanded: aria-controls names the list that just appeared, explanations included.
+    expect(info).toHaveAttribute("aria-expanded", "true");
+    const listId = info.getAttribute("aria-controls");
+    expect(listId).toBeTruthy();
+    expect(document.getElementById(listId as string)).toBeInTheDocument();
+    expect(
+      within(jiraRow).getByText(
+        "portal.policies.operations.jiraAttach.description",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(jiraRow).getByText(
+        "portal.policies.operations.jiraTransition.description",
+      ),
+    ).toBeInTheDocument();
+
+    // Collapsing takes the whole region away again, not just the prose.
+    fireEvent.click(info);
+    expect(info).toHaveAttribute("aria-expanded", "false");
+    expect(info).not.toHaveAttribute("aria-controls");
+    expect(
+      within(jiraRow).queryByText(
+        "portal.policies.operations.jiraAttach.label",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("gives a row with no tasks no (i) to press", async () => {
+    fetchIntegrations.mockResolvedValue([]);
+    render(<Integrations />);
+    await screen.findByText("portal.connections.types.s3.label");
+
+    const s3Row = screen
+      .getByText("portal.connections.types.s3.label")
+      .closest("tr") as HTMLElement;
+    expect(
+      within(s3Row).queryByLabelText("portal.connections.picker2.tasksInfo"),
+    ).not.toBeInTheDocument();
   });
 });

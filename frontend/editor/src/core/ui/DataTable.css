@@ -1,0 +1,421 @@
+/*
+ * DataTable: the one Stirling table. Appearance is owned entirely here: the
+ * canonical surface, the header/row grammar, the standardized loading / empty /
+ * error states, and every cell KIND (`sui-dtc__*`). Call-sites choose a kind and
+ * supply data; they never style a cell. This is what lets every table look and
+ * behave the same.
+ */
+
+.sui-datatable {
+  width: 100%;
+}
+
+/* The one canonical surface: every table wears it; call-sites don't wrap it. */
+.sui-datatable__frame {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.sui-datatable__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.sui-datatable__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sui-datatable__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.sui-datatable__caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+}
+
+/* Header */
+.sui-datatable__th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--c-border);
+  white-space: nowrap;
+}
+.sui-datatable__th--right {
+  text-align: right;
+}
+.sui-datatable__th--fit {
+  width: 1%;
+}
+/* Accessible-only header text for blank affordance/action columns. */
+.sui-datatable__th-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sui-datatable__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+}
+.sui-datatable__th--right .sui-datatable__sort {
+  flex-direction: row-reverse;
+}
+.sui-datatable__sort:hover {
+  color: var(--c-text);
+}
+.sui-datatable__sort:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: 0.125rem;
+  border-radius: var(--radius-sm);
+}
+.sui-datatable__sort-icon {
+  display: inline-flex;
+  color: var(--c-text-subtle);
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+.sui-datatable__sort:hover .sui-datatable__sort-icon {
+  opacity: 0.5;
+}
+.sui-datatable__sort-icon--asc,
+.sui-datatable__sort-icon--desc {
+  opacity: 1;
+  color: var(--c-primary);
+}
+.sui-datatable__sort-icon--desc svg {
+  transform: rotate(180deg);
+}
+
+/* Body */
+.sui-datatable__td {
+  padding: 0.625rem 0.875rem;
+  color: var(--c-text-muted);
+  border-bottom: 1px solid var(--c-border-subtle);
+  vertical-align: middle;
+}
+.sui-datatable__table tbody tr:last-child .sui-datatable__td {
+  border-bottom: none;
+}
+.sui-datatable__td--right {
+  text-align: right;
+}
+.sui-datatable__td--nowrap {
+  white-space: nowrap;
+}
+.sui-datatable__td--fit {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Density (the compact variant) */
+.sui-datatable--compact .sui-datatable__th,
+.sui-datatable--compact .sui-datatable__td {
+  padding: 0.375rem 0.625rem;
+}
+
+/* Interactive rows */
+.sui-datatable__row--interactive {
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.sui-datatable__row--interactive:hover {
+  background: var(--c-hover);
+}
+.sui-datatable__row--interactive:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+}
+
+/* Non-actionable rows (e.g. coming-soon): de-emphasized to read as disabled.
+   Muting is done with accessible colours + a faded (non-text) icon rather than
+   row opacity, which would blend text under the WCAG contrast floor. */
+.sui-datatable__row--muted .sui-dtc__entity-name {
+  color: var(--c-text-muted);
+  font-weight: 500;
+}
+.sui-datatable__row--muted .sui-dtc__entity-icon {
+  opacity: 0.4;
+}
+
+.sui-datatable__chevron {
+  display: inline-flex;
+  color: var(--c-text-subtle);
+}
+
+/* Full-width state cell (empty / error) */
+.sui-datatable__state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--c-text-subtle);
+}
+.sui-datatable__state--error {
+  color: var(--c-danger);
+}
+.sui-datatable__state--node {
+  padding: 0;
+}
+
+/*
+ * Cell kinds (sui-dtc__*): the locked cell vocabulary. These absorb the
+ * per-namespace portal-*__ cell styles (mono / muted / cell-stack / name-cell /
+ * caret …) that every table used to re-implement.
+ */
+.sui-dtc__text {
+  color: var(--c-text-muted);
+}
+/* Labeled value ("Category: action"): full-strength text, bold label. */
+.sui-dtc__text--labeled {
+  color: var(--c-text);
+}
+.sui-dtc__text-label {
+  font-weight: 600;
+}
+.sui-dtc__mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+.sui-dtc__muted {
+  color: var(--c-text-subtle);
+}
+.sui-dtc__num {
+  font-variant-numeric: tabular-nums;
+}
+.sui-dtc__labels {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* entity: leading icon + bold name + optional muted note */
+.sui-dtc__entity {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.sui-dtc__entity-icon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--c-text-muted);
+}
+/* The component sizes bare icons; self-styled marks (Avatar) render as-is. */
+.sui-dtc__entity-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.sui-dtc__entity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
+}
+.sui-dtc__entity-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.sui-dtc__entity-name {
+  font-weight: 600;
+  color: var(--c-text);
+}
+.sui-dtc__entity-suffix {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+}
+.sui-dtc__note {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+/* details: named capabilities, disclosed on demand by the cell's (i) */
+.sui-dtc__details {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.sui-dtc__details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.sui-dtc__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+.sui-dtc__detail-name {
+  color: var(--c-text-muted);
+}
+/* Quiet until hovered, so a collapsed cell stays a hint, not a control. */
+.sui-dtc__details-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm, 0.375rem);
+  background: transparent;
+  color: var(--c-text-subtle);
+  line-height: 0;
+  cursor: pointer;
+}
+.sui-dtc__details-toggle:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+
+.sui-dtc__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+.sui-dtc__menu-item--danger {
+  color: var(--c-danger);
+}
+
+/* Grouped tables: section header row + per-group "show all" toggle. */
+.sui-datatable__group-cell {
+  padding: 0.5rem 0.875rem;
+  background: var(--c-surface-sunken, var(--c-hover));
+  border-bottom: 1px solid var(--c-border);
+}
+.sui-datatable__table
+  tbody
+  tr.sui-datatable__group:not(:first-child)
+  .sui-datatable__group-cell {
+  border-top: 1px solid var(--c-border);
+}
+.sui-datatable__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.sui-datatable__group-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.sui-datatable__group-title strong {
+  font-size: 0.8125rem;
+  color: var(--c-text);
+}
+.sui-datatable__group-meta {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+.sui-datatable__group-more {
+  padding: 0.5rem 0.875rem;
+}
+.sui-datatable__show-all {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--c-accent-text);
+}
+.sui-datatable__show-all:hover {
+  text-decoration: underline;
+}
+
+.sui-dtc__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sui-dtc__progress-bar {
+  display: block;
+  width: 5rem;
+}
+.sui-dtc__progress-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+  min-width: 2.5rem;
+}
+
+.sui-dtc__links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+/* Neutral chip-style link (matches the invoice-link look): the colour is not an
+ * accent - the trailing glyph + hover fill carry the affordance. */
+.sui-dtc__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  text-decoration: none;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+.sui-dtc__link:hover {
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border);
+}
+.sui-dtc__link:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  background: var(--c-surface-sunken);
+}
+
+.sui-dtc__select {
+  min-width: 13rem;
+}

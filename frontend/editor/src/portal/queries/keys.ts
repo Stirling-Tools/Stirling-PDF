@@ -21,6 +21,8 @@ export const qk = {
   // Keyed on linkage: an unlinked account has no deal to read, so linking must not
   // serve the unlinked (null) snapshot back from cache.
   procurement: (linked: boolean) => ["portal", "procurement", linked] as const,
+  // Same reasoning: an unlinked instance has no wallet in the cloud.
+  wallet: (linked: boolean) => ["portal", "wallet", linked] as const,
 
   // Tier-dependent
   documents: (tier: Tier) => ["portal", "documents", tier] as const,
