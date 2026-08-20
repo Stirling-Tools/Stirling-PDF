@@ -46,6 +46,12 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Install frontend dependencies
+        env:
+          NPM_CONFIG_PREFER_OFFLINE: "true"
+          NPM_CONFIG_FETCH_RETRIES: "5"
+          NPM_CONFIG_FETCH_RETRY_FACTOR: "2"
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
         run: task frontend:install
       - name: Build frontend (production bundle for vite preview)
         env:
