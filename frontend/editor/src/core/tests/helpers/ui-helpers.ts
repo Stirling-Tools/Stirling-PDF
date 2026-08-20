@@ -152,11 +152,22 @@ export async function openSettings(page: Page): Promise<Locator> {
  * dialog is fully dismissed before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
-  await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
+  const modal = page.locator(".mantine-Modal-content").first();
+  // A single click on the X can be swallowed when it lands during a re-render -
+  // the settings URL sync re-renders the tree under parallel-worker load - which
+  // leaves the modal open. Retry the close until the modal is actually gone
+  // instead of failing the spec on one dropped click (a genuinely broken close
+  // still fails: every retry misses and the modal stays visible past the cap).
+  await expect(async () => {
+    if (await modal.isVisible().catch(() => false)) {
+      await page
+        .locator('[aria-label="Close"]')
+        .first()
+        .click({ timeout: 2_000 })
+        .catch(() => {});
+    }
+    await expect(modal).not.toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 12_000 });
 }
 
 /**
