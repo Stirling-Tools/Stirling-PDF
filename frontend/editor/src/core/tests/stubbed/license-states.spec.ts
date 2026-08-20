@@ -49,7 +49,7 @@ async function setUpAdminPage(
   await page.route("**/api/v1/admin/license-info", (route) =>
     route.fulfill({ json: licenseInfo }),
   );
-  await page.goto("/");
+  await page.goto("/editor");
 }
 
 test.describe("Admin license panel — state matrix", () => {

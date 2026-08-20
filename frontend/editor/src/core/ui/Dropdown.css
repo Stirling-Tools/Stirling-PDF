@@ -4,26 +4,18 @@
 }
 
 .sui-dd__menu {
-  position: absolute;
-  top: calc(100% + var(--space-1));
+  /* Positioned (fixed, portaled to <body>) entirely by the Menu component. */
   min-width: 12rem;
   padding: var(--space-1);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown);
+  z-index: var(--z-popover);
   animation: fadeInUp var(--motion-enter) both;
   display: flex;
   flex-direction: column;
   gap: 0.0625rem;
-}
-
-.sui-dd__menu--start {
-  left: 0;
-}
-.sui-dd__menu--end {
-  right: 0;
 }
 
 .sui-dd__item {
@@ -54,7 +46,7 @@
 
 .sui-dd__item.is-active {
   background: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
   font-weight: 500;
 }
 

@@ -17,7 +17,7 @@
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
 
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { relative, resolve, join } from "node:path";
 
@@ -566,12 +566,23 @@ function reportToneContrast() {
 // App-wide guard that source CSS routes every colour through the palette. File
 // list from `git ls-files` (a VCS query, never a directory walk feeding a read).
 // primitives.css (the literal home) and generated output.css are exempt.
-function checkAppCss() {
-  const EXEMPT = /(?:^|\/)(?:primitives\.css|output\.css)$/;
-  const listed = execSync("git ls-files -- editor/src", { encoding: "utf8" })
+/**
+ * Tracked source files that are actually present. `git ls-files` is the index
+ * view, so it still lists files deleted in the working tree - reading one of
+ * those throws ENOENT and takes the whole lint down with it.
+ */
+function trackedFiles() {
+  return execSync("git ls-files -- editor/src", { encoding: "utf8" })
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l && l.endsWith(".css") && !EXEMPT.test(l));
+    .filter((l) => l && existsSync(l));
+}
+
+function checkAppCss() {
+  const EXEMPT = /(?:^|\/)(?:primitives\.css|output\.css)$/;
+  const listed = trackedFiles().filter(
+    (l) => l.endsWith(".css") && !EXEMPT.test(l),
+  );
 
   const violations = [];
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
@@ -631,7 +642,6 @@ const CODE_EXEMPT_PATH = [
   /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
-  /UpgradeBanner|AdminPlanSection/,
   // Stories are checked like app code; colour-as-data lines opt out with
   // `theme-allow-color`.
   /\.test\.[jt]sx?$|\/types\//,
@@ -675,13 +685,9 @@ function codeRgbIsColour(inner) {
   return k !== "0,0,0" && k !== "255,255,255";
 }
 function checkCodeColors() {
-  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(
-      (l) =>
-        /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
-    );
+  const files = trackedFiles().filter(
+    (l) => /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
+  );
   const violations = [];
   for (const rel of files) {
     const raw = readFileSync(rel, "utf8");
@@ -715,10 +721,7 @@ function checkCodeColors() {
 // reference has a definition somewhere (any source .css/.ts/.tsx) or a fallback.
 // Runtime-injected families (--user-*, --mantine-*, --accent-*) are out of scope.
 function checkTokenResolution() {
-  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => /\.(css|ts|tsx)$/.test(l));
+  const files = trackedFiles().filter((l) => /\.(css|ts|tsx)$/.test(l));
   const DEF_RE = /(--[a-z0-9-]+)\s*:/gi;
   // Capture the token and the char that follows it (`,` ⇒ has a fallback).
   const REF_RE = /var\(\s*(--[a-z0-9-]+)\s*(,|\))/gi;
@@ -750,14 +753,11 @@ const PRIMITIVE_LAYER = [
   /^editor\/src\/core\/ui\/accents\.css$/,
 ];
 function checkNoPrimitives() {
-  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(
-      (l) =>
-        /\.(css|scss|ts|tsx)$/.test(l) &&
-        !PRIMITIVE_LAYER.some((re) => re.test(l)),
-    );
+  const files = trackedFiles().filter(
+    (l) =>
+      /\.(css|scss|ts|tsx)$/.test(l) &&
+      !PRIMITIVE_LAYER.some((re) => re.test(l)),
+  );
   const REF = /var\(\s*(--p-[a-z0-9-]+)/g;
   const violations = [];
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;

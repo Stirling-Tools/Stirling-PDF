@@ -7,7 +7,7 @@
   "proxy": "http://localhost:8080",
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
-    "@cantoo/pdf-lib": "^2.5.3",
+    "@cantoo/pdf-lib": "^2.8.2",
     "@dnd-kit/core": "^6.3.1",
     "@embedpdf/core": "^2.14.4",
     "@embedpdf/engines": "^2.14.4",
@@ -42,11 +42,12 @@
     "@mui/material": "^9.0.0",
     "@posthog/react": "^1.8.2",
     "@reactour/tour": "^3.8.0",
-    "@stripe/react-stripe-js": "^4.0.2",
-    "@stripe/stripe-js": "^7.9.0",
+    "@stripe/react-stripe-js": "^6.8.0",
+    "@stripe/stripe-js": "^9.10.0",
     "@supabase/supabase-js": "^2.47.13",
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-table": "^9.1.2",
     "@tanstack/react-virtual": "^3.13.12",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "2.7.0",
@@ -170,6 +171,7 @@
   },
   "overrides": {
     "devalue": "^5.8.1",
+    "pako": "^2.2.0",
     "tsconfck": {
       "typescript": "$typescript"
     }

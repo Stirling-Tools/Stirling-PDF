@@ -68,6 +68,8 @@ const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
+  // FileContext subscribes to this to drop files whose bytes are unreadable.
+  onRecordUnreadable: () => () => {},
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
@@ -567,8 +569,14 @@ describe("Convert Tool Integration Tests", () => {
         await result.current.executeOperation(parameters, [testFile]);
       });
 
-      // Verify integration: utils validation prevents API call, hook shows error
-      expect(mockedApiClient.post).not.toHaveBeenCalled();
+      // Verify integration: utils validation prevents the conversion call, hook shows
+      // error. Failure reporting posts separately and is not a conversion request.
+      const conversionCalls = vi
+        .mocked(mockedApiClient.post)
+        .mock.calls.filter(
+          ([url]) => !String(url).includes("/file-run-events/"),
+        );
+      expect(conversionCalls).toHaveLength(0);
       expect(result.current.errorMessage).toContain(
         "Unsupported conversion format",
       );

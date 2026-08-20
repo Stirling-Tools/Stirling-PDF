@@ -17,6 +17,8 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { isStirlingFile, type FileId } from "@app/types/fileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import apiClient from "@app/services/apiClient";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
@@ -72,6 +74,17 @@ const resolvePageNumber = (bookmark: PdfBookmarkObject): number | null => {
   }
 
   return null;
+};
+
+// Bookmark targets are PDF-supplied, so sanitise before opening. Local paths
+// from LaunchAppOrOpenFile fail the allowlist - a browser blocks them anyway.
+const openBookmarkTarget = (rawUrl: string): void => {
+  const href = getExternalHref(rawUrl);
+  if (!href) {
+    console.warn("[BookmarkSidebar] Blocked unsafe URL:", rawUrl);
+    return;
+  }
+  void openExternalTab(href);
 };
 
 export const BookmarkSidebar = ({
@@ -515,12 +528,12 @@ export const BookmarkSidebar = ({
       const action = target.action;
       if (action.type === PdfActionType.URI && action.uri) {
         event.preventDefault();
-        window.open(action.uri, "_blank", "noopener");
+        openBookmarkTarget(action.uri);
         return;
       }
       if (action.type === PdfActionType.LaunchAppOrOpenFile && action.path) {
         event.preventDefault();
-        window.open(action.path, "_blank", "noopener");
+        openBookmarkTarget(action.path);
         return;
       }
     }
@@ -720,7 +733,7 @@ export const BookmarkSidebar = ({
 
       {bookmarkSupport && documentCacheKey && currentError && (
         <Stack gap="xs" align="center" className="sidebar-base__error">
-          <Text size="sm" c="red" ta="center">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
             {currentError}
           </Text>
           <Button variant="secondary" size="sm" onClick={requestReload}>
@@ -804,7 +817,7 @@ export const BookmarkSidebar = ({
               disabled={isSavingBookmark}
             />
             {addBookmarkError && (
-              <Text size="xs" c="red">
+              <Text size="xs" c="var(--color-red-dark)">
                 {addBookmarkError}
               </Text>
             )}
@@ -884,7 +897,7 @@ export const BookmarkSidebar = ({
                 icon="bookmark-add-rounded"
                 width="0.95rem"
                 height="0.95rem"
-                style={{ color: "var(--mantine-color-blue-5)" }}
+                style={{ color: "var(--c-accent-text)" }}
               />
               <Text
                 size="xs"
