@@ -109,6 +109,11 @@ describe("Pipelines view", () => {
     expect(
       await screen.findByText("portal.pipelines.origin.migrated.label"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("leaves a pipeline the team built unbadged", async () => {
@@ -117,6 +122,17 @@ describe("Pipelines view", () => {
 
     expect(
       screen.queryByText("portal.pipelines.origin.migrated.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("drops the Origin column entirely when nothing was migrated", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
     ).not.toBeInTheDocument();
   });
 

@@ -7,6 +7,7 @@ import {
   useFileRunEventActions,
 } from "@portal/queries/fileRunEvents";
 import { FailureActionButtons } from "@portal/components/failures/FailureActionButtons";
+import "@portal/theme/surface.css";
 
 /**
  * Recorded policy and pipeline failures, with the triage actions the server offered
@@ -28,6 +29,7 @@ export function FileRunEventList() {
   const { apply, refresh } = useFileRunEventActions();
   const [busy, setBusy] = useState<{ id: string; action: string } | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // A build without the proprietary module has no such route, and a caller who is
   // not a team leader gets a 403. Both mean there is nothing to show.
@@ -42,19 +44,57 @@ export function FileRunEventList() {
     }
   };
 
+  // Empties the queue so a test run starts from nothing. Sequential rather than
+  // concurrent: dismissing is cheap, and one request at a time keeps the failure
+  // obvious if the endpoint refuses one of them.
+  const dismissAll = async () => {
+    setClearing(true);
+    try {
+      for (const event of events ?? []) {
+        const dismiss = event.actions.find(
+          (action) => action.id === "DISMISS" && action.enabled,
+        );
+        if (dismiss) {
+          await apply(event.id, "DISMISS");
+        }
+      }
+    } finally {
+      setClearing(false);
+      await refresh();
+    }
+  };
+
   // Dev-only inspector for hand-checking classification against real uploads.
   // Vite folds `import.meta.env.DEV` to false, so builds drop this entirely.
   const debugPanel = !import.meta.env.DEV ? null : (
     <div className="portal-failures__debug">
       <Button variant="secondary" size="sm" onClick={() => void refresh()}>
-        Refresh failures
+        {t("portal.failures.debug.refresh", "Refresh failures")}
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={clearing || (events?.length ?? 0) === 0}
+        onClick={() => void dismissAll()}
+      >
+        {clearing
+          ? t("portal.failures.debug.dismissing", "Dismissing...")
+          : t("portal.failures.debug.dismissAll", "Dismiss all ({{total}})", {
+              total: events?.length ?? 0,
+            })}
       </Button>
       <Button
         variant="secondary"
         size="sm"
         onClick={() => setShowJson((shown) => !shown)}
       >
-        {showJson ? "Hide" : "Show"} raw JSON ({events?.length ?? 0})
+        {showJson
+          ? t("portal.failures.debug.hideJson", "Hide raw JSON ({{total}})", {
+              total: events?.length ?? 0,
+            })
+          : t("portal.failures.debug.showJson", "Show raw JSON ({{total}})", {
+              total: events?.length ?? 0,
+            })}
       </Button>
       <Button
         variant="secondary"
@@ -65,7 +105,7 @@ export function FileRunEventList() {
           )
         }
       >
-        Copy JSON
+        {t("portal.failures.debug.copyJson", "Copy JSON")}
       </Button>
       {showJson && (
         <pre className="portal-failures__debug-json">
@@ -137,7 +177,7 @@ function FailureBody({
   return (
     <ul className="portal-failures__list">
       {events.map((event) => (
-        <li key={event.id} className="portal-failures__row">
+        <li key={event.id} className="portal-surface portal-failures__row">
           <div className="portal-failures__meta">
             <StatusBadge tone={SEVERITY_TONE[event.severity]}>
               {t(
@@ -157,7 +197,31 @@ function FailureBody({
                 })}
               </span>
             )}
+            <span className="portal-failures__origin">
+              {t(
+                `portal.failures.origin.${event.origin.toLowerCase()}`,
+                event.origin,
+              )}
+            </span>
           </div>
+
+          {/* Who or what it came from. An unattended file has no user, so the source
+            is the only attribution there is. */}
+          {event.actor ? (
+            <div className="portal-failures__actor">
+              {t("portal.failures.reportedBy", "Hit by {{actor}}", {
+                actor: event.actor,
+              })}
+            </div>
+          ) : (
+            event.sourceId && (
+              <div className="portal-failures__actor">
+                {t("portal.failures.fromSource", "From source {{source}}", {
+                  source: event.sourceId,
+                })}
+              </div>
+            )
+          )}
 
           {/* A reference, not a name. The record deliberately holds no document
             identity, so a reviewer sees which run failed, never which file. */}

@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 
@@ -75,6 +76,15 @@ public class InProcessPolicyStore implements PolicyStore {
                 .filter(policy -> Objects.equals(policy.teamId(), teamId))
                 .sorted(byRunOrder())
                 .toList();
+    }
+
+    @Override
+    public boolean anyPolicyReferences(String assetId) {
+        return policies.values().stream()
+                .anyMatch(
+                        policy ->
+                                PolicyAssetRefs.referencedAssetIds(policy.steps())
+                                        .contains(assetId));
     }
 
     @Override

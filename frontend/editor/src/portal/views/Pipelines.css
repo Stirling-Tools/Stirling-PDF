@@ -46,13 +46,6 @@
   min-width: 0;
 }
 
-.portal-pipelines__name-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-}
-
 .portal-pipelines__name-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
