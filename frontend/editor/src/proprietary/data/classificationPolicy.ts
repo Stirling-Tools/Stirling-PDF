@@ -1,0 +1,62 @@
+/**
+ * Everything specific to the built-in Classification policy, in one module. The generic policy
+ * runner asks the capability questions below instead of naming classification itself, so a second
+ * annotating policy needs a change here rather than in the runner.
+ */
+
+import type {
+  ClassificationConfidence,
+  StirlingFileStub,
+} from "@app/types/fileContext";
+
+/** Catalogue category id of the built-in Classification policy. */
+export const CLASSIFICATION_CATEGORY_ID = "classification";
+
+export function isClassificationCategory(categoryId: string): boolean {
+  return categoryId === CLASSIFICATION_CATEGORY_ID;
+}
+
+/**
+ * Whether the policy rewrites the document rather than only annotating it. Annotating policies are
+ * ordered last: a rewriting one after them would fork from the pre-annotation version.
+ */
+export function policyRewritesDocument(categoryId: string): boolean {
+  return !isClassificationCategory(categoryId);
+}
+
+/** Whether a completed run is expected to deliver output files (annotators deliver labels). */
+export function policyDeliversOutputFiles(categoryId: string): boolean {
+  return policyRewritesDocument(categoryId);
+}
+
+/** Whether the policy's server-side run exists only to escalate to the AI engine. */
+export function policyRequiresAiEngine(categoryId: string): boolean {
+  return isClassificationCategory(categoryId);
+}
+
+/** Order annotating policies last; everything else keeps the order it was given. */
+export function orderRewritesFirst(categoryIds: string[]): string[] {
+  return [
+    ...categoryIds.filter(policyRewritesDocument),
+    ...categoryIds.filter((id) => !policyRewritesDocument(id)),
+  ];
+}
+
+/**
+ * The one heuristic verdict trusted to stand on its own; anything less escalates to the AI, which
+ * overwrites it. Deliberately strict - a wrong label costs more than an engine call.
+ */
+const TRUSTED_CONFIDENCE: ClassificationConfidence = "high";
+
+/**
+ * Whether the AI classifier should be asked about this file. Only once the heuristic has reported:
+ * dispatching before then races the first pass and bills for an answer it was about to produce.
+ */
+export function shouldDispatchToAi(
+  categoryId: string,
+  stub: StirlingFileStub,
+): boolean {
+  if (!isClassificationCategory(categoryId)) return true;
+  const confidence = stub.classificationConfidence;
+  return confidence != null && confidence !== TRUSTED_CONFIDENCE;
+}
