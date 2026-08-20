@@ -540,7 +540,7 @@ export function SourceModal({
                 <FormField
                   key={field.key}
                   label={t(field.labelKey)}
-                  helperText={
+                  info={
                     field.helperTextKey ? t(field.helperTextKey) : undefined
                   }
                   required={field.required}

@@ -133,6 +133,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
       labelKey: "portal.sources.networkFields.recursive.label",
       control: "select",
       defaultValue: "false",
+      helperTextKey: "portal.sources.networkFields.recursive.helperText",
       options: [
         {
           value: "false",
@@ -168,6 +169,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
+        helperTextKey: "portal.sources.types.folder.fields.mode.helperText",
         options: [
           {
             value: "consume",
@@ -185,6 +187,8 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.recursive.label",
         control: "select",
         defaultValue: "false",
+        helperTextKey:
+          "portal.sources.types.folder.fields.recursive.helperText",
         options: [
           {
             value: "false",
