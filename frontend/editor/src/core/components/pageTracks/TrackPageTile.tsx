@@ -36,7 +36,7 @@ export interface TrackPageTileProps {
   onSelect: (
     fileId: FileId,
     pageId: string,
-    modifiers: { shift: boolean; toggle: boolean },
+    modifiers: { shift: boolean },
   ) => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
@@ -81,10 +81,7 @@ function TrackPageTileImpl({
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
-      onSelect(trackFileId, page.id, {
-        shift: event.shiftKey,
-        toggle: event.metaKey || event.ctrlKey,
-      });
+      onSelect(trackFileId, page.id, { shift: event.shiftKey });
     },
     [onSelect, trackFileId, page.id],
   );
@@ -120,7 +117,7 @@ function TrackPageTileImpl({
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          onSelect(trackFileId, page.id, { shift: false, toggle: true });
+          onSelect(trackFileId, page.id, { shift: false });
         }
       }}
     >
@@ -130,9 +127,7 @@ function TrackPageTileImpl({
           aria-label={t("pageTracks.selectPage", "Select page {{number}}", {
             number: position,
           })}
-          onChange={() =>
-            onSelect(trackFileId, page.id, { shift: false, toggle: true })
-          }
+          onChange={() => onSelect(trackFileId, page.id, { shift: false })}
         />
       </div>
 
