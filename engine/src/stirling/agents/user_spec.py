@@ -15,6 +15,7 @@ from stirling.contracts import (
     AiToolAgentStep,
     ConversationMessage,
     EditPlanResponse,
+    OrchestratorRequest,
     PdfEditRequest,
     PdfEditTerminalResponse,
     format_conversation_history,
@@ -42,6 +43,18 @@ class UserSpecAgent:
                 "Keep the workflow grounded and practical."
             ),
             model_settings=runtime.smart_model_settings,
+        )
+
+    async def orchestrate(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
+        """Entry point for the orchestrator delegate — adapts the orchestrator's
+        request shape into an :class:`AgentDraftRequest` and runs the standard
+        :meth:`draft` pipeline.
+        """
+        return await self.draft(
+            AgentDraftRequest(
+                user_message=request.user_message,
+                conversation_history=request.conversation_history,
+            )
         )
 
     async def draft(self, request: AgentDraftRequest) -> AgentDraftWorkflowResponse:

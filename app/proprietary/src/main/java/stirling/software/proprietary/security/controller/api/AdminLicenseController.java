@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,7 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin License Management", description = "Admin-only License Management APIs")
 public class AdminLicenseController {
 
@@ -329,7 +328,7 @@ public class AdminLicenseController {
             }
 
             // Get config directory and target path
-            Path configPath = Paths.get(InstallationPathConfig.getConfigPath());
+            Path configPath = Path.of(InstallationPathConfig.getConfigPath());
             Path configPathAbs = configPath.toAbsolutePath().normalize();
             Path targetPath = configPathAbs.resolve(filename).normalize();
             log.info(

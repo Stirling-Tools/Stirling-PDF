@@ -194,7 +194,7 @@ public class EmlParser {
         }
         attachment.setFilename(filename);
 
-        String contentId = embedded ? stripCid(resourceName) : null;
+        String contentId = embedded ? stripCid(resource.getContentId()) : null;
         attachment.setContentId(contentId);
 
         String detectedContentType = EmlProcessingUtils.detectMimeType(filename, contentType);

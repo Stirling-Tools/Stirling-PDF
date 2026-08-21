@@ -26,7 +26,10 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
@@ -41,13 +44,20 @@ public class ConvertMarkdownToPdf {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/markdown/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/markdown/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    // A ZIP of Markdown plus its images is a first-class input here, not just a bare .md file.
+    @ToolIO(
+            accepts = {ToolFormat.MARKDOWN, ToolFormat.ZIP},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
-                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to"
-                            + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
+                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
+                            + " input, converts it to HTML, and then to PDF format.")
     public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();

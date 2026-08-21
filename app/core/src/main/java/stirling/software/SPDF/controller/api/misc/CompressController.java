@@ -49,6 +49,9 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
@@ -266,7 +269,7 @@ public class CompressController {
             if (references.isEmpty()) continue;
 
             // Get the first instance of this image
-            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+            PDImageXObject originalImage = getOriginalImage(doc, references.getFirst());
 
             // Track original size
             int originalSize = (int) originalImage.getCOSObject().getLength();
@@ -922,12 +925,16 @@ public class CompressController {
         return Math.min(9, currentLevel + 1);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/compress-pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Optimize PDF file",
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
-                            + " parameters. Input:PDF Output:PDF Type:SISO")
+                            + " parameters.")
     public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -1163,7 +1170,7 @@ public class CompressController {
             List<ImageReference> references = entry.getValue();
             if (references.isEmpty()) continue;
 
-            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+            PDImageXObject originalImage = getOriginalImage(doc, references.getFirst());
 
             int originalSize = (int) originalImage.getCOSObject().getLength();
             stats.totalOriginalBytes += originalSize;

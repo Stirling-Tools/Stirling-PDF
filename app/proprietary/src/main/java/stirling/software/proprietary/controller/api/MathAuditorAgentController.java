@@ -2,6 +2,7 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,24 +21,36 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiFeatureGate;
+import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
 /**
  * Public entry point for the Math Auditor Agent (mathAuditorAgent).
  *
  * <p>Accepts a PDF from the client, hands it to the {@link MathAuditorOrchestrator} which runs the
- * multi-round Java-Python negotiation, and returns the Auditor's {@link Verdict}.
+ * multi-round Java-Python negotiation, and returns the Auditor's {@link Verdict} as JSON.
+ *
+ * <p>This endpoint is a pure specialist — it produces the structured finding and nothing more.
+ * Presentation (rendering as a chat answer, projecting to PDF comments, etc.) is the responsibility
+ * of the caller (e.g. the orchestrator's {@code delegate_pdf_question} or {@code
+ * delegate_pdf_review} meta-agents).
+ *
+ * <p>Lives under {@code /api/v1/ai/tools/} so it is dispatchable by the AI orchestrator via the
+ * standard {@code InternalApiClient} allowlist — no special-case plumbing needed.
  *
  * <p>The raw PDF never leaves Java. Python receives only structured text and CSV data.
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/ai")
+@RequestMapping("/api/v1/ai/tools")
 @RequiredArgsConstructor
-@Tag(name = "AI Engine", description = "AI-powered document analysis endpoints.")
+@Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class MathAuditorAgentController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
     private final MathAuditorOrchestrator orchestrator;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -49,13 +62,12 @@ public class MathAuditorAgentController {
                     The auditor checks:
                     - Table row and column totals (tally errors)
                     - Inline arithmetic expressions (e.g. "100 + 200 = 300")
-                    - Cross-page figure consistency (same figure cited differently on different pages)
+                    - Cross-page figure consistency
                     - Prose claims about percentages, growth rates, and comparisons
 
-                    The PDF is processed entirely on the Java side; only extracted text and table data
-                    are sent to the AI engine.
-
-                    Input: PDF  Output: JSON  Type: SISO
+                    Returns a JSON Verdict describing every discrepancy found. How the Verdict is
+                    presented to the end user (chat answer, PDF annotations, etc.) is up to the
+                    caller.
                     """)
     public ResponseEntity<Verdict> mathAuditorAgent(
             @Parameter(description = "The PDF document to audit", required = true)
@@ -67,19 +79,17 @@ public class MathAuditorAgentController {
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
+        aiFeatureGate.requireMathAuditor();
 
-        String contentType = fileInput.getContentType();
-        if (contentType == null || !contentType.equals("application/pdf")) {
-            return ResponseEntity.badRequest().build();
-        }
-
+        AiToolInputValidator.validatePdfUpload(fileInput);
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().build();
         }
 
+        String originalFilename = fileInput.getOriginalFilename();
         String safeName =
-                fileInput.getOriginalFilename() != null
-                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                originalFilename != null
+                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
 
@@ -88,9 +98,6 @@ public class MathAuditorAgentController {
             return ResponseEntity.ok(verdict);
         } catch (IOException e) {
             log.error("[math-auditor-agent] IO error during audit", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            log.error("[math-auditor-agent] unexpected error during audit", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

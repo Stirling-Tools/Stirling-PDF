@@ -15,9 +15,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from pathlib import Path
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Tuple
+from pathlib import Path
+from typing import Any
 
 
 def human_bytes(value: float) -> str:
@@ -49,7 +50,7 @@ class FontBreakdown:
     web_program_bytes: int = 0
     pdf_program_bytes: int = 0
     metadata_bytes: int = 0
-    sample_cos_ids: List[Tuple[str | None, str | None]] = None
+    sample_cos_ids: list[tuple[str | None, str | None]] = None
 
 
 @dataclass
@@ -82,7 +83,7 @@ def approx_struct_size(obj: Any) -> int:
     return len(json.dumps(obj, separators=(",", ":")))
 
 
-def analyze_fonts(fonts: Iterable[Dict[str, Any]]) -> FontBreakdown:
+def analyze_fonts(fonts: Iterable[dict[str, Any]]) -> FontBreakdown:
     total = 0
     with_cos = 0
     with_prog = 0
@@ -92,7 +93,7 @@ def analyze_fonts(fonts: Iterable[Dict[str, Any]]) -> FontBreakdown:
     web_program_bytes = 0
     pdf_program_bytes = 0
     metadata_bytes = 0
-    sample_cos_ids: List[Tuple[str | None, str | None]] = []
+    sample_cos_ids: list[tuple[str | None, str | None]] = []
 
     for font in fonts:
         total += 1
@@ -105,11 +106,7 @@ def analyze_fonts(fonts: Iterable[Dict[str, Any]]) -> FontBreakdown:
                 sample_cos_ids.append((font_id, uid))
 
         metadata_bytes += approx_struct_size(
-            {
-                k: v
-                for k, v in font.items()
-                if k not in {"program", "webProgram", "pdfProgram"}
-            }
+            {k: v for k, v in font.items() if k not in {"program", "webProgram", "pdfProgram"}}
         )
 
         program = font.get("program")
@@ -140,7 +137,7 @@ def analyze_fonts(fonts: Iterable[Dict[str, Any]]) -> FontBreakdown:
     )
 
 
-def analyze_pages(pages: Iterable[Dict[str, Any]]) -> PageBreakdown:
+def analyze_pages(pages: Iterable[dict[str, Any]]) -> PageBreakdown:
     page_count = 0
     total_text = 0
     total_images = 0
@@ -185,7 +182,7 @@ def analyze_pages(pages: Iterable[Dict[str, Any]]) -> PageBreakdown:
     )
 
 
-def analyze_document(document: Dict[str, Any], total_size: int) -> DocumentBreakdown:
+def analyze_document(document: dict[str, Any], total_size: int) -> DocumentBreakdown:
     fonts = document.get("fonts") or []
     pages = document.get("pages") or []
     metadata = document.get("metadata") or {}
@@ -259,17 +256,10 @@ def main() -> None:
     print(f"  XMP metadata bytes: {human_bytes(summary.xmp_bytes)}")
     print(f"  Form fields bytes: {human_bytes(summary.form_fields_bytes)}")
     print(f"  Lazy flag bytes: {summary.lazy_flag_bytes}")
-    print(
-        f"  Text payload characters (not counting JSON overhead): "
-        f"{page_stats.text_payload_chars:,}"
-    )
+    print(f"  Text payload characters (not counting JSON overhead): {page_stats.text_payload_chars:,}")
     print(f"  Approx text structure bytes: {human_bytes(page_stats.text_struct_bytes)}")
-    print(
-        f"  Approx image structure bytes: {human_bytes(page_stats.image_struct_bytes)}"
-    )
-    print(
-        f"  Approx content stream bytes: {human_bytes(page_stats.content_stream_bytes)}"
-    )
+    print(f"  Approx image structure bytes: {human_bytes(page_stats.image_struct_bytes)}")
+    print(f"  Approx content stream bytes: {human_bytes(page_stats.content_stream_bytes)}")
     print(f"  Approx annotations bytes: {human_bytes(page_stats.annotations_bytes)}")
 
 

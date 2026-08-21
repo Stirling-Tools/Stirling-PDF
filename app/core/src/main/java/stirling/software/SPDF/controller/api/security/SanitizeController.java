@@ -39,6 +39,9 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -52,13 +55,17 @@ public class SanitizeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/sanitize-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/sanitize-pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sanitize a PDF file",
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
-                            + " provided options. Input:PDF Output:PDF Type:SISO")
+                            + " provided options.")
     public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();

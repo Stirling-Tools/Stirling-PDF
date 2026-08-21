@@ -1,0 +1,27 @@
+# Coverage override applied on top of an existing test compose file via
+# `docker compose -f base.yml -f docker-compose-coverage.override.yml up`.
+#
+# It does NOT modify the production image. The agent jar is bind-mounted in
+# from the host's `build/jacoco/jacocoagent.jar` (produced by `./gradlew
+# copyJacocoAgent`) so the published Stirling-PDF image stays untouched and
+# we cannot accidentally ship the agent to end users.
+#
+# The container appends the agent to its JVM via `JAVA_CUSTOM_OPTS`, which
+# the init script concatenates into `JAVA_TOOL_OPTIONS` for the Spring Boot
+# process. On graceful shutdown the agent writes
+# /jacoco-out/cucumber.exec on the host (mapped to
+# `testing/cucumber-coverage/cucumber.exec`) which a follow-up
+# `jacocoReportFromExec` task converts into HTML+XML.
+services:
+  stirling-pdf:
+    # docker-compose-security-with-login.yml renames the service container,
+    # so the volume mounts intentionally land on whichever service uses the
+    # key "stirling-pdf" in the base file.
+    volumes:
+      - ../../build/jacoco/jacocoagent.jar:/jacoco/jacocoagent.jar:ro
+      - ../../testing/cucumber-coverage:/jacoco-out:rw
+    environment:
+      # append=false so an aborted re-run starts clean. dumponexit=true is
+      # what flushes the .exec when SIGTERM hits the JVM (which happens on
+      # `docker compose down`).
+      JAVA_CUSTOM_OPTS: "-javaagent:/jacoco/jacocoagent.jar=destfile=/jacoco-out/cucumber.exec,output=file,append=false,dumponexit=true"

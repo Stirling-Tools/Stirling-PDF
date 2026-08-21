@@ -27,6 +27,9 @@ import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.Outpu
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -81,12 +84,14 @@ public class ConvertPDFToEpubController {
         return command;
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/epub")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/epub",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.EBOOK)
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
-            description =
-                    "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
-                            + " Output:EPUB/AZW3 Type:SISO")
+            description = "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre.")
     public ResponseEntity<Resource> convertPdfToEpub(
             @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
 
