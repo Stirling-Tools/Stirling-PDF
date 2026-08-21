@@ -18,11 +18,8 @@ interface FlowSankeyProps {
   policies: FlowPolicy[];
 }
 
-/**
- * Sankey lens: sources → policies waist → outcomes, ribbon width ∝ 24h volume.
- * The waist splits into one segment per active policy. Shows a friendly empty
- * state when nothing has flowed yet.
- */
+/** Sankey lens: sources → policies waist → outcomes, ribbon width ∝ 24h volume;
+ *  the waist splits per active policy. Empty state when nothing has flowed. */
 export function FlowSankey({ sources, outcomes, policies }: FlowSankeyProps) {
   const { t } = useTranslation();
   const activePolicies = policies.filter((p) => p.state === "active");
@@ -70,8 +67,8 @@ export function FlowSankey({ sources, outcomes, policies }: FlowSankeyProps) {
   const y0R = padY + (H - (midH + (outcomes.length - 1) * gap)) / 2;
 
   const outFill = (key: FlowOutcomeKey) => OUTCOME_FILL[key];
-  const srcFill = "var(--color-blue)";
-  const waistFill = "var(--color-text-4)";
+  const srcFill = "var(--c-primary)";
+  const waistFill = "var(--c-text-subtle)";
 
   const ribbon = (
     x0: number,

@@ -46,9 +46,14 @@ public class InternalApiClient {
     // The second alternation carves out `/api/v1/ai/tools/*` specifically — AI tools are
     // dispatchable, but the broader `/api/v1/ai/` surface (orchestrate, health, etc.) is
     // intentionally NOT permitted to avoid plan steps re-entering the orchestrator.
+    //
+    // `/api/v1/integration/*` holds third-party steps (external API call, Purview labelling,
+    // ConsignO). They reach outside the JVM, so the namespace is deliberately kept to tools that
+    // dereference an admin-owned connection rather than a caller-supplied host — see
+    // ApiConnectionResolver.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
             Pattern.compile(
-                    "^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$"
+                    "^/api/v1/(general|misc|security|convert|filter|integration)(/[A-Za-z0-9_-]+)+$"
                             + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
     /**
@@ -152,7 +157,7 @@ public class InternalApiClient {
         boolean hasFilePart =
                 body.values().stream()
                         .flatMap(java.util.List::stream)
-                        .anyMatch(v -> v instanceof Resource);
+                        .anyMatch(Resource.class::isInstance);
         if (isAiTool && !hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }

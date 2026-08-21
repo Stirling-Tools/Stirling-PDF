@@ -7,11 +7,19 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Drawer, Group, MultiSelect, Select, Tooltip } from "@mantine/core";
+import {
+  Drawer,
+  Group,
+  MultiSelect,
+  Select,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
+import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
@@ -51,6 +59,8 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -61,18 +71,24 @@ import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
+import { downloadFileFromStorage } from "@app/utils/downloadUtils";
+import { fileStorage } from "@app/services/fileStorage";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -578,7 +594,7 @@ export default function FileManagerView() {
         } else if (materialized.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
-        navigate("/");
+        navigate(EDITOR_BASENAME);
       };
 
       requestNavigation(() => {
@@ -681,16 +697,15 @@ export default function FileManagerView() {
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
-    navigate("/");
+    navigate(EDITOR_BASENAME);
   }, [navigate]);
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  // External focus trigger (used by the FileSidebar rail Search button).
-  useEffect(() => {
-    const onFocus = () => searchInputRef.current?.focus();
-    window.addEventListener("files-page:focus-search", onFocus);
-    return () => window.removeEventListener("files-page:focus-search", onFocus);
+  // Focus the super-search input (stable id), used by the "/" shortcut.
+  const focusSearch = useCallback(() => {
+    (
+      document.getElementById("super-search-input") as HTMLInputElement | null
+    )?.focus();
   }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -734,13 +749,19 @@ export default function FileManagerView() {
       // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        focusSearch();
         return;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visibleFiles, selectedFileIds, removeFiles, setSelectedFileIds]);
+  }, [
+    visibleFiles,
+    selectedFileIds,
+    removeFiles,
+    setSelectedFileIds,
+    focusSearch,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -775,6 +796,92 @@ export default function FileManagerView() {
       await removeFiles(fileIds);
     },
     [removeFiles],
+  );
+
+  // ─── per-file kebab: download / rename / duplicate ───────────────────────
+  // Same actions the file sidebar's kebab offers, so both surfaces match.
+
+  /** Cloud-only rows hold no bytes; pull them local before acting on them. */
+  const localCopyOf = useCallback(
+    async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
+      const [materialized] = await materializeServerStubs([file], {
+        addFiles: fileActions.addFilesWithOptions,
+        updateStub: fileActions.updateStirlingFileStub,
+      });
+      return materialized ?? null;
+    },
+    [fileActions],
+  );
+
+  const handleDownloadFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        await downloadFileFromStorage(local);
+      } catch (err) {
+        console.error("[FilesPage] Download failed", err);
+        folders.setError(
+          t("filesPage.error.downloadFailed", "Could not download the file."),
+        );
+      }
+    },
+    [localCopyOf, folders, t],
+  );
+
+  const handleDuplicateFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        const copyId = await duplicateStoredFile(
+          local,
+          allFiles.map((f) => f.name),
+          addFiles,
+        );
+        if (!copyId) {
+          throw new Error(`File "${local.name}" not found in storage`);
+        }
+        await refresh();
+      } catch (err) {
+        console.error("[FilesPage] Duplicate failed", err);
+        folders.setError(
+          t("filesPage.error.duplicateFailed", "Could not duplicate the file."),
+        );
+      }
+    },
+    [localCopyOf, allFiles, addFiles, refresh, folders, t],
+  );
+
+  const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
+    null,
+  );
+
+  // The stub name is what the UI and exports read, so a rename is a metadata
+  // write; the workbench copy (if any) is updated in the same breath.
+  const handleConfirmRename = useCallback(
+    async (name: string) => {
+      const file = renameTarget;
+      if (!file) return;
+      const local = await localCopyOf(file);
+      if (!local) return;
+      // quickKey is name|size|lastModified; a stale one would make a re-upload
+      // of the original look like a duplicate of the renamed file.
+      const quickKey = `${name}|${local.size}|${local.lastModified}`;
+      const saved = await fileStorage.updateFileMetadata(local.id, {
+        name,
+        quickKey,
+      });
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
+      setRenameTarget(null);
+      await refresh();
+    },
+    [renameTarget, localCopyOf, fileActions, refresh, t],
   );
 
   // ─── derived UI bits ────────────────────────────────────────────────────
@@ -845,7 +952,7 @@ export default function FileManagerView() {
               fontSize: "0.95rem",
               fontWeight: 600,
               padding: "0.25rem 0.5rem",
-              color: "var(--text-primary)",
+              color: "var(--c-text)",
             }}
           >
             {currentTab === "local"
@@ -889,11 +996,9 @@ export default function FileManagerView() {
           };
           return (
             <>
-              <SearchField
-                ref={searchInputRef}
-                value={search}
-                onChange={setSearch}
-              />
+              <div className="files-page-header-search">
+                <SuperSearch scopes={searchScopes} />
+              </div>
               <div className="files-page-header-actions">
                 <Tooltip
                   label={
@@ -991,9 +1096,9 @@ export default function FileManagerView() {
           style={{
             padding: "0.6rem 1.25rem",
             background:
-              "color-mix(in srgb, var(--mantine-color-red-6, #e03131) 12%, transparent)",
-            color: "var(--text-primary)",
-            borderBottom: "1px solid var(--border-subtle)",
+              "color-mix(in srgb, var(--mantine-color-red-6) 12%, transparent)",
+            color: "var(--c-text)",
+            borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",
             display: "flex",
             justifyContent: "space-between",
@@ -1083,15 +1188,15 @@ export default function FileManagerView() {
                     style={{
                       background:
                         currentTab === tab.id
-                          ? "var(--hover-bg)"
+                          ? "var(--c-hover)"
                           : "transparent",
                       border: "none",
                       borderRadius: "0.3rem",
                       padding: "0.2rem 0.6rem",
                       color:
                         currentTab === tab.id
-                          ? "var(--text-primary)"
-                          : "var(--text-muted)",
+                          ? "var(--c-text)"
+                          : "var(--c-text-subtle)",
                       fontWeight: currentTab === tab.id ? 500 : 400,
                       fontSize: "0.75rem",
                       cursor: "pointer",
@@ -1342,6 +1447,27 @@ export default function FileManagerView() {
                   aria-label={t("filesPage.typeFilter.label", "Filter by type")}
                 />
               )}
+              <TextInput
+                size="xs"
+                value={search}
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                placeholder={t("filesPage.search.placeholder", "Filter files…")}
+                leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                rightSection={
+                  search ? (
+                    <ActionIcon
+                      variant="tertiary"
+                      size="sm"
+                      onClick={() => setSearch("")}
+                      aria-label={t("filesPage.search.clear", "Clear filter")}
+                    >
+                      <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                    </ActionIcon>
+                  ) : null
+                }
+                aria-label={t("filesPage.search.label", "Filter files by name")}
+                style={{ width: 180 }}
+              />
               <Select
                 size="xs"
                 value={sortMode}
@@ -1433,6 +1559,7 @@ export default function FileManagerView() {
               entries={entries}
               loading={loading}
               currentTab={currentTab}
+              searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
@@ -1466,6 +1593,9 @@ export default function FileManagerView() {
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
               onVersionHistory={(file) => setVersionHistoryFile(file)}
+              onDownloadFile={handleDownloadFile}
+              onRenameFile={setRenameTarget}
+              onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
               // Center-of-grid CTAs when the empty state shows - same
               // handlers the corner header buttons use so behaviour
@@ -1625,6 +1755,14 @@ export default function FileManagerView() {
         onConfirm={confirmRemoveFiles}
       />
 
+      {/* Rename (opened from the card kebab). */}
+      <RenameFileDialog
+        opened={Boolean(renameTarget)}
+        fileName={renameTarget?.name ?? ""}
+        onClose={() => setRenameTarget(null)}
+        onSubmit={handleConfirmRename}
+      />
+
       {/* Version journey in a modal (opened from the card kebab). */}
       <VersionHistoryModal
         opened={Boolean(versionHistoryFile)}
@@ -1654,39 +1792,6 @@ export default function FileManagerView() {
     </div>
   );
 }
-
-const SearchField = React.forwardRef<
-  HTMLInputElement,
-  { value: string; onChange: (v: string) => void }
->(function SearchField({ value, onChange }, ref) {
-  const { t } = useTranslation();
-  return (
-    <div className="files-page-search">
-      <SearchIcon fontSize="small" style={{ color: "var(--text-muted)" }} />
-      <input
-        ref={ref}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={t(
-          "filesPage.searchPlaceholder",
-          "Search this folder & subfolders",
-        )}
-        aria-label={t("filesPage.search", "Search")}
-      />
-      {value && (
-        <ActionIcon
-          variant="tertiary"
-          size="sm"
-          onClick={() => onChange("")}
-          aria-label={t("filesPage.clearSearch", "Clear search")}
-        >
-          &times;
-        </ActionIcon>
-      )}
-    </div>
-  );
-});
 
 function Breadcrumbs() {
   const { t } = useTranslation();

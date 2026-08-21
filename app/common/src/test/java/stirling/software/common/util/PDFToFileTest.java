@@ -721,7 +721,7 @@ class PDFToFileTest {
                     .thenAnswer(
                             invocation -> {
                                 List<String> args = invocation.getArgument(0);
-                                String outputPath = args.get(args.size() - 1);
+                                String outputPath = args.getLast();
                                 Files.write(Path.of(outputPath), "Fake DOCX content".getBytes());
                                 return mockExecutorResult;
                             });

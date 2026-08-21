@@ -13,9 +13,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import HistoryIcon from "@mui/icons-material/History";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -35,6 +37,8 @@ import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
@@ -82,6 +86,12 @@ interface FileGridProps {
   onSaveToServer?: (file: StirlingFileStub) => void;
   /** Open the version-history modal for a file (only when it has >1 version). */
   onVersionHistory?: (file: StirlingFileStub) => void;
+  /** Download a copy (desktop: save a copy). */
+  onDownloadFile?: (file: StirlingFileStub) => void;
+  /** Open the rename dialog for a file. */
+  onRenameFile?: (file: StirlingFileStub) => void;
+  /** Save a second copy of the file into the library. */
+  onDuplicateFile?: (file: StirlingFileStub) => void;
   /** When set, the Save to server item renders disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
@@ -89,6 +99,8 @@ interface FileGridProps {
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
   currentTab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** A filter is applied; an empty result then means "no matches", not "no files". */
+  searchActive?: boolean;
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -104,6 +116,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     entries,
     loading,
     currentTab,
+    searchActive,
     serverReachable,
     onEmptyUpload,
     onEmptyCreateFolder,
@@ -115,15 +128,28 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }
 
   if (entries.length === 0) {
-    return (
+    const emptyState = (
       <EmptyState
         tab={currentTab}
+        searchActive={searchActive}
         serverReachable={serverReachable}
         onUpload={onEmptyUpload}
         onCreateFolder={onEmptyCreateFolder}
         newFolderDisabledReason={newFolderDisabledReason}
       />
     );
+    // When a filter empties the list view, keep the column headers in place and
+    // show the no-results message beneath them, rather than replacing the whole
+    // table. Grid view (cards, no headers) just shows the empty state.
+    if (viewMode === "list" && searchActive) {
+      return (
+        <>
+          <ListView {...props} />
+          {emptyState}
+        </>
+      );
+    }
+    return emptyState;
   }
 
   if (viewMode === "list") {
@@ -187,6 +213,8 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 interface EmptyStateProps {
   /** Drives copy + iconography. */
   tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** When true the empty list is the result of a filter, not a bare folder. */
+  searchActive?: boolean;
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -198,12 +226,35 @@ interface EmptyStateProps {
 
 function EmptyState({
   tab = "all",
+  searchActive = false,
   serverReachable = true,
   onUpload,
   onCreateFolder,
   newFolderDisabledReason,
 }: EmptyStateProps) {
   const { t } = useTranslation();
+
+  // A filter with no matches isn't an empty folder - say so, and skip the
+  // upload / new-folder CTAs since clearing the filter is the way out.
+  if (searchActive) {
+    return (
+      <div className="files-page-empty">
+        <span className="files-page-empty-icon">
+          <SearchIcon style={{ fontSize: "2.5rem" }} />
+        </span>
+        <div className="files-page-empty-title">
+          {t("filesPage.empty.noResults.title", "No matching files")}
+        </div>
+        <div className="files-page-empty-hint">
+          {t(
+            "filesPage.empty.noResults.hint",
+            "No files in this folder match your filter. Try a different term or clear the filter.",
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const { titleKey, titleFallback, hintKey, hintFallback } = (() => {
     switch (tab) {
       case "local":
@@ -324,24 +375,21 @@ function EmptyState({
   );
 }
 
-function GridView({
-  entries,
-  selectedFileIds,
-  activeWorkspaceFileIds,
-  onSelectFile,
-  onOpenFolder,
-  onOpenFile,
-  onMoveFiles,
-  onMoveFolder,
-  onRenameFolder,
-  onDeleteFolder,
-  onChangeFolderAppearance,
-  onRemoveFiles,
-  onPromptMoveFiles,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
-}: FileGridProps) {
+function GridView(props: FileGridProps) {
+  const {
+    entries,
+    selectedFileIds,
+    activeWorkspaceFileIds,
+    onSelectFile,
+    onOpenFolder,
+    onOpenFile,
+    onMoveFiles,
+    onMoveFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onChangeFolderAppearance,
+  } = props;
+  const menuHandlersFor = useFileMenuHandlers(props);
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
@@ -382,22 +430,7 @@ function GridView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onDoubleClick={() => onOpenFile(entry.file!)}
-              onRemove={() => onRemoveFiles([entry.file!.id])}
-              onMove={() => {
-                const target = selectedFileIds.has(entry.file!.id)
-                  ? Array.from(selectedFileIds)
-                  : [entry.file!.id];
-                onPromptMoveFiles(target);
-              }}
-              onSaveToServer={
-                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
-              }
-              onVersionHistory={
-                onVersionHistory
-                  ? () => onVersionHistory(entry.file!)
-                  : undefined
-              }
-              saveToServerDisabledReason={saveToServerDisabledReason}
+              {...menuHandlersFor(entry.file)}
             />
           );
         }
@@ -499,7 +532,7 @@ function FolderCard({
       <div
         className="files-page-card-thumb"
         style={{
-          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.color ?? "var(--accent-interactive, #6366f1)"} 18%, var(--bg-surface)), color-mix(in srgb, ${folder.color ?? "var(--accent-interactive, #6366f1)"} 6%, var(--bg-surface)))`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.color ?? "var(--c-primary)"} 18%, var(--c-surface)), color-mix(in srgb, ${folder.color ?? "var(--c-primary)"} 6%, var(--c-surface)))`,
         }}
       >
         <FolderThumbnail
@@ -584,7 +617,222 @@ function PolicyBadges({ fileId }: { fileId: string }) {
   return <PolicyBadgeRow policies={badges} />;
 }
 
-interface FileCardProps {
+/** Per-file actions. Shared verbatim by the grid card and the list row, and
+ *  kept in step with the file sidebar's kebab so both surfaces offer the same. */
+interface FileActionsMenuProps {
+  file: StirlingFileStub;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+  onOpen: () => void;
+  onMove: () => void;
+  onRemove: () => void;
+  onDownload?: () => void;
+  onRename?: () => void;
+  onDuplicate?: () => void;
+  onSaveToServer?: () => void;
+  onVersionHistory?: () => void;
+  saveToServerDisabledReason?: string | null;
+}
+
+function FileActionsMenu({
+  file,
+  triggerRef,
+  onOpen,
+  onMove,
+  onRemove,
+  onDownload,
+  onRename,
+  onDuplicate,
+  onSaveToServer,
+  onVersionHistory,
+  saveToServerDisabledReason,
+}: FileActionsMenuProps) {
+  const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
+  const DownloadIcon = useFileActionIcons().download;
+  const showSaveToServer =
+    Boolean(onSaveToServer) && file.remoteStorageId == null;
+  const showVersionHistory =
+    Boolean(onVersionHistory) && (file.versionNumber ?? 1) > 1;
+  return (
+    <Menu shadow="md" position="bottom-end" withinPortal width={220}>
+      <Menu.Target>
+        <ActionIcon
+          ref={triggerRef}
+          variant="tertiary"
+          size="sm"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={t("filesPage.fileMenu", "File actions")}
+          data-testid="file-card-actions"
+        >
+          <MoreVertIcon fontSize="small" />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<OpenInNewIcon fontSize="small" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+        >
+          {t("filesPage.addToWorkspace", "Add to workspace")}
+        </Menu.Item>
+        <OpenInNewWindowMenuItem file={file} />
+        <Menu.Item
+          leftSection={<DriveFileMoveIcon fontSize="small" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMove();
+          }}
+          data-testid="file-menu-move-to"
+        >
+          {t("filesPage.moveTo", "Move to…")}
+        </Menu.Item>
+
+        {(onDownload || onRename || onDuplicate) && <Menu.Divider />}
+        {onDownload && (
+          <Menu.Item
+            leftSection={<DownloadIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload();
+            }}
+            data-testid="file-menu-download"
+          >
+            {terminology.download}
+          </Menu.Item>
+        )}
+        {onRename && (
+          <Menu.Item
+            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRename();
+            }}
+            data-testid="file-menu-rename"
+          >
+            {t("filesPage.rename", "Rename")}
+          </Menu.Item>
+        )}
+        {onDuplicate && (
+          <Menu.Item
+            leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate();
+            }}
+            data-testid="file-menu-duplicate"
+          >
+            {t("filesPage.duplicate", "Duplicate")}
+          </Menu.Item>
+        )}
+
+        {(showSaveToServer || showVersionHistory) && <Menu.Divider />}
+        {/* Per-file Save to server; shown for local-only files. When
+            storage is off it stays visible but disabled with a tooltip. */}
+        {showSaveToServer && onSaveToServer && (
+          <Tooltip
+            label={saveToServerDisabledReason}
+            disabled={!saveToServerDisabledReason}
+            withinPortal
+            position="left"
+            multiline
+            w={240}
+          >
+            <Menu.Item
+              leftSection={<CloudUploadIcon fontSize="small" />}
+              disabled={Boolean(saveToServerDisabledReason)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveToServer();
+              }}
+              style={
+                saveToServerDisabledReason
+                  ? { pointerEvents: "auto" }
+                  : undefined
+              }
+            >
+              {t("filesPage.saveToServer", "Save to server")}
+            </Menu.Item>
+          </Tooltip>
+        )}
+        {showVersionHistory && onVersionHistory && (
+          <Menu.Item
+            leftSection={<HistoryIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onVersionHistory();
+            }}
+          >
+            {t("filesPage.versionHistory", "Version history")}
+          </Menu.Item>
+        )}
+
+        <Menu.Divider />
+        <Menu.Item
+          color="red"
+          leftSection={<DeleteIcon fontSize="small" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          {t("filesPage.remove", "Delete")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
+/** Binds one file's kebab handlers, so grid and list wire them identically. */
+function useFileMenuHandlers(
+  props: FileGridProps,
+): (file: StirlingFileStub) => FileMenuHandlers {
+  const {
+    selectedFileIds,
+    onRemoveFiles,
+    onPromptMoveFiles,
+    onSaveToServer,
+    onVersionHistory,
+    onDownloadFile,
+    onRenameFile,
+    onDuplicateFile,
+    saveToServerDisabledReason,
+  } = props;
+  return (file: StirlingFileStub) => ({
+    onRemove: () => onRemoveFiles([file.id]),
+    // A move acts on the whole selection when this file is part of it.
+    onMove: () =>
+      onPromptMoveFiles(
+        selectedFileIds.has(file.id) ? Array.from(selectedFileIds) : [file.id],
+      ),
+    onDownload: onDownloadFile ? () => onDownloadFile(file) : undefined,
+    onRename: onRenameFile ? () => onRenameFile(file) : undefined,
+    onDuplicate: onDuplicateFile ? () => onDuplicateFile(file) : undefined,
+    onSaveToServer: onSaveToServer ? () => onSaveToServer(file) : undefined,
+    onVersionHistory: onVersionHistory
+      ? () => onVersionHistory(file)
+      : undefined,
+    saveToServerDisabledReason,
+  });
+}
+
+/** Per-file kebab handlers, shared by the card and row wrappers. */
+interface FileMenuHandlers {
+  onRemove: () => void;
+  onMove: () => void;
+  onDownload?: () => void;
+  onRename?: () => void;
+  onDuplicate?: () => void;
+  /** Kebab Save to server; only fires when file is local-only. */
+  onSaveToServer?: () => void;
+  /** Open the version-history modal; shown only when file has >1 version. */
+  onVersionHistory?: () => void;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
+}
+
+interface FileCardProps extends FileMenuHandlers {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
@@ -595,14 +843,6 @@ interface FileCardProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
-  onRemove: () => void;
-  onMove: () => void;
-  /** Kebab Save to server; only fires when file is local-only. */
-  onSaveToServer?: () => void;
-  /** Open the version-history modal; shown only when file has >1 version. */
-  onVersionHistory?: () => void;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
-  saveToServerDisabledReason?: string | null;
 }
 
 function FileCard({
@@ -614,11 +854,7 @@ function FileCard({
   multiSelectActive,
   onClick,
   onDoubleClick,
-  onRemove,
-  onMove,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
+  ...menuHandlers
 }: FileCardProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -748,120 +984,40 @@ function FileCard({
         </div>
       </div>
       <div className="files-page-card-actions">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.fileMenu", "File actions")}
-              data-testid="file-card-actions"
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDoubleClick();
-              }}
-            >
-              {t("filesPage.addToWorkspace", "Add to workspace")}
-            </Menu.Item>
-            <OpenInNewWindowMenuItem file={file} />
-            <Menu.Item
-              leftSection={<DriveFileMoveIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMove();
-              }}
-              data-testid="file-menu-move-to"
-            >
-              {t("filesPage.moveTo", "Move to…")}
-            </Menu.Item>
-            {/* Per-file Save to server; shown for local-only files. When
-                storage is off it stays visible but disabled with a tooltip. */}
-            {onSaveToServer && file.remoteStorageId == null && (
-              <Tooltip
-                label={saveToServerDisabledReason}
-                disabled={!saveToServerDisabledReason}
-                withinPortal
-                position="left"
-                multiline
-                w={240}
-              >
-                <Menu.Item
-                  leftSection={<CloudUploadIcon fontSize="small" />}
-                  disabled={Boolean(saveToServerDisabledReason)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveToServer();
-                  }}
-                  style={
-                    saveToServerDisabledReason
-                      ? { pointerEvents: "auto" }
-                      : undefined
-                  }
-                >
-                  {t("filesPage.saveToServer", "Save to server")}
-                </Menu.Item>
-              </Tooltip>
-            )}
-            {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
-              <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVersionHistory();
-                }}
-              >
-                {t("filesPage.versionHistory", "Version history")}
-              </Menu.Item>
-            )}
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-            >
-              {t("filesPage.remove", "Delete")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        <FileActionsMenu
+          file={file}
+          triggerRef={kebabRef}
+          onOpen={onDoubleClick}
+          {...menuHandlers}
+        />
       </div>
     </div>
   );
 }
 
-function ListView({
-  entries,
-  selectedFileIds,
-  activeWorkspaceFileIds,
-  onSelectFile,
-  onSetSelection,
-  onOpenFolder,
-  onOpenFile,
-  onMoveFiles,
-  onMoveFolder,
-  onRenameFolder,
-  onDeleteFolder,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
-  onChangeFolderAppearance,
-  onRemoveFiles,
-  onPromptMoveFiles,
-  sortMode,
-  onChangeSortMode,
-}: FileGridProps & {
-  sortMode?: FilesPageSortMode;
-  onChangeSortMode?: (next: FilesPageSortMode) => void;
-}) {
+function ListView(
+  props: FileGridProps & {
+    sortMode?: FilesPageSortMode;
+    onChangeSortMode?: (next: FilesPageSortMode) => void;
+  },
+) {
+  const {
+    entries,
+    selectedFileIds,
+    activeWorkspaceFileIds,
+    onSelectFile,
+    onSetSelection,
+    onOpenFolder,
+    onOpenFile,
+    onMoveFiles,
+    onMoveFolder,
+    onRenameFolder,
+    onDeleteFolder,
+    onChangeFolderAppearance,
+    sortMode,
+    onChangeSortMode,
+  } = props;
+  const menuHandlersFor = useFileMenuHandlers(props);
   const { t } = useTranslation();
 
   // Tri-state header checkbox state - computed from current entries.
@@ -906,35 +1062,47 @@ function ListView({
 
   return (
     <div className="files-page-list" role="grid">
+      {/* Each direct child is a columnheader: a role="row" may only own cells, so
+          the sort controls and the select-all box have to sit inside one. */}
       <div className="files-page-list-row is-header" role="row">
         {onSetSelection && visibleFileIds.length > 0 ? (
-          <Checkbox
-            checked={allSelected}
-            indeterminate={someSelected}
-            onChange={() => {
-              onSetSelection(allSelected ? new Set() : new Set(visibleFileIds));
-            }}
-            aria-label={
-              allSelected
-                ? t("filesPage.deselectAll", "Clear selection")
-                : t("filesPage.selectAll", "Select all")
-            }
-          />
+          <span role="columnheader">
+            <Checkbox
+              checked={allSelected}
+              indeterminate={someSelected}
+              onChange={() => {
+                onSetSelection(
+                  allSelected ? new Set() : new Set(visibleFileIds),
+                );
+              }}
+              aria-label={
+                allSelected
+                  ? t("filesPage.deselectAll", "Clear selection")
+                  : t("filesPage.selectAll", "Select all")
+              }
+            />
+          </span>
         ) : (
           <span aria-hidden="true" />
         )}
-        <span {...headerProps("name-asc", "name-desc")}>
-          {t("filesPage.column.name", "Name")}
-          {sortIndicator("name-asc", "name-desc")}
+        <span role="columnheader">
+          <span {...headerProps("name-asc", "name-desc")}>
+            {t("filesPage.column.name", "Name")}
+            {sortIndicator("name-asc", "name-desc")}
+          </span>
         </span>
-        <span>{t("filesPage.column.type", "Type")}</span>
-        <span {...headerProps("size-asc", "size-desc")}>
-          {t("filesPage.column.size", "Size")}
-          {sortIndicator("size-asc", "size-desc")}
+        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
+        <span role="columnheader">
+          <span {...headerProps("size-asc", "size-desc")}>
+            {t("filesPage.column.size", "Size")}
+            {sortIndicator("size-asc", "size-desc")}
+          </span>
         </span>
-        <span {...headerProps("modified-asc", "modified-desc")}>
-          {t("filesPage.column.modified", "Modified")}
-          {sortIndicator("modified-asc", "modified-desc")}
+        <span role="columnheader">
+          <span {...headerProps("modified-asc", "modified-desc")}>
+            {t("filesPage.column.modified", "Modified")}
+            {sortIndicator("modified-asc", "modified-desc")}
+          </span>
         </span>
         <span aria-hidden="true" />
       </div>
@@ -975,22 +1143,7 @@ function ListView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onOpen={() => onOpenFile(entry.file!)}
-              onRemove={() => onRemoveFiles([entry.file!.id])}
-              onMove={() => {
-                const target = selectedFileIds.has(entry.file!.id)
-                  ? Array.from(selectedFileIds)
-                  : [entry.file!.id];
-                onPromptMoveFiles(target);
-              }}
-              onSaveToServer={
-                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
-              }
-              onVersionHistory={
-                onVersionHistory
-                  ? () => onVersionHistory(entry.file!)
-                  : undefined
-              }
-              saveToServerDisabledReason={saveToServerDisabledReason}
+              {...menuHandlersFor(entry.file)}
             />
           );
         }
@@ -1091,7 +1244,12 @@ function FolderRow({
       className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
     >
       <span aria-hidden="true" />
-      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
+          actions menu has to sit inside one. */}
+      <span
+        role="gridcell"
+        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+      >
         <FolderThumbnail
           color={folder.color}
           size="row"
@@ -1119,66 +1277,70 @@ function FolderRow({
           )}
         </span>
       </span>
-      <span>{t("filesPage.folder", "Folder")}</span>
-      <span>
+      <span role="gridcell">{t("filesPage.folder", "Folder")}</span>
+      <span role="gridcell">
         {fileCount === 0
           ? "-"
           : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
-      <span>{getFileDate({ lastModified: folder.updatedAt })}</span>
-      <Menu shadow="md" position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon
-            ref={kebabRef}
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("filesPage.folderMenu", "Folder actions")}
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            onClick={onOpen}
-          >
-            {t("filesPage.open", "Open")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-            onClick={onRename}
-            disabled={!serverReachable}
-            title={!serverReachable ? offlineHint : undefined}
-          >
-            {t("filesPage.rename", "Rename")}
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Label>
-            {t("filesPage.appearance.title", "Appearance")}
-          </Menu.Label>
-          <FolderAppearancePicker
-            folder={folder}
-            onChange={onChangeAppearance}
-            disabled={!serverReachable}
-          />
-          <Menu.Divider />
-          <Menu.Item
-            color="red"
-            leftSection={<DeleteIcon fontSize="small" />}
-            onClick={onDelete}
-            disabled={!serverReachable}
-            title={!serverReachable ? offlineHint : undefined}
-          >
-            {t("filesPage.deleteFolder", "Delete folder")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <span role="gridcell">
+        {getFileDate({ lastModified: folder.updatedAt })}
+      </span>
+      <span role="gridcell">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              ref={kebabRef}
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.folderMenu", "Folder actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={onOpen}
+            >
+              {t("filesPage.open", "Open")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+              onClick={onRename}
+              disabled={!serverReachable}
+              title={!serverReachable ? offlineHint : undefined}
+            >
+              {t("filesPage.rename", "Rename")}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Label>
+              {t("filesPage.appearance.title", "Appearance")}
+            </Menu.Label>
+            <FolderAppearancePicker
+              folder={folder}
+              onChange={onChangeAppearance}
+              disabled={!serverReachable}
+            />
+            <Menu.Divider />
+            <Menu.Item
+              color="red"
+              leftSection={<DeleteIcon fontSize="small" />}
+              onClick={onDelete}
+              disabled={!serverReachable}
+              title={!serverReachable ? offlineHint : undefined}
+            >
+              {t("filesPage.deleteFolder", "Delete folder")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </span>
     </div>
   );
 }
 
-interface FileRowProps {
+interface FileRowProps extends FileMenuHandlers {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
@@ -1188,14 +1350,6 @@ interface FileRowProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
-  onRemove: () => void;
-  onMove: () => void;
-  /** Kebab Save to server; only fires when file is local-only. */
-  onSaveToServer?: () => void;
-  /** Open the version-history modal; shown only when file has >1 version. */
-  onVersionHistory?: () => void;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
-  saveToServerDisabledReason?: string | null;
 }
 
 function FileRow({
@@ -1207,11 +1361,7 @@ function FileRow({
   multiSelectActive,
   onClick,
   onOpen,
-  onRemove,
-  onMove,
-  onSaveToServer,
-  onVersionHistory,
-  saveToServerDisabledReason,
+  ...menuHandlers
 }: FileRowProps) {
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1254,35 +1404,40 @@ function FileRow({
         isInWorkspace ? " is-in-workspace" : ""
       }`}
     >
-      {/* Checkbox only shows in multi-select mode (see FileCard). When the
-          checkbox is hidden the first grid column collapses, but the row's
-          CSS grid keeps the columns aligned via the named template, so no
-          empty cell shows. */}
+      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
+          checkbox and the actions menu have to sit inside one.
+
+          The checkbox only shows in multi-select mode (see FileCard). When it is
+          hidden the first grid column collapses, but the row's CSS grid keeps the
+          columns aligned via the named template, so no empty cell shows. */}
       {multiSelectActive ? (
-        <Checkbox
-          checked={isSelected}
-          onClick={(e) => {
-            // Toggle this file in/out of the selection without modifier keys.
-            e.stopPropagation();
-            onClick({
-              ...e,
-              shiftKey: false,
-              ctrlKey: true,
-              metaKey: true,
-            } as unknown as React.MouseEvent);
-          }}
-          onChange={() => {
-            /* handled by onClick */
-          }}
-          aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-            name: file.name,
-          })}
-        />
+        <span role="gridcell">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e) => {
+              // Toggle this file in/out of the selection without modifier keys.
+              e.stopPropagation();
+              onClick({
+                ...e,
+                shiftKey: false,
+                ctrlKey: true,
+                metaKey: true,
+              } as unknown as React.MouseEvent);
+            }}
+            onChange={() => {
+              /* handled by onClick */
+            }}
+            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+              name: file.name,
+            })}
+          />
+        </span>
       ) : (
         // Empty cell preserves grid column alignment.
         <span aria-hidden="true" />
       )}
       <span
+        role="gridcell"
         style={{
           display: "flex",
           alignItems: "center",
@@ -1342,94 +1497,17 @@ function FileRow({
           </span>
         )}
       </span>
-      <span>{ext || t("filesPage.file", "File")}</span>
-      <span>{fileSize}</span>
-      <span>{fileDate}</span>
-      <Menu shadow="md" position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon
-            ref={kebabRef}
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("filesPage.fileMenu", "File actions")}
-            data-testid="file-card-actions"
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-          >
-            {t("filesPage.addToWorkspace", "Add to workspace")}
-          </Menu.Item>
-          <OpenInNewWindowMenuItem file={file} />
-          <Menu.Item
-            leftSection={<DriveFileMoveIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMove();
-            }}
-          >
-            {t("filesPage.moveTo", "Move to…")}
-          </Menu.Item>
-          {/* Per-file Save to server; shown for local-only files. When
-              storage is off it stays visible but disabled with a tooltip. */}
-          {onSaveToServer && file.remoteStorageId == null && (
-            <Tooltip
-              label={saveToServerDisabledReason}
-              disabled={!saveToServerDisabledReason}
-              withinPortal
-              position="left"
-              multiline
-              w={240}
-            >
-              <Menu.Item
-                leftSection={<CloudUploadIcon fontSize="small" />}
-                disabled={Boolean(saveToServerDisabledReason)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveToServer();
-                }}
-                style={
-                  saveToServerDisabledReason
-                    ? { pointerEvents: "auto" }
-                    : undefined
-                }
-              >
-                {t("filesPage.saveToServer", "Save to server")}
-              </Menu.Item>
-            </Tooltip>
-          )}
-          {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
-            <Menu.Item
-              leftSection={<HistoryIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onVersionHistory();
-              }}
-            >
-              {t("filesPage.versionHistory", "Version history")}
-            </Menu.Item>
-          )}
-          <Menu.Divider />
-          <Menu.Item
-            color="red"
-            leftSection={<DeleteIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            {t("filesPage.remove", "Delete")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{fileSize}</span>
+      <span role="gridcell">{fileDate}</span>
+      <span role="gridcell">
+        <FileActionsMenu
+          file={file}
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          {...menuHandlers}
+        />
+      </span>
     </div>
   );
 }

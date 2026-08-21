@@ -11,6 +11,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateOverlayPdfsParameters,
   type OverlayPdfsParameters,
   defaultParameters,
 } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
@@ -61,6 +62,7 @@ const buildFormData = (
 
 export const overlayPdfsOperationConfig: ToolOperationConfig<OverlayPdfsParameters> =
   defineSingleFileTool({
+    validateParams: validateOverlayPdfsParameters,
     buildFormData,
     toApiParams: overlayPdfsToApiParams,
     fromApiParams: overlayPdfsFromApiParams,

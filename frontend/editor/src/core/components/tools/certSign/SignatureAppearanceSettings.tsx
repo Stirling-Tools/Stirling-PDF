@@ -19,7 +19,10 @@ import {
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
   /** PDF being signed; enables interactive widget placement on the workbench viewer. */
   pdfFile?: File | null;
@@ -264,7 +267,12 @@ const SignatureAppearanceSettings = ({
                 "Used when no signature box is placed — places the default widget at the page corner.",
               )}
               value={parameters.pageNumber}
-              onChange={(value) => onParameterChange("pageNumber", value || 1)}
+              onChange={(value) =>
+                onParameterChange(
+                  "pageNumber",
+                  typeof value === "number" ? value : 1,
+                )
+              }
               min={1}
               disabled={disabled}
             />

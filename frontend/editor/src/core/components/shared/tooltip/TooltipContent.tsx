@@ -17,13 +17,13 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
     <div
       className={`${styles["tooltip-body"]}`}
       style={{
-        color: "var(--text-primary)",
+        color: "var(--c-text)",
         padding: `16px ${16 + extraRightPadding}px 16px 16px`,
         fontSize: "14px",
         lineHeight: "1.6",
       }}
     >
-      <div style={{ color: "var(--text-primary)" }}>
+      <div style={{ color: "var(--c-text)" }}>
         {tips ? (
           <>
             {tips.map((tip, index) => (
@@ -35,8 +35,8 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
                   <div
                     style={{
                       display: "inline-block",
-                      backgroundColor: "var(--tooltip-title-bg)",
-                      color: "var(--tooltip-title-color)",
+                      backgroundColor: "var(--c-primary-tint)",
+                      color: "var(--c-text)",
                       padding: "6px 12px",
                       borderRadius: "16px",
                       fontSize: "12px",
@@ -51,7 +51,7 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
                   <p
                     style={{
                       margin: "0 0 12px 0",
-                      color: "var(--text-secondary)",
+                      color: "var(--c-text-muted)",
                       fontSize: "13px",
                     }}
                     dangerouslySetInnerHTML={{ __html: tip.description }}
@@ -62,7 +62,7 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
                     style={{
                       margin: "0",
                       paddingLeft: "16px",
-                      color: "var(--text-secondary)",
+                      color: "var(--c-text-muted)",
                       fontSize: "13px",
                     }}
                   >

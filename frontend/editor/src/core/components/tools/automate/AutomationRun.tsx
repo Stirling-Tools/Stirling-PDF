@@ -153,7 +153,7 @@ export default function AutomationRun({
             style={{
               width: 16,
               height: 16,
-              border: "2px solid #ccc",
+              border: "2px solid var(--c-border)",
               borderRadius: "50%",
             }}
           />
@@ -216,7 +216,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="red" mt="xs">
+                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
                     {step.error}
                   </Text>
                 )}

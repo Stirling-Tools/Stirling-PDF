@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateAddPasswordParameters,
   AddPasswordFullParameters,
   defaultParameters,
 } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
@@ -47,7 +48,7 @@ export const addPasswordFromApiParams = (
 ): Partial<AddPasswordFullParameters> => ({
   password: apiParams.password ?? defaultParameters.password,
   ownerPassword: apiParams.ownerPassword ?? defaultParameters.ownerPassword,
-  keyLength: apiParams.keyLength,
+  keyLength: apiParams.keyLength ?? defaultParameters.keyLength,
   permissions: {
     preventAssembly:
       apiParams.preventAssembly ?? permissionsDefaults.preventAssembly,
@@ -86,6 +87,7 @@ const fullDefaultParameters: AddPasswordFullParameters = {
 
 // Static configuration object
 export const addPasswordOperationConfig = defineSingleFileTool({
+  validateParams: validateAddPasswordParameters,
   buildFormData: buildAddPasswordFormData,
   toApiParams: addPasswordToApiParams,
   fromApiParams: addPasswordFromApiParams,

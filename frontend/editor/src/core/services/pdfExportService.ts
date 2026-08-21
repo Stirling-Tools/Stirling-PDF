@@ -5,6 +5,7 @@ import {
   saveRawDocument,
   importPages,
   setPageRotation,
+  degreesToPdfiumRotation,
   addNewPage,
 } from "@app/services/pdfiumService";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
@@ -351,23 +352,6 @@ export class PDFExportService {
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  }
-}
-
-/**
- * Convert degrees (0, 90, 180, 270) to PDFium rotation enum (0, 1, 2, 3).
- */
-function degreesToPdfiumRotation(degrees: number): number {
-  const normalized = ((degrees % 360) + 360) % 360;
-  switch (normalized) {
-    case 90:
-      return 1;
-    case 180:
-      return 2;
-    case 270:
-      return 3;
-    default:
-      return 0;
   }
 }
 

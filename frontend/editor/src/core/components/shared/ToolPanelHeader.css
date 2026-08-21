@@ -18,7 +18,7 @@
   flex: 1;
   min-width: 0;
   padding: 0.4rem 0.75rem 0.4rem 0.4rem;
-  border: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border: 1px solid var(--c-border-subtle, var(--mantine-color-default-border));
   border-radius: 9999px;
   background: var(--mantine-color-body);
   text-align: left;
@@ -34,7 +34,7 @@
   height: 1.75rem;
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 
@@ -70,7 +70,7 @@
    so it doesn't read as a clashing lighter card on the dark toolbar. */
 [data-mantine-color-scheme="dark"] .sui-panelhdr__bar {
   background: transparent;
-  border-color: var(--border-subtle, var(--mantine-color-default-border));
+  border-color: var(--c-border-subtle, var(--mantine-color-default-border));
 }
 
 [data-mantine-color-scheme="dark"] .sui-panelhdr__icon {
@@ -79,15 +79,15 @@
     var(--mantine-color-blue-filled) 18%,
     transparent
   );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
+  color: var(--c-accent-text);
 }
 
 /* Dark mode: the subtle gray close button is too dim against the dark rail —
    brighten it to a clearly-visible light grey (near-white on hover). */
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close {
-  color: var(--mantine-color-gray-4);
+  color: var(--c-text-subtle);
 }
 
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close:hover {
-  color: var(--mantine-color-gray-2);
+  color: var(--c-text-subtle);
 }

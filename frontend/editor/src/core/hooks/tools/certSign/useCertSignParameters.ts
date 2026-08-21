@@ -61,39 +61,45 @@ export const defaultParameters: CertSignParameters = {
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateCertSignParameters(
+  params: CertSignParameters,
+): boolean {
+  // Auto mode (server certificate) - no additional validation needed
+  if (params.signMode === "AUTO") {
+    return true;
+  }
+
+  // Manual mode - requires certificate type and files
+  if (!params.certType) {
+    return false;
+  }
+
+  // Check for required files based on cert type
+  switch (params.certType) {
+    case "PEM":
+      return !!(params.privateKeyFile && params.certFile);
+    case "PKCS12":
+    case "PFX":
+      return !!params.p12File;
+    case "JKS":
+      return !!params.jksFile;
+    case "WINDOWS_STORE":
+      // Need a chosen certificate from the Windows store.
+      return !!params.alias;
+    case "PKCS11":
+      // Need a driver library and a chosen certificate on the token.
+      return !!(params.pkcs11LibraryPath && params.alias);
+    default:
+      return false;
+  }
+}
+
 export const useCertSignParameters = (): CertSignParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "cert-sign",
-    validateFn: (params) => {
-      // Auto mode (server certificate) - no additional validation needed
-      if (params.signMode === "AUTO") {
-        return true;
-      }
-
-      // Manual mode - requires certificate type and files
-      if (!params.certType) {
-        return false;
-      }
-
-      // Check for required files based on cert type
-      switch (params.certType) {
-        case "PEM":
-          return !!(params.privateKeyFile && params.certFile);
-        case "PKCS12":
-        case "PFX":
-          return !!params.p12File;
-        case "JKS":
-          return !!params.jksFile;
-        case "WINDOWS_STORE":
-          // Need a chosen certificate from the Windows store.
-          return !!params.alias;
-        case "PKCS11":
-          // Need a driver library and a chosen certificate on the token.
-          return !!(params.pkcs11LibraryPath && params.alias);
-        default:
-          return false;
-      }
-    },
+    validateFn: validateCertSignParameters,
   });
 };
