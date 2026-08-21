@@ -1,4 +1,8 @@
 import { apiClient } from "@portal/api/http";
+import {
+  type SupportingFileBindings,
+  type ToolApiStep,
+} from "@app/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -6,22 +10,31 @@ import { apiClient } from "@portal/api/http";
  * A "pipeline" in the portal IS a backend policy (PolicyController, Policy.java):
  * an ordered chain of tool steps with input sources, a trigger, and an output
  * destination. This surface lists EVERY backend policy (the user-facing Policies
- * page builds only a friendly subset of the same records). Like Sources, it calls
- * the REAL Stirling API base `/api/v1/policies`, so dropping MSW points these exact
- * calls at the live backend.
+ * page builds only a friendly subset of the same records). Like Sources, it
+ * calls the real Stirling API base `/api/v1/policies`.
  */
 
 /** One tool invocation in a pipeline. `operation` is a Stirling endpoint path. */
 export interface PipelineStep {
   operation: string;
   parameters: Record<string, unknown>;
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
-/** When a policy fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
+/** When a policy input fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
 export interface TriggerConfig {
   type: string;
   options: Record<string, unknown>;
+}
+
+/**
+ * One input of a pipeline: a persisted source paired with the trigger that decides when that
+ * source is pulled. A `null` trigger means the input is pulled only on a manual run. Mirrors the
+ * backend `PipelineInput`.
+ */
+export interface PipelineInput {
+  sourceId: string;
+  trigger: TriggerConfig | null;
 }
 
 /** Where a run's outputs are delivered. `type` keys an output sink (e.g. "inline"). */
@@ -30,20 +43,33 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
+/** Source types that can be written to (used as a pipeline's output destination). */
+export type PipelineOutputMode = "folder" | "s3";
+
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
  * the backend returns from GET/POST. Mirrors Policy.java exactly; `owner`/`teamId`
- * are stamped server-side. A `null` trigger means manual-only.
+ * are stamped server-side. Each input pairs a source with its own trigger; an input
+ * with a `null` trigger (or a policy with no triggered inputs) runs only on demand.
  */
 export interface Policy {
   id?: string;
   name: string;
   owner?: string | null;
   enabled: boolean;
-  trigger: TriggerConfig | null;
-  sourceIds: string[];
+  inputs: PipelineInput[];
   steps: PipelineStep[];
+  /**
+   * Inline output, used only when no destinations are referenced (editor/one-off runs that return
+   * results to the caller). Portal pipelines set {@link outputIds} instead.
+   */
   output: OutputSpec;
+  /**
+   * The saved Sources this policy delivers its output to (each a source used as a write target),
+   * resolved live at run time; a run is delivered to every one. Empty means the inline {@link
+   * output} is used.
+   */
+  outputIds: string[];
   teamId?: number | null;
 }
 
@@ -100,7 +126,13 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
-/** A run's current state. Mirrors the backend `PolicyRunView` (outputs elided). */
+/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
+/** A run's current state. Mirrors the backend `PolicyRunView`. */
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -110,6 +142,11 @@ export interface PolicyRunView {
   /** Human-readable failure message; set when status is FAILED. */
   error: string | null;
   errorCode: string | null;
+  /**
+   * Files the run produced, present once it completes. Whole-run, not per step: the backend keeps
+   * one flat list, so nothing here can be attributed to an individual step.
+   */
+  outputs?: RunOutputFile[] | null;
   createdAt: number;
 }
 
@@ -151,14 +188,85 @@ export async function fetchTriggers(): Promise<TriggerInfo[]> {
 }
 
 /**
- * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
- * sources, regardless of the enabled flag. Returns the ids of the runs started
- * (empty when the sources yielded no work); poll {@link fetchRun} for each.
+ * What a manual trigger found and started. Mirrors the backend `SweepOutcome`:
+ * when `runIds` is empty, the counts say why - no files listed, all already
+ * processed at their current version, parked by a failed run, or still in
+ * flight from an earlier sweep.
  */
-export async function triggerPipeline(id: string): Promise<string[]> {
-  return apiClient.local.json<string[]>(
+export interface TriggerOutcome {
+  runIds: string[];
+  filesListed: number;
+  alreadyProcessed: number;
+  parked: number;
+  inFlight: number;
+}
+
+/**
+ * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
+ * sources, regardless of the enabled flag. Returns the runs started plus what the
+ * sweep skipped; poll {@link fetchRun} for each run id.
+ */
+export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
+  return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
+  );
+}
+
+/** What an ad-hoc test run posts: the steps as they stand, with no source and no trigger. */
+export interface TestRunDefinition {
+  name: string;
+  steps: ToolApiStep[];
+  output: OutputSpec;
+}
+
+/**
+ * A fresh, in-memory supporting file sent inline with a test run, bound to the run key a test step's
+ * `fileParameters` references. Only unsaved picks ride along here; a stored file keeps its
+ * `asset:<id>` binding, which the backend resolves from the saved policy (see `runPipelineTest`).
+ */
+export interface TestRunAsset {
+  key: string;
+  file: File;
+}
+
+/**
+ * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
+ * path - callers force an inline output so nothing reaches the pipeline's real destination, and
+ * the pipeline need not be saved first. Fresh supporting files travel as keyed `assets[i]` parts;
+ * a stored file keeps its `asset:<id>` binding, and `policyId` lets the backend resolve it from that
+ * saved policy (so its bytes need not be re-sent).
+ */
+export async function runPipelineTest(
+  definition: TestRunDefinition,
+  file: File,
+  assets: TestRunAsset[] = [],
+  policyId?: string,
+): Promise<{ runId: string }> {
+  const form = new FormData();
+  form.append(
+    "json",
+    new Blob([JSON.stringify(definition)], { type: "application/json" }),
+  );
+  form.append("fileInput", file);
+  if (policyId) form.append("policyId", policyId);
+  assets.forEach((asset, i) => {
+    form.append(`assets[${i}].key`, asset.key);
+    form.append(`assets[${i}].file`, asset.file);
+  });
+  // The POST returns the identifier as `jobId`, but it is the same run id every other endpoint
+  // (fetchRun, fetchRunOutput) calls `runId`; normalise to that here so callers see one name.
+  const res = await apiClient.local.multipart<{ jobId: string }>(
+    "/api/v1/policies/run",
+    form,
+  );
+  return { runId: res.jobId };
+}
+
+/** GET /api/v1/general/files/{id}: download one of a run's outputs. */
+export async function fetchRunOutput(fileId: string): Promise<Blob> {
+  return apiClient.local.blob(
+    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
   );
 }
 

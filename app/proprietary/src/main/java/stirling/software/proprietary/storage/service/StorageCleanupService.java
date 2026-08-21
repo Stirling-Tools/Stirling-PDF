@@ -7,12 +7,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.storage.model.StorageCleanupEntry;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 
@@ -25,6 +27,7 @@ public class StorageCleanupService {
 
     private final StorageProvider storageProvider;
     private final StorageCleanupEntryRepository cleanupEntryRepository;
+    private final FileShareAccessRepository fileShareAccessRepository;
     private final FileShareRepository fileShareRepository;
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
@@ -62,12 +65,14 @@ public class StorageCleanupService {
     }
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Transactional
     public void cleanupExpiredShareLinks() {
         List<stirling.software.proprietary.storage.model.FileShare> expired =
                 fileShareRepository.findByExpiresAtBeforeAndShareTokenNotNull(LocalDateTime.now());
         if (expired.isEmpty()) {
             return;
         }
+        expired.forEach(fileShareAccessRepository::deleteByFileShare);
         fileShareRepository.deleteAll(expired);
     }
 }

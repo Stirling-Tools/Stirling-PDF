@@ -11,7 +11,12 @@ import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
-/** {@code @PreAuthorize} bean for portal-access checks. Active in self-hosted and saas. */
+/**
+ * {@code @PreAuthorize} bean for portal-access checks. Active in self-hosted and saas. Convention:
+ * every portal-exclusive endpoint is gated with
+ * {@code @PreAuthorize("@resourceAccess.canUsePortal()")}; endpoints shared with the editor (e.g.
+ * the policies API) must NOT be.
+ */
 @Component("resourceAccess")
 @RequiredArgsConstructor
 public class ResourceAccessSecurity {

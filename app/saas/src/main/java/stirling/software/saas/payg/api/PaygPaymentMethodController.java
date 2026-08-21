@@ -18,13 +18,13 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -85,7 +85,7 @@ public class PaygPaymentMethodController {
         if (rows.isEmpty()) {
             return ResponseEntity.ok(PaymentMethodResponse.absent());
         }
-        Long teamId = rows.get(0).getTeam().getId();
+        Long teamId = rows.getFirst().getTeam().getId();
 
         Optional<PaygTeamExtensions> ext = extRepo.findById(teamId);
         if (ext.isEmpty() || ext.get().getStripeCustomerId() == null) {

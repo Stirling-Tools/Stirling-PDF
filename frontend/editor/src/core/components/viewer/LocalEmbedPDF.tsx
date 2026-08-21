@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
-import { EmbedPDF } from "@embedpdf/core/react";
+import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -145,6 +145,59 @@ interface LocalEmbedPDFProps {
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   /** Imperative handle for reading/clearing/deleting signature previews. */
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+}
+
+interface ViewerPageContainerProps {
+  documentId: string;
+  pageIndex: number;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}
+
+function normalizePageRotation(rotation: number | null | undefined): number {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return ((Math.round(value) % 4) + 4) % 4;
+}
+
+function ViewerPageContainer({
+  documentId,
+  pageIndex,
+  width,
+  height,
+  children,
+}: ViewerPageContainerProps) {
+  const documentState = useDocumentState(documentId);
+  const pageRotation = normalizePageRotation(
+    documentState?.document?.pages?.[pageIndex]?.rotation,
+  );
+
+  return (
+    <div
+      data-page-index={pageIndex}
+      data-page-width={width}
+      data-page-height={height}
+      data-page-rotation={pageRotation}
+      style={{
+        width,
+        height,
+        position: "relative",
+        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+      }}
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+      onDragOver={(e) => e.preventDefault()}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function LocalEmbedPDF({
@@ -433,7 +486,11 @@ export function LocalEmbedPDF({
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>❌</div>
-          <Text c="red" size="sm" style={{ textAlign: "center" }}>
+          <Text
+            c="var(--color-red-dark)"
+            size="sm"
+            style={{ textAlign: "center" }}
+          >
             Error loading PDF engine: {error.message}
           </Text>
         </Stack>
@@ -997,7 +1054,7 @@ export function LocalEmbedPDF({
                     <Viewport
                       documentId={documentId}
                       style={{
-                        backgroundColor: "var(--bg-background)",
+                        backgroundColor: "var(--c-bg)",
                         height: "100%",
                         width: "100%",
                         maxHeight: "100%",
@@ -1023,25 +1080,11 @@ export function LocalEmbedPDF({
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
-                                <div
-                                  data-page-index={pageIndex}
-                                  data-page-width={width}
-                                  data-page-height={height}
-                                  style={{
-                                    width,
-                                    height,
-                                    position: "relative",
-                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
-                                    userSelect: "none",
-                                    WebkitUserSelect: "none",
-                                    MozUserSelect: "none",
-                                    msUserSelect: "none",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                                  }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onDragOver={(e) => e.preventDefault()}
+                                <ViewerPageContainer
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                  width={width}
+                                  height={height}
                                 >
                                   <div
                                     style={{
@@ -1173,7 +1216,7 @@ export function LocalEmbedPDF({
                                       onSelect={setSelectedSignatureId}
                                     />
                                   )}
-                                </div>
+                                </ViewerPageContainer>
                               </PagePointerProvider>
                             </Rotate>
                           );

@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Box, Button, Text, ActionIcon, Group, Loader } from "@mantine/core";
+import { Box, Text, Group, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -76,18 +78,25 @@ export function WatchedFolderCard({
       style={
         isDragOver
           ? {
-              backgroundColor: "rgba(59,130,246,0.10)",
+              backgroundColor:
+                "color-mix(in srgb, var(--c-primary) 10%, transparent)",
               borderRadius: "var(--mantine-radius-sm)",
             }
           : undefined
       }
     >
       <Button
-        variant={isActive ? "light" : "subtle"}
+        variant="tertiary"
+        accent="neutral"
+        size="sm"
         className="tool-button"
         fullWidth
-        justify="flex-start"
-        px="sm"
+        justify="start"
+        style={
+          isActive
+            ? { backgroundColor: "var(--tool-button-selected-bg)" }
+            : undefined
+        }
         leftSection={
           <Box
             style={{
@@ -110,8 +119,9 @@ export function WatchedFolderCard({
           isHovered ? (
             <Group gap={2} onClick={(e) => e.stopPropagation()}>
               <ActionIcon
-                size="xs"
-                variant="subtle"
+                as="span"
+                size="sm"
+                variant="tertiary"
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
               >
@@ -119,9 +129,10 @@ export function WatchedFolderCard({
               </ActionIcon>
               {!folder.isDefault && (
                 <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  color="red"
+                  as="span"
+                  size="sm"
+                  variant="tertiary"
+                  accent="danger"
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}
                 >

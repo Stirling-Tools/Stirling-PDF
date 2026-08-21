@@ -15,12 +15,12 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
       <div className="portal-docs__playbook-grid">
         {playbooks.map((p) => (
           <Card key={p.title} accent={p.accent} padding="loose" interactive>
-            <h3 className="portal-docs__playbook-title">{p.title}</h3>
+            <h2 className="portal-docs__playbook-title">{p.title}</h2>
             <p className="portal-docs__playbook-blurb">{p.blurb}</p>
             <div className="portal-docs__playbook-flow">
               {p.steps.map((step, i) => (
                 <span key={step} className="portal-docs__playbook-step">
-                  <Chip size="sm" tone="neutral">
+                  <Chip size="sm" accent="neutral">
                     {step}
                   </Chip>
                   {i < p.steps.length - 1 && (
@@ -33,7 +33,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
             </div>
             {/* TODO(backend): POST /v1/pipelines/clone-from-playbook to seed a
                 draft pipeline from this recipe, then route to the composer. */}
-            <Button variant="outline" accent={p.accent} size="sm">
+            <Button variant="secondary" accent={p.accent} size="sm">
               {t("portal.docs.recipes.cloneButton")}
             </Button>
           </Card>

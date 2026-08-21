@@ -1,4 +1,5 @@
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { useClientSideClassification } from "@app/components/policies/useClientSideClassification";
 
 /**
  * Headless controller that drives policy auto-run (enforce every enabled policy
@@ -7,5 +8,7 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
  */
 export function PolicyAutoRunController() {
   usePolicyAutoRun();
+  // Non-AI systems classify uploads in the browser; inert when the AI engine is on.
+  useClientSideClassification();
   return null;
 }

@@ -4,18 +4,21 @@ import {
 } from "@app/auth/supabase/supabaseClient";
 
 /**
- * Configures the shared Supabase client against the hosted SaaS project so the
- * portal can mint a SaaS JWT IN-APP for account linking (no popup). This is a
+ * Configures the shared Supabase client against the Stirling Supabase project so
+ * the portal can mint a SaaS JWT IN-APP for account linking (no popup). This is a
  * separate, transient SaaS auth — the portal's own session stays Spring (the
  * local instance admin); calls to the local backend still carry the Spring
  * bearer, and the SaaS JWT is passed only in the link request body.
  *
- * Config: VITE_SAAS_SUPABASE_URL + VITE_SAAS_SUPABASE_ANON_KEY (both public).
- * Absent → {@link isSaasSupabaseConfigured} is false and the link UI degrades to
- * a "configure the SaaS Supabase URL" state.
+ * Config: VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY (both public)
+ * — the one Stirling Supabase project every flavor talks to (same vars the editor
+ * and proprietary billing client use; there is no separate SaaS project). SaaS
+ * needs no per-flavor override: the signed-in editor session is on this same
+ * project, so the client picks it up. Absent → {@link isSaasSupabaseConfigured}
+ * is false and the link UI degrades to a "configure Supabase" state.
  */
-const url = import.meta.env.VITE_SAAS_SUPABASE_URL;
-const key = import.meta.env.VITE_SAAS_SUPABASE_ANON_KEY;
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 export const isSaasSupabaseConfigured = Boolean(url && key);
 

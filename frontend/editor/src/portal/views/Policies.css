@@ -18,14 +18,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policies__sub {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -34,6 +34,31 @@
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+}
+
+/* Category row — locked (coming soon) */
+.portal-policies__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+.portal-policies__row-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+}
+
+/* "Set up" underline link inside the active-row button's rightSection */
+.portal-policies__setup-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* Category card — horizontal table row */
@@ -45,7 +70,10 @@
 }
 
 .portal-policies__card--locked {
-  opacity: 0.7;
+  /* Recede via surface and ink rather than opacity, which would fade the
+     card's own text below the contrast floor. */
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
 }
 
 .portal-policies__card-identity {
@@ -58,7 +86,7 @@
 
 .portal-policies__card-enforces {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,13 +109,13 @@
 .portal-policies__card-statval {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   line-height: 1.2;
 }
 
 .portal-policies__card-statlbl {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   line-height: 1.2;
 }
 
@@ -99,14 +127,69 @@
   height: 2rem;
   flex-shrink: 0;
   font-size: 1.125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-policies__card-title {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
+}
+
+.portal-policies__card-blurb {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  line-height: 1.4;
+}
+
+.portal-policies__card-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+
+.portal-policies__card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.portal-policies__card-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.portal-policies__card-cta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+}
+
+.portal-policies__chevron-right {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+/* Configured-card stat footer */
+.portal-policies__card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+@media (max-width: 30rem) {
+  .portal-policies__card-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Wizard + detail shared chrome */
@@ -139,7 +222,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__wizard-heading {
@@ -147,15 +230,8 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
-}
-
-.portal-policies__wizard-subheading {
-  margin: 0.875rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-3);
 }
 
 .portal-policies__fields {
@@ -174,125 +250,48 @@
   gap: 0.375rem;
 }
 
-/* Workflow step — tool rows */
-.portal-policies__tool-head {
+/* Workflow step — policy capability settings list.
+ * Rows read as the policy's own settings (label + plain description + toggle),
+ * not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.portal-policies__capabilities {
   display: flex;
-  align-items: center;
-  gap: 0.625rem;
+  flex-direction: column;
 }
 
-.portal-policies__tool-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
+.portal-policies__capability {
+  padding: 0.75rem 0.875rem;
+}
+
+.portal-policies__capability + .portal-policies__capability {
+  border-top: 1px solid var(--c-border);
+}
+
+/* An enabled row with config gets a faint tint so the revealed settings read as
+ * belonging to it. */
+.portal-policies__capability[data-on] .portal-policies__capability-config {
+  border-top: 1px dashed var(--c-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 /* Sources picker */
+/* Selectable source tiles: a vertical stack of full-width shared Buttons
+   (icon · name · check). Layout is the Button's own leftSection/label/
+   rightSection — only the selected border/tint is added here. */
 .portal-policies__sources {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-@media (max-width: 40rem) {
-  .portal-policies__sources {
-    grid-template-columns: 1fr;
-  }
-}
-
-.portal-policies__source {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
-  padding: 0.625rem;
-  text-align: left;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-policies__source::after {
-  content: "";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-left: auto;
-  width: 1rem;
-  height: 1rem;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border-strong);
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-policies__source:hover {
-  background: var(--color-bg-hover);
 }
 
 .portal-policies__source--on {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
-}
-
-.portal-policies__source--on::after {
-  content: "✓";
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #fff;
-  border-color: var(--color-blue);
-  background: var(--color-blue);
-}
-
-.portal-policies__source-icon {
-  font-size: 1rem;
-  line-height: 1.2;
-  flex-shrink: 0;
-  color: var(--color-text-3);
-}
-
-.portal-policies__source--on .portal-policies__source-icon {
-  color: var(--color-blue);
-}
-
-.portal-policies__source-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.0625rem;
-  min-width: 0;
+  border-color: var(--c-primary);
 }
 
 .portal-policies__source-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-policies__source-desc {
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  line-height: 1.4;
-}
-
-/* Doc-type scope */
-.portal-policies__doctypes-head {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  color: var(--color-text-2);
-}
-
-.portal-policies__doctypes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.625rem;
+  gap: 0.5rem;
 }
 
 .portal-policies__link {
@@ -301,7 +300,7 @@
   padding: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: var(--c-accent-text);
   cursor: pointer;
 }
 
@@ -324,17 +323,17 @@
 }
 
 .portal-policies__detail-sep {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
 .portal-policies__detail-meta {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__enforce-arrow {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
@@ -348,7 +347,7 @@
 .portal-policies__detail-inline-label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
@@ -357,7 +356,7 @@
 
 .portal-policies__detail-inline-value {
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   line-height: 1.5;
 }
 
@@ -370,7 +369,7 @@
 }
 
 .portal-policies__activity-row + .portal-policies__activity-row {
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .portal-policies__activity-icon {
@@ -382,13 +381,13 @@
 }
 
 .portal-policies__activity-icon--success {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 .portal-policies__activity-icon--warning {
-  color: var(--color-amber);
+  color: var(--color-amber-dark);
 }
 .portal-policies__activity-icon--info {
-  color: var(--color-blue);
+  color: var(--c-accent-text);
 }
 
 @keyframes portal-policies-spin {
@@ -412,17 +411,17 @@
 .portal-policies__activity-doc {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policies__activity-action {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-policies__activity-time {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   white-space: nowrap;
 }
 
@@ -461,5 +460,40 @@
 }
 
 .portal-policies__detail-stats .sui-stat + .sui-stat {
-  border-left: 1px solid var(--color-border-light);
+  border-left: 1px solid var(--c-border-subtle);
 }
+
+/* ── Catalogue table (replaces the stacked category cards) ──────────────── */
+.portal-policies__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.portal-policies__cell-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+  min-width: 0;
+}
+
+.portal-policies__rulechips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+
+.portal-policies__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-policies__docs {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+/* The .pcat-badge icon styles live with the PolicyCategoryIcon component
+   (PolicyCategoryIcon.css) so the Home policy summary picks them up too. */

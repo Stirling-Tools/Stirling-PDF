@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Box,
-  Button,
   Stack,
   Text,
   Group,
@@ -11,6 +10,7 @@ import {
   Switch,
   Card,
 } from "@mantine/core";
+import { Button as DSButton } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -26,6 +26,7 @@ import {
   type JscanifyScanner,
 } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
@@ -890,7 +891,7 @@ export default function MobileScannerPage() {
         window.close();
         // Fallback if window.close() doesn't work (some browsers block it)
         if (!window.closed) {
-          navigate("/");
+          navigate(EDITOR_BASENAME);
         }
       }, 1500);
     } catch (err) {
@@ -995,7 +996,7 @@ export default function MobileScannerPage() {
     <Box
       style={{
         minHeight: "100dvh",
-        background: "var(--bg-background)",
+        background: "var(--c-bg)",
         display: "flex",
         flexDirection: "column",
       }}
@@ -1004,8 +1005,8 @@ export default function MobileScannerPage() {
       <Box
         p="md"
         style={{
-          background: "var(--bg-toolbar)",
-          borderBottom: "1px solid var(--border-subtle)",
+          background: "var(--c-bg-raised)",
+          borderBottom: "1px solid var(--c-border-subtle)",
         }}
       >
         <Group gap="sm" align="center">
@@ -1025,7 +1026,7 @@ export default function MobileScannerPage() {
             background: loadingStatus.includes("✗")
               ? "var(--mantine-color-red-1)"
               : "var(--mantine-color-blue-1)",
-            borderBottom: "1px solid var(--border-subtle)",
+            borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",
             fontFamily: "monospace",
             textAlign: "center",
@@ -1107,7 +1108,7 @@ export default function MobileScannerPage() {
                 <PhotoCameraRoundedIcon
                   style={{
                     fontSize: "3rem",
-                    color: "var(--mantine-color-blue-6)",
+                    color: "var(--c-accent-text)",
                   }}
                 />
                 <Text size="lg" fw={600}>
@@ -1172,9 +1173,9 @@ export default function MobileScannerPage() {
           }}
         >
           {/* Back button - floating top left */}
-          <Button
+          <DSButton
             onClick={() => setMode("choice")}
-            variant="filled"
+            variant="primary"
             size="sm"
             style={{
               position: "absolute",
@@ -1187,8 +1188,7 @@ export default function MobileScannerPage() {
             }}
           >
             ← {t("mobileScanner.back", "Back")}
-          </Button>
-
+          </DSButton>
           {/* Video feed - fills available space */}
           <Box
             style={{
@@ -1232,8 +1232,8 @@ export default function MobileScannerPage() {
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
-              backgroundColor: "var(--bg-toolbar)",
-              borderTop: "1px solid var(--border-subtle)",
+              backgroundColor: "var(--c-bg-raised)",
+              borderTop: "1px solid var(--c-border-subtle)",
               padding: "0.75rem 1rem",
             }}
           >
@@ -1266,18 +1266,17 @@ export default function MobileScannerPage() {
               </Group>
 
               {/* Capture button */}
-              <Button
+              <DSButton
                 fullWidth
-                size="lg"
+                size="md"
                 onClick={captureImage}
                 loading={isProcessing}
-                variant="filled"
-                radius="xl"
+                variant="primary"
               >
                 {isProcessing
                   ? t("mobileScanner.processing", "Processing...")
                   : t("mobileScanner.capture", "Capture")}
-              </Button>
+              </DSButton>
             </Stack>
           </Box>
         </Box>
@@ -1291,15 +1290,14 @@ export default function MobileScannerPage() {
           align="center"
           style={{ maxWidth: "500px", margin: "0 auto" }}
         >
-          <Button
+          <DSButton
             onClick={() => setMode("choice")}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             style={{ alignSelf: "flex-start" }}
           >
             ← {t("mobileScanner.back", "Back")}
-          </Button>
-
+          </DSButton>
           <Card
             shadow="sm"
             padding="xl"
@@ -1325,15 +1323,14 @@ export default function MobileScannerPage() {
                 style={{ display: "none" }}
                 onChange={handleFileSelect}
               />
-              <Button
+              <DSButton
                 size="lg"
-                variant="filled"
                 fullWidth
                 onClick={() => fileInputRef.current?.click()}
                 leftSection={<AddPhotoAlternateRoundedIcon />}
               >
                 {t("mobileScanner.selectImage", "Select Image")}
-              </Button>
+              </DSButton>
             </Stack>
           </Card>
         </Stack>
@@ -1376,54 +1373,58 @@ export default function MobileScannerPage() {
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
-              backgroundColor: "var(--bg-toolbar)",
-              borderTop: "1px solid var(--border-subtle)",
+              backgroundColor: "var(--c-bg-raised)",
+              borderTop: "1px solid var(--c-border-subtle)",
               padding: "0.75rem 1rem",
             }}
           >
             <Stack gap="sm">
               <Group grow>
-                <Button variant="default" onClick={retake} size="lg">
+                <DSButton variant="secondary" onClick={retake} size="md">
                   {t("mobileScanner.retake", "Retake")}
-                </Button>
-                <Button variant="filled" onClick={addToBatch} size="lg">
+                </DSButton>
+                <DSButton variant="primary" onClick={addToBatch} size="md">
                   {t("mobileScanner.addToBatch", "Add to Batch")}
-                </Button>
+                </DSButton>
               </Group>
-              <Button
+              <DSButton
                 fullWidth
-                variant="filled"
-                size="lg"
+                variant="primary"
+                size="md"
                 onClick={uploadImages}
                 loading={isUploading}
-                radius="xl"
               >
                 {t("mobileScanner.upload", "Upload")}
-              </Button>
+              </DSButton>
             </Stack>
           </Box>
         </Box>
       )}
 
       {capturedImages.length > 0 && (
-        <Box p="sm" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+        <Box p="sm" style={{ borderTop: "1px solid var(--c-border-subtle)" }}>
           <Group justify="space-between" mb="sm">
             <Text size="sm" fw={600}>
               {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
               )
             </Text>
             <Group gap="xs">
-              <Button
-                size="xs"
-                variant="outline"
+              <DSButton
+                size="sm"
+                variant="secondary"
+                accent="danger"
                 onClick={clearBatch}
-                color="red"
               >
                 {t("mobileScanner.clearBatch", "Clear")}
-              </Button>
-              <Button size="xs" onClick={uploadImages} loading={isUploading}>
+              </DSButton>
+              <DSButton
+                variant="primary"
+                size="sm"
+                onClick={uploadImages}
+                loading={isUploading}
+              >
                 {t("mobileScanner.uploadAll", "Upload All")}
-              </Button>
+              </DSButton>
             </Group>
           </Group>
           <Box
@@ -1442,7 +1443,7 @@ export default function MobileScannerPage() {
                   height: "80px",
                   borderRadius: "var(--radius-sm)",
                   overflow: "hidden",
-                  border: "2px solid var(--border-subtle)",
+                  border: "2px solid var(--c-border-subtle)",
                 }}
               >
                 <img

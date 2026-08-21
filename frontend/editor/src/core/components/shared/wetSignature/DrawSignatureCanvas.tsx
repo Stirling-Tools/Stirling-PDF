@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
-import { Stack, Button, Group, ColorPicker, Slider, Text } from "@mantine/core";
+import { Stack, Group, ColorPicker, Slider, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -128,6 +129,13 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
             onChange={setPenColor}
             format="hex"
             size="xs"
+            // The saturation area and hue bar are role="slider" divs; these are
+            // their only accessible names.
+            saturationLabel={t(
+              "colorPicker.saturation",
+              "Saturation and brightness",
+            )}
+            hueLabel={t("colorPicker.hue", "Hue")}
           />
         </div>
         <div style={{ flex: 2 }}>
@@ -143,6 +151,12 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
             max={10}
             step={1}
             disabled={disabled}
+            // The thumb is a div, so the heading above cannot name it.
+            thumbLabel={t(
+              "certSign.collab.signRequest.penSize",
+              "Pen Size: {{size}}px",
+              { size: penSize },
+            )}
             marks={[
               { value: 1, label: "1" },
               { value: 5, label: "5" },
@@ -153,8 +167,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
       </Group>
 
       <Button
-        variant="light"
-        color="red"
+        variant="secondary"
+        accent="danger"
         leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
         onClick={clearCanvas}
         disabled={disabled || !signature}

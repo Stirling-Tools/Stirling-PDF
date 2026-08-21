@@ -1,53 +1,33 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 export type ViewId =
   | "home"
   | "editor"
   | "users"
   | "sources"
-  | "agent-builder"
+  | "integrations"
   | "policies"
   | "pipelines"
   | "documents"
-  | "components"
   | "infrastructure"
   | "usage"
   | "docs"
-  | "procurement"
   | "settings";
-
-export const VIEW_LABELS: Record<ViewId, string> = {
-  home: "Home",
-  editor: "Editor",
-  users: "Users",
-  sources: "Sources",
-  "agent-builder": "Agent Builder",
-  policies: "Policies",
-  pipelines: "Pipelines",
-  documents: "Documents",
-  components: "Components",
-  infrastructure: "Infrastructure",
-  usage: "Usage & Billing",
-  docs: "Developer Docs",
-  procurement: "Procurement",
-  settings: "Settings",
-};
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
   editor: "/editor",
   users: "/users",
   sources: "/sources",
-  "agent-builder": "/agent-builder",
+  integrations: "/integrations",
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
-  components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
-  procurement: "/procurement",
   settings: "/settings",
 };
 
@@ -55,11 +35,12 @@ export const VIEW_PATHS: Record<ViewId, string> = {
  * The portal is mounted as a route-set under this base path inside the editor
  * app (see the admin-route seam). VIEW_PATHS stay expressed as logical portal
  * paths; this facade adds/strips the base so components keep navigating by
- * ViewId without knowing where the portal is mounted.
+ * ViewId without knowing where the portal is mounted. The constant lives in
+ * core so portal-free build flavors can reference the mount point too.
  */
-export const PORTAL_BASENAME = "/portal";
+export { PORTAL_BASENAME };
 
-/** Logical view path -> full app path (e.g. "/users" -> "/portal/users"). */
+/** Logical view path -> full app path (e.g. "/users" -> "/processor/users"). */
 export function toPortalPath(viewPath: string): string {
   return `${PORTAL_BASENAME}${viewPath === "/" ? "" : viewPath}`;
 }

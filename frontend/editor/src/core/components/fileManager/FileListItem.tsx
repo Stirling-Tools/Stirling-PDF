@@ -3,12 +3,12 @@ import {
   Group,
   Box,
   Text,
-  ActionIcon,
   Checkbox,
   Divider,
   Menu,
   Badge,
 } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -189,7 +189,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
           backgroundColor:
             isSelected || shouldShowHovered
               ? "var(--mantine-color-gray-1)"
-              : "var(--bg-file-list)",
+              : "var(--c-surface)",
           opacity: 1,
           transition: "background-color 0.15s ease",
           userSelect: "none",
@@ -323,10 +323,11 @@ const FileListItem: React.FC<FileListItemProps> = ({
           >
             <Menu.Target>
               <ActionIcon
-                variant="subtle"
-                c="dimmed"
+                variant="tertiary"
+                accent="neutral"
                 size="md"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={t("fileManager.moreOptions", "More options")}
                 style={{
                   opacity: shouldShowHovered ? 1 : 0,
                   transform: shouldShowHovered ? "scale(1)" : "scale(0.8)",

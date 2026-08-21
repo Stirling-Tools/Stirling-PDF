@@ -145,7 +145,8 @@ export function SpendLimitCard({
         />
 
         {proj && draftCap !== proj.suggestedMajor && (
-          <button
+          <Button
+            variant="quiet"
             type="button"
             className="portal-billing__suggested"
             onClick={() => setDraftCap(proj.suggestedMajor)}
@@ -157,7 +158,7 @@ export function SpendLimitCard({
                 amount: formatMoneyMajor(proj.suggestedMajor, wallet.currency),
               },
             )}
-          </button>
+          </Button>
         )}
 
         <div className="portal-billing__guardrail">
@@ -184,13 +185,13 @@ export function SpendLimitCard({
 
         <div className="portal-billing__edit-actions">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => onAdjustingChange(false)}
           >
             {t("portal.billing.spendLimit.cancel", "Cancel")}
           </Button>
-          <Button variant="gradient" size="sm" loading={saving} onClick={save}>
+          <Button size="sm" loading={saving} onClick={save}>
             {t("portal.billing.spendLimit.save", "Save limit")}
           </Button>
         </div>
@@ -223,7 +224,7 @@ export function SpendLimitCard({
         </div>
         {isLeader && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => onAdjustingChange(true)}
           >
@@ -236,6 +237,7 @@ export function SpendLimitCard({
         <MeterBar
           state={capActive ? state : "FULL"}
           pct={pct}
+          barLabel={t("portal.billing.spendLimit.eyebrow", "Spend limit")}
           figure={
             capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel
           }

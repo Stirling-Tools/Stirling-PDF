@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
 import type { MeterState } from "@app/billing/format";
+import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
+
+// Meter state → the shared StatusBadge tone (contrast-tuned per theme).
+const STATE_TONE: Record<MeterState, StatusTone> = {
+  FULL: "success",
+  WARNED: "warning",
+  DEGRADED: "danger",
+};
 
 interface MeterBarProps {
   state: MeterState;
@@ -15,6 +23,8 @@ interface MeterBarProps {
   meta?: ReactNode;
   /** Hide the fill bar (e.g. uncapped). Shown by default. */
   showBar?: boolean;
+  /** Accessible name for the fill bar — what the meter measures ("Spend limit"). */
+  barLabel: string;
 }
 
 /**
@@ -32,6 +42,7 @@ export function MeterBar({
   statusLabel,
   meta,
   showBar = true,
+  barLabel,
 }: MeterBarProps) {
   return (
     <div className="paygf-meter" data-state={state}>
@@ -41,10 +52,9 @@ export function MeterBar({
           <span className="paygf-meter__cap">{capSuffix}</span>
         </div>
         {statusLabel != null && (
-          <span className="payg-status" data-state={state}>
-            <span className="payg-status__dot" />
+          <StatusBadge tone={STATE_TONE[state]} size="sm" showDot>
             {statusLabel}
-          </span>
+          </StatusBadge>
         )}
       </div>
       {showBar && (
@@ -54,6 +64,7 @@ export function MeterBar({
           aria-valuenow={Math.round(pct)}
           aria-valuemin={0}
           aria-valuemax={100}
+          aria-label={barLabel}
         >
           <div
             className="payg-bar__fill"

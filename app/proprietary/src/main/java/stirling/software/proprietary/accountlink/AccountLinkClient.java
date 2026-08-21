@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,25 +15,31 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.billing.UnitCalcPolicy;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Outbound calls from a self-hosted instance to its linked SaaS backend (combined-billing "Mode
  * A").
  *
- * <p>Two calls:
+ * <p>Calls:
  *
  * <ul>
  *   <li>{@link #register} — relays the admin's short-lived Supabase JWT to {@code POST
  *       /api/v1/account-link/register}; the SaaS side mints + returns a device credential.
  *   <li>{@link #fetchEntitlement} — authenticates with the stored device credential against {@code
  *       GET /api/v1/instance/entitlement}; what the local gate consults.
+ *   <li>{@link #reportUsage} — daily usage sync ({@code POST /api/v1/instance/sync}); reports
+ *       cumulative units and returns the refreshed entitlement.
+ *   <li>{@link #revokeSelf} — self-revokes the credential on local unlink ({@code POST
+ *       /api/v1/instance/revoke-self}).
  * </ul>
  *
- * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern, see
- * {@code AiEngineClient}). The base URL + client are injectable so tests can stub the SaaS
- * endpoint.
+ * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
+ * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
 @Slf4j
 @Service
@@ -86,11 +93,9 @@ public class AccountLinkClient {
     }
 
     /**
-     * Authoritative deny (401/403) from the entitlement endpoint — the device credential is revoked
-     * or invalid. Distinct from a transport/server failure (which returns {@code null} and fails
-     * open): the cache must BLOCK billable work on this rather than serve a stale entitled
-     * snapshot. Unchecked so it propagates cleanly through {@link #fetchEntitlement}'s transport
-     * try/catch.
+     * Authoritative deny (401/403) — the device credential is revoked or invalid. Unlike a
+     * transport/server failure (which returns {@code null} and fails open), the cache must BLOCK on
+     * this. Unchecked so it propagates through {@link #fetchEntitlement}'s transport try/catch.
      */
     public static final class RevokedException extends RuntimeException {
         private final int status;
@@ -142,11 +147,9 @@ public class AccountLinkClient {
     }
 
     /**
-     * Revokes this instance's own credential on the SaaS side ({@code POST
-     * /api/v1/instance/revoke-self}), authenticated by the device credential — a credential is
-     * allowed to revoke its own identity. Best-effort: returns {@code false} if SaaS is unreachable
-     * or rejects the call, so the caller (local unlink) can still clear locally and log the orphan
-     * row for follow-up. Idempotent on SaaS (already-revoked → still 204).
+     * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
+     * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local
+     * unlink) can still clear locally and log the orphan for follow-up. Idempotent on SaaS.
      */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
@@ -218,6 +221,63 @@ public class AccountLinkClient {
         }
     }
 
+    /**
+     * Reports the period's cumulative per-category units to {@code POST /api/v1/instance/sync} and
+     * returns the fresh entitlement in the same reply — one round-trip both reports and refreshes.
+     * SaaS bills the delta against its last-seen cumulative, so resending the same totals is
+     * idempotent. Same three outcomes as {@link #fetchEntitlement}; on {@code null} the caller must
+     * not advance its last-synced markers so the usage retries next sync.
+     */
+    public InstanceEntitlement reportUsage(
+            String deviceId,
+            String deviceSecret,
+            long syncSeq,
+            LocalDateTime periodStart,
+            long apiUnits,
+            long aiUnits,
+            long automationUnits) {
+        HttpResponse<String> response;
+        try {
+            ObjectNode root = mapper.createObjectNode();
+            root.put("syncSeq", syncSeq);
+            // Explicit ISO-8601 string so it round-trips regardless of the mapper's time config.
+            root.put("periodStart", periodStart.toString());
+            ObjectNode units = root.putObject("cumulativeUnits");
+            units.put("api", apiUnits);
+            units.put("ai", aiUnits);
+            units.put("automation", automationUnits);
+            String body = mapper.writeValueAsString(root);
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/instance/sync"))
+                            .header(HEADER_DEVICE_ID, deviceId)
+                            .header(HEADER_DEVICE_SECRET, deviceSecret)
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(HttpRequest.BodyPublishers.ofString(body))
+                            .build();
+            response = send(request);
+        } catch (Exception e) {
+            log.debug("Usage sync failed: {}", e.getMessage());
+            return null;
+        }
+        int status = response.statusCode();
+        if (status == 401 || status == 403) {
+            throw new RevokedException(status);
+        }
+        if (status / 100 != 2) {
+            log.debug("Usage sync returned HTTP {}", status);
+            return null;
+        }
+        try {
+            return parseEntitlement(response.body());
+        } catch (IOException e) {
+            log.debug("Usage sync parse failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private InstanceEntitlement parseEntitlement(String body) throws IOException {
         JsonNode root = mapper.readTree(body);
         boolean subscribed = root.path("subscribed").asBoolean(false);
@@ -226,7 +286,45 @@ public class AccountLinkClient {
         Long periodCap =
                 root.hasNonNull("periodCapUnits") ? root.get("periodCapUnits").asLong() : null;
         EntitlementState state = mapState(root.path("state").asText(null));
-        return new InstanceEntitlement(subscribed, freeRemaining, periodSpend, periodCap, state);
+        return new InstanceEntitlement(
+                subscribed,
+                freeRemaining,
+                periodSpend,
+                periodCap,
+                state,
+                parseUnitCalcPolicy(root),
+                parseDateTime(root, "periodStart"),
+                parseDateTime(root, "periodEnd"));
+    }
+
+    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */
+    private static UnitCalcPolicy parseUnitCalcPolicy(JsonNode root) {
+        if (!root.hasNonNull("unitCalcPolicy")) {
+            return null;
+        }
+        JsonNode node = root.get("unitCalcPolicy");
+        try {
+            return new UnitCalcPolicy(
+                    node.path("docPagesPerUnit").asInt(),
+                    node.path("docBytesPerUnit").asLong(),
+                    node.path("minChargeUnits").asInt(),
+                    node.path("fileUnitCap").asInt());
+        } catch (RuntimeException e) {
+            // Malformed policy → degrade to "none" rather than fail the whole entitlement parse.
+            return null;
+        }
+    }
+
+    /** ISO date-time field → LocalDateTime; null if absent or unparseable. */
+    private static LocalDateTime parseDateTime(JsonNode root, String field) {
+        if (!root.hasNonNull(field)) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(root.get(field).asText(null));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** Maps the SaaS state string to our coarse enum; unrecognised → UNKNOWN. */

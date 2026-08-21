@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -46,9 +47,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>Scope: routes whose handler method (or bean type) carries either {@link AutoJobPostMapping}
  * (multipart tool POSTs) or {@link RequiresFeature} (AI controllers, future non-multipart gated
- * routes). Admin / info / config endpoints are excluded by the path-pattern in {@code
- * PaygWebMvcConfig} and are additionally skipped here when they carry neither annotation, so non-
- * billable infra never trips the guard.
+ * routes), plus two proprietary route families recognised by path since they can't carry the
+ * annotation: AI document tools ({@link AiToolRoutes} gated on AI_SUPPORT) and policy execute
+ * endpoints ({@link PolicyRunRoutes} gated on AUTOMATION). Admin / info / config endpoints are
+ * excluded by the path-pattern in {@code PaygWebMvcConfig} and are additionally skipped here when
+ * they carry no annotation and match no such family, so non-billable infra never trips the guard.
  *
  * <p>Decision matrix:
  *
@@ -137,13 +140,20 @@ public class EntitlementGuard implements HandlerInterceptor {
         // @RequiresFeature; recognise them by path so they're gated on AI_SUPPORT — see
         // AiToolRoutes and PaygChargeInterceptor, which classify the same routes as AI.
         boolean aiToolRoute = AiToolRoutes.matches(request);
-        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+        // Policy execute routes (/api/v1/policies/**/run etc.) are proprietary and can't carry
+        // @RequiresFeature; recognise them by path and gate on AUTOMATION (mirrors aiToolRoute).
+        boolean policyRunRoute = PolicyRunRoutes.matches(request);
+        if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute && !policyRunRoute) {
             skippedNoAnnotationCounter.increment();
             return true;
         }
 
         FeatureGate[] required =
-                aiToolRoute ? new FeatureGate[] {FeatureGate.AI_SUPPORT} : resolveRequiredGates(hm);
+                aiToolRoute
+                        ? new FeatureGate[] {FeatureGate.AI_SUPPORT}
+                        : policyRunRoute
+                                ? new FeatureGate[] {FeatureGate.AUTOMATION}
+                                : resolveRequiredGates(hm);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         boolean anonymous = isAnonymous(auth);

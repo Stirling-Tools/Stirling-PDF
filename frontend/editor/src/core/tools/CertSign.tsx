@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
 import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
@@ -22,6 +24,25 @@ const CertSign = (props: BaseToolProps) => {
     useCertSignOperation,
     props,
   );
+
+  const { config } = useAppConfig();
+  // "Upload" is always available; the source chooser is only meaningful when a
+  // server certificate or a hardware token gives the user an actual alternative.
+  const hasCertSourceChoice =
+    (config?.serverCertificateEnabled ?? false) ||
+    (config?.hardwareSigningAvailable ?? false);
+
+  // With Upload as the only source, keep signMode on MANUAL even if a saved
+  // automation set AUTO/DEVICE, so the hidden source step can't strand the flow.
+  useEffect(() => {
+    if (!hasCertSourceChoice && base.params.parameters.signMode !== "MANUAL") {
+      base.params.updateParameter("signMode", "MANUAL");
+    }
+  }, [
+    hasCertSourceChoice,
+    base.params.parameters.signMode,
+    base.params.updateParameter,
+  ]);
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -63,6 +84,7 @@ const CertSign = (props: BaseToolProps) => {
     steps: [
       {
         title: t("certSign.source.stepTitle", "Certificate source"),
+        isVisible: hasCertSourceChoice,
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
-  Button,
   Group,
   Loader,
   NumberInput,
@@ -10,6 +9,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import {
@@ -22,7 +22,10 @@ import {
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -176,16 +179,20 @@ const HardwareCertificateSettings = ({
     setError(null);
     listWindowsCertificates()
       .then(applyCerts)
-      .catch((e: any) =>
+      .catch((e) => {
+        const err = e as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         setError(
-          e?.response?.data?.message ||
-            e?.message ||
+          err?.response?.data?.message ||
+            err?.message ||
             t(
               "certSign.hardware.windowsLoadError",
               "Could not read the Windows certificate store",
             ),
-        ),
-      )
+        );
+      })
       .finally(() => setLoading(false));
   }, [applyCerts, t]);
 
@@ -221,16 +228,20 @@ const HardwareCertificateSettings = ({
       pin: parameters.password,
     })
       .then(applyCerts)
-      .catch((e: any) =>
+      .catch((e) => {
+        const err = e as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
         setError(
-          e?.response?.data?.message ||
-            e?.message ||
+          err?.response?.data?.message ||
+            err?.message ||
             t(
               "certSign.hardware.pkcs11LoadError",
               "Could not read certificates from the token. Check the PIN and driver.",
             ),
-        ),
-      )
+        );
+      })
       .finally(() => setLoading(false));
   }, [
     applyCerts,
@@ -284,22 +295,34 @@ const HardwareCertificateSettings = ({
       {supported.windows && supported.pkcs11 && (
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={isWindowsStore ? "filled" : "outline"}
-            color={isWindowsStore ? "teal" : "var(--text-muted)"}
+            variant={isWindowsStore ? "primary" : "secondary"}
+            accent={isWindowsStore ? "success" : "default"}
             onClick={() => selectKind("WINDOWS_STORE")}
             disabled={disabled || loading}
-            style={{ flex: 1, fontSize: "11px", minHeight: 40, height: "auto" }}
-            styles={{ label: { whiteSpace: "normal", lineHeight: 1.15 } }}
+            style={{
+              flex: 1,
+              fontSize: "11px",
+              minHeight: 40,
+              height: "auto",
+              whiteSpace: "normal",
+              lineHeight: 1.15,
+            }}
           >
             {t("certSign.format.windowsStore", "Windows certificate store")}
           </Button>
           <Button
-            variant={!isWindowsStore ? "filled" : "outline"}
-            color={!isWindowsStore ? "teal" : "var(--text-muted)"}
+            variant={!isWindowsStore ? "primary" : "secondary"}
+            accent={!isWindowsStore ? "success" : "default"}
             onClick={() => selectKind("PKCS11")}
             disabled={disabled || loading}
-            style={{ flex: 1, fontSize: "11px", minHeight: 40, height: "auto" }}
-            styles={{ label: { whiteSpace: "normal", lineHeight: 1.15 } }}
+            style={{
+              flex: 1,
+              fontSize: "11px",
+              minHeight: 40,
+              height: "auto",
+              whiteSpace: "normal",
+              lineHeight: 1.15,
+            }}
           >
             {t("certSign.format.pkcs11", "USB Token")}
           </Button>
@@ -332,7 +355,7 @@ const HardwareCertificateSettings = ({
               )}
             />
             <Button
-              variant="default"
+              variant="secondary"
               onClick={loadWindowsCerts}
               disabled={disabled || loading}
             >
@@ -408,7 +431,7 @@ const HardwareCertificateSettings = ({
             />
           </Group>
           <Button
-            variant="default"
+            variant="secondary"
             onClick={loadPkcs11Certs}
             disabled={
               disabled ||

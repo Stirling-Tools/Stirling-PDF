@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Box,
-  Button,
   Divider,
   Group,
   Modal,
@@ -10,12 +9,14 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
+import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
@@ -144,7 +145,7 @@ export default function LoginAgreementModal() {
       } catch {
         /* ignore */
       }
-      window.location.assign("/login");
+      window.location.assign(withBasePath("/login"));
     } else {
       // Anonymous / desktop: best-effort close the window; if that is a no-op (web),
       // reload so the agreement re-blocks until accepted.
@@ -188,10 +189,10 @@ export default function LoginAgreementModal() {
             )}
           </Text>
           <Group gap="sm" wrap="nowrap">
-            <Button variant="default" onClick={handleDecline}>
+            <Button variant="secondary" onClick={handleDecline}>
               {t("loginAgreementDecline", "Decline")}
             </Button>
-            <Button onClick={handleAccept}>
+            <Button variant="primary" onClick={handleAccept}>
               {t("loginAgreementAccept", "Accept")}
             </Button>
           </Group>

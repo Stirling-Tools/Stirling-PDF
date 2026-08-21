@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
-import {
-  ActionIcon,
-  Button,
-  Paper,
-  Group,
-  Menu,
-  NumberInput,
-  Slider,
-} from "@mantine/core";
+import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import "@app/components/viewer/PdfViewerToolbar.css";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -24,6 +18,12 @@ import WbTwilightIcon from "@mui/icons-material/WbTwilight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+
+// Sizing constants for the page number input
+const MIN_PAGE_DIGITS = 2;
+const MIN_INPUT_WIDTH_PX = 48;
+const BASE_INPUT_WIDTH_PX = 32;
+const PX_PER_DIGIT = 8;
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -138,10 +138,18 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
+  const totalPagesDigits = Math.max(
+    MIN_PAGE_DIGITS,
+    (scrollState.totalPages || 1).toString().length,
+  );
+  const inputWidth = Math.max(
+    MIN_INPUT_WIDTH_PX,
+    BASE_INPUT_WIDTH_PX + totalPagesDigits * PX_PER_DIGIT,
+  );
+
   return (
     <Paper
-      radius="xl xl 0 0"
-      shadow="sm"
+      className="pdf-viewer-toolbar"
       p={12}
       pb={12}
       style={{
@@ -151,45 +159,36 @@ export function PdfViewerToolbar({
         rowGap: 8,
         gap: 10,
         justifyContent: "center",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
         pointerEvents: "auto",
       }}
     >
       {/* First Page Button */}
       {!isPhone && (
-        <Button
-          variant="subtle"
-          color="blue"
+        <ActionIcon
+          variant="tertiary"
           size={buttonSize}
-          px={8}
-          radius="xl"
           onClick={handleFirstPage}
           disabled={scrollState.currentPage === 1}
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.firstPage", "First Page")}
+          aria-label={t("viewer.firstPage", "First Page")}
         >
           <FirstPageIcon fontSize="small" />
-        </Button>
+        </ActionIcon>
       )}
 
       {/* Previous Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
+      <ActionIcon
+        variant="tertiary"
         size={buttonSize}
-        px={8}
-        radius="xl"
         onClick={handlePreviousPage}
         disabled={scrollState.currentPage === 1}
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.previousPage", "Previous Page")}
+        aria-label={t("viewer.previousPage", "Previous Page")}
       >
         <ArrowBackIosIcon fontSize="small" />
-      </Button>
+      </ActionIcon>
 
       {/* Page Input */}
       <NumberInput
@@ -206,10 +205,13 @@ export function PdfViewerToolbar({
         hideControls
         styles={{
           input: {
-            width: 48,
+            width: inputWidth,
             textAlign: "center",
             fontWeight: 500,
             fontSize: 16,
+            paddingLeft: 4,
+            paddingRight: 4,
+            boxSizing: "border-box",
           },
         }}
       />
@@ -219,35 +221,31 @@ export function PdfViewerToolbar({
       </span>
 
       {/* Next Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
+      <ActionIcon
+        variant="tertiary"
         size={buttonSize}
-        px={8}
-        radius="xl"
         onClick={handleNextPage}
         disabled={scrollState.currentPage === scrollState.totalPages}
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.nextPage", "Next Page")}
+        aria-label={t("viewer.nextPage", "Next Page")}
       >
         <ArrowForwardIosIcon fontSize="small" />
-      </Button>
+      </ActionIcon>
 
       {/* Last Page Button */}
       {!isPhone && (
-        <Button
-          variant="subtle"
-          color="blue"
+        <ActionIcon
+          variant="tertiary"
           size={buttonSize}
-          px={8}
-          radius="xl"
           onClick={handleLastPage}
           disabled={scrollState.currentPage === scrollState.totalPages}
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.lastPage", "Last Page")}
+          aria-label={t("viewer.lastPage", "Last Page")}
         >
           <LastPageIcon fontSize="small" />
-        </Button>
+        </ActionIcon>
       )}
 
       {/* Dual Page Toggle */}
@@ -261,21 +259,24 @@ export function PdfViewerToolbar({
           position="top"
           arrow
         >
-          <Button
-            variant={isDualPageActive ? "filled" : "light"}
-            color="blue"
+          <ActionIcon
+            variant={isDualPageActive ? "primary" : "secondary"}
             size={buttonSize}
-            radius="xl"
             onClick={handleDualPageToggle}
             disabled={scrollState.totalPages <= 1}
             style={{ minWidth: buttonMinWidth }}
+            aria-label={
+              isDualPageActive
+                ? t("viewer.singlePageView", "Single Page View")
+                : t("viewer.dualPageView", "Dual Page View")
+            }
           >
             {isDualPageActive ? (
               <DescriptionIcon fontSize="small" />
             ) : (
               <ViewWeekIcon fontSize="small" />
             )}
-          </Button>
+          </ActionIcon>
         </Tooltip>
       )}
 
@@ -292,11 +293,9 @@ export function PdfViewerToolbar({
           position="top"
           arrow
         >
-          <Button
-            variant={pdfRenderMode !== "normal" ? "filled" : "light"}
-            color="blue"
+          <ActionIcon
+            variant={pdfRenderMode !== "normal" ? "primary" : "secondary"}
             size={buttonSize}
-            radius="xl"
             onClick={cyclePdfRenderMode}
             style={{ minWidth: buttonMinWidth }}
             aria-label={
@@ -310,7 +309,7 @@ export function PdfViewerToolbar({
             {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
             {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
             {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
-          </Button>
+          </ActionIcon>
         </Tooltip>
       )}
 
@@ -323,9 +322,7 @@ export function PdfViewerToolbar({
           style={{ marginLeft: 16, flexShrink: 0 }}
         >
           <ActionIcon
-            variant="subtle"
-            color="blue"
-            radius="md"
+            variant="tertiary"
             onClick={handleZoomOut}
             aria-label={t("viewer.zoomOut", "Zoom out")}
           >
@@ -346,9 +343,7 @@ export function PdfViewerToolbar({
             label={null}
           />
           <ActionIcon
-            variant="subtle"
-            color="blue"
-            radius="md"
+            variant="tertiary"
             onClick={handleZoomIn}
             aria-label={t("viewer.zoomIn", "Zoom in")}
           >
@@ -359,7 +354,7 @@ export function PdfViewerToolbar({
               minWidth: "2.5rem",
               textAlign: "center",
               fontSize: 12,
-              color: "var(--text-muted)",
+              color: "var(--c-text-subtle)",
             }}
           >
             {displayZoomPercent}%
@@ -376,9 +371,7 @@ export function PdfViewerToolbar({
         >
           <Menu.Target>
             <ActionIcon
-              variant="light"
-              color="blue"
-              radius="md"
+              variant="secondary"
               size="lg"
               aria-label={t("viewer.moreOptions", "More")}
               style={{ marginLeft: 4 }}
