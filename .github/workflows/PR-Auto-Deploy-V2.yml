@@ -26,6 +26,10 @@ jobs:
   check-pr:
     if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # Only reads the PR via pulls.get with the default GITHUB_TOKEN.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
       is_fork: ${{ steps.resolve.outputs.is_fork }}
@@ -35,7 +39,7 @@ jobs:
       pr_ref: ${{ steps.resolve.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -97,6 +101,7 @@ jobs:
           echo "allow_fork=${allow_fork:-false}" >> $GITHUB_OUTPUT
 
   deploy-v2-pr:
+    environment: pr-preview
     needs: check-pr
     runs-on: ubuntu-latest
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
@@ -107,6 +112,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      packages: write
       pull-requests: write
     env:
       # Single source of truth for whether this preview embeds the admin portal:
@@ -115,7 +121,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -125,20 +131,11 @@ jobs:
           repository: ${{ github.repository }}
           ref: main
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Add deployment started comment
         id: deployment-started
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
@@ -180,7 +177,8 @@ jobs:
         with:
           repository: ${{ needs.check-pr.outputs.pr_repository }}
           ref: ${{ needs.check-pr.outputs.pr_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # untrusted tree is built below - never leave credentials in .git/config
+          persist-credentials: false
           fetch-depth: 0 # Fetch full history for commit hash detection
 
       - name: Set up Docker Buildx
@@ -192,11 +190,16 @@ jobs:
           VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_API }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
       - name: Get commit hash for app
         id: commit-hash
@@ -220,7 +223,7 @@ jobs:
       - name: Check if image exists
         id: check-image
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${IMAGE_BASE}:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Image already exists, skipping build"
           else
@@ -228,6 +231,8 @@ jobs:
             echo "Image needs to be built"
           fi
 
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
       - name: Build and push V2 image
         if: steps.check-image.outputs.exists == 'false'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -237,7 +242,7 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
@@ -246,9 +251,11 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy V2 to VPS
         id: deploy
         run: |
@@ -261,7 +268,7 @@ jobs:
           services:
             stirling-pdf-v2:
               container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+              image: ${IMAGE_BASE}:v2-${{ steps.commit-hash.outputs.app_short }}
               ports:
                 - "${V2_PORT}:8080"
               volumes:
@@ -273,8 +280,8 @@ jobs:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
-                SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
-                SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
+                SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
+                SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
                 SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Embedded Architecture"
@@ -288,9 +295,9 @@ jobs:
           EOF
 
           # Deploy to VPS
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-v2.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose-v2.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             # Create V2 PR-specific directories
             mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs,storage}
 
@@ -315,12 +322,19 @@ jobs:
           # Set port for output
           echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
 
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          TEST_LOGIN_USERNAME: ${{ secrets.TEST_LOGIN_USERNAME }}
+          TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+
       # ---- Storybook preview (only when this PR touches stories/.storybook) ----
       # Runs inside the same approved-contributor-gated deploy job, so it deploys
       # under the exact same access rules as the app preview.
       - name: Detect Storybook changes
         id: sb-changes
-        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
           list-files: json
           filters: |
@@ -379,8 +393,9 @@ jobs:
         env:
           SB_URL: ${{ steps.storybook.outputs.url }}
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
@@ -401,7 +416,7 @@ jobs:
               }
             }
 
-            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
+            const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${v2Port}`;
 
             // Only mention the portal when this image actually embeds it.
             // Use the direct IP URL - the SSL hostname isn't supported yet.
@@ -447,6 +462,10 @@ jobs:
             });
 
   cleanup-v2-deployment:
+    # Tearing a preview down is not a deployment - no deployment object.
+    environment:
+      name: pr-preview
+      deployment: false
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
@@ -456,26 +475,17 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Clean up V2 deployment comments
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ github.event.pull_request.number }};
@@ -504,12 +514,14 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Cleanup V2 deployment
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << 'ENDSSH'
             if [ -d "/stirling/V2-PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found V2 PR directory, proceeding with cleanup..."
 
@@ -542,8 +554,11 @@ jobs:
             # Only remove PR-specific containers and directories
           ENDSSH
 
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
       - name: Cleanup temporary files
         if: always()
         run: |
-          rm -f ../private.key
+          rm -f ../private.key docker-compose.yml storybook.tgz
         continue-on-error: true

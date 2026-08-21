@@ -312,8 +312,9 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
     // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
     // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
-    // api-landing.html and mobile-upload.html are real backend source files, not generated artifacts.
-    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
+    // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
+    // not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
     // Nested prerendered route pages (e.g. settings/people.html)
     delete new File(resourcesStaticDir, 'settings')
 }
@@ -330,8 +331,24 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
+tasks.register('copyBackendOnlySamples', Copy) {
+    group = 'frontend'
+    description = 'Copy frontend sample files for backend-only mode'
+    from(new File(frontendEditorDir, 'public/samples'))
+    into(new File(resourcesStaticDir, 'samples'))
+    dependsOn cleanFrontendAssets
+    onlyIf { !buildWithFrontend }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
+// Cleanup removes frontend-generated resources that are also visible to the resource/formatting
+// task graph. Keep all Spotless tasks ahead of cleanup so they never snapshot a path that has
+// just been removed.
+tasks.named('cleanFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
@@ -342,6 +359,7 @@ if (buildWithFrontend) {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
     processResources.dependsOn copyApiLandingPage
+    processResources.dependsOn copyBackendOnlySamples
 }
 
 bootJar.dependsOn ':common:jar'

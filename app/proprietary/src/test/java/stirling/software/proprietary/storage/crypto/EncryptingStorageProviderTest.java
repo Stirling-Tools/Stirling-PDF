@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -242,6 +243,54 @@ class EncryptingStorageProviderTest {
     }
 
     @Test
+    void auditListener_receivesEncryptDecryptAndDeniedEvents() throws IOException {
+        List<String> events = new java.util.ArrayList<>();
+        StorageEncryptionAuditListener recording =
+                new StorageEncryptionAuditListener() {
+                    @Override
+                    public void encrypted(String storageKey, UUID keyId) {
+                        events.add("encrypt:" + storageKey);
+                    }
+
+                    @Override
+                    public void decrypted(String storageKey, UUID keyId) {
+                        events.add("decrypt:" + storageKey);
+                    }
+
+                    @Override
+                    public void decryptDenied(UUID keyId, String reason) {
+                        events.add("denied:" + reason);
+                    }
+                };
+        FileEncryptionKeyService keyService =
+                new FileEncryptionKeyService(
+                        repo.mock, new FileEncryptionMasterKey(MASTER, false), recording);
+        EncryptingStorageProvider audited =
+                new EncryptingStorageProvider(inner, keyService, true, recording);
+
+        StoredObject stored = audited.store(owner, upload());
+        try (InputStream in = audited.load(stored.getStorageKey()).getInputStream()) {
+            in.readAllBytes();
+        }
+        // Legacy plaintext must NOT produce a decrypt event.
+        StoredObject legacy = inner.store(owner, upload());
+        audited.load(legacy.getStorageKey());
+
+        assertThat(events)
+                .containsExactly(
+                        "encrypt:" + stored.getStorageKey(), "decrypt:" + stored.getStorageKey());
+
+        repo.rows
+                .get(UUID.fromString(stored.getEncryptionKeyId()))
+                .setStatus(FileEncryptionKey.Status.DISABLED);
+        keyService.invalidate(UUID.fromString(stored.getEncryptionKeyId()));
+        assertThatThrownBy(() -> audited.load(stored.getStorageKey()))
+                .isInstanceOf(StorageKeyRevokedException.class);
+        assertThat(events).hasSize(3);
+        assertThat(events.get(2)).isEqualTo("denied:key disabled");
+    }
+
+    @Test
     void load_tinyLegacyBlob_shorterThanHeader_passesThrough() throws IOException {
         byte[] tiny = "hi".getBytes(StandardCharsets.UTF_8);
         StoredObject legacy =
@@ -349,7 +398,11 @@ class EncryptingStorageProviderTest {
     void signedDownloadUrl_delegatesWhenNoEncryptedContentPossible() throws IOException {
         // Vanilla install: flag off, no key rows anywhere -> keep the backend's fast path.
         StorageEncryptionState vanilla =
-                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+                new StorageEncryptionState(
+                        false,
+                        () -> newKeyService(),
+                        repo.mock,
+                        StorageEncryptionAuditListener.NOOP);
         StorageProvider withUrls =
                 new StorageProvider() {
                     @Override
@@ -385,7 +438,11 @@ class EncryptingStorageProviderTest {
         StoredObject encrypted = provider.store(owner, upload());
         assertThat(encrypted.getEncryptionKeyId()).isNotNull();
         StorageEncryptionState drifted =
-                new StorageEncryptionState(false, () -> newKeyService(), repo.mock);
+                new StorageEncryptionState(
+                        false,
+                        () -> newKeyService(),
+                        repo.mock,
+                        StorageEncryptionAuditListener.NOOP);
         EncryptingStorageProvider driftedNode = new EncryptingStorageProvider(withUrls, drifted);
         assertThat(driftedNode.signedDownloadUrl("k", Duration.ofMinutes(5), false, "a.pdf"))
                 .isEmpty();

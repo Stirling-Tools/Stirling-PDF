@@ -15,6 +15,8 @@ import zipfile
 import re
 from PIL import Image, ImageDraw
 
+import parallel_support
+
 API_HEADERS = {"X-API-KEY": "123456789"}
 
 #########
@@ -642,6 +644,8 @@ def step_send_get_request(context, endpoint):
     full_url = f"{base_url}{endpoint}"
     response = requests.get(full_url, headers=API_HEADERS, timeout=60)
     context.response = response
+    context.parallel_get = (full_url, None, API_HEADERS, endpoint)
+    parallel_support.validate_get(context, full_url, None, API_HEADERS, response, endpoint)
 
 
 @when('I send a GET request to "{endpoint}" with parameters')
@@ -651,17 +655,18 @@ def step_send_get_request_with_params(context, endpoint):
     full_url = f"{base_url}{endpoint}"
     response = requests.get(full_url, params=params, headers=API_HEADERS, timeout=60)
     context.response = response
+    context.parallel_get = (full_url, params, API_HEADERS, endpoint)
+    parallel_support.validate_get(context, full_url, params, API_HEADERS, response, endpoint)
 
 
-@when('I send the API request to the endpoint "{endpoint}"')
-def step_send_api_request(context, endpoint):
-    url = f"http://localhost:8080{endpoint}"
+def _build_request_spec(context):
+    """Capture the multipart payload as replayable bytes rather than file handles."""
     files = context.files if hasattr(context, "files") else {}
 
     if not hasattr(context, "request_data") or context.request_data is None:
         context.request_data = {}
 
-    form_data = []
+    spec = []
     for key, value in context.request_data.items():
         # Handle list parameters (like 'languages') - send multiple form fields
         # Split comma-separated values or treat single values as single-item lists
@@ -669,31 +674,49 @@ def step_send_api_request(context, endpoint):
             # Split by comma if present, otherwise treat as single value
             values = [v.strip() for v in value.split(",")] if "," in value else [value]
             for val in values:
-                form_data.append((key, (None, val)))
+                spec.append((key, None, val, None))
         else:
-            form_data.append((key, (None, value)))
+            spec.append((key, None, value, None))
+
+    def _read(file):
+        file.seek(0)
+        payload = file.read()
+        file.seek(0)
+        return payload
 
     for key, file in files.items():
         mime_type, _ = mimetypes.guess_type(file.name)
         mime_type = mime_type or "application/octet-stream"
         print(f"form_data {file.name} with {mime_type}")
-        form_data.append((key, (file.name, file, mime_type)))
+        spec.append((key, file.name, _read(file), mime_type))
 
     # Multi-file entries (duplicate keys for MultipartFile[] endpoints, e.g. merge-pdfs)
     for key, file in getattr(context, "multi_files", []):
         mime_type, _ = mimetypes.guess_type(file.name)
         mime_type = mime_type or "application/octet-stream"
         print(f"form_data (multi) {file.name} with {mime_type}")
-        form_data.append((key, (file.name, file, mime_type)))
+        spec.append((key, file.name, _read(file), mime_type))
 
     # JSON multipart parts for @RequestPart endpoints (e.g. /form/fill)
     for part_name, json_content in getattr(context, "json_parts", {}).items():
-        form_data.append((part_name, (None, json_content, "application/json")))
+        spec.append((part_name, None, json_content, "application/json"))
+
+    return spec
+
+
+@when('I send the API request to the endpoint "{endpoint}"')
+def step_send_api_request(context, endpoint):
+    url = f"http://localhost:8080{endpoint}"
+    spec = _build_request_spec(context)
 
     # Set timeout to 300 seconds (5 minutes) to prevent infinite hangs
     print(f"Sending POST request to {endpoint} with timeout=300s")
-    response = requests.post(url, files=form_data, headers=API_HEADERS, timeout=300)
+    response = parallel_support.send(url, spec, API_HEADERS, timeout=300)
     context.response = response
+
+    # Remembered so a later "run N times in parallel" step can replay this request.
+    context.parallel_request = (url, spec, API_HEADERS, endpoint)
+    parallel_support.validate(context, url, spec, API_HEADERS, response, endpoint)
 
 
 ########

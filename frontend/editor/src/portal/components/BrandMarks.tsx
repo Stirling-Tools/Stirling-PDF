@@ -188,6 +188,21 @@ const BRAND: Record<string, (p: MarkProps) => ReactNode> = {
       <circle cx="12" cy="12" r="2.6" fill="#FF4F00" />
     </Fill>
   ),
+  n8n: (p) => (
+    <Fill {...p}>
+      <g stroke="#EA4B71" strokeWidth="1.6" fill="none" strokeLinecap="round">
+        <path d="M3.6 12h5.2" />
+        <path d="M13.2 12h1.2c1.1 0 1.5-.8 2-1.7s.9-1.7 2-1.7h1" />
+        <path d="M13.2 12h1.2c1.1 0 1.5.8 2 1.7s.9 1.7 2 1.7h1" />
+      </g>
+      <g fill="#EA4B71">
+        <circle cx="2.6" cy="12" r="1.7" />
+        <circle cx="11" cy="12" r="2.4" />
+        <circle cx="20.6" cy="8.6" r="1.7" />
+        <circle cx="20.6" cy="15.4" r="1.7" />
+      </g>
+    </Fill>
+  ),
   jira: (p) => (
     <Fill {...p}>
       <path

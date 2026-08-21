@@ -183,7 +183,7 @@
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .file-sidebar-file-meta-row {
@@ -208,7 +208,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* ---- Folder membership tags ---- */
@@ -302,7 +302,7 @@
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-name {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-check {
@@ -321,7 +321,7 @@
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-eye-btn:hover {
@@ -371,6 +371,28 @@
 
 .file-sidebar-kebab-btn:hover {
   color: var(--c-text);
+}
+
+/* Menu header: the full file name the row had to truncate, plus its size. */
+.file-sidebar-kebab-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 6px;
+}
+
+.file-sidebar-kebab-header-name {
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.file-sidebar-kebab-header-meta {
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  text-transform: none;
 }
 
 /* ---- Date group headers ---- */
@@ -446,4 +468,14 @@
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+}
+
+/* The stored bytes are gone - the row says so instead of pretending to open. */
+.file-sidebar-datalost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--c-danger);
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
