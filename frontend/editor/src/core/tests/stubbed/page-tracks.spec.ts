@@ -52,14 +52,15 @@ async function readRotations(
 }
 
 /**
- * Drags one page tile onto another. dnd-kit's PointerSensor needs a real
- * pointer sequence past its activation distance, plus a settle move so the
- * drop target is measured before the release.
+ * Presses on one tile and drags to a fraction across another, without
+ * releasing. dnd-kit's PointerSensor needs a real pointer sequence past its
+ * activation distance, and the intermediate moves let it measure the target.
  */
-async function dragPageOnto(
+async function dragPageOver(
   page: import("@playwright/test").Page,
   from: import("@playwright/test").Locator,
   to: import("@playwright/test").Locator,
+  fractionAcross = 0.25,
 ) {
   const source = await from.boundingBox();
   const target = await to.boundingBox();
@@ -70,8 +71,7 @@ async function dragPageOnto(
     source.y + source.height / 2,
   );
   await page.mouse.down();
-  // Left half of the target tile so the page lands before it, not after.
-  const dropX = target.x + target.width * 0.25;
+  const dropX = target.x + target.width * fractionAcross;
   const dropY = target.y + target.height / 2;
   for (const step of [0.2, 0.5, 0.8, 1]) {
     await page.mouse.move(
@@ -80,6 +80,20 @@ async function dragPageOnto(
       { steps: 8 },
     );
   }
+}
+
+/** The tile the insertion line is currently drawn against. */
+function dropTarget(page: import("@playwright/test").Page) {
+  return page.locator("[data-page-id][data-drop-before]");
+}
+
+async function dragPageOnto(
+  page: import("@playwright/test").Page,
+  from: import("@playwright/test").Locator,
+  to: import("@playwright/test").Locator,
+  fractionAcross = 0.25,
+) {
+  await dragPageOver(page, from, to, fractionAcross);
   await page.mouse.up();
 }
 
@@ -248,5 +262,53 @@ test.describe("Page Editor tracks", () => {
     await expect(saved).toContainText("v2", { timeout: 90_000 });
     await expect(saved.locator("[data-page-id]")).toHaveCount(3);
     await expect(saved).not.toContainText("edited");
+  });
+
+  test("the insertion line marks where a right-to-left drag actually lands", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 270, 180]);
+
+    const tiles = rotated.locator("[data-page-id]");
+    const second = tiles.nth(1);
+    const secondId = await second.getAttribute("data-page-id");
+
+    // Drag page 4 leftwards, crossing page 2's right half before settling on
+    // its left half. The line must follow the pointer across the midpoint, not
+    // stay where the tile was first entered.
+    await dragPageOver(page, tiles.nth(3), second, 0.25);
+    await expect(dropTarget(page)).toHaveAttribute(
+      "data-page-id",
+      secondId as string,
+    );
+
+    await page.mouse.up();
+
+    // And the drop lands exactly where the line was: 180 ahead of 90.
+    expect(await readRotations(rotated, 4)).toEqual([0, 180, 90, 270]);
+  });
+
+  test("the insertion line follows the pointer past a tile's midpoint", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 270, 180]);
+
+    const tiles = rotated.locator("[data-page-id]");
+    const thirdId = await tiles.nth(2).getAttribute("data-page-id");
+
+    // Settling on page 2's RIGHT half must mark page 3 instead, since the page
+    // is inserted after page 2.
+    await dragPageOver(page, tiles.nth(3), tiles.nth(1), 0.75);
+    await expect(dropTarget(page)).toHaveAttribute(
+      "data-page-id",
+      thirdId as string,
+    );
+
+    await page.mouse.up();
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 180, 270]);
   });
 });

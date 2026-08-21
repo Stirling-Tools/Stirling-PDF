@@ -26,6 +26,10 @@ export interface TrackPageTileProps {
   position: number;
   selected: boolean;
   dragging: boolean;
+  /** Draw the insertion line on this tile's leading edge. */
+  dropBefore: boolean;
+  /** Draw it on the trailing edge (last tile, appending to the track). */
+  dropAfterLast: boolean;
   /** Colour of the page's source file, shown when it differs from the track. */
   foreignColor: string | null;
   thumbnails: TrackThumbnailStore;
@@ -44,6 +48,8 @@ function TrackPageTileImpl({
   position,
   selected,
   dragging,
+  dropBefore,
+  dropAfterLast,
   foreignColor,
   thumbnails,
   onSelect,
@@ -93,6 +99,8 @@ function TrackPageTileImpl({
         styles.tile,
         selected ? styles.tileSelected : "",
         dragging ? styles.tileDragging : "",
+        dropBefore ? styles.dropBefore : "",
+        dropAfterLast ? styles.dropAfterLast : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -100,6 +108,8 @@ function TrackPageTileImpl({
       {...listeners}
       data-page-id={page.id}
       data-selected={selected}
+      data-drop-before={dropBefore || undefined}
+      data-drop-after-last={dropAfterLast || undefined}
       role="button"
       tabIndex={0}
       aria-pressed={selected}

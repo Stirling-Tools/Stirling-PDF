@@ -222,13 +222,29 @@
 
 /* ── Drop indicator ──────────────────────────────────────────────────────── */
 
-.dropMarker {
-  flex: 0 0 auto;
-  align-self: stretch;
+/*
+ * Drawn on the tile it inserts against, not as a flex item of its own: a real
+ * element in the lane adds another `gap`, shifting every tile to its right by
+ * 8px — including the tile whose midpoint decides which side to drop on.
+ */
+.dropBefore::before,
+.dropAfterLast::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
   width: 2px;
-  margin: 0 -1px;
   border-radius: 999px;
   background: var(--c-primary);
+  pointer-events: none;
+}
+
+.dropBefore::before {
+  left: -5px;
+}
+
+.dropAfterLast::after {
+  right: -5px;
 }
 
 .dragBadge {
