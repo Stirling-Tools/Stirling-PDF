@@ -1,11 +1,14 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { Checkbox } from "@app/ui/Checkbox";
+import HoverActionMenu, {
+  HoverAction,
+} from "@app/components/shared/HoverActionMenu";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { FileId } from "@app/types/file";
 import { TrackPage } from "@app/components/pageTracks/types";
@@ -13,7 +16,6 @@ import {
   TrackThumbnailStore,
   useTrackThumbnail,
 } from "@app/components/pageTracks/hooks/useTrackThumbnails";
-import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 export const pageDroppableId = (pageId: string) => `page:${pageId}`;
@@ -57,6 +59,7 @@ function TrackPageTileImpl({
   onDelete,
 }: TrackPageTileProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const dragData = { type: "page", pageId: page.id, fileId: trackFileId };
   const {
     attributes,
@@ -88,6 +91,40 @@ function TrackPageTileImpl({
 
   const stop = (event: React.MouseEvent) => event.stopPropagation();
   const quarterTurn = page.rotation === 90 || page.rotation === 270;
+
+  const hoverActions = useMemo<HoverAction[]>(
+    () => [
+      {
+        id: "rotate-left",
+        icon: <RotateLeftIcon style={{ fontSize: 16 }} />,
+        label: t("pageTracks.rotateLeft", "Rotate left"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onRotate([page.id], -90);
+        },
+      },
+      {
+        id: "rotate-right",
+        icon: <RotateRightIcon style={{ fontSize: 16 }} />,
+        label: t("pageTracks.rotateRight", "Rotate right"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onRotate([page.id], 90);
+        },
+      },
+      {
+        id: "delete",
+        icon: <DeleteOutlineIcon style={{ fontSize: 16 }} />,
+        label: t("pageTracks.delete.page", "Delete page"),
+        color: "var(--c-danger)",
+        onClick: (event) => {
+          event.stopPropagation();
+          onDelete([page.id]);
+        },
+      },
+    ],
+    [t, onRotate, onDelete, page.id],
+  );
 
   return (
     <div
@@ -132,40 +169,6 @@ function TrackPageTileImpl({
         />
       </div>
 
-      <div className={styles.tileTools} onClick={stop}>
-        <Tooltip content={t("pageTracks.rotateLeft", "Rotate left")}>
-          <ActionIcon
-            variant="secondary"
-            size="sm"
-            aria-label={t("pageTracks.rotateLeft", "Rotate left")}
-            onClick={() => onRotate([page.id], -90)}
-          >
-            <RotateLeftIcon sx={{ fontSize: "0.875rem" }} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip content={t("pageTracks.rotateRight", "Rotate right")}>
-          <ActionIcon
-            variant="secondary"
-            size="sm"
-            aria-label={t("pageTracks.rotateRight", "Rotate right")}
-            onClick={() => onRotate([page.id], 90)}
-          >
-            <RotateRightIcon sx={{ fontSize: "0.875rem" }} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip content={t("pageTracks.delete.page", "Delete page")}>
-          <ActionIcon
-            variant="secondary"
-            size="sm"
-            accent="danger"
-            aria-label={t("pageTracks.delete.page", "Delete page")}
-            onClick={() => onDelete([page.id])}
-          >
-            <DeleteOutlineIcon sx={{ fontSize: "0.875rem" }} />
-          </ActionIcon>
-        </Tooltip>
-      </div>
-
       <div className={styles.canvas}>
         {thumbnail ? (
           <PrivateContent>
@@ -187,6 +190,14 @@ function TrackPageTileImpl({
         ) : (
           <div className={styles.thumbPending} />
         )}
+
+        <HoverActionMenu
+          show={isMobile}
+          actions={hoverActions}
+          position="inside"
+          visibility="cssHover"
+          className={styles.pagePill}
+        />
       </div>
 
       <div className={styles.tileFooter}>

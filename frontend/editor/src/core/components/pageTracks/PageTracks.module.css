@@ -129,6 +129,7 @@
 }
 
 .canvas {
+  position: relative;
   height: var(--pt-tile-h);
   display: flex;
   align-items: center;
@@ -200,20 +201,29 @@
   opacity: 1;
 }
 
-.tileTools {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
+/*
+ * Compacted from the shared pill's defaults: the same component carries up to
+ * six actions on a 20rem file card, and three at that scale would overflow a
+ * page tile a third of the width.
+ */
+.pagePill {
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
   z-index: 2;
-  display: flex;
-  gap: 0.125rem;
-  opacity: 0;
-  transition: opacity 0.12s ease;
 }
 
-.tile:hover .tileTools,
-.tile:focus-within .tileTools {
+/* CSS-hover driven visibility, matching the file cards in Active Files. */
+.tile [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tile:hover
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.tile:focus-within
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* ── Drop indicator ──────────────────────────────────────────────────────── */
