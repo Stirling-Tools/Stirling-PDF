@@ -1,0 +1,100 @@
+/* Page container hover effects - optimized for smooth scrolling */
+.pageContainer {
+  transition: transform 0.2s ease-in-out;
+  /* Enable hardware acceleration for smoother scrolling */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.pageContainer:hover {
+  transform: scale(1.02) translateZ(0);
+}
+
+.pageSurface {
+  transition: background-color 0.4s ease;
+}
+
+.pageJustMoved {
+  animation: pageMovedHighlight 1.2s ease-out;
+}
+
+@keyframes pageMovedHighlight {
+  0% {
+    background-color: color-mix(in srgb, var(--c-primary) 32%, transparent);
+  }
+  60% {
+    background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  }
+  100% {
+    background-color: color-mix(in srgb, var(--c-primary) 0%, transparent);
+  }
+}
+
+.pageContainer:hover .pageNumber {
+  opacity: 1 !important;
+}
+
+.pageContainer:hover .pageHoverControls {
+  opacity: 0.95 !important;
+}
+
+/* Checkbox container - prevent transform inheritance */
+.checkboxContainer {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Page movement animations */
+.pageMoveAnimation {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Action styles */
+.actionRow:hover {
+  background: var(--c-hover);
+}
+
+.actionDanger {
+  color: var(--text-brand-accent);
+}
+
+.actionsDivider {
+  height: 1px;
+  background: var(--c-border);
+  margin: 4px 0;
+}
+
+.pinIndicator {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 1;
+  color: rgba(0, 0, 0, 0.35); /* match drag handle color */
+}
+
+.unsupportedPill {
+  margin-left: 1.75rem;
+  background: var(--c-text-subtle);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 20px;
+}

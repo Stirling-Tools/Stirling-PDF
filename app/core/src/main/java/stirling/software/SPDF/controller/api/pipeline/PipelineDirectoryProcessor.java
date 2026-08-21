@@ -7,7 +7,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -36,6 +35,7 @@ import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
@@ -49,6 +49,7 @@ public class PipelineDirectoryProcessor {
 
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
+    private final ToolMetadataService toolMetadataService;
     private final PipelineProcessor processor;
     private final PostHogService postHogService;
     private final FileReadinessChecker fileReadinessChecker;
@@ -62,12 +63,14 @@ public class PipelineDirectoryProcessor {
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
             ApiDocService apiDocService,
+            ToolMetadataService toolMetadataService,
             PipelineProcessor processor,
             PostHogService postHogService,
             FileReadinessChecker fileReadinessChecker,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
+        this.toolMetadataService = toolMetadataService;
         this.processor = processor;
         this.postHogService = postHogService;
         this.fileReadinessChecker = fileReadinessChecker;
@@ -82,7 +85,7 @@ public class PipelineDirectoryProcessor {
 
         try {
             for (String watchedFoldersDir : watchedFoldersDirs) {
-                scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+                scanWatchedFolder(Path.of(watchedFoldersDir).toAbsolutePath());
             }
         } finally {
             // Clean up ThreadLocal to prevent memory leaks
@@ -230,7 +233,7 @@ public class PipelineDirectoryProcessor {
             throws IOException {
 
         List<String> inputExtensions =
-                apiDocService.getExtensionTypes(false, operation.getOperation());
+                toolMetadataService.getExtensionTypes(false, operation.getOperation());
         log.info(
                 "Allowed extensions for operation {}: {}",
                 operation.getOperation(),
@@ -442,7 +445,7 @@ public class PipelineDirectoryProcessor {
                                         .replace("{outputFolder}", finishedFoldersDir)
                                         .replace("{folderName}", dir.toString()))
                         .replaceAll("");
-        return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
+        return Path.of(outputDir).isAbsolute() ? Path.of(outputDir) : Path.of(".", outputDir);
     }
 
     private void deleteOriginalFiles(List<File> filesToProcess, Path processingDir)

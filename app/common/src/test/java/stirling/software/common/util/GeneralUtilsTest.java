@@ -2,6 +2,8 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,8 +14,46 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import stirling.software.common.configuration.InstallationPathConfig;
 
 public class GeneralUtilsTest {
+
+    // Regression guard for the SSO auto-login persistence bug: the admin UI writes camelCase
+    // proFeatures keys, so saveKeyToSettings must match (and persist) them against the camelCase
+    // settings.yml.template. A case mismatch makes YamlHelper.updateValue silently no-op.
+    @Test
+    void saveKeyToSettings_persistsCamelCaseProFeatureKeys(@TempDir Path tempDir) throws Exception {
+        Path settings = tempDir.resolve("settings.yml");
+        Files.writeString(
+                settings,
+                """
+                premium:
+                  proFeatures:
+                    ssoAutoLogin: false
+                    customMetadata:
+                      author: username
+                """);
+
+        try (MockedStatic<InstallationPathConfig> mocked =
+                Mockito.mockStatic(InstallationPathConfig.class)) {
+            mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+
+            GeneralUtils.saveKeyToSettings("premium.proFeatures.ssoAutoLogin", true);
+            GeneralUtils.saveKeyToSettings("premium.proFeatures.customMetadata.author", "alice");
+        }
+
+        YamlHelper reloaded = new YamlHelper(settings);
+        assertEquals(
+                "true", reloaded.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
+        assertEquals(
+                "alice",
+                reloaded.getValueByExactKeyPath(
+                        "premium", "proFeatures", "customMetadata", "author"));
+    }
 
     @Test
     void testParsePageListWithAll() {

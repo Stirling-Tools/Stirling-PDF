@@ -9,7 +9,6 @@ import java.awt.print.PrinterJob;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Locale;
@@ -47,14 +46,14 @@ public class PrintFileController {
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
-    //                "Input of PDF or Image along with a printer name/URL/IP to match against to
-    // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
+    //                "Input of PDF or Image along with a printer name/URL/IP to match against
+    // to send it to (Fire and forget)")
     public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null
-                && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
+                && (originalFilename.contains("..") || Path.of(originalFilename).isAbsolute())) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalid.filepath", "Invalid file path detected: " + originalFilename);
         }

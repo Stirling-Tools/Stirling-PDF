@@ -55,10 +55,10 @@ services:
       context: ../..
       dockerfile: docker/embedded/Dockerfile
     extra_hosts:
-      - "localhost:host-gateway"
-      - "${KEYCLOAK_HOST:-kubernetes.docker.internal}:host-gateway"
+      localhost: host-gateway
+      kubernetes.docker.internal: host-gateway
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
       timeout: 10s
       retries: 30

@@ -6,31 +6,43 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
+from .common import (
+    AiFile,
+    ConversationMessage,
+    ExtractedFileText,
+    NeedIngestResponse,
+    WorkflowOutcome,
+)
+from .pdf_edit import EditPlanResponse
+
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    conversation_id: str | None = None
-    extracted_text: str = ""
-    file_name: str | None = None
+    files: list[AiFile] = Field(default_factory=list)
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
 class PdfQuestionAnswerResponse(ApiModel):
-    outcome: Literal["answer"] = "answer"
+    outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
-    evidence: list[str] = Field(default_factory=list)
-
-
-class PdfQuestionNeedTextResponse(ApiModel):
-    outcome: Literal["need_text"] = "need_text"
-    reason: str
+    evidence: list[ExtractedFileText] = Field(default_factory=list)
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
-    outcome: Literal["not_found"] = "not_found"
+    outcome: Literal[WorkflowOutcome.NOT_FOUND] = WorkflowOutcome.NOT_FOUND
     reason: str
 
 
-PdfQuestionResponse = Annotated[
-    PdfQuestionAnswerResponse | PdfQuestionNeedTextResponse | PdfQuestionNotFoundResponse,
+type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
+type PdfQuestionResponse = Annotated[
+    PdfQuestionTerminalResponse | NeedIngestResponse,
     Field(discriminator="outcome"),
 ]
+
+
+# ``orchestrate`` may also emit an ``EditPlanResponse`` on the math-routing
+# first turn (``outcome=PLAN`` with ``resume_with=PDF_QUESTION``). It's not in
+# ``PdfQuestionTerminalResponse`` because that alias would otherwise duplicate
+# the PLAN branch already provided by ``PdfEditTerminalResponse`` in the
+# top-level :class:`OrchestratorResponse` discriminated union.
+type PdfQuestionOrchestrateResponse = PdfQuestionResponse | EditPlanResponse

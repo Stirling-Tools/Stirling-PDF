@@ -22,9 +22,9 @@ runs:
   steps:
     - name: Generate a GitHub App Token
       id: generate-token
-      uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
       with:
-        app-id: ${{ inputs.app-id }}
+        client-id: ${{ inputs.app-id }}
         private-key: ${{ inputs.private-key }}
     - name: Configure Git
       run: |

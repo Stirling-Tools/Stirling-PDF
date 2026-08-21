@@ -41,7 +41,8 @@ print_versions() {
   command_exists unoserver && unoserver --version 2>&1 | head -n 1 | log
   command_exists tesseract && tesseract --version | head -n 1 | log
   command_exists gs && gs --version | printf "Ghostscript %s\n" "$(cat)" | log
-  command_exists ffmpeg && ffmpeg -version | head -n 1 | log
+  # ffmpeg disabled due to raised CVEs
+  # command_exists ffmpeg && ffmpeg -version | head -n 1 | log
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
   command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
   command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log
@@ -176,13 +177,6 @@ UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
 UNOSERVER_UNO_PORTS=()
 
-SU_EXEC_BIN=""
-if command_exists su-exec; then
-  SU_EXEC_BIN="su-exec"
-elif command_exists gosu; then
-  SU_EXEC_BIN="gosu"
-fi
-
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
 SWITCH_USER_WARNING_EMITTED=false
@@ -197,8 +191,12 @@ warn_switch_user_once() {
 run_as_runtime_user() {
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     "$@"
-  elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-    "$SU_EXEC_BIN" "$RUNTIME_USER" "$@"
+  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+    # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
+    env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
+        USER="$RUNTIME_USER" \
+        LOGNAME="$RUNTIME_USER" \
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
   else
     warn_switch_user_once
     "$@"
@@ -257,23 +255,49 @@ get_unoserver_count() {
   read_setting_value "libreOfficeSessionLimit"
 }
 
+# Mirror libreOfficetimeoutMinutes so Java and unoserver agree.
+get_unoserver_conversion_timeout_seconds() {
+  local minutes=""
+  if [ -n "${PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES:-}" ]; then
+    minutes="$PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES"
+  elif [ -n "${UNO_SERVER_CONVERSION_TIMEOUT_MINUTES:-}" ]; then
+    minutes="$UNO_SERVER_CONVERSION_TIMEOUT_MINUTES"
+  else
+    minutes="$(read_setting_value "libreOfficetimeoutMinutes")"
+  fi
+  case "$minutes" in
+    ''|*[!0-9]*) minutes=30 ;;
+  esac
+  if [ "$minutes" -le 0 ]; then
+    minutes=30
+  fi
+  echo $((minutes * 60))
+}
+
 start_unoserver_instance() {
   local port=$1
   local uno_port=$2
-  # Suppress repetitive POST /RPC2 access logs from health checks
+  local conversion_timeout
+  conversion_timeout="$(get_unoserver_conversion_timeout_seconds)"
+  # Per-instance profile dir avoids LibreOffice lock-file contention.
+  local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
+  run_as_runtime_user mkdir -p "$profile_dir"
+  # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
   run_as_runtime_user "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
+    --user-installation "$profile_dir" \
+    --conversion-timeout "$conversion_timeout" \
     2> >(grep --line-buffered -v "POST /RPC2" >&2) \
     &
   LAST_UNOSERVER_PID=$!
 }
 
 start_unoserver_watchdog() {
-  local interval=${UNO_SERVER_HEALTH_INTERVAL:-120}
+  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
   case "$interval" in
-    ''|*[!0-9]*) interval=120 ;;
+    ''|*[!0-9]*) interval=30 ;;
   esac
   (
     while true; do
@@ -294,10 +318,20 @@ start_unoserver_watchdog() {
 
         if [ "$needs_restart" = true ]; then
           log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-          # Kill the old process if it exists
+          # Kill the old process and its children (soffice) if it exists.
+          # Capture child PIDs first, then send TERM to children before parent
+          # so the PPID relationship is still visible. After sleep, use the
+          # saved PIDs for SIGKILL since the parent may have already exited
+          # and children would be reparented to init.
           if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            local child_pids
+            child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
+            pkill -TERM -P "$pid" 2>/dev/null || true
             kill -TERM "$pid" 2>/dev/null || true
-            sleep 1
+            sleep 3
+            if [ -n "$child_pids" ]; then
+              kill -KILL $child_pids 2>/dev/null || true
+            fi
             kill -KILL "$pid" 2>/dev/null || true
           fi
           start_unoserver_instance "$port" "$uno_port"
@@ -853,14 +887,29 @@ fi
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
-mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline || true
-CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/tmp/stirling-pdf" "/app.jar")
+mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
+CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
 CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
   if [ -e "$p" ]; then
     chown -R "stirlingpdfuser:stirlingpdfgroup" "$p" 2>/dev/null || CHOWN_OK=false
     chmod -R 755 "$p" 2>/dev/null || true
+  fi
+done
+
+# Verify write access to critical directories; repair if chown failed on bind mounts
+CRITICAL_DIRS=("/configs" "/logs" "/customFiles" "/pipeline" "/storage")
+for dir in "${CRITICAL_DIRS[@]}"; do
+  if [ -d "$dir" ]; then
+    # Test write access as the runtime user
+    if ! run_as_runtime_user test -w "$dir" 2>/dev/null; then
+      log "WARNING: ${RUNTIME_USER} cannot write to $dir - attempting to fix permissions"
+      # Try adding group-write and world-write as fallbacks
+      chmod -R o+rwX "$dir" 2>/dev/null \
+        || chmod -R a+rwX "$dir" 2>/dev/null \
+        || log "ERROR: Could not grant ${RUNTIME_USER} write access to $dir. Check your volume mount permissions (e.g. set PUID/PGID or fix host directory ownership)."
+    fi
   fi
 done
 
@@ -915,8 +964,12 @@ fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
   "${JAVA_CMD[@]}" &
-elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-  "$SU_EXEC_BIN" "$RUNTIME_USER" "${JAVA_CMD[@]}" &
+elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+  # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
+  env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
+      USER="$RUNTIME_USER" \
+      LOGNAME="$RUNTIME_USER" \
+    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &

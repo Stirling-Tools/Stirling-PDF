@@ -1,17 +1,22 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.0
-ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}
+ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
+ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.3.1-jdk25 AS app-build
+FROM gradle:9.7.1-jdk25@sha256:a80276ab804c348989df46016e2b5d58cad07c5b29e06f2112434d28ca5b2844 AS app-build
 
+ARG TASK_VERSION=3.52.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
+    && ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
+    && dpkg -i /tmp/task.deb \
+    && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
@@ -25,6 +30,8 @@ WORKDIR /app
 
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
+COPY buildSrc/build.gradle                 buildSrc/
+COPY buildSrc/src/main/                    buildSrc/src/main/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
@@ -34,14 +41,27 @@ RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+ARG PROTOTYPES_BUILD=false
+ARG STIRLING_FLAVOR=proprietary
+ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+# Embed the admin portal app at /portal. Set true by the deploy workflow when the
+# portal or AI layers change; defaults false so normal builds skip the extra app.
+ARG BUILD_PORTAL=false
+
+# Bundle only the JPDFium native for this image's target arch.
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
+      -PbuildWithPortal=${BUILD_PORTAL} \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
+      -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble AS jar-extract
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS jar-extract
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
@@ -74,7 +94,8 @@ RUN set -eux; \
     ln -s /configs /app/configs; \
     ln -s /customFiles /app/customFiles; \
     ln -s /pipeline /app/pipeline; \
-    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline; \
+    ln -s /storage /app/storage; \
+    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
@@ -91,6 +112,15 @@ ENV VERSION_TAG=$VERSION_TAG \
     _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null \
     SAL_TMP=/tmp/stirling-pdf/libre
 
 # Metadata labels
@@ -110,7 +140,7 @@ EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
-  CMD curl -fs --max-time 10 http://localhost:8080/api/v1/info/status || exit 1
+  CMD curl -fs --max-time 10 http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []
