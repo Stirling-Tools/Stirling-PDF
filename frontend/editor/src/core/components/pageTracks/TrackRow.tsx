@@ -26,9 +26,6 @@ export interface TrackRowProps {
   track: Track;
   name: string;
   versionNumber: number | undefined;
-  /** Colour assigned to this file, used to tag pages that came from it. */
-  color: string;
-  colorForFile: (fileId: FileId) => string;
   selectedIds: Set<string>;
   draggingIds: Set<string>;
   dropHint: DropHint | null;
@@ -50,8 +47,6 @@ function TrackRowImpl({
   track,
   name,
   versionNumber,
-  color,
-  colorForFile,
   selectedIds,
   draggingIds,
   dropHint,
@@ -97,7 +92,6 @@ function TrackRowImpl({
       aria-label={name}
     >
       <header className={styles.trackHeader}>
-        <span className={styles.trackAccent} style={{ background: color }} />
         <span className={styles.trackName} title={name}>
           {name}
         </span>
@@ -206,11 +200,6 @@ function TrackRowImpl({
               hintActive &&
               dropHint?.beforePageId == null &&
               index === track.pages.length - 1
-            }
-            foreignColor={
-              page.sourceFileId === track.fileId
-                ? null
-                : colorForFile(page.sourceFileId)
             }
             thumbnails={thumbnails}
             onSelect={onSelectPage}

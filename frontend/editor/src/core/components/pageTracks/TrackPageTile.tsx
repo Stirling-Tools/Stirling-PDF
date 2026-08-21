@@ -30,8 +30,6 @@ export interface TrackPageTileProps {
   dropBefore: boolean;
   /** Draw it on the trailing edge (last tile, appending to the track). */
   dropAfterLast: boolean;
-  /** Colour of the page's source file, shown when it differs from the track. */
-  foreignColor: string | null;
   thumbnails: TrackThumbnailStore;
   onSelect: (
     fileId: FileId,
@@ -50,7 +48,6 @@ function TrackPageTileImpl({
   dragging,
   dropBefore,
   dropAfterLast,
-  foreignColor,
   thumbnails,
   onSelect,
   onRotate,
@@ -190,16 +187,6 @@ function TrackPageTileImpl({
 
       <div className={styles.tileFooter}>
         <span className={styles.tileIndex}>{position}</span>
-        {foreignColor && (
-          <span
-            className={styles.foreignDot}
-            style={{ backgroundColor: foreignColor }}
-            title={t(
-              "pageTracks.movedFromOtherFile",
-              "Moved from another file",
-            )}
-          />
-        )}
       </div>
     </div>
   );
