@@ -3,10 +3,9 @@ name: Contributing agreement
 on:
   pull_request_target:
     types: [closed]
-  workflow_call:
 
 concurrency:
-  group: contributing-agreement-${{ github.event.pull_request.number || github.ref }}
+  group: contributing-agreement-${{ github.event.action == 'closed' && 'merged' || github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -15,9 +14,8 @@ jobs:
       # Required to append the contributor agreement to CONTRIBUTORS.md after a merge.
       # Read access is sufficient for the agreement validation itself.
       contents: write
-      issues: write
-    name: Check CONTRIBUTING.md agreement
-    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
+    name: Record contributor agreement
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Validate agreement
@@ -25,21 +23,16 @@ jobs:
         env:
           AGREEMENT_MARKER: "<!-- contributing-agreement -->"
           CONTRIBUTORS_FILE: "CONTRIBUTORS.md"
-          AGREEMENT_LABEL: "contributing-agreement-required"
         with:
           github-token: ${{ github.token }}
           script: |
             const pullRequest = context.payload.pull_request;
             const openingDescription = pullRequest.body || '';
 
-            // Older PRs do not contain the marker because it was added to the
-            // template with this workflow. They are intentionally grandfathered
-            // in and must not be asked to provide a retroactive agreement.
+            // Older PRs do not contain the marker and are intentionally
+            // grandfathered in.
             if (!openingDescription.includes(process.env.AGREEMENT_MARKER)) {
-              core.info(
-                `Skipping contributor agreement for PR #${pullRequest.number}: ` +
-                'the agreement marker is not present in the opening description.',
-              );
+              core.info(`Skipping contributor agreement for PR #${pullRequest.number}: marker not found.`);
               return;
             }
 
@@ -48,48 +41,6 @@ jobs:
             const repo = context.repo.repo;
             const branch = context.payload.repository.default_branch;
             const login = pullRequest.user.login;
-
-            async function ensureAgreementLabel() {
-              try {
-                await github.rest.issues.getLabel({
-                  owner,
-                  repo,
-                  name: process.env.AGREEMENT_LABEL,
-                });
-              } catch (error) {
-                if (error.status !== 403 && error.status !== 404) {
-                  throw error;
-                }
-              }
-            }
-
-            async function updateAgreementComment(body) {
-              const marker = '<!-- contributing-agreement-bot -->';
-              const comments = await github.paginate(github.rest.issues.listComments, {
-                owner,
-                repo,
-                issue_number: pullRequest.number,
-                per_page: 100,
-              });
-              const existingComment = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
-              const commentBody = `${marker}\n${body}`;
-
-              if (existingComment) {
-                await github.rest.issues.updateComment({
-                  owner,
-                  repo,
-                  comment_id: existingComment.id,
-                  body: commentBody,
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: pullRequest.number,
-                  body: commentBody,
-                });
-              }
-            }
 
             async function getFile(path, ref = branch) {
               let response;
@@ -118,10 +69,7 @@ jobs:
               };
             }
 
-            const contributingRef = context.eventName === 'pull_request_target'
-              ? pullRequest.merge_commit_sha
-              : branch;
-            const contributing = await getFile('CONTRIBUTING.md', contributingRef);
+            const contributing = await getFile('CONTRIBUTING.md', pullRequest.merge_commit_sha);
             const contributingHash = crypto.createHash('sha256')
               .update(Buffer.from(contributing.content, 'utf8'))
               .digest('hex');
@@ -130,46 +78,7 @@ jobs:
               .split(/\r?\n/)
               .find((line) => line.startsWith(`| @${login} |`));
             const alreadyAgreed = existingEntry?.includes(contributingHash) === true;
-            const agreementPattern = new RegExp(
-              `${process.env.AGREEMENT_MARKER}\\s*\\r?\\n\\s*- \\[[xX]\\]\\s*I have read and agree to the \\[Contribution Guidelines\\]`,
-              'i',
-            );
-            // Only the PR's opening description is authoritative for the agreement.
-            // Regular issue/PR comments, including the bot's reminder below, are ignored.
-            const hasAgreement = agreementPattern.test(openingDescription);
-
-            if (!alreadyAgreed && !hasAgreement) {
-              await ensureAgreementLabel();
-              await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number: pullRequest.number,
-                labels: [process.env.AGREEMENT_LABEL],
-              });
-              await updateAgreementComment(
-                `A current agreement to [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/${branch}/CONTRIBUTING.md) is required before this Pull Request can be merged. Please check **"I have read and agree to the Contribution Guidelines"** in the PR description.\n\nThe required CONTRIBUTING.md SHA-256 is \`${contributingHash}\`.`,
-              );
-              core.setFailed(
-                `A current agreement is required. Check the Contribution Guidelines checkbox in the PR description (CONTRIBUTING.md SHA-256: ${contributingHash}).`,
-              );
-              return;
-            }
-
-            await github.rest.issues.removeLabel({
-              owner,
-              repo,
-              issue_number: pullRequest.number,
-              name: process.env.AGREEMENT_LABEL,
-            }).catch((error) => {
-              if (error.status !== 404) {
-                throw error;
-              }
-            });
             core.info(`Agreement accepted for @${login} (CONTRIBUTING.md SHA-256: ${contributingHash}).`);
-
-            if (context.eventName !== 'pull_request_target' || pullRequest.merged !== true) {
-              return;
-            }
 
             if (alreadyAgreed) {
               core.info(`@${login} is already listed for this CONTRIBUTING.md version.`);

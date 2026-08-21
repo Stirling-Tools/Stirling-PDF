@@ -205,6 +205,3 @@
 - name: "has conflicts"
   color: "D93F0B"
   description: "Pull request has merge conflicts with the base branch"
-- name: "contributing-agreement-required"
-  color: "B60205"
-  description: "Pull request author must agree to CONTRIBUTING.md"
