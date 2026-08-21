@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -31,6 +31,9 @@ interface PdfViewerToolbarProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
 }
+
+const TOOLBAR_HIDE_DELAY_MS = 3000;
+const TOOLBAR_REVEAL_DISTANCE_PX = 96;
 
 export function PdfViewerToolbar({
   currentPage = 1,
@@ -67,6 +70,84 @@ export function PdfViewerToolbar({
   const [isDualPageActive, setIsDualPageActive] = useState(
     spreadState.isDualPage,
   );
+  const [isToolbarVisible, setIsToolbarVisible] = useState(true);
+  const hideTimerRef = useRef<number | null>(null);
+  const isInteractingWithToolbarRef = useRef(false);
+
+  const clearHideTimer = useCallback(() => {
+    if (hideTimerRef.current !== null) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleHide = useCallback(() => {
+    clearHideTimer();
+    hideTimerRef.current = window.setTimeout(() => {
+      if (!isInteractingWithToolbarRef.current) {
+        setIsToolbarVisible(false);
+      }
+      hideTimerRef.current = null;
+    }, TOOLBAR_HIDE_DELAY_MS);
+  }, [clearHideTimer]);
+
+  const showToolbar = useCallback(() => {
+    setIsToolbarVisible(true);
+    scheduleHide();
+  }, [scheduleHide]);
+
+  useEffect(() => {
+    scheduleHide();
+    return clearHideTimer;
+  }, [clearHideTimer, scheduleHide]);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      if (
+        window.innerHeight - event.clientY <= TOOLBAR_REVEAL_DISTANCE_PX &&
+        !isToolbarVisible
+      ) {
+        showToolbar();
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+    };
+  }, [isToolbarVisible, showToolbar]);
+
+  const handleToolbarPointerEnter = () => {
+    isInteractingWithToolbarRef.current = true;
+    clearHideTimer();
+    setIsToolbarVisible(true);
+  };
+
+  const handleToolbarPointerLeave = () => {
+    isInteractingWithToolbarRef.current = false;
+    scheduleHide();
+  };
+
+  const handleToolbarFocus = () => {
+    isInteractingWithToolbarRef.current = true;
+    clearHideTimer();
+    setIsToolbarVisible(true);
+  };
+
+  const handleToolbarBlur = (event: React.FocusEvent<HTMLElement>) => {
+    const nextFocusedElement = event.relatedTarget as Node | null;
+    if (
+      nextFocusedElement &&
+      event.currentTarget.contains(nextFocusedElement)
+    ) {
+      return;
+    }
+
+    isInteractingWithToolbarRef.current = false;
+    scheduleHide();
+  };
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
@@ -149,9 +230,15 @@ export function PdfViewerToolbar({
 
   return (
     <Paper
+      role="toolbar"
+      aria-label={t("viewer.pageAndZoomControls", "Page and zoom controls")}
       className="pdf-viewer-toolbar"
       p={12}
       pb={12}
+      onPointerEnter={handleToolbarPointerEnter}
+      onPointerLeave={handleToolbarPointerLeave}
+      onFocusCapture={handleToolbarFocus}
+      onBlurCapture={handleToolbarBlur}
       style={{
         display: "flex",
         alignItems: "center",
@@ -159,7 +246,10 @@ export function PdfViewerToolbar({
         rowGap: 8,
         gap: 10,
         justifyContent: "center",
-        pointerEvents: "auto",
+        opacity: isToolbarVisible ? 1 : 0,
+        pointerEvents: isToolbarVisible ? "auto" : "none",
+        transform: isToolbarVisible ? "translateY(0)" : "translateY(0.75rem)",
+        transition: "opacity 180ms ease, transform 180ms ease",
       }}
     >
       {/* First Page Button */}
