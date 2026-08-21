@@ -25,6 +25,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
+import stirling.software.common.util.ExceptionUtils;
 
 @Aspect
 @Component
@@ -88,6 +89,14 @@ public class AutoJobAspect {
                                             "AutoJobAspect caught exception during job execution: {}",
                                             ex.getMessage(),
                                             ex);
+                                    // A native library that will not load is an Error, so it
+                                    // reaches here untranslated from every tool that uses one.
+                                    if (ExceptionUtils.isNativeLibraryFailure(ex)) {
+                                        throw new RuntimeException(
+                                                ExceptionUtils
+                                                        .createNativeLibraryUnavailableException(
+                                                                ex));
+                                    }
                                     // Rethrow RuntimeException as-is to preserve exception type
                                     if (ex instanceof RuntimeException) {
                                         throw (RuntimeException) ex;
@@ -171,6 +180,15 @@ public class AutoJobAspect {
                                             maxRetries,
                                             ex.getMessage(),
                                             ex);
+
+                                    // A missing native library is a permanent condition; retrying
+                                    // only burns the remaining attempts.
+                                    if (ExceptionUtils.isNativeLibraryFailure(ex)) {
+                                        throw new RuntimeException(
+                                                ExceptionUtils
+                                                        .createNativeLibraryUnavailableException(
+                                                                ex));
+                                    }
 
                                     // Check if we should retry
                                     if (currentAttempt < maxRetries) {

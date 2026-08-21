@@ -282,11 +282,6 @@ public class MergeController {
                 inputPaths.add(tempFile.toPath());
 
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
-                } catch (LinkageError e) {
-                    // Natives failed to load - not a problem with this file, so don't mark it
-                    // invalid and don't let the Error escape as an opaque 500.
-                    log.error("JPDFium native library unavailable", e);
-                    throw ExceptionUtils.createNativeLibraryUnavailableException(e);
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
@@ -297,9 +292,6 @@ public class MergeController {
             try {
                 pageCounts =
                         mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
-            } catch (LinkageError e) {
-                log.error("JPDFium native library unavailable", e);
-                throw ExceptionUtils.createNativeLibraryUnavailableException(e);
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {

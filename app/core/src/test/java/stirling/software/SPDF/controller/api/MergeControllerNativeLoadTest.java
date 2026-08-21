@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -26,13 +25,18 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.exception.NativeLoadException;
 
 /**
  * Merging depends on JPDFium's native library. When those natives cannot be loaded the JVM raises
- * an ExceptionInInitializerError, which is an Error rather than an Exception - so every
- * catch(Exception) guard around PdfDocument.open() lets it through and the request fails with an
- * opaque 500 and a null message.
+ * an ExceptionInInitializerError, which is an Error rather than an Exception.
+ *
+ * <p>Translation happens once in AutoJobAspect rather than at each of the dozen call sites that
+ * touch JPDFium, so what this class pins down is the contract the controller has to keep for that
+ * to work: the failure must travel out intact. In particular the per-file validation loop must not
+ * absorb it and go on to report every input as a corrupt PDF.
  */
 class MergeControllerNativeLoadTest {
 
@@ -65,8 +69,8 @@ class MergeControllerNativeLoadTest {
     }
 
     @Test
-    @DisplayName("Reports a readable error when the JPDFium natives cannot be loaded")
-    void reportsReadableErrorWhenNativesUnavailable() throws Exception {
+    @DisplayName("Lets a native load failure travel out so the aspect can translate it")
+    void propagatesNativeLoadFailure() throws Exception {
         MergePdfsRequest request = new MergePdfsRequest();
         request.setFileInput(
                 new MultipartFile[] {
@@ -80,18 +84,19 @@ class MergeControllerNativeLoadTest {
             natives.when(() -> PdfDocument.open(any(Path.class)))
                     .thenThrow(
                             new ExceptionInInitializerError(
-                                    new RuntimeException("Failed to load native library")));
+                                    new NativeLoadException("Failed to load native library")));
 
             Throwable thrown =
                     assertThrows(Throwable.class, () -> mergeController.mergePdfs(request, null));
 
+            // Not swallowed by the per-file catch(Exception) and turned into "corrupt PDF".
             assertInstanceOf(
-                    IOException.class,
+                    LinkageError.class,
                     thrown,
-                    "a native-load failure must surface as a handled IOException, not a raw Error");
+                    "the native failure must reach the aspect, not be reported as a bad file");
             assertTrue(
-                    thrown.getMessage() != null && !thrown.getMessage().isBlank(),
-                    "the failure must carry a message the caller can act on");
+                    ExceptionUtils.isNativeLibraryFailure(thrown),
+                    "the aspect must be able to recognise what came out of the controller");
         }
     }
 
@@ -109,9 +114,9 @@ class MergeControllerNativeLoadTest {
             natives.when(() -> PdfDocument.open(any(Path.class)))
                     .thenThrow(
                             new ExceptionInInitializerError(
-                                    new RuntimeException("Failed to load native library")));
+                                    new NativeLoadException("Failed to load native library")));
 
-            assertThrows(IOException.class, () -> mergeController.mergePdfs(request, null));
+            assertThrows(Throwable.class, () -> mergeController.mergePdfs(request, null));
         }
 
         org.mockito.Mockito.verify(tempFileManager, org.mockito.Mockito.atLeastOnce())

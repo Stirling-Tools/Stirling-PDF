@@ -581,24 +581,62 @@ public class ExceptionUtils {
         return new IOException(message, cause);
     }
 
+    /** Package prefix of the JPDFium binding whose natives can fail to load. */
+    private static final String NATIVE_LIBRARY_PACKAGE = "stirling.software.jpdfium.";
+
+    /** Depth cap for cause-chain walks, so a cyclic chain cannot spin forever. */
+    private static final int MAX_CAUSE_DEPTH = 16;
+
     /**
-     * Create an IOException for a native library that could not be loaded.
-     *
-     * <p>Native loaders surface failures as {@link LinkageError} (typically {@link
-     * ExceptionInInitializerError} on first use and {@link NoClassDefFoundError} afterwards). Those
-     * are Errors, so they slip past every {@code catch (Exception)} guard and reach the caller as
-     * an opaque failure with a null message.
+     * Create the exception for a native library that could not be loaded.
      *
      * @param cause the linkage error raised by the native loader
-     * @return IOException with user-friendly message
+     * @return a typed application exception carrying a user-facing message
      */
-    public static IOException createNativeLibraryUnavailableException(LinkageError cause) {
+    public static NativeLibraryUnavailableException createNativeLibraryUnavailableException(
+            Throwable cause) {
         requireNonNull(cause, "cause");
         String message =
                 getMessage(
                         ErrorCode.NATIVE_LIBRARY_UNAVAILABLE.getMessageKey(),
                         ErrorCode.NATIVE_LIBRARY_UNAVAILABLE.getDefaultMessage());
-        return new IOException(message, cause);
+        return new NativeLibraryUnavailableException(
+                message, cause, ErrorCode.NATIVE_LIBRARY_UNAVAILABLE.getCode());
+    }
+
+    /**
+     * True when a throwable is a native library failing to load rather than a genuine processing
+     * error.
+     *
+     * <p>Native loaders raise a LinkageError - ExceptionInInitializerError the first time the class
+     * is touched, NoClassDefFoundError every time after. Both are Errors, so they pass straight
+     * through catch (Exception) and arrive as an opaque failure with a null message. The check is
+     * deliberately narrow: an unrelated LinkageError, say a dependency mismatch, must not be
+     * reported to the user as a missing native library.
+     */
+    public static boolean isNativeLibraryFailure(Throwable throwable) {
+        if (!(throwable instanceof LinkageError)) {
+            return false;
+        }
+        // Bounded walk: cause chains can be cyclic, and a real one is never this deep.
+        Throwable current = throwable;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            if (current.getClass().getName().startsWith(NATIVE_LIBRARY_PACKAGE)) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null && message.contains(NATIVE_LIBRARY_PACKAGE)) {
+                return true;
+            }
+            for (StackTraceElement frame : current.getStackTrace()) {
+                if (frame.getClassName().startsWith(NATIVE_LIBRARY_PACKAGE)) {
+                    return true;
+                }
+            }
+            Throwable next = current.getCause();
+            current = next == current ? null : next;
+        }
+        return false;
     }
 
     public static IOException createImageReadException(String filename) {
@@ -1298,6 +1336,13 @@ public class ExceptionUtils {
     public static class GhostscriptException extends BaseAppException {
         public GhostscriptException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when a required native library could not be loaded on this host. */
+    public static class NativeLibraryUnavailableException extends BaseAppException {
+        public NativeLibraryUnavailableException(String message, Throwable cause, String code) {
+            super(message, cause, code);
         }
     }
 
