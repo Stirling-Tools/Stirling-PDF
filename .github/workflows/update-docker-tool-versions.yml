@@ -136,7 +136,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t files < <(rg -l "^ARG ${VARIABLE}=" docker engine --glob 'Dockerfile*')
+          mapfile -t files < <(
+            find docker engine -type f -name 'Dockerfile*' \
+              -exec grep -l "^ARG ${VARIABLE}=" {} +
+          )
 
           if (( ${#files[@]} == 0 )); then
             echo "No Dockerfiles contain ARG ${VARIABLE}" >&2
