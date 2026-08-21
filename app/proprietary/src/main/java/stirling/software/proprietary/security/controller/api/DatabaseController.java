@@ -29,7 +29,7 @@ import stirling.software.proprietary.security.service.DatabaseService;
 
 @Slf4j
 @DatabaseApi
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Conditional(H2SQLCondition.class)
 @RequiredArgsConstructor
 public class DatabaseController {

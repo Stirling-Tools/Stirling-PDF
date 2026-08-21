@@ -1,14 +1,52 @@
+# CI routing infrastructure. Changes to the top-level router (build.yml) or
+# this filter configuration rerun every area's jobs. Every job-gating filter
+# therefore includes *ci, so routing changes exercise the jobs they affect
+# instead of matching only the project filter.
+ci: &ci
+  - .github/workflows/build.yml
+  - .github/workflows/gradle-cache-prime.yml
+  - .github/config/.files.yaml
+
 build: &build
+  - *ci
+  - buildSrc/**
   - build.gradle
-  - app/(common|core|proprietary)/build.gradle
+  - gradle/spotless.gradle
+  - app/(common|core|proprietary|saas)/build.gradle
+  - Taskfile.yml
+  - .taskfiles/backend.yml
+  - .github/workflows/check-licence.yml
+
+# Backend build inputs. This is intentionally broader than `build`: Java and
+# backend resource changes must exercise the backend matrix even when Gradle
+# build scripts themselves are unchanged.
+backend: &backend
+  - *ci
+  - *build
+  - gradle/**
+  - gradle.properties
+  - gradlew
+  - gradlew.bat
+  - settings.gradle
+  - app/(common|core|proprietary|saas)/src/(main|test)/java/**
+  - "app/(common|core|proprietary|saas)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - scripts/db-migration/**
+  - .github/workflows/backend-build.yml
 
 openapi: &openapi
+  - *ci
   - *build
-  - app/(common|core|proprietary)/src/main/java/**
+  - app/(common|core|proprietary|saas)/src/main/java/**
+  - .github/workflows/check-openapi.yml
 
 docker-base: &docker-base
   - docker/base/Dockerfile
-  - ".github/workflows/push-docker-base.yml"
+
+# Dockerfiles only (base, embedded, and unoserver). The slow multi-architecture
+# (arm64) leg of the PR Docker test build runs only when a Dockerfile changes,
+# rather than for every code PR.
+dockerfiles: &dockerfiles
+  - docker/**/Dockerfile*
 
 docker: &docker
   - docker/embedded/Dockerfile
@@ -22,13 +60,11 @@ docker: &docker
   - *docker-base
 
 project: &project
-  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - *ci
+  - app/(common|core|proprietary|saas)/src/(main|test)/java/**
   - *build
-  - "app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - "app/(common|core|proprietary|saas)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
   - exampleYmlFiles/**
-  - gradle/**
-  - libs/**
-  - "testing/**/!(requirements*.txt|requirements*.in)*"
   - *docker
   - *docker-base
   - gradle.properties
@@ -39,10 +75,17 @@ project: &project
   - frontend/**
   - docker/**
   - scripts/RestartHelper.java
+  - Taskfile.yml
+  - .taskfiles/backend.yml
+  - .taskfiles/docker.yml
+  - scripts/db-migration/**
+  - .github/workflows/db-migration-test.yml
+  - .github/workflows/docker-compose-tests.yml
+  - .github/workflows/test-build-docker.yml
 
 frontend: &frontend
+  - *ci
   - frontend/**
-  - .github/workflows/testdriver.yml
   - testing/**
   - docker/**
   - scripts/translations/*.py
@@ -54,42 +97,74 @@ frontend: &frontend
   - scripts/summarize_type3_signatures.py
   - scripts/type3_to_cff.py
   - scripts/update_type3_library.py
+  - Taskfile.yml
+  - .taskfiles/frontend.yml
+  - .taskfiles/e2e.yml
+  - .github/workflows/frontend-validation.yml
+  - .github/workflows/frontend-a11y.yml
+  - .github/workflows/e2e-stubbed.yml
+  - .github/workflows/e2e-live.yml
 
-# Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
-# job on changes to any of these.
+# Files that affect the Tauri desktop bundle. Changes to any of these files
+# trigger the multi-OS Tauri build job.
 tauri: &tauri
-  - frontend/src-tauri/**
-  - frontend/src/desktop/**
-  - frontend/tsconfig.desktop.json
+  - *ci
+  - frontend/editor/src-tauri/**
+  - frontend/editor/src/desktop/**
+  - frontend/editor/tsconfig.desktop.vite.json
   - frontend/package.json
   - frontend/package-lock.json
-  - frontend/vite.config.ts
+  - frontend/editor/vite.config.ts
   - .github/workflows/tauri-build.yml
+  - Taskfile.yml
+  - .taskfiles/desktop.yml
 
-# Files that affect the AI engine (Python tool models, fixers, tests). Gate
-# the engine validation job on changes to engine sources or to the Java
-# tool surfaces it generates models from.
+# Files that affect the AI engine, including its Python tool models, fixers,
+# and tests. The engine validation job also runs when the Java tool surfaces
+# used to generate those models change.
 engine: &engine
+  - *ci
   - engine/**
-  - app/(common|core|proprietary)/src/main/java/**
+  - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
+  - Taskfile.yml
+  - .taskfiles/engine.yml
+
+# Files that can make the committed generated API models (frontend tool API
+# types and engine tool models) stale: their Java sources, generators,
+# generated outputs (to catch hand edits), and generation tasks. Broad
+# frontend, Docker, and testing globs are intentionally excluded, so a CSS-only
+# PR does not start the backend to rebuild the specification.
+generated-models: &generated-models
+  - *ci
+  - *openapi
+  - frontend/editor/scripts/generate-tool-api-types.mts
+  - frontend/editor/src/core/types/toolApiTypes.ts
+  - frontend/editor/src/core/types/toolIO.ts
+  - engine/scripts/generate_tool_models.py
+  - engine/src/stirling/models/tool_models.py
+  - engine/src/stirling/models/tool_io.py
+  - .taskfiles/frontend.yml
+  - .taskfiles/engine.yml
+  - .github/workflows/check-generated-models.yml
 
 licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - "frontend/package.json"
   - "frontend/package-lock.json"
-  - "frontend/scripts/generate-licenses.js"
+  - "frontend/editor/scripts/generate-licenses.js"
 
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
 
-# Files that can affect premium / enterprise behaviour. Gate the enterprise
-# Playwright job on changes to any of these on PRs.
+# Files that can affect premium or enterprise behaviour. Changes to any of
+# these files trigger the enterprise Playwright job for pull requests.
 proprietary: &proprietary
+  - *ci
   - app/proprietary/**
-  - frontend/src/proprietary/**
-  - frontend/src/core/tests/enterprise/**
+  - frontend/editor/src/proprietary/**
+  - frontend/editor/src/core/tests/enterprise/**
   - testing/compose/docker-compose-keycloak-oauth.yml
   - testing/compose/docker-compose-keycloak-saml.yml
   - testing/compose/keycloak-realm-oauth.json
@@ -101,4 +176,5 @@ proprietary: &proprietary
   - configs/settings.yml.template
   - build.gradle
   - app/proprietary/build.gradle
+  - gradle/spotless.gradle
   - .github/workflows/build-enterprise.yml

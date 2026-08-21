@@ -28,6 +28,9 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -44,13 +47,15 @@ public class BookletImpositionController {
 
     @AutoJobPostMapping(
             value = "/booklet-imposition",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Create a booklet with proper page imposition",
             description =
-                    "This operation combines page reordering for booklet printing with multi-page layout. "
-                            + "It rearranges pages in the correct order for booklet printing and places multiple pages "
-                            + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
+                    "This operation combines page reordering for booklet printing with multi-page"
+                            + " layout. It rearranges pages in the correct order for booklet printing and"
+                            + " places multiple pages on each sheet for proper folding and binding.")
     public ResponseEntity<Resource> createBookletImposition(
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
@@ -292,24 +297,25 @@ public class BookletImpositionController {
 
         // Apply rotation if needed (rotate about origin), then translate to keep in cell
         switch (rot) {
-            case 90:
+            case 90 -> {
                 cs.transform(Matrix.getRotateInstance(Math.PI / 2, 0, 0));
                 // After 90° CCW, the content spans x in [-r.getHeight(), 0] and y in [0,
                 // r.getWidth()]
                 cs.transform(Matrix.getTranslateInstance(0, -r.getWidth()));
-                break;
-            case 180:
+            }
+            case 180 -> {
                 cs.transform(Matrix.getRotateInstance(Math.PI, 0, 0));
                 cs.transform(Matrix.getTranslateInstance(-r.getWidth(), -r.getHeight()));
-                break;
-            case 270:
+            }
+            case 270 -> {
                 cs.transform(Matrix.getRotateInstance(3 * Math.PI / 2, 0, 0));
                 // After 270° CCW, the content spans x in [0, r.getHeight()] and y in
                 // [-r.getWidth(), 0]
                 cs.transform(Matrix.getTranslateInstance(-r.getHeight(), 0));
-                break;
-            default:
+            }
+            default -> {
                 // 0°: no-op
+            }
         }
 
         // Reuse LayerUtility passed from caller

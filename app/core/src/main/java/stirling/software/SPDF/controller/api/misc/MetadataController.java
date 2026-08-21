@@ -25,6 +25,9 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.GeneralUtils;
@@ -56,14 +59,17 @@ public class MetadataController {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/update-metadata")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/update-metadata",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Update metadata of a PDF file",
             description =
                     "This endpoint allows you to update the metadata of a given PDF file. You can"
-                            + " add, modify, or delete standard and custom metadata fields. Input:PDF"
-                            + " Output:PDF Type:SISO")
+                            + " add, modify, or delete standard and custom metadata fields.")
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 

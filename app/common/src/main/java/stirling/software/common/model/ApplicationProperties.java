@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -76,7 +77,10 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
+    private Cluster cluster = new Cluster();
+    private Policies policies = new Policies();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -97,7 +101,14 @@ public class ApplicationProperties {
         EncodedResource encodedResource = new EncodedResource(resource);
         PropertySource<?> propertySource =
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-        environment.getPropertySources().addFirst(propertySource);
+
+        boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        if (saasActive) {
+            // Saas-pinned values in application-saas.properties must beat settings.yml.
+            environment.getPropertySources().addLast(propertySource);
+        } else {
+            environment.getPropertySources().addFirst(propertySource);
+        }
 
         log.debug("Loaded properties: {}", propertySource.getSource());
 
@@ -194,6 +205,92 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class Policies {
+        /**
+         * Absolute directories that policy folder input sources and output sinks may read from or
+         * write to. Empty (the default) disables folder access except to implicitly defined
+         * folders, such as server storage folders (if enabled) and the pipeline watched folders.
+         * Stirling's own config directory is always off-limits, and folder access is always
+         * disabled in SaaS mode regardless of this list.
+         */
+        private List<String> allowedFolderRoots = new java.util.ArrayList<>();
+
+        /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
+        private long scheduleSweepSeconds = 60;
+
+        /**
+         * How often (seconds) the folder-watch trigger reconciles its watch registrations and
+         * re-runs every folder-watch policy as a safety net for filesystem events that were missed
+         * (NFS, bind mounts, inotify-queue overflow).
+         */
+        private long watchReconcileSeconds = 300;
+
+        /**
+         * How long (milliseconds) the folder-watch trigger keeps draining filesystem events after
+         * the first, so a burst from a single file copy coalesces into one run instead of many.
+         */
+        private long watchQuietPeriodMs = 500;
+
+        /**
+         * SSE emitter timeout (milliseconds) for streamed runs; generous for long multi-step runs.
+         */
+        private long streamTimeoutMs = 1800000;
+
+        /**
+         * How long (minutes) a finished run's in-memory state is retained before eviction,
+         * mirroring the job-result expiry so rich run state does not outlive the process. Active
+         * and paused runs are kept regardless of age.
+         */
+        private int runExpiryMinutes = 30;
+
+        /**
+         * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
+         * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
+         * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
+         * in-network object store.
+         */
+        private boolean allowPrivateS3Endpoints = false;
+
+        /**
+         * Whether a network source's host (SFTP, FTP, or SMB) may resolve to a loopback,
+         * link-local, or private address. Off by default so a connection cannot be pointed at
+         * internal services; enable for an on-network file server (e.g. an internal SFTP drop or a
+         * Samba share).
+         */
+        private boolean allowPrivateNetworkSources = false;
+
+        /**
+         * Hostnames (exact, case-insensitive) that a network source may use even when they resolve
+         * to a private or local address and {@code allowPrivateNetworkSources} is off. Lets shared
+         * infra allow one named on-prem file server without opening every internal host.
+         */
+        private List<String> allowedPrivateNetworkHosts = new java.util.ArrayList<>();
+
+        /**
+         * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
+         * link-local, or private address. Off by default: unlike S3 connections, any user may
+         * create one of these, so without this gate a user could point a connection at the cloud
+         * metadata address and have the server fetch it for them. Enable only when integrations
+         * genuinely live inside the network (e.g. an on-prem ConsignO or an internal API gateway).
+         */
+        private boolean allowPrivateApiEndpoints = false;
+
+        /**
+         * Whether administrators may define their own API integrations - a free-form base URL,
+         * path, body and headers - as opposed to only using the built-in vendor presets (Purview,
+         * ConsignO, S3). On by default, and admin-only regardless: a custom integration can point
+         * the server at any host, so it is authoring power, not self-serve.
+         *
+         * <p>Turning this off stops new custom integrations being created or edited. Ones that
+         * already exist keep running, because a policy that silently stopped calling out would be a
+         * worse surprise than one that keeps working; disable the connection itself to stop it.
+         */
+        private boolean allowCustomApiIntegrations = true;
+
+        private long webhookMaxBytes = 104857600L;
+    }
+
+    @Data
     public static class PdfEditor {
         private Cache cache = new Cache();
         private FontNormalization fontNormalization = new FontNormalization();
@@ -245,6 +342,299 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+
+        /** Timeout (seconds) for the SSE stream held open by long-running orchestrator runs. */
+        private int streamTimeoutSeconds = 1800;
+
+        /**
+         * Whether the processor pushes settings-derived AI config to the engine on startup/save.
+         * Pin false for env-driven deployments (SaaS) to keep the engine env-controlled.
+         */
+        private boolean pushConfigToEngine = true;
+
+        /** Model + provider selection, forwarded to the engine per-request. */
+        private Models models = new Models();
+
+        /** Retrieval-augmented-generation (RAG) knobs, forwarded to the engine per-request. */
+        private Rag rag = new Rag();
+
+        /** Request size / cost guardrails. */
+        private Limits limits = new Limits();
+
+        /** Per-capability on/off switches so an admin can disable individual AI tools. */
+        private Features features = new Features();
+
+        @Data
+        public static class Models {
+            /** Provider driving the model strings: 'anthropic', 'openai', 'ollama', or 'custom'. */
+            private String provider = "anthropic";
+
+            /** High-quality tier model name (without provider prefix), e.g. 'claude-haiku-4-5'. */
+            private String smartModel = "claude-haiku-4-5";
+
+            /** Cheap/fast tier model name (without provider prefix). */
+            private String fastModel = "claude-haiku-4-5";
+
+            private int smartMaxTokens = 8192;
+            private int fastMaxTokens = 2048;
+
+            /**
+             * API key for the selected provider (secret; masked). Empty means the engine uses its
+             * own env credential (e.g. ANTHROPIC_API_KEY).
+             */
+            private String apiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' providers (e.g.
+             * http://ollama:11434/v1). Ignored for anthropic/openai. SSRF-sensitive - admin only.
+             */
+            private String baseUrl = "";
+        }
+
+        @Data
+        public static class Rag {
+            /**
+             * Embedding provider: 'voyageai', 'openai', 'ollama', or 'custom' (OpenAI-compatible).
+             */
+            private String embeddingProvider = "voyageai";
+
+            /** Embedding model name (without provider prefix), e.g. 'voyage-4'. */
+            private String embeddingModel = "voyage-4";
+
+            /**
+             * Secret API key for the embedding provider; masked + env-overridable like
+             * models.apiKey.
+             */
+            private String embeddingApiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' embedding providers (e.g.
+             * http://ollama:11434/v1). Ignored for voyageai/openai. SSRF-sensitive - admin only.
+             */
+            private String embeddingBaseUrl = "";
+
+            /** How many chunks retrieval returns per search. */
+            private int topK = 20;
+
+            /** Per-run cap on knowledge-search tool calls before the agent must answer. */
+            private int maxSearches = 5;
+        }
+
+        @Data
+        public static class Limits {
+            private int maxPages = 200;
+            private int maxCharacters = 200000;
+
+            /** Process-wide cap on concurrent model API calls (engine restart to apply). */
+            private int modelMaxConcurrency = 32;
+        }
+
+        @Data
+        public static class Features {
+            private boolean chat = true;
+            private boolean documentQuestions = true;
+            private boolean createPdf = true;
+            private boolean mathAuditor = true;
+            private boolean pdfComment = true;
+            private boolean classify = true;
+        }
+    }
+
+    /**
+     * Model Context Protocol (MCP) server configuration. All keys live under the top-level {@code
+     * mcp.*} prefix. {@link #enabled} defaults to {@code false}: when off, no MCP beans are wired,
+     * no /mcp endpoint exists, and no protected-resource metadata is published.
+     */
+    @Data
+    public static class Mcp {
+
+        /** Master switch. When {@code false} (default), no MCP beans are wired. */
+        private boolean enabled = false;
+
+        /**
+         * When {@code true} (default), invocations require an OAuth scope: {@code mcp.tools.read}
+         * for read-style operations and {@code mcp.tools.write} for write/destructive ones. When
+         * {@code false}, scope checks are skipped (use only if your IdP issues a single coarse
+         * scope).
+         */
+        private boolean scopesEnabled = true;
+
+        /** How often to refresh the AI capabilities manifest from the engine. */
+        private int engineCapabilityRefreshMinutes = 5;
+
+        /**
+         * Tool allow-list (operation ids, e.g. {@code compress-pdf}). When non-empty, ONLY these
+         * operations are exposed over MCP; everything else is hidden, undescribable, and
+         * uninvocable - on top of the global endpoint enable/disable config. Empty = allow all.
+         */
+        private List<String> allowedOperations = new ArrayList<>();
+
+        /**
+         * Tool deny-list (operation ids). Any operation listed here is removed from MCP even if it
+         * would otherwise be allowed. Applied after {@link #allowedOperations}.
+         */
+        private List<String> blockedOperations = new ArrayList<>();
+
+        /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
+        private long maxRequestBytes = 10L * 1024 * 1024;
+
+        /** Results up to this size return inline as base64; larger ones return a fileId only. */
+        private long maxInlineResponseBytes = 10L * 1024 * 1024;
+
+        private Auth auth = new Auth();
+
+        @Data
+        public static class Auth {
+            /**
+             * Authentication mode for the MCP endpoint. {@code oauth} (default) runs a full OAuth2
+             * resource server (JWT, RFC 8707 audience, RFC 9728 metadata). {@code apikey} accepts a
+             * Stirling per-user API key via the {@code X-API-KEY} header (or {@code Authorization:
+             * Bearer <key>}) and binds the request to that user - the low-friction self-host path,
+             * no external IdP required.
+             */
+            private String mode = "oauth";
+
+            /** OAuth2 issuer URI, e.g. {@code http://localhost:9000}. Required when MCP is on. */
+            private String issuerUri = "";
+
+            /**
+             * JWKS URI. When blank, derived from the issuer's {@code
+             * /.well-known/openid-configuration} document.
+             */
+            private String jwksUri = "";
+
+            /**
+             * RFC 8707 resource identifier of THIS MCP server, e.g. {@code
+             * http://localhost:8080/mcp}. Tokens that do not list this id in their {@code aud}
+             * claim are rejected with HTTP 401.
+             */
+            private String resourceId = "";
+
+            /**
+             * Additional JWT audiences accepted at the MCP endpoint, on top of {@link #resourceId}.
+             * Empty (default) keeps strict RFC 8707 binding. Some IdPs cannot mint
+             * resource-specific audiences - e.g. Supabase's OAuth server always issues {@code
+             * aud=authenticated} - so operators list the audience their IdP actually emits here
+             * (env: {@code MCP_AUTH_ACCEPTEDAUDIENCES}, comma-separated).
+             */
+            private List<String> acceptedAudiences = new ArrayList<>();
+
+            /**
+             * JWT claim whose value is matched against a provisioned Stirling username. Defaults to
+             * {@code sub}; set to {@code email} or {@code preferred_username} to match how your IdP
+             * maps users to Stirling accounts.
+             */
+            private String usernameClaim = "sub";
+
+            /**
+             * When {@code true} (default), a validated token is accepted only if its {@link
+             * #usernameClaim} value resolves to an existing, enabled Stirling user account. Tokens
+             * whose subject has no Stirling account (or a disabled one) are rejected with HTTP 403.
+             * Set to {@code false} only if you intentionally want any IdP-valid token to use MCP
+             * without a local account.
+             */
+            private boolean requireExistingAccount = true;
+        }
+    }
+
+    /**
+     * Cluster backplane configuration. All keys live under the top-level {@code cluster.*} prefix
+     * (e.g. env var {@code CLUSTER_ENABLED}). The master switch is {@link #enabled} and defaults to
+     * off; when off the in-process backplane is wired and no other cluster keys are required.
+     */
+    @Data
+    public static class Cluster {
+
+        /** Master switch. When {@code false} (default) the in-process backplane is wired. */
+        private boolean enabled = false;
+
+        /** Backplane implementation selector. Valid values: {@code inprocess} | {@code valkey}. */
+        private String backplane = "inprocess";
+
+        /**
+         * Transient cluster job-artifact store selector. Valid values: {@code local} | {@code s3}.
+         *
+         * <p>This is distinct from {@code storage.provider}, which selects the backend for
+         * persistent user-uploaded files. The two switches exist because the user-facing storage
+         * feature is optional ({@code storage.enabled=false} is common) but every multi-node
+         * cluster still needs a shared artifact store to serve cross-node downloads. Both
+         * implementations share credentials from {@code storage.s3.*} when set to {@code s3}.
+         */
+        private String artifactStore = "local";
+
+        private Valkey valkey = new Valkey();
+        private Node node = new Node();
+
+        private transient String cachedNodeId;
+
+        public NodeRole resolvedRole() {
+            if (node == null || node.getRole() == null) {
+                return NodeRole.BOTH;
+            }
+            String value = node.getRole().trim().toUpperCase(Locale.ROOT);
+            try {
+                return NodeRole.valueOf(value);
+            } catch (IllegalArgumentException ex) {
+                return NodeRole.BOTH;
+            }
+        }
+
+        public synchronized String resolvedNodeId() {
+            if (node != null && node.getId() != null && !node.getId().isBlank()) {
+                return node.getId();
+            }
+            if (cachedNodeId == null) {
+                cachedNodeId = UUID.randomUUID().toString();
+            }
+            return cachedNodeId;
+        }
+
+        public enum NodeRole {
+            WEB,
+            WORKER,
+            BOTH
+        }
+
+        @Data
+        public static class Valkey {
+            /**
+             * {@code redis://host:6379} or {@code rediss://...} for TLS. Required when cluster mode
+             * is on and backplane is valkey.
+             */
+            private String url = "";
+
+            private Tls tls = new Tls();
+
+            @Data
+            public static class Tls {
+                /**
+                 * When {@code true}, skip Valkey/Redis TLS certificate verification (dev/test
+                 * only). Leave {@code false} in production.
+                 */
+                private boolean skipCertVerification = false;
+            }
+        }
+
+        @Data
+        public static class Node {
+            /** Optional explicit node id. Blank = auto-generated UUID at startup. */
+            private String id = "";
+
+            /** {@code web} | {@code worker} | {@code both}. */
+            private String role = "both";
+
+            /**
+             * Internal cluster address advertised in the instance registry (host:port). Blank =
+             * derived at startup.
+             */
+            private String internalAddress = "";
+
+            /** {@code http} | {@code https} - scheme used when peers call this node. */
+            private String scheme = "http";
+
+            /** Heartbeat publish interval for the instance registry, in milliseconds. */
+            private long heartbeatIntervalMs = 5000;
+        }
     }
 
     /**
@@ -267,6 +657,14 @@ public class ApplicationProperties {
         private String accessibilityStatement;
         private String cookiePolicy;
         private String impressum;
+        private LoginAgreement loginAgreement = new LoginAgreement();
+
+        @Data
+        public static class LoginAgreement {
+            private boolean enabled = false;
+            private boolean showInAnonymousMode = true;
+            private String fallbackText = "";
+        }
     }
 
     @Data
@@ -335,7 +733,7 @@ public class ApplicationProperties {
         public static class SAML2 {
             private String provider;
             private Boolean enabled = false;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
 
@@ -412,12 +810,22 @@ public class ApplicationProperties {
             private String issuer;
             private String clientId;
             @ToString.Exclude private String clientSecret;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+
+            /**
+             * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo
+             * claims at INFO level (and again at ERROR level if the username attribute cannot be
+             * resolved). Used to diagnose provider misconfiguration (for example ADFS not returning
+             * an {@code email} claim). WARNING: writes PII (sub, email, name) to application logs.
+             * Leave disabled in production; enable only while actively troubleshooting and disable
+             * again afterwards.
+             */
+            private Boolean debugLogging = false;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
@@ -473,7 +881,6 @@ public class ApplicationProperties {
         @Data
         public static class Jwt {
             private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
 
             /**
@@ -577,8 +984,8 @@ public class ApplicationProperties {
             @Data
             public static class Trust {
                 private boolean serverAsAnchor = true;
-                private boolean useSystemTrust = false;
-                private boolean useMozillaBundle = false;
+                private boolean useSystemTrust = true;
+                private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
             }
@@ -612,8 +1019,8 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private boolean googlevisibility;
-        private boolean showUpdate;
-        private boolean showUpdateOnlyAdmin;
+        private boolean showUpdate = true;
+        private boolean showUpdateOnlyAdmin = true;
         private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
@@ -621,11 +1028,11 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
-        private Boolean enableDesktopInstallSlide;
+        private Boolean enableDesktopInstallSlide = true;
         private Boolean enableOnboarding = true;
         private Datasource datasource;
         private boolean disableSanitize;
-        private int maxDPI;
+        private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -639,8 +1046,11 @@ public class ApplicationProperties {
         private String frontendUrl; // Frontend URL for invite email links (e.g.
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
-        private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+        private ServerCertificate serverCertificate = new ServerCertificate();
 
         @Data
         public static class MobileScannerSettings {
@@ -648,6 +1058,16 @@ public class ApplicationProperties {
             private String imageResolution = "full"; // Options: "full", "reduced"
             private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
             private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
+
+        @Data
+        public static class ServerCertificate {
+            private boolean enabled =
+                    true; // Enable server-side "Sign with Stirling-PDF" certificate
+            private String organizationName = "Stirling PDF Inc";
+            private int validity = 365; // Certificate validity in days
+            private boolean regenerateOnStartup =
+                    false; // Generate a new certificate on each startup
         }
 
         public boolean isAnalyticsEnabled() {
@@ -670,9 +1090,31 @@ public class ApplicationProperties {
         private boolean enabled = false;
         private String provider = "local";
         private Local local = new Local();
+        private S3 s3 = new S3();
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
+        private Encryption encryption = new Encryption();
+
+        /**
+         * Encryption at rest for stored files (Pro/Enterprise). Enabling encrypts new writes;
+         * disabling later only stops encrypting new writes — existing encrypted files keep
+         * decrypting as long as the key material is present. The master key is resolved like the
+         * credential key: {@code stirling.security.fileEncryptionKey} property, {@code
+         * STIRLING_FILE_ENCRYPTION_KEY} env var, or an auto-generated {@code file-encryption.key}
+         * in the config directory.
+         */
+        @Data
+        public static class Encryption {
+            private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
+        }
 
         @Data
         public static class Local {
@@ -680,9 +1122,60 @@ public class ApplicationProperties {
         }
 
         @Data
+        public static class S3 {
+            /**
+             * Optional custom endpoint (e.g. {@code https://<account>.r2.cloudflarestorage.com},
+             * {@code https://<project>.supabase.co/storage/v1/s3}, or {@code http://localhost:9000}
+             * for MinIO). Blank = use AWS regional default.
+             */
+            private String endpoint = "";
+
+            private String bucket = "";
+
+            private String region = "us-east-1";
+
+            private String accessKey = "";
+            private String secretKey = "";
+
+            /**
+             * When {@code true} use path-style URLs ({@code <endpoint>/<bucket>/<key>}) instead of
+             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO and most S3-compatible
+             * gateways require path-style; AWS S3 prefers virtual-hosted.
+             */
+            private boolean pathStyleAccess = false;
+
+            /**
+             * When {@code false} (default), {@code endpoint} hostnames that resolve to private,
+             * loopback, or link-local addresses are rejected at startup to block SSRF attacks via
+             * the cloud metadata service (e.g. {@code http://169.254.169.254/}). Set to {@code
+             * true} to opt in for MinIO / in-cluster S3 endpoints on private networks.
+             */
+            private boolean allowPrivateEndpoints = false;
+
+            /**
+             * Controls when the SDK adds an {@code x-amz-checksum-*} header on PUT/UploadPart.
+             * Default {@code WHEN_SUPPORTED} (the SDK default since 2.30) makes the SDK send a
+             * CRC32 checksum on every upload - this works on AWS S3, MinIO, current Supabase,
+             * Backblaze B2 (post-July-2025), and modern R2. Set to {@code WHEN_REQUIRED} to
+             * suppress the auto-checksum on vendors that reject unknown {@code x-amz-checksum-*}
+             * headers (older Backblaze B2, some R2 corner cases, GCS S3 endpoint). Invalid values
+             * fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String requestChecksumCalculation = "WHEN_SUPPORTED";
+
+            /**
+             * Controls when the SDK validates returned {@code x-amz-checksum-*} headers on GET
+             * responses. Default {@code WHEN_SUPPORTED}. Set to {@code WHEN_REQUIRED} if your
+             * vendor never returns these headers and you see false-positive checksum-mismatch
+             * errors. Invalid values fall back to {@code WHEN_SUPPORTED}.
+             */
+            private String responseChecksumValidation = "WHEN_SUPPORTED";
+        }
+
+        @Data
         public static class Sharing {
             private boolean enabled = false;
-            private boolean linkEnabled = false;
+            private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
         }
@@ -697,6 +1190,10 @@ public class ApplicationProperties {
         @Data
         public static class Signing {
             private boolean enabled = false;
+
+            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
+            // caller's team only (fail-closed). The saas profile pins 'team'.
+            private String userListScope = "org";
         }
     }
 
@@ -820,7 +1317,7 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
-        private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
+        private String logoStyle = "modern"; // Options: "modern" (default) or "classic"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
@@ -831,10 +1328,10 @@ public class ApplicationProperties {
 
         public String getLogoStyle() {
             // Validate and return either "modern" or "classic"
-            if ("modern".equalsIgnoreCase(logoStyle)) {
-                return "modern";
+            if ("classic".equalsIgnoreCase(logoStyle)) {
+                return "classic";
             }
-            return "classic"; // default
+            return "modern"; // default
         }
 
         @Data
@@ -852,7 +1349,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private boolean enabled;
+        private boolean enabled = true;
     }
 
     @Data
@@ -904,7 +1401,7 @@ public class ApplicationProperties {
         private boolean enableInvites = false;
         private int inviteLinkExpiryHours = 72; // Default: 72 hours (3 days)
         private String host;
-        private int port;
+        private int port = 587;
         private String username;
         @ToString.Exclude private String password;
         private String from;
@@ -931,10 +1428,10 @@ public class ApplicationProperties {
         @ToString.Exclude private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
-        private Boolean customFolderSuffix = false;
-        private Boolean enableAllowUserIDs = false;
+        private Boolean customFolderSuffix = true;
+        private Boolean enableAllowUserIDs = true;
         private List<Long> allowUserIDs = new ArrayList<>();
-        private Boolean enableAllowChannelIDs = false;
+        private Boolean enableAllowChannelIDs = true;
         private List<Long> allowChannelIDs = new ArrayList<>();
         private long processingTimeoutSeconds = 180;
         private long pollingIntervalMillis = 2000;

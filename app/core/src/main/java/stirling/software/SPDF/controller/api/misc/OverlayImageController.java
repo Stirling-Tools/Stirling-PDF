@@ -22,8 +22,12 @@ import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.SPDF.utils.SvgOverlayUtil;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -35,16 +39,20 @@ public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final SvgSanitizer svgSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-image")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-image",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =
-                    "This endpoint overlays an image onto a PDF file at the specified coordinates. "
-                            + "Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). "
-                            + "SVG files are rendered as vector graphics for crisp output at any resolution. "
-                            + "The image can be overlaid on every page of the PDF if specified. "
-                            + "Input:PDF/IMAGE/SVG Output:PDF Type:SISO")
+                    "This endpoint overlays an image onto a PDF file at the specified coordinates."
+                            + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
+                            + " files are rendered as vector graphics for crisp output at any resolution. The"
+                            + " image can be overlaid on every page of the PDF if specified.")
     public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
@@ -57,6 +65,9 @@ public class OverlayImageController {
             byte[] imageBytes = imageFile.getBytes();
 
             boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
+            if (isSvg) {
+                imageBytes = svgSanitizer.sanitize(imageBytes);
+            }
 
             try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
                 int pages = document.getNumberOfPages();

@@ -30,7 +30,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -51,6 +54,8 @@ class CertSignControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private HardwareKeyStoreService hardwareKeyStoreService;
+    @Mock private HttpServletRequest httpRequest;
 
     @InjectMocks private CertSignController certSignController;
 
@@ -169,7 +174,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -195,7 +201,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -221,7 +228,7 @@ class CertSignControllerTest {
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> certSignController.signPDFWithCert(request));
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
     }
@@ -247,7 +254,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -278,7 +286,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -309,7 +318,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -340,7 +350,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
@@ -371,7 +382,8 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);

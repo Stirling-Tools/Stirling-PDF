@@ -46,7 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
@@ -559,11 +562,16 @@ public class ScannerEffectController {
         }
     }
 
-    @AutoJobPostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/scanner-effect",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
-                    "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
+                    "Applies various effects to simulate a scanned document, including rotation,"
+                            + " noise, and edge softening.")
     public ResponseEntity<Resource> scannerEffect(
             @Valid @ModelAttribute ScannerEffectRequest request) throws IOException {
         MultipartFile file = request.getFileInput();

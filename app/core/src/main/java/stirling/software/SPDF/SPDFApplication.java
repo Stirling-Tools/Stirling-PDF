@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +34,8 @@ import stirling.software.common.model.ApplicationProperties;
         scanBasePackages = {
             "stirling.software.SPDF",
             "stirling.software.common",
-            "stirling.software.proprietary"
+            "stirling.software.proprietary",
+            "stirling.software.saas"
         })
 public class SPDFApplication {
 
@@ -74,7 +74,7 @@ public class SPDFApplication {
         Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         log.info("Settings file: {}", settingsPath.toString());
         if (Files.exists(settingsPath)) {
             propertyFiles.put(
@@ -83,7 +83,7 @@ public class SPDFApplication {
             log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
         }
 
-        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         log.info("Custom settings file: {}", customSettingsPath.toString());
         if (Files.exists(customSettingsPath)) {
             String existingLocation =
@@ -205,15 +205,22 @@ public class SPDFApplication {
             }
         }
 
-        // 2. Detect if SecurityConfiguration is present on classpath
-        if (isClassPresent(
-                "stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
+        // 2. Detect classpath shape and pick the matching profile chain.
+        boolean hasSaas = isClassPresent("stirling.software.saas.security.SupabaseSecurityConfig");
+        boolean hasSecurity =
+                isClassPresent(
+                        "stirling.software.proprietary.security.configuration.SecurityConfiguration");
+
+        if (hasSaas) {
+            log.info("SaaS features in jar");
+            return new String[] {"security", "saas"};
+        }
+        if (hasSecurity) {
             log.info("Additional features in jar");
             return new String[] {"security"};
-        } else {
-            log.info("Without additional features in jar");
-            return new String[] {"default"};
         }
+        log.info("Without additional features in jar");
+        return new String[] {"default"};
     }
 
     private static boolean isClassPresent(String className) {

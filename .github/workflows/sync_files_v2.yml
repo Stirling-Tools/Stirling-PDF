@@ -10,8 +10,9 @@ on:
       - "app/common/build.gradle"
       - "app/core/build.gradle"
       - "app/proprietary/build.gradle"
+      - "gradle/spotless.gradle"
       - "README.md"
-      - "frontend/public/locales/*/translation.toml"
+      - "frontend/editor/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
@@ -32,10 +33,11 @@ permissions:
 
 jobs:
   sync-files:
+    environment: bot-identity
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -50,32 +52,38 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+          cache-suffix: sync-files
 
       - name: Install Python dependencies
         run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
+          uv sync --project engine --locked --group tools
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
       - name: Sync translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
 
-      - name: pre-commit run
+      - name: Sort translation TOML files
         run: |
-          pre-commit run toml-sort-fix --all-files
+          task pre-commit:toml-sort FIX=1
 
       - name: Commit translation files
         run: |
-          git add frontend/public/locales/*/translation.toml
+          git add frontend/editor/public/locales/*/translation.toml
           git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
 
       - name: Sync README.md
         run: |
-          python scripts/counter_translation_v3.py
+          uv run --project engine --locked --group tools python scripts/counter_translation_v3.py
 
       - name: Run git add
         run: |
@@ -100,7 +108,7 @@ jobs:
             This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
+            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-US/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
             - **Format**: TOML
@@ -125,5 +133,5 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            frontend/public/locales/*/translation.toml
+            frontend/editor/public/locales/*/translation.toml
             scripts/ignore_translation.toml

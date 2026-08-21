@@ -23,8 +23,11 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddCommentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
 import stirling.software.common.util.GeneralUtils;
@@ -66,16 +69,19 @@ public class AddCommentsController {
     private final PdfTextLocator pdfTextLocator;
     private final ObjectMapper objectMapper;
 
-    @AutoJobPostMapping(value = "/add-comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/add-comments",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add sticky-note comments to a PDF at specified positions or anchored text",
             description =
-                    "Attaches PDF Text (sticky-note) annotations to the document."
-                            + " Each CommentSpec can either supply absolute coordinates or an"
-                            + " `anchorText` hint; when provided, the tool locates the first matching"
-                            + " line on the target page and anchors the icon there (falling back to"
-                            + " the coordinates if no match). Input:PDF Output:PDF Type:SISO")
+                    "Attaches PDF Text (sticky-note) annotations to the document. Each CommentSpec"
+                            + " can either supply absolute coordinates or an `anchorText` hint; when provided,"
+                            + " the tool locates the first matching line on the target page and anchors the"
+                            + " icon there (falling back to the coordinates if no match).")
     public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request)
             throws IOException {
 
