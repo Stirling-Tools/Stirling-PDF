@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Card, Group, Modal, Stack, Text } from "@mantine/core";
+import { Badge, Card, Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import "@app/components/tools/ToolPanelModePrompt.css";
@@ -122,9 +123,6 @@ const ToolPanelModePrompt = ({
                 </div>
               </div>
               <Button
-                variant={toolPanelMode === "sidebar" ? "filled" : "light"}
-                color="blue"
-                radius="md"
                 className="tool-panel-mode-prompt__action"
                 onClick={() => handleSelect("sidebar")}
               >
@@ -174,9 +172,6 @@ const ToolPanelModePrompt = ({
                 </div>
               </div>
               <Button
-                variant={toolPanelMode === "fullscreen" ? "filled" : "outline"}
-                color="blue"
-                radius="md"
                 className="tool-panel-mode-prompt__action"
                 onClick={() => handleSelect("fullscreen")}
               >
@@ -189,9 +184,7 @@ const ToolPanelModePrompt = ({
           </Card>
         </div>
         <Button
-          variant="subtle"
-          color="gray"
-          radius="md"
+          variant="tertiary"
           className="tool-panel-mode-prompt__maybe-later"
           onClick={handleDismiss}
         >

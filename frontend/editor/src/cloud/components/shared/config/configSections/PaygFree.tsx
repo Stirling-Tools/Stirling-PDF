@@ -25,6 +25,7 @@
  */
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";
@@ -32,13 +33,13 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import { useWallet } from "@app/hooks/useWallet";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./PaygFree.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import UpgradeModal from "./UpgradeModal";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { DocHelp } from "./Payg";
 import {
   FreeMeterPanel,
@@ -171,14 +172,14 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
           <FreeMeterPanel snap={snap} />
           {isLeader ? (
             <>
-              <button
-                type="button"
-                className="paygf-cta__button paygf-proc__cta"
+              <Button
+                fullWidth
+                className="paygf-proc__cta"
                 onClick={onTurnOn}
                 data-testid="turn-on-processor"
               >
                 {t("payg.free.cta.button", "Turn on Processor →")}
-              </button>
+              </Button>
               <span className="paygf-cta__reassurance paygf-proc__reassure">
                 {t(
                   "payg.free.cta.reassurance",

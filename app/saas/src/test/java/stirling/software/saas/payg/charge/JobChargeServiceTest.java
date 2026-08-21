@@ -31,6 +31,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -70,6 +71,7 @@ class JobChargeServiceTest {
     private PaygTeamExtensionsRepository teamExtRepo;
     private PaygMeterReportingService meterReporter;
     private WalletLedgerRepository ledgerRepo;
+    private PrepaidBundleService prepaidBundleService;
     private JobChargeService service;
 
     @BeforeEach
@@ -82,6 +84,9 @@ class JobChargeServiceTest {
         teamExtRepo = Mockito.mock(PaygTeamExtensionsRepository.class);
         meterReporter = Mockito.mock(PaygMeterReportingService.class);
         ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
+        // Defaults to draw()==0 (Mockito int default) → no prepaid consumed unless a test stubs it,
+        // so existing free/metered assertions are unaffected.
+        prepaidBundleService = Mockito.mock(PrepaidBundleService.class);
         // findByIdForUpdate defaults to Optional.empty() (Mockito) → no free grant consumed unless
         // a test stubs the sidecar row. The free split is decided at openProcess time now, not at
         // close, so the meter tests just set free_units_consumed on the shadow row directly.
@@ -94,7 +99,8 @@ class JobChargeServiceTest {
                         jobRepo,
                         teamExtRepo,
                         meterReporter,
-                        ledgerRepo);
+                        ledgerRepo,
+                        prepaidBundleService);
     }
 
     @AfterEach
@@ -200,6 +206,42 @@ class JobChargeServiceTest {
         assertThat(debit.getReferenceId()).isEqualTo(newJob.getId().toString());
         assertThat(debit.getPolicyId()).isEqualTo(policy.getId());
         assertThat(debit.getBillingCategory()).isEqualTo(BillingCategory.API);
+    }
+
+    @Test
+    void openProcess_prepaidBundleDraw_netsBundleUnitsOutOfLedgerAndRecordsSplit(@TempDir Path tmp)
+            throws IOException {
+        // Bundle covers 3 of the 4 charged units. Only the metered remainder (1) lands in the
+        // ledger's CYCLE spend (so prepaid stays outside the cap + Stripe meter), while the shadow
+        // row freezes the split and doc_count is untouched (the PDF is still counted once).
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
+        // No free grant (findByIdForUpdate defaults empty); prepaid pools cover 3 of the 4 units.
+        when(prepaidBundleService.draw(eq(100L), eq(4))).thenReturn(3);
+
+        JobInput in = jobInput(tmp, "in.pdf", "application/pdf");
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(in));
+
+        ArgumentCaptor<PaygShadowCharge> shadowCaptor =
+                ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(shadowCaptor.capture());
+        assertThat(shadowCaptor.getValue().getPaygUnits()).isEqualTo(4);
+        assertThat(shadowCaptor.getValue().getBundleUnitsConsumed()).isEqualTo(3);
+
+        ArgumentCaptor<WalletLedgerEntry> ledgerCaptor =
+                ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledgerCaptor.capture());
+        // 4 charged − 3 prepaid = 1 metered unit, stored negative.
+        assertThat(ledgerCaptor.getValue().getAmountUnits()).isEqualTo(-1);
+        assertThat(ledgerCaptor.getValue().getBucket()).isEqualTo(LedgerBucket.CYCLE);
     }
 
     @Test
@@ -911,6 +953,52 @@ class JobChargeServiceTest {
                         7L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.BYPASSED);
         assertThatThrownBy(() -> service.chargeStandalone(ctx, 1))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void chargeStandalone_floorsUnitsAtMinChargeUnits() {
+        // Pins the per-call minChargeUnits floor that the linked-instance sync path inherits: a
+        // daily delta below the floor bills the floor (max(delta, minChargeUnits)) — applied per
+        // sync-delta here, not per underlying op (documented divergence from the in-cloud per-op
+        // floor; can only under-bill vs per-op, never over).
+        long teamId = 100L;
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 5, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(teamId)).thenReturn(policy);
+
+        UUID jobId = UUID.randomUUID();
+        when(jobService.open(any(JobContext.class), eq(5))).thenReturn(openJob(jobId));
+        when(jobService.close(jobId)).thenReturn(openJob(jobId));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(teamId);
+        ext.setStripeCustomerId("cus_x");
+        ext.setPaygSubscriptionId("sub_x");
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
+        when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
+                .thenReturn(
+                        Optional.of(chargedShadowRow(jobId, teamId, 5, 0, BillingCategory.API)));
+
+        ChargeContext ctx =
+                new ChargeContext(
+                        7L, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API);
+        ArgumentCaptor<WalletLedgerEntry> ledger = ArgumentCaptor.forClass(WalletLedgerEntry.class);
+
+        withTransactionSynchronization(() -> service.chargeStandalone(ctx, 2));
+
+        // Delta of 2 floored to minChargeUnits=5: the job, ledger debit, and meter all use 5.
+        verify(jobService).open(any(JobContext.class), eq(5));
+        verify(ledgerRepo).save(ledger.capture());
+        assertThat(ledger.getValue().getAmountUnits()).isEqualTo(-5);
+        verify(meterReporter)
+                .recordUsage(
+                        eq(teamId),
+                        eq("cus_x"),
+                        eq(5),
+                        eq(BillingCategory.API),
+                        eq("process:" + jobId + ":close"),
+                        eq(jobId));
     }
 
     private static void withTransactionSynchronization(Runnable body) {

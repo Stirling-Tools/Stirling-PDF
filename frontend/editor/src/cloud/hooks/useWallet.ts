@@ -32,6 +32,14 @@
  * promise see the UI flip exactly once the new state is visible — no
  * intermediate flash of the old value.
  *
+ * <h2>Freshness</h2>
+ *
+ * The figures drain as metered work runs, so a mounted consumer re-reads the
+ * wallet every {@link WALLET_POLL_MS} and again whenever the tab regains
+ * visibility. Those refreshes are silent — they leave {@code loading} and
+ * {@code error} alone and only commit fresher data — so consumers that gate on
+ * those flags don't flicker on a background tick.
+ *
  * <h2>Dev preview fallback</h2>
  *
  * When the hook is rendered outside the saas app (e.g. on {@code
@@ -50,123 +58,26 @@ import apiClient from "@app/services/apiClient";
 import { createPortalSession } from "@app/services/billing";
 import { openExternal } from "@app/platform/openExternal";
 import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
+import type {
+  Wallet,
+  WalletStatus,
+  WalletRole,
+  WalletMember,
+  WalletCategoryBreakdown,
+  WalletActivityRow,
+} from "@app/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
-
-export type WalletStatus = "free" | "subscribed";
-export type WalletRole = "leader" | "member";
-
-/**
- * A single team member's billing-relevant info — name + email for the avatar
- * row, {@code spendUnits} for their per-member usage display. Mirrors a row of
- * the backend's {@code members} array on {@code WalletSnapshot} (joined with
- * {@code team_memberships}).
- */
-export interface WalletMember {
-  /** Supabase user id of the member. */
-  userId: string;
-  name: string;
-  email: string;
-  /** Member's current-period billable spend. */
-  spendUnits: number;
-}
-
-/**
- * Per-category breakdown of current-period spend in billable units. The
- * categories mirror the {@code FeatureGate} buckets the backend tracks:
- * server-side tool calls ({@code api}), AI-backed tools ({@code ai}), and
- * pipeline / automation runs ({@code automation}). Numbers sum to {@code
- * billableUsed} (modulo rounding in mock data).
- */
-export interface WalletCategoryBreakdown {
-  api: number;
-  ai: number;
-  automation: number;
-}
-
-/** Mirror of the backend's {@code WalletSnapshot} record (the JSON returned from {@code GET /api/v1/payg/wallet}). */
-export interface Wallet {
-  /**
-   * The caller's primary team_id. Needed when invoking Supabase edge functions
-   * (create-checkout-session, etc.) that run outside Spring Security and have
-   * no other way to resolve the caller's team. May be null on the synthetic
-   * empty snapshot returned to anonymous / team-less callers.
-   */
-  teamId: number | null;
-  status: WalletStatus;
-  role: WalletRole;
-  /**
-   * ISO yyyy-mm-dd. The Stripe subscription's current period when subscribed;
-   * the calendar month for free teams.
-   */
-  billingPeriodStart: string;
-  billingPeriodEnd: string;
-  /**
-   * For a free team: the one-time free documents used so far ({@code
-   * freeAllowance − freeRemaining}). For a subscribed team: documents
-   * processed this month across automation + AI + API.
-   */
-  billableUsed: number;
-  /**
-   * The team's document ceiling for the matching window: the one-time free
-   * grant ({@code freeAllowance}) for free teams; the monthly paid-doc cap
-   * {@code floor(cap / perDocRate)} for capped subscribed teams; null when
-   * subscribed with no cap (uncapped).
-   */
-  billableLimit: number | null;
-  /**
-   * The team's one-time free document grant size — the "N" in "X of N free".
-   * A lifetime grant ({@code pricing_policy.free_tier_units}): it never resets
-   * and is not lost when the team subscribes.
-   */
-  freeAllowance: number;
-  /**
-   * One-time free documents still available to the team
-   * ({@code payg_team_extensions.free_units_remaining}). 0 = grant exhausted.
-   * Survives subscribing — a subscribed team keeps any unused grant.
-   */
-  freeRemaining: number;
-  /**
-   * Paid per-document rate in minor units of {@link Wallet#currency} (may be
-   * fractional); null when the rate can't be resolved — render "unknown",
-   * never substitute.
-   */
-  pricePerDocMinor: number | null;
-  /** Lower-case ISO 4217 currency of the subscription's Stripe Price; null when unknown. */
-  currency: string | null;
-  /**
-   * Estimated charges so far this period in minor units of currency: paid
-   * (Stripe-metered) documents this period × rate. The free portion was
-   * already netted out at charge time. Informational — the Stripe invoice
-   * is authoritative. Null when the rate is unknown.
-   */
-  estimatedBillMinor: number | null;
-  /** Monthly cap in major currency units when subscribed; null when noCap or status=='free'. */
-  capUsd: number | null;
-  /** Only meaningful when status=='subscribed'. */
-  noCap: boolean;
-  /** Stripe subscription id when subscribed; null when free. */
-  stripeSubscriptionId: string | null;
-  /** Current-period spend in billable units. */
-  spendUnitsThisPeriod: number;
-  /** Per-category spend breakdown (api / ai / automation). */
-  categoryBreakdown: WalletCategoryBreakdown;
-  /**
-   * Team members, populated for the leader view; empty for members or
-   * single-seat tenants. Leader-vs-member is still resolved via {@link
-   * Wallet#role} — this field just carries the per-member rows the leader's
-   * sub-cap table needs.
-   */
-  members: WalletMember[];
-  /**
-   * Recent billable-activity rows. V1 returns {@code []} from the backend;
-   * the field exists so the Plan page can render an empty state without
-   * branching on undefined. Each entry is a {@code Record<string, unknown>}
-   * because the activity-row shape is not yet finalised — when the meter-
-   * event surface lands, this widens to a real interface.
-   */
-  recent: Array<Record<string, unknown>>;
-}
+// The wallet contract lives in @app/billing (shared with the admin portal).
+// Re-exported so existing `@app/hooks/useWallet` importers keep their imports.
+export type {
+  Wallet,
+  WalletStatus,
+  WalletRole,
+  WalletMember,
+  WalletCategoryBreakdown,
+  WalletActivityRow,
+};
 
 export interface UseWalletResult {
   wallet: Wallet | null;
@@ -225,12 +136,20 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.freeAllowance !== next.freeAllowance ||
     prev.freeRemaining !== next.freeRemaining ||
     prev.pricePerDocMinor !== next.pricePerDocMinor ||
+    prev.bundleRatePerCreditMinor !== next.bundleRatePerCreditMinor ||
     prev.currency !== next.currency ||
     prev.estimatedBillMinor !== next.estimatedBillMinor ||
     prev.capUsd !== next.capUsd ||
     prev.noCap !== next.noCap ||
     prev.stripeSubscriptionId !== next.stripeSubscriptionId ||
-    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod
+    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod ||
+    prev.docsProcessedThisPeriod !== next.docsProcessedThisPeriod ||
+    prev.uniquePdfsThisPeriod !== next.uniquePdfsThisPeriod ||
+    prev.sizeMultiplierPdfsThisPeriod !== next.sizeMultiplierPdfsThisPeriod ||
+    prev.billingMode !== next.billingMode ||
+    prev.prepaidUnitsRemaining !== next.prepaidUnitsRemaining ||
+    prev.prepaidUnitsTotal !== next.prepaidUnitsTotal ||
+    prev.prepaidExpiresAt !== next.prepaidExpiresAt
   ) {
     return next;
   }
@@ -240,7 +159,10 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   if (
     prev.categoryBreakdown.api !== next.categoryBreakdown.api ||
     prev.categoryBreakdown.ai !== next.categoryBreakdown.ai ||
-    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation
+    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation ||
+    prev.categoryDocs.api !== next.categoryDocs.api ||
+    prev.categoryDocs.ai !== next.categoryDocs.ai ||
+    prev.categoryDocs.automation !== next.categoryDocs.automation
   ) {
     return next;
   }
@@ -263,6 +185,13 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   // otherwise, so reuse the prior reference for stable child memoisation.
   return prev;
 }
+
+/**
+ * How often a mounted consumer re-reads the wallet. Matches the app query
+ * client's staleTime, so the sidebar meter and anything cached elsewhere age
+ * out on the same clock.
+ */
+const WALLET_POLL_MS = 30_000;
 
 export function useWallet(): UseWalletResult {
   // Resolved once: the dev-preview side-channel when rendered outside the real
@@ -287,13 +216,29 @@ export function useWallet(): UseWalletResult {
   // "the request fired." Cleared when no load is pending.
   const inFlight = useRef<Promise<void> | null>(null);
 
+  // Set for refreshes the user didn't ask for (the poll below). Silence governs
+  // whether a load may RAISE `loading` / `error`, never whether it may clear
+  // them: consumers gate on both — the limit modals do
+  // `if (loading || !wallet) return null`, and Plan swaps in an error alert —
+  // so a background tick must not blink an open modal out or replace a working
+  // page over a transient failure. Clearing is always the latest request's job,
+  // silent or not; a silent load that skipped the clear would strand `loading`
+  // true after superseding a visible one, which suppresses those modals for the
+  // rest of the session.
+  const silentRefresh = useRef(false);
+
   useEffect(() => {
     const reqId = ++latestReqId.current;
     let cancelled = false;
 
+    const silent = silentRefresh.current;
+    silentRefresh.current = false;
+
     const promise = (async () => {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (devPreview) {
         const synth = devPreview.buildWallet(devPreview.role());
@@ -307,11 +252,22 @@ export function useWallet(): UseWalletResult {
         const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, res.data));
+        // Fresh data retires any earlier failure, including one a silent poll
+        // is recovering from — otherwise Plan keeps its alert over good data.
+        setError(null);
       } catch (e: unknown) {
         if (cancelled || reqId !== latestReqId.current) return;
-        console.warn("[useWallet] fetch failed", e);
-        setError(e instanceof Error ? e.message : "Failed to load wallet");
+        if (!silent) {
+          console.warn("[useWallet] fetch failed", e);
+          setError(e instanceof Error ? e.message : "Failed to load wallet");
+        }
+        // A failed background refresh is a non-event: the last good snapshot
+        // stands and the next tick self-heals, so it neither surfaces nor
+        // logs — otherwise an offline tab warns every WALLET_POLL_MS.
       } finally {
+        // Deliberately not gated on `silent`: whichever load is latest owns
+        // settling the flag, or a silent refresh that supersedes a visible one
+        // leaves it stuck true.
         if (!cancelled && reqId === latestReqId.current) {
           setLoading(false);
         }
@@ -327,6 +283,46 @@ export function useWallet(): UseWalletResult {
       // upstream ensures stale results don't commit.
     };
   }, [devPreview, refetchTick]);
+
+  // The wallet drains as automation, AI and API work runs, so a figure fetched
+  // on mount goes stale while the user watches it. Refresh on a timer, and
+  // immediately on returning to the tab — coming back to a stale number is the
+  // case people actually notice. Hidden tabs don't poll, and the dev-preview
+  // wallet is synthesised locally so there is nothing to re-read.
+  useEffect(() => {
+    if (devPreview) return;
+
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const refresh = () => {
+      silentRefresh.current = true;
+      setRefetchTick((t) => t + 1);
+    };
+    const stop = () => {
+      if (timer !== undefined) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    const start = () => {
+      stop();
+      timer = setInterval(refresh, WALLET_POLL_MS);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [devPreview]);
 
   const refetch = useCallback(async () => {
     setRefetchTick((t) => t + 1);

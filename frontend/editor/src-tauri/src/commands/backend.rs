@@ -210,6 +210,9 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
         "-Dserver.port=0",  // Let OS assign an available port
+        // No reverse proxy in front of the local sidecar, so don't trust forwarded headers.
+        // Stops a LAN caller spoofing X-Forwarded-For to defeat the desktop-only signing gate.
+        "-Dserver.forward-headers-strategy=none",
         "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
         "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
     ];

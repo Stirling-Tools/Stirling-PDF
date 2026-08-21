@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Modal,
   Stack,
   Text,
   Textarea,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { Dropzone } from "@mantine/dropzone";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
@@ -104,6 +104,11 @@ export default function AutomationImportModal({
     }
   };
 
+  const dropzoneLabel = t(
+    "automate.importModal.dropzoneAriaLabel",
+    "Drop an automation JSON file here",
+  );
+
   const formatLabel =
     parsed?.format === "automate"
       ? t("automate.importModal.detectedAutomation", "Automate JSON")
@@ -133,10 +138,10 @@ export default function AutomationImportModal({
           accept={["application/json", "text/plain"]}
           multiple={false}
           maxSize={10 * 1024 * 1024}
-          aria-label={t(
-            "automate.importModal.dropzoneAriaLabel",
-            "Drop an automation JSON file here",
-          )}
+          aria-label={dropzoneLabel}
+          // Dropzone's own aria-label lands on the wrapper; the hidden file
+          // input it renders needs naming separately.
+          inputProps={{ "aria-label": dropzoneLabel }}
         >
           <Group
             gap="md"
@@ -207,7 +212,7 @@ export default function AutomationImportModal({
                 })}
               </Text>
               {parsed.unresolvedOperations.length > 0 && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("automate.importModal.unresolved", "Unmapped: {{ops}}", {
                     ops: parsed.unresolvedOperations.join(", "),
                   })}
@@ -218,7 +223,7 @@ export default function AutomationImportModal({
         )}
 
         <Group gap="sm" justify="flex-end">
-          <Button variant="subtle" onClick={onCancel} disabled={submitting}>
+          <Button variant="tertiary" onClick={onCancel} disabled={submitting}>
             {t("automate.importModal.cancel", "Cancel")}
           </Button>
           <Button

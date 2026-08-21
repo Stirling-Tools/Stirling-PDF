@@ -445,8 +445,17 @@ test.describe("Files page screenshots", () => {
       localStorage.setItem("i18nextLng", "ar-AR");
       localStorage.setItem("stirling-language", "ar-AR");
       localStorage.setItem("stirling-language-source", "user");
-      document.documentElement.setAttribute("dir", "rtl");
-      document.documentElement.setAttribute("lang", "ar-AR");
+      // On webkit, `document.documentElement` is still null when Playwright
+      // runs init scripts, so calling setAttribute directly throws - and that
+      // uncaught error aborts the *following* init script (the IndexedDB seed
+      // in seedFiles), leaving the grid stuck on skeletons. Guard the access
+      // and defer to DOMContentLoaded when the element isn't there yet.
+      const applyDir = () => {
+        document.documentElement.setAttribute("dir", "rtl");
+        document.documentElement.setAttribute("lang", "ar-AR");
+      };
+      if (document.documentElement) applyDir();
+      else document.addEventListener("DOMContentLoaded", applyDir);
     });
   }
 

@@ -5,18 +5,18 @@ import {
   Text,
   Divider,
   Collapse,
-  Button,
   NumberInput,
   Checkbox,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { BookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;
-  onParameterChange: (
-    key: keyof BookletImpositionParameters,
-    value: any,
+  onParameterChange: <K extends keyof BookletImpositionParameters>(
+    key: K,
+    value: BookletImpositionParameters[K],
   ) => void;
   disabled?: boolean;
 }
@@ -70,7 +70,7 @@ const BookletImpositionSettings = ({
         {/* Manual Duplex Pass Selection - only show when double-sided is OFF */}
         {!parameters.doubleSided && (
           <Stack gap="xs" ml="lg">
-            <Text size="sm" fw={500} c="orange">
+            <Text size="sm" fw={500} c="var(--color-amber-dark)">
               {t("bookletImposition.manualDuplex.title", "Manual Duplex Mode")}
             </Text>
             <Text size="xs" c="dimmed">
@@ -97,7 +97,7 @@ const BookletImpositionSettings = ({
               disabled={disabled}
             />
 
-            <Text size="xs" c="blue" fs="italic">
+            <Text size="xs" c="var(--c-accent-text)" fs="italic">
               {parameters.duplexPass === "FIRST"
                 ? t(
                     "bookletImposition.duplexPass.firstInstructions",
@@ -117,7 +117,7 @@ const BookletImpositionSettings = ({
       {/* Advanced Options */}
       <Stack gap="sm">
         <Button
-          variant="subtle"
+          variant="tertiary"
           onClick={() => setAdvancedOpen(!advancedOpen)}
           disabled={disabled}
         >
@@ -214,7 +214,10 @@ const BookletImpositionSettings = ({
                   )}
                   value={parameters.gutterSize}
                   onChange={(value) =>
-                    onParameterChange("gutterSize", value || 12)
+                    onParameterChange(
+                      "gutterSize",
+                      typeof value === "number" ? value : 12,
+                    )
                   }
                   min={6}
                   max={72}

@@ -75,6 +75,24 @@ public class JpaJobLineageStore implements JobLineageStore {
         List<LineageMatch> matches =
                 hashRepository.findOpenJobsForSignatures(
                         userId, JobStatus.OPEN, since, storageKeys, Limit.of(1));
+        return matches.isEmpty() ? Optional.empty() : Optional.of(matches.getFirst());
+    }
+
+    @Override
+    public Optional<LineageMatch> findOpenJobForSignatures(
+            Long userId, Set<LineageSignature> candidates, Duration workflowWindow, String runId) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(candidates, "candidates");
+        Objects.requireNonNull(workflowWindow, "workflowWindow");
+        Objects.requireNonNull(runId, "runId");
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+        List<String> storageKeys = candidates.stream().map(LineageSignature::asStorageKey).toList();
+        LocalDateTime since = LocalDateTime.now().minus(workflowWindow);
+        List<LineageMatch> matches =
+                hashRepository.findOpenJobsForSignaturesInRun(
+                        userId, JobStatus.OPEN, since, storageKeys, runId, Limit.of(1));
         return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
     }
 

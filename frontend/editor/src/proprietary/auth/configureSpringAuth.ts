@@ -10,7 +10,7 @@
 import type { AxiosInstance } from "axios";
 import apiClient from "@app/services/apiClient";
 import { BASE_PATH } from "@app/constants/app";
-import { configureSpringAuth } from "@shared/auth/config";
+import { configureSpringAuth } from "@app/auth/config";
 import {
   clearPlatformAuthAfterSignOut,
   clearPlatformAuthOnLoginInit,

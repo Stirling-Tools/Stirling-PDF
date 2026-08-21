@@ -455,7 +455,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           })
           .map((s) => s.id);
         if (localIds.length > 0) {
-          await fileActions.removeFiles(localIds, true);
+          // Take the superseded versions with it, or their bytes sit in storage
+          // forever - invisible, because listings only show leaves.
+          const orphans = await fileStorage.orphanedAncestorIds(localIds);
+          await fileActions.removeFiles([...localIds, ...orphans], true);
         }
       }
 

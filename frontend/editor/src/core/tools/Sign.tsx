@@ -7,6 +7,7 @@ const Sign = createStampTool({
   defaultSignatureSource: "canvas",
   defaultSignatureType: "canvas",
   enableApplyAction: true,
+  enableSharedSigning: true,
 });
 
 export default Sign;
