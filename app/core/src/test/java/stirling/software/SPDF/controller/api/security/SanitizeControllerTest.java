@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -24,6 +25,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionLaunch;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.action.PDDocumentCatalogAdditionalActions;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -106,6 +108,18 @@ class SanitizeControllerTest {
             doc.addPage(new PDPage());
             PDActionJavaScript jsAction = new PDActionJavaScript("app.alert('test')");
             doc.getDocumentCatalog().setOpenAction(jsAction);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    private byte[] createPdfWithCatalogAdditionalActions() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage());
+            PDDocumentCatalogAdditionalActions actions = new PDDocumentCatalogAdditionalActions();
+            actions.setWC(new PDActionJavaScript("app.alert('closing')"));
+            doc.getDocumentCatalog().setActions(actions);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
             return baos.toByteArray();
@@ -202,6 +216,74 @@ class SanitizeControllerTest {
 
             ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should not add an empty /AA dictionary to the catalog")
+        void testDoesNotAddEmptyCatalogAdditionalActions() throws Exception {
+            try (PDDocument input = Loader.loadPDF(simplePdfBytes)) {
+                assertNull(
+                        input.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.AA),
+                        "input fixture should not already have /AA");
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            simplePdfBytes);
+
+            SanitizePdfRequest request = new SanitizePdfRequest();
+            request.setFileInput(pdfFile);
+            request.setRemoveJavaScript(true);
+            request.setRemoveEmbeddedFiles(false);
+            request.setRemoveXMPMetadata(false);
+            request.setRemoveMetadata(false);
+            request.setRemoveLinks(false);
+            request.setRemoveFonts(false);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
+                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            try (PDDocument output = Loader.loadPDF(drainBody(response))) {
+                assertNull(
+                        output.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.AA),
+                        "sanitize must not introduce an /AA entry in the catalog");
+            }
+        }
+
+        @Test
+        @DisplayName("Should drop /AA entirely once its only actions were JavaScript")
+        void testRemovesCatalogAdditionalActionsWhenEmptied() throws Exception {
+            byte[] withCatalogJs = createPdfWithCatalogAdditionalActions();
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            withCatalogJs);
+
+            SanitizePdfRequest request = new SanitizePdfRequest();
+            request.setFileInput(pdfFile);
+            request.setRemoveJavaScript(true);
+            request.setRemoveEmbeddedFiles(false);
+            request.setRemoveXMPMetadata(false);
+            request.setRemoveMetadata(false);
+            request.setRemoveLinks(false);
+            request.setRemoveFonts(false);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
+                    .thenAnswer(inv -> Loader.loadPDF(withCatalogJs));
+
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            try (PDDocument output = Loader.loadPDF(drainBody(response))) {
+                assertNull(
+                        output.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.AA),
+                        "an /AA left with no actions should be removed, not kept as an empty shell");
+            }
         }
     }
 

@@ -132,8 +132,11 @@ public class SanitizeController {
             catalog.setOpenAction(null);
         }
 
-        PDDocumentCatalogAdditionalActions catalogActions = catalog.getActions();
-        if (catalogActions != null) {
+        // getActions() lazily writes an empty /AA into the catalog, so only call it when /AA
+        // already exists - otherwise sanitizing adds active-content structure to a clean file.
+        COSDictionary catalogDict = catalog.getCOSObject();
+        if (catalogDict.getCOSDictionary(COSName.AA) != null) {
+            PDDocumentCatalogAdditionalActions catalogActions = catalog.getActions();
             if (catalogActions.getWC() instanceof PDActionJavaScript) {
                 catalogActions.setWC(null);
             }
@@ -148,6 +151,11 @@ public class SanitizeController {
             }
             if (catalogActions.getDP() instanceof PDActionJavaScript) {
                 catalogActions.setDP(null);
+            }
+            // Drop /AA rather than leave an empty shell behind once every action was JavaScript.
+            COSDictionary remaining = catalogDict.getCOSDictionary(COSName.AA);
+            if (remaining != null && remaining.size() == 0) {
+                catalogDict.removeItem(COSName.AA);
             }
         }
 
