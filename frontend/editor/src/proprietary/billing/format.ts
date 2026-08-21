@@ -33,7 +33,7 @@ export function formatMinor(
   minor: number,
   currency: string | null | undefined,
 ): string {
-  const num = new Intl.NumberFormat(undefined, {
+  const num = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3,
   }).format(minor / 100);
@@ -45,7 +45,7 @@ export function formatMoneyMajor(
   major: number,
   currency: string | null | undefined,
 ): string {
-  return `${currencySymbol(currency)}${major.toLocaleString()}`;
+  return `${currencySymbol(currency)}${major.toLocaleString("en-US")}`;
 }
 
 /**

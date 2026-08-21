@@ -560,5 +560,5 @@ jobs:
       - name: Cleanup temporary files
         if: always()
         run: |
-          rm -f ../private.key
+          rm -f ../private.key docker-compose.yml storybook.tgz
         continue-on-error: true

@@ -1,7 +1,6 @@
 alphabet = "Алфавіт"
 apply = "Застосувати"
 applyAndContinue = "Зберегти й вийти"
-areYouSure = "Ви впевнені, що хочете вийти?"
 back = "Назад"
 black = "Чорний"
 blue = "Синій"
@@ -106,6 +105,7 @@ undoSuccess = "Операцію успішно скасовано"
 unknown = "Невідомо"
 unpin = "Відкріпити файл (замінити після виконання інструмента)"
 unsavedChanges = "У вас є незбережені зміни у вашому PDF."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Незбережені зміни"
 unsupported = "Не підтримується"
 username = "Ім'я користувача"
@@ -1879,6 +1879,9 @@ width = "Ширина"
 [app]
 description = "Безкоштовна альтернатива Adobe Acrobat (10M+ завантажень)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Перетворити в PDF/A-3b"
 convertToPdfA3bDescription = "Створює архівний PDF із вбудованими вкладеннями"
@@ -2933,12 +2936,16 @@ text = "Щоб зробити ці дозволи незмінними, скор
 [chat.actions]
 copy = "Копіювати повідомлення"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Параметри агента Stirling"
+assistant = "AI Assistant"
 clearChat = "Очистити чат"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Ця операція використає ваші хмарні кр
 tooltip = "Вибрати колір з екрана"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Виберіть колір"
 
 [common]
+actions = "Actions"
 back = "Назад"
 cancel = "Скасувати"
 close = "Закрити"
+codeSample = "Code sample"
 collapse = "Згорнути"
 confirm = "Підтвердити"
 continue = "Продовжити"
 copied = "Скопійовано!"
 copy = "Копіювати"
 done = "Готово"
+enterValue = "Enter value"
 error = "Помилка"
 expand = "Розгорнути"
 loading = "Завантаження..."
 next = "Далі"
+open = "Open"
 preview = "Попередній перегляд"
 previous = "Назад"
 refresh = "Оновити"
 remaining = "Залишилося"
 retry = "Повторити"
 save = "Зберегти"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Очистити вибране"
@@ -3185,6 +3199,7 @@ title = "Метод стиснення"
 [compress.settings]
 desiredSize = "Бажаний розмір файлу"
 desiredSizePlaceholder = "Введіть розмір"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Стиснення — простий спосіб зменшити розмір файлу. Виберіть «Розмір файлу», щоб вказати цільовий розмір і ми підлаштуємо якість за вас. Або виберіть «Якість», щоб вручну задати силу стиснення."
@@ -3387,6 +3402,24 @@ pdfOptions = "Параметри PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Спочатку виберіть вихідний формат"
 settings = "Налаштування"
 single = "Один"
@@ -3565,7 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Пошук..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Редагувати"
@@ -3824,11 +3861,13 @@ shareSelected = "Поділитися вибраними"
 sharing = "Спільний доступ"
 showAll = "Показати все"
 showHistory = "Показати історію"
+sortBy = "Sort files"
 sortByDate = "Сортувати за датою"
 sortByName = "Сортувати за назвою"
 sortBySize = "Сортувати за розміром"
 storage = "Сховище"
 storageState = "Сховище"
+storageUsed = "Storage used"
 synced = "Синхронізовано"
 title = "Завантажити файли PDF"
 toolChain = "Застосовані інструменти"
@@ -3874,8 +3913,12 @@ addFiles = "Додати файли"
 addingFiles = "Додавання файлів…"
 collapse = "Згорнути бічну панель"
 customizeGroups = "Налаштувати групи"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Відкрийте файли, щоб почати"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Розгорнути бічну панель"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive не налаштовано"
@@ -3888,15 +3931,17 @@ openFromComputer = "Відкрити з комп’ютера"
 openSettings = "Відкрити налаштування"
 other = "Інше"
 recent = "Нещодавні"
-search = "Пошук"
-searchPlaceholder = "Пошук файлів..."
 viewAll = "Переглянути всі файли ({{count}})"
 
 [fileSidebar.fileItem]
 closeViewer = "Закрити переглядач"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Відкрити в переглядачі"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3908,6 +3953,14 @@ reset = "Скинути до стандартних налаштувань"
 subtitle = "Групуйте файли в батьківські категорії. Додавайте наявні або нові мітки до категорії, перейменовуйте її або створюйте власну. Файли, які не належать до жодної з ваших категорій, відображаються в розділі «Інше»."
 title = "Категорії бічної панелі"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Додати до робочої області"
 addToWorkspaceCount = "Додати {{count}} до робочої області"
@@ -3918,7 +3971,6 @@ backToMyFiles = "Назад до «Мої файли»"
 breadcrumbs = "Шлях до папки"
 cancel = "Скасувати"
 classification = "Класифікація"
-clearSearch = "Очистити пошук"
 clearSelection = "Очистити вибір"
 closeDetails = "Закрити відомості"
 create = "Створити"
@@ -3950,6 +4002,7 @@ downloadAll = "Завантажити все"
 downloadVersion = "Завантажити цю версію"
 dropOverlay = "Перетягніть файли для завантаження"
 dropOverlaySub = "Файли спочатку потрапляють у Локальні. Використовуйте «Перемістити до» або «Зберегти в хмарі», щоб упорядкувати їх у папці."
+duplicate = "Duplicate"
 file = "Файл"
 fileInfo = "File info"
 fileMenu = "Дії з файлом"
@@ -3983,8 +4036,6 @@ resizeFolderTree = "Змінити розмір дерева папок (кла�
 save = "Зберегти"
 saveToServer = "Зберегти на сервері"
 saveToServerDisabledHint = "На цьому сервері збереження не ввімкнено. Попросіть адміністратора увімкнути його."
-search = "Пошук"
-searchPlaceholder = "Шукати в цій папці та підпапках"
 selectAll = "Вибрати все"
 selectAllHint = "Натисніть, щоб вибрати все. Підказка: утримуйте Ctrl (або Cmd), щоб додавати файли по одному, Shift — щоб вибрати діапазон."
 selectedCount = "Вибрано: {{count}}"
@@ -4044,6 +4095,10 @@ title = "Ще немає хмарних файлів"
 hint = "Файли, збережені без завантаження, залишаються тут. Перетягніть файл, щоб додати його."
 title = "Немає локальних файлів"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Файли, які ви відкриєте або відредагуєте, з’являться тут."
 title = "Поки нічого не змінено"
@@ -4063,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Не вдалося видалити папку."
 deleteFolderFailedDetail = "Не вдалося видалити папку: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Не вдалося оновити вигляд папки."
 folderAppearanceFailedDetail = "Не вдалося оновити вигляд папки: {{message}}"
 moveFilesFailed = "Не вдалося перемістити файли."
@@ -4112,6 +4169,11 @@ local = "Локальні"
 localHint = "Зберігається лише в цьому браузері"
 shared = "Спільний доступ"
 sharedHint = "Надано вам за посиланням"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Спочатку найстаріші"
@@ -4168,6 +4230,7 @@ noFilesInStorageOpen = "У сховищі немає файлів. Спершу 
 open = "Відкрити"
 openFile = "Відкрити файл"
 openFiles = "Відкрити файли"
+selectFile = "Select {{name}}"
 selectFromStorage = "Вибрати зі сховища"
 upload = "Завантажити"
 uploadFile = "Завантажити файл"
@@ -4241,9 +4304,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Усе збережено"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Не вдалося витягти CSV"
 extractXlsxError = "Не вдалося витягти XLSX"
+filled = "filled"
 flattenAfterFilling = "Сплющити після заповнення"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "обов."
 requiredFieldsError = "Заповніть усі обов’язкові поля"
 rescanFields = "Повторно сканувати поля"
@@ -4795,9 +4863,6 @@ title = "Зображення в PDF"
 [imageToPdf]
 tags = "конвертація,зображення,jpg,картинка,фото"
 
-[infoBanner]
-dismiss = "Закрити"
-
 [invite]
 acceptError = "Не вдалося створити обліковий запис"
 accountFor = "Створення облікового запису для"
@@ -4979,6 +5044,34 @@ uploadSuccess = "Завантаження успішне!"
 uploadSuccessMessage = "Ваші зображення передано."
 validating = "Перевірка сеансу..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Скануйте для завантаження фото. Зображення автоматично конвертуються в PDF."
 descriptionNoConvert = "Скануйте для завантаження фото зі свого мобільного пристрою."
@@ -4997,8 +5090,13 @@ title = "Завантажити з мобільного"
 tags = "мультиінструмент,багатоопераційний,інтерфейс,перетягування,клієнтська частина,інтерактивний"
 title = "Мультиінструмент PDF"
 
-[navbar]
-search = "Пошук"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Автентифікація не відбулася. Можете закрити це вікно та спробувати ще раз."
@@ -5127,6 +5225,7 @@ activeFiles = "Вигляд <strong>Активні файли</strong> пока�
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Закрити"
 cropSettings = "Тепер, коли ми вибрали файл, який хочемо обрізати, можемо налаштувати інструмент Обрізка, щоб вибрати область, до якої слід обрізати PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Клацання по файлу позначає його для обробки. Можна вибрати кілька файлів для пакетних операцій."
 fileReplacement = "Змінений файл автоматично замінить оригінал у Робочій області, що дозволить легко пропустити його через інші інструменти."
 filesButton = "Кнопка <strong>Файли</strong> на панелі швидкого доступу дозволяє завантажувати PDF для роботи інструментів."
@@ -5563,6 +5662,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5742,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5970,6 +6071,11 @@ header = "PDF в PDF/A"
 tags = "архів,довгостроковий,стандартний,конверсія,зберігання,консервація"
 title = "PDF в PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "друк,стандарт,конвертація,виробництво,додрукарська підготовка,архів"
 title = "PDF у PDF/X"
@@ -6045,6 +6151,7 @@ small = "500 кредитів"
 xsmall = "100 кредитів"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Виберіть план, який відповідає вашим потребам"
 title = "Доступні плани"
 
@@ -6627,6 +6734,7 @@ reachedTitle = "Досягнуто місячного ліміту витрат"
 title = "Не вдалося відкрити портал Stripe"
 
 [processor.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "з {{allowance}} безкоштовних PDF використано"
 capSuffix_other = "з {{allowance}} безкоштовних PDF використано"
 eyebrow = "Пробний період Processor"
@@ -6876,6 +6984,32 @@ label = "Jira"
 description = "Надсилайте документ або сповіщення Email, коли політика запускається."
 label = "Mailgun"
 
+[processor.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[processor.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[processor.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[processor.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[processor.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[processor.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[processor.connections.types.n8n.fields.token]
+label = "Header value"
+
 [processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Розміщуйте оброблені документи в Nextcloud."
@@ -7080,11 +7214,6 @@ title = "Офіційні SDK"
 beta = "Beta"
 deprecated = "Застаріло"
 
-[processor.docs.search]
-empty = "Немає відповідних docs"
-placeholder = "Пошук docs"
-results = "{{count}} результатів"
-
 [processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "Вбудовані іменовані можливості, які ваш агент викликає як один інструмент. Кожна навичка — це детермінований ланцюг операцій із прикріпленими оцінюваннями."
@@ -7183,11 +7312,11 @@ editorAction = "Редактор"
 empty = "Жоден документ не відповідає цьому фільтру."
 rowActions = "Дії рядка"
 sensitiveLabel = "Конфіденційно"
-sensitiveTitle = "Конфіденційно — потрібен доступ"
 
 [processor.documents.table.columns]
 action = "Конвеєр / Дія"
 document = "Документ"
+labels = "Labels"
 product = "Продукт"
 status = "Статус"
 time = "Час"
@@ -7203,6 +7332,7 @@ host = "Host"
 lastSeen = "Остання активність"
 region = "Регіон"
 status = "Статус"
+target = "Target"
 version = "Версія"
 
 [processor.editorAdmin.health.empty]
@@ -7276,6 +7406,56 @@ running = "Працює"
 description = "У цьому поданні сталася неочікувана помилка. Спробуйте ще раз або виберіть інший розділ на бічній панелі."
 retry = "Спробувати ще раз"
 title = "На цій сторінці щось пішло не так"
+
+[processor.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[processor.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[processor.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[processor.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[processor.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[processor.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[processor.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[processor.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[processor.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [processor.home.download]
 back = "Назад"
@@ -7383,11 +7563,6 @@ cancel = "Скасувати"
 confirm = "Відкликати ключ"
 title = "Відкликати API ключ"
 
-[processor.infrastructure.attestationLabel]
-attested = "Підтверджено"
-inScope = "У межах обсягу"
-notApplicable = "N/A"
-
 [processor.infrastructure.audit]
 filterAriaLabel = "Фільтрувати події аудиту за категорією"
 heading = "Журнали аудиту"
@@ -7459,11 +7634,6 @@ info = "Інформація"
 success = "Успіх"
 warning = "Попередження"
 
-[processor.infrastructure.certLabel]
-certified = "Сертифіковано"
-inProgress = "Виконується"
-notStarted = "Не розпочато"
-
 [processor.infrastructure.createKey]
 cancel = "Скасувати"
 createKey = "Створити ключ"
@@ -7477,237 +7647,9 @@ subtitleCreated = "Скопіюйте цей секрет зараз — йог�
 title = "Створити ключ API"
 titleCreated = "Ключ створено"
 
-[processor.infrastructure.deployLabel]
-live = "Працює"
-queued = "У черзі"
-rolledBack = "Відкочено"
-rolling = "Розгортається"
-
-[processor.infrastructure.deployments]
-msValue = "{{value}} мс"
-throughputValue = "{{value}}/хв"
-
-[processor.infrastructure.deployments.deployColumns]
-deployedBy = "Розгорнув"
-environment = "Середовище"
-product = "Продукт"
-status = "Статус"
-version = "Версія"
-when = "Коли"
-
-[processor.infrastructure.deployments.recent]
-heading = "Останні розгортання"
-subheading = "Останні випуски в продуктах і середовищах."
-
-[processor.infrastructure.deployments.regionColumns]
-instances = "Екземпляри"
-latency = "Затримка"
-load = "Навантаження"
-p99 = "P99"
-region = "Регіон"
-status = "Статус"
-throughput = "Пропускна здатність"
-uptime = "Час безвідмовної роботи"
-version = "Версія"
-
-[processor.infrastructure.deployments.regions]
-heading = "Регіони"
-subheading = "Поточний стан кожного розгорнутого регіону Stirling — затримка, навантаження та версія випуску."
-
-[processor.infrastructure.deployments.regions.empty]
-description = "Розгорнуті регіони з’являться тут після підготовки вашого робочого простору."
-title = "Регіони не розгорнуто"
-
 [processor.infrastructure.keyLabel]
 active = "Активний"
 revoked = "Відкликаний"
-
-[processor.infrastructure.modelLabel]
-active = "Активна"
-degraded = "Погіршена"
-disabled = "Вимкнена"
-
-[processor.infrastructure.models]
-heading = "Моделі"
-msValue = "{{value}} мс"
-subheading = "Каталог моделей і маршрутизація, що забезпечують обробку документів у вашому робочому просторі."
-
-[processor.infrastructure.models.byom]
-description = "Зареєструйте локальну або самостійно розміщену модель і закріпіть її за регіоном для обробки з урахуванням резидентності даних."
-title = "Власна модель"
-
-[processor.infrastructure.models.catalogue]
-heading = "Каталог"
-sub = "Керовані моделі, доступні вашому робочому простору, з актуальною затримкою та вартістю."
-subEnterprise = "Керовані, власні та локальні моделі — з доступним закріпленням за регіонами."
-
-[processor.infrastructure.models.catalogue.empty]
-description = "Моделі в каталозі вашого робочого простору з’являться тут."
-title = "Немає доступних моделей"
-
-[processor.infrastructure.models.columns]
-cost = "Вартість"
-latency = "Затримка"
-load = "Навантаження"
-model = "Модель"
-status = "Статус"
-type = "Тип"
-version = "Версія"
-
-[processor.infrastructure.models.cost]
-perCall = "{{price}}/виклик"
-perThousand = "{{price}}/1k"
-
-[processor.infrastructure.models.metrics]
-activeModels = "Активні моделі"
-avgLatency = "Середня затримка"
-included = "Включено"
-monthlySpend = "Щомісячні витрати на моделі"
-
-[processor.infrastructure.models.routing]
-empty = "Правила маршрутизації не налаштовано."
-heading = "Правила маршрутизації"
-sub = "Яка модель обробляє кожну операцію. Типове правило застосовується, коли не збігається жодне вужче правило."
-subLocked = "Спрямовуйте операції до конкретних моделей — доступно на платних планах."
-
-[processor.infrastructure.models.routing.lockedBanner]
-description = "Оновіться до Pro, щоб керувати тим, яка модель обробляє кожну операцію та тип документа."
-title = "Маршрутизація моделей — платна функція"
-
-[processor.infrastructure.models.routingColumns]
-default = "Типово"
-docType = "Тип документа"
-modelForAria = "Модель для {{operation}}"
-operation = "Операція"
-routedTo = "Спрямовано до"
-
-[processor.infrastructure.modelTypeLabel]
-classification = "Класифікація"
-extraction = "Видобування"
-llm = "LLM"
-ocr = "OCR"
-
-[processor.infrastructure.regionLabel]
-degraded = "Погіршено"
-down = "Недоступно"
-healthy = "Справно"
-
-[processor.infrastructure.security.access.byok]
-description = "Надайте ключ із власного KMS. Stirling шифрує ним, але все ще може читати."
-label = "Власний ключ (BYOK)"
-
-[processor.infrastructure.security.access.hyok]
-description = "Ключі ніколи не залишають ваш KMS. Stirling зберігає лише шифротекст."
-label = "Зберігайте власний ключ (HYOK)"
-
-[processor.infrastructure.security.access.stirling]
-description = "Stirling керує ключами шифрування. Найпростіше — нуль операцій із ключами з вашого боку."
-label = "Ключі, що зберігаються Stirling"
-
-[processor.infrastructure.security.accessPolicy]
-heading = "Політика доступу до документів"
-subheading = "Керує тим, хто може розшифровувати оброблені документи в стані спокою."
-
-[processor.infrastructure.security.attestations]
-heading = "Підтвердження відповідності"
-noReport = "Звіт недоступний"
-subheading = "Стан аудиту за кожним фреймворком, зі звітами щодо підтверджених контролів."
-viewReport = "Переглянути звіт →"
-
-[processor.infrastructure.security.compliance]
-heading = "Відповідність вимогам"
-subheading = "Підтвердження та сертифікації, що охоплюють платформу Stirling."
-
-[processor.infrastructure.security.empty]
-description = "Конфігурація безпеки вашого робочого простору з’явиться тут."
-title = "Стан безпеки недоступний"
-
-[processor.infrastructure.security.hyokBanner]
-description = "З HYOK ключі шифрування ніколи не залишають ваш KMS. Stirling зберігає й обробляє лише шифротекст, який ви можете відкликати будь-коли."
-title = "Stirling не може розшифрувати ваші документи"
-
-[processor.infrastructure.security.ipAllowlist]
-empty = "Діапазони IP не налаштовано — дозволено всі IP."
-heading = "Список дозволених IP"
-sub = "Доступ до API обмежено цими діапазонами CIDR."
-subLocked = "Обмежте доступ до API відомими діапазонами IP — доступно на платних планах."
-
-[processor.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Оновіться до Pro, щоб обмежити доступ до API конкретними мережами."
-title = "Списки дозволених IP — платна функція"
-
-[processor.infrastructure.security.ipColumns]
-added = "Додано"
-addedBy = "Додав"
-cidr = "CIDR"
-label = "Мітка"
-
-[processor.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "Керування ключами шифрування"
-keyId = "Ідентифікатор ключа"
-lastRotated = "Остання ротація"
-rotateKey = "Ротувати ключ"
-rotationPolicy = "Політика ротації"
-subheading = "Зберігання ключів, що шифрують документи в стані спокою — хто може розшифровувати та як ключі ротуються."
-
-[processor.infrastructure.security.managedBanner]
-description = "Зберігання власних ключів BYOK і HYOK доступне на Enterprise. Оновіться, щоб надавати ключі з власного KMS."
-title = "На вашому плані ключами керує Stirling"
-
-[processor.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Азійсько-Тихоокеанський регіон"
-
-[processor.infrastructure.security.residency.eu]
-description = "eu-west-1 · межа даних GDPR"
-label = "Європейський Союз"
-
-[processor.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Сполучені Штати"
-
-[processor.infrastructure.security.residencyHeader]
-heading = "Резидентність даних"
-subheading = "Де документи зберігаються та обробляються."
-
-[processor.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} використано"
-
-[processor.infrastructure.storage.empty]
-description = "Підключене сховище та використання з’являться тут."
-title = "Сховище не налаштовано"
-
-[processor.infrastructure.storage.lifecycle]
-active = "Активно"
-activeRange = "0–{{value}} дн."
-archived = "Архівовано"
-coldStorage = "холодне сховище"
-deleted = "Видалено"
-never = "ніколи"
-purged = "очищено"
-
-[processor.infrastructure.storage.providers]
-connect = "Підключити"
-connected = "Підключено"
-heading = "Підключені провайдери"
-subheading = "Куди записуються оброблені артефакти."
-
-[processor.infrastructure.storage.retention]
-heading = "Зберігання"
-subheading = "Як довго артефакти зберігаються перед видаленням за життєвим циклом."
-windowLabel = "Типове вікно зберігання"
-
-[processor.infrastructure.storage.retentionOption]
-days_one = "{{count}} день"
-days_other = "{{count}} днів"
-never = "Ніколи не видаляти"
-
-[processor.infrastructure.storage.totalUsage]
-heading = "Загальне використання"
-progressLabel = "Використано сховища"
-subheading = "Сховище, використане всіма підключеними провайдерами."
 
 [processor.infrastructure.tabs]
 apiKeys = "Ключі API"
@@ -7718,11 +7660,9 @@ security = "Безпека"
 storage = "Сховище"
 
 [processor.integrations]
-addAnother = "Додати ще одну"
 availableHeading = "Доступні"
 comingSoonHeading = "Незабаром"
 connect = "Підключити"
-connectedHeading = "Підключено"
 connectionCount_one = "{{count}} підключення"
 connectionCount_other = "{{count}} підключень"
 customApi = "Власний API"
@@ -7739,6 +7679,10 @@ notify = "Сповіщення"
 security = "Безпека"
 signing = "Підписування"
 storage = "Сховище"
+
+[processor.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [processor.integrations.status]
 connected = "Підключено"
@@ -7770,7 +7714,6 @@ integrations = "Інтеграції"
 pipelines = "Конвеєри"
 policies = "Політики"
 procurement = "Закупівлі"
-settings = "Налаштування"
 sources = "Джерела"
 usage = "Використання та оплата"
 users = "Користувачі"
@@ -7787,7 +7730,7 @@ title = "Конвеєри"
 newPipeline = "Новий конвеєр"
 
 [processor.pipelines.builder]
-addStep = "Додати інструмент"
+activate = "Activate"
 back = "Назад до конвеєрів"
 cannotFollow = "Не можна прийняти {{produced}}"
 chooseAccount = "Виберіть обліковий запис"
@@ -7795,28 +7738,38 @@ chooseDestination = "Виберіть призначення"
 chooseOperation = "Виберіть, що робить цей крок"
 chooseSource = "Виберіть джерело"
 discard = "Відхилити зміни"
-enabled = "Увімкнено"
 inputs = "Вхідні дані"
 inputSource = "Вхідне джерело"
 inputTrigger = "Тригер"
 keepEditing = "Продовжити редагування"
+moreActions = "More actions"
 needsConfiguring = "Потрібне налаштування"
-needsUpload = "Потрібен завантажений файл"
-noSources = "Поки що немає підключених джерел. Створіть одне, щоб використовувати його як вхід."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Жоден інструмент не відповідає вашому пошуку."
-pipelineSettings = "Налаштування конвеєра"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Пошук інструментів"
-selectToolBody = "Додайте інструмент, щоб створити конвеєр."
-selectToolTitle = "Інструментів ще немає"
 sendToSystem = "Надіслати до іншої системи"
 stepsIncompatible = "Ці кроки не можуть працювати з тим, що створює попередній крок: {{tools}}."
 stepsNeedSetup = "Ці кроки все ще потрібно налаштувати перед збереженням: {{tools}}."
-toolSettings = "Налаштування інструмента"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Нерозпізнана операція, залишено як є."
 unsavedBody = "У вас є незбережені зміни. Зберегти їх перед виходом чи відхилити?"
 unsavedTitle = "Незбережені зміни"
-uploadUnsupported = "Завантажені файли поки не підтримуються в конвеєрах, тому ці кроки не можна зберегти: {{tools}}."
 usesDefaults = "Запускається з типовими налаштуваннями"
+viewDefinition = "View definition"
+
+[processor.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [processor.pipelines.builder.diagnostic]
 fan-in = "Об'єднує кожен файл із попереднього кроку"
@@ -7828,30 +7781,35 @@ undeclared-operation = "Не вдається перевірити, що при�
 
 [processor.pipelines.composer]
 addTool = "Додати інструмент"
-cancel = "Скасувати"
-chainEmpty = "Додайте інструмент, щоб почати створювати конвеєр."
 create = "Створити конвеєр"
+createPaused = "Create paused"
 editingUnsupported = "Відображення цих параметрів інструмента для редагування поки не підтримується."
-moveDown = "Перемістити вниз"
-moveUp = "Перемістити вгору"
+editSource = "Edit source"
 name = "Назва"
 namePlaceholder = "напр. Redaction sweep"
 noToolSettings = "Цей інструмент не має налаштовуваних параметрів."
-operations_one = "Операція ({{count}})"
-operations_other = "Операції ({{count}})"
 output = "Вивід"
-removeStep = "Вилучити операцію"
 save = "Зберегти зміни"
 scheduleEvery = "Запускати кожні"
-sources = "Джерела"
-sourcesLoading = "Завантаження джерел..."
 trigger = "Тригер"
 triggerManual = "Лише вручну"
+
+[processor.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [processor.pipelines.composer.unit]
 days = "днів"
 hours = "годин"
 minutes = "хвилин"
+
+[processor.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [processor.pipelines.delete]
 body = "Видалити \"{{name}}\"? Цю дію не можна скасувати."
@@ -7870,6 +7828,37 @@ connectSource = "Підключити джерело"
 description = "Створіть свій перший конвеєр: виберіть джерела, для яких він запускається, з’єднайте операції та виберіть, куди надходитиме вивід."
 title = "Конвеєрів ще немає"
 
+[processor.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[processor.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[processor.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[processor.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[processor.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [processor.pipelines.kpi]
 active = "Активні"
 paused = "Призупинені"
@@ -7882,7 +7871,6 @@ completed_one = "Запуск завершено."
 completed_other = "Усі {{count}} запусків завершено."
 empty = "Немає чого запускати: джерела не мали документів для обробки."
 failed = "Запуск не вдався: {{error}}"
-historyCleared = "Історію очищено. Наступний запуск повторно обробить усе, що зараз є в джерелах."
 inFlight = "Немає нічого нового для запуску: документи все ще обробляються з попереднього запуску."
 parked_one = "Нічого запускати: {{count}} документ раніше не вдалося обробити, і його відкладено. Усуньте причину, а потім очистьте історію, щоб повторити спробу."
 parked_other = "Нічого запускати: {{count}} документів раніше не вдалося обробити, і їх відкладено. Усуньте причину, а потім очистьте історію, щоб повторити спробу."
@@ -7898,6 +7886,7 @@ name = "Конвеєр"
 sources = "Джерела"
 status = "Статус"
 steps = "Кроки"
+trigger = "Trigger"
 
 [processor.pipelines.trigger]
 folder-watch = "Відстеження папки"
@@ -8211,6 +8200,24 @@ label = "Прикріпити до задачі Jira"
 [processor.policies.operations.mailgunEmail]
 description = "Надсилає оброблений документ як вкладення."
 label = "Надіслати документ email (Mailgun)"
+
+[processor.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[processor.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[processor.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[processor.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [processor.policies.operations.nextcloudUpload]
 description = "Записує оброблений документ у папку."
@@ -8686,16 +8693,6 @@ maxed = "Ліміт вичерпано"
 subtitle = "Ваш безкоштовний trial триває до {{date}}. Картка не потрібна."
 title = "Enterprise trial"
 
-[processor.search]
-ariaLabel = "Пошук"
-placeholder = "Пошук у Stirling — endpoints, конвеєри, документи…"
-
-[processor.search.empty]
-noActionsDescription = "Швидкі дії з’являться тут, коли стануть доступними."
-noActionsTitle = "Немає швидких дій"
-noMatches = "Немає збігів для «{{query}}»"
-noMatchesDescription = "Спробуйте інше ключове слово або перегляньте каталог."
-
 [processor.settings.groups]
 admin = "Адміністратор"
 
@@ -8746,10 +8743,6 @@ cancel = "Скасувати"
 confirm = "Видалити"
 title = "Видалити джерело?"
 
-[processor.sources.empty]
-description = "Підключіть папку (а незабаром — і cloud storage), щоб ваші політики мали звідки отримувати документи."
-title = "Джерела ще не підключено"
-
 [processor.sources.kpi]
 inUse = "Використовується"
 total = "Підключення"
@@ -8788,6 +8781,7 @@ unused = "Не використовується"
 documents = "Документи"
 source = "Джерело"
 status = "Статус"
+type = "Type"
 usedBy = "Політики"
 
 [processor.sources.types.box]
@@ -9980,9 +9974,6 @@ title = "Політики та конфіденційність"
 [settings.preferences]
 title = "Параметри"
 
-[settings.search]
-placeholder = "Пошук сторінок налаштувань..."
-
 [settings.security]
 description = "Оновіть свій пароль, щоб убезпечити обліковий запис."
 title = "Безпека"
@@ -10128,6 +10119,7 @@ last = "Остання сторінка"
 maintainRatio = "Переключити збереження пропорцій"
 next = "Наступна сторінка"
 noSavedSigs = "Збережені підписи не знайдено"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Особисті підписи"
 previous = "Попередня сторінка"
 redo = "Повторити"
@@ -10166,6 +10158,7 @@ backgroundRemovalFailedTitle = "Не вдалося прибрати фон"
 hint = "Завантажте зображення підпису у форматі PNG або JPG"
 label = "Завантажити зображення підпису"
 placeholder = "Виберіть файл зображення"
+previewAlt = "Current image signature"
 processing = "Обробка зображення..."
 removeBackground = "Прибрати білий фон (зробити прозорим)"
 
@@ -10178,6 +10171,17 @@ resumeHint = "Відновіть розміщення, щоб натиснути
 saved = "Виберіть збережений підпис вище, потім натисніть будь-де на PDF, щоб розмістити його."
 text = "Після введення імені вище клацніть будь-де по PDF, щоб розмістити підпис."
 title = "Як додати підпис"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Перемістити підпис"
@@ -10625,6 +10629,23 @@ title = "Завантажити на сервер"
 updateButton = "Оновити на сервері"
 uploadButton = "Завантажити на сервер"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10795,6 @@ goBack = "Повернутися"
 pdfTools = "Інструменти PDF"
 placeholder = "Виберіть інструмент, щоб почати"
 premiumFeature = "Преміум-функція:"
-searchTools = "Пошук інструментів"
 toolsHeader = "Інструменти"
 viewAllTools = "Переглянути всі інструменти"
 
@@ -10821,6 +10841,9 @@ pageFormatting = "Форматування сторінок"
 removal = "Видалення"
 signing = "Підписання"
 verification = "Перевірка"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Інструментів не знайдено"
@@ -10979,6 +11002,13 @@ approver = "Схвалює політику"
 editor = "Редактор"
 processor = "Обробник"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Скасувати запрошення для {{email}}? Вони не зможуть приєднатися за поточним посиланням."
 cancelInviteTitle = "Скасувати запрошення"
@@ -10998,10 +11028,8 @@ title = "Учасників ще немає"
 addToTeam = "Додати до команди"
 guestCount = "{{count}} гість"
 guests = "Гості"
-guestsDesc = "Зовнішні співробітники, обмежені тим, чим ви поділилися. Лише Редактор."
 ledBy = "під керівництвом {{owner}}"
 org = "Організація"
-orgDesc = "Власники з повноваженнями на рівні всієї організації та схваленням політик"
 owners = "{{count}} власник"
 team = "Команда {{name}}"
 teamMeta = "{{count}} людей"
@@ -11041,12 +11069,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Запросив(ла) {{who}}"
 cancel = "Скасувати"
-count = "{{count}} очікують"
-desc = "Запрошені люди, які ще не приєдналися. Вони займають місце, доки не приймуть запрошення."
 expiresInDays_one = "Закінчується через {{count}} день"
 expiresInDays_other = "Закінчується через {{count}} днів"
 expiresToday = "Закінчується сьогодні"
 title = "Запрошення, що очікують"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Сталася помилка під час звернення до бекенду, або у вас немає доступу. Спробуйте ще раз."
@@ -11237,12 +11267,15 @@ searchPlaceholder = "Пошук вкладень"
 title = "Вкладення"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Назва закладки"
 bookmarkTitleRequired = "Потрібно вказати назву закладки"
 closeSidebar = "Закрити бічну панель закладок"
 collapseAll = "Згорнути всі закладки"
+empty = "No bookmarks in this document"
 expandAll = "Розгорнути всі закладки"
 searchPlaceholder = "Пошук закладок"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Додати коментар"
@@ -11264,10 +11297,12 @@ locateAnnotation = "Знайти в документі"
 moreActions = "Додаткові дії"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Сторінка {{page}}"
 placingHint = "Клацніть сторінку, щоб розмістити… (скасувати)"
 removeCommentOnly = "Прибрати лише коментар"
 saveReply = "Зберегти відповідь"
+searchPlaceholder = "Search comments"
 title = "Коментарі"
 typeComment = "Коментар"
 typeInsertText = "Вставити текст"
@@ -11290,6 +11325,7 @@ unsavedDesc = "У вас є незбережені зміни"
 closeSidebar = "Закрити бічну панель шарів"
 hideAll = "Приховати всі шари"
 showAll = "Показати всі шари"
+title = "Layers"
 
 [viewer.link]
 delete = "Видалити посилання"
@@ -11646,6 +11682,7 @@ exitRedaction = "Вийти з режиму затемнення"
 exportAll = "Експортувати PDF"
 exportSelected = "Експортувати вибрані сторінки"
 formFill = "Заповнити форму"
+hideToolbar = "Hide toolbar"
 multiTool = "Мультиінструмент"
 panMode = "Режим переміщення"
 print = "Надрукувати PDF"
@@ -11666,6 +11703,7 @@ selectAll = "Вибрати все"
 selectByNumber = "Вибрати за номерами сторінок"
 selectLanguage = "Вибрати мову"
 share = "Надати спільний доступ"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Перемкнути видимість анотацій"
 toggleAttachments = "Перемкнути вкладення"
 toggleBookmarks = "Перемкнути закладки"
