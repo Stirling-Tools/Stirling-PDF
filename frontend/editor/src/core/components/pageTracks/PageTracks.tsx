@@ -42,6 +42,13 @@ const collisionDetection: CollisionDetection = (args) => {
   return rectIntersection(args);
 };
 
+const sameHint = (a: DropHint | null, b: DropHint | null): boolean =>
+  a === b ||
+  (a != null &&
+    b != null &&
+    a.fileId === b.fileId &&
+    a.beforePageId === b.beforePageId);
+
 /**
  * The pointer x dnd-kit is itself working from: the activator's position plus
  * the drag delta. Using this rather than a live pointermove listener keeps the
@@ -182,12 +189,13 @@ export default function PageTracks() {
   // latter. Recomputing per move is what keeps the marker and the drop in sync.
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
-      setDropHint(
-        resolveHint(
-          event.over ? String(event.over.id) : null,
-          pointerXOf(event),
-        ),
+      const next = resolveHint(
+        event.over ? String(event.over.id) : null,
+        pointerXOf(event),
       );
+      // Most moves land on the same side of the same tile. Keeping the previous
+      // object bails the re-render out, so only a real change costs anything.
+      setDropHint((prev) => (sameHint(prev, next) ? prev : next));
     },
     [resolveHint],
   );

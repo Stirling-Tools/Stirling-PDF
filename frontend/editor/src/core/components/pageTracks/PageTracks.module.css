@@ -19,8 +19,8 @@
 /* ── Track ───────────────────────────────────────────────────────────────── */
 
 .track {
-  --pt-tile-h: 11.5rem;
-  --pt-tile-w: 8.5rem;
+  /* --pt-tile-w / --pt-tile-h / --pt-tile-footer-h / --pt-gap come from
+     constants.ts, so the virtualiser and the CSS agree on tile geometry. */
   /* The scroller is a flex column: without this, an overflowing stack of
      tracks squeezes each lane below its tiles and clips them. */
   flex: 0 0 auto;
@@ -71,12 +71,17 @@
 }
 
 .lane {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  position: relative;
   padding: 0.75rem;
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* Sized by the virtualiser; the tiles inside are absolutely placed, so the
+   height has to be stated rather than derived from content. */
+.laneInner {
+  position: relative;
+  height: calc(var(--pt-tile-h) + var(--pt-tile-footer-h));
 }
 
 .laneHint {
@@ -84,6 +89,7 @@
 }
 
 .laneEmpty {
+  display: flex;
   align-items: center;
   justify-content: center;
   min-height: calc(var(--pt-tile-h) + 2.5rem);
@@ -94,8 +100,8 @@
 /* ── Tile ────────────────────────────────────────────────────────────────── */
 
 .tile {
-  position: relative;
-  flex: 0 0 auto;
+  position: absolute;
+  top: 0;
   width: var(--pt-tile-w);
   cursor: grab;
   user-select: none;
@@ -161,7 +167,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.25rem;
-  padding: 0.25rem 0.375rem;
+  height: var(--pt-tile-footer-h);
+  padding: 0 0.375rem;
   font-size: 0.6875rem;
   color: var(--c-text-muted);
   min-width: 0;
