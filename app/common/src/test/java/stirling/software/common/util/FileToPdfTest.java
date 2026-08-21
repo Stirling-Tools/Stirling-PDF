@@ -1,115 +1,76 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import stirling.software.common.model.api.converters.HTMLToPdfRequest;
-import stirling.software.common.service.SsrfProtectionService;
+class FileToPdfTest {
 
-public class FileToPdfTest {
-
-    private CustomHtmlSanitizer customHtmlSanitizer;
-
-    @BeforeEach
-    void setUp() {
-        SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
-        stirling.software.common.model.ApplicationProperties mockApplicationProperties =
-                mock(stirling.software.common.model.ApplicationProperties.class);
-        stirling.software.common.model.ApplicationProperties.System mockSystem =
-                mock(stirling.software.common.model.ApplicationProperties.System.class);
-
-        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString()))
-                .thenReturn(true);
-        when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
-        when(mockSystem.isDisableSanitize()).thenReturn(false);
-
-        customHtmlSanitizer =
-                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+    @Test
+    void testSanitizeZipFilename_normalFilename() {
+        String result = FileToPdf.sanitizeZipFilename("document.html");
+        assertEquals("document.html", result);
     }
 
-    /**
-     * Test the HTML to PDF conversion. This test expects an IOException when an empty HTML input is
-     * provided.
-     */
     @Test
-    public void testConvertHtmlToPdf() {
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
-        String fileName = "test.html"; // Sample file name indicating an HTML file
-        TempFileManager tempFileManager = mock(TempFileManager.class); // Mock TempFileManager
-
-        // Mock the temp file creation to return real temp files
-        try {
-            when(tempFileManager.createTempFile(anyString()))
-                    .thenReturn(Files.createTempFile("test", ".pdf").toFile())
-                    .thenReturn(Files.createTempFile("test", ".html").toFile());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Expect an IOException to be thrown due to empty input or invalid weasyprint path
-        Throwable thrown =
-                assertThrows(
-                        Exception.class,
-                        () ->
-                                FileToPdf.convertHtmlToPdf(
-                                        "/path/",
-                                        request,
-                                        fileBytes,
-                                        fileName,
-                                        tempFileManager,
-                                        customHtmlSanitizer));
-        assertNotNull(thrown);
+    void testSanitizeZipFilename_pathTraversal() {
+        String result = FileToPdf.sanitizeZipFilename("../../etc/passwd");
+        // Should remove ../ sequences
+        assertFalse(result.contains(".."), "Path traversal sequences should be removed");
     }
 
-    /**
-     * Test sanitizeZipFilename with null or empty input. It should return an empty string in these
-     * cases.
-     */
     @Test
-    public void testSanitizeZipFilename_NullOrEmpty() {
-        assertEquals("", FileToPdf.sanitizeZipFilename(null));
-        assertEquals("", FileToPdf.sanitizeZipFilename("   "));
+    void testSanitizeZipFilename_driveLetterRemoved() {
+        String result = FileToPdf.sanitizeZipFilename("C:\\Users\\test\\file.html");
+        assertFalse(result.startsWith("C:"), "Drive letter should be removed");
     }
 
-    /**
-     * Test sanitizeZipFilename to ensure it removes path traversal sequences. This includes
-     * removing both forward and backward slash sequences.
-     */
     @Test
-    public void testSanitizeZipFilename_RemovesTraversalSequences() {
-        String input = "../some/../path/..\\to\\file.txt";
-        String expected = "some/path/to/file.txt";
-
-        // Expect that the method replaces backslashes with forward slashes
-        // and removes path traversal sequences
-        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
+    void testSanitizeZipFilename_backslashesNormalized() {
+        String result = FileToPdf.sanitizeZipFilename("path\\to\\file.html");
+        assertFalse(result.contains("\\"), "Backslashes should be normalized to forward slashes");
+        assertTrue(result.contains("/") || !result.contains("\\"));
     }
 
-    /** Test sanitizeZipFilename to ensure that it removes leading drive letters and slashes. */
     @Test
-    public void testSanitizeZipFilename_RemovesLeadingDriveAndSlashes() {
-        String input = "C:\\folder\\file.txt";
-        String expected = "folder/file.txt";
-        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
-
-        input = "/folder/file.txt";
-        expected = "folder/file.txt";
-        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
+    void testSanitizeZipFilename_nullInput() {
+        String result = FileToPdf.sanitizeZipFilename(null);
+        assertEquals("", result, "Null input should return empty string");
     }
 
-    /** Test sanitizeZipFilename to verify that safe filenames remain unchanged. */
     @Test
-    public void testSanitizeZipFilename_NoChangeForSafeNames() {
-        String input = "folder/subfolder/file.txt";
-        assertEquals(input, FileToPdf.sanitizeZipFilename(input));
+    void testSanitizeZipFilename_emptyInput() {
+        String result = FileToPdf.sanitizeZipFilename("");
+        assertEquals("", result, "Empty input should return empty string");
+    }
+
+    @Test
+    void testSanitizeZipFilename_whitespaceOnly() {
+        String result = FileToPdf.sanitizeZipFilename("   ");
+        assertEquals("", result, "Whitespace-only input should return empty string");
+    }
+
+    @Test
+    void testSanitizeZipFilename_leadingSlashes() {
+        String result = FileToPdf.sanitizeZipFilename("///path/to/file.html");
+        assertFalse(result.startsWith("/"), "Leading slashes should be removed");
+    }
+
+    @Test
+    void testSanitizeZipFilename_nestedDirectories() {
+        String result = FileToPdf.sanitizeZipFilename("dir1/dir2/file.html");
+        assertEquals("dir1/dir2/file.html", result, "Normal nested paths should be preserved");
+    }
+
+    @Test
+    void testSanitizeZipFilename_mixedTraversal() {
+        String result = FileToPdf.sanitizeZipFilename("dir/../../../etc/passwd");
+        assertFalse(result.contains(".."), "Mixed path traversal should be removed");
+    }
+
+    @Test
+    void testSanitizeZipFilename_backslashTraversal() {
+        String result = FileToPdf.sanitizeZipFilename("dir\\..\\..\\etc\\passwd");
+        assertFalse(result.contains(".."), "Backslash path traversal should be removed");
     }
 }

@@ -12,12 +12,12 @@ Fork Stirling-PDF and create a new branch out of `main`.
 
 ### Add Language Directory and Translation File
 
-1. Create a new language directory in `frontend/public/locales/`
+1. Create a new language directory in `frontend/editor/public/locales/`
    - Use hyphenated format: `pl-PL` (not underscore)
 
 2. Copy the reference translation file:
-   - Source: `frontend/public/locales/en-GB/translation.toml`
-   - Destination: `frontend/public/locales/pl-PL/translation.toml`
+   - Source: `frontend/editor/public/locales/en-US/translation.toml`
+   - Destination: `frontend/editor/public/locales/pl-PL/translation.toml`
 
 3. Translate all entries in the TOML file
    - Keep the TOML structure intact
@@ -47,10 +47,10 @@ ignore = [
 ## Add New Translation Tags
 
 > [!IMPORTANT]
-> If you add any new translation tags, they must first be added to the `en-GB/translation.toml` file. This ensures consistency across all language files.
+> If you add any new translation tags, they must first be added to the `en-US/translation.toml` file. This ensures consistency across all language files.
 
-- New translation tags **must be added** to `frontend/public/locales/en-GB/translation.toml` to maintain a reference for other languages.
-- After adding the new tags to `en-GB/translation.toml`, add and translate them in the respective language file (e.g., `pl-PL/translation.toml`).
+- New translation tags **must be added** to `frontend/editor/public/locales/en-US/translation.toml` to maintain a reference for other languages.
+- After adding the new tags to `en-US/translation.toml`, add and translate them in the respective language file (e.g., `pl-PL/translation.toml`).
 - Use the scripts in `scripts/translations/` to validate and manage translations (see `scripts/translations/README.md`)
 
 Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.

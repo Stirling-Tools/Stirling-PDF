@@ -12,6 +12,7 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import lombok.Getter;
@@ -28,9 +29,34 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
         basePackages = {
             "stirling.software.proprietary.security.database.repository",
             "stirling.software.proprietary.security.repository",
-            "stirling.software.proprietary.repository"
+            "stirling.software.proprietary.repository",
+            "stirling.software.proprietary.storage.repository",
+            "stirling.software.proprietary.workflow.repository",
+            "stirling.software.proprietary.policy.asset",
+            "stirling.software.proprietary.policy.store",
+            "stirling.software.proprietary.policy.source",
+            "stirling.software.proprietary.policy.migration",
+            "stirling.software.proprietary.policy.ledger",
+            "stirling.software.proprietary.accountlink",
+            "stirling.software.proprietary.access.repository",
+            "stirling.software.proprietary.integration.repository",
+            "stirling.software.proprietary.failure"
         })
-@EntityScan({"stirling.software.proprietary.security.model", "stirling.software.proprietary.model"})
+@EntityScan({
+    "stirling.software.proprietary.security.model",
+    "stirling.software.proprietary.model",
+    "stirling.software.proprietary.storage.model",
+    "stirling.software.proprietary.workflow.model",
+    "stirling.software.proprietary.policy.asset",
+    "stirling.software.proprietary.policy.store",
+    "stirling.software.proprietary.policy.source",
+    "stirling.software.proprietary.policy.migration",
+    "stirling.software.proprietary.policy.ledger",
+    "stirling.software.proprietary.accountlink",
+    "stirling.software.proprietary.access.model",
+    "stirling.software.proprietary.integration.model",
+    "stirling.software.proprietary.failure"
+})
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;
@@ -64,6 +90,7 @@ public class DatabaseConfig {
     @Bean
     @Qualifier("dataSource")
     @Primary
+    @Profile("!saas")
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 

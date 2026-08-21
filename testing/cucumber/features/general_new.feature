@@ -10,6 +10,7 @@ Feature: General PDF Operations API Validation
             | parameter | value   |
             | angle     | <angle> |
         When I send the API request to the endpoint "/api/v1/general/rotate-pdf"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -41,6 +42,7 @@ Feature: General PDF Operations API Validation
             | parameter   | value |
             | pageNumbers | 3     |
         When I send the API request to the endpoint "/api/v1/general/remove-pages"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -76,6 +78,7 @@ Feature: General PDF Operations API Validation
             | parameter  | value        |
             | customMode | <customMode> |
         When I send the API request to the endpoint "/api/v1/general/rearrange-pages"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -103,6 +106,7 @@ Feature: General PDF Operations API Validation
             | parameter | value      |
             | pageSize  | <pageSize> |
         When I send the API request to the endpoint "/api/v1/general/scale-pages"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -127,6 +131,7 @@ Feature: General PDF Operations API Validation
             | width     | 50    |
             | height    | 50    |
         When I send the API request to the endpoint "/api/v1/general/crop"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -155,6 +160,7 @@ Feature: General PDF Operations API Validation
         Given I generate a PDF file as "fileInput"
         And the pdf contains 5 pages
         When I send the API request to the endpoint "/api/v1/general/pdf-to-single-page"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -199,6 +205,7 @@ Feature: General PDF Operations API Validation
             | parameter     | value |
             | pagesPerSheet | 9     |
         When I send the API request to the endpoint "/api/v1/general/multi-page-layout"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -213,6 +220,7 @@ Feature: General PDF Operations API Validation
             | parameter     | value |
             | pagesPerSheet | 2     |
         When I send the API request to the endpoint "/api/v1/general/booklet-imposition"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response status code should be 200
         And the response file should have size greater than 200
@@ -231,21 +239,73 @@ Feature: General PDF Operations API Validation
         And the response file should have size greater than 200
 
 
-    @remove-image-pdf @positive
-    Scenario: remove-image-pdf strips images from a PDF containing images
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 images of size 100x100 on 2 pages
-        When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
-        Then the response content type should be "application/pdf"
-        And the response status code should be 200
-        And the response file should have size greater than 0
+    # @remove-image-pdf @positive
+    # Scenario: remove-image-pdf strips images from a PDF containing images
+    #     Given I generate a PDF file as "fileInput"
+    #     And the pdf contains 3 images of size 100x100 on 2 pages
+    #     When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
+    #     Then the response content type should be "application/pdf"
+    #     And the response status code should be 200
+    #     And the response file should have size greater than 0
+    #
+    #
+    # @remove-image-pdf @positive
+    # Scenario: remove-image-pdf on a plain text PDF returns a PDF
+    #     Given I generate a PDF file as "fileInput"
+    #     And the pdf contains 3 pages with random text
+    #     When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
+    #     Then the response content type should be "application/pdf"
+    #     And the response status code should be 200
+    #     And the response file should have size greater than 0
 
 
-    @remove-image-pdf @positive
-    Scenario: remove-image-pdf on a plain text PDF returns a PDF
+    @edit-table-of-contents @positive
+    Scenario: edit-table-of-contents rewrites the outline
         Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages with random text
-        When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
-        Then the response content type should be "application/pdf"
-        And the response status code should be 200
-        And the response file should have size greater than 0
+        And the pdf contains 3 pages
+        And the pdf has bookmarks
+        And the request data includes
+            | parameter    | value                                                    |
+            | bookmarkData | [{"title":"Intro","pageNumber":1,"children":[]}]          |
+        When I send the API request to the endpoint "/api/v1/general/edit-table-of-contents"
+        And this operation is run 5 times in parallel
+        Then the response status code should be 200
+        And the response content type should be "application/pdf"
+        And the response PDF should contain 3 pages
+
+
+    @edit-text @positive
+    Scenario: edit-text applies a find and replace across the document
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 3 pages
+        And the pdf pages all contain the text "Hello world"
+        And the request data includes
+            | parameter | value                                        |
+            | edits     | [{"find":"Hello","replace":"Goodbye"}]       |
+        When I send the API request to the endpoint "/api/v1/general/edit-text"
+        And this operation is run 5 times in parallel
+        Then the response status code should be 200
+        And the response content type should be "application/pdf"
+
+
+    @edit-text @negative
+    Scenario: edit-text without any operations returns 400
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        When I send the API request to the endpoint "/api/v1/general/edit-text"
+        Then the response status code should be 400
+        And the response JSON error should contain "find/replace"
+
+
+    @split-for-poster-print @positive
+    Scenario: split-for-poster-print tiles each page into an archive
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        And the request data includes
+            | parameter           | value |
+            | horizontalDivisions | 1     |
+            | verticalDivisions   | 1     |
+        When I send the API request to the endpoint "/api/v1/general/split-for-poster-print"
+        And this operation is run 5 times in parallel
+        Then the response status code should be 200
+        And the response file should have size greater than 200

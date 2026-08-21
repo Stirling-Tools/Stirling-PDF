@@ -9,44 +9,19 @@ configurations {
     }
 }
 
-spotless {
-    java {
-        target 'src/**/java/**/*.java'
-        targetExclude 'src/main/resources/static/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        targetExclude 'src/main/resources/static/**'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '**/gradle/*.gradle', '**/*.gradle'
-        targetExclude 'src/main/resources/static/**'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
-
 dependencies {
-    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+    if (!gradle.ext.disableAdditional) {
         implementation project(':proprietary')
+    }
+
+    if (gradle.ext.enableSaas) {
+        implementation project(':saas')
     }
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
+    implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     implementation ('org.telegram:telegrambots:6.9.7.1') {
         // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
         // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
@@ -63,10 +38,10 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.jaxrs'
         exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
     }
-    implementation 'commons-io:commons-io:2.21.0'
+    implementation "commons-io:commons-io:$commonsIoVersion"
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core:1.16.2'
+    implementation 'io.micrometer:micrometer-core'
     implementation 'com.google.zxing:core:3.5.4'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
@@ -75,31 +50,26 @@ dependencies {
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
-    implementation 'org.verapdf:validation-model:1.28.2'
+    implementation 'org.verapdf:validation-model:1.30.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
-    implementation 'org.mozilla:rhino:1.7.15'
+    implementation "org.mozilla:rhino:${rhinoVersion}"
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.9'
 
-    // https://mvnrepository.com/artifact/technology.tabula/tabula
-    implementation ('technology.tabula:tabula:1.0.5')  {
-        exclude group: 'org.slf4j', module: 'slf4j-simple'
-        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
-        exclude group: 'com.google.code.gson', module: 'gson'
-    }
-    // CVE-2022-25647: Explicit gson 2.8.9 to prevent unsafe deserialization (tabula would pull 2.8.7)
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
+    // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
+    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.5'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
-    implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
+    implementation "org.apache.xmlgraphics:batik-bridge:${batikVersion}"
+    // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
+    runtimeOnly "org.apache.xmlgraphics:batik-transcoder:${batikVersion}"
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
@@ -162,7 +132,8 @@ bootJar {
     manifest {
         attributes(
             'Implementation-Title': 'Stirling-PDF',
-            'Implementation-Version': project.version
+            'Implementation-Version': project.version,
+            'Enable-Native-Access': 'ALL-UNNAMED'
         )
     }
 }
@@ -174,19 +145,69 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
+def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
+// The admin portal ships as a lazy route inside the editor bundle (see
+// proprietary/routes/adminRouteExtensions). -PbuildWithPortal=true includes that
+// chunk via VITE_INCLUDE_PORTAL on the editor build; the deploy GHA sets it when
+// the portal or AI layers change. Building the portal implies building the editor.
+def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
+if (buildWithPortal) {
+    buildWithFrontend = true
+}
+// Workspace root holds package.json and node_modules (shared across editor /
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/.
+
+// Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
+def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
+def frontendMode
+if (buildPrototypes) {
+    frontendMode = 'prototypes'
+} else if (frontendModeOverride) {
+    frontendMode = frontendModeOverride
+} else if (gradle.ext.enableSaas) {
+    frontendMode = 'saas'
+} else if (gradle.ext.disableAdditional) {
+    frontendMode = 'core'
+} else {
+    frontendMode = 'proprietary'
+}
+def frontendBuildTask = "frontend:build:${frontendMode}"
+
+// Workspace root holds package.json and node_modules (shared across editor /
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/. When the portal lands as an embedded
+// app, add a sibling frontendPortalDir / frontendPortalDistDir alongside.
 def frontendDir = file('../../frontend')
-def frontendDistDir = file('../../frontend/dist')
+def frontendEditorDir = file('../../frontend/editor')
+def frontendEditorDistDir = file('../../frontend/editor/dist')
 def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
+    'index.html.gz',
+    'index.html.br',
+    'sw.js',
+    'sw.js.gz',
+    'sw.js.br',
+    'manifest.json.gz',
+    'manifest.json.br',
+    'site.webmanifest.gz',
+    'site.webmanifest.br',
+    'browserconfig.xml.gz',
+    'browserconfig.xml.br',
+    'manifest-classic.json',
+    'manifest-classic.json.gz',
+    'manifest-classic.json.br',
     'locales',
     'Login',
     'classic-logo',
     'modern-logo',
     'og_images',
     'samples',
-    'manifest-classic.json'
+    'pdfium',
+    'vendor',
+    'pdfjs'
 ]
 
 tasks.register('npmInstall', Exec) {
@@ -240,14 +261,13 @@ tasks.register('npmBuild', Exec) {
     doNotTrackState("Frontend build depends on untracked npmInstall task")
     enabled = buildWithFrontend
     group = 'frontend'
-    description = 'Build frontend application'
-    workingDir frontendDir
-    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
-    dependsOn npmInstall
-    inputs.dir(new File(frontendDir, 'src'))
-    inputs.dir(new File(frontendDir, 'public'))
+    description = 'Build editor frontend application'
+    workingDir file('../..')
+    commandLine = ['task', frontendBuildTask]
+    inputs.dir(new File(frontendEditorDir, 'src'))
+    inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
-    outputs.dir(frontendDistDir)
+    outputs.dir(frontendEditorDistDir)
 
     // Show live output
     standardOutput = System.out
@@ -256,18 +276,21 @@ tasks.register('npmBuild', Exec) {
     // Override VITE_API_BASE_URL to use relative paths for production builds
     // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
     environment 'VITE_API_BASE_URL', '/'
+    // Include the admin portal's lazy route/chunk in the editor build when requested.
+    environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
 
     doFirst {
-        println "Building frontend application for production (VITE_API_BASE_URL=/)"
+        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
     }
 }
 
 tasks.register('copyFrontendAssets', Copy) {
     enabled = buildWithFrontend
     group = 'frontend'
-    description = 'Copy frontend build to static resources'
+    description = 'Copy editor frontend build to static resources'
     dependsOn npmBuild
-    from(frontendDistDir) {
+    dependsOn cleanFrontendAssets
+    from(frontendEditorDistDir) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
@@ -275,7 +298,7 @@ tasks.register('copyFrontendAssets', Copy) {
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
     doFirst {
-        println "Copying frontend build from ${frontendDistDir} to ${resourcesStaticDir}..."
+        println "Copying frontend build from ${frontendEditorDistDir} to ${resourcesStaticDir}..."
         println "Backend static resources will be preserved"
     }
     doLast {
@@ -287,6 +310,13 @@ tasks.register('cleanFrontendAssets', Delete) {
     group = 'frontend'
     description = 'Remove previously generated frontend assets from static resources'
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
+    // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
+    // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
+    // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
+    // not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
+    // Nested prerendered route pages (e.g. settings/people.html)
+    delete new File(resourcesStaticDir, 'settings')
 }
 
 tasks.register('copyApiLandingPage', Copy) {
@@ -301,19 +331,41 @@ tasks.register('copyApiLandingPage', Copy) {
     }
 }
 
+tasks.register('copyBackendOnlySamples', Copy) {
+    group = 'frontend'
+    description = 'Copy frontend sample files for backend-only mode'
+    from(new File(frontendEditorDir, 'public/samples'))
+    into(new File(resourcesStaticDir, 'samples'))
+    dependsOn cleanFrontendAssets
+    onlyIf { !buildWithFrontend }
+}
+
 // Ensure copyFrontendAssets runs after spotless tasks
 tasks.named('copyFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
 
+// Cleanup removes frontend-generated resources that are also visible to the resource/formatting
+// task graph. Keep all Spotless tasks ahead of cleanup so they never snapshot a path that has
+// just been removed.
+tasks.named('cleanFrontendAssets').configure {
+    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
+}
+
 if (buildWithFrontend) {
-    println "Frontend build enabled - JAR will include React frontend"
+    println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets
 } else {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
     processResources.dependsOn copyApiLandingPage
+    processResources.dependsOn copyBackendOnlySamples
 }
 
 bootJar.dependsOn ':common:jar'
-bootJar.dependsOn ':proprietary:jar'
+if (!gradle.ext.disableAdditional) {
+    bootJar.dependsOn ':proprietary:jar'
+}
+if (gradle.ext.enableSaas) {
+    bootJar.dependsOn ':saas:jar'
+}

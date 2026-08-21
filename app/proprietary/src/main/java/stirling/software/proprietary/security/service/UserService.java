@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,8 +39,14 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.access.model.PrincipalType;
+import stirling.software.proprietary.access.model.ResourceType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.integration.model.IntegrationConfig;
+import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
+import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
@@ -47,6 +54,16 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.storage.model.FileShare;
+import stirling.software.proprietary.storage.model.StorageCleanupEntry;
+import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
+import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
 @Service
 @Slf4j
@@ -66,6 +83,19 @@ public class UserService implements UserServiceInterface {
     private final DatabaseServiceInterface databaseService;
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
+
+    private final PersistentLoginRepository persistentLoginRepository;
+    private final UserServerCertificateService userServerCertificateService;
+    private final WorkflowParticipantRepository workflowParticipantRepository;
+    private final WorkflowSessionRepository workflowSessionRepository;
+    private final StoredFileRepository storedFileRepository;
+    private final StorageCleanupEntryRepository storageCleanupEntryRepository;
+    private final FileShareRepository fileShareRepository;
+    private final FileShareAccessRepository fileShareAccessRepository;
+    private final ResourceGrantRepository resourceGrantRepository;
+    private final IntegrationConfigRepository integrationConfigRepository;
+    private final TeamMembershipService teamMembershipService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Transactional
     public void processSSOPostLogin(
@@ -118,15 +148,16 @@ public class UserService implements UserServiceInterface {
     }
 
     public Authentication getAuthentication(String apiKey) {
-        Optional<User> user = getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
-            throw new UsernameNotFoundException("API key is not valid");
-        }
-        // Convert the user into an Authentication object
-        return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                getAuthorities(user.get()));
+        // Resolve through the shared service (multi-key table, then the legacy per-user column).
+        // The key runs as its owner with the owner's authorities.
+        var resolved =
+                apiKeyAuthenticationService
+                        .authenticate(apiKey)
+                        .orElseThrow(() -> new UsernameNotFoundException("API key is not valid"));
+        return new UsernamePasswordAuthenticationToken(
+                resolved.user(), // principal
+                null, // credentials (we don't expose the password or API key here)
+                resolved.authorities()); // the owner's authorities
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
@@ -144,6 +175,9 @@ public class UserService implements UserServiceInterface {
 
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        // Rotating/regenerating the legacy key must also revoke its migrated api_keys shadow row,
+        // otherwise the old secret keeps authenticating (it resolves from api_keys first).
+        userOpt.map(User::getApiKey).ifPresent(apiKeyAuthenticationService::revokeMigratedKey);
         User user = saveUser(userOpt, generateApiKey());
         try {
             databaseService.exportDatabase();
@@ -171,10 +205,19 @@ public class UserService implements UserServiceInterface {
         User user =
                 findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if (user.getApiKey() == null || user.getApiKey().length() == 0) {
+        if (user.getApiKey() == null || user.getApiKey().isEmpty()) {
             user = addApiKeyToUser(username);
         }
         return user.getApiKey();
+    }
+
+    @Override
+    public String getCurrentUserApiKey() {
+        String username = getCurrentUsername();
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("Cannot determine calling user for API key lookup");
+        }
+        return getApiKeyForUser(username);
     }
 
     public boolean isValidApiKey(String apiKey) {
@@ -182,7 +225,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public Optional<User> getUserByApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey);
+        // Resolves the multi-key api_keys table first, then the legacy per-user column.
+        return apiKeyAuthenticationService.resolveUser(apiKey);
     }
 
     public Optional<User> loadUserByApiKey(String apiKey) {
@@ -199,17 +243,91 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
+    @Transactional
     public void deleteUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
-            for (Authority authority : userOpt.get().getAuthorities()) {
+            User user = userOpt.get();
+            for (Authority authority : user.getAuthorities()) {
                 if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                     return;
                 }
             }
-            userRepository.delete(userOpt.get());
+            deleteUserRelatedData(user);
+            userRepository.delete(user);
+            persistentLoginRepository.deleteByUsername(username);
         }
         invalidateUserSessions(username);
+    }
+
+    private void deleteUserRelatedData(User user) {
+        log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Drop ACL grants held by this user and detach grants they issued
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
+                PrincipalType.USER, user.getId());
+        resourceGrantRepository.clearGrantedBy(user);
+
+        // Integration configs owned by this user FK the users row; drop them and their grants
+        for (IntegrationConfig cfg : integrationConfigRepository.findByOwnerUser(user)) {
+            resourceGrantRepository.deleteByResourceTypeAndResourceId(
+                    ResourceType.INTEGRATION_CONFIG, String.valueOf(cfg.getId()));
+        }
+        integrationConfigRepository.deleteByOwnerUser(user);
+
+        // Membership rows and invitation references would dangle once the user row is gone
+        teamMembershipService.deleteAllForUser(user);
+
+        // Delete server certificate (non-nullable OneToOne → User)
+        userServerCertificateService.deleteUserCertificate(user.getId());
+
+        // Delete FileShareAccess records where this user is the accessor
+        fileShareAccessRepository.deleteByUser(user);
+
+        // Delete FileShare records where this user is the recipient (shared with them by others).
+        // FileShareAccess for those shares must be cleared first (no cascade from FileShare side).
+        List<FileShare> sharesTargetingUser = fileShareRepository.findBySharedWithUser(user);
+        sharesTargetingUser.forEach(fileShareAccessRepository::deleteByFileShare);
+        fileShareRepository.deleteAll(sharesTargetingUser);
+
+        // Null out WorkflowParticipant.user for sessions this user participates in but does not
+        // own.
+        // The participant record is retained to preserve the workflow audit trail.
+        workflowParticipantRepository.clearUserReferences(user);
+
+        // Break circular FK: null out stored_files.workflow_session_id before deleting sessions
+        storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
+
+        // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
+        workflowSessionRepository.deleteAll(
+                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+
+        // Collect storage keys for physical cleanup before deleting DB records
+        List<StoredFile> files = storedFileRepository.findAllByOwner(user);
+        List<String> storageKeys =
+                files.stream()
+                        .flatMap(
+                                f ->
+                                        java.util.stream.Stream.of(
+                                                f.getStorageKey(),
+                                                f.getHistoryStorageKey(),
+                                                f.getAuditLogStorageKey()))
+                        .filter(k -> k != null && !k.isBlank())
+                        .toList();
+
+        // Clear FileShareAccess per share (no cascade from FileShare), then delete StoredFiles
+        // (CascadeType.ALL on StoredFile.shares cascades to FileShare)
+        for (StoredFile file : files) {
+            file.getShares().forEach(fileShareAccessRepository::deleteByFileShare);
+        }
+        storedFileRepository.deleteAll(files);
+
+        // Schedule physical deletion of all storage blobs; StorageCleanupService handles retry
+        for (String key : storageKeys) {
+            StorageCleanupEntry entry = new StorageCleanupEntry();
+            entry.setStorageKey(key);
+            storageCleanupEntryRepository.save(entry);
+        }
     }
 
     public boolean usernameExists(String username) {
@@ -247,6 +365,22 @@ public class UserService implements UserServiceInterface {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */
+    public Optional<User> findBySupabaseId(UUID supabaseId) {
+        return userRepository.findBySupabaseId(supabaseId);
+    }
+
+    @Transactional
+    public void trackApiKeyFirstUse(User user) {
+        // No-op default; saas mode overrides via SaasUserExtensionService#trackApiKeyFirstUse.
+    }
+
+    /** Low-level user persistence; bypasses {@link #saveUserCore}'s settings/audit lifecycle. */
+    @Transactional
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
     public Optional<User> findByUsernameIgnoreCase(String username) {
@@ -307,6 +441,7 @@ public class UserService implements UserServiceInterface {
         }
         user.setTeam(team);
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
         databaseService.exportDatabase();
     }
 
@@ -418,6 +553,7 @@ public class UserService implements UserServiceInterface {
 
         // Save user
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
 
         // Export database
         databaseService.exportDatabase();
@@ -522,19 +658,35 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Try SecurityContext first (normal request context)
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                Object principal = auth.getPrincipal();
 
-        if (principal instanceof UserDetails detailsUser) {
-            return detailsUser.getUsername();
-        } else if (principal instanceof User domainUser) {
-            return domainUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            return stringUser;
+                if (principal instanceof UserDetails detailsUser) {
+                    return detailsUser.getUsername();
+                } else if (principal instanceof User domainUser) {
+                    return domainUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    return saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    return stringUser;
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
         }
+
+        // Fallback to MDC for async contexts (e.g., when called from async job threads)
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        String mdcPrincipal = MDC.get("auditPrincipal");
+        if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
+            return mdcPrincipal;
+        }
+
         return null;
     }
 

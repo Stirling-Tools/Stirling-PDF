@@ -12,6 +12,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +55,10 @@ public class GeneralUtils {
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
+
+    // Extracted once per run. Rewriting a script while another request is exec-ing it
+    // races wherever rename is not atomic, such as 9p or NFS bind mounts.
+    private final Map<String, Path> EXTRACTED_SCRIPTS = new ConcurrentHashMap<>();
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
     private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
@@ -255,7 +260,7 @@ public class GeneralUtils {
         String pattern = locationPattern;
         if (pattern.startsWith("file:")) {
             String rawPath = pattern.substring(5).replace("\\*", "").replace("/*", "");
-            Path normalizePath = Paths.get(rawPath).normalize();
+            Path normalizePath = Path.of(rawPath).normalize();
             pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
         }
         return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
@@ -837,7 +842,7 @@ public class GeneralUtils {
     }
 
     public boolean createDir(String path) {
-        Path folder = Paths.get(path);
+        Path folder = Path.of(path);
         if (!Files.exists(folder)) {
             try {
                 Files.createDirectories(folder);
@@ -867,9 +872,39 @@ public class GeneralUtils {
 
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         String[] keyArray = key.split("\\.");
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
         settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+        settingsYaml.saveOverride(settingsPath);
+    }
+
+    /**
+     * Updates multiple settings in a single transaction. This ensures that nested settings (e.g.,
+     * oauth2.client.google.*) don't lose sibling values when partial updates are made.
+     *
+     * <p>Instead of multiple read-update-write cycles (which could cause race conditions), this
+     * method loads the YAML once, applies all updates, and saves once.
+     *
+     * @param settingsMap Map of dotted-notation keys to values to update
+     * @throws IOException if file read/write fails
+     */
+    public void updateSettingsTransactional(Map<String, Object> settingsMap) throws IOException {
+        if (settingsMap == null || settingsMap.isEmpty()) {
+            return;
+        }
+
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+        YamlHelper settingsYaml = new YamlHelper(settingsPath);
+
+        // Apply all updates to the same YamlHelper instance
+        for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            String[] keyArray = key.split("\\.");
+            settingsYaml.updateValue(Arrays.asList(keyArray), value);
+        }
+
+        // Save only once after all updates are applied
         settingsYaml.saveOverride(settingsPath);
     }
 
@@ -911,7 +946,7 @@ public class GeneralUtils {
             }
 
             // If no MAC address found, use hostname as fallback
-            if (sb.length() == 0) {
+            if (sb.isEmpty()) {
                 String hostname = InetAddress.getLocalHost().getHostName();
                 sb.append(hostname != null ? hostname : "unknown-host");
                 log.warn("No MAC address found, using hostname for fingerprint generation");
@@ -944,11 +979,11 @@ public class GeneralUtils {
      */
     public void extractPipeline() throws IOException {
         Path pipelineDir =
-                Paths.get(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
+                Path.of(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
         Files.createDirectories(pipelineDir);
 
         for (String name : DEFAULT_VALID_PIPELINE) {
-            if (!Paths.get(name).getFileName().toString().equals(name)) {
+            if (!Path.of(name).getFileName().toString().equals(name)) {
                 log.error("Invalid pipeline file name: {}", name);
                 throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
@@ -984,7 +1019,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
-        if (!Paths.get(scriptName).getFileName().toString().equals(scriptName)) {
+        if (!Path.of(scriptName).getFileName().toString().equals(scriptName)) {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
@@ -994,18 +1029,31 @@ public class GeneralUtils {
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
-        Files.createDirectories(scriptsDir);
-
+        Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Path target = scriptsDir.resolve(scriptName);
-        ClassPathResource res =
-                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
-        if (!res.exists()) {
-            log.error("Resource not found: {}", res.getPath());
-            throw new IOException("Resource not found: " + res.getPath());
+
+        Path cached = EXTRACTED_SCRIPTS.get(scriptName);
+        if (cached != null && Files.isRegularFile(cached)) {
+            return cached;
         }
-        copyResourceToFile(res, target);
-        return target;
+
+        synchronized (EXTRACTED_SCRIPTS) {
+            cached = EXTRACTED_SCRIPTS.get(scriptName);
+            if (cached != null && Files.isRegularFile(cached)) {
+                return cached;
+            }
+
+            Files.createDirectories(scriptsDir);
+            ClassPathResource res =
+                    new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
+            if (!res.exists()) {
+                log.error("Resource not found: {}", res.getPath());
+                throw new IOException("Resource not found: " + res.getPath());
+            }
+            copyResourceToFile(res, target);
+            EXTRACTED_SCRIPTS.put(scriptName, target);
+            return target;
+        }
     }
 
     /*
@@ -1153,4 +1201,183 @@ public class GeneralUtils {
             }
         }
     }
+
+    public String getLocalNetworkIp() {
+        String routed = detectLocalIpViaDefaultRoute();
+        if (routed != null) {
+            return routed;
+        }
+        try {
+            return selectBestSiteLocalIp(collectInterfaceInfo());
+        } catch (Exception e) {
+            log.warn("Failed to detect local network IP", e);
+            return null;
+        }
+    }
+
+    private String detectLocalIpViaDefaultRoute() {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            socket.connect(InetAddress.getByName("8.8.8.8"), 53);
+            InetAddress local = socket.getLocalAddress();
+            if (local instanceof Inet4Address
+                    && !local.isAnyLocalAddress()
+                    && !local.isLoopbackAddress()
+                    && !local.isLinkLocalAddress()) {
+                return local.getHostAddress();
+            }
+        } catch (Exception e) {
+            log.debug("Default-route IP detection failed; will scan interfaces", e);
+        }
+        return null;
+    }
+
+    private List<NetworkInterfaceInfo> collectInterfaceInfo() throws SocketException {
+        List<NetworkInterfaceInfo> infos = new ArrayList<>();
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        if (interfaces == null) {
+            return infos;
+        }
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface iface = interfaces.nextElement();
+
+            List<String> siteLocalIpv4s = new ArrayList<>();
+            Enumeration<InetAddress> addresses = iface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+                if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
+                    siteLocalIpv4s.add(addr.getHostAddress());
+                }
+            }
+            if (siteLocalIpv4s.isEmpty()) {
+                continue;
+            }
+
+            try {
+                byte[] mac = iface.getHardwareAddress();
+                infos.add(
+                        new NetworkInterfaceInfo(
+                                iface.getName(),
+                                iface.getDisplayName(),
+                                iface.getIndex(),
+                                iface.isUp(),
+                                iface.isLoopback(),
+                                iface.isPointToPoint(),
+                                iface.isVirtual(),
+                                mac != null && mac.length > 0,
+                                siteLocalIpv4s));
+            } catch (SocketException e) {
+                log.debug("Skipping interface {} while scanning for local IP", iface.getName(), e);
+            }
+        }
+        return infos;
+    }
+
+    static String selectBestSiteLocalIp(List<NetworkInterfaceInfo> interfaces) {
+        return interfaces.stream()
+                .filter(i -> i.up() && !i.loopback() && !i.pointToPoint() && !i.virtual())
+                .filter(i -> !isLikelyVirtualInterface(i.name(), i.displayName()))
+                .flatMap(
+                        i ->
+                                i.siteLocalIpv4s().stream()
+                                        .map(
+                                                ip ->
+                                                        new ScoredAddress(
+                                                                ip,
+                                                                scoreInterface(i, ip),
+                                                                i.index())))
+                .max(
+                        Comparator.comparingInt(ScoredAddress::score)
+                                .thenComparing(
+                                        Comparator.comparingInt(ScoredAddress::interfaceIndex)
+                                                .reversed()))
+                .map(ScoredAddress::ip)
+                .orElse(null);
+    }
+
+    private static int scoreInterface(NetworkInterfaceInfo iface, String ip) {
+        int score = 0;
+        if (isLikelyPhysicalInterface(iface.name(), iface.displayName())) {
+            score += 100;
+        }
+        if (iface.hasHardwareAddress()) {
+            score += 20;
+        }
+        if (ip.startsWith("192.168.")) {
+            score += 30;
+        } else if (ip.startsWith("10.")) {
+            score += 20;
+        } else {
+            score += 5;
+        }
+        return score;
+    }
+
+    static boolean isLikelyVirtualInterface(String name, String displayName) {
+        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
+        String d = displayName == null ? "" : displayName.toLowerCase(Locale.ROOT);
+        String[] namePrefixes = {
+            "tun", "tap", "utun", "veth", "virbr", "vmnet", "docker", "br-", "wg", "ppp", "awdl",
+            "llw"
+        };
+        for (String prefix : namePrefixes) {
+            if (n.startsWith(prefix)) {
+                return true;
+            }
+        }
+        String[] displayMarkers = {
+            "vmware",
+            "virtualbox",
+            "virtual box",
+            "vbox",
+            "hyper-v",
+            "hyperv",
+            "vethernet",
+            "windows subsystem for linux",
+            "wsl",
+            "docker",
+            "tap-windows",
+            "tunnel",
+            "vpn",
+            "zerotier",
+            "tailscale",
+            "bluetooth",
+            "teredo",
+            "isatap",
+            "loopback",
+            "pseudo",
+            "virtual"
+        };
+        for (String marker : displayMarkers) {
+            if (d.contains(marker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLikelyPhysicalInterface(String name, String displayName) {
+        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
+        String d = displayName == null ? "" : displayName.toLowerCase(Locale.ROOT);
+        return n.startsWith("eth")
+                || n.startsWith("en")
+                || n.startsWith("wl")
+                || n.startsWith("em")
+                || d.contains("ethernet")
+                || d.contains("wi-fi")
+                || d.contains("wifi")
+                || d.contains("wireless");
+    }
+
+    record NetworkInterfaceInfo(
+            String name,
+            String displayName,
+            int index,
+            boolean up,
+            boolean loopback,
+            boolean pointToPoint,
+            boolean virtual,
+            boolean hasHardwareAddress,
+            List<String> siteLocalIpv4s) {}
+
+    private record ScoredAddress(String ip, int score, int interfaceIndex) {}
 }

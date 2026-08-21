@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,7 +21,6 @@ import org.springframework.security.config.annotation.web.configurers.CsrfConfig
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
@@ -28,6 +29,8 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -54,6 +57,7 @@ import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestRe
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -66,6 +70,7 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @EnableWebSecurity
 @EnableMethodSecurity
 @DependsOn("runningProOrHigher")
+@Profile("!saas")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
@@ -88,6 +93,8 @@ public class SecurityConfiguration {
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final stirling.software.proprietary.service.AiUserDataService aiUserDataService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -109,8 +116,9 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver,
             @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
-            stirling.software.proprietary.service.UserLicenseSettingsService
-                    licenseSettingsService) {
+            stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService,
+            PasswordEncoder passwordEncoder,
+            stirling.software.proprietary.service.AiUserDataService aiUserDataService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -129,11 +137,37 @@ public class SecurityConfiguration {
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
         this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
+        this.passwordEncoder = passwordEncoder;
+        this.aiUserDataService = aiUserDataService;
     }
 
+    /**
+     * Configures HttpFirewall to allow non-ASCII characters in header values. This fixes issues
+     * with reverse proxies (like Authelia) that may set headers with non-ASCII characters (e.g.,
+     * "Remote-User: Dvořák").
+     *
+     * <p>By default, StrictHttpFirewall rejects header values containing non-ASCII characters. This
+     * configuration allows valid UTF-8 encoded characters while maintaining security.
+     *
+     * @return Configured HttpFirewall that allows non-ASCII characters in headers
+     */
     @Bean
-    public static PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // Allow non-ASCII characters but continue to reject control characters such as newlines.
+        // Pattern adapted from Spring Security's StrictHttpFirewall documentation.
+        Pattern allowedChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]]*");
+
+        firewall.setAllowedHeaderValues(
+                headerValue -> headerValue != null && allowedChars.matcher(headerValue).matches());
+
+        // Allow non-ASCII characters and newlines in parameter values.
+        Pattern allowedParamChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]\\r\\n]*");
+        firewall.setAllowedParameterValues(
+                parameterValue ->
+                        parameterValue != null
+                                && allowedParamChars.matcher(parameterValue).matches());
+        return firewall;
     }
 
     @Bean
@@ -169,7 +203,8 @@ public class SecurityConfiguration {
                         "Origin",
                         "X-API-KEY",
                         "X-CSRF-TOKEN",
-                        "X-XSRF-TOKEN"));
+                        "X-XSRF-TOKEN",
+                        "X-Browser-Id"));
 
         cfg.setExposedHeaders(
                 List.of(
@@ -261,7 +296,12 @@ public class SecurityConfiguration {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    // TODO: IPRateLimitingFilter disabled (limit is 1M, no-op) and raw Filter
+                    // impl causes Spring Security async dispatch bug (response already committed
+                    // errors on StreamingResponseBody endpoints). Re-enable once converted to
+                    // OncePerRequestFilter with proper config-driven limits.
+                    // .addFilterBefore(rateLimitingFilter,
+                    // UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
@@ -287,7 +327,10 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
+                                                    securityProperties,
+                                                    appConfig,
+                                                    jwtService,
+                                                    aiUserDataService))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
@@ -425,7 +468,7 @@ public class SecurityConfiguration {
 
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -442,12 +485,14 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         return new JwtAuthenticationFilter(
                 jwtService,
                 userService,
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
-                securityProperties);
+                securityProperties,
+                apiKeyAuthenticationService);
     }
 }

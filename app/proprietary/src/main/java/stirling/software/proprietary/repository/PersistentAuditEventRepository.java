@@ -68,6 +68,10 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type")
     List<PersistentAuditEvent> findByTypeForExport(@Param("type") String type);
 
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp > :startDate")
+    List<PersistentAuditEvent> findByTypeAndTimestampAfterForExport(
+            @Param("type") String type, @Param("startDate") Instant startDate);
+
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByTimestampBetweenForExport(
             @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
@@ -171,4 +175,140 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     Optional<PersistentAuditEvent> findTopByPrincipalOrderByTimestampDesc(String principal);
 
     Optional<PersistentAuditEvent> findTopByTypeOrderByTimestampDesc(String type);
+
+    // Multi-value queries for filtering by multiple types and/or principals
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types")
+    Page<PersistentAuditEvent> findByTypeIn(@Param("types") List<String> types, Pageable pageable);
+
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals")
+    Page<PersistentAuditEvent> findByPrincipalIn(
+            @Param("principals") List<String> principals, Pageable pageable);
+
+    // Noise-excluding scans for the portal: keep the page window full of meaningful events so the
+    // list doesn't shrink as read/polling noise (UI_DATA/HTTP_REQUEST) grows in the recent window.
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes")
+    Page<PersistentAuditEvent> findByTypeNotIn(
+            @Param("excludedTypes") List<String> excludedTypes, Pageable pageable);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes AND e.principal"
+                    + " IN :principals")
+    Page<PersistentAuditEvent> findByTypeNotInAndPrincipalIn(
+            @Param("excludedTypes") List<String> excludedTypes,
+            @Param("principals") List<String> principals,
+            Pageable pageable);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.timestamp BETWEEN :startDate AND :endDate")
+    Page<PersistentAuditEvent> findByTypeInAndTimestampBetween(
+            @Param("types") List<String> types,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            Pageable pageable);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals AND e.timestamp BETWEEN :startDate AND :endDate")
+    Page<PersistentAuditEvent> findByPrincipalInAndTimestampBetween(
+            @Param("principals") List<String> principals,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            Pageable pageable);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
+    Page<PersistentAuditEvent> findByTypeInAndPrincipalIn(
+            @Param("types") List<String> types,
+            @Param("principals") List<String> principals,
+            Pageable pageable);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals AND e.timestamp BETWEEN :startDate AND :endDate")
+    Page<PersistentAuditEvent> findByTypeInAndPrincipalInAndTimestampBetween(
+            @Param("types") List<String> types,
+            @Param("principals") List<String> principals,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            Pageable pageable);
+
+    // Export versions (non-paged)
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types")
+    List<PersistentAuditEvent> findByTypeInForExport(@Param("types") List<String> types);
+
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals")
+    List<PersistentAuditEvent> findByPrincipalInForExport(
+            @Param("principals") List<String> principals);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.timestamp BETWEEN :startDate AND :endDate")
+    List<PersistentAuditEvent> findByTypeInAndTimestampBetweenForExport(
+            @Param("types") List<String> types,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals AND e.timestamp BETWEEN :startDate AND :endDate")
+    List<PersistentAuditEvent> findByPrincipalInAndTimestampBetweenForExport(
+            @Param("principals") List<String> principals,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
+    List<PersistentAuditEvent> findByTypeInAndPrincipalInForExport(
+            @Param("types") List<String> types, @Param("principals") List<String> principals);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals AND e.timestamp BETWEEN :startDate AND :endDate")
+    List<PersistentAuditEvent> findByTypeInAndPrincipalInAndTimestampBetweenForExport(
+            @Param("types") List<String> types,
+            @Param("principals") List<String> principals,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate);
+
+    // Query events excluding a specific type (used for analytics where we want to exclude UI_DATA)
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType")
+    List<PersistentAuditEvent> findAllExceptTypeForExport(@Param("excludeType") String excludeType);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType AND e.timestamp > :startDate")
+    List<PersistentAuditEvent> findAllExceptTypeAndTimestampAfterForExport(
+            @Param("excludeType") String excludeType, @Param("startDate") Instant startDate);
+
+    // Free-editor fleet usage: count genuine free-UI operations (source = "WEB") by type.
+    @Query(
+            "SELECT COUNT(e) FROM PersistentAuditEvent e "
+                    + "WHERE e.type IN :types AND e.source = :source AND e.timestamp > :since")
+    long countByTypeInAndSourceAndTimestampAfter(
+            @Param("types") List<String> types,
+            @Param("source") String source,
+            @Param("since") Instant since);
+
+    @Query(
+            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                    + "WHERE e.source = :source AND e.type <> :excludeType AND e.timestamp > :since")
+    long countDistinctPrincipalsBySourceExcludingTypeAfter(
+            @Param("source") String source,
+            @Param("excludeType") String excludeType,
+            @Param("since") Instant since);
+
+    // Team-scoped (SaaS) variants: same free-UI counts, constrained to a team's member principals.
+    @Query(
+            "SELECT COUNT(e) FROM PersistentAuditEvent e "
+                    + "WHERE e.type IN :types AND e.source = :source "
+                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    long countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
+            @Param("types") List<String> types,
+            @Param("source") String source,
+            @Param("principals") List<String> principals,
+            @Param("since") Instant since);
+
+    @Query(
+            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                    + "WHERE e.source = :source AND e.type <> :excludeType "
+                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    long countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
+            @Param("source") String source,
+            @Param("excludeType") String excludeType,
+            @Param("principals") List<String> principals,
+            @Param("since") Instant since);
 }

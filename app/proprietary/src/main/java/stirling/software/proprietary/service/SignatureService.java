@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -35,7 +34,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
     private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
 
     // Storage limits per user
@@ -55,7 +54,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
     @Override
     public byte[] getPersonalSignatureBytes(String username, String fileName) throws IOException {
         validateFileName(fileName);
-        Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);
+        Path userPath = Path.of(SIGNATURE_BASE_PATH, username, fileName);
 
         if (!Files.exists(userPath)) {
             throw new FileNotFoundException("Personal signature not found");
@@ -76,7 +75,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         }
 
         String folderName = "shared".equals(scope) ? ALL_USERS_FOLDER : username;
-        Path targetFolder = Paths.get(SIGNATURE_BASE_PATH, folderName);
+        Path targetFolder = Path.of(SIGNATURE_BASE_PATH, folderName);
 
         // Only enforce limits for personal signatures (not shared)
         if ("personal".equals(scope)) {
@@ -115,7 +114,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             }
 
             // Extract base64 data
-            String base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+            String base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
             // Validate decoded size
@@ -127,8 +126,8 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             }
 
             // Determine and validate file extension from data URL
-            String mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
-            String rawExtension = mimeType.substring(mimeType.indexOf("/") + 1);
+            String mimeType = dataUrl.substring(dataUrl.indexOf(':') + 1, dataUrl.indexOf(';'));
+            String rawExtension = mimeType.substring(mimeType.indexOf('/') + 1);
             String extension = validateAndNormalizeExtension(rawExtension);
 
             // Save image file
@@ -170,13 +169,13 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         List<SavedSignatureResponse> signatures = new ArrayList<>();
 
         // Load personal signatures
-        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         if (Files.exists(personalFolder)) {
             signatures.addAll(loadSignaturesFromFolder(personalFolder, "personal", true));
         }
 
         // Load shared signatures
-        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
         if (Files.exists(sharedFolder)) {
             signatures.addAll(loadSignaturesFromFolder(sharedFolder, "shared", false));
         }
@@ -189,7 +188,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         validateFileName(signatureId);
 
         // Only allow deletion from personal folder
-        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         boolean deleted = false;
 
         if (Files.exists(personalFolder)) {
@@ -227,7 +226,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         validateFileName(signatureId);
 
         // Try personal folder first
-        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         Path metadataPath = personalFolder.resolve(signatureId + ".json");
 
         if (Files.exists(metadataPath)) {
@@ -237,7 +236,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         }
 
         // If not found in personal, try shared folder
-        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
         Path sharedMetadataPath = sharedFolder.resolve(signatureId + ".json");
 
         if (Files.exists(sharedMetadataPath)) {
@@ -247,6 +246,12 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         }
 
         throw new FileNotFoundException("Signature metadata not found");
+    }
+
+    public boolean isSharedSignature(String signatureId) {
+        validateFileName(signatureId);
+        Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        return Files.exists(sharedFolder.resolve(signatureId + ".json"));
     }
 
     private void updateMetadataLabel(Path metadataPath, String newLabel) throws IOException {
@@ -268,7 +273,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
     // Private helper methods
 
     private void enforceStorageLimits(String username, String dataUrlToAdd) throws IOException {
-        Path userFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path userFolder = Path.of(SIGNATURE_BASE_PATH, username);
 
         if (!Files.exists(userFolder)) {
             return; // First signature, no limits to check

@@ -97,7 +97,7 @@ To add a 3rd UNO server:
 ```yaml
   unoserver3:
     container_name: UNO-Server-3
-    image: ghcr.io/unoconv/unoserver-docker:0.4.4
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
     # ... same config as unoserver1/2
 ```
 

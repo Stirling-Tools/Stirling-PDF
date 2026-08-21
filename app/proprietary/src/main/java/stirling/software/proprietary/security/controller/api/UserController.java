@@ -18,6 +18,7 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.UserApi;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.audit.AuditEventType;
@@ -46,7 +48,9 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -65,6 +69,8 @@ public class UserController {
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
+    private final LoginAttemptService loginAttemptService;
+    private final TeamMembershipService teamMembershipService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -193,7 +199,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "usernameExists", "message", "Username already exists"));
         }
-        if (newUsername != null && newUsername.length() > 0) {
+        if (newUsername != null && !newUsername.isEmpty()) {
             try {
                 userService.changeUsername(user, newUsername);
             } catch (IllegalArgumentException e) {
@@ -356,7 +362,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Settings updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/saveUser")
     public ResponseEntity<?> saveUser(
             @RequestParam(name = "username", required = true) String username,
@@ -464,7 +470,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/inviteUsers")
     public ResponseEntity<?> inviteUsers(
             @RequestParam(name = "emails", required = true) String emails,
@@ -581,7 +587,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeRole")
     @Transactional
     public ResponseEntity<?> changeRole(
@@ -640,6 +646,7 @@ public class UserController {
 
                 user.setTeam(team);
                 userRepository.save(user);
+                teamMembershipService.syncMembership(user);
             }
         }
 
@@ -647,7 +654,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User role updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changePasswordForUser")
     public ResponseEntity<?> changePasswordForUser(
             @RequestParam(name = "username") String username,
@@ -721,7 +728,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeUserEnabled/{username}")
     public ResponseEntity<?> changeUserEnabled(
             @PathVariable("username") String username,
@@ -773,8 +780,17 @@ public class UserController {
                 Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/unlockUser/{username}")
+    @Audited(type = AuditEventType.SETTINGS_CHANGED, level = AuditLevel.BASIC)
+    public ResponseEntity<?> unlockUser(@PathVariable("username") String username) {
+        loginAttemptService.resetAttempts(username);
+        return ResponseEntity.ok(Map.of("message", "User account unlocked successfully"));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
+    @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> deleteUser(
             @PathVariable("username") String username, Authentication authentication) {
         if (!userService.usernameExistsIgnoreCase(username)) {
@@ -942,7 +958,7 @@ public class UserController {
     public ResponseEntity<?> completeInitialSetup() {
         try {
             String username = userService.getCurrentUsername();
-            if (username == null) {
+            if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("User not authenticated");
             }
@@ -963,5 +979,64 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to complete initial setup");
         }
+    }
+
+    // Lists enabled users for the signing picker; 'org' scope = instance-wide, else caller's team.
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<User> callerOpt = userService.findByUsernameIgnoreCase(principal.getName());
+
+        // Anonymous (SaaS) accounts must never enumerate users, in any scope or team.
+        if (callerOpt.map(UserController::isAnonymousUser).orElse(false)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Fail-closed: only literal "org" opens the whole instance; anything else scopes to team.
+        String scope = applicationProperties.getStorage().getSigning().getUserListScope();
+        boolean teamScoped = !"org".equalsIgnoreCase(scope == null ? "" : scope.trim());
+
+        List<User> source;
+        if (teamScoped) {
+            Team callerTeam = callerOpt.map(User::getTeam).orElse(null);
+            if (callerTeam == null || isSystemTeam(callerTeam)) {
+                // No team or a shared system team: return only the caller, not the team's members.
+                source = callerOpt.map(List::of).orElse(List.of());
+            } else {
+                // Scopes via the single User.team FK; revisit if multi-team membership is added.
+                source = userRepository.findAllByTeamId(callerTeam.getId());
+            }
+        } else {
+            source = userRepository.findAll();
+        }
+
+        List<UserSummaryDTO> users =
+                source.stream().filter(User::isEnabled).map(this::toUserSummaryDTO).toList();
+
+        return ResponseEntity.ok(users);
+    }
+
+    // SaaS anonymous accounts, which must not enumerate users.
+    private static boolean isAnonymousUser(User user) {
+        return AuthenticationType.ANONYMOUS.name().equalsIgnoreCase(user.getAuthenticationType());
+    }
+
+    // System teams (Default/Internal) are not enumerable through the signing picker.
+    private static boolean isSystemTeam(Team team) {
+        String name = team.getName();
+        return TeamService.DEFAULT_TEAM_NAME.equalsIgnoreCase(name)
+                || TeamService.INTERNAL_TEAM_NAME.equalsIgnoreCase(name);
+    }
+
+    private UserSummaryDTO toUserSummaryDTO(User user) {
+        return new UserSummaryDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getUsername(), // Use username as displayName
+                user.getTeam() != null ? user.getTeam().getName() : null,
+                user.isEnabled());
     }
 }

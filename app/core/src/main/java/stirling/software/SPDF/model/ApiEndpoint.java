@@ -18,15 +18,16 @@ public class ApiEndpoint {
         postNode.path("parameters")
                 .forEach(
                         paramNode -> {
-                            String paramName = paramNode.path("name").asText("");
+                            String paramName = paramNode.path("name").asString("");
                             parameters.put(paramName, paramNode);
                         });
-        this.description = postNode.path("description").asText("");
+        this.description = postNode.path("description").asString("");
     }
 
     public boolean areParametersValid(Map<String, Object> providedParams) {
-        for (String requiredParam : parameters.keySet()) {
-            if (!providedParams.containsKey(requiredParam)) {
+        for (Map.Entry<String, JsonNode> entry : parameters.entrySet()) {
+            boolean isRequired = entry.getValue().path("required").asBoolean(false);
+            if (isRequired && !providedParams.containsKey(entry.getKey())) {
                 return false;
             }
         }

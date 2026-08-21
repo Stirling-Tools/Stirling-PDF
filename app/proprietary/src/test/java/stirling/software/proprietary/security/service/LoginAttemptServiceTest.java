@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -235,5 +236,146 @@ class LoginAttemptServiceTest {
         // Documentation test: current implementation returns a negative number.
         // If you later clamp to 0, update this assertion accordingly and add a new test.
         assertEquals(expected, actual, "Current behavior returns negative values without clamping");
+    }
+
+    @Test
+    @DisplayName("resetAttempts(): removes entry from cache for given key")
+    void resetAttempts_shouldRemoveEntryFromCache() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+
+        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        AttemptCounter counter = new AttemptCounter();
+        Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
+        ac.setAccessible(true);
+        ac.setInt(counter, 5);
+        attemptsCache.put("blockeduser", counter);
+        setPrivate(svc, "attemptsCache", attemptsCache);
+
+        var method = svc.getClass().getMethod("resetAttempts", String.class);
+        method.invoke(svc, "BlockedUser"); // case-insensitive
+
+        assertFalse(
+                attemptsCache.containsKey("blockeduser"),
+                "resetAttempts should remove the user's entry from the cache");
+    }
+
+    @Test
+    @DisplayName("resetAttempts(): does nothing for null or blank key")
+    void resetAttempts_shouldDoNothingForNullOrBlankKey() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+
+        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        attemptsCache.put("existing", new AttemptCounter());
+        setPrivate(svc, "attemptsCache", attemptsCache);
+
+        var method = svc.getClass().getMethod("resetAttempts", String.class);
+        method.invoke(svc, (Object) null);
+        method.invoke(svc, "   ");
+
+        assertEquals(1, attemptsCache.size(), "Null or blank key should not modify the cache");
+    }
+
+    @Test
+    @DisplayName("isBlockingEnabled(): returns true when blocking is enabled")
+    void isBlockingEnabled_shouldReturnTrueWhenEnabled() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+
+        var method = svc.getClass().getMethod("isBlockingEnabled");
+        boolean result = (Boolean) method.invoke(svc);
+
+        assertTrue(result, "isBlockingEnabled should return true when isBlockedEnabled is true");
+    }
+
+    @Test
+    @DisplayName("isBlockingEnabled(): returns false when blocking is disabled")
+    void isBlockingEnabled_shouldReturnFalseWhenDisabled() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", false);
+
+        var method = svc.getClass().getMethod("isBlockingEnabled");
+        boolean result = (Boolean) method.invoke(svc);
+
+        assertFalse(result, "isBlockingEnabled should return false when isBlockedEnabled is false");
+    }
+
+    @Test
+    @DisplayName("getAllBlockedUsers(): returns empty list when blocking is disabled")
+    void getAllBlockedUsers_shouldReturnEmptyWhenDisabled() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", false);
+        setPrivate(svc, "attemptsCache", new ConcurrentHashMap<String, AttemptCounter>());
+
+        var method = svc.getClass().getMethod("getAllBlockedUsers");
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) method.invoke(svc);
+
+        assertTrue(
+                result.isEmpty(),
+                "getAllBlockedUsers should return empty list when blocking is disabled");
+    }
+
+    @Test
+    @DisplayName("getAllBlockedUsers(): returns only users at or above MAX_ATTEMPT")
+    void getAllBlockedUsers_shouldReturnOnlyBlockedUsers() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+        setPrivate(svc, "MAX_ATTEMPT", 3);
+
+        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
+        ac.setAccessible(true);
+
+        // User with exactly MAX_ATTEMPT attempts (blocked)
+        AttemptCounter blocked1 = new AttemptCounter();
+        ac.setInt(blocked1, 3);
+        attemptsCache.put("blocked1", blocked1);
+
+        // User with more than MAX_ATTEMPT attempts (blocked)
+        AttemptCounter blocked2 = new AttemptCounter();
+        ac.setInt(blocked2, 5);
+        attemptsCache.put("blocked2", blocked2);
+
+        // User with fewer than MAX_ATTEMPT attempts (not blocked)
+        AttemptCounter notBlocked = new AttemptCounter();
+        ac.setInt(notBlocked, 2);
+        attemptsCache.put("safe", notBlocked);
+
+        setPrivate(svc, "attemptsCache", attemptsCache);
+
+        var method = svc.getClass().getMethod("getAllBlockedUsers");
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) method.invoke(svc);
+
+        assertEquals(2, result.size(), "Should return exactly 2 blocked users");
+        assertTrue(result.contains("blocked1"), "Should contain blocked1");
+        assertTrue(result.contains("blocked2"), "Should contain blocked2");
+        assertFalse(result.contains("safe"), "Should not contain safe user");
+    }
+
+    @Test
+    @DisplayName("getAllBlockedUsers(): returns empty list when no users are blocked")
+    void getAllBlockedUsers_shouldReturnEmptyWhenNoUsersBlocked() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+        setPrivate(svc, "MAX_ATTEMPT", 3);
+
+        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
+        ac.setAccessible(true);
+
+        AttemptCounter notBlocked = new AttemptCounter();
+        ac.setInt(notBlocked, 1);
+        attemptsCache.put("user1", notBlocked);
+
+        setPrivate(svc, "attemptsCache", attemptsCache);
+
+        var method = svc.getClass().getMethod("getAllBlockedUsers");
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) method.invoke(svc);
+
+        assertTrue(result.isEmpty(), "Should return empty list when no users exceed MAX_ATTEMPT");
     }
 }

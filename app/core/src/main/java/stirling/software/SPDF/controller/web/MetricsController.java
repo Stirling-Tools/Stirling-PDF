@@ -51,9 +51,19 @@ public class MetricsController {
             description =
                     "This endpoint returns the status of the application and its version number.")
     public ResponseEntity<?> getStatus() {
-        if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
-        }
+        return getApplicationStatus();
+    }
+
+    @GetMapping("/health")
+    @Operation(
+            summary = "Application health check",
+            description =
+                    "This endpoint returns the health status of the application and its version number. Mirrors /api/v1/info/status.")
+    public ResponseEntity<?> getHealth() {
+        return getApplicationStatus();
+    }
+
+    private ResponseEntity<?> getApplicationStatus() {
         Map<String, String> status = new HashMap<>();
         status.put("status", "UP");
         String version = getClass().getPackage().getImplementationVersion();
@@ -241,7 +251,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -282,7 +292,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
@@ -322,7 +332,7 @@ public class MetricsController {
 
                             // For GET requests, validate if we have a list of valid endpoints
                             final boolean validateGetEndpoints =
-                                    endpointInspector.getValidGetEndpoints().size() != 0;
+                                    !endpointInspector.getValidGetEndpoints().isEmpty();
                             if ("GET".equals(method)
                                     && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {

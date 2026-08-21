@@ -110,7 +110,12 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
                 .webProgramFormat(toFormat(entry.getWebProgram()))
                 .pdfProgram(toBase64(entry.getPdfProgram()))
                 .pdfProgramFormat(toFormat(entry.getPdfProgram()))
-                .glyphCoverage(entry.getGlyphCoverage())
+                .glyphCoverage(
+                        entry.getGlyphCoverage() != null
+                                ? entry.getGlyphCoverage().stream()
+                                        .mapToInt(Integer::intValue)
+                                        .toArray()
+                                : null)
                 .message(message)
                 .build();
     }

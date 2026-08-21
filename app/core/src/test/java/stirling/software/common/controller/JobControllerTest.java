@@ -5,9 +5,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -15,11 +17,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import stirling.software.common.cluster.ClusterBackplane;
+import stirling.software.common.cluster.JobStore;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 
@@ -32,6 +38,12 @@ class JobControllerTest {
     @Mock private JobQueue jobQueue;
 
     @Mock private HttpServletRequest request;
+
+    @Mock private JobOwnershipService jobOwnershipService;
+
+    @Mock private ClusterBackplane clusterBackplane;
+
+    @Mock private JobStore jobStore;
 
     private MockHttpSession session;
 
@@ -403,5 +415,81 @@ class JobControllerTest {
         assertEquals("Job cancelled successfully", responseBody.get("message"));
 
         verify(taskManager).setError(jobId, "Job was cancelled by user");
+    }
+
+    @Test
+    void testDownloadFile_ForbiddenWhenFileOwnedByAnotherUser() throws Exception {
+        String fileId = "file-id";
+
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", jobOwnershipService);
+        when(taskManager.findJobKeyByFileId(fileId)).thenReturn("other-user:job-id");
+        when(jobOwnershipService.validateJobAccess("other-user:job-id")).thenReturn(false);
+
+        ResponseEntity<?> response = controller.downloadFile(fileId);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        verify(fileStorage, never()).retrieveBytes(eq(fileId));
+    }
+
+    @Test
+    void testGetFileMetadata_ForbiddenWhenFileOwnedByAnotherUser() throws Exception {
+        String fileId = "file-id";
+
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", jobOwnershipService);
+        when(taskManager.findJobKeyByFileId(fileId)).thenReturn("other-user:job-id");
+        when(jobOwnershipService.validateJobAccess("other-user:job-id")).thenReturn(false);
+
+        ResponseEntity<?> response = controller.getFileMetadata(fileId);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        verify(fileStorage, never()).getFileSize(eq(fileId));
+    }
+
+    @Test
+    void testCleanupFinishedJobs_ReportsWhatWasReleased() {
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(2, 5, 1));
+
+        ResponseEntity<?> response = controller.cleanupFinishedJobs();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertEquals(2, body.get("jobsRemoved"));
+        assertEquals(5, body.get("filesDeleted"));
+        assertEquals(1, body.get("jobsRetained"));
+    }
+
+    @Test
+    void testCleanupFinishedJobs_OnlySweepsJobsTheCallerOwns() {
+        ReflectionTestUtils.setField(controller, "jobOwnershipService", jobOwnershipService);
+        when(jobOwnershipService.validateJobAccess("me:job")).thenReturn(true);
+        when(jobOwnershipService.validateJobAccess("someone-else:job"))
+                .thenThrow(new SecurityException("not yours"));
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(1, 1, 1));
+
+        controller.cleanupFinishedJobs();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Predicate<String>> filter = ArgumentCaptor.forClass(Predicate.class);
+        verify(taskManager).cleanupFinishedJobsNow(filter.capture());
+        assertTrue(filter.getValue().test("me:job"));
+        assertFalse(
+                filter.getValue().test("someone-else:job"),
+                "A job the caller cannot access must be left in place");
+    }
+
+    @Test
+    void testCleanupFinishedJobs_SweepsEverythingWhenSecurityIsDisabled() {
+        when(taskManager.cleanupFinishedJobsNow(any()))
+                .thenReturn(new TaskManager.CleanupSummary(3, 3, 0));
+
+        controller.cleanupFinishedJobs();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Predicate<String>> filter = ArgumentCaptor.forClass(Predicate.class);
+        verify(taskManager).cleanupFinishedJobsNow(filter.capture());
+        assertTrue(filter.getValue().test("any-job-id"));
     }
 }
