@@ -22,13 +22,15 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAuth } from "@app/auth/UseSession";
-import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
+import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
+import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
+import { useOpenPlan } from "@app/hooks/useOpenPlan";
+import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { AppSwitcher } from "@app/components/shared/AppSwitcher";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
@@ -37,8 +39,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import SettingsIcon from "@mui/icons-material/Settings";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
@@ -54,12 +55,16 @@ import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerMo
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
 import {
   deleteServerFile,
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
 import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
@@ -241,43 +246,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
-    // Each auth layer derives its own displayName from its native user shape.
-    // Fall back to the proprietary REST endpoint only when the auth
-    // context yields nothing - then to "User" as a generic last resort.
-    const { displayName: authDisplayName, isAnonymous } = useAuth();
-    const [accountUsername, setAccountUsername] = useState<string | null>(null);
-    const displayName =
-      authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
-
-    const profilePictureUrl = useProfilePictureUrl();
-    const [pictureFailed, setPictureFailed] = useState(false);
-    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
-    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
-
-    useEffect(() => {
-      if (!config?.enableLogin) {
-        setAccountUsername(null);
-        return;
-      }
-      if (authDisplayName) {
-        // The auth context has a name; don't bother hitting the REST
-        // endpoint, but clear any stale cached value from a prior call.
-        setAccountUsername(null);
-        return;
-      }
-      accountService
-        .getAccountData()
-        .then((data) => {
-          // Always reflect the latest result - including clearing it on
-          // sign-out, when the endpoint returns no username (or 401s into
-          // the catch branch below). Without this, signing out would leave
-          // the old username on screen.
-          setAccountUsername(data?.username ?? null);
-        })
-        .catch(() => {
-          setAccountUsername(null);
-        });
-    }, [config?.enableLogin, authDisplayName]);
+    const { displayName, profilePictureUrl, isAnonymous } =
+      useAccountIdentity();
+    const credits = useFreeCreditsSummary();
+    const otherApp = useOtherAppSwitch();
+    const openPlan = useOpenPlan();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
@@ -305,6 +278,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Kebab "Delete" target when the file is on the cloud; drives the
     // local/cloud/both choice dialog. Local-only files delete immediately.
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
+    // Kebab "Rename" target; drives RenameFileDialog.
+    const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
       null,
     );
     // Storage gate: only offer Save-to-cloud when the server allows it and
@@ -446,6 +423,121 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (stub) setVersionHistoryTarget(stub);
       },
       [allFileStubs],
+    );
+
+    const warnDataUnavailable = useCallback(() => {
+      alert({
+        alertType: "warning",
+        title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
+        body: t(
+          "fileSidebar.dataLostBody",
+          "This browser lost this file's contents. Upload it again to keep working with it.",
+        ),
+        expandable: false,
+        durationMs: 6000,
+      });
+    }, [t]);
+
+    // Kebab: download a copy (desktop saves via the native dialog). Routed
+    // through the policy wrapper so export policies enforce here too.
+    const handleDownload = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        const file = await fileStorage.getStirlingFile(fileId);
+        if (!file) {
+          warnDataUnavailable();
+          return;
+        }
+        try {
+          await downloadFileWithPolicy({
+            data: file,
+            filename: stub?.name ?? file.name,
+            fileId: fileId as string,
+          });
+        } catch (error) {
+          console.error("[FileSidebar] Download failed:", error);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.downloadFailed", "Download failed"),
+            body: error instanceof Error ? error.message : String(error),
+            expandable: false,
+          });
+        }
+      },
+      [allFileStubs, warnDataUnavailable, t],
+    );
+
+    // Kebab: copy the file into the library under a free "(copy)" name.
+    const handleDuplicate = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (!stub) return;
+        try {
+          const copyId = await duplicateStoredFile(
+            stub,
+            allFileStubs.map((s) => s.name),
+            addFiles,
+          );
+          if (!copyId) {
+            warnDataUnavailable();
+            return;
+          }
+          await refreshStubs();
+        } catch (error) {
+          console.error("[FileSidebar] Duplicate failed:", error);
+          alert({
+            alertType: "error",
+            title: t("fileSidebar.duplicateFailed", "Could not duplicate file"),
+            body: error instanceof Error ? error.message : String(error),
+            expandable: false,
+          });
+        }
+      },
+      [allFileStubs, addFiles, refreshStubs, warnDataUnavailable, t],
+    );
+
+    // Kebab: open the rename dialog for this one file.
+    const handleRename = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setRenameTarget(stub);
+      },
+      [allFileStubs],
+    );
+
+    // The stub name is what the UI and exports read, so a rename is a metadata
+    // write - storage first, then the workbench copy if the file is open.
+    const handleConfirmRename = useCallback(
+      async (name: string) => {
+        const stub = renameTarget;
+        if (!stub) return;
+        // quickKey is name|size|lastModified; a stale one would make a re-upload
+        // of the original look like a duplicate of the renamed file.
+        const quickKey = `${name}|${stub.size}|${stub.lastModified}`;
+        const saved = await fileStorage.updateFileMetadata(stub.id, {
+          name,
+          quickKey,
+        });
+        if (!saved) {
+          throw new Error(
+            t("fileSidebar.rename.error", "Could not rename the file."),
+          );
+        }
+        fileActions.updateStirlingFileStub(stub.id, { name, quickKey });
+        setRenameTarget(null);
+        await refreshStubs();
+      },
+      [renameTarget, fileActions, refreshStubs, t],
+    );
+
+    // Desktop-only; a no-op stub on web, where this stays hidden.
+    const { canOpenInNewWindow, openInNewWindow } = useOpenInNewWindow();
+    const handleOpenInNewWindow = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) openInNewWindow(stub);
+      },
+      [allFileStubs, openInNewWindow],
     );
 
     // Once a pending file lands in state, open it in the viewer.
@@ -804,6 +896,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onFolderClick={openWatchedFolder}
           policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
           onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
+          onDownload={handleDownload}
+          onRename={isWatchedFoldersActive ? undefined : handleRename}
+          onDuplicate={isWatchedFoldersActive ? undefined : handleDuplicate}
+          onOpenInNewWindow={
+            canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
+          }
           onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
@@ -1115,7 +1213,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                      <OpenInFullIcon sx={{ fontSize: "1rem" }} />
                     </ActionIcon>
                     <ActionIcon
                       variant="quiet"
@@ -1253,6 +1351,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onChanged={refreshStubs}
         />
 
+        {/* Kebab "Rename" dialog. */}
+        <RenameFileDialog
+          opened={Boolean(renameTarget)}
+          fileName={renameTarget?.name ?? ""}
+          onClose={() => setRenameTarget(null)}
+          onSubmit={handleConfirmRename}
+        />
+
         {/* Cloud-aware delete choice (only opened for cloud-uploaded files). */}
         <DeleteFilesDialog
           opened={Boolean(deleteTarget)}
@@ -1264,70 +1370,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — account footer (avatar + name + settings). */}
-        <NavSurface className="file-sidebar-footer-box">
-          {/* Bottom bar: user name + settings */}
-          <Tooltip
-            label={
-              onOpenSettings
-                ? `${displayName} - ${t("fileSidebar.openSettings", "Open settings")}`
-                : displayName
-            }
-            position="right"
-            withinPortal
-            disabled={!collapsed}
-          >
-            <div
-              className="file-sidebar-bottom-bar"
-              onClick={onOpenSettings}
-              role={onOpenSettings ? "button" : undefined}
-              tabIndex={onOpenSettings ? 0 : undefined}
-              onKeyDown={
-                onOpenSettings
-                  ? (e) => e.key === "Enter" && onOpenSettings()
-                  : undefined
-              }
-              data-testid={onOpenSettings ? "config-button" : undefined}
-              data-tour={onOpenSettings ? "config-button" : undefined}
-              aria-label={
-                onOpenSettings
-                  ? t("fileSidebar.openSettings", "Open settings")
-                  : displayName
-              }
-              style={onOpenSettings ? { cursor: "pointer" } : undefined}
-            >
-              <div
-                className={`file-sidebar-bottom-avatar${
-                  showProfilePicture
-                    ? " file-sidebar-bottom-avatar--picture"
-                    : ""
-                }`}
-                aria-label={displayName}
-              >
-                {showProfilePicture ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt=""
-                    className="file-sidebar-bottom-avatar-img"
-                    onError={() => setPictureFailed(true)}
-                  />
-                ) : (
-                  displayName.charAt(0).toUpperCase()
-                )}
-              </div>
-              {!collapsed && (
-                <span className="file-sidebar-bottom-name sidebar-content-fade">
-                  {displayName}
-                </span>
-              )}
-              {onOpenSettings && !collapsed && (
-                <div className="file-sidebar-bottom-settings">
-                  <SettingsIcon sx={{ fontSize: "1.1rem" }} />
-                </div>
-              )}
-            </div>
-          </Tooltip>
-        </NavSurface>
+        {/* Box 3 — the shared footer: credits, app switch, account row. */}
+        <NavFooter
+          className="file-sidebar-footer-box"
+          displayName={displayName}
+          profilePictureUrl={profilePictureUrl}
+          onOpenSettings={onOpenSettings}
+          credits={credits}
+          onOpenPlan={openPlan ?? undefined}
+          otherApp={otherApp}
+          collapsed={collapsed}
+        />
       </div>
     );
   },
