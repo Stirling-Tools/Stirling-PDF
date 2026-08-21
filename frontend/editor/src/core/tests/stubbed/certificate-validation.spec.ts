@@ -5,7 +5,7 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 // ---------------------------------------------------------------------------
 // Test fixtures — pre-generated keystores in test-fixtures/certs/
 // ---------------------------------------------------------------------------
-const CERTS_DIR = path.join(__dirname, "../test-fixtures/certs");
+const CERTS_DIR = path.join(import.meta.dirname, "../test-fixtures/certs");
 const VALID_P12 = path.join(CERTS_DIR, "valid-test.p12");
 const EXPIRED_P12 = path.join(CERTS_DIR, "expired-test.p12");
 const NOT_YET_VALID_P12 = path.join(CERTS_DIR, "not-yet-valid-test.p12");

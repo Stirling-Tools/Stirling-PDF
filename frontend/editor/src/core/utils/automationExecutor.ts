@@ -65,7 +65,6 @@ const executeApiRequest = async (
 ): Promise<File[]> => {
   const response = await apiClient.post(endpoint, formData, {
     responseType: "blob",
-    timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
   });
 
   return await processMultiFileResponse(
@@ -88,12 +87,17 @@ const executeSingleFileOperation = async (
 ): Promise<File[]> => {
   const resultFiles: File[] = [];
 
-  for (const file of files) {
-    const endpoint =
-      typeof config.endpoint === "function"
-        ? config.endpoint(parameters)
-        : config.endpoint;
+  const endpoint =
+    typeof config.endpoint === "function"
+      ? config.endpoint(parameters)
+      : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
+  for (const file of files) {
     const formData = config.buildFormData(parameters, file);
 
     const processedFiles = await executeApiRequest(
@@ -122,6 +126,11 @@ const executeMultiFileOperation = async (
     typeof config.endpoint === "function"
       ? config.endpoint(parameters)
       : config.endpoint;
+  if (!endpoint) {
+    throw new Error(
+      "This operation has no backend endpoint and cannot be executed directly.",
+    );
+  }
 
   const formData = config.buildFormData(parameters, files);
 

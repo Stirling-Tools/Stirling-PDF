@@ -1,12 +1,16 @@
 package stirling.software.proprietary.integration.crypto;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.EnumSet;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -40,10 +44,13 @@ public class CredentialEncryption {
     private static volatile SecretKey key;
 
     private final String configuredKey;
+    private final boolean clusterEnabled;
 
     public CredentialEncryption(
-            @Value("${stirling.security.credentialEncryptionKey:}") String configuredKey) {
+            @Value("${stirling.security.credentialEncryptionKey:}") String configuredKey,
+            @Value("${cluster.enabled:false}") boolean clusterEnabled) {
         this.configuredKey = configuredKey;
+        this.clusterEnabled = clusterEnabled;
     }
 
     @PostConstruct
@@ -60,6 +67,14 @@ public class CredentialEncryption {
         if (configured != null && !configured.isBlank()) {
             return new SecretKeySpec(Base64.getDecoder().decode(configured.trim()), ALGORITHM);
         }
+        // Cluster nodes must share this key, so fail fast rather than generate a node-local one.
+        if (clusterEnabled) {
+            throw new IllegalStateException(
+                    "cluster.enabled=true requires a shared credential encryption key. Set"
+                            + " STIRLING_CREDENTIAL_ENCRYPTION_KEY (or"
+                            + " stirling.security.credentialEncryptionKey) to the same value on every"
+                            + " node.");
+        }
         return loadOrCreateKeyFile();
     }
 
@@ -74,10 +89,11 @@ public class CredentialEncryption {
             generator.init(256);
             SecretKey generated = generator.generateKey();
             Files.createDirectories(path.getParent());
-            Files.writeString(path, Base64.getEncoder().encodeToString(generated.getEncoded()));
+            writeOwnerOnly(path, Base64.getEncoder().encodeToString(generated.getEncoded()));
             log.warn(
                     "Generated a new credential encryption key at {}. Back this file up: losing it"
-                            + " makes stored integration secrets unrecoverable.",
+                            + " makes stored integration secrets and pipeline supporting files"
+                            + " unrecoverable.",
                     path);
             return generated;
         } catch (Exception e) {
@@ -85,7 +101,27 @@ public class CredentialEncryption {
         }
     }
 
-    public static String encrypt(String plaintext) {
+    // The master key decrypts every stored integration secret, so create it 0600
+    // (owner-only) atomically. On non-POSIX filesystems (Windows) the config-dir
+    // ACL is the protection; we still create the file, just without POSIX perms.
+    private static void writeOwnerOnly(Path path, String content) throws IOException {
+        EnumSet<PosixFilePermission> ownerOnly =
+                EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+        try {
+            Files.createFile(path, PosixFilePermissions.asFileAttribute(ownerOnly));
+        } catch (UnsupportedOperationException e) {
+            Files.createFile(path);
+        }
+        Files.writeString(path, content);
+        try {
+            Files.setPosixFilePermissions(path, ownerOnly);
+        } catch (UnsupportedOperationException ignored) {
+            // Non-POSIX filesystem: nothing to tighten here.
+        }
+    }
+
+    /** Raw {@code IV || ciphertext}, for binary columns that can't afford Base64's 33% overhead. */
+    public static byte[] encryptBytes(byte[] plaintext) {
         if (plaintext == null) {
             return null;
         }
@@ -94,30 +130,46 @@ public class CredentialEncryption {
             RANDOM.nextBytes(iv);
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, requireKey(), new GCMParameterSpec(GCM_TAG_BITS, iv));
-            byte[] ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
+            byte[] ciphertext = cipher.doFinal(plaintext);
             byte[] combined = new byte[iv.length + ciphertext.length];
             System.arraycopy(iv, 0, combined, 0, iv.length);
             System.arraycopy(ciphertext, 0, combined, iv.length, ciphertext.length);
-            return Base64.getEncoder().encodeToString(combined);
+            return combined;
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("Failed to encrypt credential", e);
         }
+    }
+
+    /** Inverse of {@link #encryptBytes}; throws if the blob was tampered with (GCM tag). */
+    public static byte[] decryptBytes(byte[] stored) {
+        if (stored == null) {
+            return null;
+        }
+        try {
+            byte[] iv = Arrays.copyOfRange(stored, 0, IV_BYTES);
+            byte[] ciphertext = Arrays.copyOfRange(stored, IV_BYTES, stored.length);
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.DECRYPT_MODE, requireKey(), new GCMParameterSpec(GCM_TAG_BITS, iv));
+            return cipher.doFinal(ciphertext);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Failed to decrypt credential", e);
+        }
+    }
+
+    public static String encrypt(String plaintext) {
+        if (plaintext == null) {
+            return null;
+        }
+        return Base64.getEncoder()
+                .encodeToString(encryptBytes(plaintext.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static String decrypt(String stored) {
         if (stored == null) {
             return null;
         }
-        try {
-            byte[] combined = Base64.getDecoder().decode(stored);
-            byte[] iv = Arrays.copyOfRange(combined, 0, IV_BYTES);
-            byte[] ciphertext = Arrays.copyOfRange(combined, IV_BYTES, combined.length);
-            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            cipher.init(Cipher.DECRYPT_MODE, requireKey(), new GCMParameterSpec(GCM_TAG_BITS, iv));
-            return new String(cipher.doFinal(ciphertext), StandardCharsets.UTF_8);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("Failed to decrypt credential", e);
-        }
+        // Base64's IllegalArgumentException stays uncaught: LegacyDecryptStringConverter needs it.
+        return new String(decryptBytes(Base64.getDecoder().decode(stored)), StandardCharsets.UTF_8);
     }
 
     private static SecretKey requireKey() {

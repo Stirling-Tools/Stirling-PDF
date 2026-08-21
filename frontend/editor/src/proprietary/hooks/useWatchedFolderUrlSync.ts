@@ -12,6 +12,8 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
+import { slugify } from "@app/utils/slug";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 // Inlined to avoid circular imports — must match WatchedFoldersRegistration.tsx
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
@@ -20,13 +22,7 @@ const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 const WATCHED_FOLDERS_BASE = "/watch-folders";
 
 export function slugifyFolderName(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "") || "folder"
-  );
+  return slugify(name) || "folder";
 }
 
 function parseWatchedFolderRoute(): {
@@ -165,7 +161,7 @@ export function useWatchedFolderUrlSync() {
         window.history.pushState(null, "", targetPath);
       }
     } else if (prevIsWatchedFolder.current && isWatchedFolderUrl()) {
-      window.history.pushState(null, "", withBasePath("/"));
+      window.history.pushState(null, "", withBasePath(EDITOR_BASENAME));
     }
     prevIsWatchedFolder.current = isWatchedFolderWorkbench;
   }, [isWatchedFolderWorkbench, folderId, idToSlug]);

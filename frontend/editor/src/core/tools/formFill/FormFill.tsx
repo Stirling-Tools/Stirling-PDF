@@ -17,7 +17,6 @@ import React, {
   useMemo,
 } from "react";
 import {
-  Button,
   Text,
   Alert,
   Switch,
@@ -25,8 +24,9 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  ActionIcon,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
@@ -35,7 +35,7 @@ import {
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
@@ -124,7 +124,7 @@ const _MODE_TABS: ModeTabDef[] = [
 const FormFill = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedTool } = useNavigation();
-  const { selectors, state: fileState } = useFileState();
+  const { state: fileState } = useFileState();
 
   const {
     state: formState,
@@ -178,7 +178,9 @@ const FormFill = (_props: BaseToolProps) => {
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
 
-  const activeFiles = selectors.getFiles();
+  // Subscribing read: getFiles() during render doesn't re-run when the workbench
+  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
+  const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
@@ -204,7 +206,7 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] CSV extraction failed:", err);
-      setSaveError("Failed to extract CSV");
+      setSaveError(t("formFill.extractCsvError", "Failed to extract CSV"));
     } finally {
       setExtracting(false);
     }
@@ -223,7 +225,7 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] XLSX extraction failed:", err);
-      setSaveError("Failed to extract XLSX");
+      setSaveError(t("formFill.extractXlsxError", "Failed to extract XLSX"));
     } finally {
       setExtracting(false);
     }
@@ -246,7 +248,9 @@ const FormFill = (_props: BaseToolProps) => {
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
     if (!validateForm()) {
-      setSaveError("Please fill in all required fields");
+      setSaveError(
+        t("formFill.requiredFieldsError", "Please fill in all required fields"),
+      );
       return;
     }
 
@@ -434,7 +438,7 @@ const FormFill = (_props: BaseToolProps) => {
                 >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
-                    Analysing form fields...
+                    {t("formFill.analyzingFields", "Analysing form fields...")}
                   </Text>
                 </div>
                 <Skeleton height={48} radius="sm" />
@@ -462,10 +466,12 @@ const FormFill = (_props: BaseToolProps) => {
                 <div>
                   <div className={styles.progressRow}>
                     <span className={styles.progressLabel}>
-                      {filledCount} / {fillableCount} filled
+                      {filledCount} / {fillableCount}{" "}
+                      {t("formFill.filled", "filled")}
                       {requiredCount > 0 && (
                         <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
-                          ({filledRequiredCount}/{requiredCount} req.)
+                          ({filledRequiredCount}/{requiredCount}{" "}
+                          {t("formFill.requiredAbbreviation", "req")}.)
                         </span>
                       )}
                     </span>
@@ -510,7 +516,7 @@ const FormFill = (_props: BaseToolProps) => {
                   <div className={styles.primaryActions}>
                     <Button
                       leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                      size="xs"
+                      size="sm"
                       onClick={handleSave}
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
@@ -524,7 +530,7 @@ const FormFill = (_props: BaseToolProps) => {
                       position="bottom"
                     >
                       <ActionIcon
-                        variant="light"
+                        variant="secondary"
                         size="md"
                         onClick={handleRefresh}
                         aria-label={t(
@@ -539,34 +545,31 @@ const FormFill = (_props: BaseToolProps) => {
 
                   <div className={styles.secondaryActions}>
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractJson}
-                      size="xs"
+                      size="sm"
                     >
                       JSON
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractCsv}
-                      size="xs"
+                      size="sm"
                     >
                       CSV
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractXlsx}
-                      size="xs"
+                      size="sm"
                     >
                       XLSX
                     </Button>
@@ -589,7 +592,10 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.emptyState}>
                   <DescriptionIcon className={styles.emptyStateIcon} />
                   <span className={styles.emptyStateText}>
-                    No fillable form fields found in this PDF.
+                    {t(
+                      "formFill.noFields",
+                      "No fillable form fields found in this PDF.",
+                    )}
                   </span>
                 </div>
               )}
@@ -606,7 +612,7 @@ const FormFill = (_props: BaseToolProps) => {
                       style={i === 0 ? { marginTop: 0 } : undefined}
                     >
                       <Text className={styles.pageDividerLabel}>
-                        Page {pageIdx + 1}
+                        {t("page", "Page")} {pageIdx + 1}
                       </Text>
                     </div>
 
@@ -644,7 +650,9 @@ const FormFill = (_props: BaseToolProps) => {
                               {field.label || field.name}
                             </span>
                             {field.required && (
-                              <span className={styles.fieldRequired}>req</span>
+                              <span className={styles.fieldRequired}>
+                                {t("formFill.requiredAbbreviation", "req")}
+                              </span>
                             )}
                           </div>
 
@@ -686,10 +694,10 @@ const FormFill = (_props: BaseToolProps) => {
                   <span className={styles.unsavedDot} />
                 )}
                 {formState.isDirty || flattenChanged
-                  ? "Unsaved changes"
-                  : "All saved"}
+                  ? t("formFill.unsavedChanges", "Unsaved changes")
+                  : t("formFill.allSaved", "All saved")}
               </span>
-              <span>Ctrl+S to save</span>
+              <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
             </div>
           )}
         </>

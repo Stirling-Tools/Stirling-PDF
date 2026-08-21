@@ -123,8 +123,9 @@ export function SpendCapControl({
     <div className="scc">
       <div className="scc-row">
         {presets.map((preset) => (
-          <button
+          <Button
             key={preset}
+            variant="quiet"
             type="button"
             className="scc-chip"
             data-selected={capUsd === preset ? "true" : "false"}
@@ -133,7 +134,7 @@ export function SpendCapControl({
           >
             {sym}
             {preset.toLocaleString()}
-          </button>
+          </Button>
         ))}
 
         <label
@@ -154,7 +155,8 @@ export function SpendCapControl({
           />
         </label>
 
-        <button
+        <Button
+          variant="quiet"
           type="button"
           className={`scc-chip${onSave ? "" : " scc-row__spacer"}`}
           data-selected={isNoCap ? "true" : "false"}
@@ -162,12 +164,12 @@ export function SpendCapControl({
           disabled={busy}
         >
           {L.noCap}
-        </button>
+        </Button>
 
         {onSave && (
           <div className="scc-row__spacer">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               loading={saving}
               disabled={!dirty || busy}

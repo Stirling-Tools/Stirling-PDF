@@ -1,98 +1,128 @@
 import { apiClient } from "@portal/api/http";
 import type { Tier } from "@portal/contexts/TierContext";
-import type {
-  ApiKey,
-  AuditLogResponse,
-  DeploymentRegion,
-  ModelsResponse,
-  RecentDeployment,
-  SecurityConfig,
-  StorageConfig,
-} from "@portal/mocks/infrastructure";
 
-export type {
-  AccessPolicy,
-  ApiKey,
-  ApiKeyPermission,
-  ApiKeyStatus,
-  AttestationStatus,
-  AuditCategory,
-  AuditEvent,
-  AuditLogResponse,
-  AuditStatus,
-  AuditSummary,
-  CertStatus,
-  ComplianceAttestation,
-  ComplianceCert,
-  DataResidency,
-  DeploymentRegion,
-  DeploymentStatus,
-  IpAllowEntry,
-  KeyManagement,
-  KeyMode,
-  ModelCostUnit,
-  ModelEntry,
-  ModelProvider,
-  ModelsResponse,
-  ModelsSummary,
-  ModelStatus,
-  ModelType,
-  RecentDeployment,
-  RegionStatus,
-  RetentionWindow,
-  RoutingRule,
-  SecurityConfig,
-  StorageConfig,
-  StorageProvider,
-} from "@portal/mocks/infrastructure";
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  API Keys                                                                 */
+/* ──────────────────────────────────────────────────────────────────────── */
 
-export interface DeploymentsResponse {
-  regions: DeploymentRegion[];
-  recent: RecentDeployment[];
+export type ApiKeyStatus = "active" | "revoked";
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  /** Non-secret leading fragment, e.g. "sk_a3f81b2c". */
+  prefix: string;
+  created: string;
+  /** Formatted last-use time, or "Never". */
+  lastUsed: string;
+  status: ApiKeyStatus;
+  /** Requests made today (UTC). */
+  usageToday: number;
+  /** Requests in the trailing 30 days. */
+  usageMonth: number;
+  /** Lifetime request count. */
+  usageTotal: number;
 }
+
+export interface ApiKeysResponse {
+  keys: ApiKey[];
+}
+
+/** Returned once on creation: the listed row plus the plaintext secret, shown once. */
+export interface CreatedApiKey {
+  key: ApiKey;
+  secret: string;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Audit Logs                                                               */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export type AuditCategory =
+  | "auth"
+  | "config"
+  | "elevation"
+  | "policy"
+  | "processing"
+  | "security";
+
+export type AuditStatus = "success" | "warning" | "danger" | "info";
+
+export interface AuditEvent {
+  id: string;
+  timestamp: string;
+  category: AuditCategory;
+  action: string;
+  actor: string;
+  target: string;
+  status: AuditStatus;
+  latencyMs: number;
+}
+
+export interface AuditSummary {
+  totalEvents: number;
+  policy: number;
+  processing: number;
+  elevation: number;
+  config: number;
+}
+
+export interface AuditLogResponse {
+  summary: AuditSummary;
+  events: AuditEvent[];
+  /** True for the whole-server (admin) view; gates the admin-only CSV export. */
+  fullServer: boolean;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Endpoints                                                                */
+/* ──────────────────────────────────────────────────────────────────────── */
 
 const q = (tier: Tier) => `?tier=${encodeURIComponent(tier)}`;
 
-/** GET /v1/infrastructure/deployments?tier=… */
-export async function fetchDeployments(
-  tier: Tier,
-): Promise<DeploymentsResponse> {
-  return apiClient.local.json<DeploymentsResponse>(
-    `/v1/infrastructure/deployments${q(tier)}`,
-  );
+const API_KEYS_PATH = "/api/v1/proprietary/ui-data/infrastructure/api-keys";
+
+// Always this instance's own backend: a key authenticates the instance that issued it, so a
+// self-hosted instance manages its own keys even when SaaS-linked (.local is the SaaS backend on SaaS).
+
+/** GET the caller's personal API keys; scoped server-side per user. */
+export async function fetchApiKeys(): Promise<ApiKeysResponse> {
+  return apiClient.local.json<ApiKeysResponse>(API_KEYS_PATH);
 }
 
-/** GET /v1/infrastructure/api-keys?tier=… */
-export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
-  return apiClient.local.json<ApiKey[]>(
-    `/v1/infrastructure/api-keys${q(tier)}`,
-  );
+/** POST a new key; the response carries the one-time secret. */
+export async function createApiKey(body: {
+  name: string;
+}): Promise<CreatedApiKey> {
+  return apiClient.local.json<CreatedApiKey>(API_KEYS_PATH, {
+    method: "POST",
+    body,
+  });
 }
 
-/** GET /v1/infrastructure/security?tier=… */
-export async function fetchSecurity(tier: Tier): Promise<SecurityConfig> {
-  return apiClient.local.json<SecurityConfig>(
-    `/v1/infrastructure/security${q(tier)}`,
-  );
+/** DELETE (revoke) a key the caller owns. */
+export async function revokeApiKey(id: string): Promise<void> {
+  const path = `${API_KEYS_PATH}/${encodeURIComponent(id)}`;
+  await apiClient.local.json<void>(path, { method: "DELETE" });
 }
 
-/** GET /v1/infrastructure/models?tier=… */
-export async function fetchModels(tier: Tier): Promise<ModelsResponse> {
-  return apiClient.local.json<ModelsResponse>(
-    `/v1/infrastructure/models${q(tier)}`,
-  );
-}
-
-/** GET /v1/infrastructure/storage?tier=… */
-export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
-  return apiClient.local.json<StorageConfig>(
-    `/v1/infrastructure/storage${q(tier)}`,
-  );
-}
-
-/** GET /v1/infrastructure/audit-log?tier=… */
+/** GET the audit log; SaaS or local, backend-scoped (admin → server, SaaS lead → team). */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return apiClient.local.json<AuditLogResponse>(
-    `/v1/infrastructure/audit-log${q(tier)}`,
-  );
+  const path = `/api/v1/proprietary/ui-data/infrastructure/audit-log${q(tier)}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.json<AuditLogResponse>(path)
+    : apiClient.local.json<AuditLogResponse>(path);
+}
+
+/** Download the audit log as a CSV/JSON blob (admin-only, whole-server); SaaS or local. */
+export async function exportAuditLog(
+  format: "csv" | "json",
+  fields: string,
+): Promise<Blob> {
+  const path = `/api/v1/proprietary/ui-data/audit-export?format=${format}&fields=${encodeURIComponent(
+    fields,
+  )}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.blob(path)
+    : apiClient.local.blob(path);
 }

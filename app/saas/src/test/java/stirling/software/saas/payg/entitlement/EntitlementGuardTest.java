@@ -199,6 +199,97 @@ class EntitlementGuardTest {
     }
 
     // ---------------------------------------------------------------------------------------
+    // Policy execute routes (proprietary; recognised by path, gated on AUTOMATION)
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void policyRunRoute_noAnnotation_isInScopeAndGatedOnAutomation() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(degradedSnapshot());
+
+        HandlerMethod hm = handlerFor("plainEndpoint"); // no annotations
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/policies/pol-123/run");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(402);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("FEATURE_DEGRADED");
+        assertThat(body.get("missingGates").get(0).asText()).isEqualTo("AUTOMATION");
+        verify(entitlementService).getSnapshot(42L);
+    }
+
+    @Test
+    void policyRunRoute_anonymous_returns401WithAutomationCategory() throws Exception {
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new AnonymousAuthenticationToken(
+                                "key",
+                                "anonymousUser",
+                                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+        HandlerMethod hm = handlerFor("plainEndpoint");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/policies/pol-123/trigger");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isFalse();
+        assertThat(res.getStatus()).isEqualTo(401);
+        JsonNode body = json.readTree(res.getContentAsByteArray());
+        assertThat(body.get("error").asText()).isEqualTo("SIGNUP_REQUIRED");
+        assertThat(body.get("category").asText()).isEqualTo("AUTOMATION");
+    }
+
+    @Test
+    void policyRunRoute_authenticatedFull_passesThrough() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        SecurityContextHolder.getContext().setAuthentication(jwtAuth(supabaseId));
+        when(userRepository.findBySupabaseId(supabaseId))
+                .thenReturn(Optional.of(userWithTeam(7L, 42L)));
+        when(entitlementService.getSnapshot(42L)).thenReturn(fullSnapshot());
+
+        HandlerMethod hm = handlerFor("plainEndpoint");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/policies/run");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void policyReadRoute_notGated_passesThroughEvenDegraded() throws Exception {
+        // Listing policies must stay ungated so the UI can show them and prompt on use.
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new AnonymousAuthenticationToken(
+                                "key",
+                                "anonymousUser",
+                                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+        HandlerMethod hm = handlerFor("plainEndpoint");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setRequestURI("/api/v1/policies");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        boolean proceed = guard.preHandle(req, res, hm);
+
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+        Mockito.verifyNoInteractions(entitlementService);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Anonymous user
     // ---------------------------------------------------------------------------------------
 

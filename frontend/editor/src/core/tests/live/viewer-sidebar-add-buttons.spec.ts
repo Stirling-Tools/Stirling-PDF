@@ -126,7 +126,9 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
     });
     const attachments = doc.getAttachments();
     expect(attachments.length).toBeGreaterThan(0);
-    expect(attachments.map((a) => a.name)).toContain(attachmentName);
+    expect(attachments.map((a: { name?: string }) => a.name)).toContain(
+      attachmentName,
+    );
   });
 
   test("Add bookmark from viewer sidebar adds the bookmark to the produced PDF outline", async ({

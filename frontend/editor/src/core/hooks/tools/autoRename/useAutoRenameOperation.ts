@@ -1,45 +1,58 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   AutoRenameParameters,
   defaultParameters,
 } from "@app/hooks/tools/autoRename/useAutoRenameParameters";
 
-export const getFormData = (parameters: AutoRenameParameters) =>
-  Object.entries(parameters).map(([key, value]) => [
-    key,
-    value.toString(),
-  ]) as string[][];
+const ENDPOINT = "/api/v1/misc/auto-rename" satisfies ToolEndpoint;
+type AutoRenameApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the auto-rename request body. The return
+// type is the generated backend model, so a spec change that renames or drops a
+// field breaks the build here.
+export const autoRenameToApiParams = (
+  parameters: AutoRenameParameters,
+): AutoRenameApiParams => ({
+  useFirstTextAsFallback: parameters.useFirstTextAsFallback,
+});
+
+// Reconstruct the tool's UI parameters from an auto-rename request body, so a
+// stored or AI-authored step can be re-rendered in the settings UI.
+export const autoRenameFromApiParams = (
+  apiParams: AutoRenameApiParams,
+): Partial<AutoRenameParameters> => ({
+  useFirstTextAsFallback:
+    apiParams.useFirstTextAsFallback ??
+    defaultParameters.useFirstTextAsFallback,
+});
 
 // Static function that can be used by both the hook and automation executor
 export const buildAutoRenameFormData = (
   parameters: AutoRenameParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-
-  // Add all permission parameters
-  getFormData(parameters).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-
-  return formData;
-};
+): FormData =>
+  objectToFormData(autoRenameToApiParams(parameters), { fileInput: file });
 
 // Static configuration object
-export const autoRenameOperationConfig = {
-  toolType: ToolType.singleFile,
+export const autoRenameOperationConfig = defineSingleFileTool({
   buildFormData: buildAutoRenameFormData,
+  toApiParams: autoRenameToApiParams,
+  fromApiParams: autoRenameFromApiParams,
   operationType: "autoRename",
-  endpoint: "/api/v1/misc/auto-rename",
+  endpoint: ENDPOINT,
   preserveBackendFilename: true, // Use filename from backend response headers
   defaultParameters,
-} as const;
+});
 
 export const useAutoRenameOperation = () => {
   const { t } = useTranslation();

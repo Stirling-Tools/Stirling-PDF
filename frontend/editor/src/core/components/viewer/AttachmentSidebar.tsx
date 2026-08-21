@@ -1,22 +1,15 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  ActionIcon,
-  Button,
-  Loader,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Text, Loader, Stack } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
-import "@app/components/viewer/SidebarBase.css";
+import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/AttachmentSidebar.css";
 
 interface AttachmentSidebarProps {
@@ -26,8 +19,6 @@ interface AttachmentSidebarProps {
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
-
-const SIDEBAR_WIDTH = "15rem";
 
 interface AttachmentCacheEntry {
   status: "idle" | "loading" | "success" | "error";
@@ -322,9 +313,10 @@ export const AttachmentSidebar = ({
             )}
           </div>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
+            aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
           >
             <DownloadIcon sx={{ fontSize: "1.2rem" }} />
@@ -366,177 +358,129 @@ export const AttachmentSidebar = ({
   const showNoDocument = attachmentSupport && !documentCacheKey;
 
   return (
-    <Box
-      className="sidebar-base attachment-sidebar"
-      style={{
-        position: "fixed",
-        right: `${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`,
-        top: 0,
-        bottom: 0,
-        width: SIDEBAR_WIDTH,
-        zIndex: 998,
-      }}
+    <SidebarBase
+      className="attachment-sidebar"
+      title={t("viewer.attachments.title", "Attachments")}
+      icon={<AttachmentIcon />}
+      rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
+      visible={visible}
+      onClose={toggleAttachmentSidebar}
+      closeLabel={t(
+        "viewer.attachments.closeSidebar",
+        "Close attachments sidebar",
+      )}
+      searchTerm={searchTerm}
+      searchPlaceholder={t(
+        "viewer.attachments.searchPlaceholder",
+        "Search attachments",
+      )}
+      onSearchChange={setSearchTerm}
     >
-      <div className="sidebar-base__header attachment-sidebar__header">
-        <div className="sidebar-base__header-title attachment-sidebar__header-title">
-          <span className="sidebar-base__header-icon attachment-sidebar__header-icon">
-            <AttachmentIcon />
-          </span>
-          <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
-            {t("viewer.attachments.title", "Attachments")}
+      {!attachmentSupport && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noSupport",
+              "Attachment support is unavailable for this viewer.",
+            )}
           </Text>
         </div>
-        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
+      )}
+
+      {attachmentSupport && showNoDocument && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noDocument",
+              "Open a PDF to view its attachments.",
+            )}
+          </Text>
+        </div>
+      )}
+
+      {attachmentSupport && documentCacheKey && currentError && (
+        <Stack gap="xs" align="center" className="sidebar-base__error">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
+            {currentError}
+          </Text>
           <ActionIcon
-            variant="subtle"
-            size="sm"
-            color="gray"
-            onClick={toggleAttachmentSidebar}
-            aria-label="Close attachments sidebar"
-            title={t("viewer.attachments.close", "Close attachments")}
+            variant="secondary"
+            aria-label={t("viewer.attachments.retry", "Retry")}
+            onClick={requestReload}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <LocalIcon icon="refresh" />
           </ActionIcon>
-        </Box>
-      </div>
+        </Stack>
+      )}
 
-      <Box
-        px="sm"
-        pb="sm"
-        className="sidebar-base__search attachment-sidebar__search"
-      >
-        <TextInput
-          value={searchTerm}
-          placeholder={t(
-            "viewer.attachments.searchPlaceholder",
-            "Search attachments",
-          )}
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={
-            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-          }
-          size="xs"
-        />
-      </Box>
-
-      <ScrollArea style={{ flex: 1 }}>
-        <Box
-          p="sm"
-          className="sidebar-base__content attachment-sidebar__content"
+      {attachmentSupport && documentCacheKey && isLocalLoading && (
+        <Stack
+          gap="md"
+          align="center"
+          c="dimmed"
+          py="xl"
+          className="sidebar-base__loading"
         >
-          {!attachmentSupport && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noSupport",
-                  "Attachment support is unavailable for this viewer.",
-                )}
-              </Text>
-            </div>
-          )}
+          <Loader size="md" type="dots" />
+          <Text size="sm" ta="center">
+            {t("viewer.attachments.loading", "Loading attachments...")}
+          </Text>
+        </Stack>
+      )}
 
-          {attachmentSupport && showNoDocument && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noDocument",
-                  "Open a PDF to view its attachments.",
-                )}
-              </Text>
-            </div>
-          )}
+      {showEmptyState && (
+        <Stack align="center" gap="sm" py="lg">
+          <LocalIcon
+            icon="attachment-rounded"
+            width="2rem"
+            height="2rem"
+            style={{ color: "var(--mantine-color-dimmed)" }}
+          />
+          <Text size="sm" c="dimmed" ta="center">
+            {t("viewer.attachments.empty", "No attachments in this document")}
+          </Text>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={handleAddAttachment}
+            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+          >
+            {t("viewer.attachments.addAttachment", "Add attachment")}
+          </Button>
+        </Stack>
+      )}
 
-          {attachmentSupport && documentCacheKey && currentError && (
-            <Stack gap="xs" align="center" className="sidebar-base__error">
-              <Text size="sm" c="red" ta="center">
-                {currentError}
-              </Text>
-              <ActionIcon variant="light" onClick={requestReload}>
-                <LocalIcon icon="refresh" />
-              </ActionIcon>
-            </Stack>
-          )}
+      {showAttachmentList && (
+        <>
+          <Button
+            variant="tertiary"
+            size="sm"
+            fullWidth
+            justify="start"
+            onClick={handleAddAttachment}
+            leftSection={
+              <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+            }
+            style={{ marginBottom: "var(--space-xs)" }}
+          >
+            {t("viewer.attachments.addAttachment", "Add attachment")}
+          </Button>
+          <div className="attachment-list">
+            {renderAttachments(filteredAttachments)}
+          </div>
+        </>
+      )}
 
-          {attachmentSupport && documentCacheKey && isLocalLoading && (
-            <Stack
-              gap="md"
-              align="center"
-              c="dimmed"
-              py="xl"
-              className="sidebar-base__loading"
-            >
-              <Loader size="md" type="dots" />
-              <Text size="sm" ta="center">
-                {t("viewer.attachments.loading", "Loading attachments...")}
-              </Text>
-            </Stack>
-          )}
-
-          {showEmptyState && (
-            <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="attachment-rounded"
-                width="2rem"
-                height="2rem"
-                style={{ color: "var(--mantine-color-dimmed)" }}
-              />
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.empty",
-                  "No attachments in this document",
-                )}
-              </Text>
-              <Button
-                variant="light"
-                size="xs"
-                onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
-              >
-                {t("viewer.attachments.addAttachment", "Add attachment")}
-              </Button>
-            </Stack>
-          )}
-
-          {showAttachmentList && (
-            <>
-              <Button
-                variant="subtle"
-                size="compact-xs"
-                fullWidth
-                onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                }
-                mb="xs"
-                styles={{
-                  root: {
-                    justifyContent: "flex-start",
-                    paddingInline: 6,
-                  },
-                }}
-              >
-                {t("viewer.attachments.addAttachment", "Add attachment")}
-              </Button>
-              <div className="attachment-list">
-                {renderAttachments(filteredAttachments)}
-              </div>
-            </>
-          )}
-
-          {showSearchEmpty && (
-            <div className="sidebar-base__empty-state">
-              <Text size="sm" c="dimmed" ta="center">
-                {t(
-                  "viewer.attachments.noMatch",
-                  "No attachments match your search",
-                )}
-              </Text>
-            </div>
-          )}
-        </Box>
-      </ScrollArea>
-    </Box>
+      {showSearchEmpty && (
+        <div className="sidebar-base__empty-state">
+          <Text size="sm" c="dimmed" ta="center">
+            {t(
+              "viewer.attachments.noMatch",
+              "No attachments match your search",
+            )}
+          </Text>
+        </div>
+      )}
+    </SidebarBase>
   );
 };

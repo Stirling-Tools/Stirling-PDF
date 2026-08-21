@@ -17,7 +17,10 @@ import path from "path";
  * Backend-free spec.
  */
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 async function openViewerWithSample(page: import("@playwright/test").Page) {
   await page.goto("/read");

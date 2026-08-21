@@ -1,7 +1,7 @@
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const MULTIPAGE_PDF = path.join(FIXTURES_DIR, "annotations_out_of_order.pdf");
 
@@ -120,27 +120,35 @@ test("Ctrl+C copies selected text to the clipboard", async ({
   expect(clipboardText.trim().length).toBeGreaterThan(0);
 });
 
-test("right-click on a word auto-selects it and reveals the Copy menu", async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
-  const firstPage = await loadSampleAndOpenViewer(page);
-  const box = await firstPage.boundingBox();
-  if (!box) throw new Error("no box");
+// Pinned wide: the page is auto-fit, so at the 1280x720 firefox/webkit projects
+// the text renders too small to hit-test a word reliably.
+test.describe("right-click selection", () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
 
-  // Right-click on a word in the top paragraph "Test document for word documents".
-  await page.mouse.click(box.x + box.width * 0.21, box.y + box.height * 0.105, {
-    button: "right",
+  test("right-click on a word auto-selects it and reveals the Copy menu", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const firstPage = await loadSampleAndOpenViewer(page);
+    const box = await firstPage.boundingBox();
+    if (!box) throw new Error("no box");
+
+    // Right-click a word in the top paragraph "Test document for word documents".
+    await page.mouse.click(
+      box.x + box.width * 0.21,
+      box.y + box.height * 0.105,
+      { button: "right" },
+    );
+    await page.waitForTimeout(400);
+
+    const selectionRects = firstPage.locator(
+      ".pdf-selection-layer > div:first-child > div",
+    );
+    await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+
+    const copyButton = page.getByRole("button", { name: "Copy" }).first();
+    await expect(copyButton).toBeVisible({ timeout: 5_000 });
   });
-  await page.waitForTimeout(400);
-
-  const selectionRects = firstPage.locator(
-    ".pdf-selection-layer > div:first-child > div",
-  );
-  await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
-
-  const copyButton = page.getByRole("button", { name: "Copy" }).first();
-  await expect(copyButton).toBeVisible({ timeout: 5_000 });
 });
 
 test("right-click on the page does not surface the browser context menu", async ({

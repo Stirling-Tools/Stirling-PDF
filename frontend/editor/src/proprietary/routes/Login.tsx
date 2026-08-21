@@ -5,7 +5,8 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Text, Stack, Alert } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { isSafePostLoginRedirect } from "@app/auth";
 import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -13,13 +14,12 @@ import { useTranslation } from "react-i18next";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
-import {
-  DEBUG_SHOW_ALL_PROVIDERS,
-  oauthProviderConfig,
-} from "@app/auth/ui/OAuthButtons";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
+import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
@@ -29,26 +29,35 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
+  // Reuses the shared guard rather than re-deriving one: same-origin relative
+  // paths only, rejecting "//host", "/\host" (browsers normalise the backslash)
+  // and auth routes (a ?from=/login would cost a pointless hop back here).
+  const safePath = (path: unknown): string | null =>
+    isSafePostLoginRedirect(path) ? path : null;
+
+  // Where to return to after signing in. Router state first (set when Landing
+  // bounces an unauthenticated visitor), then the query, which is what survives
+  // a reload of /login. Null means "no specific destination" and the caller
+  // falls back to role-based landing.
   const resolveReturnPath = (): string | null => {
     const fromState = (
       location.state as { from?: { pathname?: string } } | null
     )?.from?.pathname;
-    if (fromState) return fromState;
+    if (fromState) return safePath(fromState);
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {
-      return decodeURIComponent(fromQuery);
+      return safePath(decodeURIComponent(fromQuery));
     } catch {
-      return fromQuery;
+      return safePath(fromQuery);
     }
   };
   const { refetch } = useAppConfig();
   const { t } = useTranslation();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(true);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const [ssoAutoLogin, setSsoAutoLogin] = useState(false);
-  const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
@@ -149,8 +158,8 @@ export default function Login() {
     onConfigLoaded: (data) => {
       // If login is disabled, redirect to home (anonymous mode)
       if (data.enableLogin === false) {
-        console.debug("[Login] Login disabled, redirecting to home");
-        navigate("/");
+        console.debug("[Login] Login disabled, going to the editor");
+        navigate(EDITOR_BASENAME);
         return;
       }
       setEnableLogin(data.enableLogin ?? true);
@@ -177,7 +186,7 @@ export default function Login() {
       if (result.status === "up") {
         await refetch();
         if (loginDisabled) {
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         }
       }
     };
@@ -196,20 +205,36 @@ export default function Login() {
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
-    if (!loading && session) {
-      const returnPath = resolveReturnPath();
-      console.debug("[Login] User already authenticated, redirecting to home", {
-        returnPath,
-      });
-      navigate(returnPath || "/", { replace: true });
+    if (loading) return;
+    if (!session) return;
+    const returnPath = resolveReturnPath();
+    if (returnPath) {
+      navigate(returnPath, { replace: true });
+      return;
     }
+    // No explicit destination: land processor users on the processor and
+    // everyone else on the editor. Resolved here rather than by bouncing
+    // through "/" so the app isn't torn down and remounted on the way.
+    let active = true;
+    void resolveLandingPath().then((path) => {
+      if (!active) return;
+      console.debug("[Login] Authenticated, landing on", path);
+      navigate(path, { replace: true });
+    });
+    return () => {
+      active = false;
+    };
   }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
     if (backendProbe.loginDisabled) {
-      // Slight delay to allow state updates before redirecting
-      const id = setTimeout(() => navigate("/", { replace: true }), 0);
+      // Straight to the editor, not "/": with login disabled there is no role
+      // to route on, and "/" would just bounce back here.
+      const id = setTimeout(
+        () => navigate(EDITOR_BASENAME, { replace: true }),
+        0,
+      );
       return () => clearTimeout(id);
     }
   }, [backendProbe.loginDisabled, navigate]);
@@ -220,26 +245,13 @@ export default function Login() {
     }
   }, [backendProbe.status, refetch]);
 
-  // Update hasSSOProviders and showEmailForm when providers or loginMethod change
+  // The email/password form is always shown when username/password auth is
+  // allowed; SSO-only mode hides it.
   useEffect(() => {
-    // In debug mode, check if any providers exist in the config
-    const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
-      ? Object.keys(oauthProviderConfig).length > 0
-      : login.providers.length > 0;
-    setHasSSOProviders(hasProviders);
-
-    // Check if username/password authentication is allowed
     const userPassAllowed =
       login.loginMethod === "all" || login.loginMethod === "normal";
-
-    // Show email form if no SSO providers exist AND username/password is allowed
-    if (!hasProviders && userPassAllowed) {
-      setShowEmailForm(true);
-    } else if (!userPassAllowed) {
-      // Hide email form if username/password auth is not allowed
-      setShowEmailForm(false);
-    }
-  }, [login.providers, login.loginMethod]);
+    setShowEmailForm(userPassAllowed);
+  }, [login.loginMethod]);
 
   // Auto-login to SSO when enabled and only one SSO option exists
   useEffect(() => {
@@ -388,7 +400,7 @@ export default function Login() {
 
   // If login is disabled, short-circuit to home (avoids rendering the form after retry)
   if (loginDisabled) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
   // Show logged in state if authenticated
@@ -425,24 +437,26 @@ export default function Login() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
             )}
           </p>
-          <button
+          <Button
             type="button"
             onClick={handleRetry}
             className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
             style={{ width: "fit-content" }}
           >
             {t("backendStartup.retry", "Retry")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -465,10 +479,12 @@ export default function Login() {
               style={{
                 padding: "1rem",
                 marginBottom: "1rem",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--c-success) 10%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "#16a34a",
+                color: "var(--color-green-dark)",
               }}
             >
               <p
@@ -483,73 +499,9 @@ export default function Login() {
             </div>
           ) : undefined
         }
-        beforeEmailForm={
-          hasSSOProviders && !showEmailForm && isUserPassAllowed ? (
-            <div className="auth-section">
-              <button
-                type="button"
-                onClick={() => setShowEmailForm(true)}
-                disabled={login.isSubmitting}
-                className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-              >
-                {t("login.useEmailInstead", "Login with email")}
-              </button>
-            </div>
-          ) : undefined
-        }
         footer={
           isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
-            <Alert color="blue" variant="light" radius="md" mt="xl">
-              <Stack gap="xs" align="center">
-                <Text
-                  size="sm"
-                  fw={600}
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  {t("login.defaultCredentials", "Default Login Credentials")}
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
-                  >
-                    {t("login.username", "Username")}:
-                  </Text>{" "}
-                  admin
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
-                  >
-                    {t("login.password", "Password")}:
-                  </Text>{" "}
-                  stirling
-                </Text>
-                <Text
-                  size="xs"
-                  ta="center"
-                  mt="xs"
-                  style={{ color: "var(--text-always-dark-muted)" }}
-                >
-                  {t(
-                    "login.changePasswordWarning",
-                    "Please change your password after logging in for the first time",
-                  )}
-                </Text>
-              </Stack>
-            </Alert>
+            <AuthDefaultCredentials />
           ) : undefined
         }
       />

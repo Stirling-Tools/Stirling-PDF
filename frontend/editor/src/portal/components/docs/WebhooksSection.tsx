@@ -25,7 +25,7 @@ export function WebhooksSection() {
   }
 }`}
       />
-      <Card className="portal-docs__callout" accent="amber" padding="loose">
+      <Card className="portal-docs__callout" accent="warning" padding="loose">
         {t("portal.docs.webhooks.callout.beforeSignature")}{" "}
         <code>Stirling-Signature</code>{" "}
         {t("portal.docs.webhooks.callout.beforeHelper")}{" "}

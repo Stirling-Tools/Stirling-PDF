@@ -1,10 +1,21 @@
 import { apiClient } from "@portal/api/http";
-import type {
-  Notification,
-  NotificationCategory,
-} from "@portal/mocks/notifications";
 
-export type { Notification, NotificationCategory };
+export type NotificationCategory =
+  | "pipeline"
+  | "deploy"
+  | "billing"
+  | "audit"
+  | "agent"
+  | "doc";
+
+export interface Notification {
+  id: string;
+  category: NotificationCategory;
+  title: string;
+  description: string;
+  /** Relative-time string. */
+  time: string;
+}
 
 /** GET /v1/notifications */
 export async function fetchNotifications(): Promise<Notification[]> {

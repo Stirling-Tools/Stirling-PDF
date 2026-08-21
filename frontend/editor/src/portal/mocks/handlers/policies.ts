@@ -1,10 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
-import {
-  seedPolicies,
-  seedPolicyRuns,
-  type WirePolicy,
-} from "@portal/mocks/policies";
-import type { PolicyRunView } from "@app/policies/types";
+import { seedPolicies, seedPolicyRuns } from "@portal/mocks/policies";
+import type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 /**
  * The portal exercises the REAL policy API base — `/api/v1/policies`, NOT the
@@ -18,7 +14,7 @@ import type { PolicyRunView } from "@app/policies/types";
  * - DELETE /api/v1/policies/:id → 204
  *
  * The decorated catalogue (summary, category grouping, stats) is assembled
- * client-side in api/policies.ts#fetchPolicies(), mirroring the real backend.
+ * client-side in api/policies.ts#assemblePolicies(), mirroring the real backend.
  */
 
 let store: WirePolicy[] = seedPolicies();

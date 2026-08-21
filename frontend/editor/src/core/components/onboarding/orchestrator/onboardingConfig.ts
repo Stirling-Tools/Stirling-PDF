@@ -1,6 +1,7 @@
 export type OnboardingStepId =
   | "first-login"
   | "welcome"
+  | "processor-intro"
   | "desktop-install"
   | "security-check"
   | "admin-overview"
@@ -15,7 +16,8 @@ export type OnboardingStepType = "modal-slide" | "tool-prompt";
 export interface OnboardingRuntimeState {
   selectedRole: "admin" | "user" | null;
   tourRequested: boolean;
-  tourType: "admin" | "tools" | "whatsnew";
+  // Open key into the tour registry (see tourRegistry.ts).
+  tourType: string;
   isDesktopApp: boolean;
   desktopSlideEnabled: boolean;
   analyticsNotConfigured: boolean;
@@ -44,6 +46,7 @@ export interface OnboardingStep {
   slideId?:
     | "first-login"
     | "welcome"
+    | "processor-intro"
     | "desktop-install"
     | "security-check"
     | "admin-overview"
@@ -89,6 +92,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     condition: (ctx) => !ctx.isDesktopApp,
   },
   {
+    id: "processor-intro",
+    type: "modal-slide",
+    slideId: "processor-intro",
+    // Admins can manage policies in the portal/processor; regular users can't.
+    condition: (ctx) => ctx.effectiveIsAdmin,
+  },
+  {
     id: "admin-overview",
     type: "modal-slide",
     slideId: "admin-overview",
@@ -99,17 +109,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: "modal-slide",
     slideId: "desktop-install",
     condition: (ctx) => !ctx.isDesktopApp && ctx.desktopSlideEnabled,
-  },
-  {
-    id: "security-check",
-    type: "modal-slide",
-    slideId: "security-check",
-    condition: () => false,
-  },
-  {
-    id: "tool-layout",
-    type: "tool-prompt",
-    condition: () => false,
   },
   {
     id: "tour-overview",
