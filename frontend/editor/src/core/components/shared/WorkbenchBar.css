@@ -107,12 +107,17 @@
   justify-content: center;
   height: 38px;
   transform: translateX(var(--workbench-bar-search-offset, 0px));
+  /* The slot spans the whole centre and is shifted by a transform, so its empty
+     flanks can sit over the view switcher or the globals cluster and swallow
+     their clicks. Only the pill itself takes pointer events. */
+  pointer-events: none;
 }
 
 .workbench-bar-search .super-search {
   flex: 0 1 24rem;
   width: min(100%, 24rem);
   max-width: 24rem;
+  pointer-events: auto;
 }
 
 .workbench-bar-search .super-search input {

@@ -54,7 +54,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actions: navActions } = useNavigationActions();
   const { workbench: currentWorkbench, selectedTool } = useNavigationState();
   const isMultiTool =
-    currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+    currentWorkbench === "multiTool" && selectedTool === "multiTool";
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
