@@ -35,7 +35,9 @@ export function isAuthRoute(pathname: string): boolean {
 }
 
 /**
- * Check if pathname is home route
+ * Check if pathname is home route. Only "/" - the editor's own URL is a real
+ * destination, so a signed-out visit there bounces to /login carrying a return
+ * path, the same as any other non-home route.
  */
 export function isHomeRoute(pathname: string): boolean {
   return normalizePath(pathname) === "/";

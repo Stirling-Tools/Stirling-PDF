@@ -1,25 +1,38 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@app/ui";
-import { formatMinor, MeterBar, meterState } from "@app/billing";
+import { formatMinor, MeterBar, remainingMeter } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
+import type { LocalUsage } from "@portal/api/link";
 
 interface Props {
   /** A linked-free wallet. */
   wallet: Wallet;
+  /** Instance-local usage not yet synced to SaaS; folded into "used" so the trial meter reflects work since the last sync. */
+  unsynced?: LocalUsage | null;
   /** Optional top-right action (e.g. "Switch on the Processor"). */
   action?: ReactNode;
 }
 
 /**
- * The free Processor-trial meter — "X / N free PDFs used" against the one-time
- * grant. Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
+ * The free Processor-trial meter — "X of N free PDFs left" against the one-time
+ * grant, with what has been used alongside as the status badge. The bar shows what
+ * is left, so it drains towards empty as the grant is spent.
+ * Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
  * cloud plan page). The subscribed spend-vs-cap meter is a separate surface
  * ({@code SpendLimitCard}); this card is only the free face.
+ *
+ * <p>Locally-accrued usage SaaS hasn't billed yet ({@code unsynced}) is folded
+ * into the used figure + remaining count so the trial depletes in step with the
+ * gate — which now also blocks against the pending local delta — instead of only
+ * moving after a daily sync.
  */
-export function WalletMeter({ wallet, action }: Props) {
+export function WalletMeter({ wallet, unsynced, action }: Props) {
   const { t } = useTranslation();
-  const { state, pct } = meterState(wallet.billableUsed, wallet.freeAllowance);
+  const pending = unsynced?.totalUnsyncedUnits ?? 0;
+  const used = wallet.billableUsed + pending;
+  const remaining = Math.max(0, wallet.freeRemaining - pending);
+  const { state, pct } = remainingMeter(remaining, wallet.freeAllowance);
   const rate =
     wallet.pricePerDocMinor != null && wallet.pricePerDocMinor > 0
       ? wallet.pricePerDocMinor
@@ -65,10 +78,14 @@ export function WalletMeter({ wallet, action }: Props) {
         <MeterBar
           state={state}
           pct={pct}
-          figure={wallet.billableUsed.toLocaleString()}
+          barLabel={t(
+            "portal.billing.walletMeter.barAria",
+            "Free PDFs remaining",
+          )}
+          figure={remaining.toLocaleString()}
           capSuffix={t(
             "portal.billing.walletMeter.capSuffix",
-            "of {{allowance}} free PDFs used",
+            "of {{allowance}} free PDFs left",
             {
               count: wallet.freeAllowance,
               allowance: wallet.freeAllowance.toLocaleString(),
@@ -76,11 +93,8 @@ export function WalletMeter({ wallet, action }: Props) {
           )}
           statusLabel={t(
             "portal.billing.walletMeter.statusLabel",
-            "{{remaining}} left",
-            {
-              count: wallet.freeRemaining,
-              remaining: wallet.freeRemaining.toLocaleString(),
-            },
+            "{{used}} used",
+            { count: used, used: used.toLocaleString() },
           )}
         />
       </div>

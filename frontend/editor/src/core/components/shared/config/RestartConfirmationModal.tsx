@@ -1,4 +1,5 @@
-import { Modal, Text, Group, Button, Stack } from "@mantine/core";
+import { Modal, Text, Group, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -48,14 +49,13 @@ export default function RestartConfirmationModal({
 
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="default"
+            variant="secondary"
             leftSection={<ScheduleIcon style={{ fontSize: 16 }} />}
             onClick={onClose}
           >
             {t("admin.settings.restart.later", "Restart Later")}
           </Button>
           <Button
-            color="blue"
             leftSection={<RefreshIcon style={{ fontSize: 16 }} />}
             onClick={onRestart}
           >

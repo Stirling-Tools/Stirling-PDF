@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from "react";
-import { Box, Button, Stack } from "@mantine/core";
+import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { useToolSections } from "@app/hooks/useToolSections";
@@ -33,10 +34,10 @@ const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
 const HEADER_TEXT_STYLE: React.CSSProperties = {
   fontSize: "0.68rem",
   fontWeight: 600,
-  padding: "1rem 0 0.35rem 0.5rem",
+  padding: "0.25rem 0 0.35rem 0.5rem",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--text-muted)",
+  color: "var(--c-text-subtle)",
 };
 const SCROLLABLE_STYLE: React.CSSProperties = {
   flex: 1,
@@ -49,7 +50,7 @@ const SCROLLABLE_STYLE: React.CSSProperties = {
 const CONTAINER_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  background: "var(--bg-toolbar)",
+  background: "var(--c-surface)",
 };
 const toTitleCase = (s: string) =>
   s.replace(
@@ -182,7 +183,7 @@ const ToolPicker = ({
             )}
             {onShowAllTools && (
               <Button
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
                 fullWidth
                 onClick={onShowAllTools}
@@ -196,7 +197,7 @@ const ToolPicker = ({
         ) : (
           <>
             {/* All-tools view: favourites + recommended + all subcategories. */}
-            <Stack p="sm" gap="xs">
+            <Stack px="sm" pb="sm" pt={4} gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
                   <div style={HEADER_TEXT_STYLE}>

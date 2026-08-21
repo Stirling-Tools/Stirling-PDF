@@ -1,21 +1,10 @@
-/** Mock notifications for the header dropdown. */
+/**
+ * Notification fixtures for the header dropdown. Types live in
+ * api/notifications.ts (the backend contract); this module only builds fake
+ * data for Storybook and tests.
+ */
 
-export type NotificationCategory =
-  | "pipeline"
-  | "deploy"
-  | "billing"
-  | "audit"
-  | "agent"
-  | "doc";
-
-export interface Notification {
-  id: string;
-  category: NotificationCategory;
-  title: string;
-  description: string;
-  /** Relative-time string. */
-  time: string;
-}
+import type { Notification } from "@portal/api/notifications";
 
 export const NOTIFICATIONS: Notification[] = [
   {

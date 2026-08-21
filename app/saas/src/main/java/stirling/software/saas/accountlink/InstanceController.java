@@ -1,5 +1,8 @@
 package stirling.software.saas.accountlink;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -9,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,11 +20,16 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
+import stirling.software.saas.payg.instance.InstanceUsageIngestService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
+import stirling.software.saas.payg.policy.PricingPolicy;
+import stirling.software.saas.payg.policy.PricingPolicyService;
 
 /**
  * Instance-facing surface (combined-billing "Mode A"), authenticated by the <b>device
@@ -46,14 +55,23 @@ public class InstanceController {
     private final EntitlementService entitlementService;
     private final TeamBillingService billingService;
     private final AccountLinkService accountLinkService;
+    private final PricingPolicyService pricingPolicyService;
+    private final InstanceUsageIngestService usageIngestService;
+    private final LinkedInstanceRepository linkedInstanceRepository;
 
     public InstanceController(
             EntitlementService entitlementService,
             TeamBillingService billingService,
-            AccountLinkService accountLinkService) {
+            AccountLinkService accountLinkService,
+            PricingPolicyService pricingPolicyService,
+            InstanceUsageIngestService usageIngestService,
+            LinkedInstanceRepository linkedInstanceRepository) {
         this.entitlementService = entitlementService;
         this.billingService = billingService;
         this.accountLinkService = accountLinkService;
+        this.pricingPolicyService = pricingPolicyService;
+        this.usageIngestService = usageIngestService;
+        this.linkedInstanceRepository = linkedInstanceRepository;
     }
 
     public record WhoAmIResponse(Long instanceId, Long teamId) {}
@@ -68,7 +86,13 @@ public class InstanceController {
             long freeRemainingUnits,
             long periodSpendUnits,
             Long periodCapUnits,
-            String state) {}
+            String state,
+            // Metering inputs the instance needs to cost + bucket its own usage (Phase 2). The
+            // instance computes units locally with this policy and resets its per-period cumulative
+            // counters on the [periodStart, periodEnd) boundary.
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -103,20 +127,96 @@ public class InstanceController {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Long teamId = token.getTeamId();
+        // Drop the cached snapshot first: this low-frequency read gates real-time billable work, so
+        // it must reflect a just-changed subscription/cap at once (the flip is a DB-function write
+        // with no Java event to invalidate on).
+        entitlementService.invalidate(token.getTeamId());
+        return ResponseEntity.ok(buildEntitlement(token.getTeamId()));
+    }
 
+    /** Body for {@code POST /sync}: the instance's cumulative units per category this period. */
+    public record UsageSyncRequest(
+            long syncSeq, LocalDateTime periodStart, CategoryUnits cumulativeUnits) {
+        public record CategoryUnits(long api, long ai, long automation) {}
+    }
+
+    /**
+     * Daily usage sync: the instance reports its cumulative per-category unit totals for the
+     * period; SaaS bills the delta since the last sync (reusing the standard charge path) and
+     * returns the fresh entitlement — so one round-trip both reports usage and refreshes the gate
+     * state.
+     */
+    @PostMapping("/sync")
+    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    @Transactional
+    public ResponseEntity<EntitlementResponse> sync(
+            Authentication auth, @RequestBody UsageSyncRequest req) {
+        if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (req == null || req.periodStart() == null || req.cumulativeUnits() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Long teamId = token.getTeamId();
+        // periodStart is the dedup/regression partition key, so bound a fabricated value to the
+        // snapshot window (current or immediately-prior period, never future).
+        EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
+        LocalDateTime reported = req.periodStart();
+        if (!reported.isBefore(snap.periodEnd())
+                || reported.isBefore(snap.periodStart().minusMonths(1))) {
+            log.warn(
+                    "Instance sync for team {} reported implausible periodStart {} (authoritative"
+                            + " {}..{}); rejecting.",
+                    teamId,
+                    reported,
+                    snap.periodStart(),
+                    snap.periodEnd());
+            return ResponseEntity.badRequest().build();
+        }
+        // Attribute the charge to the admin who linked the instance (the device credential carries
+        // no user). Null is tolerated by the ingest service (it skips + retries next sync).
+        Long actorUserId =
+                linkedInstanceRepository
+                        .findById(token.getInstanceId())
+                        .map(LinkedInstance::getCreatedByUserId)
+                        .orElse(null);
+        UsageSyncRequest.CategoryUnits c = req.cumulativeUnits();
+        usageIngestService.ingest(
+                teamId,
+                actorUserId,
+                req.syncSeq(),
+                req.periodStart(),
+                Map.of(
+                        BillingCategory.API, c.api(),
+                        BillingCategory.AI, c.ai(),
+                        BillingCategory.AUTOMATION, c.automation()));
+        // Drop the cache so the buildEntitlement below (and the portal's next read) reflect the
+        // just-charged delta + moved free-grant balance now, not after the TTL.
+        entitlementService.invalidate(teamId);
+        return ResponseEntity.ok(buildEntitlement(teamId));
+    }
+
+    /** The entitlement view shared by {@code GET /entitlement} and the {@code /sync} response. */
+    private EntitlementResponse buildEntitlement(Long teamId) {
         // Same composition the FE wallet uses: billing facts (subscription, free pool) from
-        // TeamBillingService, period spend/cap + state from the entitlement snapshot.
+        // TeamBillingService, period spend/cap + state from the entitlement snapshot, plus the
+        // unit-calc policy + period the instance needs to meter locally.
         TeamBillingContext billing = billingService.forTeam(teamId);
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
-
-        return ResponseEntity.ok(
-                new EntitlementResponse(
-                        billing.subscribed(),
-                        billing.freeRemainingUnits(),
-                        snap.periodSpendUnits(),
-                        snap.periodCapUnits(),
-                        coarseState(snap.state())));
+        PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
+        return new EntitlementResponse(
+                billing.subscribed(),
+                billing.freeRemainingUnits(),
+                snap.periodSpendUnits(),
+                snap.periodCapUnits(),
+                coarseState(snap.state()),
+                new UnitCalcPolicy(
+                        policy.getDocPagesPerUnit(),
+                        policy.getDocBytesPerUnit(),
+                        policy.getMinChargeUnits(),
+                        policy.getFileUnitCap()),
+                snap.periodStart(),
+                snap.periodEnd());
     }
 
     /**

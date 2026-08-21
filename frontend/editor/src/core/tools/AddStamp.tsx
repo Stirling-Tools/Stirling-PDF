@@ -126,7 +126,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 },
               ]}
               disabled={endpointLoading}
-              buttonClassName={styles.modeToggleButton}
               textClassName={styles.modeToggleButtonText}
             />
           )}

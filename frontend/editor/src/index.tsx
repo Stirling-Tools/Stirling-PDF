@@ -3,9 +3,12 @@
 // (Edge / Google Translate / extensions) from crashing the app via
 // parent-mismatch DOMExceptions. See the module for details.
 import "@app/utils/patchDomForTranslators";
+// WebKit is missing several APIs the app assumes (ReadableStream async
+// iteration, which pdf.js needs for all text extraction; requestIdleCallback).
+import "@app/utils/engineShims";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "../vite-env.d.ts"; // eslint-disable-line no-restricted-imports -- Outside app paths
+import "../vite-env.d.ts"; // oxlint-disable-line no-restricted-imports -- Outside app paths
 import "@app/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -13,20 +16,16 @@ import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
 import "@app/i18n"; // Initialize i18next
-import posthog from "posthog-js";
-import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
+import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
+applyDevWorktreeLabel();
+
 if (typeof window !== "undefined") {
-  const scheduleCompilation = () => {
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
-    } else {
-      setTimeout(startEagerWasmCompilation, 1000);
-    }
-  };
+  const scheduleCompilation = () =>
+    requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
 
   if (document.readyState === "complete") {
     scheduleCompilation();
@@ -34,33 +33,6 @@ if (typeof window !== "undefined") {
     window.addEventListener("load", scheduleCompilation);
   }
 }
-
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-  defaults: "2025-05-24",
-  capture_exceptions: true, // This enables capturing exceptions using Error Tracking, set to false if you don't want this
-  debug: false,
-  opt_out_capturing_by_default: true, // Opt-out by default, controlled by cookie consent
-  persistence: "memory", // No cookies/localStorage written until user opts in
-  cross_subdomain_cookie: false,
-});
-
-function updatePosthogConsent() {
-  if (!posthog.__loaded) return;
-  const optIn =
-    window.CookieConsent?.acceptedService?.("posthog", "analytics") || false;
-  if (optIn) {
-    posthog.set_config({ persistence: "localStorage+cookie" });
-    posthog.opt_in_capturing();
-  } else {
-    posthog.opt_out_capturing();
-    posthog.set_config({ persistence: "memory" });
-  }
-  console.log("Updated PostHog consent: ", optIn ? "opted in" : "opted out");
-}
-
-window.addEventListener("cc:onConsent", updatePosthogConsent);
-window.addEventListener("cc:onChange", updatePosthogConsent);
 
 const container = document.getElementById("root");
 if (!container) {
@@ -71,10 +43,8 @@ const root = ReactDOM.createRoot(container); // Finds the root DOM element
 root.render(
   <React.StrictMode>
     <ColorSchemeScript />
-    <PostHogProvider client={posthog}>
-      <BrowserRouter basename={BASE_PATH}>
-        <App />
-      </BrowserRouter>
-    </PostHogProvider>
+    <BrowserRouter basename={BASE_PATH}>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>,
 );

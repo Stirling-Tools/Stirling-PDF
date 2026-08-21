@@ -207,15 +207,11 @@ public class ApplicationProperties {
     @Data
     public static class Policies {
         /**
-         * Master switch for the policy + sources subsystem (the PAYG-metered automation surface).
-         */
-        private boolean enabled = false;
-
-        /**
          * Absolute directories that policy folder input sources and output sinks may read from or
-         * write to. Empty (the default) disables folder access entirely, so a policy can never be
-         * pointed at an arbitrary server path. Stirling's own config directory is always
-         * off-limits, and folder access is always disabled in SaaS mode regardless of this list.
+         * write to. Empty (the default) disables folder access except to implicitly defined
+         * folders, such as server storage folders (if enabled) and the pipeline watched folders.
+         * Stirling's own config directory is always off-limits, and folder access is always
+         * disabled in SaaS mode regardless of this list.
          */
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
 
@@ -246,6 +242,52 @@ public class ApplicationProperties {
          * and paused runs are kept regardless of age.
          */
         private int runExpiryMinutes = 30;
+
+        /**
+         * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
+         * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
+         * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
+         * in-network object store.
+         */
+        private boolean allowPrivateS3Endpoints = false;
+
+        /**
+         * Whether a network source's host (SFTP, FTP, or SMB) may resolve to a loopback,
+         * link-local, or private address. Off by default so a connection cannot be pointed at
+         * internal services; enable for an on-network file server (e.g. an internal SFTP drop or a
+         * Samba share).
+         */
+        private boolean allowPrivateNetworkSources = false;
+
+        /**
+         * Hostnames (exact, case-insensitive) that a network source may use even when they resolve
+         * to a private or local address and {@code allowPrivateNetworkSources} is off. Lets shared
+         * infra allow one named on-prem file server without opening every internal host.
+         */
+        private List<String> allowedPrivateNetworkHosts = new java.util.ArrayList<>();
+
+        /**
+         * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
+         * link-local, or private address. Off by default: unlike S3 connections, any user may
+         * create one of these, so without this gate a user could point a connection at the cloud
+         * metadata address and have the server fetch it for them. Enable only when integrations
+         * genuinely live inside the network (e.g. an on-prem ConsignO or an internal API gateway).
+         */
+        private boolean allowPrivateApiEndpoints = false;
+
+        /**
+         * Whether administrators may define their own API integrations - a free-form base URL,
+         * path, body and headers - as opposed to only using the built-in vendor presets (Purview,
+         * ConsignO, S3). On by default, and admin-only regardless: a custom integration can point
+         * the server at any host, so it is authoring power, not self-serve.
+         *
+         * <p>Turning this off stops new custom integrations being created or edited. Ones that
+         * already exist keep running, because a policy that silently stopped calling out would be a
+         * worse surprise than one that keeps working; disable the connection itself to stop it.
+         */
+        private boolean allowCustomApiIntegrations = true;
+
+        private long webhookMaxBytes = 104857600L;
     }
 
     @Data
@@ -300,6 +342,102 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+
+        /** Timeout (seconds) for the SSE stream held open by long-running orchestrator runs. */
+        private int streamTimeoutSeconds = 1800;
+
+        /**
+         * Whether the processor pushes settings-derived AI config to the engine on startup/save.
+         * Pin false for env-driven deployments (SaaS) to keep the engine env-controlled.
+         */
+        private boolean pushConfigToEngine = true;
+
+        /** Model + provider selection, forwarded to the engine per-request. */
+        private Models models = new Models();
+
+        /** Retrieval-augmented-generation (RAG) knobs, forwarded to the engine per-request. */
+        private Rag rag = new Rag();
+
+        /** Request size / cost guardrails. */
+        private Limits limits = new Limits();
+
+        /** Per-capability on/off switches so an admin can disable individual AI tools. */
+        private Features features = new Features();
+
+        @Data
+        public static class Models {
+            /** Provider driving the model strings: 'anthropic', 'openai', 'ollama', or 'custom'. */
+            private String provider = "anthropic";
+
+            /** High-quality tier model name (without provider prefix), e.g. 'claude-haiku-4-5'. */
+            private String smartModel = "claude-haiku-4-5";
+
+            /** Cheap/fast tier model name (without provider prefix). */
+            private String fastModel = "claude-haiku-4-5";
+
+            private int smartMaxTokens = 8192;
+            private int fastMaxTokens = 2048;
+
+            /**
+             * API key for the selected provider (secret; masked). Empty means the engine uses its
+             * own env credential (e.g. ANTHROPIC_API_KEY).
+             */
+            private String apiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' providers (e.g.
+             * http://ollama:11434/v1). Ignored for anthropic/openai. SSRF-sensitive - admin only.
+             */
+            private String baseUrl = "";
+        }
+
+        @Data
+        public static class Rag {
+            /**
+             * Embedding provider: 'voyageai', 'openai', 'ollama', or 'custom' (OpenAI-compatible).
+             */
+            private String embeddingProvider = "voyageai";
+
+            /** Embedding model name (without provider prefix), e.g. 'voyage-4'. */
+            private String embeddingModel = "voyage-4";
+
+            /**
+             * Secret API key for the embedding provider; masked + env-overridable like
+             * models.apiKey.
+             */
+            private String embeddingApiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' embedding providers (e.g.
+             * http://ollama:11434/v1). Ignored for voyageai/openai. SSRF-sensitive - admin only.
+             */
+            private String embeddingBaseUrl = "";
+
+            /** How many chunks retrieval returns per search. */
+            private int topK = 20;
+
+            /** Per-run cap on knowledge-search tool calls before the agent must answer. */
+            private int maxSearches = 5;
+        }
+
+        @Data
+        public static class Limits {
+            private int maxPages = 200;
+            private int maxCharacters = 200000;
+
+            /** Process-wide cap on concurrent model API calls (engine restart to apply). */
+            private int modelMaxConcurrency = 32;
+        }
+
+        @Data
+        public static class Features {
+            private boolean chat = true;
+            private boolean documentQuestions = true;
+            private boolean createPdf = true;
+            private boolean mathAuditor = true;
+            private boolean pdfComment = true;
+            private boolean classify = true;
+        }
     }
 
     /**
@@ -908,6 +1046,8 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
 
@@ -953,6 +1093,27 @@ public class ApplicationProperties {
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
         private Signing signing = new Signing();
+        private Encryption encryption = new Encryption();
+
+        /**
+         * Encryption at rest for stored files (Pro/Enterprise). Enabling encrypts new writes;
+         * disabling later only stops encrypting new writes — existing encrypted files keep
+         * decrypting as long as the key material is present. The master key is resolved like the
+         * credential key: {@code stirling.security.fileEncryptionKey} property, {@code
+         * STIRLING_FILE_ENCRYPTION_KEY} env var, or an auto-generated {@code file-encryption.key}
+         * in the config directory.
+         */
+        @Data
+        public static class Encryption {
+            private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
+        }
 
         @Data
         public static class Local {
@@ -1155,7 +1316,7 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
-        private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
+        private String logoStyle = "modern"; // Options: "modern" (default) or "classic"
         // Options: "sidebar" (default) or "fullscreen"
         private String defaultToolPanelMode = "sidebar";
         // Options: "tools" (default), "read", or "automate"
@@ -1170,10 +1331,10 @@ public class ApplicationProperties {
 
         public String getLogoStyle() {
             // Validate and return either "modern" or "classic"
-            if ("modern".equalsIgnoreCase(logoStyle)) {
-                return "modern";
+            if ("classic".equalsIgnoreCase(logoStyle)) {
+                return "classic";
             }
-            return "classic"; // default
+            return "modern"; // default
         }
 
         public String getDefaultToolPanelMode() {

@@ -13,7 +13,7 @@ const Overview: React.FC = () => {
 
     return (
       <Stack gap="xs" mb="md">
-        <Text fw={600} size="md" c="blue">
+        <Text fw={600} size="md" c="var(--c-accent-text)">
           {title}
         </Text>
         <Stack gap="xs" pl="md">

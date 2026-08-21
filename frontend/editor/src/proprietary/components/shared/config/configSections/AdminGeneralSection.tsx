@@ -12,9 +12,9 @@ import {
   Group,
   MultiSelect,
   Badge,
-  SegmentedControl,
   Select,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -376,8 +376,8 @@ export default function AdminGeneralSection() {
   // Show the server setting when loaded (for admin config), otherwise show user's preference
   // Note: User's preference in localStorage is separate and takes precedence in the app via useLogoVariant hook
   const logoStyleValue = loginEnabled
-    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "classic")
-    : (preferences.logoVariant ?? "classic");
+    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "modern")
+    : (preferences.logoVariant ?? "modern");
   const configuredDefaultStartupView = settings.ui?.defaultStartupView;
   const defaultToolPanelModeValue: ToolPanelMode =
     settings.ui?.defaultToolPanelMode === "fullscreen"
@@ -390,7 +390,7 @@ export default function AdminGeneralSection() {
       : "tools";
 
   const handleLogoStyleChange = (value: string) => {
-    const nextValue = value === "modern" ? "modern" : "classic";
+    const nextValue = value === "classic" ? "classic" : "modern";
 
     // Only update local settings state - don't update the actual preference until save
     // When login is disabled, update preference immediately since there's no server to save to
@@ -498,7 +498,7 @@ export default function AdminGeneralSection() {
             </div>
 
             <div>
-              <Text size="sm" fw={500} mb={4}>
+              <Text component="div" size="sm" fw={500} mb={4}>
                 <Group gap="xs">
                   <span>
                     {t("admin.settings.general.logoStyle.label", "Logo Style")}
@@ -515,7 +515,7 @@ export default function AdminGeneralSection() {
               <SegmentedControl
                 value={logoStyleValue}
                 onChange={handleLogoStyleChange}
-                data={[
+                options={[
                   {
                     value: "classic",
                     label: (

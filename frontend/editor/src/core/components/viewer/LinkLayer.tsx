@@ -17,6 +17,10 @@ import {
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
 import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -206,8 +210,8 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         onMouseLeave={onMouseLeave}
       >
         {/* Delete */}
-        <button
-          type="button"
+        <ActionIcon
+          variant="tertiary"
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
           onClick={(e) => {
             e.stopPropagation();
@@ -217,13 +221,12 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           title={t("viewer.link.delete", "Delete link")}
         >
           <TrashIcon />
-        </button>
-
+        </ActionIcon>
         <span className="pdf-link-toolbar-sep" />
 
         {/* Navigate / Open */}
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
           onClick={(e) => {
             e.stopPropagation();
@@ -234,7 +237,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         >
           {internal ? <PageIcon /> : <ExternalLinkIcon />}
           <span className="pdf-link-toolbar-label">{label}</span>
-        </button>
+        </Button>
       </div>
     );
   },
@@ -401,19 +404,11 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
             behavior: "smooth",
           });
         } else if (action.type === PdfActionType.URI) {
-          const uri = action.uri;
-          try {
-            const url = new URL(uri, window.location.href);
-            if (["http:", "https:", "mailto:"].includes(url.protocol)) {
-              window.open(uri, "_blank", "noopener,noreferrer");
-            } else {
-              console.warn(
-                "[LinkLayer] Blocked unsafe URL protocol:",
-                url.protocol,
-              );
-            }
-          } catch {
-            window.open(uri, "_blank", "noopener,noreferrer");
+          const href = getExternalHref(action.uri);
+          if (href) {
+            void openExternalTab(href);
+          } else {
+            console.warn("[LinkLayer] Blocked unsafe URL:", action.uri);
           }
         }
       }
@@ -513,6 +508,11 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           const top = annotationLink.rect.origin.y * scale;
           const width = annotationLink.rect.size.width * scale;
           const height = annotationLink.rect.size.height * scale;
+          const externalHref =
+            annotationLink.target?.type === "action" &&
+            annotationLink.target.action.type === PdfActionType.URI
+              ? getExternalHref(annotationLink.target.action.uri)
+              : null;
 
           return (
             <a
@@ -524,7 +524,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
                   linkElementRefs.current.delete(annotationLink.id);
                 }
               }}
-              href="#"
+              href={externalHref ?? "#"}
+              target={externalHref ? "_blank" : undefined}
+              rel={externalHref ? "noopener noreferrer" : undefined}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

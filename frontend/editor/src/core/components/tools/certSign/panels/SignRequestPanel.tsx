@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Divider } from "@mantine/core";
+import { Stack, Text, Divider } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -272,11 +273,10 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
     <Stack gap="md" p="md">
       <Button
         leftSection={<ArrowBackIcon fontSize="small" />}
-        variant="subtle"
+        variant="tertiary"
         size="sm"
         onClick={onBack}
-        justify="flex-start"
-        px={6}
+        justify="start"
         style={{ alignSelf: "flex-start" }}
       >
         {t("certSign.collab.signRequest.backToList", "Back to Sign Requests")}
@@ -312,14 +312,14 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       )}
 
       <Button
-        variant="light"
+        variant="tertiary"
         leftSection={<FolderOpenIcon fontSize="small" />}
         onClick={handleAddToActiveFiles}
         fullWidth
         style={{
-          backgroundColor: "var(--landing-inner-paper-bg)",
-          color: "var(--btn-open-file)",
-          border: "1px solid var(--landing-inner-paper-border)",
+          backgroundColor: "var(--c-surface-raised)",
+          color: "var(--c-accent-text)",
+          border: "1px solid var(--c-border)",
         }}
       >
         {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}
@@ -328,8 +328,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       {signRequest.myStatus !== "SIGNED" &&
         signRequest.myStatus !== "DECLINED" && (
           <Button
-            variant="light"
-            color="red"
+            variant="tertiary"
+            accent="danger"
             leftSection={<CancelIcon fontSize="small" />}
             onClick={handleDecline}
             loading={declining}

@@ -1,5 +1,6 @@
 import React from "react";
-import { Modal, Stack, Text, Group, Button } from "@mantine/core";
+import { Modal, Stack, Text, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -25,7 +26,7 @@ export default function RefreshModal({
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
     >
       <Stack gap="md">
-        <Text size="sm" c="red">
+        <Text size="sm" c="var(--color-red-dark)">
           {t(
             "config.apiKeys.refreshModal.warning",
             "⚠️ Warning: This action will generate new API keys and make your previous keys invalid.",
@@ -44,10 +45,10 @@ export default function RefreshModal({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button color="red" onClick={onConfirm}>
+          <Button accent="danger" onClick={onConfirm}>
             {t("config.apiKeys.refreshModal.confirmCta", "Refresh Keys")}
           </Button>
         </Group>

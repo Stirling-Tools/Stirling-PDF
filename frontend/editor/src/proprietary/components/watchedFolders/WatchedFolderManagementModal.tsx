@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  Button,
   Stack,
   Group,
   TextInput,
@@ -15,6 +14,7 @@ import {
   Tooltip,
   Modal,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig, AutomationMode } from "@app/types/automation";
@@ -58,7 +58,7 @@ function SectionLabel({ children }: { children: string }) {
       tt="uppercase"
       style={{
         letterSpacing: "0.06em",
-        color: "var(--tool-subcategory-text-color)",
+        color: "var(--c-text-subtle)",
         marginBottom: "0.5rem",
       }}
     >
@@ -330,7 +330,7 @@ export function WatchedFolderManagementModal({
           style={{
             width: "28rem",
             flexShrink: 0,
-            borderRight: "0.0625rem solid var(--border-subtle)",
+            borderRight: "0.0625rem solid var(--c-border-subtle)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -439,7 +439,7 @@ export function WatchedFolderManagementModal({
                       style={{
                         marginLeft: "0.75rem",
                         paddingLeft: "0.75rem",
-                        borderLeft: "2px solid var(--border-subtle)",
+                        borderLeft: "2px solid var(--c-border-subtle)",
                       }}
                     >
                       <Box
@@ -478,8 +478,8 @@ export function WatchedFolderManagementModal({
                             </Text>
                           </Stack>
                           <Button
-                            size="xs"
-                            variant="subtle"
+                            size="sm"
+                            variant="tertiary"
                             onClick={async () => {
                               try {
                                 const handle = await (
@@ -505,9 +505,9 @@ export function WatchedFolderManagementModal({
                           </Button>
                           {inputDirName && (
                             <Button
-                              size="xs"
-                              variant="subtle"
-                              color="red"
+                              size="sm"
+                              variant="tertiary"
+                              accent="danger"
                               onClick={() => {
                                 pendingInputDirHandle.current = null;
                                 setInputDirName(null);
@@ -532,7 +532,7 @@ export function WatchedFolderManagementModal({
                     style={{
                       padding: "0.5rem 0.75rem",
                       borderRadius: "var(--mantine-radius-sm)",
-                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--border-subtle)"}`,
+                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--c-border-subtle)"}`,
                       backgroundColor: outputDirName
                         ? "var(--mantine-color-green-light)"
                         : "transparent",
@@ -575,8 +575,8 @@ export function WatchedFolderManagementModal({
                         zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
                       >
                         <Button
-                          size="xs"
-                          variant="subtle"
+                          size="sm"
+                          variant="tertiary"
                           disabled={!canWriteLocalFolder}
                           onClick={async () => {
                             try {
@@ -601,9 +601,9 @@ export function WatchedFolderManagementModal({
                       </Tooltip>
                       {outputDirName && (
                         <Button
-                          size="xs"
-                          variant="subtle"
-                          color="red"
+                          size="sm"
+                          variant="tertiary"
+                          accent="danger"
                           onClick={() => {
                             pendingDirHandle.current = null;
                             setOutputDirName(null);
@@ -619,18 +619,16 @@ export function WatchedFolderManagementModal({
 
               {/* ── Advanced (collapsible) ── */}
               <div>
-                <button
+                <Button
+                  variant="tertiary"
                   onClick={() => setShowAdvanced((v) => !v)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "0.35rem",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
                     padding: "0.25rem 0",
                     width: "100%",
-                    color: "var(--tool-subcategory-text-color)",
+                    color: "var(--c-text-subtle)",
                     fontSize: "0.7rem",
                     fontWeight: 600,
                     letterSpacing: "0.06em",
@@ -645,7 +643,7 @@ export function WatchedFolderManagementModal({
                     }}
                   />
                   {t("watchedFolders.modal.advanced", "Advanced")}
-                </button>
+                </Button>
 
                 <Collapse in={showAdvanced} transitionDuration={180}>
                   <Stack gap="sm" mt="sm">
@@ -812,7 +810,7 @@ export function WatchedFolderManagementModal({
           <div
             style={{
               padding: "1rem 1.5rem",
-              borderTop: "0.0625rem solid var(--border-subtle)",
+              borderTop: "0.0625rem solid var(--c-border-subtle)",
               flexShrink: 0,
             }}
           >
@@ -828,15 +826,11 @@ export function WatchedFolderManagementModal({
               </Alert>
             )}
             <Group justify="flex-end" gap="sm">
-              <Button
-                variant="subtle"
-                size="sm"
-                color="gray"
-                onClick={handleClose}
-              >
+              <Button variant="tertiary" size="sm" onClick={handleClose}>
                 {t("cancel", "Cancel")}
               </Button>
               <Button
+                variant="primary"
                 size="sm"
                 onClick={handleSave}
                 loading={saving}
@@ -865,7 +859,7 @@ export function WatchedFolderManagementModal({
               {t("watchedFolders.modal.sectionSteps", "Steps")}
             </SectionLabel>
             {automationError && (
-              <Text size="xs" c="red" mt={4}>
+              <Text size="xs" c="var(--color-red-dark)" mt={4}>
                 {automationError}
               </Text>
             )}

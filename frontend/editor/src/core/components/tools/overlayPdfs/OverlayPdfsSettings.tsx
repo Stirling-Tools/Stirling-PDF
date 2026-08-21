@@ -1,21 +1,23 @@
+import { useContext, useRef } from "react";
 import {
   Stack,
   Text,
   Group,
   Select,
-  SegmentedControl,
   NumberInput,
-  Button,
-  ActionIcon,
   Divider,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   type OverlayPdfsParameters,
   type OverlayMode,
 } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import { FilesModalContext } from "@app/contexts/FilesModalContext";
 import styles from "@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
@@ -34,7 +36,12 @@ export default function OverlayPdfsSettings({
   disabled = false,
 }: OverlayPdfsSettingsProps) {
   const { t } = useTranslation();
-  const { openFilesModal } = useFilesModalContext();
+  // Read optionally: the portal pipeline builder mounts no FilesModalProvider.
+  // Present (editor tool + Automate modal) -> keep the workspace file picker;
+  // absent (portal) -> fall back to the plain file input below.
+  const filesModal = useContext(FilesModalContext);
+  // Clears the FilePicker so the same file can be re-selected (Mantine resetRef).
+  const resetOverlayPicker = useRef<() => void>(null);
 
   const handleOverlayFilesChange = (files: File[]) => {
     onParameterChange("overlayFiles", files);
@@ -66,8 +73,8 @@ export default function OverlayPdfsSettings({
   };
 
   const handleOpenOverlayFilesModal = () => {
-    if (disabled) return;
-    openFilesModal({
+    if (disabled || !filesModal) return;
+    filesModal.openFilesModal({
       customHandler: (files: File[]) => {
         handleOverlayFilesChange([
           ...(parameters.overlayFiles || []),
@@ -76,6 +83,17 @@ export default function OverlayPdfsSettings({
       },
     });
   };
+
+  const appendOverlayFiles = (files: File[]) => {
+    if (files.length === 0) return;
+    handleOverlayFilesChange([...(parameters.overlayFiles || []), ...files]);
+    resetOverlayPicker.current?.();
+  };
+
+  const overlayFilesButtonLabel =
+    parameters.overlayFiles?.length > 0
+      ? t("overlay-pdfs.overlayFiles.addMore", "Add more PDFs...")
+      : t("overlay-pdfs.overlayFiles.placeholder", "Choose PDF(s)...");
 
   return (
     <Stack gap="md">
@@ -121,17 +139,18 @@ export default function OverlayPdfsSettings({
           onChange={(v) =>
             onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)
           }
-          data={[
+          options={[
             {
               label: t("overlay-pdfs.position.foreground", "Foreground"),
               value: "0",
+              disabled,
             },
             {
               label: t("overlay-pdfs.position.background", "Background"),
               value: "1",
+              disabled,
             },
           ]}
-          disabled={disabled}
         />
       </Stack>
 
@@ -182,18 +201,30 @@ export default function OverlayPdfsSettings({
         <Text size="sm" fw={500}>
           {t("overlay-pdfs.overlayFiles.label", "Overlay Files")}
         </Text>
-        <Button
-          size="xs"
-          color="blue"
-          onClick={handleOpenOverlayFilesModal}
-          disabled={disabled}
-          leftSection={<LocalIcon icon="add" width="14" height="14" />}
-          fullWidth
-        >
-          {parameters.overlayFiles?.length > 0
-            ? t("overlay-pdfs.overlayFiles.addMore", "Add more PDFs...")
-            : t("overlay-pdfs.overlayFiles.placeholder", "Choose PDF(s)...")}
-        </Button>
+        {filesModal ? (
+          <Button
+            size="sm"
+            onClick={handleOpenOverlayFilesModal}
+            disabled={disabled}
+            leftSection={<LocalIcon icon="add" width="14" height="14" />}
+            fullWidth
+          >
+            {overlayFilesButtonLabel}
+          </Button>
+        ) : (
+          <FilePicker
+            multiple
+            accept="application/pdf"
+            onChange={appendOverlayFiles}
+            resetRef={resetOverlayPicker}
+            size="sm"
+            disabled={disabled}
+            leftSection={<LocalIcon icon="add" width="14" height="14" />}
+            fullWidth
+          >
+            {overlayFilesButtonLabel}
+          </FilePicker>
+        )}
 
         {parameters.overlayFiles?.length > 0 &&
           (() => {
@@ -219,8 +250,8 @@ export default function OverlayPdfsSettings({
                       </Group>
                       <ActionIcon
                         size="sm"
-                        variant="subtle"
-                        color="red"
+                        variant="tertiary"
+                        accent="danger"
                         className={styles.removeButton}
                         onClick={() => {
                           const next = (parameters.overlayFiles || []).filter(
@@ -229,6 +260,7 @@ export default function OverlayPdfsSettings({
                           handleOverlayFilesChange(next);
                         }}
                         disabled={disabled}
+                        aria-label={t("remove", "Remove")}
                       >
                         <LocalIcon
                           icon="close-rounded"

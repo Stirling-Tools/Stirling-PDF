@@ -16,6 +16,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
@@ -56,9 +57,10 @@ class SourceOverviewServiceTest {
 
         SourcesResponse response = service.overview();
 
-        assertEquals(3, response.sources().size());
-        // Sorted most-referenced first, so the shared source A leads.
-        assertEquals(a.id(), response.sources().get(0).id());
+        assertEquals(4, response.sources().size());
+        // The built-in editor is pinned first; persisted sources follow, most-referenced leading.
+        assertEquals(EditorSource.ID, response.sources().get(0).id());
+        assertEquals(a.id(), response.sources().get(1).id());
 
         SourceView av = find(response, a.id());
         assertEquals(2, av.referenceCount());
@@ -123,11 +125,55 @@ class SourceOverviewServiceTest {
 
         SourcesResponse response = scoped.overview();
 
-        assertEquals(1, response.sources().size());
-        SourceView view = response.sources().get(0);
-        assertEquals(ours.id(), view.id());
+        assertEquals(2, response.sources().size());
+        assertEquals(EditorSource.ID, response.sources().get(0).id());
+        SourceView view = find(response, ours.id());
         assertEquals(1, view.referenceCount());
         assertEquals(List.of(1L, 1L, 0L), response.kpis().stream().map(SourceKpi::value).toList());
+    }
+
+    @Test
+    void theEditorSourceIsAlwaysPresentEvenWithNoConnections() {
+        SourcesResponse response = service.overview();
+
+        assertEquals(1, response.sources().size());
+        SourceView editor = response.sources().get(0);
+        assertEquals(EditorSource.ID, editor.id());
+        assertEquals("editor", editor.type());
+        assertEquals("active", editor.status());
+        assertEquals(0, editor.referenceCount());
+        // KPIs describe configured connections, so the built-in editor is left out of them.
+        assertEquals(List.of(0L, 0L, 0L), response.kpis().stream().map(SourceKpi::value).toList());
+    }
+
+    @Test
+    void theEditorSourceIsUsedByEveryPolicyThatRunsFromIt() {
+        editorPolicy("Redact on upload");
+        editorPolicy("Classify on upload");
+        // A folder-sourced policy does not target the editor, so it must not inflate the count.
+        policyReferencing("Folder sweep", source("Folder", "/f").id());
+
+        SourceView editor = find(service.overview(), EditorSource.ID);
+
+        assertEquals(2, editor.referenceCount());
+        assertTrue(
+                editor.referencingPolicies().stream()
+                        .map(SourceView.PolicyRef::name)
+                        .toList()
+                        .containsAll(List.of("Redact on upload", "Classify on upload")));
+    }
+
+    @Test
+    void theEditorSourceReportsTheTeamsRecordedDocumentThroughput() {
+        // Login disabled, so the team is null and the editor shares the global counter bucket.
+        docCounter.record(EditorSource.counterKey(null), 4);
+        docCounter.record(EditorSource.counterKey(null), 6);
+
+        SourceView editor = find(service.overview(), EditorSource.ID);
+
+        assertEquals(10, editor.docsTotal());
+        assertEquals(10, editor.docs24h());
+        assertEquals(10, editor.docs30d());
     }
 
     @Test
@@ -171,10 +217,24 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
+    }
+
+    /**
+     * A policy that targets the editor: membership rides in its output metadata, not a sourceId.
+     */
+    private void editorPolicy(String name) {
+        policyStore.save(
+                new Policy(
+                        null,
+                        name,
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        new OutputSpec("inline", Map.of("sources", List.of("editor")))));
     }
 
     private void teamPolicy(String name, Long teamId, String... sourceIds) {
@@ -184,8 +244,7 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));

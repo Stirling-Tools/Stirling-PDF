@@ -20,13 +20,13 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripeInvoiceDao;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -105,7 +105,7 @@ public class PaygInvoicesController {
         if (rows.isEmpty()) {
             return ResponseEntity.ok(List.of());
         }
-        Long teamId = rows.get(0).getTeam().getId();
+        Long teamId = rows.getFirst().getTeam().getId();
 
         // No PAYG extension row OR no Stripe customer id → team has never subscribed → no
         // invoices. Empty list, not 404 — the UI distinguishes "no invoices yet" from a

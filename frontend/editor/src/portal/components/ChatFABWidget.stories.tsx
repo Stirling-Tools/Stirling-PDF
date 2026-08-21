@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
+import { Button } from "@app/ui/Button";
 import { ChatFABButton } from "@app/ui/ChatFABButton";
 import { ChatFABWindow } from "@app/ui/ChatFABWindow";
 
@@ -54,26 +55,20 @@ function MockChatContent({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "14px 16px 10px",
-          borderBottom: "1px solid var(--color-border, #e3e8ee)",
+          borderBottom: "1px solid var(--c-border)",
           flexShrink: 0,
         }}
       >
         <span style={{ fontWeight: 600 }}>Stirling</span>
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
+          shape="circle"
           onClick={onClose}
           aria-label="Close chat"
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 4,
-            borderRadius: 6,
-            color: "var(--color-text-4, #64748b)",
-          }}
+          style={{ color: "var(--c-text-subtle)" }}
         >
           ✕
-        </button>
+        </Button>
       </div>
 
       {/* Messages */}
@@ -95,8 +90,8 @@ function MockChatContent({
               maxWidth: "82%",
               background:
                 m.role === "user"
-                  ? "#3b82f6"
-                  : "var(--color-bg-muted, #f3f4f6)",
+                  ? "var(--c-accent-solid)"
+                  : "var(--c-surface-sunken)",
               color: m.role === "user" ? "#fff" : "inherit",
               borderRadius: 10,
               padding: "8px 12px",
@@ -113,17 +108,17 @@ function MockChatContent({
       <div
         style={{
           padding: "10px 12px 14px",
-          borderTop: "1px solid var(--color-border, #e3e8ee)",
+          borderTop: "1px solid var(--c-border)",
           flexShrink: 0,
         }}
       >
         <div
           style={{
-            background: "var(--color-bg-muted, #f3f4f6)",
+            background: "var(--c-surface-sunken)",
             borderRadius: 10,
             padding: "8px 12px",
             fontSize: 13,
-            color: "var(--color-text-4, #64748b)",
+            color: "var(--c-text-subtle)",
           }}
         >
           What do you want to do?
@@ -154,12 +149,14 @@ function ChatFABWidgetDemo({
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "var(--color-bg, #f8f9fb)",
+        background: "var(--c-bg)",
       }}
     >
       {/* FAB button */}
-      <button
-        type="button"
+      <ChatFABButton
+        loading={agentLoading}
+        showTick={hasUnviewedResult && !agentLoading}
+        tabIndex={open ? -1 : 0}
         onClick={() => {
           setOpen(true);
           setHasUnviewedResult(false);
@@ -171,22 +168,13 @@ function ChatFABWidgetDemo({
           right: 16,
           bottom: 16,
           padding: 0,
-          border: "none",
-          background: "none",
-          cursor: "pointer",
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.78)" : "scale(1)",
           transition:
             "opacity 160ms ease, transform 180ms cubic-bezier(0.32, 0.72, 0, 1)",
           pointerEvents: open ? "none" : "auto",
         }}
-      >
-        <ChatFABButton
-          isLoading={agentLoading}
-          showTick={hasUnviewedResult && !agentLoading}
-          tabIndex={open ? -1 : 0}
-        />
-      </button>
+      />
 
       {/* Chat panel */}
       <div
@@ -261,7 +249,9 @@ function ChatFABFullFlowDemo() {
               padding: "4px 10px",
               borderRadius: 6,
               background:
-                step === s ? "#3b82f6" : "var(--color-bg-muted, #f3f4f6)",
+                step === s
+                  ? "var(--c-accent-solid)"
+                  : "var(--c-surface-sunken)",
               color: step === s ? "#fff" : "inherit",
               fontWeight: step === s ? 600 : 400,
             }}
@@ -272,29 +262,21 @@ function ChatFABFullFlowDemo() {
             {s === "open" && "④ Viewed — tick cleared"}
           </div>
         ))}
-        <button
-          type="button"
+        <Button
+          accent="success"
+          size="sm"
           onClick={simulateAgentRun}
           disabled={isLoading || open}
-          style={{
-            marginTop: 4,
-            padding: "6px 12px",
-            borderRadius: 6,
-            border: "none",
-            background: "#22c55e",
-            color: "#fff",
-            cursor: isLoading || open ? "not-allowed" : "pointer",
-            opacity: isLoading || open ? 0.5 : 1,
-            fontSize: 13,
-          }}
+          style={{ marginTop: 4 }}
         >
           Simulate agent run
-        </button>
+        </Button>
       </div>
 
       {/* FAB button */}
-      <button
-        type="button"
+      <ChatFABButton
+        loading={isLoading}
+        showTick={hasUnviewedResult && !isLoading}
         onClick={handleOpen}
         aria-label="Open Stirling AI assistant"
         style={{
@@ -302,21 +284,13 @@ function ChatFABFullFlowDemo() {
           right: 16,
           bottom: 16,
           padding: 0,
-          border: "none",
-          background: "none",
-          cursor: "pointer",
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.78)" : "scale(1)",
           transition:
             "opacity 160ms ease, transform 180ms cubic-bezier(0.32, 0.72, 0, 1)",
           pointerEvents: open ? "none" : "auto",
         }}
-      >
-        <ChatFABButton
-          isLoading={isLoading}
-          showTick={hasUnviewedResult && !isLoading}
-        />
-      </button>
+      />
 
       {/* Chat panel */}
       <div

@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import "@app/auth/ui/auth.css";
 import { useTranslation } from "react-i18next";
-import { Checkbox, TextInput, PasswordInput, Button } from "@mantine/core";
+import { Checkbox, TextInput, PasswordInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
 
 interface SignupFormProps {
@@ -98,8 +99,12 @@ export default function SignupForm({
           />
         </div>
 
+        {/* Collapsed to zero height rather than unmounted so it can animate open,
+            so `inert` is what keeps the field out of the tab order while
+            aria-hidden keeps it off the accessibility tree. */}
         <div
           aria-hidden={!showConfirm}
+          inert={!showConfirm}
           className="auth-confirm"
           style={{
             maxHeight: showConfirm ? 96 : 0,
@@ -159,8 +164,11 @@ export default function SignupForm({
           !confirmPassword ||
           (showTerms && !agree)
         }
-        className="auth-button"
+        className="auth-submit"
         fullWidth
+        size="lg"
+        fontSize="sm"
+        accent="brand"
         loading={isSubmitting}
       >
         {isSubmitting ? t("signup.creatingAccount") : t("signup.signUp")}

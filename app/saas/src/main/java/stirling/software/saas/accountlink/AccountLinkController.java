@@ -20,10 +20,10 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
-import stirling.software.saas.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -152,7 +152,7 @@ public class AccountLinkController {
         if (rows.isEmpty()) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
-        TeamMembership m = rows.get(0);
+        TeamMembership m = rows.getFirst();
         if (m.getRole() != TeamRole.LEADER) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }

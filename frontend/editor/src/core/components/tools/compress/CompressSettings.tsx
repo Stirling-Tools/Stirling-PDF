@@ -6,10 +6,10 @@ import {
   Divider,
   Checkbox,
   Slider,
-  SegmentedControl,
   Tooltip,
   Box,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
@@ -116,6 +116,7 @@ const CompressSettings = ({
               style={{ flex: 1 }}
             />
             <Select
+              aria-label={t("compress.settings.desiredSizeUnit", "Size unit")}
               value={parameters.fileSizeUnit}
               onChange={(value) => {
                 // Prevent deselection - if value is null/undefined, keep the current value
@@ -214,7 +215,9 @@ const CompressSettings = ({
           <Stack
             gap="xs"
             style={{
-              opacity: disabled || imageMagickAvailable === false ? 0.6 : 1,
+              // Dimmed enough to read as inactive, but not so far that the
+              // muted labels inside drop below the 4.5:1 text floor.
+              opacity: disabled || imageMagickAvailable === false ? 0.8 : 1,
             }}
           >
             <Text size="sm" fw={600}>
@@ -244,6 +247,8 @@ const CompressSettings = ({
               }}
               disabled={disabled || imageMagickAvailable === false}
               label={null}
+              // The thumb is a div, so the heading above cannot name it.
+              thumbLabel={t("compress.lineArt.detailLevel", "Detail level")}
               marks={[
                 { value: 1 },
                 { value: 2 },
@@ -258,14 +263,22 @@ const CompressSettings = ({
             </Text>
             <SegmentedControl
               fullWidth
-              disabled={disabled || imageMagickAvailable === false}
-              data={[
-                { value: "1", label: t("compress.lineArt.edgeLow", "Gentle") },
+              options={[
+                {
+                  value: "1",
+                  label: t("compress.lineArt.edgeLow", "Gentle"),
+                  disabled: disabled || imageMagickAvailable === false,
+                },
                 {
                   value: "2",
                   label: t("compress.lineArt.edgeMedium", "Balanced"),
+                  disabled: disabled || imageMagickAvailable === false,
                 },
-                { value: "3", label: t("compress.lineArt.edgeHigh", "Strong") },
+                {
+                  value: "3",
+                  label: t("compress.lineArt.edgeHigh", "Strong"),
+                  disabled: disabled || imageMagickAvailable === false,
+                },
               ]}
               value={parameters.lineArtEdgeLevel.toString()}
               onChange={(value) =>

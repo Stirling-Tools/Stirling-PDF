@@ -1,453 +1,957 @@
-.portal-proc {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem;
-  max-width: 84rem;
-  margin: 0 auto;
-}
-
-/* Page header */
-.portal-proc__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.portal-proc__title {
-  margin: 0;
-  font-size: 1.375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
 .portal-proc__subtitle {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
-/* Eyebrow label shared by the journey header + SE block */
+/* Eyebrow label above a stage panel's heading */
 .portal-proc__eyebrow {
   display: block;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   margin-bottom: 0.25rem;
 }
-
-/* ── Journey card ─────────────────────────────────────────────────────── */
-/* Stacked, border-divided sections: header / stepper / trial / next step. */
-.portal-proc__journey-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border-light);
-  flex-wrap: wrap;
-}
-
-.portal-proc__journey-title {
+.portal-proc__builder-title {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-text-1);
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--c-text);
 }
 
-.portal-proc__journey-sub {
-  margin: 0.25rem 0 0;
-  max-width: 36rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--color-text-4);
-}
-
-.portal-proc__se {
+/* ══ Quote builder — copied from the marketing prototype (tight density) ═════ */
+.portal-qb {
   display: flex;
   flex-direction: column;
-  text-align: right;
+}
+/* No padding or scroll of its own: FlowModal's panel supplies both, and nesting a second scroll
+   container inside a scrolling panel gave the builder two scrollbars. */
+/* This gap is the builder's only vertical rhythm: the blocks inside carry no bottom margins of their
+   own, so spacing cannot double up the way a margin plus a gap did. The top margin is the breathing
+   room under the stepped header, which deliberately has no bottom margin so its host sets this. */
+.portal-qb__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.05rem;
+}
+.portal-qb__intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.portal-qb__intro-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--c-primary-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   flex-shrink: 0;
 }
-
-.portal-proc__se .portal-proc__eyebrow {
-  margin-bottom: 0.25rem;
-}
-
-.portal-proc__se-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-proc__se-email {
-  font-size: 0.75rem;
-  color: var(--color-blue);
-  text-decoration: none;
-}
-
-.portal-proc__se-email:hover {
-  text-decoration: underline;
-}
-
-/* Stepper band */
-.portal-proc__journey-stepper {
-  padding: 1.125rem 1.5rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-proc__steps {
-  display: flex;
-  align-items: flex-start;
-}
-
-.portal-proc__steps--locked {
-  opacity: 0.55;
-  filter: grayscale(0.4);
-  pointer-events: none;
-}
-
-.portal-proc__step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 4rem;
-}
-
-.portal-proc__step-dot {
-  width: 0.875rem;
-  height: 0.875rem;
-  border-radius: 50%;
-  background: var(--color-border-input);
-}
-
-.portal-proc__step--complete .portal-proc__step-dot {
-  background: var(--color-green);
-}
-
-.portal-proc__step--current .portal-proc__step-dot {
-  background: var(--color-purple);
-  box-shadow: 0 0 0 4px var(--color-purple-light);
-}
-
-.portal-proc__step-label {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  color: var(--color-text-5);
-}
-
-.portal-proc__step--complete .portal-proc__step-label {
-  color: var(--color-text-4);
-}
-
-.portal-proc__step--current .portal-proc__step-label {
+.portal-qb__intro-title {
+  font-size: 15px;
   font-weight: 700;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
-
-/* Connector aligns with the 0.875rem dots: (14px − 2px) / 2 = 6px down */
-.portal-proc__step-line {
+.portal-qb__intro-sub {
+  font-size: 12.5px;
+  color: var(--c-text-subtle);
+  margin-top: 1px;
+}
+/* No bottom margin: inside .portal-qb__body the gap spaces these, and inside .portal-qb__row a
+   margin only reserved dead space under the inputs. */
+.portal-qb__field {
+  display: block;
+}
+.portal-qb__field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  margin-bottom: 6px;
+}
+.portal-qb__field input,
+.portal-qb__field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  font-size: 13.5px;
+  border-radius: 8px;
+  border: 1px solid var(--c-border);
+  font-family: inherit;
+  outline: none;
+  background: var(--c-input-bg);
+  color: var(--c-text);
+}
+.portal-qb__req {
+  color: var(--color-red-dark);
+}
+.portal-qb__field[data-invalid] input,
+.portal-qb__field[data-invalid] select {
+  border-color: var(--c-danger);
+}
+.portal-qb__error {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-red-dark);
+}
+.portal-qb__row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.portal-qb__row .portal-qb__field {
   flex: 1;
-  height: 2px;
-  margin: 0.375rem 0.375rem 0;
-  background: var(--color-border-light);
+  min-width: 190px;
 }
-
-.portal-proc__step-line[data-filled="true"] {
-  background: var(--color-green);
+.portal-qb__hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--c-text-subtle);
+  line-height: 1.4;
 }
-
-/* Trial status strip (shown while evaluating) */
-.portal-proc__trial {
+.portal-qb__pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.portal-qb__pills button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text);
+  cursor: pointer;
+}
+.portal-qb__pills button[data-on] {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+.portal-qb__discount {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--color-green-dark);
+}
+.portal-qb__opts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* Short-label options that should sit across one row rather than wrapping 2 + 1. Tighter padding
+   and label size so each caption fits on a single line at three-across. Deliberately no `nowrap`:
+   a longer translation should wrap rather than clip or push the card out of the row. */
+.portal-qb__opts--across .portal-qb__opt {
+  min-width: 0;
+  padding: 11px 12px;
+}
+.portal-qb__opts--across .portal-qb__opt-sub {
+  font-size: 11px;
+  line-height: 1.35;
+}
+.portal-qb__opt {
+  text-align: left;
+  flex: 1;
+  min-width: 150px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-qb__opt[data-on] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
+}
+.portal-qb__opt-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-qb__opt[data-on] .portal-qb__opt-title {
+  color: var(--c-accent-text);
+}
+.portal-qb__opt-sub {
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  line-height: 1.4;
+}
+.portal-qb__addons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.portal-qb__addon {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  cursor: pointer;
+  text-align: left;
+}
+.portal-qb__addon[data-on] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
+}
+.portal-qb__addon-box {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid var(--c-border);
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--color-border-light);
-  background: var(--color-bg-code);
+  justify-content: center;
+  font-size: 12px;
+  color: transparent;
+  background: var(--c-surface);
 }
-
-.portal-proc__trial-title {
-  font-size: 0.8125rem;
+.portal-qb__addon[data-on] .portal-qb__addon-box {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+.portal-qb__addon-title {
+  display: block;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
-
-.portal-proc__trial-dim {
-  font-size: 0.78125rem;
-  color: var(--color-text-5);
+.portal-qb__addon-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--c-text-subtle);
+  margin-top: 1px;
 }
-
-.portal-proc__trial-key {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-input);
-  border-radius: 0.375rem;
-  padding: 0.1875rem 0.5rem;
+.portal-qb__eula {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-sunken);
+  font-size: 12.5px;
+  color: var(--c-text);
+  line-height: 1.5;
+  cursor: pointer;
 }
-
-/* Next-step row: one primary action at a time */
-.portal-proc__next {
+.portal-qb__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 12px;
+  /* Bleeds to the panel's edges by reading the shell's own inset, so changing FlowModal's padding
+     can no longer leave this footer stopping short of them. */
+  margin: 0.85rem calc(-1 * var(--flowmodal-inset))
+    calc(-1 * var(--flowmodal-body-end));
+  padding: 0.8rem var(--flowmodal-inset) 0.9rem;
+  border-top: 1px solid var(--c-border-subtle);
   flex-wrap: wrap;
-  padding: 1rem 1.5rem;
 }
-
-.portal-proc__next-label {
+.portal-qb__running {
+  font-size: 11.5px;
+  color: var(--c-text-subtle);
+}
+.portal-qb__foot-btns {
   display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  font-size: 0.84375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
+  gap: 10px;
 }
-
-.portal-proc__next-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--color-amber);
-  flex-shrink: 0;
+/* Step 4 — the itemised quote paper, on a sunken tray that runs to the panel's edges. No scroll of
+   its own: the dialog body already scrolls, and nesting a second scroller gave the builder two
+   scrollbars. The bleed reads the shell's inset rather than hard-coding a copy of it. */
+.portal-qb__papertray {
+  background: var(--c-surface-sunken);
+  padding: 14px var(--flowmodal-inset);
+  margin: 0 calc(-1 * var(--flowmodal-inset));
 }
-
-.portal-proc__next-dot[data-live="true"] {
-  background: var(--color-green);
-}
-
-/* ── Documents card ───────────────────────────────────────────────────── */
-.portal-proc__docs-head {
-  padding: 1.125rem 1.5rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-proc__docs-title {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-text-1);
-}
-
-.portal-proc__docs-sub {
-  margin: 0.25rem 0 0;
-  font-size: 0.78125rem;
-  color: var(--color-text-5);
-}
-
-.portal-proc__docs-body {
-  padding: 0.375rem 1.5rem 1.125rem;
-}
-
-/* Accordion spacing — the disclosure chrome itself lives in shared Collapsible
-   (.sui-collapsible); here we only space the stacked sections. */
-.portal-proc__docs-body .sui-collapsible {
-  margin-top: 0.875rem;
-}
-
-/* Stage header bits */
-.portal-proc__stage-dot {
-  width: 0.4375rem;
-  height: 0.4375rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.portal-proc__stage-dot[data-state="done"] {
-  background: var(--color-green);
-}
-
-.portal-proc__stage-dot[data-state="current"] {
-  background: var(--color-purple);
-}
-
-.portal-proc__stage-dot[data-state="upcoming"] {
-  background: var(--color-border-input);
-}
-
-.portal-proc__stage-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-text-4);
-}
-
-.portal-proc__stage-label[data-current] {
-  color: var(--color-text-1);
-}
-
-.portal-proc__stage-hint {
-  font-size: 0.71875rem;
-  color: var(--color-text-5);
-}
-
-.portal-proc__stage-count {
-  font-size: 0.6875rem;
-  color: var(--color-text-5);
-}
-
-/* Document lists inside the accordion */
-.portal-proc__doc-list {
-  border-top: 1px solid var(--color-border-light);
-}
-
-.portal-proc__doc-list--boxed {
-  border: 1px solid var(--color-border-light);
-  border-radius: 0.5rem;
+.portal-qb__paper {
   overflow: hidden;
 }
-
-/* Supporting section — extra separation from the stage accordion above it.
-   Scoped to match the general .sui-collapsible spacing rule's specificity. */
-.portal-proc__docs-body .portal-proc__supporting-acc {
-  margin-top: 1.5rem;
-}
-
-.portal-proc__supporting-head {
+.portal-qb__paper-head {
   display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--c-border-subtle);
 }
-
-.portal-proc__supporting-sub {
-  font-size: 0.71875rem;
-  font-weight: 400;
-  line-height: 1.45;
-  color: var(--color-text-5);
+.portal-qb__paper-brand {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--c-text);
 }
-
-.portal-proc__acc-toggle-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-blue);
+.portal-qb__paper-eyebrow {
+  font-size: 11px;
+  color: var(--c-text-subtle);
 }
-
-.portal-proc__supporting-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border-top: 1px solid var(--color-border-light);
-  padding: 0.875rem;
+.portal-qb__paper-meta {
+  text-align: right;
 }
-
-.portal-proc__group-label {
-  font-size: 0.6875rem;
+/* Reads as a link on the document rather than a button in a toolbar: right-aligned under the quote's
+   own metadata, with the row's padding trimmed so it sits tight to the date above it. */
+.portal-qb__paper-download {
+  margin: 0.2rem -0.5rem -0.25rem 0;
+}
+.portal-qb__quote-number {
+  font-size: 12.5px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-5);
-  margin-bottom: 0.5rem;
+  color: var(--c-text);
 }
-
-/* ── Document rows (ledger + supporting) ──────────────────────────────── */
-.portal-proc__doc {
+.portal-qb__paper-meta div:not(.portal-qb__quote-number) {
+  font-size: 11px;
+  color: var(--c-text-subtle);
+}
+.portal-qb__paper-for {
+  padding: 18px 24px 0;
+}
+.portal-qb__paper-company {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-qb__lines {
+  list-style: none;
+  margin: 0;
+  padding: 12px 24px 0;
+}
+.portal-qb__lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.portal-qb__lines li[data-kind="DISCOUNT"] {
+  color: var(--color-green-dark);
+}
+.portal-qb__lines li[data-kind="INCLUDED"] span:last-child {
+  color: var(--c-text-subtle);
+  font-weight: 500;
+}
+.portal-qb__total {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 16px 24px 24px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--c-primary-tint);
+  border: 1px solid var(--c-primary-border);
+}
+.portal-qb__total-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-qb__total-tcv {
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+.portal-qb__total-num {
+  text-align: right;
+}
+.portal-qb__total-num strong {
+  display: block;
+  font-size: 23px;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1;
+}
+.portal-qb__total-num span {
+  font-size: 11px;
+  color: var(--c-text-subtle);
+  margin-top: 3px;
+}
+
+/* ── Deal-status hero (Home, active deal) ─────────────────────────────────── */
+.portal-hero {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  padding: 0.75rem 0.875rem;
-  border-bottom: 1px solid var(--color-border-light);
 }
 
-.portal-proc__doc:last-child {
-  border-bottom: none;
+/* Attached under the editor rail the two read as one card, so the hero drops its standalone frame
+   and lets the footer's top border be the only seam. It keeps the frame on the procurement view,
+   where it stands alone. */
+.portal-editor-hero__footer .portal-hero {
+  border: none;
+  border-radius: 0;
 }
-
-.portal-proc__doc[data-locked] {
-  opacity: 0.6;
+.portal-hero__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
-
-.portal-proc__doc-text {
+.portal-hero__ident {
+  flex: 1;
   min-width: 0;
 }
-
-.portal-proc__doc-name-row {
+.portal-hero__eyebrow {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-subtle);
+  margin-bottom: 0.55rem;
+}
+/* The journey band: one segment per stage, filled through the current one. A progress indicator,
+   so it lives inside the block whose progress it reports and deliberately does not pulse. */
+.portal-hero__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.625rem;
+}
+.portal-hero__bar span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-hover);
+  transition: background 0.3s ease;
+}
+.portal-hero__bar span[data-on] {
+  background: var(--c-primary);
+}
+/* The hero's one-line status: bold stage · what it asks, then Next: … */
+.portal-hero__sentence {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+.portal-hero__sentence strong {
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-hero__sentence-next {
+  color: var(--c-text-subtle);
+}
+.portal-hero__chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.portal-hero__chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  background: var(--c-border-subtle);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+}
+/* One action row: the stage's primary CTA leads, quiet icon actions sit beside it. No dividers. */
+.portal-hero__cta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.portal-hero__icons {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
-
-.portal-proc__doc-name {
-  font-size: 0.84375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
+.portal-hero__iconbtn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
-
-.portal-proc__doc-sub {
-  margin: 0.0625rem 0 0;
-  font-size: 0.71875rem;
-  line-height: 1.4;
-  color: var(--color-text-5);
+.portal-hero__iconbtn:hover {
+  background: var(--c-hover);
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
 }
-
-.portal-proc__doc-actions {
+/* Terminal state: the deal is done, so the row reports rather than asks. */
+.portal-hero__live {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-shrink: 0;
 }
-
-/* ── Locked state ─────────────────────────────────────────────────────── */
-.portal-proc__locked {
+.portal-hero__live-tile {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Holds a CheckIcon, which takes its stroke from `color` and its size from its own prop. */
+  color: var(--color-green-dark);
+  background: var(--c-success-subtle);
+}
+.portal-hero__live-text {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  min-width: 0;
+}
+.portal-hero__live-title {
+  font-size: 0.90625rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-hero__live-sub {
+  font-size: 0.78125rem;
+  color: var(--c-text-subtle);
+  margin-top: 1px;
 }
 
-/* ── Action modal ─────────────────────────────────────────────────────── */
-.portal-proc__modal-body {
-  margin: 0 0 1rem;
+/* ── Procurement takeover: heading type only, the shell is the shared Modal ── */
+.portal-procmodal__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-procmodal__sub {
+  margin: 0.3rem 0 0;
   font-size: 0.875rem;
+  color: var(--c-text-subtle);
+}
+.portal-proc__payment-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.portal-proc__license {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: 0.6rem;
+  background: var(--c-surface-sunken);
+}
+.portal-proc__license-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-text-muted);
+}
+.portal-proc__license-key {
+  display: block;
+  margin-top: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.4rem;
+  background: var(--c-surface-raised);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  word-break: break-all;
+  color: var(--c-text);
+}
+.portal-proc__license-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle, var(--c-text-muted));
+}
+
+/* Hero next-step action row (primary CTA + optional extend-trial). */
+/* Hero quick-action chips (the trial countdown pill under the stage sentence). */
+.portal-hero__chip--action {
+  border: 1px solid var(--c-border);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    transform 0.12s;
+}
+.portal-hero__chip--action:hover {
+  background: var(--c-surface);
+  border-color: var(--c-border-strong);
+  transform: translateY(-1px);
+}
+
+/* ── Side dialogs (Key documents / Schedule a call / Trial) ───────────────── */
+/* Chrome and width come from the shared Modal via FlowModal; only type and content live here. */
+.portal-sidemodal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.portal-sidemodal__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  line-height: 1.5;
+}
+.portal-sidemodal__text {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
   line-height: 1.55;
-  color: var(--color-text-2);
+}
+.portal-sidemodal__ghost {
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+}
+.portal-sidemodal__ghost:hover:not(:disabled) {
+  color: var(--c-text-muted);
 }
 
-.portal-proc__modal-actions {
+/* Calendly scheduler embed (Schedule a call). The widget is always light (Calendly renders inputs on
+   white), so give it a white surface — it reads as a clean card even inside the dark-mode modal. */
+.portal-calendly {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* Fills the surface; Calendly injects its iframe in here. */
+.portal-calendly__embed {
+  height: 100%;
+}
+
+/* Centred spinner shown over the white surface until the widget initialises. */
+.portal-calendly__loading {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ── Agreement (security) step ────────────────────────────────────────────── */
+/* The terminal steps (payment, live): a stacked eyebrow/title/description with the flow's own footer
+   bar beneath. No card of their own — the dialog is already the surface. */
+.portal-procstage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+/* Nothing to report on the left of these, so the actions take the whole bar. */
+.portal-procstage__foot {
   justify-content: flex-end;
-  gap: 0.625rem;
 }
 
-.portal-proc__upload {
+/* The two document actions read as a pair, close together and set apart from the close beside them. */
+.portal-agreement__actions {
   display: flex;
   align-items: center;
+  gap: 0.1rem;
+}
+
+/* The signature block: the three fields that name the bound party and its signatory, on the same line
+   as the act of signing, with the consent directly beneath them and no rule between. Fields shrink
+   below the row's usual floor so all three plus the button hold one line at the takeover's width;
+   they wrap rather than clip if a translation runs long. */
+/* No rule above it: the tray's grey ends where the signature block begins, which is boundary enough,
+   and a border there cut the document off from the page it sits on. */
+.portal-agreement__signbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  border-top: none;
+}
+/* Bottom-aligned: a field is a label above an input, so aligning to the block's centre or its top
+   leaves the button off the input row. Sharing the input's bottom edge puts its centre on theirs, both
+   being 37px. The gate note is deliberately NOT in this row — hanging it off the button would make the
+   column taller than the fields and drag the button back up off the row. */
+.portal-agreement__signrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+/* Consent on the left, the gate's state on the right so it lands under the button it explains. */
+.portal-agreement__signfoot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.portal-agreement__gate {
+  flex: 0 0 auto;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+.portal-agreement__signrow .portal-agreement__signfields {
+  flex: 1;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.portal-agreement__signrow .portal-qb__field {
+  min-width: 8.5rem;
+}
+/* Unboxed: a line of small print under the fields, not a panel competing with the document. */
+.portal-agreement__accept {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+}
+.portal-agreement__accept input {
+  margin: 0.1rem 0 0;
+  flex: 0 0 auto;
+}
+
+/* The agreement is presented as paper, not as app copy in a box: a sunken tray running to the panel's
+   edges, with the terms on white stock in a serif face. Signing is the most consequential thing a
+   buyer does here, so the document should read like the document it is. */
+/* The document takes every pixel the dialog can spare: it is what the buyer is here to read, and a
+   fixed height left it a small white box floating in a tall panel. The chain has to carry the fill —
+   each link needs min-height:0 or a flex child refuses to shrink below its content. */
+.portal-agreement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* The tray is the scroll container, so the paper inside it behaves like a page being scrolled past a
+   window: flush to the footer while there is more to read, and revealing the tray's bottom padding
+   only at the end. Scrolling the paper instead left a permanent grey band under it, which read as a
+   box with contents rather than a document. */
+/* `scroll`, not `auto`, and an explicitly styled bar: signing is gated on reaching the end of the
+   document, so the buyer has to be able to see there is more of it and how far through they are.
+   Overlay scrollbars fade out when idle, which hid both. Styling the bar also opts Chromium out of
+   overlay behaviour, so it stays put. Matches the treatment on the files page. */
+.portal-agreement__tray {
+  background: var(--c-surface-sunken);
+  padding: 14px var(--flowmodal-inset);
+  margin: 0 calc(-1 * var(--flowmodal-inset));
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-text-subtle) var(--c-border-subtle);
+}
+.portal-agreement__tray::-webkit-scrollbar {
+  width: 0.625rem;
+}
+.portal-agreement__tray::-webkit-scrollbar-track {
+  background: var(--c-border-subtle);
+  border-radius: 999px;
+}
+.portal-agreement__tray::-webkit-scrollbar-thumb {
+  background: var(--c-text-subtle);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.portal-agreement__tray::-webkit-scrollbar-thumb:hover {
+  background: var(--c-text-muted);
+  background-clip: content-box;
+}
+.portal-agreement__doc {
+  /* A floor so a short document still reads as a page; no ceiling, so a long one runs on and the tray
+     does the scrolling. */
+  min-height: 16rem;
+  padding: 1.35rem 1.6rem;
+  /* No serif token exists in the theme — the serif is specific to rendering legal terms as paper. */
+  font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
+  font-size: 0.84rem;
+  line-height: 1.62;
+  color: var(--c-text-muted);
+}
+/* Masthead above the document's own heading: confidentiality on the left, the quote reference and
+   signed version on the right, over the rule that opens the terms. */
+.portal-agreement__letterhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--c-text);
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+}
+.portal-agreement__confidential {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+/* The document's own title, centred like an executed agreement's. */
+.portal-agreement__md > h1:first-child,
+.portal-agreement__md > h2:first-child {
+  text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.portal-agreement__doc h4 {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--c-text);
+}
+.portal-agreement__doc h4:first-child {
+  margin-top: 0;
+}
+.portal-agreement__doc p {
+  margin: 0 0 0.5rem;
+}
+.portal-agreement__doc strong {
+  color: var(--c-text);
+}
+.portal-agreement__md h1 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-text);
+  margin: 1.1rem 0 0.5rem;
+}
+.portal-agreement__md h2 {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--c-text);
+  margin: 1rem 0 0.4rem;
+}
+.portal-agreement__md h3 {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--c-text);
+  margin: 0.9rem 0 0.3rem;
+}
+.portal-agreement__md h1:first-child,
+.portal-agreement__md h2:first-child {
+  margin-top: 0;
+}
+.portal-agreement__md p {
+  margin: 0 0 0.55rem;
+}
+.portal-agreement__md strong {
+  color: var(--c-text);
+}
+.portal-agreement__md ul {
+  margin: 0 0 0.6rem;
+  padding-left: 1.1rem;
+}
+.portal-agreement__md li {
+  margin-bottom: 0.2rem;
+}
+.portal-agreement__md table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.4rem 0 0.8rem;
+  font-size: 0.78rem;
+}
+.portal-agreement__md th,
+.portal-agreement__md td {
+  border: 1px solid var(--c-border);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.portal-agreement__md th {
+  background: var(--c-bg);
+  font-weight: 650;
+  color: var(--c-text);
+}
+.portal-agreement__signfields {
+  margin-top: 0.75rem;
+}
+.portal-proc__error {
+  color: var(--color-red-dark);
+  font-size: 0.8125rem;
+  margin: 0.5rem 0 0;
+}
+.portal-legal__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--c-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.portal-legal__link:hover {
+  color: var(--c-text);
+}
+.portal-docmodal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.portal-docmodal__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.portal-docmodal__row:last-child {
+  border-bottom: none;
+}
+.portal-docmodal__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.portal-docmodal__name {
+  font-weight: 650;
+  font-size: 0.875rem;
+  color: var(--c-text);
+}
+.portal-docmodal__sub {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+.portal-docmodal__later {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+}
+
+/* Title row: the step badge rides beside the heading, not on a line of its own. */
+.portal-sidemodal__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
-.portal-proc__upload-input {
-  display: none;
-}
-
-.portal-proc__upload-name {
+/* Quiet hint sat opposite the primary action in a dialog footer. */
+.portal-sidemodal__foot-hint {
   font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-@media (max-width: 48rem) {
-  .portal-proc__journey-head {
-    flex-direction: column;
-  }
-
-  .portal-proc__se {
-    text-align: left;
-  }
-
-  .portal-proc__steps {
-    overflow-x: auto;
-  }
+  color: var(--c-text-subtle);
 }

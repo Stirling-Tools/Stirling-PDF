@@ -12,7 +12,7 @@ const meta: Meta<typeof ReviewQueueTable> = {
   args: { documents: DOCS, onRowClick: () => {} },
   decorators: [
     (S) => (
-      <div style={{ maxWidth: "78rem" }}>
+      <div style={{ maxWidth: "80rem" }}>
         <S />
       </div>
     ),
@@ -23,12 +23,10 @@ type Story = StoryObj<typeof ReviewQueueTable>;
 
 export const Default: Story = {};
 
-/** Only the rows demanding a decision. */
+/** Only the rows that need a human decision. */
 export const NeedsReview: Story = {
   args: {
-    documents: DOCS.filter(
-      (d) => d.status === "needs-review" || d.status === "flagged",
-    ),
+    documents: DOCS.filter((d) => d.status === "flagged"),
   },
 };
 

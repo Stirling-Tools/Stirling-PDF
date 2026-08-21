@@ -5,6 +5,14 @@ version: '3'
 # mode flag) or use `--project editor/...` for tsc — so the editor lives
 # under frontend/editor/ without each task needing a cd.
 
+vars:
+  # Dev-only browser-tab label so concurrent worktrees are distinguishable. Only
+  # the worktree folder basename (e.g. "wt1") is exposed — never the full path,
+  # hostname, or user. Dropped from production builds.
+  DEV_LABEL:
+    sh: >-
+      {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+
 tasks:
   install:
     desc: "Install dependencies"
@@ -80,8 +88,51 @@ tasks:
       OPEN: '{{.OPEN | default ""}}'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+
+  # Separate from dev:_run rather than a flag on it: Task sets an `env:` key even
+  # when its value resolves to empty, and Vite treats an empty process.env VITE_* as
+  # authoritative over the committed editor/.env, so folding these in blanks Supabase
+  # config for the core, proprietary and desktop dev servers.
+  dev:_run:saas:
+    internal: true
+    ignore_error: true
+    # The backend's own env files, so both halves target one project. Paths are
+    # relative to this taskfile's dir, `frontend`.
+    dotenv: ['../app/.env.saas.local', '../app/.env.saas']
+    vars:
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
+      SAAS_ENV: '{{.SAAS_ENV}}'
+      # A real process.env VITE_* beats a committed .env in Vite (loadEnv applies
+      # process.env last), which is what lets this override editor/.env.
+      #
+      # These must stay `sh:`, not Go templates: dotenv values are visible to Task's
+      # embedded shell but not to templates, where {{.SAAS_DEV_PROJECT_REF}} is
+      # always empty.
+      VITE_SUPABASE_URL:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) ref="${SAAS_STAGING_PROJECT_REF:?set it in app/.env.saas.local}" ;;
+            *)       ref="${SAAS_DEV_PROJECT_REF:?set it in app/.env.saas.local, or run task staging:saas}" ;;
+          esac
+          echo "https://${ref}.supabase.co"
+      VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+          esac
+    cmds:
+      - 'echo ">> frontend Supabase target: $VITE_SUPABASE_URL"'
+      - npx vite editor --mode saas --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
     desc: "Start frontend dev server"
@@ -104,13 +155,23 @@ tasks:
         vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
-    desc: "Start frontend dev server in SaaS mode"
+    desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
     deps:
       - task: prepare
         vars: { MODE: saas }
+    vars:
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+      # prod routes to the plain runner, which sets no VITE_SUPABASE_* and so leaves
+      # the committed editor/.env alone.
+      RUNNER: '{{if eq .SAAS_ENV "prod"}}dev:_run{{else}}dev:_run:saas{{end}}'
     cmds:
-      - task: dev:_run
-        vars: { MODE: saas, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+      - task: '{{.RUNNER}}'
+        vars:
+          MODE: saas
+          PORT: '{{.PORT}}'
+          BACKEND_URL: '{{.BACKEND_URL}}'
+          OPEN: '{{.OPEN}}'
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
@@ -177,15 +238,89 @@ tasks:
 
   storybook:
     desc: "Start Storybook dev server"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook dev -p 6006 {{.CLI_ARGS}}
 
   storybook:build:
     desc: "Build static Storybook"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook build {{.CLI_ARGS}}
+
+  storybook:browser:
+    internal: true
+    desc: "Install the Chromium build the story scan runs in"
+    run: once
+    deps: [install]
+    cmds:
+      - npx playwright install chromium
+
+  storybook:test:
+    desc: "Scan every story in real Chromium: it must render and pass axe"
+    deps: [prepare, storybook:browser]
+    cmds:
+      # Runs each story as a browser test. Pass a filter through, e.g.
+      #   task frontend:storybook:test -- Button
+      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
+  storybook:a11y:light:
+    desc: "a11y gate over every story in light mode"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+
+  storybook:a11y:dark:
+    desc: "a11y gate over every story in dark mode"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:
+    desc: "a11y gate over every story, light and dark"
+    cmds:
+      - task: storybook:a11y:light
+      - task: storybook:a11y:dark
+
+  storybook:a11y:changed:
+    desc: "a11y gate over the stories this branch affects (default base origin/main)"
+    summary: |
+      Scans the stories a branch affects, which is what pull requests run — a
+      full scan takes ~30 minutes, far too long to sit in front of every merge.
+      A story is affected if its file changed, or if a same-named sibling
+      source file changed (editing Button.tsx or Button.css re-scans
+      Button.stories.tsx — the story renders the live component, so a component
+      edit changes what the story shows without touching the story file).
+      Changes that ripple further than a component's own stories are covered by
+      the nightly full sweep.
+
+      Pass a base ref through CLI_ARGS, e.g.
+        task frontend:storybook:a11y:changed -- origin/release
+    vars:
+      BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      CHANGED:
+        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
+    cmds:
+      - cmd: |
+          if [ -z '{{.CHANGED}}' ]; then
+            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
+            exit 0
+          fi
+          rc=0
+          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          exit $rc
+
+  storybook:a11y:record:
+    desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record --baseline .storybook/a11y-baseline.dark.json
 
   # ============================================================
   # Code quality
@@ -195,28 +330,46 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
-      - task: lint:dpdm
+      - task: lint:oxlint
+      - task: lint:colors
+      - task: lint:css
 
-  lint:eslint:
-    desc: "Run ESLint linting"
+  lint:css:
+    desc: "Lint stylesheets for duplicate selectors"
     deps: [install]
     cmds:
-      - npx eslint --max-warnings=0
+      # Covers the whole editor tree, including the portal/processor layer and
+      # public/css. Vendored CSS and build output are excluded via ignoreFiles
+      # in stylelint.config.mjs.
+      - npx stylelint "editor/**/*.css"
 
-  lint:dpdm:
-    desc: "Run circular import linting"
+  lint:colors:
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
+    aliases: [lint:colours]
     deps: [install]
     cmds:
-      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers the whole editor tree, including the portal layer.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
+
+  lint:oxlint:
+    desc: "Run oxlint linting"
+    deps: [install]
+    cmds:
+      - npx oxlint --config oxlint.config.ts --max-warnings=0
 
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --config oxlint.config.ts --fix
 
   format:
     desc: "Auto-fix code formatting"
@@ -243,10 +396,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"
@@ -308,6 +459,13 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/portal/tsconfig.json }
 
+  typecheck:storybook:
+    desc: "Typecheck Storybook config and stories"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: .storybook/tsconfig.json }
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -319,6 +477,7 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
+      - task: typecheck:storybook
 
   # ============================================================
   # Quality Gate
@@ -362,8 +521,17 @@ tasks:
   test:editor:
     desc: "Run editor tests"
     deps: [prepare]
+    vars:
+      COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
-      - npx vitest run --root editor
+      - >
+        npx vitest run --root editor
+        {{if eq .COVERAGE "true"}}--coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage{{end}}
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -373,28 +541,31 @@ tasks:
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
-    deps: [prepare]
     cmds:
-      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
-      # mode). Explicit reporter list because v8 + json-summary is what the
-      # coverage-summary.py helper consumes; html/text are kept for humans.
-      #
-      # reportsDirectory is pinned to ./coverage relative to vitest's root
-      # (--root editor), so output lands at frontend/editor/coverage/. The
-      # CI upload step reads from that path. An earlier attempt with
-      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
-      # pinning future-proofs against vitest changing the default.
-      - >
-        npx vitest run --root editor --coverage
-        --coverage.provider=v8
-        --coverage.reporter=text-summary
-        --coverage.reporter=json-summary
-        --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage
+      - task: test:editor
+        vars: { COVERAGE: "true" }
 
   # ============================================================
   # Code Generation
   # ============================================================
+
+  tool-models:
+    desc: "Generate tool API types from the Java OpenAPI spec"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
+    sources:
+      - editor/scripts/generate-tool-api-types.mts
+      - ../SwaggerDoc.json
+    generates:
+      - editor/src/core/types/toolApiTypes.ts
+      - editor/src/core/types/toolIO.ts
+
+  tool-models:check:
+    desc: "Fail if committed tool API types are out of date"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"

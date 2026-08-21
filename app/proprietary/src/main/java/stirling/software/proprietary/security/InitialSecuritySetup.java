@@ -22,6 +22,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -40,6 +41,7 @@ public class InitialSecuritySetup {
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
     private final Environment environment;
+    private final TeamMembershipService teamMembershipService;
 
     /**
      * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
@@ -114,6 +116,7 @@ public class InitialSecuritySetup {
         }
 
         userService.saveAll(usersWithoutTeam); // batch save
+        usersWithoutTeam.forEach(teamMembershipService::syncMembership);
         if (usersWithoutTeam != null && !usersWithoutTeam.isEmpty()) {
             log.info(
                     "Assigned {} user(s) without a team to the default team.",

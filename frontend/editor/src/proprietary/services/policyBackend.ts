@@ -26,12 +26,15 @@ import type { PolicyState } from "@app/types/policies";
 export async function fetchPoliciesByCategory(): Promise<
   Map<string, DecodedPolicy>
 > {
+  // The backend returns policies in the team's run order; the list index IS the
+  // order (server-side, shared team-wide), which we carry onto the decoded state.
   const stored = await policyApi.listPolicies();
   const byCategory = new Map<string, DecodedPolicy>();
-  for (const policy of stored) {
+  stored.forEach((policy, index) => {
     const decoded = fromBackendPolicy(policy);
-    if (decoded.categoryId) byCategory.set(decoded.categoryId, decoded);
-  }
+    if (decoded.categoryId)
+      byCategory.set(decoded.categoryId, { ...decoded, order: index });
+  });
   return byCategory;
 }
 
@@ -57,6 +60,8 @@ export function decodedToState(
     runOn: decoded.folder.runOn,
     folderId: localFolderId,
     backendId: decoded.id,
+    // Server-side run-order position (team-wide); drives the settings reorder list.
+    order: decoded.order,
     // Catalog-category policies are built-in defaults (not deletable).
     isDefault: true,
   };
