@@ -159,12 +159,12 @@ export default function WorkbenchBar({
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
 
   const totalItems = useMemo(() => {
-    if (currentView === "pageEditor") return pageEditorTotalPages;
+    if (currentView === "multiTool") return pageEditorTotalPages;
     return activeFiles.length;
   }, [currentView, pageEditorTotalPages, activeFiles.length]);
 
   const selectedCount = useMemo(() => {
-    if (currentView === "pageEditor") return pageEditorSelectedCount;
+    if (currentView === "multiTool") return pageEditorSelectedCount;
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
 
@@ -226,7 +226,7 @@ export default function WorkbenchBar({
         return;
       }
 
-      if (currentView === "pageEditor") {
+      if (currentView === "multiTool") {
         pageEditorFunctions?.onExportAll?.();
         return;
       }
@@ -299,7 +299,7 @@ export default function WorkbenchBar({
   }, [viewerContext]);
 
   const handleClose = useCallback(async () => {
-    if (currentView === "fileEditor") {
+    if (currentView === "fileEditor" || currentView === "pageEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
       const file =
@@ -324,7 +324,7 @@ export default function WorkbenchBar({
       } else if (countBeforeRemove <= 1) {
         setCurrentView("fileEditor");
       }
-    } else if (currentView === "pageEditor") {
+    } else if (currentView === "multiTool") {
       pageEditorFunctions?.closePdf?.();
     }
   }, [
@@ -338,7 +338,7 @@ export default function WorkbenchBar({
   ]);
 
   const downloadTooltip = useMemo(() => {
-    if (currentView === "pageEditor")
+    if (currentView === "multiTool")
       return t("workbenchBar.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
     if (selectedCount > 0) return terminology.downloadSelected;
@@ -435,6 +435,13 @@ export default function WorkbenchBar({
           },
         ]),
     {
+      value: "pageEditor" as WorkbenchType,
+      label: t("workbenchBar.pageEditor", "Page Editor"),
+      icon: (
+        <LocalIcon icon="layers-outline-rounded" width="1rem" height="1rem" />
+      ),
+    },
+    {
       value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <Icon name="folder" size={20} />,
@@ -442,7 +449,7 @@ export default function WorkbenchBar({
     ...(selectedTool === "multiTool"
       ? [
           {
-            value: "pageEditor" as WorkbenchType,
+            value: "multiTool" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
             // The registry's multiTool glyph: one tool, one mark, wherever it is drawn.
             icon: <Icon name="grid-2x2-plus" size="1rem" />,

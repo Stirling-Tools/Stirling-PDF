@@ -498,7 +498,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         return;
       }
 
-      // Handle multiTool selection - enable page editor workbench
+      // Handle multiTool selection - enable its own page editor workbench
       if (toolId === "multiTool") {
         setReaderMode(false);
         // The page editor is the tool, so the panel beside it stays on the picker:
@@ -506,7 +506,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         setLeftPanelView("toolPicker");
         actions.setSelectedTool("multiTool");
         actions.setWorkbench(
-          wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
+          wasInCustomWorkbench ? getDefaultWorkbench() : "multiTool",
         );
         setSearchQuery("");
         return;

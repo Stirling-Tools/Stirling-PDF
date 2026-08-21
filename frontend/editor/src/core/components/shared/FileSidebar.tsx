@@ -187,7 +187,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
     const isMultiTool =
-      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+      currentWorkbench === "multiTool" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();

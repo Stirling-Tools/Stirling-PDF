@@ -351,7 +351,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
 
   useEffect(() => {
     return () => {
-      if (navigationState.workbench !== "pageEditor") {
+      if (navigationState.workbench !== "multiTool") {
         return;
       }
 
