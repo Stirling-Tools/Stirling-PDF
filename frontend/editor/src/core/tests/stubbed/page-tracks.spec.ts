@@ -109,6 +109,48 @@ async function dragPageOnto(
   await page.mouse.up();
 }
 
+/** The order of the tracks, top to bottom. */
+async function trackOrder(page: import("@playwright/test").Page) {
+  return page
+    .locator("section[aria-label] header")
+    .evaluateAll((headers) =>
+      headers.map(
+        (h) =>
+          (h.closest("section") as HTMLElement).getAttribute("aria-label") ??
+          "",
+      ),
+    );
+}
+
+/** Drags a track's header onto another track, vertically. */
+async function dragTrackOnto(
+  page: import("@playwright/test").Page,
+  sourceName: string,
+  targetName: string,
+  fractionDown = 0.25,
+) {
+  const from = await page
+    .locator(`section[aria-label="${sourceName}"] header`)
+    .boundingBox();
+  const target = await page
+    .locator(`section[aria-label="${targetName}"]`)
+    .boundingBox();
+  if (!from || !target) throw new Error("tracks are not laid out");
+
+  await page.mouse.move(from.x + 140, from.y + from.height / 2);
+  await page.mouse.down();
+  const toX = target.x + 140;
+  const toY = target.y + target.height * fractionDown;
+  for (const step of [0.3, 0.7, 1]) {
+    await page.mouse.move(
+      from.x + 140 + (toX - (from.x + 140)) * step,
+      from.y + from.height / 2 + (toY - (from.y + from.height / 2)) * step,
+      { steps: 8 },
+    );
+  }
+  await page.mouse.up();
+}
+
 async function openPageEditor(page: import("@playwright/test").Page) {
   await page.goto("/editor", {
     waitUntil: "domcontentloaded",
@@ -535,5 +577,57 @@ test.describe("Page Editor tracks", () => {
     const saved = track(page, "rotated-pages.pdf");
     await expect(saved).toContainText("v2", { timeout: 90_000 });
     await expect(saved.locator("[data-page-id]")).toHaveCount(3);
+  });
+
+  test("dragging a track header reorders the tracks", async ({ page }) => {
+    await openPageEditor(page);
+    await expect(
+      track(page, "sample.pdf").locator("[data-page-id]"),
+    ).toHaveCount(1, { timeout: 30_000 });
+    expect(await trackOrder(page)).toEqual(["rotated-pages.pdf", "sample.pdf"]);
+
+    // Drop sample.pdf on the top half of rotated-pages.pdf: above it.
+    await dragTrackOnto(page, "sample.pdf", "rotated-pages.pdf", 0.2);
+    await expect
+      .poll(async () => trackOrder(page), { timeout: 30_000 })
+      .toEqual(["sample.pdf", "rotated-pages.pdf"]);
+
+    // Pages stayed with their own files rather than moving between tracks.
+    await expect(
+      track(page, "sample.pdf").locator("[data-page-id]"),
+    ).toHaveCount(1);
+    await expect(
+      track(page, "rotated-pages.pdf").locator("[data-page-id]"),
+    ).toHaveCount(4);
+    await expect(track(page, "rotated-pages.pdf")).not.toContainText("edited");
+  });
+
+  test("reordering tracks keeps pending page edits and their undo history", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+
+    const last = tiles.nth(3);
+    await last.hover();
+    await last.getByRole("button", { name: "Delete page" }).click();
+    await expect(tiles).toHaveCount(3);
+
+    await dragTrackOnto(page, "sample.pdf", "rotated-pages.pdf", 0.2);
+    await expect
+      .poll(async () => trackOrder(page), { timeout: 30_000 })
+      .toEqual(["sample.pdf", "rotated-pages.pdf"]);
+
+    // The edit is still pending, not silently re-baselined by the reorder.
+    const moved = track(page, "rotated-pages.pdf");
+    await expect(moved.locator("[data-page-id]")).toHaveCount(3);
+    await expect(moved).toContainText("edited");
+
+    // And it is still undoable.
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(moved.locator("[data-page-id]")).toHaveCount(4);
+    await expect(moved).not.toContainText("edited");
   });
 });

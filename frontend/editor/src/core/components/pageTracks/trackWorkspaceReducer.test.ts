@@ -184,6 +184,26 @@ describe("trackEditorReducer history", () => {
     expect(changedTrackIds(state)).toEqual([A]);
   });
 
+  it("keeps history when tracks are merely reordered", () => {
+    let state = twoTracks();
+    state = trackEditorReducer(state, {
+      type: "delete",
+      pageIds: [pagesOf(state, A)[0].id],
+    });
+    expect(state.past).toHaveLength(1);
+
+    state = sync(state, [source(B, 2), source(A, 3, [0, 90, 0])]);
+
+    expect(state.present.order).toEqual([B, A]);
+    expect(state.past).toHaveLength(1);
+    // The pending delete survives the reorder rather than being re-baselined.
+    expect(pagesOf(state, A)).toHaveLength(2);
+    expect(changedTrackIds(state)).toEqual([A]);
+
+    state = trackEditorReducer(state, { type: "undo" });
+    expect(pagesOf(state, A)).toHaveLength(3);
+  });
+
   it("clears history on a file-set change, since undo could revive dead pages", () => {
     let state = twoTracks();
     state = trackEditorReducer(state, {

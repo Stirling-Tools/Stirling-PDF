@@ -19,6 +19,7 @@
 /* ── Track ───────────────────────────────────────────────────────────────── */
 
 .track {
+  position: relative;
   /* --pt-tile-w / --pt-tile-h / --pt-tile-footer-h / --pt-gap come from
      constants.ts, so the virtualiser and the CSS agree on tile geometry. */
   /* The scroller is a flex column: without this, an overflowing stack of
@@ -36,6 +37,7 @@
 }
 
 .trackHeader {
+  cursor: grab;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -229,6 +231,37 @@
   [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ── Track reorder ───────────────────────────────────────────────────────── */
+
+.trackDragging {
+  opacity: 0.4;
+}
+
+/* Same trick as the page marker: drawn on the track rather than inserted
+   between them, so nothing shifts while the pointer is deciding. */
+.trackDropBefore::before,
+.trackDropAfterLast::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Drawn just inside the edge, not in the gap above it: .track clips its own
+   overflow to round the lane's corners, so an outside offset is invisible. */
+.trackDropBefore::before {
+  top: 0;
+}
+
+.trackDropAfterLast::after {
+  bottom: 0;
 }
 
 /* ── Drop indicator ──────────────────────────────────────────────────────── */

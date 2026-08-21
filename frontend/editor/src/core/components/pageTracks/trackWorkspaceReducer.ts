@@ -118,6 +118,21 @@ function syncSources(
   );
   if (orderUnchanged && signaturesUnchanged) return state;
 
+  // A pure permutation (dragging tracks around) touches no page, so the undo
+  // history stays valid: only a changed FILE SET can leave an entry pointing at
+  // pages that no longer exist.
+  const sameFileSet =
+    order.length === state.present.order.length &&
+    order.every((id) => state.present.tracks[id] != null);
+  if (sameFileSet && signaturesUnchanged) {
+    return {
+      ...state,
+      present: { order, tracks: state.present.tracks },
+      baseline: { order, tracks: state.baseline.tracks },
+      sourceSignatures: signatures,
+    };
+  }
+
   const liveIds = new Set(order);
   let seq = state.seq;
   const tracks: Record<FileId, Track> = {};
