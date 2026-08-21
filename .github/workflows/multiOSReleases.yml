@@ -697,6 +697,17 @@ jobs:
           path: ./dist/*
           retention-days: 1
 
+      - name: Cleanup temporary files
+        if: always()
+        shell: bash
+        run: |
+          rm -f certificate.p12
+          rm -rf "$RUNNER_TEMP/msi-verify"
+          if [ "${{ matrix.platform }}" = "macos-15" ]; then
+            security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          fi
+        continue-on-error: true
+
   collect-and-release:
     needs: [determine-matrix, build, build-jars]
     runs-on: ubuntu-latest

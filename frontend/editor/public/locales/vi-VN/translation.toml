@@ -1,7 +1,6 @@
 alphabet = "Bảng chữ cái"
 apply = "Áp dụng"
 applyAndContinue = "Lưu và rời đi"
-areYouSure = "Bạn có chắc muốn rời đi không?"
 back = "Quay lại"
 black = "Đen"
 blue = "Xanh dương"
@@ -106,6 +105,7 @@ undoSuccess = "Hoàn tác thành công"
 unknown = "Không xác định"
 unpin = "Bỏ ghim tệp (thay thế sau khi chạy công cụ)"
 unsavedChanges = "Bạn có thay đổi chưa lưu đối với PDF."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Thay đổi chưa lưu"
 unsupported = "Không được hỗ trợ"
 username = "Tên người dùng"
@@ -1879,6 +1879,9 @@ width = "Độ rộng"
 [app]
 description = "Giải pháp thay thế Adobe Acrobat miễn phí (10M+ lượt tải xuống)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Chuyển sang PDF/A-3b"
 convertToPdfA3bDescription = "Tạo PDF lưu trữ với tệp đính kèm được nhúng"
@@ -2933,12 +2936,16 @@ text = "Để các quyền này không bị thay đổi, hãy dùng công cụ T
 [chat.actions]
 copy = "Sao chép tin nhắn"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Tùy chọn tác nhân Stirling"
+assistant = "AI Assistant"
 clearChat = "Xóa trò chuyện"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Thao tác này sẽ sử dụng tín dụng đám mây của bạn"
 tooltip = "Lấy màu từ màn hình"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Chọn màu"
 
 [common]
+actions = "Actions"
 back = "Quay lại"
 cancel = "Hủy"
 close = "Đóng"
+codeSample = "Code sample"
 collapse = "Thu gọn"
 confirm = "Xác nhận"
 continue = "Tiếp tục"
 copied = "Đã sao chép!"
 copy = "Sao chép"
 done = "Xong"
+enterValue = "Enter value"
 error = "Lỗi"
 expand = "Mở rộng"
 loading = "Đang tải..."
 next = "Tiếp"
+open = "Open"
 preview = "Xem trước"
 previous = "Trước"
 refresh = "Làm mới"
 remaining = "Còn lại"
 retry = "Thử lại"
 save = "Lưu"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Xóa lựa chọn"
@@ -3185,6 +3199,7 @@ title = "Phương pháp nén"
 [compress.settings]
 desiredSize = "Kích thước tệp mong muốn"
 desiredSizePlaceholder = "Nhập kích thước"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Nén là cách đơn giản để giảm kích thước tệp. Chọn Kích thước tệp để nhập kích thước mục tiêu và chúng tôi sẽ điều chỉnh chất lượng cho bạn. Chọn Chất lượng để tự đặt mức nén thủ công."
@@ -3387,6 +3402,24 @@ pdfOptions = "Tùy chọn PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Chọn định dạng nguồn trước"
 settings = "Cài đặt"
 single = "Một tệp"
@@ -3565,7 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Tìm kiếm..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Sửa"
@@ -3824,11 +3861,13 @@ shareSelected = "Chia sẻ mục đã chọn"
 sharing = "Chia sẻ"
 showAll = "Hiện tất cả"
 showHistory = "Hiện lịch sử"
+sortBy = "Sort files"
 sortByDate = "Sắp xếp theo ngày"
 sortByName = "Sắp xếp theo tên"
 sortBySize = "Sắp xếp theo kích thước"
 storage = "Lưu trữ"
 storageState = "Lưu trữ"
+storageUsed = "Storage used"
 synced = "Đã đồng bộ"
 title = "Tải tệp PDF lên"
 toolChain = "Công cụ đã áp dụng"
@@ -3874,8 +3913,12 @@ addFiles = "Thêm tệp"
 addingFiles = "Đang thêm tệp…"
 collapse = "Thu gọn thanh bên"
 customizeGroups = "Tùy chỉnh nhóm"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Mở tệp để bắt đầu"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Mở rộng thanh bên"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive chưa được cấu hình"
@@ -3888,15 +3931,17 @@ openFromComputer = "Mở từ máy tính"
 openSettings = "Mở cài đặt"
 other = "Khác"
 recent = "Gần đây"
-search = "Tìm kiếm"
-searchPlaceholder = "Tìm kiếm tệp..."
 viewAll = "Xem tất cả {{count}} tệp"
 
 [fileSidebar.fileItem]
 closeViewer = "Đóng trình xem"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Mở trong trình xem"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3908,6 +3953,14 @@ reset = "Đặt lại về mặc định"
 subtitle = "Nhóm các tệp của bạn vào danh mục cha. Thêm nhãn hiện có hoặc nhãn mới vào danh mục, đổi tên danh mục hoặc tự tạo danh mục riêng. Các tệp không thuộc danh mục nào của bạn sẽ xuất hiện trong “Khác”."
 title = "Danh mục thanh bên"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Thêm vào không gian làm việc"
 addToWorkspaceCount = "Thêm {{count}} vào không gian làm việc"
@@ -3918,7 +3971,6 @@ backToMyFiles = "Quay lại Tệp của tôi"
 breadcrumbs = "Đường dẫn thư mục"
 cancel = "Hủy"
 classification = "Phân loại"
-clearSearch = "Xóa tìm kiếm"
 clearSelection = "Bỏ chọn"
 closeDetails = "Đóng chi tiết"
 create = "Tạo"
@@ -3950,6 +4002,7 @@ downloadAll = "Tải xuống tất cả"
 downloadVersion = "Tải xuống phiên bản này"
 dropOverlay = "Thả tệp để tải lên"
 dropOverlaySub = "Các tệp bắt đầu ở Cục bộ. Dùng 'Di chuyển đến' hoặc 'Lưu lên đám mây' để sắp xếp vào thư mục."
+duplicate = "Duplicate"
 file = "Tệp"
 fileInfo = "File info"
 fileMenu = "Hành động tệp"
@@ -3983,8 +4036,6 @@ resizeFolderTree = "Thay đổi kích thước cây thư mục (phím mũi tên,
 save = "Lưu"
 saveToServer = "Lưu lên máy chủ"
 saveToServerDisabledHint = "Lưu lên máy chủ chưa được bật trên máy chủ này. Hãy yêu cầu quản trị viên bật nó."
-search = "Tìm kiếm"
-searchPlaceholder = "Tìm trong thư mục này và các thư mục con"
 selectAll = "Chọn tất cả"
 selectAllHint = "Nhấn để chọn tất cả. Mẹo: giữ Ctrl (hoặc Cmd) để thêm từng tệp, Shift để chọn một dải."
 selectedCount = "Đã chọn {{count}}"
@@ -4044,6 +4095,10 @@ title = "Chưa có tệp đám mây"
 hint = "Các tệp lưu mà không tải lên sẽ ở đây. Thả một tệp để thêm."
 title = "Không có tệp chỉ cục bộ"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Các tệp bạn mở hoặc chỉnh sửa sẽ xuất hiện ở đây."
 title = "Chưa có gì được sửa đổi"
@@ -4063,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Không thể xóa thư mục."
 deleteFolderFailedDetail = "Không thể xóa thư mục: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Không thể cập nhật giao diện thư mục."
 folderAppearanceFailedDetail = "Không thể cập nhật giao diện thư mục: {{message}}"
 moveFilesFailed = "Không thể di chuyển tệp."
@@ -4112,6 +4169,11 @@ local = "Cục bộ"
 localHint = "Chỉ lưu trong trình duyệt này"
 shared = "Được chia sẻ"
 sharedHint = "Được chia sẻ với bạn qua liên kết"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Cũ nhất trước"
@@ -4168,6 +4230,7 @@ noFilesInStorageOpen = "Không có tệp trong bộ nhớ. Hãy mở một số 
 open = "Mở"
 openFile = "Mở tệp"
 openFiles = "Mở nhiều tệp"
+selectFile = "Select {{name}}"
 selectFromStorage = "Chọn từ Lưu trữ"
 upload = "Tải lên"
 uploadFile = "Tải tệp lên"
@@ -4241,9 +4304,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Đã lưu tất cả"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Không thể trích xuất CSV"
 extractXlsxError = "Không thể trích xuất XLSX"
+filled = "filled"
 flattenAfterFilling = "Làm phẳng sau khi điền"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "bắt buộc"
 requiredFieldsError = "Vui lòng điền tất cả các trường bắt buộc"
 rescanFields = "Quét lại trường"
@@ -4795,9 +4863,6 @@ title = "Hình ảnh sang PDF"
 [imageToPdf]
 tags = "chuyển đổi,img,jpg,hình ảnh,ảnh"
 
-[infoBanner]
-dismiss = "Bỏ qua"
-
 [invite]
 acceptError = "Không thể tạo tài khoản"
 accountFor = "Đang tạo tài khoản cho"
@@ -4979,6 +5044,34 @@ uploadSuccess = "Tải lên thành công!"
 uploadSuccessMessage = "Hình ảnh của bạn đã được chuyển."
 validating = "Đang xác thực phiên..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Quét để tải ảnh. Hình ảnh tự động chuyển sang PDF."
 descriptionNoConvert = "Quét để tải ảnh từ thiết bị di động của bạn."
@@ -4997,8 +5090,13 @@ title = "Tải lên từ Di động"
 tags = "Đa công cụ,Đa thao tác,Giao diện người dùng,nhấp kéo,phía trước,phía máy khách,tương tác,có thể tương tác,di chuyển"
 title = "Công cụ đa năng PDF"
 
-[navbar]
-search = "Tìm kiếm"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Xác thực không thành công. Bạn có thể đóng cửa sổ này và thử lại."
@@ -5127,6 +5225,7 @@ activeFiles = "Chế độ xem <strong>Tệp đang hoạt động</strong> hiể
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Đóng"
 cropSettings = "Bây giờ chúng ta đã chọn tệp muốn cắt, có thể cấu hình công cụ Cắt xén để chọn vùng cần cắt PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Nhấp vào một tệp sẽ chọn nó để xử lý. Bạn có thể chọn nhiều tệp cho các thao tác hàng loạt."
 fileReplacement = "Tệp đã chỉnh sửa sẽ tự động thay thế tệp gốc trong Bàn làm việc, giúp bạn dễ dàng chạy thêm các công cụ khác."
 filesButton = "Nút <strong>Tệp</strong> trên thanh Truy cập nhanh cho phép bạn tải PDF lên để dùng các công cụ."
@@ -5563,6 +5662,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5742,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5970,6 +6071,11 @@ header = "PDF sang PDF/A"
 tags = "lưu trữ,dài hạn,tiêu chuẩn,chuyển đổi,lưu trữ,bảo quản"
 title = "PDF sang PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "in ấn,tiêu chuẩn,chuyển đổi,sản xuất,tiền in,lưu trữ"
 title = "PDF sang PDF/X"
@@ -6045,6 +6151,7 @@ small = "500 Tín dụng"
 xsmall = "100 Tín dụng"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Chọn gói phù hợp với nhu cầu của bạn"
 title = "Các gói khả dụng"
 
@@ -6627,6 +6734,7 @@ reachedTitle = "Đã đạt giới hạn chi tiêu hàng tháng"
 title = "Không thể mở portal Stripe"
 
 [processor.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "trong {{allowance}} PDF miễn phí đã dùng"
 capSuffix_other = "trong {{allowance}} PDF miễn phí đã dùng"
 eyebrow = "Dùng thử Processor"
@@ -6876,6 +6984,32 @@ label = "Jira"
 description = "Gửi email tài liệu hoặc thông báo khi một chính sách chạy."
 label = "Mailgun"
 
+[processor.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[processor.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[processor.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[processor.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[processor.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[processor.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[processor.connections.types.n8n.fields.token]
+label = "Header value"
+
 [processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Lưu tài liệu đã xử lý vào Nextcloud."
@@ -7080,11 +7214,6 @@ title = "SDK chính thức"
 beta = "Beta"
 deprecated = "Không còn dùng"
 
-[processor.docs.search]
-empty = "Không có tài liệu phù hợp"
-placeholder = "Tìm kiếm tài liệu"
-results = "{{count}} kết quả"
-
 [processor.docs.skills]
 eyebrow = "KỸ NĂNG"
 lead = "Các năng lực đi kèm, có tên, mà agent của bạn gọi như một công cụ duy nhất. Mỗi kỹ năng là một chuỗi thao tác xác định với đánh giá đính kèm."
@@ -7183,11 +7312,11 @@ editorAction = "Trình chỉnh sửa"
 empty = "Không có tài liệu nào khớp với bộ lọc này."
 rowActions = "Hành động hàng"
 sensitiveLabel = "Nhạy cảm"
-sensitiveTitle = "Nhạy cảm — yêu cầu quyền truy cập"
 
 [processor.documents.table.columns]
 action = "Pipeline / Hành động"
 document = "Tài liệu"
+labels = "Labels"
 product = "Sản phẩm"
 status = "Trạng thái"
 time = "Thời gian"
@@ -7203,6 +7332,7 @@ host = "Host"
 lastSeen = "Lần thấy gần nhất"
 region = "Khu vực"
 status = "Trạng thái"
+target = "Target"
 version = "Phiên bản"
 
 [processor.editorAdmin.health.empty]
@@ -7276,6 +7406,56 @@ running = "Đang chạy"
 description = "Chế độ xem này gặp lỗi không mong muốn. Hãy thử lại hoặc chọn phần khác từ thanh bên."
 retry = "Thử lại"
 title = "Đã xảy ra lỗi trên trang này"
+
+[processor.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[processor.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[processor.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[processor.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[processor.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[processor.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[processor.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[processor.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[processor.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [processor.home.download]
 back = "Quay lại"
@@ -7383,11 +7563,6 @@ cancel = "Hủy"
 confirm = "Thu hồi khóa"
 title = "Thu hồi API key"
 
-[processor.infrastructure.attestationLabel]
-attested = "Đã chứng thực"
-inScope = "Trong phạm vi"
-notApplicable = "N/A"
-
 [processor.infrastructure.audit]
 filterAriaLabel = "Lọc sự kiện kiểm tra theo danh mục"
 heading = "Nhật ký kiểm tra"
@@ -7459,11 +7634,6 @@ info = "Thông tin"
 success = "Thành công"
 warning = "Cảnh báo"
 
-[processor.infrastructure.certLabel]
-certified = "Đã chứng nhận"
-inProgress = "Đang tiến hành"
-notStarted = "Chưa bắt đầu"
-
 [processor.infrastructure.createKey]
 cancel = "Hủy"
 createKey = "Tạo khóa"
@@ -7477,237 +7647,9 @@ subtitleCreated = "Sao chép bí mật này ngay — nó sẽ không được hi
 title = "Tạo khóa API"
 titleCreated = "Đã tạo khóa"
 
-[processor.infrastructure.deployLabel]
-live = "Đang chạy"
-queued = "Đang xếp hàng"
-rolledBack = "Đã rollback"
-rolling = "Đang triển khai"
-
-[processor.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/phút"
-
-[processor.infrastructure.deployments.deployColumns]
-deployedBy = "Được triển khai bởi"
-environment = "Môi trường"
-product = "Sản phẩm"
-status = "Trạng thái"
-version = "Phiên bản"
-when = "Thời điểm"
-
-[processor.infrastructure.deployments.recent]
-heading = "Triển khai gần đây"
-subheading = "Các đợt phát hành mới nhất trên các sản phẩm và môi trường."
-
-[processor.infrastructure.deployments.regionColumns]
-instances = "Phiên bản"
-latency = "Độ trễ"
-load = "Tải"
-p99 = "P99"
-region = "Khu vực"
-status = "Trạng thái"
-throughput = "Thông lượng"
-uptime = "Thời gian hoạt động"
-version = "Phiên bản"
-
-[processor.infrastructure.deployments.regions]
-heading = "Khu vực"
-subheading = "Tình trạng trực tiếp cho từng khu vực Stirling đã triển khai — độ trễ, tải và phiên bản phát hành."
-
-[processor.infrastructure.deployments.regions.empty]
-description = "Các khu vực đã triển khai sẽ xuất hiện tại đây sau khi workspace của bạn được cấp phát."
-title = "Chưa triển khai khu vực nào"
-
 [processor.infrastructure.keyLabel]
 active = "Đang hoạt động"
 revoked = "Đã thu hồi"
-
-[processor.infrastructure.modelLabel]
-active = "Đang hoạt động"
-degraded = "Suy giảm"
-disabled = "Đã tắt"
-
-[processor.infrastructure.models]
-heading = "Mô hình"
-msValue = "{{value}} ms"
-subheading = "Danh mục mô hình và định tuyến hỗ trợ xử lý tài liệu trên toàn workspace của bạn."
-
-[processor.infrastructure.models.byom]
-description = "Đăng ký một mô hình on-prem hoặc self-hosted và ghim nó vào một khu vực để xử lý theo ràng buộc lưu trú dữ liệu."
-title = "Mang mô hình của riêng bạn"
-
-[processor.infrastructure.models.catalogue]
-heading = "Danh mục"
-sub = "Các mô hình được quản lý khả dụng cho workspace của bạn, với độ trễ và chi phí trực tiếp."
-subEnterprise = "Các mô hình được quản lý, mang theo của riêng bạn và on-prem — có thể ghim theo từng khu vực."
-
-[processor.infrastructure.models.catalogue.empty]
-description = "Các mô hình trong danh mục của workspace sẽ xuất hiện tại đây."
-title = "Không có mô hình khả dụng"
-
-[processor.infrastructure.models.columns]
-cost = "Chi phí"
-latency = "Độ trễ"
-load = "Tải"
-model = "Mô hình"
-status = "Trạng thái"
-type = "Loại"
-version = "Phiên bản"
-
-[processor.infrastructure.models.cost]
-perCall = "{{price}}/lần gọi"
-perThousand = "{{price}}/1k"
-
-[processor.infrastructure.models.metrics]
-activeModels = "Mô hình đang hoạt động"
-avgLatency = "Độ trễ trung bình"
-included = "Đã bao gồm"
-monthlySpend = "Chi tiêu mô hình hàng tháng"
-
-[processor.infrastructure.models.routing]
-empty = "Chưa cấu hình quy tắc định tuyến nào."
-heading = "Quy tắc định tuyến"
-sub = "Mô hình nào xử lý từng thao tác. Mặc định áp dụng khi không có quy tắc hẹp hơn khớp."
-subLocked = "Định tuyến thao tác đến các mô hình cụ thể — khả dụng trên gói trả phí."
-
-[processor.infrastructure.models.routing.lockedBanner]
-description = "Nâng cấp lên Pro để kiểm soát mô hình nào xử lý từng thao tác và loại tài liệu."
-title = "Định tuyến mô hình là tính năng trả phí"
-
-[processor.infrastructure.models.routingColumns]
-default = "Mặc định"
-docType = "Loại tài liệu"
-modelForAria = "Mô hình cho {{operation}}"
-operation = "Thao tác"
-routedTo = "Định tuyến đến"
-
-[processor.infrastructure.modelTypeLabel]
-classification = "Phân loại"
-extraction = "Trích xuất"
-llm = "LLM"
-ocr = "OCR"
-
-[processor.infrastructure.regionLabel]
-degraded = "Suy giảm"
-down = "Ngừng hoạt động"
-healthy = "Khỏe mạnh"
-
-[processor.infrastructure.security.access.byok]
-description = "Cung cấp khóa từ KMS của riêng bạn. Stirling mã hóa bằng khóa đó nhưng vẫn có thể đọc."
-label = "Mang khóa của riêng bạn (BYOK)"
-
-[processor.infrastructure.security.access.hyok]
-description = "Khóa không bao giờ rời khỏi KMS của bạn. Stirling chỉ giữ ciphertext."
-label = "Giữ khóa của riêng bạn (HYOK)"
-
-[processor.infrastructure.security.access.stirling]
-description = "Stirling quản lý khóa mã hóa. Đơn giản nhất — phía bạn không cần vận hành khóa."
-label = "Khóa do Stirling giữ"
-
-[processor.infrastructure.security.accessPolicy]
-heading = "Chính sách truy cập tài liệu"
-subheading = "Kiểm soát ai có thể giải mã tài liệu đã xử lý khi lưu trữ."
-
-[processor.infrastructure.security.attestations]
-heading = "Chứng nhận tuân thủ"
-noReport = "Không có báo cáo"
-subheading = "Tư thế kiểm tra theo từng framework, với báo cáo khả dụng cho các kiểm soát đã được chứng nhận."
-viewReport = "Xem báo cáo →"
-
-[processor.infrastructure.security.compliance]
-heading = "Tuân thủ"
-subheading = "Chứng nhận và chứng chỉ bao phủ nền tảng Stirling."
-
-[processor.infrastructure.security.empty]
-description = "Cấu hình bảo mật của workspace sẽ xuất hiện tại đây."
-title = "Không có tư thế bảo mật"
-
-[processor.infrastructure.security.hyokBanner]
-description = "Với HYOK, khóa mã hóa không bao giờ rời khỏi KMS của bạn. Stirling chỉ lưu trữ và xử lý ciphertext mà bạn có thể thu hồi bất cứ lúc nào."
-title = "Stirling không thể giải mã tài liệu của bạn"
-
-[processor.infrastructure.security.ipAllowlist]
-empty = "Chưa cấu hình dải IP nào — tất cả IP đều được phép."
-heading = "Danh sách cho phép IP"
-sub = "Quyền truy cập API bị giới hạn trong các dải CIDR này."
-subLocked = "Giới hạn quyền truy cập API vào các dải IP đã biết — khả dụng trên gói trả phí."
-
-[processor.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Nâng cấp lên Pro để giới hạn quyền truy cập API vào các mạng cụ thể."
-title = "Danh sách cho phép IP là tính năng trả phí"
-
-[processor.infrastructure.security.ipColumns]
-added = "Đã thêm"
-addedBy = "Được thêm bởi"
-cidr = "CIDR"
-label = "Nhãn"
-
-[processor.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "Quản lý khóa mã hóa"
-keyId = "Mã định danh khóa"
-lastRotated = "Lần xoay vòng gần nhất"
-rotateKey = "Xoay vòng khóa"
-rotationPolicy = "Chính sách xoay vòng"
-subheading = "Quyền lưu giữ các khóa mã hóa tài liệu khi lưu trữ — ai có thể giải mã và cách khóa được xoay vòng."
-
-[processor.infrastructure.security.managedBanner]
-description = "Quyền lưu giữ bring-your-own-key (BYOK) và hold-your-own-key (HYOK) khả dụng trên Enterprise. Nâng cấp để cung cấp khóa từ KMS của riêng bạn."
-title = "Khóa được Stirling quản lý trên gói của bạn"
-
-[processor.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Châu Á - Thái Bình Dương"
-
-[processor.infrastructure.security.residency.eu]
-description = "eu-west-1 · ranh giới dữ liệu GDPR"
-label = "Liên minh Châu Âu"
-
-[processor.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "Hoa Kỳ"
-
-[processor.infrastructure.security.residencyHeader]
-heading = "Lưu trú dữ liệu"
-subheading = "Nơi tài liệu được lưu trữ và xử lý."
-
-[processor.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "Đã dùng {{value}}"
-
-[processor.infrastructure.storage.empty]
-description = "Lưu trữ đã kết nối và mức sử dụng sẽ xuất hiện tại đây."
-title = "Chưa cấu hình lưu trữ"
-
-[processor.infrastructure.storage.lifecycle]
-active = "Đang hoạt động"
-activeRange = "0–{{value}} ngày"
-archived = "Đã lưu trữ"
-coldStorage = "lưu trữ lạnh"
-deleted = "Đã xóa"
-never = "không bao giờ"
-purged = "đã xóa vĩnh viễn"
-
-[processor.infrastructure.storage.providers]
-connect = "Kết nối"
-connected = "Đã kết nối"
-heading = "Nhà cung cấp đã kết nối"
-subheading = "Nơi các artifact đã xử lý được ghi."
-
-[processor.infrastructure.storage.retention]
-heading = "Lưu giữ"
-subheading = "Thời gian giữ artifact trước khi xóa theo vòng đời."
-windowLabel = "Khoảng thời gian lưu giữ mặc định"
-
-[processor.infrastructure.storage.retentionOption]
-days_one = "{{count}} ngày"
-days_other = "{{count}} ngày"
-never = "Không bao giờ xóa"
-
-[processor.infrastructure.storage.totalUsage]
-heading = "Tổng mức sử dụng"
-progressLabel = "Dung lượng đã dùng"
-subheading = "Dung lượng đã tiêu thụ trên tất cả nhà cung cấp đã kết nối."
 
 [processor.infrastructure.tabs]
 apiKeys = "Khóa API"
@@ -7718,11 +7660,9 @@ security = "Bảo mật"
 storage = "Lưu trữ"
 
 [processor.integrations]
-addAnother = "Thêm mục khác"
 availableHeading = "Có sẵn"
 comingSoonHeading = "Sắp ra mắt"
 connect = "Kết nối"
-connectedHeading = "Đã kết nối"
 connectionCount_one = "{{count}} kết nối"
 connectionCount_other = "{{count}} kết nối"
 customApi = "API tùy chỉnh"
@@ -7739,6 +7679,10 @@ notify = "Thông báo"
 security = "Bảo mật"
 signing = "Ký"
 storage = "Lưu trữ"
+
+[processor.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [processor.integrations.status]
 connected = "Đã kết nối"
@@ -7770,7 +7714,6 @@ integrations = "Tích hợp"
 pipelines = "Pipeline"
 policies = "Chính sách"
 procurement = "Mua sắm"
-settings = "Cài đặt"
 sources = "Nguồn"
 usage = "Sử dụng & Thanh toán"
 users = "Người dùng"
@@ -7787,7 +7730,7 @@ title = "Pipeline"
 newPipeline = "Pipeline mới"
 
 [processor.pipelines.builder]
-addStep = "Thêm công cụ"
+activate = "Activate"
 back = "Quay lại pipeline"
 cannotFollow = "Không thể nhận {{produced}}"
 chooseAccount = "Chọn tài khoản"
@@ -7795,28 +7738,38 @@ chooseDestination = "Chọn đích đến"
 chooseOperation = "Chọn việc bước này thực hiện"
 chooseSource = "Chọn nguồn"
 discard = "Hủy thay đổi"
-enabled = "Đã bật"
 inputs = "Đầu vào"
 inputSource = "Nguồn đầu vào"
 inputTrigger = "Kích hoạt"
 keepEditing = "Tiếp tục chỉnh sửa"
+moreActions = "More actions"
 needsConfiguring = "Cần thiết lập"
-needsUpload = "Cần một file đã upload"
-noSources = "Chưa có nguồn nào được kết nối. Tạo một nguồn để dùng làm đầu vào."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Không có công cụ nào khớp với tìm kiếm của bạn."
-pipelineSettings = "Cài đặt pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Tìm kiếm công cụ"
-selectToolBody = "Thêm công cụ để xây dựng pipeline của bạn."
-selectToolTitle = "Chưa có công cụ"
 sendToSystem = "Gửi đến hệ thống khác"
 stepsIncompatible = "Các bước này không thể chạy trên kết quả mà bước trước tạo ra: {{tools}}."
 stepsNeedSetup = "Các bước này vẫn cần thiết lập trước khi lưu: {{tools}}."
-toolSettings = "Cài đặt công cụ"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Thao tác không được nhận dạng, giữ nguyên."
 unsavedBody = "Bạn có thay đổi chưa lưu. Lưu trước khi rời đi hay hủy chúng?"
 unsavedTitle = "Thay đổi chưa lưu"
-uploadUnsupported = "File đã upload chưa được hỗ trợ trong pipeline, vì vậy không thể lưu các bước này: {{tools}}."
 usesDefaults = "Chạy với cài đặt mặc định"
+viewDefinition = "View definition"
+
+[processor.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [processor.pipelines.builder.diagnostic]
 fan-in = "Kết hợp mọi file từ bước trước"
@@ -7828,30 +7781,35 @@ undeclared-operation = "Không thể kiểm tra bước này chấp nhận gì"
 
 [processor.pipelines.composer]
 addTool = "Thêm công cụ"
-cancel = "Hủy"
-chainEmpty = "Thêm công cụ để bắt đầu xây dựng pipeline của bạn."
 create = "Tạo pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Chưa hỗ trợ hiển thị các tham số công cụ này để chỉnh sửa."
-moveDown = "Di chuyển xuống"
-moveUp = "Di chuyển lên"
+editSource = "Edit source"
 name = "Tên"
 namePlaceholder = "ví dụ: Quét che giấu"
 noToolSettings = "Công cụ này không có cài đặt có thể cấu hình."
-operations_one = "Thao tác ({{count}})"
-operations_other = "Thao tác ({{count}})"
 output = "Đầu ra"
-removeStep = "Xóa thao tác"
 save = "Lưu thay đổi"
 scheduleEvery = "Chạy mỗi"
-sources = "Nguồn"
-sourcesLoading = "Đang tải nguồn..."
 trigger = "Trigger"
 triggerManual = "Chỉ thủ công"
+
+[processor.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [processor.pipelines.composer.unit]
 days = "ngày"
 hours = "giờ"
 minutes = "phút"
+
+[processor.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [processor.pipelines.delete]
 body = "Xóa \"{{name}}\"? Không thể hoàn tác thao tác này."
@@ -7870,6 +7828,37 @@ connectSource = "Kết nối một nguồn"
 description = "Tạo pipeline đầu tiên của bạn: chọn các nguồn mà nó chạy, nối chuỗi các thao tác và chọn nơi đầu ra sẽ đến."
 title = "Chưa có pipeline"
 
+[processor.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[processor.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[processor.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[processor.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[processor.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [processor.pipelines.kpi]
 active = "Đang hoạt động"
 paused = "Đã tạm dừng"
@@ -7882,7 +7871,6 @@ completed_one = "Lượt chạy đã hoàn tất."
 completed_other = "Tất cả {{count}} lượt chạy đã hoàn tất."
 empty = "Không có gì để chạy: các nguồn không có tài liệu để xử lý."
 failed = "Lượt chạy thất bại: {{error}}"
-historyCleared = "Đã xóa lịch sử. Lần chạy tiếp theo sẽ xử lý lại mọi thứ hiện có trong các nguồn."
 inFlight = "Không có gì mới để chạy: tài liệu vẫn đang được xử lý từ một lần chạy trước đó."
 parked_one = "Không có gì để chạy: {{count}} tài liệu đã thất bại trước đó và đang được tạm dừng. Khắc phục nguyên nhân, rồi xóa lịch sử để thử lại."
 parked_other = "Không có gì để chạy: {{count}} tài liệu đã thất bại trước đó và đang được tạm dừng. Khắc phục nguyên nhân, rồi xóa lịch sử để thử lại."
@@ -7898,6 +7886,7 @@ name = "Pipeline"
 sources = "Nguồn"
 status = "Trạng thái"
 steps = "Bước"
+trigger = "Trigger"
 
 [processor.pipelines.trigger]
 folder-watch = "Theo dõi thư mục"
@@ -8211,6 +8200,24 @@ label = "Đính kèm vào Jira issue"
 [processor.policies.operations.mailgunEmail]
 description = "Gửi tài liệu đã xử lý dưới dạng tệp đính kèm."
 label = "Gửi tài liệu qua email (Mailgun)"
+
+[processor.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[processor.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[processor.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[processor.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [processor.policies.operations.nextcloudUpload]
 description = "Ghi tài liệu đã xử lý vào một thư mục."
@@ -8686,16 +8693,6 @@ maxed = "Đã đạt giới hạn"
 subtitle = "Bản dùng thử miễn phí của bạn kéo dài đến {{date}}. Không cần thẻ."
 title = "Dùng thử Enterprise"
 
-[processor.search]
-ariaLabel = "Tìm kiếm"
-placeholder = "Tìm kiếm Stirling — endpoint, pipeline, tài liệu…"
-
-[processor.search.empty]
-noActionsDescription = "Hành động nhanh sẽ xuất hiện ở đây khi có sẵn."
-noActionsTitle = "Không có hành động nhanh"
-noMatches = "Không có kết quả cho \"{{query}}\""
-noMatchesDescription = "Thử từ khóa khác hoặc duyệt catalogue."
-
 [processor.settings.groups]
 admin = "Quản trị"
 
@@ -8746,10 +8743,6 @@ cancel = "Hủy"
 confirm = "Xóa"
 title = "Xóa nguồn?"
 
-[processor.sources.empty]
-description = "Kết nối một thư mục (và sắp tới là cloud storage) để chính sách của bạn có nơi lấy tài liệu."
-title = "Chưa kết nối nguồn nào"
-
 [processor.sources.kpi]
 inUse = "Đang sử dụng"
 total = "Kết nối"
@@ -8788,6 +8781,7 @@ unused = "Chưa dùng"
 documents = "Tài liệu"
 source = "Nguồn"
 status = "Trạng thái"
+type = "Type"
 usedBy = "Chính sách"
 
 [processor.sources.types.box]
@@ -9980,9 +9974,6 @@ title = "Chính sách & Quyền riêng tư"
 [settings.preferences]
 title = "Tùy chọn"
 
-[settings.search]
-placeholder = "Tìm kiếm trang cài đặt..."
-
 [settings.security]
 description = "Cập nhật mật khẩu để giữ an toàn cho tài khoản của bạn."
 title = "Bảo mật"
@@ -10128,6 +10119,7 @@ last = "Trang cuối"
 maintainRatio = "Bật/tắt giữ tỉ lệ khung hình"
 next = "Trang tiếp"
 noSavedSigs = "Không tìm thấy chữ ký đã lưu"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Chữ ký cá nhân"
 previous = "Trang trước"
 redo = "Làm lại"
@@ -10166,6 +10158,7 @@ backgroundRemovalFailedTitle = "Xóa nền thất bại"
 hint = "Tải lên ảnh chữ ký định dạng PNG hoặc JPG"
 label = "Tải lên ảnh chữ ký"
 placeholder = "Chọn tệp hình ảnh"
+previewAlt = "Current image signature"
 processing = "Đang xử lý hình ảnh..."
 removeBackground = "Xóa nền trắng (tạo trong suốt)"
 
@@ -10178,6 +10171,17 @@ resumeHint = "Tiếp tục đặt để nhấp và thêm chữ ký."
 saved = "Chọn một chữ ký đã lưu ở trên, rồi nhấp vào bất kỳ đâu trên PDF để đặt."
 text = "Sau khi nhập tên ở trên, bấm vào bất kỳ đâu trên PDF để đặt chữ ký của bạn."
 title = "Cách thêm chữ ký"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Di chuyển chữ ký"
@@ -10625,6 +10629,23 @@ title = "Tải lên máy chủ"
 updateButton = "Cập nhật trên máy chủ"
 uploadButton = "Tải lên máy chủ"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10795,6 @@ goBack = "Quay lại"
 pdfTools = "Công cụ PDF"
 placeholder = "Chọn một công cụ để bắt đầu"
 premiumFeature = "Tính năng Premium:"
-searchTools = "Tìm kiếm công cụ"
 toolsHeader = "Công cụ"
 viewAllTools = "Xem tất cả công cụ"
 
@@ -10821,6 +10841,9 @@ pageFormatting = "Định dạng trang"
 removal = "Loại bỏ"
 signing = "Ký"
 verification = "Xác minh"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Không tìm thấy công cụ nào"
@@ -10979,6 +11002,13 @@ approver = "Phê duyệt chính sách"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Hủy lời mời đến {{email}}? Họ sẽ không thể tham gia bằng liên kết hiện tại."
 cancelInviteTitle = "Hủy lời mời"
@@ -10998,10 +11028,8 @@ title = "Chưa có thành viên"
 addToTeam = "Thêm vào đội"
 guestCount = "{{count}} khách"
 guests = "Khách"
-guestsDesc = "Cộng tác viên bên ngoài, giới hạn trong những gì bạn chia sẻ. Chỉ Editor."
 ledBy = "do {{owner}} dẫn dắt"
 org = "Tổ chức"
-orgDesc = "Chủ sở hữu có quyền hạn toàn tổ chức và phê duyệt chính sách"
 owners = "{{count}} chủ sở hữu"
 team = "Đội {{name}}"
 teamMeta = "{{count}} người"
@@ -11041,12 +11069,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Được mời bởi {{who}}"
 cancel = "Hủy"
-count = "{{count}} đang chờ"
-desc = "Những người đã được mời nhưng chưa tham gia. Họ giữ một chỗ cho đến khi chấp nhận."
 expiresInDays_one = "Hết hạn sau {{count}} ngày"
 expiresInDays_other = "Hết hạn sau {{count}} ngày"
 expiresToday = "Hết hạn hôm nay"
 title = "Lời mời đang chờ"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Đã xảy ra lỗi khi kết nối tới backend, hoặc bạn không có quyền truy cập. Hãy thử lại."
@@ -11237,12 +11267,15 @@ searchPlaceholder = "Tìm kiếm tệp đính kèm"
 title = "Tệp đính kèm"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Tiêu đề dấu trang"
 bookmarkTitleRequired = "Bắt buộc nhập tiêu đề dấu trang"
 closeSidebar = "Đóng thanh bên dấu trang"
 collapseAll = "Thu gọn tất cả dấu trang"
+empty = "No bookmarks in this document"
 expandAll = "Mở rộng tất cả dấu trang"
 searchPlaceholder = "Tìm kiếm dấu trang"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Thêm bình luận"
@@ -11264,10 +11297,12 @@ locateAnnotation = "Định vị trong tài liệu"
 moreActions = "Thao tác khác"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Trang {{page}}"
 placingHint = "Nhấp vào một trang để đặt… (hủy)"
 removeCommentOnly = "Chỉ gỡ bình luận"
 saveReply = "Lưu trả lời"
+searchPlaceholder = "Search comments"
 title = "Bình luận"
 typeComment = "Bình luận"
 typeInsertText = "Chèn văn bản"
@@ -11290,6 +11325,7 @@ unsavedDesc = "Bạn có các thay đổi chưa được lưu"
 closeSidebar = "Đóng thanh bên lớp"
 hideAll = "Ẩn tất cả lớp"
 showAll = "Hiển thị tất cả lớp"
+title = "Layers"
 
 [viewer.link]
 delete = "Xóa liên kết"
@@ -11646,6 +11682,7 @@ exitRedaction = "Thoát chế độ bôi đen"
 exportAll = "Xuất PDF"
 exportSelected = "Xuất các trang đã chọn"
 formFill = "Điền biểu mẫu"
+hideToolbar = "Hide toolbar"
 multiTool = "Công cụ đa năng"
 panMode = "Chế độ di chuyển"
 print = "In PDF"
@@ -11666,6 +11703,7 @@ selectAll = "Chọn tất cả"
 selectByNumber = "Chọn theo số trang"
 selectLanguage = "Chọn ngôn ngữ"
 share = "Chia sẻ"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Bật/Tắt hiển thị chú thích"
 toggleAttachments = "Bật/Tắt tệp đính kèm"
 toggleBookmarks = "Bật/Tắt dấu trang"

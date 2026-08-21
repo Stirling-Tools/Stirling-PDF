@@ -71,6 +71,10 @@ import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
+import { downloadFileFromStorage } from "@app/utils/downloadUtils";
+import { fileStorage } from "@app/services/fileStorage";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
@@ -794,6 +798,92 @@ export default function FileManagerView() {
     [removeFiles],
   );
 
+  // ─── per-file kebab: download / rename / duplicate ───────────────────────
+  // Same actions the file sidebar's kebab offers, so both surfaces match.
+
+  /** Cloud-only rows hold no bytes; pull them local before acting on them. */
+  const localCopyOf = useCallback(
+    async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
+      const [materialized] = await materializeServerStubs([file], {
+        addFiles: fileActions.addFilesWithOptions,
+        updateStub: fileActions.updateStirlingFileStub,
+      });
+      return materialized ?? null;
+    },
+    [fileActions],
+  );
+
+  const handleDownloadFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        await downloadFileFromStorage(local);
+      } catch (err) {
+        console.error("[FilesPage] Download failed", err);
+        folders.setError(
+          t("filesPage.error.downloadFailed", "Could not download the file."),
+        );
+      }
+    },
+    [localCopyOf, folders, t],
+  );
+
+  const handleDuplicateFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        const copyId = await duplicateStoredFile(
+          local,
+          allFiles.map((f) => f.name),
+          addFiles,
+        );
+        if (!copyId) {
+          throw new Error(`File "${local.name}" not found in storage`);
+        }
+        await refresh();
+      } catch (err) {
+        console.error("[FilesPage] Duplicate failed", err);
+        folders.setError(
+          t("filesPage.error.duplicateFailed", "Could not duplicate the file."),
+        );
+      }
+    },
+    [localCopyOf, allFiles, addFiles, refresh, folders, t],
+  );
+
+  const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
+    null,
+  );
+
+  // The stub name is what the UI and exports read, so a rename is a metadata
+  // write; the workbench copy (if any) is updated in the same breath.
+  const handleConfirmRename = useCallback(
+    async (name: string) => {
+      const file = renameTarget;
+      if (!file) return;
+      const local = await localCopyOf(file);
+      if (!local) return;
+      // quickKey is name|size|lastModified; a stale one would make a re-upload
+      // of the original look like a duplicate of the renamed file.
+      const quickKey = `${name}|${local.size}|${local.lastModified}`;
+      const saved = await fileStorage.updateFileMetadata(local.id, {
+        name,
+        quickKey,
+      });
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
+      setRenameTarget(null);
+      await refresh();
+    },
+    [renameTarget, localCopyOf, fileActions, refresh, t],
+  );
+
   // ─── derived UI bits ────────────────────────────────────────────────────
   const currentFolderRecord = currentFolderId
     ? (foldersById.get(currentFolderId) ?? null)
@@ -1503,6 +1593,9 @@ export default function FileManagerView() {
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
               onVersionHistory={(file) => setVersionHistoryFile(file)}
+              onDownloadFile={handleDownloadFile}
+              onRenameFile={setRenameTarget}
+              onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
               // Center-of-grid CTAs when the empty state shows - same
               // handlers the corner header buttons use so behaviour
@@ -1660,6 +1753,14 @@ export default function FileManagerView() {
         files={deleteDialogFiles}
         onClose={closeDeleteDialog}
         onConfirm={confirmRemoveFiles}
+      />
+
+      {/* Rename (opened from the card kebab). */}
+      <RenameFileDialog
+        opened={Boolean(renameTarget)}
+        fileName={renameTarget?.name ?? ""}
+        onClose={() => setRenameTarget(null)}
+        onSubmit={handleConfirmRename}
       />
 
       {/* Version journey in a modal (opened from the card kebab). */}
