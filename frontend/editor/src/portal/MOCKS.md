@@ -62,15 +62,11 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
 | Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
 | Policies | `GET/POST /api/v1/policies` · `GET/DELETE /api/v1/policies/{id}` · `POST /api/v1/policies/{id}/run` | — | `fetchPolicies` · `savePolicy` · `deletePolicy` · `runPolicy` | `PoliciesResponse` · `Policy` |
-| Agent Builder | `GET /v1/agents` | `tier` | `fetchAgents` | `AgentsResponse` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
 | Components | `GET /v1/components` | `tier` | `fetchComponents` | `ComponentsResponse` |
-| Infrastructure | `GET /v1/infrastructure/deployments` | `tier` | `fetchDeployments` | `DeploymentsResponse` |
-| Infrastructure | `GET /v1/infrastructure/api-keys` | `tier` | `fetchApiKeys` | `ApiKey[]` |
-| Infrastructure | `GET /v1/infrastructure/security` | `tier` | `fetchSecurity` | `SecurityConfig` |
-| Infrastructure | `GET /v1/infrastructure/models` | `tier` | `fetchModels` | `ModelsResponse` |
-| Infrastructure | `GET /v1/infrastructure/storage` | `tier` | `fetchStorage` | `StorageConfig` |
-| Infrastructure | `GET /v1/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
+| Infrastructure | `GET/POST /api/v1/proprietary/ui-data/infrastructure/api-keys` · `DELETE …/api-keys/{id}` | — | `fetchApiKeys` · `createApiKey` · `revokeApiKey` | `ApiKeysResponse` · `CreatedApiKey` |
+| Infrastructure | `GET /api/v1/proprietary/ui-data/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
+| Infrastructure | `GET /api/v1/proprietary/ui-data/audit-export` | `format`, `fields` | `exportAuditLog` | CSV/JSON blob |
 | Usage & Billing | `GET /v1/billing/usage` | — | `fetchBillingUsage` | `UsageSeriesResponse` |
 | Usage & Billing | `GET /v1/billing/summary` | `tier` | `fetchBillingSummary` | `BillingSummary` |
 | Usage & Billing | `GET /v1/billing/plans` | — | `fetchPlanOptions` | `PlanOption[]` |

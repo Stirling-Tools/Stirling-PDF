@@ -1,7 +1,7 @@
 .sui-modal__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -15,18 +15,30 @@
   /* Set our own font: the modal portals to <body>, so it can't inherit the
      app's font through the DOM (the portal's .portal-scope isn't an ancestor). */
   font-family: var(--font-sans);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-xl);
   box-shadow:
-    0 1.25rem 3rem rgba(15, 23, 42, 0.35),
-    0 0 0 1px var(--color-border-light);
+    0 1.25rem 3rem rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--c-border-subtle);
   display: flex;
   flex-direction: column;
   width: 100%;
   max-height: calc(100vh - 6.5rem);
+  max-height: calc(100dvh - 6.5rem); /* mobile browser chrome shrinks 100vh */
   overflow: hidden;
   animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Phones: drop the tall top inset so the modal gets the vertical space */
+@media (max-width: 30rem) {
+  .sui-modal__backdrop {
+    padding: 1rem 0.75rem;
+    align-items: center;
+  }
+  .sui-modal {
+    max-height: calc(100dvh - 2rem);
+  }
 }
 
 .sui-modal--sm {
@@ -47,7 +59,7 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.125rem 0.75rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .sui-modal__header-text {
@@ -58,13 +70,13 @@
 .sui-modal__title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .sui-modal__sub {
   margin-top: 0.125rem;
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* Sizing/background/hover are owned by the Button; this just keeps it from
@@ -77,12 +89,12 @@
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 1rem 1.125rem 1.125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .sui-modal__footer {
   padding: 0.875rem 1.125rem;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;

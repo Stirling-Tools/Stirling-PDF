@@ -219,8 +219,9 @@ export default function BookmarkEditor({
         withBorder
         p="md"
         style={{
-          borderColor: "var(--border-default)",
-          background: level === 0 ? "var(--bg-surface)" : "var(--bg-muted)",
+          borderColor: "var(--c-border)",
+          background:
+            level === 0 ? "var(--c-surface)" : "var(--c-surface-sunken)",
         }}
       >
         <Stack gap="sm">
@@ -380,7 +381,7 @@ export default function BookmarkEditor({
             <Stack
               gap="sm"
               pl="lg"
-              style={{ borderLeft: "1px solid var(--border-default)" }}
+              style={{ borderLeft: "1px solid var(--c-border)" }}
             >
               {bookmark.children.map((child) => (
                 <Fragment key={child.id}>

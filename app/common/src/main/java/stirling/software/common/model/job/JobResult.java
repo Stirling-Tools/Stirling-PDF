@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,6 +48,16 @@ public class JobResult {
      * when notes are added concurrently.
      */
     private final List<String> notes = new CopyOnWriteArrayList<>();
+
+    /** Key/value metadata that survives the write-through into the shared job store. */
+    private final Map<String, String> metadata = new ConcurrentHashMap<>();
+
+    /**
+     * File ids of the persistent input copies made for this job. An async submit copies the upload
+     * into FileStorage so the job can still read it after the request returns; without tracking
+     * them here nothing would ever delete those copies.
+     */
+    @JsonIgnore private final List<String> inputFileIds = new CopyOnWriteArrayList<>();
 
     /**
      * Create a new JobResult with the given job ID
@@ -160,5 +172,33 @@ public class JobResult {
      */
     public List<String> getNotes() {
         return Collections.unmodifiableList(notes);
+    }
+
+    /** Record a persistent input copy so job cleanup deletes it alongside the results. */
+    public void addInputFileId(String fileId) {
+        if (fileId != null && !fileId.isBlank() && !inputFileIds.contains(fileId)) {
+            this.inputFileIds.add(fileId);
+        }
+    }
+
+    /**
+     * File ids of this job's persistent input copies.
+     *
+     * @return An unmodifiable view of the input file ids
+     */
+    public List<String> getInputFileIds() {
+        return Collections.unmodifiableList(inputFileIds);
+    }
+
+    /** Attach a metadata value, e.g. a policy id so cluster peers can identify a policy run. */
+    public void putMetadata(String key, String value) {
+        if (key != null && value != null) {
+            this.metadata.put(key, value);
+        }
+    }
+
+    /** An unmodifiable view of this job's metadata. */
+    public Map<String, String> getMetadata() {
+        return Collections.unmodifiableMap(metadata);
     }
 }

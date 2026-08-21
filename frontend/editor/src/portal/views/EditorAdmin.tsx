@@ -2,11 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import {
-  fetchEditorDeployment,
-  type EditorDeploymentResponse,
-} from "@portal/api/editorDeploy";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { useEditorDeployment } from "@portal/queries/infrastructure";
 import { DeploymentSummaryStrip } from "@portal/components/editor-admin/DeploymentSummaryStrip";
 import { DeploymentTargets } from "@portal/components/editor-admin/DeploymentTargets";
 import { PairingPanel } from "@portal/components/editor-admin/PairingPanel";
@@ -35,10 +32,7 @@ export function EditorAdmin() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
-  const state = useAsync<EditorDeploymentResponse>(
-    () => fetchEditorDeployment(tier),
-    [tier],
-  );
+  const state = useEditorDeployment(tier);
   const { data } = state;
   const { isLoading } = useSectionFlags(state);
 

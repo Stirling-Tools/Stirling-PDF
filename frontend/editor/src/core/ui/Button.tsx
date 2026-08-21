@@ -42,6 +42,7 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  fat?: boolean;
   /** Label size relative to `size`. Defaults to the `size`-derived value. */
   fontSize?: ButtonFontSize;
   /** Padding override for both axes */
@@ -103,6 +104,9 @@ function ButtonGroup({
   );
 }
 
+const FAT_HEIGHT = "2.75rem";
+const FAT_PADDING_X = "lg" satisfies ControlPadding;
+
 const MANTINE_VARIANT: Record<ButtonVariant, string> = {
   primary: "filled",
   secondary: "outline",
@@ -123,6 +127,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       accent = "default",
       size = "sm",
+      fat = false,
       fontSize,
       p,
       px,
@@ -153,8 +158,15 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     const iconOnly =
       !hasLabel && !fullWidth && (!!leftSection || !!rightSection || loading);
 
+    // A button whose label is momentarily absent while loading still needs an
+    // accessible name; the spinner and any icon are decorative.
+    const fallbackLabel =
+      !hasLabel && loading && !rest["aria-label"] && !rest["aria-labelledby"]
+        ? "Loading"
+        : undefined;
+
     // px/py override p for their axis; each stays undefined (= size default) if unset.
-    const padX = px ?? p;
+    const padX = px ?? p ?? (fat ? FAT_PADDING_X : undefined);
     const padY = py ?? p;
 
     // Sections flank a label → spread them without requiring justify="between".
@@ -168,6 +180,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       `sui-acc-${accent}`,
       `sui-btn--${variant}`,
       iconOnly ? "sui-btn--icon" : "",
+      fat ? "sui-btn--fat" : "",
       shape !== "default" ? `sui-btn--${shape}` : "",
       overflow === "wrap" ? "sui-btn--wrap" : "",
       !hover ? "sui-btn--no-hover" : "",
@@ -190,18 +203,26 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
               "--button-bg": "transparent",
               "--button-hover": "transparent",
               "--button-color": "var(--_text)",
-              "--button-hover-color": "var(--color-text-1)",
+              "--button-hover-color": "var(--c-text)",
               "--button-bd": "1px solid transparent",
             }
-          : {
-              "--button-bg": "transparent",
-              "--button-hover": "var(--_tint)",
-              "--button-color": "var(--_text)",
-              "--button-bd":
-                variant === "secondary"
-                  ? "1px solid var(--_bd)"
-                  : "1px solid transparent",
-            };
+          : variant === "secondary"
+            ? {
+                // Filled when the accent defines --_solid-2 (default = inverse
+                // ink/snow); otherwise falls back to the outlined look.
+                "--button-bg": "var(--_solid-2, transparent)",
+                "--button-hover": "var(--_solid-2-hover, var(--_tint))",
+                "--button-color": "var(--_on-2, var(--_text))",
+                "--button-bd": "1px solid var(--_bd-2, var(--_bd))",
+              }
+            : {
+                // tertiary (ghost) — neutral text + hover when the accent
+                // defines --_tert-* (default); otherwise the accent link colour.
+                "--button-bg": "transparent",
+                "--button-hover": "var(--_tert-tint, var(--_tint))",
+                "--button-color": "var(--_tert-text, var(--_text))",
+                "--button-bd": "1px solid transparent",
+              };
 
     // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
     const Comp = MantineButton as ElementType;
@@ -209,6 +230,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         {...rest}
+        aria-label={rest["aria-label"] ?? fallbackLabel}
         ref={ref}
         component={as}
         variant={MANTINE_VARIANT[variant]}
@@ -222,7 +244,9 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         className={classes}
         style={{
           ...(accentVars as CSSProperties),
-          ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          ...({
+            "--button-height": fat ? FAT_HEIGHT : CONTROL_HEIGHT[size],
+          } as CSSProperties),
           // Relative label size, scaled off the `size` base (unset → Mantine default).
           ...(fontSize
             ? ({
@@ -236,6 +260,10 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
             : {}),
           ...(padY
             ? ({ "--sui-btn-py": CONTROL_PADDING[padY] } as CSSProperties)
+            : {}),
+          // mantineTheme writes font-weight inline on every button root, so this must be inline too.
+          ...(fat
+            ? ({ fontWeight: "var(--font-weight-semibold)" } as CSSProperties)
             : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),

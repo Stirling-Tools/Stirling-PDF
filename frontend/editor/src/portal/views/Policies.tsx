@@ -1,31 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { useSectionFlags } from "@portal/hooks/useAsync";
 import {
   buildWireFromSetup,
   buildWireFromState,
   clearProcessedHistory,
   deletePolicy,
-  fetchPolicies,
   savePolicy,
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type CatalogueEntry,
-  type PoliciesResponse,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { usePoliciesOverview } from "@portal/queries/policies";
+import { qk } from "@portal/queries/keys";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
-import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
+import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import "@portal/views/Policies.css";
 
 export function Policies() {
   const { t } = useTranslation();
-  const [version, setVersion] = useState(0);
-  const state = useAsync<PoliciesResponse>(() => fetchPolicies(), [version]);
+  const queryClient = useQueryClient();
+  const state = usePoliciesOverview();
   const { data, loading, error: fetchError } = state;
   const { isLoading } = useSectionFlags(state);
 
@@ -33,33 +36,97 @@ export function Policies() {
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const setupId = searchParams.get("setup");
+    if (!setupId || !data) return;
+    const entry = data.catalogue.find((e) => e.category.id === setupId);
+    if (entry && !entry.category.comingSoon) {
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("setup");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, data, setSearchParams]);
+
+  const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
+    useAiEngineEnabled();
+
+  const isLocked = useCallback(
+    (entry: CatalogueEntry): boolean =>
+      entry.category.requiresAiEngine === true &&
+      !aiEngineEnabled &&
+      !aiEngineLoading &&
+      !entry.policy,
+    [aiEngineEnabled, aiEngineLoading],
+  );
 
   const catalogue = data?.catalogue ?? [];
-  const refetch = useCallback(() => setVersion((v) => v + 1), []);
+  // Invalidate the shared policies caches; because ProcessorFlow and onboarding
+  // read the SAME entries, this also live-refreshes Home.
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: qk.policiesList() });
+    queryClient.invalidateQueries({ queryKey: qk.policyRuns() });
+  }, [queryClient]);
   // The catalogue cards are always shown (they're the "configure a policy" CTAs),
   // but the summary strip is pure stat boxes: hide it until at least one policy
   // is configured so a fresh workspace doesn't show a row of zeros.
   const hasPolicies = !!data && data.summary.active + data.summary.paused > 0;
 
-  const displayCatalogue: CatalogueEntry[] =
-    catalogue.length > 0
-      ? catalogue
-      : POLICY_CATEGORIES.map((cat) => ({
-          category: cat,
-          config: POLICY_CONFIG[cat.id] ?? {
-            summary: "",
-            rules: [],
-            scopeLabel: "",
-            fields: [],
-            defaultOperations: [],
-          },
-          policy: null,
-        }));
+  const displayCatalogue: CatalogueEntry[] = useMemo(
+    () =>
+      catalogue.length > 0
+        ? catalogue
+        : POLICY_CATEGORIES.map((cat) => ({
+            category: cat,
+            config: POLICY_CONFIG[cat.id] ?? {
+              summary: "",
+              rules: [],
+              scopeLabel: "",
+              fields: [],
+              defaultOperations: [],
+            },
+            policy: null,
+          })),
+    [catalogue],
+  );
 
-  function openEntry(entry: CatalogueEntry) {
-    if (entry.policy) setDetail(entry);
-    else setWizard(entry);
-  }
+  const openEntry = useCallback(
+    (entry: CatalogueEntry) => {
+      // Block setup of an AI-required policy until the engine is confirmed on (so a
+      // click during the app-config load can't open a wizard for a disabled
+      // feature); a configured policy stays openable so it can be paused/deleted.
+      if (entry.category.requiresAiEngine && !aiEngineEnabled && !entry.policy)
+        return;
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    },
+    [aiEngineEnabled],
+  );
+
+  // Open a category passed as ?category=<id> (deep link from the super
+  // search), then strip the param so back/reload doesn't re-open it. Waits for
+  // the AI-engine flag too: openEntry refuses AI-gated categories until the
+  // flag is confirmed, and stripping the param before that decision would
+  // drop the deep link silently.
+  useEffect(() => {
+    const categoryId = searchParams.get("category");
+    if (categoryId === null || loading || aiEngineLoading) return;
+    const entry = displayCatalogue.find((e) => e.category.id === categoryId);
+    if (entry) openEntry(entry);
+    const next = new URLSearchParams(searchParams);
+    next.delete("category");
+    setSearchParams(next, { replace: true });
+  }, [
+    searchParams,
+    setSearchParams,
+    loading,
+    aiEngineLoading,
+    displayCatalogue,
+    openEntry,
+  ]);
 
   async function handleSubmit(
     entry: CatalogueEntry,
@@ -151,15 +218,12 @@ export function Policies() {
       )}
 
       {!isLoading && !fetchError && (
-        <div className="portal-policies__grid">
-          {displayCatalogue.map((entry) => (
-            <PolicyCategoryCard
-              key={entry.category.id}
-              entry={entry}
-              onOpen={openEntry}
-            />
-          ))}
-        </div>
+        <PolicyCatalogueTable
+          entries={displayCatalogue}
+          onOpen={openEntry}
+          isLocked={isLocked}
+          lockedLabel={t("portal.policies.card.requiresAiEngine")}
+        />
       )}
 
       <PolicyDetailPanel

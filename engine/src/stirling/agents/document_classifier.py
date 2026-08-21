@@ -116,8 +116,8 @@ class DocumentClassifierAgent:
         )
 
     async def classify(self, request: ClassifyDocumentRequest) -> ClassifyDocumentResponse:
-        # The caller (the backend) always supplies the allowed vocabulary — the
-        # team's stored labels — so the engine holds no vocabulary of its own.
+        # The caller (the backend) always supplies the allowed vocabulary — its
+        # fixed built-in label set — so the engine holds no vocabulary of its own.
         allowed = request.labels
         window = select_window(request.pages)
         prompt = self._build_prompt(request.file_name, allowed, window)

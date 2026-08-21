@@ -12,15 +12,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import stirling.software.proprietary.integration.crypto.LenientEncryptedStringConverter;
+import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConverter;
 
 /**
  * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
  * as JSON in {@code policyJson} (authoritative on read); the scalar columns are denormalized copies
- * for querying, notably {@code triggerType} + {@code enabled} so background triggers can fetch
- * their policies, and {@code teamId} so the caller's team can be loaded without scanning every
- * team's rows. {@code owner} and {@code teamId} are plain values, not foreign keys, to stay
- * decoupled from the security entities.
+ * for querying, notably {@code enabled} so background triggers can scan the active policies, and
+ * {@code teamId} so the caller's team can be loaded without scanning every team's rows. {@code
+ * owner} and {@code teamId} are plain values, not foreign keys, to stay decoupled from the security
+ * entities.
  */
 @Entity
 @Table(name = "policies")
@@ -44,9 +44,6 @@ public class PolicyEntity implements Serializable {
     @Column(name = "enabled")
     private boolean enabled;
 
-    @Column(name = "trigger_type")
-    private String triggerType;
-
     @Column(name = "team_id")
     private Long teamId;
 
@@ -58,9 +55,9 @@ public class PolicyEntity implements Serializable {
     @Column(name = "sort_order")
     private Integer sortOrder;
 
-    // Encrypted at rest: output options carry user-supplied credentials (e.g. an S3 secret
-    // access key). Lenient so rows written before encryption shipped still load.
-    @Convert(converter = LenientEncryptedStringConverter.class)
+    // Plaintext at rest: the S3 credentials that used to live here now sit in a referenced
+    // IntegrationConfig connection (still encrypted). Decrypts legacy ciphertext on read.
+    @Convert(converter = LegacyDecryptStringConverter.class)
     @Column(name = "policy_json", columnDefinition = "text")
     private String policyJson;
 }
