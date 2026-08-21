@@ -1,7 +1,12 @@
 import { Stack, NumberInput, Select } from "@mantine/core";
+import {
+  SegmentedControl,
+  type SegmentedOption,
+} from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   AdjustPageScaleParameters,
+  Orientation,
   PageSize,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -22,6 +27,8 @@ const AdjustPageScaleSettings = ({
 }: AdjustPageScaleSettingsProps) => {
   const { t } = useTranslation();
 
+  const isKeepSelected = parameters.pageSize === PageSize.KEEP;
+
   const pageSizeOptions = [
     {
       value: PageSize.KEEP,
@@ -41,6 +48,20 @@ const AdjustPageScaleSettings = ({
     {
       value: PageSize.LEGAL,
       label: t("adjustPageScale.pageSize.legal", "Legal"),
+    },
+  ];
+
+  const orientationDisabled = disabled || isKeepSelected;
+  const orientationOptions: SegmentedOption<Orientation>[] = [
+    {
+      value: "PORTRAIT",
+      label: t("adjustPageScale.orientation.portrait", "Portrait"),
+      disabled: orientationDisabled,
+    },
+    {
+      value: "LANDSCAPE",
+      label: t("adjustPageScale.orientation.landscape", "Landscape"),
+      disabled: orientationDisabled,
     },
   ];
 
@@ -66,9 +87,10 @@ const AdjustPageScaleSettings = ({
         label={t("adjustPageScale.pageSize.label", "Target Page Size")}
         value={parameters.pageSize}
         onChange={(value) => {
-          if (value && Object.values(PageSize).includes(value as PageSize)) {
-            onParameterChange("pageSize", value as PageSize);
-          }
+          if (!value) return;
+          const next = value as PageSize;
+          if (!Object.values(PageSize).includes(next)) return;
+          onParameterChange("pageSize", next);
         }}
         data={pageSizeOptions}
         disabled={disabled}
@@ -76,6 +98,16 @@ const AdjustPageScaleSettings = ({
           withinPortal: true,
           zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
         }}
+      />
+
+      <SegmentedControl
+        aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
+        value={parameters.orientation}
+        onChange={(value) =>
+          onParameterChange("orientation", value as Orientation)
+        }
+        options={orientationOptions}
+        fullWidth
       />
     </Stack>
   );

@@ -5,11 +5,11 @@ Outputs untranslated entries in minimal JSON format with whitespace stripped.
 TOML format only.
 """
 
+import argparse
 import json
 import sys
-from pathlib import Path
-import argparse
 import tomllib  # Python 3.11+ (stdlib)
+from pathlib import Path
 
 
 class CompactTranslationExtractor:
@@ -19,10 +19,10 @@ class CompactTranslationExtractor:
         ignore_file: str = "scripts/ignore_translation.toml",
     ):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         if not self.golden_truth_file.exists():
             print(
-                f"Error: en-GB translation file not found at {self.golden_truth_file}",
+                f"Error: en-US translation file not found at {self.golden_truth_file}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -50,9 +50,7 @@ class CompactTranslationExtractor:
         try:
             with open(self.ignore_file, "rb") as f:
                 ignore_data = tomllib.load(f)
-            return {
-                lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()
-            }
+            return {lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()}
         except Exception as e:
             print(
                 f"Warning: Could not load ignore file {self.ignore_file}: {e}",
@@ -60,9 +58,7 @@ class CompactTranslationExtractor:
             )
             return {}
 
-    def _flatten_dict(
-        self, d: dict, parent_key: str = "", separator: str = "."
-    ) -> dict:
+    def _flatten_dict(self, d: dict, parent_key: str = "", separator: str = ".") -> dict:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -95,19 +91,15 @@ class CompactTranslationExtractor:
         # Find missing translations
         missing_keys = set(golden_flat.keys()) - set(target_flat.keys()) - ignore_set
 
-        # Find untranslated entries (identical to en-GB or marked [UNTRANSLATED])
+        # Find untranslated entries (identical to en-US or marked [UNTRANSLATED])
         untranslated_keys = set()
         for key in target_flat:
             if key in golden_flat and key not in ignore_set:
                 target_value = target_flat[key]
                 golden_value = golden_flat[key]
 
-                if (
-                    isinstance(target_value, str)
-                    and target_value.startswith("[UNTRANSLATED]")
-                ) or (
-                    golden_value == target_value
-                    and not self._is_expected_identical(key, golden_value)
+                if (isinstance(target_value, str) and target_value.startswith("[UNTRANSLATED]")) or (
+                    golden_value == target_value and not self._is_expected_identical(key, golden_value)
                 ):
                     untranslated_keys.add(key)
 
@@ -151,9 +143,7 @@ def main():
         default="scripts/ignore_translation.toml",
         help="Path to ignore patterns file",
     )
-    parser.add_argument(
-        "--max-entries", type=int, help="Maximum number of entries to output"
-    )
+    parser.add_argument("--max-entries", type=int, help="Maximum number of entries to output")
     parser.add_argument("--output", help="Output file (default: stdout)")
 
     args = parser.parse_args()

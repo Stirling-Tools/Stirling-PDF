@@ -23,6 +23,8 @@ describe("useAdjustPageScaleParameters", () => {
     { paramName: "pageSize" as const, value: PageSize.A4 },
     { paramName: "pageSize" as const, value: PageSize.LETTER },
     { paramName: "pageSize" as const, value: PageSize.LEGAL },
+    { paramName: "orientation" as const, value: "LANDSCAPE" as const },
+    { paramName: "orientation" as const, value: "PORTRAIT" as const },
   ])("should update parameter $paramName to $value", ({ paramName, value }) => {
     const { result } = renderHook(() => useAdjustPageScaleParameters());
 

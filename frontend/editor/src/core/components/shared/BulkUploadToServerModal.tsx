@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Stack, Text, Button, Group, Alert } from "@mantine/core";
+import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useTranslation } from "react-i18next";
 
@@ -89,11 +90,21 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Failed to upload files to server:", error);
+      // A 403 means the server has storage turned off (or login disabled,
+      // which gates storage). Say so plainly instead of the generic
+      // "check your settings" message, which reads as a user mistake.
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status;
       setErrorMessage(
-        t(
-          "storageUpload.failure",
-          "Upload failed. Please check your login and storage settings.",
-        ),
+        status === 403
+          ? t(
+              "storageUpload.featureDisabled",
+              "Saving to the server isn't enabled on this server.",
+            )
+          : t(
+              "storageUpload.failure",
+              "Upload failed. Please check your login and storage settings.",
+            ),
       );
     } finally {
       setIsUploading(false);
@@ -141,7 +152,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
         )}
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose} disabled={isUploading}>
+          <Button variant="secondary" onClick={onClose} disabled={isUploading}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

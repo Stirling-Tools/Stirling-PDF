@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -41,6 +40,9 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -58,8 +60,6 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 @Slf4j
 @RequiredArgsConstructor
 public class MergeController {
-
-    private static final Pattern QUOTE_WRAP_PATTERN = Pattern.compile("^\"|\"$");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -161,30 +161,6 @@ public class MergeController {
         };
     }
 
-    private String[] parseClientFileIds(String clientFileIds) {
-        if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
-            return new String[0];
-        }
-        try {
-            String trimmed = clientFileIds.trim();
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                String inside = trimmed.substring(1, trimmed.length() - 1).trim();
-                if (inside.isEmpty()) {
-                    return new String[0];
-                }
-                String[] parts = inside.split(",");
-                String[] result = new String[parts.length];
-                for (int i = 0; i < parts.length; i++) {
-                    result[i] = QUOTE_WRAP_PATTERN.matcher(parts[i].trim()).replaceAll("");
-                }
-                return result;
-            }
-        } catch (Exception e) {
-            log.warn("Failed to parse client file IDs: {}", clientFileIds, e);
-        }
-        return new String[0];
-    }
-
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
         PDDocumentOutline outline = new PDDocumentOutline();
         mergedDocument.getDocumentCatalog().setDocumentOutline(outline);
@@ -265,12 +241,13 @@ public class MergeController {
             value = "/merge-pdfs",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
-                            + " provided. Input:PDF Output:PDF Type:MISO")
+                            + " provided.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)

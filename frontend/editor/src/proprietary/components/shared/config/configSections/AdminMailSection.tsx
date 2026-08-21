@@ -168,7 +168,7 @@ export default function AdminMailSection() {
                     "Allow admins to invite users via email with auto-generated passwords",
                   )}
                 </Text>
-                <Text size="xs" c="orange" mt={8} fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
                     "admin.settings.mail.frontendUrlNote.note",
                     "Note: Requires Frontend URL to be configured. ",
@@ -179,7 +179,7 @@ export default function AdminMailSection() {
                       e.preventDefault();
                       navigate("/settings/adminGeneral#frontendUrl");
                     }}
-                    c="orange"
+                    c="var(--color-amber-dark)"
                     td="underline"
                   >
                     {t(
@@ -286,7 +286,10 @@ export default function AdminMailSection() {
                 onChange={(value) =>
                   setSettings({ ...settings, password: value })
                 }
-                placeholder="Enter SMTP password"
+                placeholder={t(
+                  "admin.settings.mail.password.placeholder",
+                  "Enter SMTP password",
+                )}
               />
             </div>
 

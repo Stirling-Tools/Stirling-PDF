@@ -3,7 +3,6 @@ import {
   Modal,
   Stack,
   Text,
-  Button,
   Group,
   Alert,
   TextInput,
@@ -13,10 +12,12 @@ import {
   ScrollArea,
   Select,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HistoryIcon from "@mui/icons-material/History";
 import LinkIcon from "@mui/icons-material/Link";
+import ShareIcon from "@mui/icons-material/Share";
 import { useTranslation } from "react-i18next";
 
 import apiClient from "@app/services/apiClient";
@@ -129,7 +130,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   }, [config?.frontendUrl]);
 
   const loadShareLinks = useCallback(async () => {
-    if (!file.remoteStorageId) return;
+    if (!file.remoteStorageId) {
+      // No remote file yet — clear any leftover state from a previously opened file.
+      setShareLinks([]);
+      setSharedUsers([]);
+      return;
+    }
     setIsLoading(true);
     setErrorMessage(null);
     try {
@@ -160,6 +166,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
 
   useEffect(() => {
     if (opened) {
+      // Clear the previous file's data before loading so a stale list is never
+      // shown (and never targeted by a Remove click) while the new file resolves.
+      setShareLinks([]);
+      setSharedUsers([]);
       loadShareLinks();
       setActivityMap({});
       setShareRole("editor");
@@ -472,13 +482,25 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
       opened={opened}
       onClose={onClose}
       centered
-      title={t("storageShare.manageTitle", "Manage Sharing")}
+      title={
+        <Group gap="xs" wrap="nowrap">
+          <ShareIcon style={{ fontSize: 20 }} />
+          <Text fw={600} size="lg">
+            {t("storageShare.manageTitle", "Manage Sharing")}
+          </Text>
+        </Group>
+      }
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
-      size="xl"
+      size={shareLinksEnabled ? "min(58rem, 94vw)" : "min(46rem, 94vw)"}
+      radius="lg"
+      padding="lg"
+      styles={{
+        header: { paddingTop: "0.875rem", paddingBottom: "0.875rem" },
+      }}
       overlayProps={{ blur: 8 }}
     >
       <Stack gap="lg">
-        <Stack gap={4}>
+        <Group justify="space-between" align="center" gap="md" mt="md">
           <Text size="sm" c="dimmed">
             {t(
               "storageShare.manageDescription",
@@ -491,7 +513,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
               {file.name}
             </Text>
           </Text>
-        </Stack>
+        </Group>
 
         {errorMessage && (
           <Alert
@@ -513,7 +535,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           </Alert>
         )}
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+        <SimpleGrid
+          cols={{ base: 1, md: shareLinksEnabled ? 2 : 1 }}
+          spacing="lg"
+        >
           <Stack gap="lg">
             {shareLinksEnabled && (
               <Paper withBorder radius="md" p="md">
@@ -574,8 +599,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                 <Text size="sm" fw={600}>
                   {t("storageShare.sharedUsersTitle", "Shared users")}
                 </Text>
-                <Group align="flex-end" gap="sm">
+                <Group align="flex-end" gap="sm" wrap="nowrap">
                   <TextInput
+                    style={{ flex: 1 }}
                     label={t("storageShare.usernameLabel", "Username or email")}
                     placeholder={t(
                       "storageShare.usernamePlaceholder",
@@ -622,7 +648,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                       </Text>
                       <Group justify="flex-end" gap="sm">
                         <Button
-                          variant="default"
+                          variant="secondary"
                           onClick={() => setShowEmailWarning(false)}
                           disabled={isLoading}
                         >
@@ -705,9 +731,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                           {confirmRemoveUser === user.username ? (
                             <Group gap="xs">
                               <Button
-                                variant="filled"
-                                size="xs"
-                                color="red"
+                                accent="danger"
+                                size="sm"
                                 onClick={() => {
                                   void handleRemoveUser(user.username);
                                 }}
@@ -716,8 +741,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                 {t("confirm", "Confirm")}
                               </Button>
                               <Button
-                                variant="default"
-                                size="xs"
+                                variant="secondary"
+                                size="sm"
                                 onClick={() => setConfirmRemoveUser(null)}
                               >
                                 {t("cancel", "Cancel")}
@@ -725,9 +750,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             </Group>
                           ) : (
                             <Button
-                              variant="light"
-                              size="xs"
-                              color="red"
+                              variant="secondary"
+                              accent="danger"
+                              size="sm"
                               leftSection={
                                 <DeleteIcon style={{ fontSize: 16 }} />
                               }
@@ -787,8 +812,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             label={t("storageShare.linkLabel", "Share link")}
                             rightSection={
                               <Button
-                                variant="subtle"
-                                size="xs"
+                                variant="tertiary"
+                                size="sm"
                                 leftSection={
                                   <ContentCopyRoundedIcon
                                     style={{ fontSize: 16 }}
@@ -848,8 +873,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             </Stack>
                             <Group gap="xs">
                               <Button
-                                variant={isSelected ? "filled" : "light"}
-                                size="xs"
+                                variant={isSelected ? "secondary" : "primary"}
+                                size="sm"
                                 leftSection={
                                   <HistoryIcon style={{ fontSize: 16 }} />
                                 }
@@ -872,9 +897,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                               {confirmRevokeToken === link.token ? (
                                 <Group gap="xs">
                                   <Button
-                                    variant="filled"
-                                    size="xs"
-                                    color="red"
+                                    accent="danger"
+                                    size="sm"
                                     onClick={() => {
                                       void handleRevokeLink(link.token);
                                     }}
@@ -883,8 +907,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                     {t("confirm", "Confirm")}
                                   </Button>
                                   <Button
-                                    variant="default"
-                                    size="xs"
+                                    variant="secondary"
+                                    size="sm"
                                     onClick={() => setConfirmRevokeToken(null)}
                                   >
                                     {t("cancel", "Cancel")}
@@ -892,9 +916,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                 </Group>
                               ) : (
                                 <Button
-                                  variant="light"
-                                  size="xs"
-                                  color="red"
+                                  variant="secondary"
+                                  accent="danger"
+                                  size="sm"
                                   leftSection={
                                     <DeleteIcon style={{ fontSize: 16 }} />
                                   }

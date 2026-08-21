@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Button,
   Collapse,
   Alert,
   TextInput,
@@ -8,9 +7,10 @@ import {
   Stack,
   Group,
   Text,
-  SegmentedControl,
-  FileButton,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
@@ -113,7 +113,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   return (
     <div>
       <Button
-        variant="subtle"
+        variant="tertiary"
         leftSection={
           <LocalIcon
             icon={
@@ -238,13 +238,14 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               if (value === "text") setLicenseFile(null);
               if (value === "file") setLicenseKeyInput("");
             }}
-            data={[
+            options={[
               {
                 label: t(
                   "admin.settings.premium.inputMethod.text",
                   "License Key",
                 ),
                 value: "text",
+                disabled: !loginEnabled || savingLicense,
               },
               {
                 label: t(
@@ -252,9 +253,9 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                   "Certificate File",
                 ),
                 value: "file",
+                disabled: !loginEnabled || savingLicense,
               },
             ]}
-            disabled={!loginEnabled || savingLicense}
           />
 
           {/* Input area */}
@@ -292,33 +293,26 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                       "Upload your .lic or .cert license file",
                     )}
                   </Text>
-                  <FileButton
+                  <FilePicker
                     onChange={setLicenseFile}
                     accept=".lic,.cert"
                     disabled={!loginEnabled || savingLicense}
+                    variant="secondary"
+                    leftSection={
+                      <LocalIcon
+                        icon="upload-file-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
+                    }
                   >
-                    {(props) => (
-                      <Button
-                        {...props}
-                        variant="outline"
-                        leftSection={
-                          <LocalIcon
-                            icon="upload-file-rounded"
-                            width="1rem"
-                            height="1rem"
-                          />
-                        }
-                        disabled={!loginEnabled || savingLicense}
-                      >
-                        {licenseFile
-                          ? licenseFile.name
-                          : t(
-                              "admin.settings.premium.file.choose",
-                              "Choose License File",
-                            )}
-                      </Button>
-                    )}
-                  </FileButton>
+                    {licenseFile
+                      ? licenseFile.name
+                      : t(
+                          "admin.settings.premium.file.choose",
+                          "Choose License File",
+                        )}
+                  </FilePicker>
                   {licenseFile && (
                     <Text size="xs" c="dimmed" mt="xs">
                       {t(

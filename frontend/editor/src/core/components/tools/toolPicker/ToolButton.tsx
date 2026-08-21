@@ -1,5 +1,6 @@
 import React, { memo } from "react";
-import { Button, Badge } from "@mantine/core";
+import { Badge } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
@@ -32,8 +33,10 @@ interface ToolButtonProps {
   disableNavigation?: boolean;
   matchedSynonym?: string;
   hasStars?: boolean;
+  showDescription?: boolean;
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
+  badgeCount?: number;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({
@@ -44,7 +47,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   disableNavigation = false,
   matchedSynonym,
   hasStars = false,
+  showDescription = false,
   onUnavailableClick,
+  badgeCount,
 }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -139,97 +144,112 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       </div>
     </div>
   );
-
+  const buttonIcon = (
+    <ToolIcon icon={tool.icon} opacity={visuallyUnavailable ? 0.25 : 1} />
+  );
   const buttonContent = (
-    <>
-      <ToolIcon icon={tool.icon} opacity={visuallyUnavailable ? 0.25 : 1} />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        flex: 1,
+        overflow: "visible",
+      }}
+    >
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          flex: 1,
-          overflow: "visible",
+          alignItems: "center",
+          gap: "0.5rem",
+          width: "100%",
         }}
       >
-        <div
+        <FitText
+          text={tool.name}
+          lines={1}
+          minimumFontScale={0.8}
+          as="span"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            width: "100%",
+            display: "inline-block",
+            maxWidth: "100%",
+            opacity: visuallyUnavailable ? 0.25 : 1,
+          }}
+        />
+        {tool.versionStatus === "alpha" && (
+          <Badge
+            size="xs"
+            variant="light"
+            color="orange"
+            style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
+          >
+            {t("toolPanel.alpha", "Alpha")}
+          </Badge>
+        )}
+        {typeof badgeCount === "number" && badgeCount > 0 && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="red"
+            style={{ flexShrink: 0 }}
+          >
+            {badgeCount}
+          </Badge>
+        )}
+        {usesCloud && !visuallyUnavailable && <CloudBadge />}
+      </div>
+      {showDescription && tool.description && (
+        <span
+          className="tool-button__description"
+          style={{ opacity: visuallyUnavailable ? 0.25 : 1 }}
+        >
+          {tool.description}
+        </span>
+      )}
+      {matchedSynonym && (
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--mantine-color-dimmed)",
+            opacity: visuallyUnavailable ? 0.25 : 1,
+            marginTop: "1px",
+            overflow: "visible",
+            whiteSpace: "nowrap",
           }}
         >
-          <FitText
-            text={tool.name}
-            lines={1}
-            minimumFontScale={0.8}
-            as="span"
-            style={{
-              display: "inline-block",
-              maxWidth: "100%",
-              opacity: visuallyUnavailable ? 0.25 : 1,
-            }}
-          />
-          {tool.versionStatus === "alpha" && (
-            <Badge
-              size="xs"
-              variant="light"
-              color="orange"
-              style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
-            >
-              {t("toolPanel.alpha", "Alpha")}
-            </Badge>
-          )}
-          {usesCloud && !visuallyUnavailable && <CloudBadge />}
-        </div>
-        {matchedSynonym && (
-          <span
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--mantine-color-dimmed)",
-              opacity: visuallyUnavailable ? 0.25 : 1,
-              marginTop: "1px",
-              overflow: "visible",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {matchedSynonym}
-          </span>
-        )}
-      </div>
-    </>
+          {matchedSynonym}
+        </span>
+      )}
+    </div>
   );
 
   const handleExternalClick = (e: React.MouseEvent) => {
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
-  const selectedStyles = isSelected
-    ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" }
+  const selectedBg = isSelected
+    ? { backgroundColor: "var(--tool-button-selected-bg)" }
     : {};
 
   const buttonElement = navProps ? (
     // For internal tools with URLs, render Button as an anchor for proper link behavior
     <Button
-      component="a"
+      as="a"
       href={navProps.href}
       onClick={navProps.onClick}
-      variant="subtle"
+      variant="tertiary"
+      accent="neutral"
       size="sm"
-      radius="md"
+      p="none"
       fullWidth
-      justify="flex-start"
+      justify="start"
       className="tool-button"
       data-tour={`tool-button-${id}`}
-      styles={{
-        root: {
-          borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
-          overflow: "visible",
-          ...selectedStyles,
-        },
-        label: { overflow: "visible" },
+      leftSection={buttonIcon}
+      style={{
+        borderRadius: 0,
+        overflow: "visible",
+        ...selectedBg,
       }}
     >
       {buttonContent}
@@ -237,26 +257,24 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   ) : tool.link && !isUnavailable ? (
     // For external links, render Button as an anchor with proper href
     <Button
-      component="a"
+      as="a"
       href={tool.link}
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleExternalClick}
-      variant="subtle"
+      variant="tertiary"
+      accent="neutral"
       size="sm"
-      radius="md"
+      p="none"
       fullWidth
-      justify="flex-start"
+      justify="start"
       className="tool-button"
       data-tour={`tool-button-${id}`}
-      styles={{
-        root: {
-          borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
-          overflow: "visible",
-          ...selectedStyles,
-        },
-        label: { overflow: "visible" },
+      leftSection={buttonIcon}
+      style={{
+        borderRadius: 0,
+        overflow: "visible",
+        ...selectedBg,
       }}
     >
       {buttonContent}
@@ -264,24 +282,22 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   ) : (
     // For unavailable tools, use regular button
     <Button
-      variant="subtle"
+      variant="tertiary"
+      accent="neutral"
       onClick={() => handleClick(id)}
       size="sm"
-      radius="md"
+      p="none"
       fullWidth
-      justify="flex-start"
+      justify="start"
       className="tool-button"
       aria-disabled={isUnavailable}
       data-tour={`tool-button-${id}`}
-      styles={{
-        root: {
-          borderRadius: 0,
-          color: "var(--tools-text-and-icon-color)",
-          cursor: visuallyUnavailable ? "not-allowed" : undefined,
-          overflow: "visible",
-          ...selectedStyles,
-        },
-        label: { overflow: "visible" },
+      leftSection={buttonIcon}
+      style={{
+        borderRadius: 0,
+        cursor: visuallyUnavailable ? "not-allowed" : undefined,
+        overflow: "visible",
+        ...selectedBg,
       }}
     >
       {buttonContent}

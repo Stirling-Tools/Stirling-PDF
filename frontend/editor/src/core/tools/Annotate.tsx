@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
+import { generateId } from "@app/utils/generateId";
 import { useTranslation } from "react-i18next";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
@@ -17,6 +18,7 @@ import type {
 import { useAnnotationStyleState } from "@app/tools/annotate/useAnnotationStyleState";
 import { useAnnotationSelection } from "@app/tools/annotate/useAnnotationSelection";
 import { AnnotationPanel } from "@app/tools/annotate/AnnotationPanel";
+import { alert } from "@app/components/toast";
 
 // Tools that require drawing/interacting with the PDF and should disable pan mode
 const DRAWING_TOOLS: AnnotationToolId[] = [
@@ -73,7 +75,8 @@ const isKnownAnnotationTool = (
 
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedTool, workbench, hasUnsavedChanges } = useNavigation();
+  const { selectedTool, workbench, hasUnsavedChanges, setHasUnsavedChanges } =
+    useNavigation();
   const { files: allFiles } = useAllFiles();
   const {
     signatureApiRef,
@@ -86,7 +89,8 @@ const Annotate = (_props: BaseToolProps) => {
     placementPreviewSize,
     setPlacementPreviewSize,
   } = useSignature();
-  const { activateAnnotationToolRef } = useAnnotationContext();
+  const { activateAnnotationToolRef, setActiveAnnotationToolId } =
+    useAnnotationContext();
   const viewerContext = useContext(ViewerContext);
   const viewerContextRef = useRef(viewerContext);
   useEffect(() => {
@@ -138,7 +142,21 @@ const Annotate = (_props: BaseToolProps) => {
 
   useEffect(() => {
     activeToolRef.current = activeTool;
-  }, [activeTool]);
+    // Mirror the panel's armed tool to AnnotationContext so callers
+    // outside the panel (CommentsSidebar's Add Comment hint) can react
+    // without coupling to this component's internals. "select" means
+    // nothing is armed - publish null so consumers can branch cheaply.
+    setActiveAnnotationToolId(activeTool === "select" ? null : activeTool);
+  }, [activeTool, setActiveAnnotationToolId]);
+
+  // Make sure we clear the published tool when the annotation panel
+  // unmounts (user navigated away from /annotate). Otherwise the
+  // sidebar would think textComment is still armed.
+  useEffect(() => {
+    return () => {
+      setActiveAnnotationToolId(null);
+    };
+  }, [setActiveAnnotationToolId]);
 
   // CSS to PDF size conversion accounting for zoom
   const cssToPdfSize = useCallback(
@@ -578,10 +596,7 @@ const Annotate = (_props: BaseToolProps) => {
         const OFFSET = 20;
         const pasted: Record<string, unknown> = { ...annotation };
         // Assign a new id so EmbedPDF tracks the copy and delete works on it
-        pasted.id =
-          typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `paste-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        pasted.id = generateId();
         delete pasted.uid;
         // Remove appearance stream reference — the copy needs its own rendering
         delete pasted.appearanceModes;
@@ -681,6 +696,117 @@ const Annotate = (_props: BaseToolProps) => {
       setTextAlignment,
     });
 
+  const resetAnnotationInteractionState = useCallback(() => {
+    const annotationApi = annotationApiRef.current;
+
+    signatureApiRef.current?.deactivateTools?.();
+    annotationApi?.deselectAnnotation?.();
+    annotationApi?.activateAnnotationTool?.("select");
+
+    setPlacementMode(false);
+    setSignatureConfig(null);
+    setPlacementPreviewSize(null);
+    setSelectedAnn(null);
+    setSelectedAnnId(null);
+    setActiveTool("select");
+    activeToolRef.current = "select";
+    viewerContextRef.current?.setAnnotationMode(true);
+  }, [
+    annotationApiRef,
+    signatureApiRef,
+    setPlacementMode,
+    setSignatureConfig,
+    setPlacementPreviewSize,
+    setSelectedAnn,
+    setSelectedAnnId,
+  ]);
+
+  const handleClearDocumentAnnotations = useCallback(async () => {
+    const annotationApi = annotationApiRef.current;
+
+    if (!annotationApi?.clearDocumentAnnotations) {
+      alert({
+        title: t(
+          "annotation.clearDocumentAnnotationsUnavailableTitle",
+          "Annotations are not ready",
+        ),
+        body: t(
+          "annotation.clearDocumentAnnotationsUnavailableBody",
+          "The annotation layer is still loading. Try again in a moment.",
+        ),
+        alertType: "error",
+      });
+      return false;
+    }
+
+    try {
+      const result = await annotationApi.clearDocumentAnnotations();
+      if (!result.available) {
+        alert({
+          title: t(
+            "annotation.clearDocumentAnnotationsUnavailableTitle",
+            "Annotations are not ready",
+          ),
+          body: t(
+            "annotation.clearDocumentAnnotationsUnavailableBody",
+            "The annotation layer is still loading. Try again in a moment.",
+          ),
+          alertType: "error",
+        });
+        return false;
+      }
+
+      if (!result.cleared) {
+        alert({
+          title: t(
+            "annotation.clearDocumentAnnotationsEmptyTitle",
+            "No annotations to clear",
+          ),
+          body: t(
+            "annotation.clearDocumentAnnotationsEmptyBody",
+            "There are no annotations currently loaded in the editor.",
+          ),
+          alertType: "neutral",
+        });
+        return true;
+      }
+
+      resetAnnotationInteractionState();
+      setHasUnsavedChanges(true);
+
+      alert({
+        title: t(
+          "annotation.clearDocumentAnnotationsSuccessTitle",
+          "All annotations cleared",
+        ),
+        body: t(
+          "annotation.clearDocumentAnnotationsSuccessBody",
+          "Please save changes to persist the annotation removal in the PDF.",
+        ),
+        alertType: "success",
+      });
+      return true;
+    } catch (error) {
+      alert({
+        title: t(
+          "annotation.clearDocumentAnnotationsErrorTitle",
+          "Could not clear annotations",
+        ),
+        body:
+          error instanceof Error
+            ? error.message
+            : String(error ?? "Unknown error"),
+        alertType: "error",
+      });
+      return false;
+    }
+  }, [
+    annotationApiRef,
+    resetAnnotationInteractionState,
+    setHasUnsavedChanges,
+    t,
+  ]);
+
   const steps =
     allFiles.length === 0
       ? []
@@ -717,6 +843,7 @@ const Annotate = (_props: BaseToolProps) => {
                 undo={undo}
                 redo={redo}
                 historyAvailability={historyAvailability}
+                onClearDocumentAnnotations={handleClearDocumentAnnotations}
                 onApplyChanges={handleApplyChanges}
                 applyDisabled={!hasUnsavedChanges}
               />

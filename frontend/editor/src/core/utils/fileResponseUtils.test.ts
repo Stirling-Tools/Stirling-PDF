@@ -63,6 +63,14 @@ describe("fileResponseUtils", () => {
 
       expect(filename).toBe("email_content.html");
     });
+
+    test("should decode URL-encoded filenames from content-disposition header", () => {
+      const contentDisposition =
+        'attachment; filename="Quarterly%20Report%20(EN)%20v2.pdf"';
+      const filename = getFilenameFromHeaders(contentDisposition);
+
+      expect(filename).toBe("Quarterly Report (EN) v2.pdf");
+    });
   });
 
   describe("createFileFromApiResponse", () => {

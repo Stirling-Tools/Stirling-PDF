@@ -29,6 +29,10 @@ import {
   ToolOperationHook,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  mergeFromApiParams,
+  mergeToApiParams,
+} from "@app/hooks/tools/merge/useMergeOperation";
 
 describe("useMergeOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation<MergeParameters>);
@@ -127,5 +131,61 @@ describe("useMergeOperation", () => {
     const formData2 = config.buildFormData(params2, mockFiles);
     expect(formData2.get("removeCertSign")).toBe("true");
     expect(formData2.get("generateToc")).toBe("true");
+  });
+
+  test("should include client file IDs derived from the files", () => {
+    renderHook(() => useMergeOperation());
+
+    const config = getToolConfig();
+    const mockFiles = [
+      new File(["a"], "a.pdf", { type: "application/pdf" }),
+      new File(["b"], "b.pdf", { type: "application/pdf" }),
+    ];
+    const formData = config.buildFormData(
+      { removeDigitalSignature: false, generateTableOfContents: false },
+      mockFiles,
+    );
+
+    expect(formData.get("clientFileIds")).toBe(
+      JSON.stringify(["a.pdf", "b.pdf"]),
+    );
+  });
+});
+
+describe("merge mappers", () => {
+  test("toApiParams renames UI fields to the backend request model", () => {
+    expect(
+      mergeToApiParams({
+        removeDigitalSignature: true,
+        generateTableOfContents: false,
+      }),
+    ).toEqual({
+      sortType: "orderProvided",
+      removeCertSign: true,
+      generateToc: false,
+    });
+  });
+
+  test("fromApiParams maps the backend request model back to UI fields", () => {
+    expect(
+      mergeFromApiParams({ removeCertSign: false, generateToc: true }),
+    ).toEqual({
+      removeDigitalSignature: false,
+      generateTableOfContents: true,
+    });
+  });
+
+  test("round-trips backend params", () => {
+    const api = mergeToApiParams({
+      removeDigitalSignature: true,
+      generateTableOfContents: true,
+    });
+    const roundTripped = mergeToApiParams({
+      removeDigitalSignature: false,
+      generateTableOfContents: false,
+      ...mergeFromApiParams(api),
+    });
+
+    expect(roundTripped).toEqual(api);
   });
 });

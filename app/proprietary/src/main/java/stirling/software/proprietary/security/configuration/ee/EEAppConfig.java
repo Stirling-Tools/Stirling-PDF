@@ -49,7 +49,11 @@ public class EEAppConfig {
     @Profile("security & !saas")
     @Bean(name = "SSOAutoLogin")
     public boolean ssoAutoLogin() {
-        return applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
+        boolean enabled = applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
+        if (enabled) {
+            licenseKeyChecker.requireProOrEnterprise("premium.proFeatures.ssoAutoLogin=true");
+        }
+        return enabled;
     }
 
     // TODO: Remove post migration

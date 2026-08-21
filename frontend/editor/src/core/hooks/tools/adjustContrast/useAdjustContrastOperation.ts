@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
+  defineCustomTool,
   useToolOperation,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -13,9 +13,10 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 
 async function renderPdfPageToCanvas(
-  pdf: any,
+  pdf: PDFDocumentProxy,
   pageNumber: number,
   scale: number,
 ): Promise<HTMLCanvasElement> {
@@ -26,7 +27,7 @@ async function renderPdfPageToCanvas(
   canvas.height = viewport.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  await page.render({ canvasContext: ctx, canvas, viewport }).promise;
   return canvas;
 }
 
@@ -195,14 +196,11 @@ async function processPdfClientSide(
   };
 }
 
-export const adjustContrastOperationConfig = {
-  toolType: ToolType.custom,
+export const adjustContrastOperationConfig = defineCustomTool({
   customProcessor: processPdfClientSide,
   operationType: "adjustContrast",
   defaultParameters,
-  settingsComponentPath:
-    "components/tools/adjustContrast/AdjustContrastSingleStepSettings",
-} as const;
+});
 
 export const useAdjustContrastOperation = () => {
   const { t } = useTranslation();

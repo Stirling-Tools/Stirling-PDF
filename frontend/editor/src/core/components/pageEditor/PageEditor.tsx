@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import {
   useNavigationGuard,
@@ -10,7 +11,9 @@ import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import "@app/components/pageEditor/PageEditor.module.css";
 import PageThumbnail from "@app/components/pageEditor/PageThumbnail";
-import DragDropGrid from "@app/components/pageEditor/DragDropGrid";
+import DragDropGrid, {
+  type DragHandleProps,
+} from "@app/components/pageEditor/DragDropGrid";
 import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { FileId } from "@app/types/file";
 import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
@@ -32,7 +35,15 @@ export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
 }
 
+interface PageEditorFileEntry {
+  fileId: FileId;
+  name: string;
+  versionNumber: number | undefined;
+  isSelected: boolean;
+}
+
 const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
+  const { t } = useTranslation();
   // Use split contexts to prevent re-renders
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
@@ -75,7 +86,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   // Zoom state management
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isContainerHovered, setIsContainerHovered] = useState(false);
   const rootFontSize = useMemo(() => {
     if (typeof window === "undefined") {
       return 16;
@@ -105,14 +115,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const selectedIdsKey = [...state.ui.selectedFileIds].sort().join(",");
   const filesSignature = selectors.getFilesSignature();
 
-  const fileObjectsRef = useRef(new Map<FileId, any>());
+  const fileObjectsRef = useRef(new Map<FileId, PageEditorFileEntry>());
   const gridItemRefsRef = useRef<React.MutableRefObject<
     Map<string, HTMLDivElement>
   > | null>(null);
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
-    const newFiles: any[] = [];
+    const newFiles: PageEditorFileEntry[] = [];
 
     fileOrder.forEach((fileId) => {
       const stub = selectors.getStirlingFileStub(fileId);
@@ -560,23 +570,24 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   // Handle keyboard zoom shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isContainerHovered) return;
+      if (!(event.ctrlKey || event.metaKey)) return;
 
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key === "=" || event.key === "+") {
-          // Ctrl+= or Ctrl++ for zoom in
-          event.preventDefault();
-          zoomIn();
-        } else if (event.key === "-" || event.key === "_") {
-          // Ctrl+- for zoom out
-          event.preventDefault();
-          zoomOut();
-        } else if (event.key === "0") {
-          // Ctrl+0 for reset zoom
-          event.preventDefault();
-          setZoomLevel(1.0);
-        }
+      const target = event.target as Element | null;
+      const isInTextInput =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        (target as HTMLElement | null)?.isContentEditable === true;
+      if (isInTextInput) return;
+
+      if (event.key === "=" || event.key === "+") {
+        event.preventDefault();
+        zoomIn();
+      } else if (event.key === "-" || event.key === "_") {
+        event.preventDefault();
+        zoomOut();
+      } else if (event.key === "0") {
+        event.preventDefault();
+        setZoomLevel(1.0);
       }
     };
 
@@ -584,7 +595,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isContainerHovered, zoomIn, zoomOut]);
+  }, [zoomIn, zoomOut, setZoomLevel]);
 
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
@@ -603,7 +614,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       clearBoxSelection: () => void,
       activeDragIds: string[],
       justMoved: boolean,
-      dragHandleProps?: any,
+      dragHandleProps?: DragHandleProps,
       zoomLevelParam?: number,
     ) => {
       gridItemRefsRef.current = refs;
@@ -673,8 +684,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     <div
       ref={containerRef}
       data-scrolling-container="true"
-      onMouseEnter={() => setIsContainerHovered(true)}
-      onMouseLeave={() => setIsContainerHovered(false)}
       style={{
         height: "100%",
         overflow: "auto",
@@ -690,9 +699,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
             <Text size="lg" c="dimmed">
               📄
             </Text>
-            <Text c="dimmed">No PDF files loaded</Text>
+            <Text c="dimmed">
+              {t("pageEditor.emptyState.title", "No PDF files loaded")}
+            </Text>
             <Text size="sm" c="dimmed">
-              Add files to start editing pages
+              {t(
+                "pageEditor.emptyState.body",
+                "Add files to start editing pages",
+              )}
             </Text>
           </Stack>
         </Center>

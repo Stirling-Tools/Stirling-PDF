@@ -12,7 +12,7 @@ import AvailablePlansSection from "@app/components/shared/config/configSections/
 import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { alert } from "@app/components/toast";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import {
   getPreferredCurrency,
@@ -183,8 +183,14 @@ const AdminPlanSection: React.FC = () => {
 
   if (!plans || plans.length === 0) {
     return (
-      <Alert color="yellow" title="No data available">
-        Plans data is not available at the moment.
+      <Alert
+        color="yellow"
+        title={t("admin.settings.plan.noData.title", "No data available")}
+      >
+        {t(
+          "admin.settings.plan.noData.message",
+          "Plans data is not available at the moment.",
+        )}
       </Alert>
     );
   }
@@ -194,7 +200,7 @@ const AdminPlanSection: React.FC = () => {
       <LoginRequiredBanner show={!loginEnabled} />
 
       {shouldShowLicenseWarning && (
-        <InfoBanner
+        <AppBanner
           icon="warning-rounded"
           tone="warning"
           title={t(
@@ -209,13 +215,6 @@ const AdminPlanSection: React.FC = () => {
           buttonIcon="upgrade-rounded"
           onButtonClick={scrollToPlans}
           dismissible={false}
-          minHeight={68}
-          background="#FFF4E6"
-          borderColor="var(--mantine-color-orange-7)"
-          textColor="#9A3412"
-          iconColor="#EA580C"
-          buttonVariant="filled"
-          buttonColor="orange.7"
         />
       )}
 

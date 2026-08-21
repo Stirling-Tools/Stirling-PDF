@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -43,6 +44,8 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.AmrMethod;
@@ -63,9 +66,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final TeamService teamService;
     private final UserService userService;
     private final SupabaseUserService supabaseUserService;
-    private final stirling.software.saas.service.CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final AuthenticationEntryPoint authenticationEntryPoint =
             new BearerTokenAuthenticationEntryPoint();
 
@@ -73,21 +76,24 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             TeamService teamService,
             UserService userService,
             SupabaseUserService supabaseUserService,
-            stirling.software.saas.service.CreditService creditService,
             SaasTeamService saasTeamService,
-            JwtDecoder jwtDecoder) {
+            JwtDecoder jwtDecoder,
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         this.teamService = teamService;
         this.userService = userService;
         this.supabaseUserService = supabaseUserService;
-        this.creditService = creditService;
         this.saasTeamService = saasTeamService;
         this.jwtDecoder = jwtDecoder;
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        // Start clean so a pooled thread can't inherit a prior request's API-key label.
+        MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
         if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
             filterChain.doFilter(request, response);
@@ -155,9 +161,15 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
             User user = getOrCreateUser(jwt);
 
+            // Full accounts carry the resolved User as principal for shared
+            // instanceof-User authorization; anonymous sessions keep the raw Jwt.
             EnhancedJwtAuthenticationToken authToken =
                     new EnhancedJwtAuthenticationToken(
-                            jwt, user.getAuthorities(), user.getUsername(), supabaseId);
+                            jwt,
+                            user.getAuthorities(),
+                            user.getUsername(),
+                            supabaseId,
+                            isAnonymous(jwt) ? null : user);
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             // Hot path: runs on every authenticated request (>10 per page on a typical SPA),
@@ -259,7 +271,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             user.setUsername(supabaseUser.getEmail());
         }
         try {
-            return userService.saveUser(user);
+            // Give the account its own team rather than the shared Default team.
+            return saasTeamService.saveUserWithPersonalTeam(user);
         } catch (DataIntegrityViolationException e) {
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
@@ -278,7 +291,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             if (!(raw instanceof List<?> amrList) || amrList.isEmpty()) {
                 return WEB;
             }
-            Object first = amrList.get(0);
+            Object first = amrList.getFirst();
             if (!(first instanceof Map<?, ?> entry)) {
                 return WEB;
             }
@@ -341,7 +354,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         newUser.setEnabled(true);
         newUser.setFirstLogin(true);
         newUser.setRoleName(roleId);
-        newUser.setTeam(teamService.getOrCreateDefaultTeam());
+        // No shared Default team; a per-user personal team is assigned after save (team_id
+        // nullable).
         newUser.setAuthenticationType(authenticationType);
         newUser.setSupabaseId(supabaseId);
         newUser.addAuthority(new Authority(roleId, newUser));
@@ -356,47 +370,22 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             throw new AuthenticationFailureException("Failed to create SupabaseUser", e);
         }
 
-        User savedUser;
-        boolean weCreatedThisUser = true;
+        // Guests get NO team: the editor is free and needs none. Everyone else is provisioned
+        // atomically, so a user visible to a parallel request always already has one.
         try {
-            savedUser = userService.saveUser(newUser);
+            return isAnonymous(jwt)
+                    ? userService.saveUser(newUser)
+                    : saasTeamService.saveUserWithPersonalTeam(newUser);
         } catch (DataIntegrityViolationException dup) {
             // Parallel filter won the race; fetch the winning row.
-            weCreatedThisUser = false;
-            savedUser =
-                    userService
-                            .findBySupabaseId(supabaseId)
-                            .orElseThrow(
-                                    () ->
-                                            new AuthenticationFailureException(
-                                                    "User creation conflict, but unable to find existing user",
-                                                    dup));
+            return userService
+                    .findBySupabaseId(supabaseId)
+                    .orElseThrow(
+                            () ->
+                                    new AuthenticationFailureException(
+                                            "User creation conflict, but unable to find existing user",
+                                            dup));
         }
-
-        // Only the DB-race winner runs first-time init; the losers skip it.
-        if (weCreatedThisUser) {
-            try {
-                creditService.getOrCreateUserCredits(savedUser);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to initialize credits for new user {} ({}): {}",
-                        LogRedactionUtils.redactSupabaseId(supabaseId),
-                        LogRedactionUtils.redactEmail(savedUser.getUsername()),
-                        e.getMessage());
-            }
-
-            try {
-                saasTeamService.createPersonalTeam(savedUser);
-                savedUser = userService.findBySupabaseId(supabaseId).orElse(savedUser);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to create personal team for new user {} ({}): {}",
-                        LogRedactionUtils.redactSupabaseId(supabaseId),
-                        LogRedactionUtils.redactEmail(savedUser.getUsername()),
-                        e.getMessage());
-            }
-        }
-        return savedUser;
     }
 
     private boolean apiKeyAuthenticated(HttpServletRequest request) throws AuthenticationException {
@@ -410,16 +399,22 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             return false;
         }
 
-        Optional<User> user = userService.getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
+        // Resolves the multi-key table then the legacy key, records per-key usage, and yields a
+        // label for the processor's document-source attribution.
+        Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
+        if (resolved.isEmpty()) {
             throw new InvalidBearerTokenException("Invalid API Key.");
         }
+        User user = resolved.get().user();
 
-        userService.trackApiKeyFirstUse(user.get());
+        userService.trackApiKeyFirstUse(user);
 
         ApiKeyAuthenticationToken authToken =
-                new ApiKeyAuthenticationToken(user.get(), apiKey, user.get().getAuthorities());
+                new ApiKeyAuthenticationToken(user, apiKey, resolved.get().authorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        if (resolved.get().auditLabel() != null) {
+            MDC.put(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY, resolved.get().auditLabel());
+        }
         return true;
     }
 

@@ -4,6 +4,7 @@
  */
 
 import { loadScript } from "@app/utils/scriptLoader";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
@@ -154,7 +155,7 @@ class GoogleDrivePickerService {
           return;
         }
         if (response.access_token == null) {
-          reject(new Error("No acces token in response"));
+          reject(new Error("No access token in response"));
         }
 
         this.accessToken = response.access_token;
@@ -201,6 +202,10 @@ class GoogleDrivePickerService {
         .addView(view1)
         .addView(view2)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
+
+      (builder as unknown as { setZIndex(z: number): void }).setZIndex(
+        Z_INDEX_OVER_FILE_MANAGER_MODAL,
+      );
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);

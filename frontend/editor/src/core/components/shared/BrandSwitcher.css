@@ -1,0 +1,15 @@
+/* Logo + app-switch dropdown, shared between the editor and the processor.
+   The logo itself is the trigger (its mark morphs into a chevron on hover). */
+.sui-brand-switcher {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Tighten the ghost-button padding so the lockup sits flush like a plain logo,
+   and negative-margin it back so the hover surface still extends past the text. */
+.sui-brand-switcher__trigger.sui-btn {
+  --button-padding-x: 0.375rem;
+  margin-inline: -0.375rem;
+}
