@@ -120,7 +120,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
-        workbench: "pageEditor",
+        workbench: "multiTool",
         description: t(
           "home.multiTool.desc",
           "Use multiple tools on a single PDF document",

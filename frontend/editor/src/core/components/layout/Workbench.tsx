@@ -26,12 +26,12 @@ import { ChatFAB } from "@app/components/chat/ChatFAB";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
-// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
 // is open. Lazy-loading keeps all of that out of the initial bundle.
 const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
-const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
-const PageEditorControls = lazy(
-  () => import("@app/components/pageEditor/PageEditorControls"),
+const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
+const MultiToolWorkbench = lazy(
+  () => import("@app/components/pageEditor/MultiToolWorkbench"),
 );
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 const FileManagerView = lazy(
@@ -53,10 +53,8 @@ export default function Workbench() {
   const setCurrentView = navActions.setWorkbench;
   const {
     previewFile,
-    pageEditorFunctions,
     sidebarsVisible,
     setPreviewFile,
-    setPageEditorFunctions,
     setSidebarsVisible,
     customWorkbenchViews,
     readerMode,
@@ -101,6 +99,9 @@ export default function Workbench() {
     topControlsAvailable && hasWorkbenchContent && !readerMode;
   const showFloatingSearch =
     topControlsAvailable && !hasWorkbenchContent && !readerMode;
+  // Page-level editors scroll internally, so the shell must not add its own.
+  const isPageLevelEditor =
+    currentView === "pageEditor" || currentView === "multiTool";
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
@@ -216,43 +217,10 @@ export default function Workbench() {
         );
 
       case "pageEditor":
-        return (
-          <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
-            <PageEditor onFunctionsReady={setPageEditorFunctions} />
-            {pageEditorFunctions && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 100,
-                }}
-              >
-                <PageEditorControls
-                  onClosePdf={pageEditorFunctions.closePdf}
-                  onUndo={pageEditorFunctions.handleUndo}
-                  onRedo={pageEditorFunctions.handleRedo}
-                  canUndo={pageEditorFunctions.canUndo}
-                  canRedo={pageEditorFunctions.canRedo}
-                  onRotate={pageEditorFunctions.handleRotate}
-                  onDelete={pageEditorFunctions.handleDelete}
-                  onSplit={pageEditorFunctions.handleSplit}
-                  onSplitAll={pageEditorFunctions.handleSplitAll}
-                  onPageBreak={pageEditorFunctions.handlePageBreak}
-                  onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                  onExportAll={pageEditorFunctions.onExportAll}
-                  exportLoading={pageEditorFunctions.exportLoading}
-                  selectionMode={pageEditorFunctions.selectionMode}
-                  selectedPageIds={pageEditorFunctions.selectedPageIds}
-                  displayDocument={pageEditorFunctions.displayDocument}
-                  splitPositions={pageEditorFunctions.splitPositions}
-                  totalPages={pageEditorFunctions.totalPages}
-                />
-              </div>
-            )}
-          </div>
-        );
+        return <PageTracks />;
+
+      case "multiTool":
+        return <MultiToolWorkbench />;
 
       default:
         return null;
@@ -310,7 +278,7 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
+        className={`flex-1 min-h-0 z-10 ${isPageLevelEditor ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
         style={{
           transition: "opacity 0.15s ease-in-out",
           // Force min-width:0 so flex children (notably the files page
@@ -318,7 +286,7 @@ export default function Workbench() {
           // toggle) can shrink below their intrinsic content size on
           // narrow viewports instead of overflowing horizontally.
           minWidth: 0,
-          ...(currentView === "pageEditor" && { height: 0 }),
+          ...(isPageLevelEditor && { height: 0 }),
         }}
       >
         <Suspense

@@ -1,0 +1,245 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+}
+
+.scroller {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ── Track ───────────────────────────────────────────────────────────────── */
+
+.track {
+  --pt-tile-h: 11.5rem;
+  --pt-tile-w: 8.5rem;
+  /* The scroller is a flex column: without this, an overflowing stack of
+     tracks squeezes each lane below its tiles and clips them. */
+  flex: 0 0 auto;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.trackDropActive {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+
+.trackHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-sunken);
+  min-width: 0;
+}
+
+.trackAccent {
+  width: 0.25rem;
+  align-self: stretch;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.trackName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.trackMeta {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.trackActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex: 0 0 auto;
+}
+
+.lane {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.laneEmpty {
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--pt-tile-h) + 2.5rem);
+  color: var(--c-text-subtle);
+  font-size: 0.8125rem;
+}
+
+/* ── Tile ────────────────────────────────────────────────────────────────── */
+
+.tile {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--pt-tile-w);
+  cursor: grab;
+  user-select: none;
+  border-radius: var(--radius-sm);
+  outline: 1px solid var(--c-border-subtle);
+  outline-offset: -1px;
+  background: var(--c-surface-raised);
+  transition:
+    outline-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tile:hover {
+  outline-color: var(--c-border-strong);
+}
+
+.tileSelected {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 22%, transparent);
+}
+
+.tileDragging {
+  opacity: 0.35;
+}
+
+.canvas {
+  height: var(--pt-tile-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--c-surface-sunken);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.thumb {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transition: transform 0.2s ease-in-out;
+}
+
+/*
+ * A quarter turn is applied after layout, so the pre-rotation box has to be
+ * constrained by the OPPOSITE axis or the rotated page overflows and clips.
+ */
+.thumbQuarterTurn {
+  max-width: var(--pt-tile-h);
+  max-height: var(--pt-tile-w);
+}
+
+.thumbPending {
+  width: 60%;
+  height: 78%;
+  border-radius: 2px;
+  background: var(--c-hover);
+}
+
+.tileFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.25rem 0.375rem;
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  min-width: 0;
+}
+
+.tileIndex {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Marks a page whose bytes come from a different file than its track. */
+.foreignDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+/* Kept out of the way until the tile is hovered or already selected: a
+   permanent checkbox over every page reads as noise at this density. */
+.tileCheckbox {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  z-index: 2;
+  display: flex;
+  padding: 0.125rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tile:hover .tileCheckbox,
+.tile:focus-within .tileCheckbox,
+.tileSelected .tileCheckbox {
+  opacity: 1;
+}
+
+.tileTools {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.125rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tile:hover .tileTools,
+.tile:focus-within .tileTools {
+  opacity: 1;
+}
+
+/* ── Drop indicator ──────────────────────────────────────────────────────── */
+
+.dropMarker {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 2px;
+  margin: 0 -1px;
+  border-radius: 999px;
+  background: var(--c-primary);
+}
+
+.dragBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 25%);
+}

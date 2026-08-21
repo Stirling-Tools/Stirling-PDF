@@ -412,7 +412,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   ]);
 
   // When in multi-tool, sync left panel visibility with workbench:
-  // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.
+  // hide the panel on its own view, show it when navigating to viewer/fileEditor.
   const prevMultiToolWorkbenchRef = React.useRef<WorkbenchType | null>(null);
   useEffect(() => {
     const prev = prevMultiToolWorkbenchRef.current;
@@ -420,11 +420,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     if (navigationState.selectedTool !== "multiTool") return;
 
-    if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
+    if (navigationState.workbench === "multiTool" && prev !== "multiTool") {
       setLeftPanelView("hidden");
     } else if (
-      navigationState.workbench !== "pageEditor" &&
-      prev === "pageEditor"
+      navigationState.workbench !== "multiTool" &&
+      prev === "multiTool"
     ) {
       setLeftPanelView("toolPicker");
     }
@@ -491,13 +491,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         return;
       }
 
-      // Handle multiTool selection - enable page editor workbench
+      // Handle multiTool selection - enable its own page editor workbench
       if (toolId === "multiTool") {
         setReaderMode(false);
         setLeftPanelView("hidden");
         actions.setSelectedTool("multiTool");
         actions.setWorkbench(
-          wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
+          wasInCustomWorkbench ? getDefaultWorkbench() : "multiTool",
         );
         setSearchQuery("");
         return;
