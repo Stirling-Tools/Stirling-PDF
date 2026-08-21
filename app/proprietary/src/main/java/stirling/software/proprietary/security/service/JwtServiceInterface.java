@@ -94,6 +94,19 @@ public interface JwtServiceInterface {
     String extractToken(HttpServletRequest request);
 
     /**
+     * Read the username off the request's JWT, allowing an expired token. Returns null when no
+     * token is present, the token can't be parsed, or the resulting username is blank.
+     *
+     * <p>Used by flows that need to identify the user without depending on {@code
+     * SecurityContextHolder} - for example logout, where the security filter chain may have left
+     * the anonymous principal in place by the time the handler runs.
+     *
+     * @param request HTTP servlet request
+     * @return username from the token, or null when one can't be safely derived
+     */
+    String extractUsernameFromRequestAllowExpired(HttpServletRequest request);
+
+    /**
      * Check if JWT authentication is enabled
      *
      * @return true if JWT is enabled, false otherwise

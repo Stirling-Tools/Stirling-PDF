@@ -12,13 +12,16 @@ public enum AiWorkflowOutcome {
     ANSWER("answer"),
     NOT_FOUND("not_found"),
     NEED_CONTENT("need_content"),
+    NEED_INGEST("need_ingest"),
     PLAN("plan"),
     NEED_CLARIFICATION("need_clarification"),
     CANNOT_DO("cannot_do"),
+    DRAFT("draft"),
     TOOL_CALL("tool_call"),
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
-    CANNOT_CONTINUE("cannot_continue");
+    CANNOT_CONTINUE("cannot_continue"),
+    GENERATE_FILE("generate_file");
 
     private final String value;
 

@@ -95,7 +95,7 @@ public class ExternalAppDepConfig {
                                                 checkDependencyAndDisableGroup(cmd);
                                                 return null;
                                             })
-                            .collect(Collectors.toList());
+                            .toList();
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
 
             // Python / OpenCV special handling
@@ -321,7 +321,7 @@ public class ExternalAppDepConfig {
                 new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (sb.length() > 0) sb.append('\n');
+                if (!sb.isEmpty()) sb.append('\n');
                 sb.append(line);
             }
         }

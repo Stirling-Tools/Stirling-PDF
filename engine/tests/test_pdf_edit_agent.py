@@ -1,50 +1,61 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import pytest
 
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
-from stirling.config import AppSettings
+from stirling.agents.pdf_edit import PdfEditNeedContentSelection, PdfEditPlanOutput
 from stirling.contracts import (
+    AiFile,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
+    ExtractedFileText,
+    NeedContentFileRequest,
+    NeedContentResponse,
+    PdfContentType,
     PdfEditRequest,
+    PdfTextSelection,
+    SupportedCapability,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressParams, OperationId, RotateParams
-from stirling.services import build_runtime
-
-
-def build_test_settings() -> AppSettings:
-    return AppSettings(
-        smart_model_name="test",
-        fast_model_name="test",
-        smart_model_max_tokens=8192,
-        fast_model_max_tokens=2048,
-    )
+from stirling.models import OPERATIONS, FileId, ParamToolModel
+from stirling.models.tool_models import (
+    Angle,
+    EditTextOperation,
+    EditTextParams,
+    FlattenParams,
+    RotatePdfParams,
+    SplitPagesParams,
+    ToolEndpoint,
+)
+from stirling.services.runtime import AppRuntime
 
 
 @dataclass(frozen=True)
 class ParameterSelectorCall:
     request: PdfEditRequest
-    operation_plan: list[OperationId]
+    operation_plan: list[ToolEndpoint]
     operation_index: int
     generated_steps: list[ToolOperationStep]
 
 
 class RecordingParameterSelector:
-    def __init__(self) -> None:
+    """Test double that records calls and returns predetermined parameter objects per index."""
+
+    def __init__(self, params_by_index: list[ParamToolModel] | None = None) -> None:
         self.calls: list[ParameterSelectorCall] = []
+        self._params_by_index = params_by_index
 
     async def select(
         self,
         request: PdfEditRequest,
-        operation_plan: list[OperationId],
+        operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
-    ) -> RotateParams | CompressParams:
+    ) -> ParamToolModel:
         self.calls.append(
             ParameterSelectorCall(
                 request=request,
@@ -53,35 +64,58 @@ class RecordingParameterSelector:
                 generated_steps=list(generated_steps),
             )
         )
+        if self._params_by_index is not None:
+            return self._params_by_index[operation_index]
         if operation_index == 0:
-            return RotateParams(angle=90)
-        return CompressParams(compression_level=5)
+            return RotatePdfParams(angle=Angle(90))
+        return FlattenParams(flatten_only_forms=False, render_dpi=None)
 
 
 class StubPdfEditAgent(PdfEditAgent):
     def __init__(
         self,
-        selection: PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse,
+        runtime: AppRuntime,
+        selection: PdfEditPlanOutput,
         parameter_selector: RecordingParameterSelector | PdfEditParameterSelector | None = None,
+        later_selections: list[PdfEditPlanOutput] | None = None,
     ) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+        super().__init__(runtime)
         self.selection = selection
+        # Selections handed out on retry, in order, so a test can drive the repair loop.
+        self.later_selections = list(later_selections or [])
+        self.repair_notes: list[str] = []
         if parameter_selector is not None:
             self.parameter_selector = parameter_selector
+
+    def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
+        # Tests construct requests without `enabled_endpoints`; pretend everything is enabled
+        # unless the test explicitly supplies an enabled set.
+        if not request.enabled_endpoints:
+            return list(OPERATIONS), []
+        return super()._classify_operations(request)
 
     async def _select_plan(
         self,
         request: PdfEditRequest,
-    ) -> PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse:
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
+        *,
+        allow_need_content: bool = True,
+        repair_note: str = "",
+    ) -> PdfEditPlanOutput:
+        self.repair_notes.append(repair_note)
+        if repair_note and self.later_selections:
+            return self.later_selections.pop(0)
         return self.selection
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_builds_multi_step_plan() -> None:
+async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> None:
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
+        runtime,
         PdfEditPlanSelection(
-            operations=[OperationId.ROTATE, OperationId.COMPRESS],
+            operations=[ToolEndpoint.ROTATE_PDF, ToolEndpoint.FLATTEN],
             summary="Rotate the PDF, then compress it.",
             rationale="The pages need reorientation before reducing file size.",
         ),
@@ -91,32 +125,149 @@ async def test_pdf_edit_agent_builds_multi_step_plan() -> None:
     response = await agent.handle(
         PdfEditRequest(
             user_message="Rotate the PDF clockwise and then compress it.",
-            file_names=["scan.pdf"],
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
         )
     )
 
     assert isinstance(response, EditPlanResponse)
     assert response.summary == "Rotate the PDF, then compress it."
     assert response.rationale == "The pages need reorientation before reducing file size."
-    assert [step.tool for step in response.steps] == [OperationId.ROTATE, OperationId.COMPRESS]
-    assert isinstance(response.steps[0].parameters, RotateParams)
-    assert isinstance(response.steps[1].parameters, CompressParams)
+    assert [step.tool for step in response.steps] == [ToolEndpoint.ROTATE_PDF, ToolEndpoint.FLATTEN]
+    assert isinstance(response.steps[0].parameters, RotatePdfParams)
+    assert isinstance(response.steps[1].parameters, FlattenParams)
+
+
+_ANY_SELECTION = PdfEditPlanSelection(operations=[ToolEndpoint.ROTATE_PDF], summary="s", rationale="r")
+
+
+def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime) -> None:
+    # Compatibility is only raised once a plan has actually failed, so the operation list stays
+    # about what each tool does. Leaking format hints here re-inflates an already large prompt.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    assert "outputs:" not in prompt
+    assert "IMAGE (several files)" not in prompt
+
+
+def test_repair_prompt_offers_reorder_or_telling_the_user(runtime: AppRuntime) -> None:
+    # The model decides which: it has the user's intent, and a reorder that changes the result
+    # is worse than saying it cannot be done.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(
+        PdfEditRequest(user_message="anything", files=[]),
+        list(OPERATIONS),
+        [],
+        "step 3 (SANITIZE_PDF) accepts PDF but the previous step produces IMAGE.",
+    )
+    assert "SANITIZE_PDF" in prompt
+    assert "different order" in prompt
+    assert "cannot_do" in prompt
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector() -> None:
+async def test_pdf_edit_agent_retries_a_plan_whose_steps_cannot_chain(runtime: AppRuntime) -> None:
+    # Extracting images emits images, which rotate cannot take. The agent should be told exactly
+    # that and get one chance to produce something workable rather than shipping a plan that
+    # would fail part-way through execution.
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EXTRACT_IMAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Extract the images, then rotate.",
+            rationale="Initial attempt.",
+        ),
+        later_selections=[
+            PdfEditPlanSelection(
+                operations=[ToolEndpoint.ROTATE_PDF],
+                summary="Rotate the PDF.",
+                rationale="Repaired attempt.",
+            )
+        ],
+        parameter_selector=RecordingParameterSelector(),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Pull out the images and rotate them.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert [step.tool for step in response.steps] == [ToolEndpoint.ROTATE_PDF]
+    # First attempt gets no note; the retry is told which transition failed.
+    assert agent.repair_notes[0] == ""
+    assert "ROTATE_PDF" in agent.repair_notes[1]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_gives_up_when_the_repaired_plan_still_cannot_chain(
+    runtime: AppRuntime,
+) -> None:
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EXTRACT_IMAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Extract the images, then rotate.",
+            rationale="Initial attempt.",
+        ),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Pull out the images and rotate them.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditCannotDoResponse)
+    assert "No workable order" in response.reason
+    # Exactly one retry, not an unbounded loop.
+    assert len(agent.repair_notes) == 2
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_accepts_a_chain_that_lines_up(runtime: AppRuntime) -> None:
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.SPLIT_PAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Split then rotate.",
+            rationale="Splitting fans out; rotate runs per file.",
+        ),
+        parameter_selector=RecordingParameterSelector(
+            [SplitPagesParams(page_numbers="all"), RotatePdfParams(angle=Angle(90))]
+        ),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Split the pages and rotate each one.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    # A fan-out is information, not a problem, so no retry.
+    assert isinstance(response, EditPlanResponse)
+    assert agent.repair_notes == [""]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtime: AppRuntime) -> None:
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
+        runtime,
         PdfEditPlanSelection(
-            operations=[OperationId.ROTATE, OperationId.COMPRESS],
+            operations=[ToolEndpoint.ROTATE_PDF, ToolEndpoint.FLATTEN],
             summary="Rotate the PDF, then compress it.",
+            rationale="test rationale",
         ),
         parameter_selector=parameter_selector,
     )
 
     request = PdfEditRequest(
         user_message="Rotate the PDF clockwise and then compress it.",
-        file_names=["scan.pdf"],
+        files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
     )
     response = await agent.handle(request)
 
@@ -127,19 +278,20 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector() -> N
     assert parameter_selector.calls[1].operation_index == 1
     assert parameter_selector.calls[1].generated_steps == [
         ToolOperationStep(
-            tool=OperationId.ROTATE,
-            parameters=RotateParams(angle=90),
+            tool=ToolEndpoint.ROTATE_PDF,
+            parameters=RotatePdfParams(angle=Angle(90)),
         )
     ]
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_returns_clarification_without_partial_plan() -> None:
+async def test_pdf_edit_agent_returns_clarification_without_partial_plan(runtime: AppRuntime) -> None:
     agent = StubPdfEditAgent(
+        runtime,
         EditClarificationRequest(
             question="Which pages should be rotated?",
             reason="The request does not say which pages to change.",
-        )
+        ),
     )
 
     response = await agent.handle(PdfEditRequest(user_message="Rotate some pages."))
@@ -148,13 +300,398 @@ async def test_pdf_edit_agent_returns_clarification_without_partial_plan() -> No
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_returns_cannot_do_without_partial_plan() -> None:
+async def test_pdf_edit_agent_returns_cannot_do_without_partial_plan(runtime: AppRuntime) -> None:
     agent = StubPdfEditAgent(
+        runtime,
         EditCannotDoResponse(
             reason="This request requires OCR, which is not part of PDF edit planning.",
-        )
+        ),
     )
 
     response = await agent.handle(PdfEditRequest(user_message="Read this scan and summarize it."))
 
     assert isinstance(response, EditCannotDoResponse)
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime: AppRuntime) -> None:
+    parameter_selector = RecordingParameterSelector()
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditNeedContentSelection(
+            reason="Need page text to locate the NEW PAGE markers.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Split after every page that says 'NEW PAGE'.",
+            files=[AiFile(id=FileId("report-id"), name="report.pdf")],
+        )
+    )
+
+    assert isinstance(response, NeedContentResponse)
+    assert response.resume_with == SupportedCapability.PDF_EDIT
+    assert response.files == [
+        NeedContentFileRequest(
+            file=AiFile(id=FileId("report-id"), name="report.pdf"),
+            content_types=[PdfContentType.PAGE_TEXT],
+        )
+    ]
+    assert response.max_pages == runtime.settings.max_pages
+    assert response.max_characters == runtime.settings.max_characters
+    assert parameter_selector.calls == []
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_builds_selection_agent_matching_content_availability(runtime: AppRuntime) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    agent = PdfEditAgent(runtime)
+    captured: list[bool] = []
+
+    def record(
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
+        *,
+        allow_need_content: bool,
+    ) -> PdfEditSelectionAgent:
+        captured.append(allow_need_content)
+        raise _StopSelectionError()
+
+    agent._build_selection_agent = record
+
+    supported = list(OPERATIONS)
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported, [])
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(
+            PdfEditRequest(
+                user_message="Rotate.",
+                page_text=[
+                    ExtractedFileText(
+                        file_name="report.pdf",
+                        pages=[PdfTextSelection(page_number=1, text="content")],
+                    )
+                ],
+            ),
+            supported,
+            [],
+        )
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported, [], allow_need_content=False)
+
+    assert captured == [True, False, False]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_not_allowed(
+    runtime: AppRuntime,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    can_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=True)
+    cannot_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=False)
+
+    assert PdfEditNeedContentSelection in _agent_output_types(can_request)
+    assert PdfEditNeedContentSelection not in _agent_output_types(cannot_request)
+
+
+def _agent_output_types(agent: object) -> list[type]:
+    native = getattr(getattr(agent, "agent"), "output_type")
+    return list(getattr(native, "outputs", []))
+
+
+class _StopSelectionError(Exception):
+    pass
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: AppRuntime) -> None:
+    parameter_selector = RecordingParameterSelector()
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.ROTATE_PDF],
+            summary="Rotate the PDF.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    page_text = [
+        ExtractedFileText(
+            file_name="report.pdf",
+            pages=[PdfTextSelection(page_number=1, text="NEW PAGE")],
+        )
+    ]
+    await agent.handle(
+        PdfEditRequest(
+            user_message="Rotate clockwise.",
+            files=[AiFile(id=FileId("report-id"), name="report.pdf")],
+            page_text=page_text,
+        )
+    )
+
+    assert parameter_selector.calls[0].request.page_text == page_text
+
+
+def test_pdf_edit_request_drops_unknown_enabled_urls() -> None:
+    request = PdfEditRequest.model_validate(
+        {
+            "user_message": "ignore me",
+            "enabled_endpoints": [
+                ToolEndpoint.COMPRESS_PDF.value,
+                "/api/v1/not-a-real/endpoint",
+            ],
+        }
+    )
+
+    assert request.enabled_endpoints == [ToolEndpoint.COMPRESS_PDF]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supported_operations_defaults_to_empty(
+    runtime: AppRuntime,
+) -> None:
+    agent = PdfEditAgent(runtime)
+    supported, _ = agent._classify_operations(PdfEditRequest(user_message="hi"))
+
+    assert list(supported) == []
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supported_operations_uses_provided_list(
+    runtime: AppRuntime,
+) -> None:
+    agent = PdfEditAgent(runtime)
+    request = PdfEditRequest(
+        user_message="Compress this PDF.",
+        enabled_endpoints=[ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF],
+    )
+
+    supported, _ = agent._classify_operations(request)
+
+    assert list(supported) == [ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_returns_cannot_do_when_no_operations_enabled(
+    runtime: AppRuntime,
+) -> None:
+    agent = PdfEditAgent(runtime)
+    response = await agent.handle(PdfEditRequest(user_message="Do anything.", enabled_endpoints=[]))
+
+    assert isinstance(response, EditCannotDoResponse)
+
+
+def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppRuntime) -> None:
+    agent = PdfEditAgent(runtime)
+    request = PdfEditRequest(
+        user_message="Run OCR.",
+        enabled_endpoints=[ToolEndpoint.FLATTEN],
+    )
+    supported, unavailable = agent._classify_operations(request)
+
+    prompt = agent._build_selection_prompt(request, supported, unavailable)
+
+    assert "Unavailable operations" in prompt
+    assert "OCR_PDF" in prompt
+    assert ToolEndpoint.OCR_PDF.value in prompt
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_rejects_plan_referencing_unavailable_operations(
+    runtime: AppRuntime,
+) -> None:
+    parameter_selector = RecordingParameterSelector()
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.COMPRESS_PDF],
+            summary="Compress.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Compress this PDF.",
+            enabled_endpoints=[ToolEndpoint.FLATTEN],
+        )
+    )
+
+    assert isinstance(response, EditCannotDoResponse)
+    assert "not available" in response.reason
+    assert "COMPRESS_PDF" in response.reason
+    assert parameter_selector.calls == []
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime) -> None:
+    params = EditTextParams(
+        edits=[EditTextOperation(find="2025", replace="2026")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Replace 2025 with 2026 throughout the document.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Change every 2025 to 2026.",
+            files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert len(response.steps) == 1
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    assert step.parameters.edits == [EditTextOperation(find="2025", replace="2026")]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRuntime) -> None:
+    page_text = [
+        ExtractedFileText(
+            file_name="memo.pdf",
+            pages=[
+                PdfTextSelection(
+                    page_number=3,
+                    text="The quick brown fox jumps over the lazy dog.",
+                )
+            ],
+        )
+    ]
+    params = EditTextParams(
+        edits=[
+            EditTextOperation(find="quick", replace="slow"),
+            EditTextOperation(find="lazy", replace="energetic"),
+        ],
+        page_numbers="3",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Fix typos on page 3.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Fix typos on page 3.",
+            files=[AiFile(id=FileId("memo-id"), name="memo.pdf")],
+            page_text=page_text,
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert len(parameter_selector.calls) == 1
+    # The parameter selector receives the extracted page text, which is what enables free-form
+    # copy-editing: it can read the current text and propose specific edits.
+    assert parameter_selector.calls[0].request.page_text == page_text
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    assert step.parameters.page_numbers == "3"
+    assert step.parameters.edits is not None
+    assert len(step.parameters.edits) == 2
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: AppRuntime) -> None:
+    page_text = [
+        ExtractedFileText(
+            file_name="agreement.pdf",
+            pages=[
+                PdfTextSelection(
+                    page_number=1,
+                    text="This agreement is between OldCompany Inc. and the client.",
+                )
+            ],
+        )
+    ]
+    params = EditTextParams(
+        edits=[EditTextOperation(find="OldCompany Inc.", replace="Acme Corp")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Update the company name to Acme Corp.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Update the company name to Acme Corp.",
+            files=[AiFile(id=FileId("agreement-id"), name="agreement.pdf")],
+            page_text=page_text,
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    # The exact find string came from interpreting the user's intent against the extracted text.
+    assert step.parameters.edits is not None
+    assert step.parameters.edits[0].find == "OldCompany Inc."
+    assert step.parameters.edits[0].replace == "Acme Corp"
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: AppRuntime) -> None:
+    """EDIT_TEXT can appear alongside other operations in a single plan."""
+    edit_params = EditTextParams(
+        edits=[EditTextOperation(find="DRAFT", replace="")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([edit_params, RotatePdfParams(angle=Angle(90))])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT, ToolEndpoint.ROTATE_PDF],
+            summary="Remove DRAFT marker, then rotate.",
+            rationale="test rationale",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Remove the DRAFT watermark text and then rotate.",
+            files=[AiFile(id=FileId("draft-id"), name="draft.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert [step.tool for step in response.steps] == [
+        ToolEndpoint.EDIT_TEXT,
+        ToolEndpoint.ROTATE_PDF,
+    ]
+    assert isinstance(response.steps[0].parameters, EditTextParams)
+    assert isinstance(response.steps[1].parameters, RotatePdfParams)

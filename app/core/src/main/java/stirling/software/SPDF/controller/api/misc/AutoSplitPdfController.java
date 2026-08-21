@@ -14,10 +14,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,7 +39,11 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -266,16 +272,19 @@ public class AutoSplitPdfController {
         return QR_DETECTION_DPI;
     }
 
-    @AutoJobPostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/auto-split-pdf",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
                     "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip"
-                            + " file containing each separate PDF document. Input:PDF Output:ZIP-PDF"
-                            + " Type:SISO")
-    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
+                            + " splits the document at the QR code boundaries. The output is a zip file"
+                            + " containing each separate PDF document.")
+    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
@@ -287,8 +296,8 @@ public class AutoSplitPdfController {
                 duplexMode);
 
         List<PDDocument> splitDocuments = new ArrayList<>();
-        try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-                PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
+        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 
@@ -327,7 +336,7 @@ public class AutoSplitPdfController {
                 }
 
                 if (!splitDocuments.isEmpty() && !isValidQrCode) {
-                    splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
+                    splitDocuments.getLast().addPage(document.getPage(page));
                 } else if (page == 0) {
                     PDDocument firstDocument = new PDDocument();
                     firstDocument.addPage(document.getPage(page));
@@ -352,16 +361,18 @@ public class AutoSplitPdfController {
                 for (int i = 0; i < splitDocuments.size(); i++) {
                     String fileName = filename + "_" + (i + 1) + ".pdf";
                     zipOut.putNextEntry(new ZipEntry(fileName));
-                    splitDocuments.get(i).save(zipOut);
+                    // NO_COMPRESSION: split docs are built by addPage()-ing pages copied from the
+                    // source document. PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared
+                    // resources imported across documents, corrupting fonts. Revert once on 3.0.8.
+                    splitDocuments.get(i).save(zipOut, CompressParameters.NO_COMPRESSION);
                     zipOut.closeEntry();
                 }
             }
 
-            byte[] data = Files.readAllBytes(outputTempFile.getPath());
-            return WebResponseUtils.bytesToWebResponse(
-                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.zipFileToWebResponse(outputTempFile, filename + ".zip");
 
         } catch (Exception e) {
+            outputTempFile.close();
             log.error("Error in auto split", e);
             throw e;
         } finally {

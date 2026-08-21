@@ -401,7 +401,7 @@ public class JobQueue implements SmartLifecycle {
      * @throws Exception If there is an execution error
      */
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs) throws Exception {
-        CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier);
+        CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier, jobExecutor);
 
         try {
             if (timeoutMs <= 0) {

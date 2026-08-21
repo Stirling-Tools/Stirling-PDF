@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
+
+import tools.jackson.databind.JsonNode;
 
 @Data
 @Schema(description = "Structured AI workflow result")
@@ -17,6 +21,14 @@ public class AiWorkflowResponse {
 
     @Schema(description = "Answer returned by the AI workflow when applicable")
     private String answer;
+
+    @JsonProperty("content")
+    @Schema(description = "Text content to package as a file (generate_file outcomes)")
+    private String generatedContent;
+
+    @JsonProperty("filename")
+    @Schema(description = "Desired output filename for generate_file outcomes")
+    private String generatedFilename;
 
     @Schema(description = "Summary returned by the AI workflow when applicable")
     private String summary;
@@ -44,8 +56,38 @@ public class AiWorkflowResponse {
     @Schema(description = "Structured tool steps when the workflow returns a plan")
     private List<Map<String, Object>> steps = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Tool endpoint path for tool_call outcomes (e.g. /api/v1/misc/compress-pdf)")
+    private String tool;
+
+    @Schema(description = "Tool parameters for tool_call outcomes")
+    private Map<String, Object> parameters;
+
+    @Schema(description = "Result file ID after tool execution completes (single-file result)")
+    private String fileId;
+
+    @Schema(description = "Result filename after tool execution completes (single-file result)")
+    private String fileName;
+
+    @Schema(description = "Result MIME type after tool execution completes (single-file result)")
+    private String contentType;
+
+    @Schema(
+            description =
+                    "Result files produced by the workflow. Always populated on completed outcomes"
+                            + " with at least one entry; for single-file results this mirrors"
+                            + " fileId/fileName/contentType.")
+    private List<AiWorkflowResultFile> resultFiles = new ArrayList<>();
+
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
+
+    @Schema(
+            description =
+                    "Files the AI engine requires to be ingested into RAG before it can continue"
+                            + " the workflow. Populated on need_ingest outcomes.")
+    private List<AiFile> filesToIngest = new ArrayList<>();
 
     @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;
@@ -55,4 +97,27 @@ public class AiWorkflowResponse {
 
     @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
+
+    @Schema(
+            description =
+                    "Optional structured report from the tool (e.g. math-auditor Verdict, PDF"
+                            + " comment-agent summary). Tools surface this either via a JSON response"
+                            + " body or via the X-Stirling-Tool-Report header. May be null for tools"
+                            + " that produce only a file.")
+    private JsonNode report;
+
+    @Schema(
+            description =
+                    "Structured error code when a downstream tool call was blocked (e.g."
+                            + " PAYG_LIMIT_REACHED). Lets the client react — such as opening the"
+                            + " usage-limit modal — instead of only seeing a generic failure. Null"
+                            + " for ordinary outcomes.")
+    private String errorCode;
+
+    @Schema(
+            description =
+                    "Whether the team is subscribed, carried from a downstream usage-limit response."
+                            + " Selects which limit modal the client shows (free → subscribe,"
+                            + " subscribed → raise cap). Null when the downstream body omitted it.")
+    private Boolean errorSubscribed;
 }

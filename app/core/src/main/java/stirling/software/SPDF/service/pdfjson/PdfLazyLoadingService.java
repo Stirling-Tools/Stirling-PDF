@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service.pdfjson;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -81,14 +82,15 @@ public class PdfLazyLoadingService {
      * @param jobId The job ID for caching
      * @param fonts Font map (will be populated)
      * @param pageFontResources Page font resources map (will be populated)
-     * @return Serialized metadata JSON
+     * @param out The output stream to write the serialized metadata JSON to
      * @throws IOException If extraction fails
      */
-    public byte[] extractDocumentMetadata(
+    public void extractDocumentMetadata(
             MultipartFile file,
             String jobId,
             Map<String, PdfJsonFont> fonts,
-            Map<Integer, Map<PDFont, String>> pageFontResources)
+            Map<Integer, Map<PDFont, String>> pageFontResources,
+            OutputStream out)
             throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
@@ -160,7 +162,7 @@ public class PdfLazyLoadingService {
             progress.accept(
                     PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
 
-            return objectMapper.writeValueAsBytes(docMetadata);
+            objectMapper.writeValue(out, docMetadata);
         }
     }
 
@@ -174,10 +176,10 @@ public class PdfLazyLoadingService {
      * @param filterImageXObjectsFromResources Function to filter image XObjects
      * @param extractText Function to extract text elements for the page
      * @param extractAnnotations Function to extract annotations for the page
-     * @return Serialized page JSON
+     * @param out The output stream to write the serialized page JSON to
      * @throws IOException If extraction fails
      */
-    public byte[] extractSinglePage(
+    public void extractSinglePage(
             String jobId,
             int pageNumber,
             java.util.function.Function<COSBase, PdfJsonCosValue> serializeCosValue,
@@ -186,7 +188,8 @@ public class PdfLazyLoadingService {
             java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonTextElement>>
                     extractText,
             java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonAnnotation>>
-                    extractAnnotations)
+                    extractAnnotations,
+            OutputStream out)
             throws IOException {
         CachedPdfDocument cached = documentCache.get(jobId);
         if (cached == null) {
@@ -238,7 +241,7 @@ public class PdfLazyLoadingService {
                     pageModel.getAnnotations().size(),
                     jobId);
 
-            return objectMapper.writeValueAsBytes(pageModel);
+            objectMapper.writeValue(out, pageModel);
         }
     }
 

@@ -59,6 +59,18 @@ public class InstallationPathConfig {
     }
 
     private static String initializeBasePath() {
+        // Allow tests / harnesses to redirect the entire state tree (configs,
+        // backups, customFiles, pipeline, logs) to an isolated location via
+        // -Dstirling.base-path=... or STIRLING_BASE_PATH=... so a Playwright
+        // run never touches a developer's working state.
+        String override = System.getProperty("stirling.base-path");
+        if (override == null || override.isBlank()) {
+            override = System.getenv("STIRLING_BASE_PATH");
+        }
+        if (override != null && !override.isBlank()) {
+            boolean hasTrailingSeparator = override.endsWith("/") || override.endsWith("\\");
+            return hasTrailingSeparator ? override : override + File.separator;
+        }
         return "." + File.separator;
     }
 

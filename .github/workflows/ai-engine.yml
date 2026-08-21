@@ -1,9 +1,16 @@
 name: AI Engine CI
 
+# Runs the engine quality gate (lint, type-check, format-check, tests). Called
+# from build.yml on PRs and merge_group; also runs directly on push to main as
+# a post-merge safety net. Freshness of the generated tool_models.py is checked
+# by the shared check-generated-models workflow.
 on:
+  workflow_call:
   push:
     branches: [main]
-  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   engine:
@@ -11,73 +18,112 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    defaults:
-      run:
-        working-directory: engine
-
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+          cache-suffix: ai-engine
 
-      - name: Install dependencies
-        run: make install
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
-      - name: Run fixers
-        # Ignore errors here because we're going to add comments for them in the following steps before actually failing
-        run: make fix || true
-
-      - name: Check for fixer changes
-        id: fixer_changes
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Post fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@v1
+      - name: Quality-check engine
+        id: engine-check
+        run: task engine:check
         continue-on-error: true
-        with:
-          tool_name: engine-make-fix
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          filter_mode: file
-          fail_level: any
-          level: info
 
-      - name: Comment on fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+      - name: Comment on engine check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.engine-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            await github.rest.issues.createComment({
+            const marker = '<!-- engine-check -->';
+            const body = [
+              marker,
+              '### Engine Check Failed',
+              '',
+              'There are issues with your Python code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task engine:fix` to auto-fix what can be fixed automatically, then run `task engine:check` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "The Python code in your PR has formatting/linting issues. Consider running `make fix` locally or setting up your editor's Ruff integration to auto-format and lint your files as you go, or commit the suggested changes on this PR.",
             });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
-      - name: Verify fixer changes are committed
-        if: steps.fixer_changes.outputs.changed == 'true'
+      - name: Fail if engine check failed
+        if: steps.engine-check.outcome == 'failure'
         run: |
-          if ! git diff --exit-code; then
-            echo "Fixes are out of date."
-            echo "Apply the reviewdog suggestions or run 'make fix' from engine/ and commit the updated files."
-            git --no-pager diff --stat
-            exit 1
-          fi
+          echo "============================================"
+          echo "  Engine Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your Python code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task engine:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task engine:check'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
 
-      - name: Run linting
-        run: make lint
+      - name: Build engine production image
+        if: always()
+        run: docker build --file engine/Dockerfile --tag stirling-pdf-engine:ci .
 
-      - name: Run type checking
-        run: make typecheck
+      - name: Build engine development image
+        if: always()
+        run: docker build --file engine/Dockerfile.dev --tag stirling-pdf-engine-dev:ci .
 
-      - name: Run tests
-        run: make test
+      - name: Remove engine check comment on success
+        if: steps.engine-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- engine-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }

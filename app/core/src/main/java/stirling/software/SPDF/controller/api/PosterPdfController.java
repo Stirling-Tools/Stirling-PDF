@@ -14,10 +14,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -28,6 +28,10 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.general.PosterPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -43,16 +47,19 @@ public class PosterPdfController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(value = "/split-for-poster-print", consumes = "multipart/form-data")
+    @AutoJobPostMapping(
+            value = "/split-for-poster-print",
+            consumes = "multipart/form-data",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split large PDF pages into smaller printable chunks",
             description =
-                    "This endpoint splits large or oddly-sized PDF pages into smaller chunks "
-                            + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
-                            + "Divides each page into a grid of smaller pages using Apache PDFBox. "
-                            + "Input: PDF Output: ZIP-PDF Type: SISO")
-    public ResponseEntity<StreamingResponseBody> posterPdf(@ModelAttribute PosterPdfRequest request)
+                    "This endpoint splits large or oddly-sized PDF pages into smaller chunks"
+                            + " suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each"
+                            + " page into a grid of smaller pages using Apache PDFBox.")
+    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
 
         log.debug("Starting PDF poster split process with request: {}", request);

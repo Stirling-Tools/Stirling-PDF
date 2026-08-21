@@ -1,0 +1,156 @@
+/* ============================================================
+   Landing Page styles.
+   All custom properties are defined in theme.css.
+   ============================================================ */
+
+/* ── Entrance animation (editor empty state) ─────────────────
+   Logo fades/slides up first (0.2s), then the actions after it finishes
+   (0.2s delay + 0.2s) — 0.4s total. */
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-logo-enter {
+  animation: landing-fade-up 0.2s ease-out both;
+}
+.landing-actions-enter {
+  animation: landing-fade-up 0.2s ease-out 0.2s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-logo-enter,
+  .landing-actions-enter {
+    animation: none;
+  }
+}
+
+/* ── Hero text ───────────────────────────────────────────── */
+.landing-title {
+  margin: 1.75rem 0 1.5rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--c-text);
+}
+
+.landing-subtitle {
+  margin: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  max-width: 28rem;
+  color: var(--c-text-muted);
+}
+
+/* ── Document stack ──────────────────────────────────────── */
+.landing-stack {
+  position: relative;
+  z-index: 1;
+  width: var(--landing-stack-w);
+  min-width: var(--landing-stack-w);
+  height: var(--landing-stack-h);
+  min-height: var(--landing-stack-h);
+  margin-left: auto;
+  margin-right: auto;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Sheets — static white, never change with theme */
+.landing-sheet {
+  position: absolute;
+  border-radius: 12px;
+  background-color: #ffffff;
+  cursor: default;
+}
+
+.landing-sheet--back {
+  width: 128px;
+  height: 160px;
+  transform-origin: bottom center;
+  border: 1px solid var(--c-illustration-line);
+  box-shadow: var(--landing-doc-shadow-back-idle);
+}
+
+.landing-sheet--left {
+  left: 8px;
+  top: 12px;
+  transform: rotate(-8deg);
+}
+
+.landing-sheet--right {
+  right: 8px;
+  top: 12px;
+  transform: rotate(8deg);
+}
+
+.landing-sheet--front {
+  left: 50%;
+  top: 0;
+  z-index: 10;
+  width: 144px;
+  height: 176px;
+  margin-left: -72px;
+  overflow: hidden;
+  box-shadow: var(--landing-doc-shadow-front-idle);
+}
+
+.landing-sheet-header {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 12px 12px 0 0;
+  background: var(--landing-hero-gradient);
+}
+
+.landing-sheet-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+}
+
+.landing-sheet-body {
+  padding: 10px 12px;
+}
+
+.landing-sheet-side-body {
+  padding: 12px;
+}
+
+/* Bars — static light colours, never change with theme */
+.landing-bar {
+  border-radius: 9999px;
+  background-color: var(--c-illustration-line);
+}
+.landing-bar--strong {
+  background-color: var(--c-illustration-line-strong);
+}
+
+/* ── Action buttons ──────────────────────────────────────── */
+.landing-btn-icon {
+  min-height: 3rem !important;
+  width: 3rem !important;
+  min-width: 3rem !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Dropzone accept/reject outlines. Mantine 8 no longer supports nested
+ * `&[data-accept]` selectors inside the `styles` prop object, so these are
+ * plain CSS attribute selectors on a class applied to the Dropzone root. */
+.landing-dropzone[data-accept] {
+  outline: 2px dashed var(--c-primary);
+  outline-offset: 4px;
+}
+.landing-dropzone[data-reject] {
+  outline: 2px dashed var(--mantine-color-red-6);
+  outline-offset: 4px;
+}

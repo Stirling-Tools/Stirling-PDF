@@ -23,6 +23,9 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.bouncycastle.tsp.TimeStampToken;
+import org.bouncycastle.tsp.TimeStampTokenInfo;
 import org.bouncycastle.util.Store;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +45,9 @@ import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 
@@ -52,6 +58,9 @@ public class ValidateSignatureController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
+
+    /** PDF sub-filter identifying an RFC 3161 document timestamp (PAdES-LTV). */
+    private static final String SUBFILTER_RFC3161 = "ETSI.RFC3161";
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -66,15 +75,16 @@ public class ValidateSignatureController {
     }
 
     @JsonDataResponse
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
-                    "Validates the digital signatures in a PDF file using PKIX path building"
-                            + " and time-of-signing semantics. Supports custom trust anchors."
-                            + " Input:PDF Output:JSON Type:SISO")
+                    "Validates the digital signatures in a PDF file using PKIX path building and"
+                            + " time-of-signing semantics. Supports custom trust anchors.")
     @AutoJobPostMapping(
             value = "/validate-signature",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();
@@ -100,15 +110,65 @@ public class ValidateSignatureController {
         try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
+            // Detect content appended outside every signature's ByteRange (added after signing). A
+            // properly signed document has its last signature cover all the way to EOF; if the
+            // furthest any signature reaches stops short of the file length, the tail is unsigned.
+            // Taking the max across all signatures avoids false positives on legitimately
+            // multi-signed PDFs, where an earlier signature intentionally omits later revisions.
+            long fileLength = file.getSize();
+            long maxCovered = 0;
+            for (PDSignature sig : signatures) {
+                int[] byteRange = sig.getByteRange();
+                if (byteRange != null && byteRange.length == 4) {
+                    long end = (long) byteRange[2] + byteRange[3];
+                    if (end > maxCovered) {
+                        maxCovered = end;
+                    }
+                }
+            }
+            boolean documentCovered = maxCovered <= 0 || maxCovered >= fileLength;
+
             for (PDSignature sig : signatures) {
                 SignatureValidationResult result = new SignatureValidationResult();
+                result.setCoversEntireDocument(documentCovered);
 
                 try {
                     byte[] signedContent = sig.getSignedContent(file.getInputStream());
                     byte[] signatureBytes = sig.getContents(file.getInputStream());
 
-                    CMSProcessable content = new CMSProcessableByteArray(signedContent);
-                    CMSSignedData signedData = new CMSSignedData(content, signatureBytes);
+                    // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
+                    // *inside* the CMS - a TSTInfo - rather than being detached over the document.
+                    // Building it as detached digests the ByteRange against an attribute that
+                    // covers the TSTInfo, which can never match.
+                    boolean isDocTimeStamp = SUBFILTER_RFC3161.equals(sig.getSubFilter());
+                    CMSSignedData signedData;
+                    // Parse from a stream: /Contents is zero-padded to its reserved length and the
+                    // byte[] constructors reject those trailing bytes since BC 1.85.
+                    if (isDocTimeStamp) {
+                        signedData = new CMSSignedData(new ByteArrayInputStream(signatureBytes));
+                    } else {
+                        CMSProcessable content = new CMSProcessableByteArray(signedContent);
+                        signedData =
+                                new CMSSignedData(
+                                        content, new ByteArrayInputStream(signatureBytes));
+                    }
+
+                    // What actually binds a timestamp to this document: the TSTInfo's message
+                    // imprint must equal the digest of the signed byte range. Without this check a
+                    // valid timestamp token for some *other* document would verify happily here.
+                    Date timeStampGenTime = null;
+                    if (isDocTimeStamp) {
+                        TimeStampToken token = new TimeStampToken(signedData);
+                        TimeStampTokenInfo info = token.getTimeStampInfo();
+                        timeStampGenTime = info.getGenTime();
+                        if (!timestampCoversContent(info, signedContent)) {
+                            result.setValid(false);
+                            result.setErrorMessage(
+                                    "Timestamp message imprint does not match the document");
+                            results.add(result);
+                            continue;
+                        }
+                    }
 
                     Store<X509CertificateHolder> certStore = signedData.getCertificates();
                     SignerInformationStore signerStore = signedData.getSignerInfos();
@@ -141,7 +201,15 @@ public class ValidateSignatureController {
                         CertificateValidationService.ValidationTime validationTimeResult =
                                 certValidationService.extractValidationTime(signerInfo);
                         Date validationTime;
-                        if (validationTimeResult == null) {
+                        if (timeStampGenTime != null) {
+                            // The TSA's own asserted time is the authoritative one here, and is
+                            // exactly what makes the signature verifiable after the cert expires.
+                            validationTime = timeStampGenTime;
+                            // Distinct from "timestamp", which CertificateValidationService already
+                            // uses for a signature countersigned by a TSA. Both are RFC 3161, but
+                            // one attests a signature and the other attests the whole document.
+                            result.setValidationTimeSource("document-timestamp");
+                        } else if (validationTimeResult == null) {
                             validationTime = new Date();
                             result.setValidationTimeSource("current");
                         } else {
@@ -214,10 +282,13 @@ public class ValidateSignatureController {
 
                         // Set basic signature info
                         result.setSignerName(sig.getName());
+                        // A DocTimeStamp has no /M entry; its date is the TSA's genTime.
                         result.setSignatureDate(
-                                sig.getSignDate() != null
-                                        ? sig.getSignDate().getTime().toString()
-                                        : null);
+                                timeStampGenTime != null
+                                        ? timeStampGenTime.toString()
+                                        : sig.getSignDate() != null
+                                                ? sig.getSignDate().getTime().toString()
+                                                : null);
                         result.setReason(sig.getReason());
                         result.setLocation(sig.getLocation());
 
@@ -279,5 +350,21 @@ public class ValidateSignatureController {
         }
 
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * True when the timestamp token was issued over exactly these bytes.
+     *
+     * <p>The digest algorithm is taken from the token rather than assumed, because a TSA chooses it
+     * - assuming SHA-256 would silently fail against any TSA that uses something else.
+     */
+    private static boolean timestampCoversContent(TimeStampTokenInfo info, byte[] signedContent)
+            throws Exception {
+        org.bouncycastle.operator.DigestCalculator digest =
+                new JcaDigestCalculatorProviderBuilder().build().get(info.getHashAlgorithm());
+        try (java.io.OutputStream out = digest.getOutputStream()) {
+            out.write(signedContent);
+        }
+        return java.util.Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
     }
 }

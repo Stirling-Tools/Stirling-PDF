@@ -3,12 +3,15 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -26,6 +30,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -38,10 +44,22 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToEpubControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
+        return baos.toByteArray();
+    }
 
     private static final MediaType EPUB_MEDIA_TYPE = MediaType.valueOf("application/epub+zip");
 
@@ -49,6 +67,22 @@ class ConvertPDFToEpubControllerTest {
     @Mock private EndpointConfiguration endpointConfiguration;
 
     @InjectMocks private ConvertPDFToEpubController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void convertPdfToEpub_buildsGoldenCommandAndCleansUp() throws Exception {
@@ -110,7 +144,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("novel_convertedToEPUB.epub");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals(13, command.size());
@@ -134,7 +168,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "novel_convertedToEPUB.epub",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("epub", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
             assertEquals(workingDir, deletedDir.get());
@@ -202,7 +236,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("story_convertedToEPUB.epub");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertTrue(command.stream().noneMatch(arg -> "--chapter".equals(arg)));
@@ -220,7 +254,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "story_convertedToEPUB.epub",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("epub", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
         } finally {
             deleteIfExists(workingDir);
         }
@@ -287,7 +321,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
                     .thenReturn("book_convertedToAZW3.azw3");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals("ebook-convert", command.get(0));
@@ -308,7 +342,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "book_convertedToAZW3.azw3",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("azw3", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("azw3", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
         } finally {

@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,6 +28,7 @@ import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampRequestGenerator;
 import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampToken;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -43,9 +43,14 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
@@ -74,17 +79,21 @@ public class TimestampController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ApplicationProperties applicationProperties;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/timestamp-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/timestamp-pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add RFC 3161 document timestamp to a PDF",
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
-                            + " document timestamp into the PDF. Only a SHA-256 hash of the"
-                            + " document is sent to the TSA — the PDF itself never leaves the"
-                            + " server. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> timestampPdf(@ModelAttribute TimestampPdfRequest request)
+                            + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
+                            + " to the TSA - the PDF itself never leaves the server.")
+    public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         ApplicationProperties.Security.Timestamp tsConfig =
@@ -124,9 +133,10 @@ public class TimestampController {
                             + " via settings.yml (security.timestamp.customTsaUrls).");
         }
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
+        try (PDDocument document = pdfDocumentFactory.load(inputFile);
+                OutputStream outputStream =
+                        java.nio.file.Files.newOutputStream(tempOutputFile.getPath())) {
             PDSignature signature = new PDSignature();
             signature.setType(COSName.DOC_TIME_STAMP);
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -136,10 +146,13 @@ public class TimestampController {
             document.addSignature(signature, content -> requestTimestampToken(content, tsaUrl));
 
             document.saveIncremental(outputStream);
+        } catch (Exception e) {
+            tempOutputFile.close();
+            throw e;
         }
 
-        return WebResponseUtils.bytesToWebResponse(
-                outputStream.toByteArray(),
+        return WebResponseUtils.pdfFileToWebResponse(
+                tempOutputFile,
                 GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_timestamped.pdf"));
     }
 
@@ -163,7 +176,8 @@ public class TimestampController {
             TimeStampRequest tsaRequest = generator.generate(digestAlgorithm, hash, nonce);
             byte[] requestBytes = tsaRequest.getEncoded();
 
-            // Contact the TSA server (redirects disabled to prevent SSRF via redirect)
+            // Contact the TSA server — tsaUrl is validated against an allowlist above,
+            // and redirects are disabled below to prevent SSRF via redirect.
             connection = (HttpURLConnection) URI.create(tsaUrl).toURL().openConnection();
             connection.setInstanceFollowRedirects(false);
             connection.setDoOutput(true);

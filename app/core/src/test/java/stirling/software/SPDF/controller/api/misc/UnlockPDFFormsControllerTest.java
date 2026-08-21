@@ -2,7 +2,11 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+
+import java.io.File;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -12,24 +16,40 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class UnlockPDFFormsControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     private UnlockPDFFormsController controller;
 
     private MockMultipartFile mockPdfFile;
 
     @BeforeEach
-    void setUp() {
-        controller = new UnlockPDFFormsController(pdfDocumentFactory);
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+        controller = new UnlockPDFFormsController(pdfDocumentFactory, tempFileManager);
         mockPdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -47,7 +67,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<byte[]> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -65,7 +85,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<byte[]> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -79,7 +99,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<byte[]> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         // Controller catches exceptions and returns null
         assertNull(response);
@@ -94,7 +114,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<byte[]> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
@@ -113,7 +133,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<byte[]> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertTrue(acroForm.getNeedAppearances());

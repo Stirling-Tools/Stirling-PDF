@@ -2,15 +2,27 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, ToolEndpoint
 
 from .agent_drafts import AgentDraftResponse
-from .common import ArtifactKind, ExtractedFileText, SupportedCapability, WorkflowOutcome
+from .common import (
+    AiFile,
+    ArtifactKind,
+    ConversationMessage,
+    ExtractedFileText,
+    GenerateFileResponse,
+    NeedContentResponse,
+    NeedIngestResponse,
+    SupportedCapability,
+    ToolReportArtifact,
+    WorkflowOutcome,
+    drop_unknown_tool_endpoints,
+)
 from .execution import NextExecutionAction
-from .pdf_edit import PdfEditResponse
-from .pdf_questions import PdfQuestionResponse
+from .pdf_edit import PdfEditTerminalResponse
+from .pdf_questions import PdfQuestionTerminalResponse
 
 
 class ExtractedTextArtifact(ApiModel):
@@ -18,14 +30,22 @@ class ExtractedTextArtifact(ApiModel):
     files: list[ExtractedFileText] = Field(default_factory=list)
 
 
-WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
+WorkflowArtifact = Annotated[
+    ExtractedTextArtifact | ToolReportArtifact,
+    Field(discriminator="kind"),
+]
 
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
+    # See `PdfEditRequest.enabled_endpoints`.
+    enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
+        default_factory=list
+    )
 
 
 class UnsupportedCapabilityResponse(ApiModel):
@@ -34,7 +54,14 @@ class UnsupportedCapabilityResponse(ApiModel):
     message: str
 
 
-OrchestratorResponse = Annotated[
-    PdfEditResponse | PdfQuestionResponse | AgentDraftResponse | NextExecutionAction | UnsupportedCapabilityResponse,
+type OrchestratorResponse = Annotated[
+    PdfEditTerminalResponse
+    | PdfQuestionTerminalResponse
+    | GenerateFileResponse
+    | NeedContentResponse
+    | NeedIngestResponse
+    | AgentDraftResponse
+    | NextExecutionAction
+    | UnsupportedCapabilityResponse,
     Field(discriminator="outcome"),
 ]

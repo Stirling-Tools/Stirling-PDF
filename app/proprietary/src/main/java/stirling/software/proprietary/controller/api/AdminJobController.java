@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +28,7 @@ import stirling.software.common.service.TaskManager;
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Job Management", description = "Admin-only Job  Management APIs")
 public class AdminJobController {
 
@@ -41,7 +42,7 @@ public class AdminJobController {
      */
     @GetMapping("/job/stats")
     @Operation(summary = "Get job statistics")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<JobStats> getJobStats() {
         JobStats stats = taskManager.getJobStats();
         log.info(
@@ -58,7 +59,7 @@ public class AdminJobController {
      */
     @GetMapping("/job/queue/stats")
     @Operation(summary = "Get job queue statistics")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getQueueStats() {
         Map<String, Object> queueStats = jobQueue.getQueueStats();
         log.info("Admin requested queue stats: {} queued jobs", queueStats.get("queuedJobs"));
@@ -66,28 +67,40 @@ public class AdminJobController {
     }
 
     /**
-     * Manually trigger cleanup of old jobs (admin only)
+     * Manually trigger cleanup of old jobs (admin only). Covers every user's jobs, unlike the
+     * self-service {@code POST /api/v1/general/jobs/cleanup}, which only releases the caller's own.
      *
-     * @return A response indicating how many jobs were cleaned up
+     * @param force Ignore the retention window and release every finished job now, rather than only
+     *     those already past it
+     * @return A response indicating how many jobs and files were cleaned up
      */
     @PostMapping("/job/cleanup")
-    @Operation(summary = "Cleanup old jobs")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> cleanupOldJobs() {
-        int beforeCount = taskManager.getJobStats().getTotalJobs();
-        taskManager.cleanupOldJobs();
-        int afterCount = taskManager.getJobStats().getTotalJobs();
-        int removedCount = beforeCount - afterCount;
+    @Operation(
+            summary = "Cleanup old jobs",
+            description =
+                    "Runs the job retention sweep now across all users. With force=true the"
+                            + " retention window is ignored and every finished job is released"
+                            + " immediately.")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> cleanupOldJobs(
+            @RequestParam(name = "force", defaultValue = "false") boolean force) {
+        TaskManager.CleanupSummary summary =
+                force
+                        ? taskManager.cleanupFinishedJobsNow(jobId -> true)
+                        : taskManager.cleanupOldJobs();
 
         log.info(
-                "Admin triggered job cleanup: removed {} jobs, {} remaining",
-                removedCount,
-                afterCount);
+                "Admin triggered job cleanup (force={}): removed {} jobs and {} files, {} remaining",
+                force,
+                summary.jobsRemoved(),
+                summary.filesDeleted(),
+                summary.jobsRetained());
 
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Cleanup complete",
-                        "removedJobs", removedCount,
-                        "remainingJobs", afterCount));
+                        "removedJobs", summary.jobsRemoved(),
+                        "filesDeleted", summary.filesDeleted(),
+                        "remainingJobs", summary.jobsRetained()));
     }
 }
