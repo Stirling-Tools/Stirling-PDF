@@ -13,7 +13,10 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -24,11 +27,14 @@ public class ConvertPDFToHtml {
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/html")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/html",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.ZIP)
     @Operation(
             summary = "Convert PDF to HTML",
-            description =
-                    "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
+            description = "This endpoint converts a PDF file to HTML format.")
     public ResponseEntity<Resource> processPdfToHTML(@ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();

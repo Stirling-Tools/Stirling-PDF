@@ -1,0 +1,501 @@
+import {
+  createTheme,
+  MantineColorsTuple,
+  MantineTheme,
+  MantineThemeComponent,
+  type CSSVariablesResolver,
+} from "@mantine/core";
+
+// Define color tuples using CSS variables
+const primary: MantineColorsTuple = [
+  "var(--color-primary-50)",
+  "var(--color-primary-100)",
+  "var(--color-primary-200)",
+  "var(--color-primary-300)",
+  "var(--color-primary-400)",
+  "var(--color-primary-500)",
+  "var(--color-primary-600)",
+  "var(--color-primary-700)",
+  "var(--color-primary-800)",
+  "var(--color-primary-900)",
+];
+
+const green: MantineColorsTuple = [
+  "var(--color-green-50)",
+  "var(--color-green-100)",
+  "var(--color-green-200)",
+  "var(--color-green-300)",
+  "var(--color-green-400)",
+  "var(--color-green-500)",
+  "var(--color-green-600)",
+  "var(--color-green-700)",
+  "var(--color-green-800)",
+  "var(--color-green-900)",
+];
+
+const yellow: MantineColorsTuple = [
+  "var(--color-yellow-50)",
+  "var(--color-yellow-100)",
+  "var(--color-yellow-200)",
+  "var(--color-yellow-300)",
+  "var(--color-yellow-400)",
+  "var(--color-yellow-500)",
+  "var(--color-yellow-600)",
+  "var(--color-yellow-700)",
+  "var(--color-yellow-800)",
+  "var(--color-yellow-900)",
+];
+
+// Mantine falls back to its own palette for any colour name the theme does not
+// define, which is how stock reds/blues (failing contrast) reached the UI.
+const red: MantineColorsTuple = [
+  "var(--color-red-50)",
+  "var(--color-red-100)",
+  "var(--color-red-200)",
+  "var(--color-red-300)",
+  "var(--color-red-400)",
+  "var(--color-red-500)",
+  "var(--color-red-600)",
+  "var(--color-red-700)",
+  "var(--color-red-800)",
+  "var(--color-red-900)",
+];
+
+const gray: MantineColorsTuple = [
+  "var(--color-gray-50)",
+  "var(--color-gray-100)",
+  "var(--color-gray-200)",
+  "var(--color-gray-300)",
+  "var(--color-gray-400)",
+  "var(--color-gray-500)",
+  "var(--color-gray-600)",
+  "var(--color-gray-700)",
+  "var(--color-gray-800)",
+  "var(--color-gray-900)",
+];
+
+// Neutral dark scale (zinc, mirroring --p-zinc-*) replacing Mantine's default gray ramp; colors.css re-points dark-4..7 at the --c-* surfaces. 0..3 text, 4..7 surfaces, 8..9 deepest.
+const dark: MantineColorsTuple = [
+  "#f4f4f5", // dark-0  — primary text on dark bg (zinc-100)
+  "#a1a1aa", // dark-1  — secondary text (zinc-200)
+  "#71717a", // dark-2  — muted text / icons (zinc-300)
+  "#52525b", // dark-3  — subtle text / dividers (zinc-400)
+  "#2a2a2e", // dark-4  — elevated surface / selected bg (zinc-650)
+  "#202023", // dark-5  — card / panel surface (zinc-775)
+  "#18181b", // dark-6  — toolbar / sidebar bg (zinc-800)
+  "#0f0f10", // dark-7  — page background (zinc-950)
+  "#070708", // dark-8  — deeper than the reachable surfaces
+  "#050506", // dark-9  — deepest
+];
+
+/**
+ * Mantine derives each variant's text colour from the palette itself, landing
+ * around 3.7:1 on its own tint — too low for badge, button and helper text.
+ * These slots point at the accessible shade for the scheme instead.
+ *
+ * Slots whose values are written in tokens that already flip with the colour
+ * scheme (`--c-accent-text`, `--color-*-dark`, `--c-text-muted`), plus the
+ * solid fills, which are chosen to carry a white label on either ground. Both
+ * schemes therefore take the same map; only the slots naming a fixed primitive
+ * need a per-scheme value.
+ */
+const accessibleColorSlots = {
+  // Link colour: Mantine derives it from the accent's shade 6.
+  "--mantine-color-anchor": "var(--c-accent-text)",
+  "--mantine-color-primary-light-color": "var(--c-accent-text)",
+  "--mantine-color-blue-light-color": "var(--c-accent-text)",
+  "--mantine-color-red-light-color": "var(--color-red-dark)",
+  "--mantine-color-green-light-color": "var(--color-green-dark)",
+  "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
+  // Colour names the app never registers still reach Mantine's own palette
+  // through `color="..."` props, so pin their light-variant text too.
+  "--mantine-color-orange-light-color": "var(--color-amber-dark)",
+  "--mantine-color-grape-light-color": "var(--color-purple-dark)",
+  "--mantine-color-teal-light-color": "var(--color-green-dark)",
+  "--mantine-color-cyan-light-color": "var(--c-accent-text)",
+  // Mantine's own semantic slots. The -text variants back input errors and
+  // text-only variants; the -filled ones back solid badges, and the stock
+  // orange and grey are too light to carry a white label.
+  "--mantine-color-dimmed": "var(--c-text-muted)",
+  // Placeholders default to a divider-weight grey, which is not a text shade.
+  "--mantine-color-placeholder": "var(--c-text-subtle)",
+  // Neutral badges and chips derive their label from the grey ramp, which lands
+  // mid-scale and reads against neither ground.
+  "--mantine-color-gray-light-color": "var(--c-text-muted)",
+  "--mantine-color-error": "var(--color-red-dark)",
+  "--mantine-color-red-text": "var(--color-red-dark)",
+  "--mantine-color-green-text": "var(--color-green-dark)",
+  "--mantine-color-orange-text": "var(--color-amber-dark)",
+  "--mantine-color-blue-text": "var(--c-accent-text)",
+  "--mantine-color-blue-filled": "var(--c-accent-solid)",
+  "--mantine-color-green-filled-hover": "var(--c-success-solid)",
+  "--mantine-color-orange-filled": "var(--p-amber-700)",
+  "--mantine-color-green-filled": "var(--p-green-700)",
+  "--mantine-color-yellow-filled": "var(--p-amber-700)",
+  // Outline variants paint their label with the hue's -outline slot, which
+  // defaults to the solid fill and is therefore too light to read.
+  "--mantine-color-red-outline": "var(--color-red-dark)",
+  "--mantine-color-green-outline": "var(--color-green-dark)",
+  "--mantine-color-teal-outline": "var(--color-green-dark)",
+  "--mantine-color-orange-outline": "var(--color-amber-dark)",
+  "--mantine-color-yellow-outline": "var(--color-amber-dark)",
+  "--mantine-color-blue-outline": "var(--c-accent-text)",
+  "--mantine-color-primary-outline": "var(--c-accent-text)",
+  "--mantine-color-teal-filled": "var(--p-green-700)",
+  "--mantine-color-gray-filled": "var(--p-gray-600)",
+} as const;
+
+export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: {
+    ...accessibleColorSlots,
+    // Indigo has no semantic token to flip, so each scheme names its own step.
+    "--mantine-color-indigo-light-color": "var(--p-indigo-600)",
+  },
+  dark: {
+    ...accessibleColorSlots,
+    "--mantine-color-indigo-light-color": "var(--p-indigo-300)",
+    // Hues the theme never registers keep Mantine's own ramp, whose shade 0 is
+    // a pale tint in both schemes — a light panel in a dark UI. The registered
+    // hues take their tint from the app's own dark rungs already.
+    "--mantine-color-orange-0": "var(--color-yellow-50)",
+    "--mantine-color-orange-1": "var(--color-yellow-100)",
+    "--mantine-color-grape-0": "var(--color-purple-light)",
+    "--mantine-color-indigo-0": "var(--color-primary-50)",
+    "--mantine-color-cyan-0": "var(--color-primary-50)",
+  },
+});
+
+export const mantineTheme = createTheme({
+  // Primary color
+  primaryColor: "primary",
+
+  // Color palette
+  colors: {
+    primary,
+    // `blue` is the same ramp as `primary`: components written against Mantine's
+    // default palette name still land on the app's accent instead of stock blue.
+    blue: primary,
+    teal: green,
+    red,
+    green,
+    yellow,
+    gray,
+    dark,
+  },
+
+  // Spacing system - uses CSS variables
+  spacing: {
+    xs: "var(--space-xs)",
+    sm: "var(--space-sm)",
+    md: "var(--space-md)",
+    lg: "var(--space-lg)",
+    xl: "var(--space-xl)",
+  },
+
+  // Border radius system
+  radius: {
+    xs: "var(--radius-xs)",
+    sm: "var(--radius-sm)",
+    md: "var(--radius-md)",
+    lg: "var(--radius-lg)",
+    xl: "var(--radius-xl)",
+  },
+
+  // Shadow system
+  shadows: {
+    xs: "var(--shadow-xs)",
+    sm: "var(--shadow-sm)",
+    md: "var(--shadow-md)",
+    lg: "var(--shadow-lg)",
+    xl: "var(--shadow-xl)",
+  },
+
+  // Custom variables for specific components
+  other: {
+    crop: {
+      overlayBorder: "var(--color-primary-500)",
+      overlayBackground: "rgba(59, 130, 246, 0.1)", // Blue with 10% opacity
+      handleColor: "var(--color-primary-500)",
+      handleBorder: "var(--c-surface)",
+    },
+  },
+
+  // Component customizations
+  components: {
+    // Mantine renders the modal/drawer dismiss control as an icon-only button
+    // with no text, so without a name it is unreachable by screen reader. The
+    // app's own Modal wrapper (@app/ui/Modal) names itself; this covers the
+    // components that still mount Mantine's Modal directly. Pass a translated
+    // aria-label at the call site where the control means more than "close".
+    Anchor: {
+      styles: {
+        root: {
+          // Mantine links default to the accent shade, which reads at 4.4:1 on
+          // the page; accent copy has its own deeper token.
+          color: "var(--c-accent-text)",
+        },
+      },
+    },
+    CloseButton: {
+      defaultProps: { "aria-label": "Close" },
+    },
+    ColorInput: {
+      // Mantine ships the eye-dropper trigger as an icon-only button with no
+      // accessible name.
+      defaultProps: {
+        eyeDropperButtonProps: {
+          "aria-label": "Pick a colour from the screen",
+        },
+      },
+    },
+    Drawer: {
+      defaultProps: { closeButtonProps: { "aria-label": "Close" } },
+    },
+    Button: {
+      styles: {
+        root: {
+          fontWeight: "var(--font-weight-medium)",
+          transition: "all 0.2s ease",
+        },
+      },
+      variants: {
+        // Custom button variant for PDF tools
+        pdfTool: (_theme: MantineTheme) => ({
+          root: {
+            backgroundColor: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
+            color: "var(--c-text)",
+            "&:hover": {
+              backgroundColor: "var(--c-hover)",
+              borderColor: "var(--color-primary-500)",
+            },
+          },
+        }),
+      },
+    } as MantineThemeComponent,
+
+    Paper: {
+      styles: {
+        root: {
+          backgroundColor: "var(--c-surface)",
+          border: "1px solid var(--c-border-subtle)",
+        },
+      },
+    },
+
+    Card: {
+      styles: {
+        root: {
+          backgroundColor: "var(--c-surface)",
+          border: "1px solid var(--c-border-subtle)",
+          boxShadow: "var(--shadow-sm)",
+        },
+      },
+    },
+
+    Code: {
+      styles: {
+        root: {
+          backgroundColor: "var(--color-gray-100)",
+          color: "var(--c-text)",
+        },
+      },
+    },
+
+    Textarea: {
+      styles: (_theme: MantineTheme) => ({
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      }),
+    },
+
+    TextInput: {
+      styles: (_theme: MantineTheme) => ({
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      }),
+    },
+
+    PasswordInput: {
+      styles: (_theme: MantineTheme) => ({
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+      }),
+    },
+
+    Select: {
+      styles: {
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+        dropdown: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border-subtle)",
+          boxShadow: "var(--shadow-lg)",
+        },
+        option: {
+          color: "var(--c-text)",
+          "--combobox-option-hover": "var(--c-hover)",
+          "--combobox-option-selected": "var(--color-primary-100)",
+        },
+      },
+    },
+
+    MultiSelect: {
+      styles: {
+        input: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border)",
+          color: "var(--c-text)",
+          "&:focus": {
+            borderColor: "var(--color-primary-500)",
+            boxShadow: "0 0 0 1px var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text-muted)",
+          fontWeight: "var(--font-weight-medium)",
+        },
+        dropdown: {
+          backgroundColor: "var(--c-surface)",
+          borderColor: "var(--c-border-subtle)",
+          boxShadow: "var(--shadow-lg)",
+        },
+        option: {
+          color: "var(--c-text)",
+          "--combobox-option-hover": "var(--c-hover)",
+          "--combobox-option-selected": "var(--color-primary-100)",
+        },
+      },
+    },
+    Tooltip: {
+      styles: {
+        tooltip: {
+          backgroundColor:
+            "color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) )",
+          color: "var(--c-text)",
+          border: "1px solid var(--tooltip-border)",
+          fontSize: "0.75rem",
+          fontWeight: "500",
+          boxShadow: "var(--shadow-md)",
+          borderRadius: "var(--radius-sm)",
+        },
+      },
+    },
+
+    Checkbox: {
+      styles: {
+        input: {
+          borderColor: "var(--c-border)",
+          "&:checked": {
+            backgroundColor: "var(--color-primary-500)",
+            borderColor: "var(--color-primary-500)",
+          },
+        },
+        label: {
+          color: "var(--c-text)",
+        },
+      },
+    },
+
+    Slider: {
+      styles: {
+        track: {
+          backgroundColor: "var(--c-surface-sunken)",
+        },
+        bar: {
+          backgroundColor: "var(--color-primary-500)",
+        },
+        thumb: {
+          backgroundColor: "var(--color-primary-500)",
+          borderColor: "var(--color-primary-500)",
+        },
+        mark: {
+          borderColor: "var(--c-border)",
+        },
+        markLabel: {
+          color: "var(--c-text-subtle)",
+        },
+      },
+    },
+
+    Modal: {
+      defaultProps: { closeButtonProps: { "aria-label": "Close" } },
+      styles: {
+        content: {
+          backgroundColor: "var(--c-surface)",
+          border: "1px solid var(--c-border-subtle)",
+          boxShadow: "var(--shadow-xl)",
+        },
+        header: {
+          backgroundColor: "var(--c-surface)",
+          borderBottom: "1px solid var(--c-border-subtle)",
+        },
+        title: {
+          color: "var(--c-text)",
+          fontWeight: "var(--font-weight-semibold)",
+        },
+      },
+    },
+
+    Notification: {
+      styles: {
+        root: {
+          backgroundColor: "var(--c-surface)",
+          border: "1px solid var(--c-border-subtle)",
+          boxShadow: "var(--shadow-lg)",
+        },
+        title: {
+          color: "var(--c-text)",
+        },
+        description: {
+          color: "var(--c-text-muted)",
+        },
+      },
+    },
+  },
+});

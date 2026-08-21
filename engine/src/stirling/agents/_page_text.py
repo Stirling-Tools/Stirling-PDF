@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from stirling.contracts import ExtractedFileText
+from stirling.contracts import ExtractedFileText, ExtractedTextArtifact, OrchestratorRequest
+
+
+def get_extracted_text_artifact(request: OrchestratorRequest) -> ExtractedTextArtifact | None:
+    for artifact in request.artifacts:
+        if isinstance(artifact, ExtractedTextArtifact):
+            return artifact
+    return None
 
 
 def has_page_text(page_text: list[ExtractedFileText]) -> bool:

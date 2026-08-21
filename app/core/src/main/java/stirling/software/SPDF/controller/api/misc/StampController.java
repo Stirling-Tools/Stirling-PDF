@@ -46,6 +46,9 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -87,13 +90,16 @@ public class StampController {
                 });
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-stamp")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-stamp",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
-                            + " type (text or image), rotation, opacity, width spacer, and height"
-                            + " spacer. Input:PDF Output:PDF Type:SISO")
+                            + " type (text or image), rotation, opacity, width spacer, and height spacer.")
     public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();

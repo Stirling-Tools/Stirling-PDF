@@ -1,19 +1,134 @@
 version: '3'
 
+# Gradle invocation strategy:
+#   - Linux/macOS: `./gradlew` runs the POSIX shell wrapper natively.
+#   - Windows:     `cmd /c ".\gradlew.bat ..."` invokes the .bat wrapper through
+#                  cmd.exe so it inherits the user's Windows-side `JAVA_HOME`
+#                  and PATH. Routing through `bash gradlew` on Windows ends up
+#                  under WSL or Git-Bash, neither of which inherits
+#                  Adoptium/Temurin's default Windows-only Java env - gradlew
+#                  then errors with "JAVA_HOME is not set and no 'java' command
+#                  could be found".
+#
+#                  The entire `.\gradlew.bat ...` payload is double-quoted so
+#                  the leading `.\` survives mvdan/sh's POSIX backslash
+#                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
+#                  because modern Windows excludes cwd from cmd's search path.
+
 tasks:
   dev:
     desc: "Start backend dev server"
+    cmds:
+      - task: dev:proprietary
+        vars:
+          PORT: '{{.PORT}}'
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+          SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+
+  dev:proprietary:
+    desc: "Start backend dev server in proprietary mode"
+    # `dotenv:` reads from the root Taskfile's directory (".") because this
+    # subtaskfile is included with `dir: .`. Local overrides in
+    # .env.proprietary.local win over the committed .env.proprietary defaults.
+    dotenv: ['app/.env.proprietary.local', 'app/.env.proprietary']
+    ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
+      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default ""}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
+    cmds:
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+        platforms: [windows]
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
+        platforms: [linux, darwin]
+
+  dev:bundled:
+    desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
     ignore_error: true
     cmds:
-      - cmd: cmd /c gradlew.bat :stirling-pdf:bootRun
+      - cmd: cmd /c ".\gradlew.bat clean bootRun -PbuildWithFrontend=true"
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun
+      - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
+        platforms: [linux, darwin]
+
+  # SaaS backend. dev:saas -> the PR's preview branch, staging:saas -> shared v3,
+  # PROFILES=none -> production against your own SAAS_DB_*. Production has no named
+  # task on purpose. Use `none`, not an empty value: Go template `default` treats ""
+  # as absent and would resolve back to dev.
+
+  dev:saas:
+    desc: "Start SaaS backend against the current PR's Supabase preview branch"
+    dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    vars:
+      PROFILES: '{{.PROFILES | default "dev"}}'
+    cmds:
+      # Don't move this check into a `sh:` var: dotenv is visible in cmds but not
+      # during var evaluation, so the test would always see an empty value.
+      - cmd: |
+          if [ "{{.PROFILES}}" = "dev" ] && [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
+            echo ">> SAAS_DEV_PROJECT_REF is not set."
+            echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
+            echo ">> Wanted the shared v3 project? Use 'task backend:staging:saas' instead."
+            exit 1
+          fi
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: '{{.PROFILES}}'
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  staging:saas:
+    desc: "Start SaaS backend against the shared v3 staging project"
+    cmds:
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: staging
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  _run:saas:
+    internal: true
+    dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      PROFILES: '{{.PROFILES | default "dev"}}'
+      # Built here rather than inline in the cmds below: the Windows line is an
+      # unquoted YAML scalar wrapping a cmd.exe string, so a nested {{if ne .X
+      # "none"}} needs escaped quotes that reach the Go template as literal
+      # backslashes and fail with `unexpected "\" in operand`.
+      PROFILE_ARGS: '{{if ne .PROFILES "none"}}--spring.profiles.include={{.PROFILES}}{{end}}'
+      AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
+      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
+      STIRLING_FLAVOR: saas
+      AIENGINE_URL: '{{.AIENGINE_URL}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+    cmds:
+      # PROFILE_ARGS is empty when PROFILES=none, i.e. the bare `saas` profile
+      # against SAAS_DB_* (production).
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args=\"{{.PROFILE_ARGS}}\"{{end}}"
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args='{{.PROFILE_ARGS}}'{{end}}
         platforms: [linux, darwin]
 
   build:
     desc: "Full backend build"
     cmds:
-      - cmd: cmd /c gradlew.bat clean build
+      - cmd: cmd /c ".\gradlew.bat clean build"
         platforms: [windows]
       - cmd: ./gradlew clean build
         platforms: [linux, darwin]
@@ -21,7 +136,7 @@ tasks:
   build:fast:
     desc: "Build without tests"
     cmds:
-      - cmd: cmd /c gradlew.bat clean build -x test
+      - cmd: cmd /c ".\gradlew.bat clean build -x test"
         platforms: [windows]
       - cmd: ./gradlew clean build -x test
         platforms: [linux, darwin]
@@ -29,7 +144,7 @@ tasks:
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - cmd: cmd /c gradlew.bat build -PnoSpotless
+      - cmd: cmd /c ".\gradlew.bat build -PnoSpotless"
         platforms: [windows]
       - cmd: ./gradlew build -PnoSpotless
         platforms: [linux, darwin]
@@ -37,15 +152,24 @@ tasks:
   test:
     desc: "Run backend tests"
     cmds:
-      - cmd: cmd /c gradlew.bat test
+      - cmd: cmd /c ".\gradlew.bat test"
         platforms: [windows]
       - cmd: ./gradlew test
+        platforms: [linux, darwin]
+
+  test:force:
+    desc: "Run backend tests, ignoring cached results"
+    aliases: [test:no-cache]
+    cmds:
+      - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache"
+        platforms: [windows]
+      - cmd: ./gradlew cleanTest test --no-build-cache
         platforms: [linux, darwin]
 
   format:
     desc: "Auto-fix code formatting"
     cmds:
-      - cmd: cmd /c gradlew.bat spotlessApply
+      - cmd: cmd /c ".\gradlew.bat spotlessApply"
         platforms: [windows]
       - cmd: ./gradlew spotlessApply
         platforms: [linux, darwin]
@@ -53,7 +177,7 @@ tasks:
   format:check:
     desc: "Check code formatting"
     cmds:
-      - cmd: cmd /c gradlew.bat spotlessCheck
+      - cmd: cmd /c ".\gradlew.bat spotlessCheck"
         platforms: [windows]
       - cmd: ./gradlew spotlessCheck
         platforms: [linux, darwin]
@@ -65,8 +189,9 @@ tasks:
 
   swagger:
     desc: "Generate OpenAPI docs"
+    run: once
     cmds:
-      - cmd: cmd /c gradlew.bat :stirling-pdf:copySwaggerDoc
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
         platforms: [windows]
       - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
         platforms: [linux, darwin]
@@ -87,7 +212,7 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - cmd: cmd /c gradlew.bat printVersion --quiet | tail -1
+      - cmd: cmd /c ".\gradlew.bat printVersion --quiet" | tail -1
         platforms: [windows]
       - cmd: ./gradlew printVersion --quiet | tail -1
         platforms: [linux, darwin]
@@ -95,7 +220,7 @@ tasks:
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - cmd: cmd /c gradlew.bat checkLicense --no-parallel
+      - cmd: cmd /c ".\gradlew.bat checkLicense --no-parallel"
         platforms: [windows]
       - cmd: ./gradlew checkLicense --no-parallel
         platforms: [linux, darwin]
@@ -103,7 +228,7 @@ tasks:
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - cmd: cmd /c gradlew.bat checkLicense generateLicenseReport --no-parallel
+      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport --no-parallel"
         platforms: [windows]
       - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
         platforms: [linux, darwin]
@@ -111,7 +236,7 @@ tasks:
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - cmd: cmd /c gradlew.bat clean
+      - cmd: cmd /c ".\gradlew.bat clean"
         platforms: [windows]
       - cmd: ./gradlew clean
         platforms: [linux, darwin]

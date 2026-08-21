@@ -2,6 +2,10 @@ version: '3'
 
 output: prefixed
 
+vars:
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1
+  FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
+
 includes:
   backend:
     taskfile: .taskfiles/backend.yml
@@ -18,8 +22,34 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
+  e2e:
+    taskfile: .taskfiles/e2e.yml
+    dir: .
+  cucumber:
+    taskfile: .taskfiles/cucumber.yml
+    dir: testing/cucumber
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
+  # ============================================================
+  # Help (shown when you run `task` with no arguments)
+  # ============================================================
+
+  default:
+    desc: "List the most common commands"
+    silent: true
+    cmds:
+      - |
+        echo "Common commands (run 'task --list' to see all):"
+        echo ""
+        echo "  task dev            Start backend & frontend on free ports"
+        echo "  task backend:dev    Start backend on default port"
+        echo "  task frontend:dev   Start frontend on default port"
+        echo "  task desktop:dev    Start desktop app"
+        echo "  task check          Quality gate (lint, typecheck, test, etc.)"
+
   # ============================================================
   # Setup & Prerequisites
   # ============================================================
@@ -35,17 +65,90 @@ tasks:
   # ============================================================
 
   dev:
-    desc: "Start backend + frontend concurrently"
+    desc: "Start backend + frontend concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
-      - backend:dev
-      - frontend:dev
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+      - task: frontend:dev
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  dev:portal:
+    desc: "Start backend + editor; the portal is an admin route at /portal"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+      - task: frontend:dev:proprietary
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  # Set SAAS_DEV_PROJECT_REF in app/.env.saas.local to pick the PR.
+  dev:saas:
+    desc: "Start SaaS backend + frontend + engine against the current PR's preview branch"
+    cmds:
+      - task: dev:_all
+        vars: { FRONTEND: saas, BACKEND: saas, SAAS_ENV: dev }
+
+  staging:saas:
+    desc: "Start SaaS backend + frontend + engine against the shared v3 staging project"
+    cmds:
+      - task: dev:_all
+        vars:
+          FRONTEND: saas
+          BACKEND: saas
+          BACKEND_TASK: backend:staging:saas
+          SAAS_ENV: staging
 
   dev:all:
-    desc: "Start backend + frontend + engine concurrently"
+    desc: "Start backend + frontend + engine concurrently on free ports"
+    cmds:
+      - task: dev:_all
+
+  dev:_all:
+    internal: true
+    vars:
+      FRONTEND: '{{.FRONTEND | default "proprietary"}}'
+      BACKEND: '{{.BACKEND | default "proprietary"}}'
+      BACKEND_TASK: '{{.BACKEND_TASK | default (printf "backend:dev:%s" .BACKEND)}}'
+      # Only meaningful to the saas frontend; every other flavor ignores it.
+      SAAS_ENV: '{{.SAAS_ENV | default ""}}'
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
     deps:
-      - backend:dev
-      - frontend:dev:prototypes
-      - engine:dev
+      - task: engine:dev
+        vars:
+          PORT: '{{.ENGINE_PORT}}'
+      - task: '{{.BACKEND_TASK}}'
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+          AIENGINE_ENABLED: "true"
+      - task: 'frontend:dev:{{.FRONTEND}}'
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   # ============================================================
   # Build
@@ -100,6 +203,22 @@ tasks:
       - task: engine:format:check
 
   # ============================================================
+  # Code generation
+  # ============================================================
+
+  tool-models:
+    desc: "Generate all API models from the Java OpenAPI spec"
+    cmds:
+      - task: frontend:tool-models
+      - task: engine:tool-models
+
+  tool-models:check:
+    desc: "Fail if any committed API model is out of date"
+    cmds:
+      - task: frontend:tool-models:check
+      - task: engine:tool-models:check
+
+  # ============================================================
   # Quality Gate
   # ============================================================
 
@@ -125,4 +244,6 @@ tasks:
     desc: "Clean all build artifacts"
     cmds:
       - task: backend:clean
+      - task: frontend:clean
       - task: engine:clean
+      - task: pre-commit:clean

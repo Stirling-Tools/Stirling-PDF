@@ -21,6 +21,9 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 
 @SecurityApi
@@ -30,14 +33,17 @@ public class VerifyPDFController {
 
     private final VeraPDFService veraPDFService;
 
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Verify PDF Standards Compliance",
             description =
-                    "Validates PDF files against the standards declared in their metadata. "
-                            + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
-                            + "from the document's XMP metadata and validates compliance. "
-                            + "Input:PDF Output:JSON Type:SISO")
-    @AutoJobPostMapping(value = "/verify-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+                    "Validates PDF files against the standards declared in their metadata."
+                            + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
+                            + " document's XMP metadata and validates compliance.")
+    @AutoJobPostMapping(
+            value = "/verify-pdf",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
             @ModelAttribute PDFVerificationRequest request) {
 

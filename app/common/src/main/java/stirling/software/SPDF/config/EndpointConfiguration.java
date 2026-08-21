@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
 @Slf4j
@@ -51,12 +53,16 @@ public class EndpointConfiguration {
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
+        // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
+        this.pdfUaAvailable = pdfaLevelAService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -66,6 +72,36 @@ public class EndpointConfiguration {
             return null;
         }
         return endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+    }
+
+    /**
+     * Translate a full request URI like {@code /api/v1/general/remove-pages} into the endpoint key
+     * used by this configuration ({@code remove-pages}). Convert endpoints are a special case -
+     * {@code /api/v1/convert/pdf/img} is registered as {@code pdf-to-img}. Returns {@code null} if
+     * the URI is not an {@code /api/v1/<group>/<endpoint>} path.
+     */
+    public static String endpointKeyForUri(String uri) {
+        if (uri == null || !uri.contains("/api/v1")) {
+            return null;
+        }
+        String[] parts = uri.split("/");
+        if (parts.length <= 4) {
+            return null;
+        }
+        if ("convert".equals(parts[3]) && parts.length > 5) {
+            return parts[4] + "-to-" + parts[5];
+        }
+        return parts[4];
+    }
+
+    /**
+     * Convenience wrapper around {@link #isEndpointEnabled(String)} that accepts a full request URI
+     * and translates it to the endpoint key. Falls back to treating the URI itself as a key for
+     * non-{@code /api/v1/...} paths so callers can pass arbitrary URIs.
+     */
+    public boolean isEndpointEnabledForUri(String uri) {
+        String key = endpointKeyForUri(uri);
+        return isEndpointEnabled(key != null ? key : uri);
     }
 
     public void enableEndpoint(String endpoint) {
@@ -308,6 +344,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "split-pages");
         addEndpointToGroup("PageOps", "rearrange-pages");
         addEndpointToGroup("PageOps", "rotate-pdf");
+        addEndpointToGroup("PageOps", "auto-rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
         addEndpointToGroup("PageOps", "booklet-imposition");
         addEndpointToGroup("PageOps", "scale-pages");
@@ -325,6 +362,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
+        addEndpointToGroup("Convert", "pdf-to-ua");
         addEndpointToGroup("Convert", "file-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-word");
         addEndpointToGroup("Convert", "pdf-to-presentation");
@@ -364,6 +402,7 @@ public class EndpointConfiguration {
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "verify-pdf");
+        addEndpointToGroup("Security", "accessibility-report");
         addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
@@ -498,6 +537,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "json-to-pdf");
         addEndpointToGroup("Java", "pdf-to-video");
         addEndpointToGroup("Java", "verify-pdf");
+        addEndpointToGroup("Java", "pdf-to-ua");
+        addEndpointToGroup("Java", "accessibility-report");
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
@@ -569,6 +610,8 @@ public class EndpointConfiguration {
 
         // veraPDF dependent endpoints
         addEndpointToGroup("veraPDF", "verify-pdf");
+        addEndpointToGroup("veraPDF", "pdf-to-ua");
+        addEndpointToGroup("veraPDF", "accessibility-report");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
@@ -597,6 +640,11 @@ public class EndpointConfiguration {
         }
         if (!runningProOrHigher) {
             disableGroup("enterprise");
+        }
+
+        if (!pdfUaAvailable) {
+            disableEndpoint("pdf-to-ua");
+            disableEndpoint("accessibility-report");
         }
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {

@@ -27,6 +27,9 @@ import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.FilterApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -42,10 +45,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-text")
-    @Operation(
-            summary = "Checks if a PDF contains set text, returns true if does",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-contains-text",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains set text, returns true if does")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -75,10 +78,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-image")
-    @Operation(
-            summary = "Checks if a PDF contains an image",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-contains-image",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains an image")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -107,10 +110,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-count")
-    @Operation(
-            summary = "Checks if a PDF is greater, less or equal to a setPageCount",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-page-count",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is greater, less or equal to a setPageCount")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -138,10 +141,12 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
-    @Operation(
-            summary = "Checks if a PDF is of a certain size",
-            description = "Input:PDF Output:Boolean Type:SISO")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain size")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -175,10 +180,12 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
-    @Operation(
-            summary = "Checks if a PDF is a set file size",
-            description = "Input:PDF Output:Boolean Type:SISO")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-file-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is a set file size")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -205,10 +212,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-rotation")
-    @Operation(
-            summary = "Checks if a PDF is of a certain rotation",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-page-rotation",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain rotation")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

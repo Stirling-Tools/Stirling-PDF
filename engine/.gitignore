@@ -21,6 +21,9 @@ yarn-error.log*
 # Environment
 .env.local
 
+# Root .gitignore ignores all .env* - whitelist our committed .env here
+!.env
+
 # LaTeX outputs
 *.aux
 *.log
