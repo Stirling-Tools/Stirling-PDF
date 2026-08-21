@@ -34,6 +34,9 @@ import stirling.software.proprietary.pdf.ua.TaggingOptions;
  */
 class PdfUaBenchmarkTest {
 
+    /** Under this a heap delta is JVM bookkeeping, not the converter's retained set. */
+    private static final long NOISE_FLOOR_BYTES = 2L * 1024 * 1024;
+
     private static PdfUaConversionService service;
     private static PdfUaValidationService validation;
 
@@ -117,10 +120,15 @@ class PdfUaBenchmarkTest {
                 .build();
     }
 
+    /** Lowest of several post-collection readings, so one lazy GC cannot distort a delta. */
     private static long usedHeap() {
         Runtime runtime = Runtime.getRuntime();
-        System.gc();
-        return runtime.totalMemory() - runtime.freeMemory();
+        long lowest = Long.MAX_VALUE;
+        for (int attempt = 0; attempt < 3; attempt++) {
+            System.gc();
+            lowest = Math.min(lowest, runtime.totalMemory() - runtime.freeMemory());
+        }
+        return lowest;
     }
 
     @Test
@@ -301,16 +309,19 @@ class PdfUaBenchmarkTest {
     @Test
     @DisplayName("memory stays proportional to document size, not quadratic")
     void memoryScales() throws Exception {
+        // Warm up so lazily built caches are charged here, not to the first measured run.
+        service.convert(document(5), options());
+
         List<String> rows = new ArrayList<>();
-        long previousPerPage = 0;
-        boolean blewUp = false;
+        long baselinePerPageKb = 0;
+        long worstPerPageKb = 0;
 
         for (int pages : new int[] {20, 80, 200}) {
             byte[] input = document(pages);
             long before = usedHeap();
             var outcome = service.convert(input, options());
-            long after = usedHeap();
-            long perPageKb = Math.max(after - before, 0) / 1024 / pages;
+            long retained = Math.max(usedHeap() - before, 0);
+            long perPageKb = retained / 1024 / pages;
             rows.add(
                     String.format(
                             Locale.ROOT,
@@ -319,14 +330,20 @@ class PdfUaBenchmarkTest {
                             humanBytes(input.length),
                             humanBytes(outcome.pdfBytes().length),
                             perPageKb));
-            // Per-page cost should stay roughly flat; a big jump means something accumulates.
-            if (previousPerPage > 0 && perPageKb > previousPerPage * 4 && perPageKb > 200) {
-                blewUp = true;
+            // A reading in the noise is neither a usable baseline nor evidence of a leak.
+            if (retained < NOISE_FLOOR_BYTES) {
+                continue;
             }
-            previousPerPage = Math.max(perPageKb, 1);
+            if (baselinePerPageKb == 0) {
+                baselinePerPageKb = perPageKb;
+            }
+            worstPerPageKb = Math.max(worstPerPageKb, perPageKb);
         }
         System.out.println("\nMemory scaling\n" + String.join("\n", rows));
-        assertTrue(!blewUp, "per-page memory grew superlinearly: " + rows);
+        // Per-page cost should stay roughly flat; a big jump means something accumulates.
+        assertTrue(
+                baselinePerPageKb == 0 || worstPerPageKb <= baselinePerPageKb * 4,
+                "per-page memory grew superlinearly: " + rows);
     }
 
     private static long ms(long startNanos) {
