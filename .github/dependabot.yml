@@ -11,6 +11,8 @@ updates:
       - "/app/common"
       - "/app/core"
       - "/app/proprietary"
+      - "/app/saas"
+      - "/buildSrc"
     schedule:
       interval: "weekly"
     cooldown:
@@ -37,6 +39,19 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      ubuntu:
+        patterns:
+          - "ubuntu"
+      eclipse-temurin:
+        patterns:
+          - "eclipse-temurin"
+      uv:
+        patterns:
+          - "ghcr.io/astral-sh/uv"
+      gradle:
+        patterns:
+          - "gradle"
 
   - package-ecosystem: github-actions
     directory: /
@@ -50,6 +65,7 @@ updates:
     directories:
       - /devTools
       - /frontend
+      - /testing/compose/mcp-client-check
     schedule:
       interval: "weekly"
     cooldown:
@@ -78,6 +94,13 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+      typescript:
+        patterns:
+          - "typescript"
+          - "@typescript/*"
       vite:
         patterns:
           - "vite"
@@ -106,6 +129,10 @@ updates:
         patterns:
           - "@posthog/*"
           - "posthog-js"
+      storybook:
+        patterns:
+          - "storybook"
+          - "@storybook/*"
       supabase:
         patterns:
           - "@supabase/*"
@@ -152,8 +179,8 @@ updates:
           - "tokio"
           - "tokio-*"
 
-  - package-ecosystem: pip
-    directory: /testing/cucumber
+  - package-ecosystem: "uv"
+    directory: "/engine"
     schedule:
       interval: "weekly"
     cooldown:
