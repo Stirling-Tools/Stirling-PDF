@@ -57,7 +57,7 @@ jobs:
                   name: process.env.AGREEMENT_LABEL,
                 });
               } catch (error) {
-                if (error.status !== 404) {
+                if (error.status !== 403 && error.status !== 404) {
                   throw error;
                 }
               }
