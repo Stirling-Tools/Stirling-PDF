@@ -7,6 +7,34 @@ import {
 import { zipFileService } from "@app/services/zipFileService";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 
+// A wedged pdfium worker never replies, so awaiting it pinned the review panel on
+// "Generating previews..." with no way out but a page reload.
+const THUMBNAIL_TIMEOUT_MS = 30_000;
+
+function withThumbnailTimeout<T>(
+  work: Promise<T>,
+  fallback: T,
+  fileName: string,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      console.warn(`Thumbnail generation timed out for ${fileName}`);
+      resolve(fallback);
+    }, THUMBNAIL_TIMEOUT_MS);
+
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export const useToolResources = () => {
   const { preferences } = usePreferences();
   const [blobUrls, setBlobUrls] = useState<string[]>([]);
@@ -59,7 +87,11 @@ export const useToolResources = () => {
           console.log(
             `🖼️ Generating thumbnail for: ${file.name} (${file.type}, ${file.size} bytes)`,
           );
-          const thumbnail = await generateThumbnailForFile(file);
+          const thumbnail = await withThumbnailTimeout(
+            generateThumbnailForFile(file),
+            "",
+            file.name,
+          );
           console.log(`🖼️ Generated thumbnail for ${file.name}: SUCCESS`);
           thumbnails.push(thumbnail);
         } catch (error) {
@@ -88,7 +120,11 @@ export const useToolResources = () => {
           console.log(
             `🖼️ Generating thumbnail with metadata for: ${file.name} (${file.type}, ${file.size} bytes)`,
           );
-          const result = await generateThumbnailWithMetadata(file);
+          const result = await withThumbnailTimeout(
+            generateThumbnailWithMetadata(file),
+            { thumbnail: "", pageCount: 1 },
+            file.name,
+          );
           console.log(
             `🖼️ Generated thumbnail with metadata for ${file.name}: SUCCESS, ${result.pageCount} pages`,
           );

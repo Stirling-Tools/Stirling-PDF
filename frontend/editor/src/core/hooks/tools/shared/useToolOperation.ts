@@ -406,13 +406,19 @@ export const useToolOperation = <TParams>(
 
           actions.setFiles(processedFiles);
 
-          // Generate thumbnails and download URL concurrently
+          // Generate thumbnails and download URL concurrently. The flag has to clear in a
+          // finally: anything thrown here otherwise leaves the spinner up permanently.
           actions.setGeneratingThumbnails(true);
-          const [thumbnails, downloadInfo] = await Promise.all([
-            generateThumbnails(processedFiles),
-            createDownloadInfo(processedFiles, config.operationType),
-          ]);
-          actions.setGeneratingThumbnails(false);
+          let thumbnails: string[];
+          let downloadInfo: { url: string; filename: string };
+          try {
+            [thumbnails, downloadInfo] = await Promise.all([
+              generateThumbnails(processedFiles),
+              createDownloadInfo(processedFiles, config.operationType),
+            ]);
+          } finally {
+            actions.setGeneratingThumbnails(false);
+          }
 
           actions.setThumbnails(thumbnails);
 
