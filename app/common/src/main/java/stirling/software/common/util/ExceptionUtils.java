@@ -581,6 +581,26 @@ public class ExceptionUtils {
         return new IOException(message, cause);
     }
 
+    /**
+     * Create an IOException for a native library that could not be loaded.
+     *
+     * <p>Native loaders surface failures as {@link LinkageError} (typically {@link
+     * ExceptionInInitializerError} on first use and {@link NoClassDefFoundError} afterwards). Those
+     * are Errors, so they slip past every {@code catch (Exception)} guard and reach the caller as
+     * an opaque failure with a null message.
+     *
+     * @param cause the linkage error raised by the native loader
+     * @return IOException with user-friendly message
+     */
+    public static IOException createNativeLibraryUnavailableException(LinkageError cause) {
+        requireNonNull(cause, "cause");
+        String message =
+                getMessage(
+                        ErrorCode.NATIVE_LIBRARY_UNAVAILABLE.getMessageKey(),
+                        ErrorCode.NATIVE_LIBRARY_UNAVAILABLE.getDefaultMessage());
+        return new IOException(message, cause);
+    }
+
     public static IOException createImageReadException(String filename) {
         requireNonNull(filename, "filename");
         String message =
@@ -1218,6 +1238,10 @@ public class ExceptionUtils {
 
         // System errors
         MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
+        NATIVE_LIBRARY_UNAVAILABLE(
+                "E082",
+                "error.nativeLibraryUnavailable",
+                "A native library required for this operation could not be loaded on this system. This usually means the container image or platform is unsupported. Check the server logs for the underlying loader error."),
         OUT_OF_MEMORY_DPI(
                 "E081",
                 "error.outOfMemoryDpi",
