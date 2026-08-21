@@ -3969,6 +3969,7 @@ back = "Back"
 backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to My Files"
 breadcrumbs = "Folder path"
+bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
 clearSelection = "Clear selection"
@@ -4142,6 +4143,11 @@ totalSize = "Total size"
 type = "Type"
 versionHistory = "Version journey"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "Cancel"
 error = "Could not save folder. Try again."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "Oldest first"
 modifiedDesc = "Recent first"
 nameAsc = "Name A→Z"

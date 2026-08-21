@@ -215,6 +215,17 @@
 .files-page-toolbar-actions .mantine-Button-label {
   display: none;
 }
+/* Exception: the bulk-actions trigger IS its label. Collapsed to an icon it
+   would read as a bare chevron with nothing to say what it opens. */
+.files-page-toolbar-actions
+  .files-page-toolbar-bulk-trigger
+  .mantine-Button-label {
+  display: inline;
+}
+.files-page-toolbar-actions .files-page-toolbar-bulk-trigger {
+  padding-left: 0.75rem;
+  padding-right: 0.5rem;
+}
 /* Pin the view toggle: never let it clip off the right. flex-shrink:0
    keeps its width fixed; the rest of the row shrinks around it. */
 .files-page-toolbar-actions .mantine-SegmentedControl-root {
@@ -1323,6 +1334,11 @@
     min-width: 0;
     white-space: nowrap;
   }
+  /* Filter and sort collapse to icon triggers here (see FilesToolbar*Menu);
+     they are the whole control, so they never shrink. */
+  .files-page-toolbar-icon-btn {
+    flex-shrink: 0;
+  }
   .files-page-toolbar-actions {
     flex-wrap: nowrap;
     gap: 0.3rem;
@@ -1408,11 +1424,6 @@
 }
 
 @media (max-width: 640px) {
-  /* Phone: take the room out of the filter selects before anything else. */
-  .files-page-toolbar-actions .mantine-Select-root,
-  .files-page-toolbar-actions .mantine-Select-input {
-    max-width: 5.5rem;
-  }
   /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
