@@ -19,8 +19,14 @@ public enum AuditEventType {
     // File operations - STANDARD level
     FILE_OPERATION("File operation"),
 
+    // Storage encryption at rest - STANDARD level
+    STORAGE_ENCRYPTION("Storage encryption operation"),
+
     // PDF operations - STANDARD level
     PDF_PROCESS("PDF processing operation"),
+
+    // UI data requests - STANDARD level
+    UI_DATA("UI data request"),
 
     // HTTP requests - STANDARD level
     HTTP_REQUEST("HTTP request");
@@ -49,7 +55,7 @@ public enum AuditEventType {
             // If the exact enum name doesn't match, try finding a similar one
             for (AuditEventType eventType : values()) {
                 if (eventType.name().equalsIgnoreCase(type)
-                        || eventType.getDescription().equalsIgnoreCase(type)) {
+                        || eventType.description.equalsIgnoreCase(type)) {
                     return eventType;
                 }
             }

@@ -6,16 +6,12 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,25 +19,31 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.PDFVerificationRequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
 
-@RestController
-@RequestMapping("/api/v1/security")
-@Tag(name = "Security", description = "Security APIs")
+@SecurityApi
 @RequiredArgsConstructor
 @Slf4j
 public class VerifyPDFController {
 
     private final VeraPDFService veraPDFService;
 
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Verify PDF Standards Compliance",
             description =
-                    "Validates PDF files against the standards declared in their metadata. "
-                            + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
-                            + "from the document's XMP metadata and validates compliance. "
-                            + "Input:PDF Output:JSON Type:SISO")
-    @PostMapping(value = "/verify-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+                    "Validates PDF files against the standards declared in their metadata."
+                            + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
+                            + " document's XMP metadata and validates compliance.")
+    @AutoJobPostMapping(
+            value = "/verify-pdf",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
             @ModelAttribute PDFVerificationRequest request) {
 

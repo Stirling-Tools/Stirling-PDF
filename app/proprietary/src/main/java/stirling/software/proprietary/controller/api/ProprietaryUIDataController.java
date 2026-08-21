@@ -3,8 +3,8 @@ package stirling.software.proprietary.controller.api;
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -31,27 +28,36 @@ import stirling.software.common.model.ApplicationProperties.Security.OAUTH2.Clie
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.FileInfo;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
-import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.dto.AdminUserSummary;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @ProprietaryUiDataApi
@@ -62,12 +68,16 @@ public class ProprietaryUIDataController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
     private final SessionRepository sessionRepository;
-    private final DatabaseService databaseService;
+    private final DatabaseServiceInterface databaseService;
     private final boolean runningEE;
     private final ObjectMapper objectMapper;
     private final UserLicenseSettingsService licenseSettingsService;
     private final PersistentAuditEventRepository auditRepository;
+    private final MfaService mfaService;
+    private final LoginAttemptService loginAttemptService;
+    private final ResourceAccessService resourceAccessService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -75,23 +85,31 @@ public class ProprietaryUIDataController {
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
             TeamRepository teamRepository,
+            TeamMembershipRepository teamMembershipRepository,
             SessionRepository sessionRepository,
-            DatabaseService databaseService,
+            DatabaseServiceInterface databaseService,
             ObjectMapper objectMapper,
             @Qualifier("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
-            PersistentAuditEventRepository auditRepository) {
+            PersistentAuditEventRepository auditRepository,
+            MfaService mfaService,
+            LoginAttemptService loginAttemptService,
+            ResourceAccessService resourceAccessService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.teamRepository = teamRepository;
+        this.teamMembershipRepository = teamMembershipRepository;
         this.sessionRepository = sessionRepository;
         this.databaseService = databaseService;
         this.objectMapper = objectMapper;
         this.runningEE = runningEE;
         this.licenseSettingsService = licenseSettingsService;
         this.auditRepository = auditRepository;
+        this.mfaService = mfaService;
+        this.loginAttemptService = loginAttemptService;
+        this.resourceAccessService = resourceAccessService;
     }
 
     /**
@@ -122,6 +140,13 @@ public class ProprietaryUIDataController {
         data.setRetentionDays(auditConfig.getRetentionDays());
         data.setAuditLevels(AuditLevel.values());
         data.setAuditEventTypes(AuditEventType.values());
+        // Metadata capture settings (independent flags)
+        data.setCaptureFileHash(auditConfig.isCaptureFileHash());
+        data.setCapturePdfAuthor(auditConfig.isCapturePdfAuthor());
+        data.setCaptureOperationResults(auditConfig.isCaptureOperationResults());
+        // pdfMetadataEnabled: true if any metadata flag is enabled (file hash or PDF author)
+        data.setPdfMetadataEnabled(
+                auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
 
         return ResponseEntity.ok(data);
     }
@@ -135,22 +160,15 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
+        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
         boolean isFirstTimeSetup = false;
         boolean showDefaultCredentials = false;
 
-        List<User> allUsers = userRepository.findAll();
-        List<User> realUsers =
-                allUsers.stream()
-                        .filter(
-                                user ->
-                                        !Role.INTERNAL_API_USER
-                                                .getRoleId()
-                                                .equals(user.getUsername()))
-                        .toList();
-        long userCount = realUsers.size();
+        // Count real users, excluding the internal API user.
+        long userCount = userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId());
 
         if (userCount == 0) {
             isFirstTimeSetup = true;
@@ -214,9 +232,7 @@ public class ProprietaryUIDataController {
             String backendUrl = getBackendBaseUrl();
             String fullSamlPath = backendUrl + saml2AuthenticationPath;
 
-            if (!applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
-                providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
-            }
+            providerList.put(fullSamlPath, samlIdp + " (SAML 2)");
         }
 
         // Remove null entries
@@ -236,80 +252,70 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/admin-settings")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin settings data")
     public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
-        List<User> allUsers = userRepository.findAllWithTeam();
-        Iterator<User> iterator = allUsers.iterator();
+        List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
+
+        // Drop the internal API user and internal-team members; the roster never shows them.
+        boolean hasInternalApiUser = false;
+        List<User> visibleUsers = new ArrayList<>(allUsers.size());
+        for (User user : allUsers) {
+            if (user == null) {
+                continue;
+            }
+            if (isInternalApiUser(user)) {
+                hasInternalApiUser = true;
+                continue;
+            }
+            if (user.getTeam() != null
+                    && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
+                continue;
+            }
+            visibleUsers.add(user);
+        }
+        if (hasInternalApiUser) {
+            roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
+        }
+
+        // All users' settings in one query (mfaSecret masked).
+        Map<Long, Map<String, String>> settingsByUserId =
+                loadSettingsByUserId(visibleUsers.stream().map(User::getId).toList());
+
+        // Active = any non-expired session within the inactivity window; expiry is left to
+        // SessionScheduled.
+        int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
+        Instant activeCutoff = Instant.now().minusSeconds(maxInactiveInterval);
+        Map<String, Instant> lastRequestByPrincipal = new HashMap<>();
+        for (Object[] row : sessionRepository.findLatestRequestPerPrincipal()) {
+            if (row[0] != null) {
+                lastRequestByPrincipal.put((String) row[0], (Instant) row[1]);
+            }
+        }
+        Set<String> activePrincipals =
+                new HashSet<>(sessionRepository.findActivePrincipalsSince(activeCutoff));
 
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Map<String, String>> userSettings = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
-
-        while (iterator.hasNext()) {
-            User user = iterator.next();
-            if (user != null) {
-                boolean shouldRemove = false;
-
-                // Check if user is an INTERNAL_API_USER
-                for (Authority authority : user.getAuthorities()) {
-                    if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
-                        shouldRemove = true;
-                        roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
-                        break;
-                    }
-                }
-
-                // Check if user is part of the Internal team
-                if (user.getTeam() != null
-                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
-                    shouldRemove = true;
-                }
-
-                if (shouldRemove) {
-                    iterator.remove();
-                    continue;
-                }
-
-                // Session status and last request time
-                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
-                boolean hasActiveSession = false;
-                Date lastRequest = null;
-                Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(user.getUsername());
-
-                if (latestSession.isPresent()) {
-                    SessionEntity sessionEntity = latestSession.get();
-                    Instant lastAccessedTime =
-                            Optional.ofNullable(sessionEntity.getLastRequest())
-                                    .orElse(Instant.EPOCH);
-                    Instant now = Instant.now();
-                    Instant expirationTime =
-                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
-
-                    if (now.isAfter(expirationTime)) {
-                        sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
-                    } else {
-                        hasActiveSession = !sessionEntity.isExpired();
-                    }
-                    lastRequest = Date.from(lastAccessedTime);
-                } else {
-                    lastRequest = new Date(0);
-                }
-
-                userSessions.put(user.getUsername(), hasActiveSession);
-                userLastRequest.put(user.getUsername(), lastRequest);
-
-                if (hasActiveSession) activeUsers++;
-                if (!user.isEnabled()) disabledUsers++;
-            }
+        for (User user : visibleUsers) {
+            String username = user.getUsername();
+            boolean hasActiveSession = activePrincipals.contains(username);
+            Instant lastRequest = lastRequestByPrincipal.get(username);
+            userSessions.put(username, hasActiveSession);
+            userLastRequest.put(
+                    username, lastRequest != null ? Date.from(lastRequest) : new Date(0));
+            userSettings.put(username, maskSecrets(settingsByUserId.get(user.getId())));
+            if (hasActiveSession) activeUsers++;
+            if (!user.isEnabled()) disabledUsers++;
         }
 
         // Sort users by active status and last request date
         List<User> sortedUsers =
-                allUsers.stream()
+                visibleUsers.stream()
                         .sorted(
                                 (u1, u2) -> {
                                     boolean u1Active = userSessions.get(u1.getUsername());
@@ -329,7 +335,7 @@ public class ProprietaryUIDataController {
 
         List<Team> allTeams =
                 teamRepository.findAll().stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         // Calculate license limits
@@ -339,13 +345,39 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
+        // Resolve portal access for the whole roster. The teamLead display flag counts a
+        // LEADER membership on any team (mirrors /me), but the portal default policy only
+        // admits leaders of their own active team, so the bulk check gets the narrower set.
+        List<TeamMembership> leaderMemberships =
+                teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER);
+        Set<Long> leaderUserIds =
+                leaderMemberships.stream()
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
+        Set<Long> activeTeamLeaderUserIds =
+                leaderMemberships.stream()
+                        .filter(
+                                row ->
+                                        row.getUser().getTeam() != null
+                                                && row.getTeam()
+                                                        .getId()
+                                                        .equals(row.getUser().getTeam().getId()))
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
+        Set<Long> portalAccessUserIds =
+                resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        List<AdminUserSummary> userSummaries =
+                sortedUsers.stream()
+                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .toList();
+
         AdminSettingsData data = new AdminSettingsData();
-        data.setUsers(sortedUsers);
+        data.setUsers(userSummaries);
         data.setCurrentUsername(authentication.getName());
         data.setRoleDetails(roleDetails);
         data.setUserSessions(userSessions);
         data.setUserLastRequest(userLastRequest);
-        data.setTotalUsers(allUsers.size());
+        data.setTotalUsers(visibleUsers.size());
         data.setActiveUsers(activeUsers);
         data.setDisabledUsers(disabledUsers);
         data.setTeams(allTeams);
@@ -356,6 +388,12 @@ public class ProprietaryUIDataController {
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
+        // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
+        data.setEmailInvitesEnabled(
+                applicationProperties.getMail().isEnableInvites()
+                        && applicationProperties.getMail().isEnabled());
+        data.setUserSettings(userSettings);
+        data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
         return ResponseEntity.ok(data);
     }
@@ -395,7 +433,7 @@ public class ProprietaryUIDataController {
         String settingsJson;
         try {
             settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error converting settings map", e);
             return ResponseEntity.status(500).build();
         }
@@ -407,18 +445,20 @@ public class ProprietaryUIDataController {
         data.setChangeCredsFlag(user.get().isFirstLogin() || user.get().isForcePasswordChange());
         data.setOAuth2Login(isOAuth2Login);
         data.setSaml2Login(isSaml2Login);
+        data.setMfaEnabled(mfaService.isMfaEnabled(user.get()));
+        data.setMfaRequired(mfaService.isMfaRequired(user.get()));
 
         return ResponseEntity.ok(data);
     }
 
     @GetMapping("/teams")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get teams list data")
     public ResponseEntity<TeamsData> getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
         List<TeamWithUserCountDTO> teamsWithCounts =
                 allTeamsWithCounts.stream()
-                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
                         .toList();
 
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
@@ -430,15 +470,24 @@ public class ProprietaryUIDataController {
             teamLastRequest.put(teamId, lastActivity);
         }
 
+        Map<Long, List<String>> teamOwners = new HashMap<>();
+        for (TeamMembership row :
+                teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER)) {
+            teamOwners
+                    .computeIfAbsent(row.getTeam().getId(), id -> new ArrayList<>())
+                    .add(row.getUser().getUsername());
+        }
+
         TeamsData data = new TeamsData();
         data.setTeamsWithCounts(teamsWithCounts);
         data.setTeamLastRequest(teamLastRequest);
+        data.setTeamOwners(teamOwners);
 
         return ResponseEntity.ok(data);
     }
 
     @GetMapping("/teams/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get team details data")
     public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
         Team team =
@@ -446,12 +495,13 @@ public class ProprietaryUIDataController {
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(403).build();
         }
 
         List<User> teamUsers = userRepository.findAllByTeamId(id);
-        List<User> allUsers = userRepository.findAllWithTeam();
+        // Fetch authorities + team for the available-users list.
+        List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         List<User> availableUsers =
                 allUsers.stream()
                         .filter(
@@ -459,11 +509,8 @@ public class ProprietaryUIDataController {
                                         (user.getTeam() == null
                                                         || !user.getTeam().getId().equals(id))
                                                 && (user.getTeam() == null
-                                                        || !user.getTeam()
-                                                                .getName()
-                                                                .equals(
-                                                                        TeamService
-                                                                                .INTERNAL_TEAM_NAME)))
+                                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
+                                                                user.getTeam().getName())))
                         .toList();
 
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
@@ -475,17 +522,23 @@ public class ProprietaryUIDataController {
             userLastRequest.put(username, lastRequest);
         }
 
+        Set<Long> ownerUserIds =
+                teamMembershipRepository.findByTeamIdAndRole(id, TeamRole.LEADER).stream()
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
+
         TeamDetailsData data = new TeamDetailsData();
         data.setTeam(team);
         data.setTeamUsers(teamUsers);
         data.setAvailableUsers(availableUsers);
         data.setUserLastRequest(userLastRequest);
+        data.setOwnerUserIds(ownerUserIds);
 
         return ResponseEntity.ok(data);
     }
 
     @GetMapping("/database")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get database management data")
     public ResponseEntity<DatabaseData> getDatabaseData() {
         List<FileInfo> backupList = databaseService.getBackupList();
@@ -500,6 +553,69 @@ public class ProprietaryUIDataController {
         return ResponseEntity.ok(data);
     }
 
+    /** Whether the user holds the internal-API authority (never shown in the roster). */
+    private boolean isInternalApiUser(User user) {
+        for (Authority authority : user.getAuthorities()) {
+            if (Role.INTERNAL_API_USER.getRoleId().equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Assemble per-user settings maps from the flat (id, key, value) rows of one bulk query. */
+    private Map<Long, Map<String, String>> loadSettingsByUserId(List<Long> userIds) {
+        Map<Long, Map<String, String>> byUser = new HashMap<>();
+        if (userIds.isEmpty()) {
+            return byUser;
+        }
+        for (Object[] row : userRepository.findSettingsByUserIds(userIds)) {
+            byUser.computeIfAbsent((Long) row[0], id -> new HashMap<>())
+                    .put((String) row[1], (String) row[2]);
+        }
+        return byUser;
+    }
+
+    /** Copy a settings map with mfaSecret masked; null-safe. */
+    private Map<String, String> maskSecrets(Map<String, String> settings) {
+        Map<String, String> copy = settings != null ? new HashMap<>(settings) : new HashMap<>();
+        if (copy.containsKey("mfaSecret")) {
+            copy.put("mfaSecret", "********");
+        }
+        return copy;
+    }
+
+    /**
+     * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
+     */
+    private AdminUserSummary convertUserToSummary(
+            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
+        AdminUserSummary summary = new AdminUserSummary();
+        summary.setId(user.getId());
+        summary.setTeamLead(leaderUserIds.contains(user.getId()));
+        // Portal access (same policy /me uses).
+        summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
+        summary.setUsername(user.getUsername());
+        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setRoleName(user.getRoleName());
+        summary.setRolesAsString(user.getRolesAsString());
+        summary.setEnabled(user.isEnabled());
+        summary.setIsFirstLogin(user.isFirstLogin());
+        summary.setAuthenticationType(user.getAuthenticationType());
+        summary.setCreatedAt(user.getCreatedAt());
+        summary.setUpdatedAt(user.getUpdatedAt());
+
+        // Map team if present
+        if (user.getTeam() != null) {
+            AdminUserSummary.TeamSummary teamSummary = new AdminUserSummary.TeamSummary();
+            teamSummary.setId(user.getTeam().getId());
+            teamSummary.setName(user.getTeam().getName());
+            summary.setTeam(teamSummary);
+        }
+
+        return summary;
+    }
+
     // Data classes
     @Data
     public static class AuditDashboardData {
@@ -509,11 +625,16 @@ public class ProprietaryUIDataController {
         private int retentionDays;
         private AuditLevel[] auditLevels;
         private AuditEventType[] auditEventTypes;
+        private boolean pdfMetadataEnabled;
+        private boolean captureFileHash;
+        private boolean capturePdfAuthor;
+        private boolean captureOperationResults;
     }
 
     @Data
     public static class LoginData {
         private Boolean enableLogin;
+        private boolean ssoAutoLogin;
         private Map<String, String> providerList;
         private String loginMethod;
         private boolean altLogin;
@@ -525,7 +646,7 @@ public class ProprietaryUIDataController {
 
     @Data
     public static class AdminSettingsData {
-        private List<User> users;
+        private List<AdminUserSummary> users;
         private String currentUsername;
         private Map<String, String> roleDetails;
         private Map<String, Boolean> userSessions;
@@ -541,6 +662,9 @@ public class ProprietaryUIDataController {
         private int licenseMaxUsers;
         private boolean premiumEnabled;
         private boolean mailEnabled;
+        private boolean emailInvitesEnabled;
+        private Map<String, Map<String, String>> userSettings;
+        private List<String> lockedUsers;
     }
 
     @Data
@@ -551,12 +675,15 @@ public class ProprietaryUIDataController {
         private boolean changeCredsFlag;
         private boolean oAuth2Login;
         private boolean saml2Login;
+        private boolean mfaEnabled;
+        private boolean mfaRequired;
     }
 
     @Data
     public static class TeamsData {
         private List<TeamWithUserCountDTO> teamsWithCounts;
         private Map<Long, Date> teamLastRequest;
+        private Map<Long, List<String>> teamOwners;
     }
 
     @Data
@@ -565,6 +692,7 @@ public class ProprietaryUIDataController {
         private List<User> teamUsers;
         private List<User> availableUsers;
         private Map<String, Date> userLastRequest;
+        private Set<Long> ownerUserIds;
     }
 
     @Data

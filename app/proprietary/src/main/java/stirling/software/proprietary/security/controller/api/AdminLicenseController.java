@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,7 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin License Management", description = "Admin-only License Management APIs")
 public class AdminLicenseController {
 
@@ -309,10 +308,16 @@ public class AdminLicenseController {
         }
 
         try {
+            log.info(
+                    "License upload: original filename='{}', size={} bytes, contentType='{}'",
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    file.getContentType());
             // Validate certificate format by reading content
             byte[] fileBytes = file.getBytes();
             String content = new String(fileBytes, StandardCharsets.UTF_8);
             if (!content.trim().startsWith("-----BEGIN LICENSE FILE-----")) {
+                log.warn("License upload rejected: invalid certificate header");
                 return ResponseEntity.badRequest()
                         .body(
                                 Map.of(
@@ -323,10 +328,16 @@ public class AdminLicenseController {
             }
 
             // Get config directory and target path
-            Path configPath = Paths.get(InstallationPathConfig.getConfigPath());
-            Path targetPath = configPath.resolve(filename).normalize();
+            Path configPath = Path.of(InstallationPathConfig.getConfigPath());
+            Path configPathAbs = configPath.toAbsolutePath().normalize();
+            Path targetPath = configPathAbs.resolve(filename).normalize();
+            log.info(
+                    "License upload paths: configPath='{}', targetPath='{}'",
+                    configPathAbs,
+                    targetPath.toAbsolutePath());
             // Prevent directory traversal: ensure targetPath is inside configPath
-            if (!targetPath.startsWith(configPath.normalize().toAbsolutePath())) {
+            if (!targetPath.startsWith(configPathAbs)) {
+                log.warn("License upload rejected: target path outside config path");
                 return ResponseEntity.badRequest()
                         .body(Map.of("success", false, "error", "Invalid file path"));
             }

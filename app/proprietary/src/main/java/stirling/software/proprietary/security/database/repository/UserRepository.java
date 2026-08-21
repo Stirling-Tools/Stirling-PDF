@@ -1,9 +1,15 @@
 package stirling.software.proprietary.security.database.repository;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,9 +24,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
     Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
 
+    @Query("FROM User u LEFT JOIN FETCH u.settings where u.id = :id")
+    Optional<User> findByIdWithSettings(@Param("id") Long id);
+
     Optional<User> findByUsername(String username);
 
     Optional<User> findByApiKey(String apiKey);
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findBySupabaseId(UUID supabaseId);
 
     Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
 
@@ -32,11 +45,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
 
+    /** All users with team + authorities fetched (DISTINCT dedupes the collection join). */
+    @EntityGraph(attributePaths = {"team", "authorities"})
+    @Query("SELECT DISTINCT u FROM User u")
+    List<User> findAllWithTeamAndAuthorities();
+
+    /** (userId, key, value) settings rows for the given users. */
+    @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
+    List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
+
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);
+
+    /** Count real users, excluding a reserved username such as the internal API user. */
+    long countByUsernameNot(String username);
 
     List<User> findAllByTeam(Team team);
 
@@ -76,4 +101,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
                     + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
     long countSsoUsers();
+
+    @Query(
+            "SELECT COUNT(u) FROM User u JOIN u.settings settings "
+                    + "WHERE KEY(settings) = :key AND settings = :value")
+    long countUsersBySetting(@Param("key") String key, @Param("value") String value);
+
+    @Modifying
+    @Query(
+            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
+            nativeQuery = true)
+    void deleteSettingsByUserIdAndKeys(
+            @Param("userId") Long userId, @Param("keys") List<String> keys);
+
+    /** Anonymous users (no username) created before the cut-off, streamed for batch cleanup. */
+    @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")
+    Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
+            @Param("cutoffDate") LocalDateTime cutoffDate);
+
+    /** Single-shot UPDATE that reassigns a user to a different team. */
+    @Modifying
+    @Query("UPDATE User u SET u.team.id = :teamId WHERE u.id = :userId")
+    int updateUserTeamId(@Param("userId") Long userId, @Param("teamId") Long teamId);
 }

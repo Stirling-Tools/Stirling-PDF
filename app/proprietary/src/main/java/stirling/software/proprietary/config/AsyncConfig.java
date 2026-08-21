@@ -2,21 +2,29 @@ package stirling.software.proprietary.config;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
+import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
+
+import jakarta.annotation.PreDestroy;
 
 @Configuration
 @EnableAsync
 public class AsyncConfig {
 
+    private ExecutorService auditExecutorService;
+    private ExecutorService aiStreamExecutorService;
+
     /**
-     * MDC context-propagating task decorator Copies MDC context from the caller thread to the async
-     * executor thread
+     * MDC context-propagating task decorator. Copies MDC context from the caller thread to the
+     * virtual thread executing the task.
      */
     static class MDCContextTaskDecorator implements TaskDecorator {
         @Override
@@ -42,16 +50,34 @@ public class AsyncConfig {
 
     @Bean(name = "auditExecutor")
     public Executor auditExecutor() {
-        ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
-        exec.setCorePoolSize(2);
-        exec.setMaxPoolSize(8);
-        exec.setQueueCapacity(1_000);
-        exec.setThreadNamePrefix("audit-");
+        auditExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+        TaskExecutorAdapter adapter = new TaskExecutorAdapter(auditExecutorService);
+        adapter.setTaskDecorator(new MDCContextTaskDecorator());
+        return adapter;
+    }
 
-        // Set the task decorator to propagate MDC context
-        exec.setTaskDecorator(new MDCContextTaskDecorator());
+    /** Propagates the request's SecurityContext onto background AI-orchestration threads. */
+    @Bean(name = "aiStreamExecutor")
+    public Executor aiStreamExecutor() {
+        aiStreamExecutorService = Executors.newVirtualThreadPerTaskExecutor();
+        TaskExecutorAdapter adapter = new TaskExecutorAdapter(aiStreamExecutorService);
+        adapter.setTaskDecorator(new MDCContextTaskDecorator());
+        return new DelegatingSecurityContextExecutor(adapter);
+    }
 
-        exec.initialize();
-        return exec;
+    /**
+     * Close the underlying executors because the exposed Spring adapters do not own their
+     * lifecycle.
+     */
+    @PreDestroy
+    void shutdown() {
+        shutdownExecutor(auditExecutorService);
+        shutdownExecutor(aiStreamExecutorService);
+    }
+
+    private void shutdownExecutor(ExecutorService executor) {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
     }
 }

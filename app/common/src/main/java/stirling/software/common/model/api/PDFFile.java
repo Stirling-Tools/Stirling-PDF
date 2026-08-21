@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-@Schema(description = "PDF file input - either upload a file or provide a server-side file ID")
 public class PDFFile {
 
     @Schema(

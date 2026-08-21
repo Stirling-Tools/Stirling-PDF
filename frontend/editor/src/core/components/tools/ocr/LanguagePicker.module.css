@@ -1,0 +1,99 @@
+/* Language Picker Component */
+.languagePicker {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Center align items vertically */
+  height: 32px;
+  border: 1px solid var(--c-border);
+  background-color: var(--c-input-bg);
+  color: var(--c-text-muted);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.languagePicker:hover {
+  border-color: var(--c-border-strong);
+  background-color: var(--c-hover);
+}
+
+.languagePicker:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.languagePickerIcon {
+  font-size: 16px;
+  color: var(--c-text-subtle);
+  margin-left: auto;
+  display: flex;
+  align-items: center; /* Center the icon vertically */
+}
+
+.languagePickerDropdown {
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
+.languagePickerOption {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  color: var(--c-text);
+  transition: background-color 0.2s ease;
+}
+
+.languagePickerOptionWithCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.languagePickerCheckbox {
+  margin-left: auto;
+}
+
+.languagePickerOption:hover {
+  background-color: var(--c-hover);
+}
+
+/* Additional helper classes for the component */
+.languagePickerTarget {
+  width: 100%;
+}
+
+.languagePickerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.languagePickerText {
+  flex: 1;
+  text-align: left;
+}
+
+.languagePickerScrollArea {
+  max-height: 180px;
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 8px;
+}
+
+.languagePickerFooter {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.languagePickerLink {
+  color: var(--c-accent-text);
+  text-decoration: underline;
+  cursor: pointer;
+}

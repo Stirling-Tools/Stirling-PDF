@@ -9,17 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,15 +25,19 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
-@Tag(name = "Convert", description = "Convert APIs")
+@ConvertApi
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertPDFToEpubController {
@@ -58,6 +59,12 @@ public class ConvertPDFToEpubController {
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 
+        // Use pdftohtml engine (poppler) for PDF input instead of calibre's Qt-based engine.
+        // This avoids the Qt WebEngine dependency for PDF parsing and uses the lighter
+        // poppler-utils pdftohtml binary which is already available in the container.
+        command.add("--pdf-engine");
+        command.add("pdftohtml");
+
         // Golden defaults
         command.add("--enable-heuristics");
         command.add("--insert-blank-line");
@@ -77,14 +84,16 @@ public class ConvertPDFToEpubController {
         return command;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/epub")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/epub",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.EBOOK)
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
-            description =
-                    "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
-                            + " Output:EPUB/AZW3 Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToEpub(@ModelAttribute ConvertPdfToEpubRequest request)
-            throws Exception {
+            description = "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre.")
+    public ResponseEntity<Resource> convertPdfToEpub(
+            @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
             throw new IllegalStateException(
@@ -168,9 +177,16 @@ public class ConvertPDFToEpubController {
                                     + "."
                                     + outputFormat.getExtension());
 
-            byte[] outputBytes = Files.readAllBytes(outputPath);
             MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
-            return WebResponseUtils.bytesToWebResponse(outputBytes, outputFilename, mediaType);
+            TempFile tempOut =
+                    tempFileManager.createManagedTempFile("." + outputFormat.getExtension());
+            try {
+                Files.copy(outputPath, tempOut.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                tempOut.close();
+                throw e;
+            }
+            return WebResponseUtils.fileToWebResponse(tempOut, outputFilename, mediaType);
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }

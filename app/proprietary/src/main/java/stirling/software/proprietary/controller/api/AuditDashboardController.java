@@ -1,5 +1,6 @@
 package stirling.software.proprietary.controller.api;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,9 +29,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,11 +45,14 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
 /** REST endpoints for the audit dashboard. */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
@@ -119,7 +120,7 @@ public class AuditDashboardController {
             @Schema(
                             description = "Number of days to look back for audit events",
                             example = "7",
-                            required = true)
+                            requiredMode = Schema.RequiredMode.REQUIRED)
                     @RequestParam(value = "days", defaultValue = "7")
                     int days) {
 
@@ -206,16 +207,14 @@ public class AuditDashboardController {
 
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes =
-                Arrays.stream(AuditEventType.values())
-                        .map(AuditEventType::name)
-                        .collect(Collectors.toList());
+                Arrays.stream(AuditEventType.values()).map(AuditEventType::name).toList();
 
         // Combine both sources, remove duplicates, and sort
         Set<String> combinedTypes = new HashSet<>();
         combinedTypes.addAll(dbTypes);
         combinedTypes.addAll(enumTypes);
 
-        return combinedTypes.stream().sorted().collect(Collectors.toList());
+        return combinedTypes.stream().sorted().toList();
     }
 
     /** Export audit data as CSV. */
@@ -239,7 +238,7 @@ public class AuditDashboardController {
             csv.append(escapeCSV(event.getData())).append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         // Set up HTTP headers for download
         HttpHeaders headers = new HttpHeaders();
@@ -266,7 +265,7 @@ public class AuditDashboardController {
             headers.setContentDispositionFormData("attachment", "audit_export.json");
 
             return ResponseEntity.ok().headers(headers).body(jsonBytes);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error serializing audit events to JSON", e);
             return ResponseEntity.internalServerError().build();
         }

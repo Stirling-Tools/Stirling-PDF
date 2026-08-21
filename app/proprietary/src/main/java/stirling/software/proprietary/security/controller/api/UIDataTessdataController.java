@@ -3,12 +3,13 @@ package stirling.software.proprietary.security.controller.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -30,30 +29,36 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/ui-data")
 @RequiredArgsConstructor
+@Tag(name = "UI Data")
 public class UIDataTessdataController {
 
+    private static final Pattern INVALID_LANG_CHARS_PATTERN = Pattern.compile("[^A-Za-z0-9_+\\-]");
     private final RuntimePathConfig runtimePathConfig;
+    private final ObjectMapper objectMapper;
     private static volatile List<String> cachedRemoteTessdata = null;
     private static volatile long cachedRemoteTessdataExpiry = 0L;
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
     @GetMapping("/tessdata-languages")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "List installed and remotely available tessdata languages")
     public ResponseEntity<TessdataLanguagesResponse> getTessdataLanguages() {
         TessdataLanguagesResponse response = new TessdataLanguagesResponse();
         response.setInstalled(getAvailableTesseractLanguages());
         response.setAvailable(getRemoteTessdataLanguages());
-        response.setWritable(isWritableDirectory(Paths.get(runtimePathConfig.getTessDataPath())));
+        response.setWritable(isWritableDirectory(Path.of(runtimePathConfig.getTessDataPath())));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/tessdata/download")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Download selected tessdata languages from the official repository")
     public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
             @RequestBody TessdataDownloadRequest request) {
@@ -62,7 +67,7 @@ public class UIDataTessdataController {
                     .body(Map.of("message", "No languages provided for download"));
         }
 
-        Path tessdataDir = Paths.get(runtimePathConfig.getTessDataPath());
+        Path tessdataDir = Path.of(runtimePathConfig.getTessDataPath());
         try {
             Files.createDirectories(tessdataDir);
         } catch (IOException e) {
@@ -88,7 +93,7 @@ public class UIDataTessdataController {
                 failed.add(language);
                 continue;
             }
-            String safeLang = language.replaceAll("[^A-Za-z0-9_+\\-]", "");
+            String safeLang = INVALID_LANG_CHARS_PATTERN.matcher(language).replaceAll("");
             if (!safeLang.equals(language)) {
                 failed.add(language);
                 continue;
@@ -146,7 +151,7 @@ public class UIDataTessdataController {
     protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(downloadUrl);
+            URL url = URI.create(downloadUrl).toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
@@ -195,7 +200,7 @@ public class UIDataTessdataController {
         String apiUrl = "https://api.github.com/repos/tesseract-ocr/tessdata/contents";
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(apiUrl);
+            URL url = URI.create(apiUrl).toURL();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Stirling-PDF-App");
@@ -221,9 +226,9 @@ public class UIDataTessdataController {
             }
 
             try (InputStream is = connection.getInputStream()) {
-                ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, Object>> items =
-                        mapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+                        objectMapper.readValue(
+                                is, new TypeReference<List<Map<String, Object>>>() {});
                 List<String> languages =
                         items.stream()
                                 .map(item -> (String) item.get("name"))

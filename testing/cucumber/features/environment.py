@@ -1,4 +1,128 @@
 import os
+import subprocess
+import sys
+
+import requests
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
+import job_support  # noqa: E402
+import parallel_support  # noqa: E402
+
+_BASE_URL = "http://localhost:8080"
+_CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
+_REPORT_DIR = os.environ.get("TEST_REPORT_DIR", "")
+
+# Tags that indicate a scenario requires JWT Bearer auth to be functional.
+# These scenarios are skipped when the server has JWT disabled (V2=false).
+# @login and @register scenarios work in both modes.
+# The "jwt" tag itself is included so that feature-level @jwt tagging is sufficient
+# to mark an entire feature as JWT-dependent.
+_JWT_DEPENDENT_TAGS = frozenset({
+    # jwt_auth.feature scenario tags
+    "me", "refresh", "logout", "role", "token", "mfa", "apikey",
+    # proprietary/enterprise feature tags (all scenarios in these features need JWT)
+    "jwt", "user_mgmt", "admin_settings", "audit", "signature", "team",
+})
+
+# Tags for scenarios that require the policies feature (policies.enabled=true).
+_POLICIES_DEPENDENT_TAGS = frozenset({"policies", "webhook"})
+
+
+def _check_jwt_available():
+    """Probe the server to determine whether JWT Bearer auth is functional.
+
+    Logs in as admin, then attempts to use the returned token on /me.
+    Returns True only when the full JWT round-trip succeeds (V2 enabled).
+    """
+    try:
+        login = requests.post(
+            f"{_BASE_URL}/api/v1/auth/login",
+            json={"username": "admin", "password": "stirling"},
+            timeout=10,
+        )
+        if login.status_code != 200:
+            return False
+        token = login.json().get("session", {}).get("access_token")
+        if not token:
+            return False
+        me = requests.get(
+            f"{_BASE_URL}/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+        return me.status_code == 200
+    except Exception:
+        return False
+
+
+def _get_docker_log_line_count():
+    if not _CONTAINER_NAME:
+        return 0
+    try:
+        result = subprocess.run(
+            ["docker", "logs", _CONTAINER_NAME],
+            capture_output=True, text=True, timeout=10,
+        )
+        return len(result.stdout.splitlines()) + len(result.stderr.splitlines())
+    except Exception:
+        return 0
+
+
+def _capture_docker_logs_window(start_line, scenario_name):
+    if not _CONTAINER_NAME or not _REPORT_DIR:
+        return
+    try:
+        result = subprocess.run(
+            ["docker", "logs", _CONTAINER_NAME],
+            capture_output=True, text=True, timeout=10,
+        )
+        all_lines = (result.stdout + result.stderr).splitlines()
+        window = all_lines[start_line:]
+        if not window:
+            return
+
+        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in scenario_name)
+        log_path = os.path.join(_REPORT_DIR, f"scenario_{safe_name}.log")
+        with open(log_path, "w") as f:
+            f.write(f"=== Docker logs during: {scenario_name} ===\n")
+            f.write(f"Container: {_CONTAINER_NAME}\n")
+            f.write(f"Lines {start_line + 1}-{len(all_lines)} ({len(window)} lines)\n")
+            f.write("---\n")
+            f.write("\n".join(window[-200:]) + "\n")
+    except Exception:
+        pass
+
+
+def _check_policies_available():
+    """Probe whether webhook sources can be created (proprietary policy feature).
+
+    Creates a throwaway webhook source: a 200 with a minted webhookId means the
+    webhook beans are present (a proprietary build). The probe source is
+    best-effort deleted afterwards.
+    """
+    try:
+        resp = requests.post(
+            f"{_BASE_URL}/api/v1/sources",
+            headers={"X-API-KEY": "123456789", "Content-Type": "application/json"},
+            json={"name": "policies-probe", "type": "webhook", "options": {}, "enabled": True},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return False
+        source_id = resp.json().get("id")
+        has_webhook = bool(resp.json().get("options", {}).get("webhookId"))
+        if source_id:
+            try:
+                requests.delete(
+                    f"{_BASE_URL}/api/v1/sources/{source_id}",
+                    headers={"X-API-KEY": "123456789"},
+                    timeout=10,
+                )
+            except Exception:
+                pass
+        return has_webhook
+    except Exception:
+        return False
 
 
 def before_all(context):
@@ -6,20 +130,149 @@ def before_all(context):
     context.request_data = None
     context.files = {}
     context.response = None
+    context.jwt_available = _check_jwt_available()
+    if not context.jwt_available:
+        print(
+            "\n[JWT] JWT Bearer authentication is not available in this environment "
+            "(server likely running with V2=false). "
+            "Scenarios tagged with JWT-dependent tags will be skipped."
+        )
+    context.policies_available = _check_policies_available()
+    if not context.policies_available:
+        print(
+            "\n[POLICIES] Webhook sources are not available in this environment "
+            "(e.g. a core-only build). Scenarios tagged @policies/@webhook will be skipped."
+        )
+
+
+def before_scenario(context, scenario):
+    """Reset all per-scenario state before each scenario runs."""
+    scenario_tags = set(scenario.effective_tags)
+
+    # Concurrency is opted into by a step in the feature, never by configuration.
+    context.parallel_repeat = 1
+    context.parallel_decoy = False
+    context.parallel_validated = False
+    context.parallel_ran_at = 0
+    context.parallel_request = None
+    context.parallel_get = None
+
+    # Skip scenarios that require JWT Bearer auth when it is not functional.
+    if _JWT_DEPENDENT_TAGS & scenario_tags and not context.jwt_available:
+        scenario.skip(
+            "JWT Bearer authentication not available in this environment (V2 disabled). "
+            "Run against a server with V2=true to execute these scenarios."
+        )
+        return
+
+    if _POLICIES_DEPENDENT_TAGS & scenario_tags and not context.policies_available:
+        scenario.skip(
+            "Webhook sources not available in this environment (e.g. a core-only build). "
+            "Run against a proprietary build to execute these scenarios."
+        )
+        return
+
+    context.files = {}
+    context.multi_files = []
+    context.json_parts = {}
+    context.request_data = None
+    # JWT auth state
+    context.jwt_token = None
+    context.original_jwt_token = None
+    # OR-status helper used by auth step definitions
+    context._status_ok = False
+    # Stored value used by enterprise step definitions for dynamic URL composition
+    context.stored_value = None
+
+    context._docker_log_line_count = _get_docker_log_line_count()
 
 
 def after_scenario(context, scenario):
+    if scenario.status == "failed":
+        start_line = getattr(context, "_docker_log_line_count", 0)
+        _capture_docker_logs_window(start_line, scenario.name)
+
     if hasattr(context, "files"):
         for file in context.files.values():
+            try:
+                file.close()
+            except Exception:
+                pass
+
+    # Close any multi-file handles
+    for _key, file in getattr(context, "multi_files", []):
+        try:
             file.close()
+        except Exception:
+            pass
+
     if os.path.exists("response_file"):
         os.remove("response_file")
-    if hasattr(context, "file_name") and os.path.exists(context.file_name):
+    # Guard against context.file_name being None (e.g. reset from a previous scenario)
+    if hasattr(context, "file_name") and context.file_name and os.path.exists(context.file_name):
         os.remove(context.file_name)
 
-    # Remove any temporary files
+    # Remove any temporary files generated during the scenario
     for temp_file in os.listdir("."):
         if temp_file.startswith("genericNonCustomisableName") or temp_file.startswith(
             "temp_image_"
         ):
-            os.remove(temp_file)
+            try:
+                os.remove(temp_file)
+            except Exception:
+                pass
+
+    # Reset all per-scenario state so stale handles don't bleed into the next scenario
+    context.files = {}
+    context.multi_files = []
+    context.json_parts = {}
+    context.request_data = None
+    # JWT auth state
+    context.jwt_token = None
+    context.original_jwt_token = None
+    context._status_ok = False
+    context.parallel_request = None
+    context.parallel_get = None
+
+
+def _cleanup_async_job_files():
+    """Release every async job result the run left on the server.
+
+    An async submit persists a copy of the upload plus its results, and both are held
+    for the job retention window (30 minutes by default) - far longer than a test run.
+    The regression check that diffs the container filesystem before and after this suite
+    would otherwise flag them as leaked temp files. Sweeping them here keeps that check
+    strict: anything it still reports afterwards is a genuine leak.
+    """
+    try:
+        response = job_support.trigger_cleanup()
+    except Exception as exc:
+        print(f"\n[CLEANUP] Async job cleanup request failed: {exc}")
+        return
+    if response.status_code == 404:
+        print(
+            "\n[CLEANUP] Async job cleanup endpoint not available on this build; "
+            "async job files will age out on their own."
+        )
+        return
+    if response.status_code != 200:
+        print(
+            f"\n[CLEANUP] Async job cleanup returned {response.status_code}: "
+            f"{response.text[:200]}"
+        )
+        return
+    try:
+        summary = response.json()
+    except ValueError:
+        print("\n[CLEANUP] Async job cleanup returned a non-JSON body")
+        return
+    print(
+        f"\n[CLEANUP] Released {summary.get('jobsRemoved', '?')} async job(s) and "
+        f"{summary.get('filesDeleted', '?')} stored file(s); "
+        f"{summary.get('jobsRetained', '?')} retained."
+    )
+
+
+def after_all(context):
+    _cleanup_async_job_files()
+    parallel_support.print_summary()

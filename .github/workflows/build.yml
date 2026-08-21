@@ -1,7 +1,17 @@
 name: Build and Test Workflow
 
+# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# to the dedicated reusable workflows under .github/workflows/. Each child
+# workflow keeps its own setup/teardown so this file stays a routing layer.
+#
+# The final `all-checks-passed` job is the single status check that branch
+# protection should require — it succeeds only if every required upstream
+# job either succeeded or was legitimately skipped by its path filter.
+
 on:
   pull_request:
+    branches: ["main"]
+  merge_group:
     branches: ["main"]
   workflow_dispatch:
 
@@ -27,361 +37,305 @@ jobs:
     timeout-minutes: 3
     outputs:
       build: ${{ steps.changes.outputs.build }}
+      backend: ${{ steps.changes.outputs.backend }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      docker-base: ${{ steps.changes.outputs.docker-base }}
+      dockerfiles: ${{ steps.changes.outputs.dockerfiles }}
+      tauri: ${{ steps.changes.outputs.tauri }}
+      engine: ${{ steps.changes.outputs.engine }}
+      generated-models: ${{ steps.changes.outputs.generated-models }}
+      proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
           filters: .github/config/.files.yaml
 
+  gradle-cache-prime:
+    needs: [files-changed]
+    uses: ./.github/workflows/gradle-cache-prime.yml
+    secrets: inherit
+
   build:
-    runs-on: ubuntu-latest
+    if: needs.files-changed.outputs.backend == 'true'
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
+      contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk-version: [17, 21]
-        spring-security: [true, false]
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      pull-requests: write
+    uses: ./.github/workflows/backend-build.yml
+    secrets: inherit
 
-      - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: ${{ matrix.jdk-version }}
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew build -PnoSpotless
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
-
-      - name: Check Test Reports Exist
-        if: always()
-        run: |
-          declare -a dirs=(
-            "app/core/build/reports/tests/"
-            "app/core/build/test-results/"
-            "app/common/build/reports/tests/"
-            "app/common/build/test-results/"
-            "app/proprietary/build/reports/tests/"
-            "app/proprietary/build/test-results/"
-          )
-          for dir in "${dirs[@]}"; do
-            if [ ! -d "$dir" ]; then
-              echo "Missing $dir"
-              exit 1
-            fi
-          done
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
-          path: |
-            app/**/build/reports/jacoco/test
-            app/**/build/reports/tests/
-            app/**/build/test-results/
-            app/**/build/reports/problems/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
-
-      - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
-        id: jacoco
-        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
-        with:
-          paths: |
-            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 10
-          min-coverage-changed-files: 0
-          comment-type: summary
+  db-migration-test:
+    # Boots the current bootJar against H2 fixtures captured from past
+    # releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still
+    # works after Hibernate's ddl-auto=update migrates the schema. Gated on
+    # the `project` filter so doc-only PRs skip this ~5-minute job.
+    if: needs.files-changed.outputs.project == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/db-migration-test.yml
+    secrets: inherit
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
-    needs: [files-changed]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-
-      - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: openapi-docs
-          path: ./SwaggerDoc.json
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-openapi.yml
+    secrets: inherit
 
   frontend-validation:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: files-changed
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-      - name: Type-check frontend
-        run: cd frontend && npm run prebuild && npm run typecheck:all
-      - name: Lint frontend
-        run: cd frontend && npm run lint
-      - name: Build frontend
-        run: cd frontend && npm run build
-      - name: Run frontend tests
-        run: cd frontend && npm run test -- --run
-      - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: frontend-build
-          path: frontend/dist/
-          retention-days: 3
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/frontend-validation.yml
+    secrets: inherit
+
+  # Required (in all-checks-passed). Scans the stories a branch touches in both
+  # light and dark; an axe violation in either theme blocks the merge. The
+  # whole-suite sweep (nightly.yml) still covers stories a change affects without
+  # touching them directly.
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
+    secrets: inherit
+
+  playwright-e2e:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-stubbed.yml
+    secrets: inherit
+
+  playwright-e2e-live:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-live.yml
+    secrets: inherit
+
+  playwright-e2e-enterprise:
+    if: needs.files-changed.outputs.proprietary == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-enterprise.yml
+    secrets: inherit
+    with:
+      use_shared_cache: true
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: check the licenses for compatibility
-        run: ./gradlew checkLicense
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: FAILED - check the licenses for compatibility
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: dependencies-without-allowed-license.json
-          path: build/reports/dependency-license/dependencies-without-allowed-license.json
-          retention-days: 3
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-licence.yml
+    secrets: inherit
 
   docker-compose-tests:
     if: needs.files-changed.outputs.project == 'true'
-    needs: files-changed
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
-    #     (github.event_name == 'pull_request' &&
-    #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
-    #     (
-    #       contains(github.event.pull_request.labels.*.name, 'Front End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Java') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Back End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Security') ||
-    #       contains(github.event.pull_request.labels.*.name, 'API') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Docker') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Test')
-    #     )
-    #     )
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      - name: Install Docker Compose
-        run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
-        with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./testing/cucumber/requirements.txt
-
-      - name: Pip requirements
-        run: |
-          pip install --require-hashes -r ./testing/cucumber/requirements.txt
-
-      - name: Run Docker Compose Tests
-        run: |
-          chmod +x ./testing/test_webpages.sh
-          chmod +x ./testing/test.sh
-          chmod +x ./testing/test_disabledEndpoints.sh
-          ./testing/test.sh
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      actions: write
+      contents: read
+      checks: write
+    uses: ./.github/workflows/docker-compose-tests.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      needs.files-changed.outputs.project == 'true' &&
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.build.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-generateOpenApiDocs.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-licence.result)
+    needs:
+      [
+        files-changed,
+        build,
+        check-generateOpenApiDocs,
+        check-licence,
+        gradle-cache-prime,
+      ]
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/test-build-docker.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+      dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
+
+  tauri-build:
+    if: needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/tauri-build.yml
+    secrets: inherit
+    # PR smoke build: macOS + Windows (the platforms our developers use).
+    # sign: true only reaches macOS - tauri-build's per-platform gate keeps
+    # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
+    # The full signed multi-OS matrix runs on release;
+    # nightly still warms the Rust cache with all-OS defaults.
+    with:
+      platform: windows-macos
+      sign: true
+      use_shared_cache: true
+
+  ai-engine:
+    if: needs.files-changed.outputs.engine == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/ai-engine.yml
+    secrets: inherit
+
+  # The generated frontend types and engine tool models are both derived from
+  # the Java OpenAPI spec. This job regenerates and diffs them; it boots the
+  # backend, so it is gated on the narrow generated-models filter (spec source,
+  # generators, generated files, generation tasks) rather than the broad
+  # frontend filter, so a CSS-only PR does not pay for a backend build.
+  generated-models:
+    if: needs.files-changed.outputs.generated-models == 'true'
+    needs: [files-changed, gradle-cache-prime]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/check-generated-models.yml
+    secrets: inherit
+    with:
+      use_shared_cache: true
+
+  pre-commit:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/pre_commit.yml
+    secrets: inherit
+
+  dependency-review:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/dependency-review.yml
+    secrets: inherit
+
+  # Coverage aggregate: merges the JUnit + e2e:live + cucumber .exec
+  # artifacts produced by the jobs above into one report, plus pulls
+  # in vitest + Playwright frontend coverage for the per-area matrix.
+  # `if: always()` so a producer failing partway still gets credit
+  # for whatever did record. Advisory only - intentionally NOT in
+  # all-checks-passed, so a flaky aggregate run never blocks merging.
+  coverage-aggregate:
+    if: always()
+    needs:
+      - build
+      - playwright-e2e-live
+      - docker-compose-tests
+      - frontend-validation
+    permissions:
+      contents: read
+    uses: ./.github/workflows/coverage-aggregate.yml
+    secrets: inherit
+    with:
+      frontend-validation-result: ${{ needs.frontend-validation.result }}
+      playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
+
+  # Single status check that branch protection should mark as required.
+  # Succeeds when every upstream job is either `success` or `skipped` (path-
+  # gated jobs that didn't apply this run). Any `failure` or `cancelled`
+  # result fails the gate. `if: always()` ensures the gate evaluates even
+  # when an upstream job fails.
+  all-checks-passed:
+    name: All checks passed
+    if: always()
+    needs:
+      - files-changed
+      - gradle-cache-prime
+      - build
+      - db-migration-test
+      - check-generateOpenApiDocs
+      - frontend-validation
+      - frontend-a11y
+      - playwright-e2e
+      - playwright-e2e-live
+      - playwright-e2e-enterprise
+      - check-licence
+      - docker-compose-tests
+      - test-build-docker-images
+      - tauri-build
+      - ai-engine
+      - generated-models
+      - pre-commit
+      - dependency-review
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - docker-rev: docker/embedded/Dockerfile
-            artifact-suffix: Dockerfile
-          - docker-rev: docker/embedded/Dockerfile.ultra-lite
-            artifact-suffix: Dockerfile.ultra-lite
-          - docker-rev: docker/embedded/Dockerfile.fat
-            artifact-suffix: Dockerfile.fat
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Free disk space on runner
-        run: |
-          echo "Disk space before cleanup:" && df -h
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
-          docker system prune -af || true
-          echo "Disk space after cleanup:" && df -h
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: Build application
-        run: ./gradlew build
+      - name: Verify every required job passed (or was legitimately skipped)
         env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      - name: Build ${{ matrix.docker-rev }}
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./${{ matrix.docker-rev }}
-          push: false
-          cache-from: type=gha,scope=${{ matrix.artifact-suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.artifact-suffix }}
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: reports-docker-${{ matrix.artifact-suffix }}
-          path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
+          RESULTS: |
+            files-changed=${{ needs.files-changed.result }}
+            gradle-cache-prime=${{ needs.gradle-cache-prime.result }}
+            build=${{ needs.build.result }}
+            db-migration-test=${{ needs.db-migration-test.result }}
+            check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
+            frontend-validation=${{ needs.frontend-validation.result }}
+            frontend-a11y=${{ needs.frontend-a11y.result }}
+            playwright-e2e=${{ needs.playwright-e2e.result }}
+            playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
+            playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}
+            check-licence=${{ needs.check-licence.result }}
+            docker-compose-tests=${{ needs.docker-compose-tests.result }}
+            test-build-docker-images=${{ needs.test-build-docker-images.result }}
+            tauri-build=${{ needs.tauri-build.result }}
+            ai-engine=${{ needs.ai-engine.result }}
+            generated-models=${{ needs.generated-models.result }}
+            pre-commit=${{ needs.pre-commit.result }}
+            dependency-review=${{ needs.dependency-review.result }}
+        run: |
+          ok=true
+          while IFS='=' read -r name result; do
+            [ -z "$name" ] && continue
+            case "$result" in
+              success|skipped) printf '  %-30s %s\n' "$name" "$result" ;;
+              *)               printf '✗ %-30s %s\n' "$name" "$result"; ok=false ;;
+            esac
+          done <<< "$RESULTS"
+          if [ "$ok" != "true" ]; then
+            echo ""
+            echo "One or more required checks failed or were cancelled."
+            exit 1
+          fi
+          echo ""
+          echo "All required checks passed."

@@ -2,8 +2,6 @@
   "recommendations": [
     "elagil.pre-commit-helper", // Support for pre-commit hooks to enforce code quality
     "josevseb.google-java-format-for-vs-code", // Google Java code formatter to follow the Google Java Style Guide
-    "ms-python.black-formatter", // Python code formatter using Black
-    "ms-python.flake8", // Flake8 linter for Python to enforce code quality
     "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support
     "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
     // "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
@@ -13,12 +11,13 @@
     "vscjava.vscode-spring-boot-dashboard", // Spring Boot dashboard for managing and visualizing Spring Boot applications
     "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
     "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
-    "GitHub.copilot", // GitHub Copilot AI pair programmer for Visual Studio Code
+    "GitHub.copilot-chat", // GitHub Copilot AI pair programmer for Visual Studio Code
     "GitHub.vscode-pull-request-github", // GitHub Pull Requests extension for Visual Studio Code
     "charliermarsh.ruff", // Ruff code formatter for Python to follow the Ruff Style Guide
     "yzhang.markdown-all-in-one", // Markdown All-in-One extension for enhanced Markdown editing
     "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
     "redhat.vscode-yaml", // YAML extension for Visual Studio Code
-    "dbaeumer.vscode-eslint", // ESLint extension for TypeScript linting
+    "tamasfe.even-better-toml", // TOML language support and formatting
+    "oxc.oxc-vscode", // Oxc (oxlint) extension for JavaScript/TypeScript linting
   ]
 }

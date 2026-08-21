@@ -19,6 +19,7 @@ import org.apache.batik.bridge.GVTBuilder;
 import org.apache.batik.bridge.UserAgent;
 import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.gvt.GraphicsNode;
+import org.apache.batik.util.ParsedURL;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -63,7 +64,7 @@ public class SvgToPdf {
             }
 
             // 2. Build the GVT (Graphics Vector Tree) with timeout protection
-            UserAgent userAgent = new UserAgentAdapter();
+            UserAgent userAgent = createSecureUserAgent();
             DocumentLoader loader = new DocumentLoader(userAgent);
             BridgeContext ctx = new BridgeContext(userAgent, loader);
             ctx.setDynamicState(BridgeContext.DYNAMIC);
@@ -94,10 +95,25 @@ public class SvgToPdf {
         }
     }
 
+    private UserAgent createSecureUserAgent() {
+        return new UserAgentAdapter() {
+            @Override
+            public void checkLoadExternalResource(ParsedURL resourceURL, ParsedURL docURL) {
+                // Inline data: URIs are self-contained (no network/file fetch) - allow them.
+                if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
+                    return;
+                }
+                throw new SecurityException(
+                        "External resource loading is disabled for SVG to PDF conversion: "
+                                + resourceURL);
+            }
+        };
+    }
+
     private GraphicsNode buildGvtWithTimeout(BridgeContext ctx, SVGDocument svgDoc)
             throws IOException {
         GVTBuilder builder = new GVTBuilder();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
         Callable<GraphicsNode> buildTask = () -> builder.build(ctx, svgDoc);
         Future<GraphicsNode> future = executor.submit(buildTask);
@@ -202,7 +218,7 @@ public class SvgToPdf {
             svgDoc = factory.createSVGDocument("file:///input.svg", inputStream);
         }
 
-        UserAgent userAgent = new UserAgentAdapter();
+        UserAgent userAgent = createSecureUserAgent();
         DocumentLoader loader = new DocumentLoader(userAgent);
         BridgeContext ctx = new BridgeContext(userAgent, loader);
         ctx.setDynamicState(BridgeContext.DYNAMIC);

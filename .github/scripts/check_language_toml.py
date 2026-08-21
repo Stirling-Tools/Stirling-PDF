@@ -13,15 +13,15 @@ Usage:
 """
 
 # Sample for Windows:
-# python .github/scripts/check_language_toml.py --reference-file frontend/public/locales/en-GB/translation.toml --branch "" --files frontend/public/locales/de-DE/translation.toml frontend/public/locales/fr-FR/translation.toml
+# python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-US/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
 
 import argparse
 import glob
 import os
 import re
+import tomllib  # Python 3.11+ (stdlib)
 from pathlib import Path
 
-import tomllib  # Python 3.11+ (stdlib)
 import tomli_w  # For writing TOML files
 
 
@@ -59,8 +59,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     return duplicates
 
 
-# Maximum size for TOML files (e.g., 570 KB)
-MAX_FILE_SIZE = 570 * 1024
+# Maximum size for TOML files (e.g., 1 MB)
+MAX_FILE_SIZE = 1000 * 1024
 
 
 def parse_toml_file(file_path):
@@ -133,11 +133,7 @@ def update_missing_keys(reference_file, file_list, branch=""):
         file_path = Path(file_path)
         language_dir = file_path.parent.name
         reference_lang_dir = reference_file.parent.name
-        if (
-            language_dir == reference_lang_dir
-            or file_path.suffix != ".toml"
-            or file_path.parents[1].name != "locales"
-        ):
+        if language_dir == reference_lang_dir or file_path.suffix != ".toml" or file_path.parents[1].name != "locales":
             print(f"Skipping file: {file_path}")
             continue
 
@@ -184,7 +180,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = Path.cwd() / "frontend" / "public" / "locales"
+    base_dir = Path.cwd() / "frontend" / "editor" / "public" / "locales"
 
     for file_path in file_arr:
         file_path = Path(file_path)
@@ -198,9 +194,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         # Verify that file is within the expected directory
         if not absolute_path.is_relative_to(base_dir):
             has_differences = True
-            report.append(
-                f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n"
-            )
+            report.append(f"\n⚠️ Unsafe file found: `{locale_dir}/{basename_current_file}`\n\n---\n")
             continue
 
         # Verify file size before processing
@@ -211,13 +205,10 @@ def check_for_differences(reference_file, file_list, branch, actor):
             )
             continue
 
-        if basename_current_file == basename_reference_file and locale_dir == "en-GB":
+        if basename_current_file == basename_reference_file and locale_dir == "en-US":
             continue
 
-        if (
-            file_normpath.suffix != ".toml"
-            or basename_current_file != "translation.toml"
-        ):
+        if file_normpath.suffix != ".toml" or basename_current_file != "translation.toml":
             continue
 
         only_reference_file = False
@@ -259,9 +250,22 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 report.append(
                     f"    - **_Extra keys in `{locale_dir}/{basename_current_file}`_**: `{missing_keys_str}` that are not present in **_`{basename_reference_file}`_**."
                 )
+                report.append("")
+                report.append("    Use the following command to remove them:")
+                report.append(f"    `python scripts/translations/translation_merger.py {locale_dir} remove-unused`")
+                report.append("")
             if extra_keys_list:
                 report.append(
                     f"    - **_Missing keys in `{locale_dir}/{basename_current_file}`_**: `{extra_keys_str}` that are not present in **_`{basename_reference_file}`_**."
+                )
+                report.append("")
+                report.append("    Use the following command to add them:")
+                report.append(f"    `python scripts/translations/translation_merger.py {locale_dir} add-missing`")
+                report.append("")
+
+            if missing_keys_list or extra_keys_list:
+                report.append(
+                    "    See: https://github.com/Stirling-Tools/Stirling-PDF/tree/main/scripts/translations#2-translation_mergerpy"
                 )
         else:
             report.append("2. **Test Status:** ✅ **_Passed_**")
@@ -271,9 +275,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
             output = "\n".join(
                 [
                     f"      - `{key}`: first at {first}, duplicate at `{duplicate}`"
-                    for key, first, duplicate in find_duplicate_keys(
-                        branch_path / file_normpath
-                    )
+                    for key, first, duplicate in find_duplicate_keys(branch_path / file_normpath)
                 ]
             )
             report.append("3. **Test Status:** ❌ **_Failed_**")
@@ -291,23 +293,19 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/public/locales/en-GB/translation.toml)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-US/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/editor/public/locales/en-US/translation.toml)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
         report.append("")
-        report.append(
-            f"Thanks @{actor} for your help in keeping the translations up to date."
-        )
+        report.append(f"Thanks @{actor} for your help in keeping the translations up to date.")
 
     if not only_reference_file:
         print("\n".join(report))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Find missing keys in TOML translation files"
-    )
+    parser = argparse.ArgumentParser(description="Find missing keys in TOML translation files")
     parser.add_argument(
         "--actor",
         required=False,
@@ -355,6 +353,7 @@ if __name__ == "__main__":
                 os.path.join(
                     os.getcwd(),
                     "frontend",
+                    "editor",
                     "public",
                     "locales",
                     "*",

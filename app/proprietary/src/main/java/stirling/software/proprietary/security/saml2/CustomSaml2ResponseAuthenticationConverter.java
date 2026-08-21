@@ -14,7 +14,7 @@ import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class CustomSaml2ResponseAuthenticationConverter
 
     @Override
     public Saml2Authentication convert(ResponseToken responseToken) {
-        Assertion assertion = responseToken.getResponse().getAssertions().get(0);
+        Assertion assertion = responseToken.getResponse().getAssertions().getFirst();
         Map<String, List<Object>> attributes = extractAttributes(assertion);
 
         // Debug log with actual values
@@ -99,7 +99,11 @@ public class CustomSaml2ResponseAuthenticationConverter
 
         CustomSaml2AuthenticatedPrincipal principal =
                 new CustomSaml2AuthenticatedPrincipal(
-                        userIdentifier, attributes, userIdentifier, sessionIndexes);
+                        userIdentifier,
+                        attributes,
+                        userIdentifier,
+                        sessionIndexes,
+                        responseToken.getToken().getSaml2Response());
 
         return new Saml2Authentication(
                 principal,
@@ -113,6 +117,6 @@ public class CustomSaml2ResponseAuthenticationConverter
 
     private String getFirstAttributeValue(Map<String, List<Object>> attributes, String name) {
         List<Object> values = attributes.get(name);
-        return values != null && !values.isEmpty() ? values.get(0).toString() : null;
+        return values != null && !values.isEmpty() ? values.getFirst().toString() : null;
     }
 }

@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.controller.api;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +22,10 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
 @Slf4j
@@ -36,6 +37,7 @@ public class InviteLinkController {
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
+    private final UserLicenseSettingsService userLicenseSettingsService;
 
     /**
      * Generate a new invite link (admin only)
@@ -49,7 +51,7 @@ public class InviteLinkController {
      * @param request The HTTP request
      * @return ResponseEntity with the invite link or error
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/generate")
     public ResponseEntity<?> generateInviteLink(
             @RequestParam(name = "email", required = false) String email,
@@ -57,6 +59,7 @@ public class InviteLinkController {
             @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "expiryHours", required = false) Integer expiryHours,
             @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
+            @RequestParam(name = "frontendBaseUrl", required = false) String frontendBaseUrl,
             Principal principal,
             HttpServletRequest request) {
 
@@ -90,13 +93,10 @@ public class InviteLinkController {
                             .body(
                                     Map.of(
                                             "error",
-                                            "An active invite already exists for this email address"));
+                                            "An active invite already exists for this email"
+                                                    + " address"));
                 }
 
-                // If sendEmail is requested but no email provided, reject
-                if (sendEmail) {
-                    // Email will be sent
-                }
             } else {
                 // No email provided - this is a general invite link
                 email = null; // Ensure it's null, not empty string
@@ -112,7 +112,7 @@ public class InviteLinkController {
             if (applicationProperties.getPremium().isEnabled()) {
                 long currentUserCount = userService.getTotalUsersCount();
                 long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
-                int maxUsers = applicationProperties.getPremium().getMaxUsers();
+                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
 
                 if (currentUserCount + activeInvites >= maxUsers) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -123,7 +123,8 @@ public class InviteLinkController {
                                                     + (currentUserCount + activeInvites)
                                                     + "/"
                                                     + maxUsers
-                                                    + " users). Contact your administrator to upgrade your license."));
+                                                    + " users). Contact your administrator to"
+                                                    + " upgrade your license."));
                 }
             }
 
@@ -177,19 +178,18 @@ public class InviteLinkController {
 
             inviteTokenRepository.save(inviteToken);
 
-            // Build invite URL
-            // Use configured frontend URL if available, otherwise fall back to backend URL
+            // Build invite URL: system.frontendUrl → caller's frontendBaseUrl → system.backendUrl →
+            // request URL
             String baseUrl;
             String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            String configuredBackendUrl = applicationProperties.getSystem().getBackendUrl();
             if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
-                // Use configured frontend URL (remove trailing slash if present)
-                baseUrl =
-                        configuredFrontendUrl.endsWith("/")
-                                ? configuredFrontendUrl.substring(
-                                        0, configuredFrontendUrl.length() - 1)
-                                : configuredFrontendUrl;
+                baseUrl = configuredFrontendUrl.trim();
+            } else if (frontendBaseUrl != null && !frontendBaseUrl.trim().isEmpty()) {
+                baseUrl = frontendBaseUrl.trim();
+            } else if (configuredBackendUrl != null && !configuredBackendUrl.trim().isEmpty()) {
+                baseUrl = configuredBackendUrl.trim();
             } else {
-                // Fall back to backend URL from request
                 baseUrl =
                         request.getScheme()
                                 + "://"
@@ -198,7 +198,10 @@ public class InviteLinkController {
                                         ? ":" + request.getServerPort()
                                         : "");
             }
-            String inviteUrl = baseUrl + "/invite?token=" + token;
+            if (baseUrl.endsWith("/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+            }
+            String inviteUrl = baseUrl + "/invite/" + token;
 
             log.info("Generated invite link for {} by {}", email, principal.getName());
 
@@ -253,7 +256,7 @@ public class InviteLinkController {
      *
      * @return List of active invite tokens
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/list")
     public ResponseEntity<?> listInviteLinks() {
         try {
@@ -276,7 +279,7 @@ public class InviteLinkController {
                                                 "expiresAt", invite.getExpiresAt().toString());
                                         return inviteMap;
                                     })
-                            .collect(Collectors.toList());
+                            .toList();
 
             return ResponseEntity.ok(Map.of("invites", inviteList));
 
@@ -293,7 +296,7 @@ public class InviteLinkController {
      * @param inviteId The invite token ID to revoke
      * @return Success or error response
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/revoke/{inviteId}")
     public ResponseEntity<?> revokeInviteLink(@PathVariable Long inviteId) {
         try {
@@ -320,14 +323,14 @@ public class InviteLinkController {
      *
      * @return Number of deleted tokens
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/cleanup")
     public ResponseEntity<?> cleanupExpiredInvites() {
         try {
             List<InviteToken> expiredInvites =
                     inviteTokenRepository.findAll().stream()
                             .filter(invite -> !invite.isValid())
-                            .collect(Collectors.toList());
+                            .toList();
 
             int count = expiredInvites.size();
             inviteTokenRepository.deleteAll(expiredInvites);
@@ -355,27 +358,23 @@ public class InviteLinkController {
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
 
             if (inviteOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Invalid invite link"));
+                return invalidInviteResponse();
             }
 
             InviteToken invite = inviteOpt.get();
 
             if (invite.isUsed()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has already been used"));
+                return invalidInviteResponse();
             }
 
             if (invite.isExpired()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has expired"));
+                return invalidInviteResponse();
             }
 
             // Check if user already exists (only if email is pre-set)
             if (invite.getEmail() != null
                     && userService.usernameExistsIgnoreCase(invite.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("error", "User already exists"));
+                return invalidInviteResponse();
             }
 
             Map<String, Object> response = new HashMap<>();
@@ -388,8 +387,7 @@ public class InviteLinkController {
 
         } catch (Exception e) {
             log.error("Failed to validate invite token: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to validate invite link"));
+            return invalidInviteResponse();
         }
     }
 
@@ -416,20 +414,17 @@ public class InviteLinkController {
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
 
             if (inviteOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Invalid invite link"));
+                return invalidInviteResponse();
             }
 
             InviteToken invite = inviteOpt.get();
 
             if (invite.isUsed()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has already been used"));
+                return invalidInviteResponse();
             }
 
             if (invite.isExpired()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has expired"));
+                return invalidInviteResponse();
             }
 
             // Determine the email to use
@@ -452,17 +447,17 @@ public class InviteLinkController {
 
             // Check if user already exists
             if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("error", "User already exists"));
+                return invalidInviteResponse();
             }
 
             // Create the user account
-            userService.saveUser(
-                    effectiveEmail,
-                    password,
-                    invite.getTeamId(),
-                    invite.getRole(),
-                    false); // Don't force password change
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(effectiveEmail)
+                            .password(password)
+                            .teamId(invite.getTeamId())
+                            .role(invite.getRole());
+            userService.saveUserCore(builder.build());
 
             // Mark invite as used
             invite.setUsed(true);
@@ -480,7 +475,12 @@ public class InviteLinkController {
         } catch (Exception e) {
             log.error("Failed to accept invite: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to create account: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to create account"));
         }
+    }
+
+    private ResponseEntity<Map<String, String>> invalidInviteResponse() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Invalid invite link"));
     }
 }

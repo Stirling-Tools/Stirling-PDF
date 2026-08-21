@@ -44,8 +44,10 @@ public class JobQueue implements SmartLifecycle {
 
     private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService jobExecutor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
+    private final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(
+                    Thread.ofVirtual().name("job-queue-scheduler-", 0).factory());
+    private final ExecutorService jobExecutor = ExecutorFactory.newVirtualThreadExecutor();
     private final Object queueLock = new Object(); // Lock for synchronizing queue operations
 
     private boolean shuttingDown = false;
@@ -399,7 +401,7 @@ public class JobQueue implements SmartLifecycle {
      * @throws Exception If there is an execution error
      */
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs) throws Exception {
-        CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier);
+        CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier, jobExecutor);
 
         try {
             if (timeoutMs <= 0) {

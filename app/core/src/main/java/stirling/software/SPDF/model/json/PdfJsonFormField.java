@@ -45,13 +45,13 @@ public class PdfJsonFormField {
     private Integer pageNumber;
 
     /** Field rectangle [x1, y1, x2, y2] on the page */
-    private List<Float> rect;
+    private float[] rect;
 
     /** For choice fields: list of options */
     private List<String> options;
 
     /** For choice fields: selected indices */
-    private List<Integer> selectedIndices;
+    private int[] selectedIndices;
 
     /** For button fields: whether it's checked */
     private Boolean checked;

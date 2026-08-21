@@ -49,8 +49,8 @@ public class LibreOfficeListener {
         process = SystemCommand.runCommand(Runtime.getRuntime(), "unoconv --listener");
         lastActivityTime = System.currentTimeMillis();
 
-        // Start a background thread to monitor the activity timeout
-        executorService = Executors.newSingleThreadExecutor();
+        // Start a virtual thread to monitor the activity timeout
+        executorService = Executors.newVirtualThreadPerTaskExecutor();
         executorService.submit(
                 () -> {
                     while (true) {

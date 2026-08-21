@@ -57,17 +57,17 @@ build_and_test() {
 
     case "$build_type" in
         full)
-            dockerfile_name="./docker/backend/Dockerfile"
+            dockerfile_name="./docker/embedded/Dockerfile.fat"
             if [ "$enable_security" == "true" ]; then
                 compose_file="${docker_compose_base}-fat-security${compose_suffix}"
                 service_name="Stirling-PDF-Security-Fat"
             else
                 compose_file="${docker_compose_base}-fat${compose_suffix}"
-                service_name="stirling-pdf-backend-fat"
+                service_name="stirling-pdf-fat"
             fi
             ;;
         ultra-lite)
-            dockerfile_name="./docker/backend/Dockerfile.ultra-lite"
+            dockerfile_name="./docker/embedded/Dockerfile.ultra-lite"
             if [ "$enable_security" == "true" ]; then
                 compose_file="${docker_compose_base}-ultra-lite-security${compose_suffix}"
                 service_name="stirling-pdf-backend-ultra-lite-security"

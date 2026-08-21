@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.exception.CacheUnavailableException;
+
+import tools.jackson.databind.ObjectMapper;
 
 @ControllerAdvice(assignableTypes = ConvertPdfJsonController.class)
 @Slf4j

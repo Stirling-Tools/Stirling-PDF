@@ -1,192 +1,129 @@
-# ==============================================================================
-# Multi-stage Dockerfile for Stirling-PDF – image with everything included
-# Includes: LibreOffice, Calibre, Tesseract, OCRmyPDF, unoserver, WeasyPrint, etc.
-# ==============================================================================
+# Stirling-PDF backend-only image — JAR built with -PbuildWithFrontend=false, UI ships separately.
 
-# ========================================
-# STAGE 1: Build stage - Alpine with Gradle
-# ========================================
-FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
+ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
+ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle gradle/
-COPY app/core/build.gradle core/.
-COPY app/common/build.gradle common/.
-COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+# Stage 1: Build the Java application (backend only, no frontend)
+FROM gradle:9.7.1-jdk25@sha256:a80276ab804c348989df46016e2b5d58cad07c5b29e06f2112434d28ca5b2844 AS app-build
 
-# Set the working directory
+# JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
+ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+
 WORKDIR /app
 
-# Copy the entire project to the working directory
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle/                               gradle/
+COPY buildSrc/build.gradle                 buildSrc/
+COPY buildSrc/src/main/                    buildSrc/src/main/
+COPY app/core/build.gradle                  app/core/
+COPY app/common/build.gradle                app/common/
+COPY app/proprietary/build.gradle           app/proprietary/
+
+# Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
+RUN gradle dependencies --no-daemon || true
+
 COPY . .
 
-# Build the application (server-only JAR - no UI, includes security features controlled at runtime)
-RUN DISABLE_ADDITIONAL_FEATURES=false \
-    STIRLING_PDF_DESKTOP_UI=false \
-    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+ARG PROTOTYPES_BUILD=false
+ARG STIRLING_FLAVOR=proprietary
+ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 
-# ========================================
-# STAGE 2: Runtime image based on Debian stable-slim
-# Contains Java runtime + LibreOffice + Calibre + all PDF tools
-# ========================================
-FROM debian:stable-slim@sha256:7cb087f19bcc175b96fbe4c2aef42ed00733a659581a80f6ebccfd8fe3185a3d
+# buildWithFrontend=false → backend-only JAR with API landing page.
+# Bundle only the JPDFium native for this image's target arch.
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    STIRLING_FLAVOR=${STIRLING_FLAVOR} \
+    gradle clean build \
+      -PbuildWithFrontend=false \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
+      -PprototypesMode=${PROTOTYPES_BUILD} \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+      --no-daemon
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
+# Stage 2: Extract Spring Boot Layers
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS jar-extract
+WORKDIR /tmp
+COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
-ENV TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-# Install core runtime dependencies + tools required by Stirling-PDF features
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates tzdata tini bash fontconfig \
-    openjdk-21-jre-headless \
-    ffmpeg poppler-utils ocrmypdf \
-    libreoffice-nogui libreoffice-java-common \
-    python3 python3-venv python3-uno \
-    tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
-    tesseract-ocr-por tesseract-ocr-chi-sim \
-    libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 \
-    gosu unpaper \
-    # AWT headless support (required for some Java graphics operations)
-    libfreetype6 libfontconfig1 libx11-6 libxt6 libxext6 libxrender1 libxtst6 libxi6 \
-    libxinerama1 libxkbcommon0 libxkbfile1 libsm6 libice6 \
-    # Qt WebEngine dependencies for Calibre
-    libegl1 libopengl0 libgl1 libxdamage1 libxfixes3 libxshmfence1 libdrm2 libgbm1 \
-    libxkbcommon-x11-0 libxrandr2 libxcomposite1 libnss3 libx11-xcb1 \
-    libxcb-cursor0 libdbus-1-3 libglib2.0-0 \
-    # Virtual framebuffer (required for headless LibreOffice)
-    xvfb x11-utils coreutils \
-    # Temporary packages only needed for Calibre installer
-    xz-utils gpgv curl xdg-utils \
-    \
-    # Install Calibre from official installer script
-    && curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin \
-    \
-    # Clean up installer-only packages
-    && apt-get purge -y xz-utils gpgv xdg-utils \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 3: Final runtime image on top of pre-built base
+FROM ${BASE_IMAGE}
 
-# Make ebook-convert available in PATH
-RUN ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert \
-    && /opt/calibre/ebook-convert --version
-
-# ==============================================================================
-# Create non-root user (stirlingpdfuser) with configurable UID/GID
-# ==============================================================================
-ARG PUID=1000
-ARG PGID=1000
-
-RUN set -eux; \
-    # Create group if it doesn't exist
-    if ! getent group stirlingpdfgroup >/dev/null 2>&1; then \
-    if getent group "${PGID}" >/dev/null 2>&1; then \
-    groupadd -o -g "${PGID}" stirlingpdfgroup; \
-    else \
-    groupadd -g "${PGID}" stirlingpdfgroup; \
-    fi; \
-    fi; \
-    # Create user if it doesn't exist, avoid UID conflicts
-    if ! id -u stirlingpdfuser >/dev/null 2>&1; then \
-    if getent passwd | awk -F: -v id="${PUID}" '$3==id{found=1} END{exit !found}'; then \
-    echo "UID ${PUID} already in use – creating stirlingpdfuser with automatic UID"; \
-    useradd -m -g stirlingpdfgroup -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    else \
-    useradd -m -u "${PUID}" -g stirlingpdfgroup -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    fi; \
-    fi
-
-# Compatibility alias for older entrypoint scripts expecting su-exec
-RUN ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
-
-# Copy application files from build stage
-COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build --chown=stirlingpdfuser:stirlingpdfgroup /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY scripts/ /scripts/
-COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
-
-# Optional version tag (can be passed at build time)
 ARG VERSION_TAG
 
-LABEL org.opencontainers.image.title="Stirling-PDF Backend"
-LABEL org.opencontainers.image.description="Backend service for Stirling-PDF - Java Spring Boot with PDF processing capabilities"
-LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Stirling-Tools"
-LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
-LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
-LABEL maintainer="Stirling-Tools"
-LABEL org.opencontainers.image.authors="Stirling-Tools"
-LABEL org.opencontainers.image.version="${VERSION_TAG}"
-LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
+WORKDIR /app
 
-# ==============================================================================
-# Runtime environment variables
-# ==============================================================================
+# Application layers
+COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/build/libs/restart-helper.jar /restart-helper.jar
+COPY --link --chown=1000:1000 scripts/ /scripts/
+
+# Fonts go to system dir, root ownership is correct (world-readable)
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
+
+# Permissions and configuration
+RUN set -eux; \
+    chmod +x /scripts/*; \
+    ln -s /logs /app/logs; \
+    ln -s /configs /app/configs; \
+    ln -s /customFiles /app/customFiles; \
+    ln -s /pipeline /app/pipeline; \
+    ln -s /storage /app/storage; \
+    chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
+    chown stirlingpdfuser:stirlingpdfgroup /app; \
+    chmod 750 /tmp/stirling-pdf; \
+    chmod 750 /tmp/stirling-pdf/heap_dumps; \
+    fc-cache -f
+
+# Version file for scripts (init-without-ocr.sh reads /etc/stirling_version).
+RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
+
+# Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
-    DISABLE_ADDITIONAL_FEATURES=true \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps \
-    -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 \
-    -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 \
-    -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70 \
-    -Djava.awt.headless=true" \
+    STIRLING_AOT_ENABLE="false" \
+    STIRLING_JVM_PROFILE="balanced" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
-    PUID=${PUID} \
-    PGID=${PGID} \
+    PUID=1000 \
+    PGID=1000 \
     UMASK=022 \
-    UNO_PATH=/usr/lib/libreoffice/program \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
-    TMP=/tmp/stirling-pdf
+    TMP=/tmp/stirling-pdf \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null \
+    SAL_TMP=/tmp/stirling-pdf/libre
 
-# ==============================================================================
-# Python virtual environment for additional Python tools (WeasyPrint, OpenCV, etc.)
-# ==============================================================================
-RUN python3 -m venv /opt/venv --system-site-packages \
-    && /opt/venv/bin/pip install --no-cache-dir weasyprint pdf2image opencv-python-headless \
-    && /opt/venv/bin/python -c "import cv2; print('OpenCV version:', cv2.__version__)"
+# Metadata labels
+LABEL org.opencontainers.image.title="Stirling-PDF Backend" \
+      org.opencontainers.image.description="Backend-only version (no embedded UI) with Calibre, LibreOffice, Tesseract, OCRmyPDF" \
+      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="Stirling-Tools" \
+      org.opencontainers.image.url="https://www.stirlingpdf.com" \
+      org.opencontainers.image.documentation="https://docs.stirlingpdf.com" \
+      maintainer="Stirling-Tools" \
+      org.opencontainers.image.authors="Stirling-Tools" \
+      org.opencontainers.image.version="${VERSION_TAG}" \
+      org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
 
-# Separate venv for unoserver (keeps it isolated)
-RUN python3 -m venv /opt/unoserver-venv --system-site-packages \
-    && /opt/unoserver-venv/bin/pip install --no-cache-dir unoserver
-
-# Make unoserver tools available in main venv PATH
-RUN ln -sf /opt/unoserver-venv/bin/unoconvert /opt/venv/bin/unoconvert \
-    && ln -sf /opt/unoserver-venv/bin/unoserver /opt/venv/bin/unoserver
-
-# Extend PATH to include both virtual environments
-ENV PATH="/opt/venv/bin:/opt/unoserver-venv/bin:${PATH}"
-
-# ==============================================================================
-# Final permissions, directories and font cache
-# ==============================================================================
-RUN set -eux; \
-    chmod +x /scripts/*; \
-    mkdir -p /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf; \
-    chown -R stirlingpdfuser:stirlingpdfgroup \
-    /home/stirlingpdfuser /configs /logs /customFiles /pipeline /tmp/stirling-pdf \
-    /app.jar /restart-helper.jar /usr/share/fonts/truetype /scripts; \
-    chmod -R 755 /tmp/stirling-pdf
-
-# Rebuild font cache
-RUN fc-cache -f -v
-
-# Force Qt/WebEngine to run headlessly (required for Calibre in Docker)
-ENV QT_QPA_PLATFORM=offscreen \
-    QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --disable-dev-shm-usage"
-
-# Expose web UI port
 EXPOSE 8080/tcp
-
 STOPSIGNAL SIGTERM
 
-# Use tini as init (handles signals and zombies correctly)
-ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -fs --max-time 10 http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status || exit 1
 
-# CMD is empty – actual start command is defined in init.sh
+ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []

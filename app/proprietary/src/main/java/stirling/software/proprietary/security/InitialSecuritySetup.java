@@ -1,11 +1,13 @@
 package stirling.software.proprietary.security;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -19,6 +21,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -36,6 +40,18 @@ public class InitialSecuritySetup {
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
+    private final Environment environment;
+    private final TeamMembershipService teamMembershipService;
+
+    /**
+     * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
+     * scan/rewrite the whole user table (default-team backfill, seat-license grandfathering) don't
+     * apply - and against a large SaaS user table they stall startup with full-table loads +
+     * per-row saveAll. Per-user team assignment happens in SupabaseAuthenticationFilter instead.
+     */
+    private boolean isSaas() {
+        return Arrays.asList(environment.getActiveProfiles()).contains("saas");
+    }
 
     @PostConstruct
     public void init() {
@@ -50,9 +66,15 @@ public class InitialSecuritySetup {
             }
 
             configureJWTSettings();
-            assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
-            initializeUserLicenseSettings();
+            if (isSaas()) {
+                log.info(
+                        "SaaS profile active - skipping self-host user-table bootstrap"
+                                + " (default-team backfill, seat-license grandfathering).");
+            } else {
+                assignUsersToDefaultTeamIfMissing();
+                initializeUserLicenseSettings();
+            }
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
@@ -94,6 +116,7 @@ public class InitialSecuritySetup {
         }
 
         userService.saveAll(usersWithoutTeam); // batch save
+        usersWithoutTeam.forEach(teamMembershipService::syncMembership);
         if (usersWithoutTeam != null && !usersWithoutTeam.isEmpty()) {
             log.info(
                     "Assigned {} user(s) without a team to the default team.",
@@ -113,8 +136,14 @@ public class InitialSecuritySetup {
                 && userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {
 
             Team team = teamService.getOrCreateDefaultTeam();
-            userService.saveUser(
-                    initialUsername, initialPassword, team, Role.ADMIN.getRoleId(), false);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(initialUsername)
+                            .password(initialPassword)
+                            .team(team)
+                            .role(Role.ADMIN.getRoleId())
+                            .firstLogin(false);
+            userService.saveUserCore(builder.build());
             log.info("Admin user created: {}", initialUsername);
         } else {
             createDefaultAdminUser();
@@ -127,8 +156,14 @@ public class InitialSecuritySetup {
 
         if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
             Team team = teamService.getOrCreateDefaultTeam();
-            userService.saveUser(
-                    defaultUsername, defaultPassword, team, Role.ADMIN.getRoleId(), true);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(defaultUsername)
+                            .password(defaultPassword)
+                            .team(team)
+                            .role(Role.ADMIN.getRoleId())
+                            .firstLogin(true);
+            userService.saveUserCore(builder.build());
             log.info("Default admin user created: {}", defaultUsername);
         }
     }
@@ -137,12 +172,14 @@ public class InitialSecuritySetup {
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
             Team team = teamService.getOrCreateInternalTeam();
-            userService.saveUser(
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    UUID.randomUUID().toString(),
-                    team,
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    false);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(Role.INTERNAL_API_USER.getRoleId())
+                            .password(UUID.randomUUID().toString())
+                            .team(team)
+                            .role(Role.INTERNAL_API_USER.getRoleId())
+                            .firstLogin(false);
+            userService.saveUserCore(builder.build());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
         } else {

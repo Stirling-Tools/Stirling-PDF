@@ -1,12 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +22,14 @@ import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.SPDF.utils.SvgOverlayUtil;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.SvgSanitizer;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -32,17 +38,22 @@ import stirling.software.common.util.WebResponseUtils;
 public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
+    private final SvgSanitizer svgSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-image")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-image",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =
-                    "This endpoint overlays an image onto a PDF file at the specified coordinates. "
-                            + "Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). "
-                            + "SVG files are rendered as vector graphics for crisp output at any resolution. "
-                            + "The image can be overlaid on every page of the PDF if specified. "
-                            + "Input:PDF/IMAGE/SVG Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> overlayImage(@ModelAttribute OverlayImageRequest request) {
+                    "This endpoint overlays an image onto a PDF file at the specified coordinates."
+                            + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
+                            + " files are rendered as vector graphics for crisp output at any resolution. The"
+                            + " image can be overlaid on every page of the PDF if specified.")
+    public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();
@@ -54,45 +65,51 @@ public class OverlayImageController {
             byte[] imageBytes = imageFile.getBytes();
 
             boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
+            if (isSvg) {
+                imageBytes = svgSanitizer.sanitize(imageBytes);
+            }
 
-            PDDocument document = pdfDocumentFactory.load(pdfBytes);
+            try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
+                int pages = document.getNumberOfPages();
+                for (int i = 0; i < pages; i++) {
+                    PDPage page = document.getPage(i);
 
-            int pages = document.getNumberOfPages();
-            for (int i = 0; i < pages; i++) {
-                PDPage page = document.getPage(i);
+                    if (isSvg) {
+                        SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
+                    } else {
+                        try (PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        document,
+                                        page,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        true,
+                                        true)) {
+                            PDImageXObject image =
+                                    PDImageXObject.createFromByteArray(document, imageBytes, "");
+                            contentStream.drawImage(image, x, y);
+                            log.info("Image successfully overlaid onto PDF page {}", i);
+                        }
+                    }
 
-                if (isSvg) {
-                    SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
-                } else {
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    page,
-                                    PDPageContentStream.AppendMode.APPEND,
-                                    true,
-                                    true)) {
-                        PDImageXObject image =
-                                PDImageXObject.createFromByteArray(document, imageBytes, "");
-                        contentStream.drawImage(image, x, y);
-                        log.info("Image successfully overlaid onto PDF page {}", i);
+                    if (!everyPage && i == 0) {
+                        break;
                     }
                 }
 
-                if (!everyPage && i == 0) {
-                    break;
+                TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    document.save(tempOut.getFile());
+                } catch (IOException e) {
+                    tempOut.close();
+                    throw e;
                 }
+                log.info("PDF with overlaid image successfully created");
+
+                return WebResponseUtils.pdfFileToWebResponse(
+                        tempOut,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_overlayed.pdf"));
             }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            document.close();
-
-            byte[] result = baos.toByteArray();
-            log.info("PDF with overlaid image successfully created");
-
-            return WebResponseUtils.bytesToWebResponse(
-                    result,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
 
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);

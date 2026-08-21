@@ -3,8 +3,8 @@ A script to update language progress status in README.md based on
 frontend locale TOML file comparisons.
 
 This script compares the default (reference) TOML file,
-`frontend/public/locales/en-GB/translation.toml`, with other translation
-files in `frontend/public/locales/*/translation.toml`.
+`frontend/editor/public/locales/en-US/translation.toml`, with other translation
+files in `frontend/editor/public/locales/*/translation.toml`.
 It determines how many keys are fully translated and automatically updates
 progress badges in the `README.md`.
 
@@ -21,7 +21,7 @@ Usage:
     $ python scripts/counter_translation_v3.py
 
     This will:
-        • Compare all files matching frontend/public/locales/*/translation.toml
+        • Compare all files matching frontend/editor/public/locales/*/translation.toml
         • Update progress badges in README.md
         • Update/format ignore_translation.toml automatically
 
@@ -50,16 +50,13 @@ import glob
 import os
 import re
 import sys
-from collections.abc import Mapping
-from typing import Iterable
+from collections.abc import Iterable, Mapping
 
 # Ensure tomlkit is installed before importing
 try:
     import tomlkit
 except ImportError:
-    raise ImportError(
-        "The 'tomlkit' library is not installed. Please install it using 'pip install tomlkit'."
-    )
+    raise ImportError("The 'tomlkit' library is not installed. Please install it using 'pip install tomlkit'.")
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -242,15 +239,11 @@ def compare_files(
             "ignore" not in sort_ignore_translation[language]
             or len(sort_ignore_translation[language].get("ignore", [])) < 1
         ):
-            sort_ignore_translation[language]["ignore"] = tomlkit.array(
-                ["language.direction"]
-            )
+            sort_ignore_translation[language]["ignore"] = tomlkit.array(["language.direction"])
 
         # Clean up ignore list to only include keys present in reference
         sort_ignore_translation[language]["ignore"] = [
-            key
-            for key in sort_ignore_translation[language]["ignore"]
-            if key in ref_keys or key == "language.direction"
+            key for key in sort_ignore_translation[language]["ignore"] if key in ref_keys or key == "language.direction"
         ]
 
         translation_entries = load_translation_entries(file_path)
@@ -264,10 +257,7 @@ def compare_files(
                 continue
 
             file_value = translation_entries[default_key]
-            if (
-                default_value == file_value
-                and default_key not in sort_ignore_translation[language]["ignore"]
-            ):
+            if default_value == file_value and default_key not in sort_ignore_translation[language]["ignore"]:
                 # Missing translation (same as default and not ignored)
                 fails += 1
                 missing_str_keys.append(default_key)
@@ -345,8 +335,8 @@ def main() -> None:
 
     # Project layout assumptions
     cwd = os.getcwd()
-    locales_dir = os.path.join(cwd, "frontend", "public", "locales")
-    reference_file = os.path.join(locales_dir, "en-GB", "translation.toml")
+    locales_dir = os.path.join(cwd, "frontend", "editor", "public", "locales")
+    reference_file = os.path.join(locales_dir, "en-US", "translation.toml")
     scripts_directory = os.path.join(cwd, "scripts")
     translation_state_file = os.path.join(scripts_directory, "ignore_translation.toml")
 
@@ -357,9 +347,7 @@ def main() -> None:
             lang_file = lang_input
         else:
             candidate = os.path.join(locales_dir, lang_input)
-            candidate_with_file = os.path.join(
-                locales_dir, lang_input, "translation.toml"
-            )
+            candidate_with_file = os.path.join(locales_dir, lang_input, "translation.toml")
             if os.path.exists(candidate):
                 if os.path.isdir(candidate):
                     lang_file = candidate_with_file
@@ -399,9 +387,7 @@ def main() -> None:
 
     # Default behavior (no --lang): process all and update README
     messages_file_paths = glob.glob(os.path.join(locales_dir, "*", "translation.toml"))
-    progress = compare_files(
-        reference_file, messages_file_paths, translation_state_file
-    )
+    compare_files(reference_file, messages_file_paths, translation_state_file)
     # write_readme(progress)
 
 

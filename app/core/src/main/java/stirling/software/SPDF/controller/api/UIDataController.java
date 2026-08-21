@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -15,9 +14,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -35,6 +31,9 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 @Slf4j
 @UiDataApi
 public class UIDataController {
@@ -44,18 +43,21 @@ public class UIDataController {
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
+    private final ObjectMapper objectMapper;
 
     public UIDataController(
             ApplicationProperties applicationProperties,
             SharedSignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader,
-            RuntimePathConfig runtimePathConfig) {
+            RuntimePathConfig runtimePathConfig,
+            ObjectMapper objectMapper) {
         this.applicationProperties = applicationProperties;
         this.signatureService = signatureService;
         this.userService = userService;
         this.resourceLoader = resourceLoader;
         this.runtimePathConfig = runtimePathConfig;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/footer-info")
@@ -92,10 +94,8 @@ public class UIDataController {
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
         try (InputStream is = resource.getInputStream()) {
-            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> licenseData =
-                    mapper.readValue(json, new TypeReference<>() {});
+                    objectMapper.readValue(is, new TypeReference<>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
@@ -114,7 +114,7 @@ public class UIDataController {
 
         if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
             try (Stream<Path> paths =
-                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
+                    Files.walk(Path.of(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))
@@ -125,17 +125,14 @@ public class UIDataController {
                     pipelineConfigs.add(content);
                 }
 
-                for (String config : pipelineConfigs) {
+                for (int i = 0; i < jsonFiles.size(); i++) {
+                    String config = pipelineConfigs.get(i);
                     Map<String, Object> jsonContent =
-                            new ObjectMapper()
-                                    .readValue(config, new TypeReference<Map<String, Object>>() {});
+                            objectMapper.readValue(
+                                    config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
-                        String filename =
-                                jsonFiles
-                                        .get(pipelineConfigs.indexOf(config))
-                                        .getFileName()
-                                        .toString();
+                    if (name == null || name.isEmpty()) {
+                        String filename = jsonFiles.get(i).getFileName().toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
@@ -301,20 +298,14 @@ public class UIDataController {
         }
 
         private static String getFormatFromExtension(String extension) {
-            switch (extension) {
-                case "ttf":
-                    return "truetype";
-                case "woff":
-                    return "woff";
-                case "woff2":
-                    return "woff2";
-                case "eot":
-                    return "embedded-opentype";
-                case "svg":
-                    return "svg";
-                default:
-                    return "";
-            }
+            return switch (extension) {
+                case "ttf" -> "truetype";
+                case "woff" -> "woff";
+                case "woff2" -> "woff2";
+                case "eot" -> "embedded-opentype";
+                case "svg" -> "svg";
+                default -> "";
+            };
         }
     }
 }

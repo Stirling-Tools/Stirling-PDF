@@ -26,6 +26,16 @@ public interface JwtServiceInterface {
     String generateToken(String username, Map<String, Object> claims);
 
     /**
+     * Generate a JWT token for a specific username with custom expiry
+     *
+     * @param username the username for which to generate the token
+     * @param claims additional claims to include in the token
+     * @param expiryMinutes custom token lifetime in minutes
+     * @return JWT token as a string
+     */
+    String generateToken(String username, Map<String, Object> claims, int expiryMinutes);
+
+    /**
      * Validate a JWT token
      *
      * @param token the JWT token to validate
@@ -42,12 +52,30 @@ public interface JwtServiceInterface {
     String extractUsername(String token);
 
     /**
+     * Extract username from JWT token while allowing expired tokens. Signature and token structure
+     * must still be valid.
+     *
+     * @param token the JWT token
+     * @return username extracted from token
+     */
+    String extractUsernameAllowExpired(String token);
+
+    /**
      * Extract all claims from JWT token
      *
      * @param token the JWT token
      * @return map of claims
      */
     Map<String, Object> extractClaims(String token);
+
+    /**
+     * Extract all claims from JWT token while allowing expired tokens. Signature and token
+     * structure must still be valid.
+     *
+     * @param token the JWT token
+     * @return map of claims
+     */
+    Map<String, Object> extractClaimsAllowExpired(String token);
 
     /**
      * Check if token is expired
@@ -64,6 +92,19 @@ public interface JwtServiceInterface {
      * @return JWT token if found, null otherwise
      */
     String extractToken(HttpServletRequest request);
+
+    /**
+     * Read the username off the request's JWT, allowing an expired token. Returns null when no
+     * token is present, the token can't be parsed, or the resulting username is blank.
+     *
+     * <p>Used by flows that need to identify the user without depending on {@code
+     * SecurityContextHolder} - for example logout, where the security filter chain may have left
+     * the anonymous principal in place by the time the handler runs.
+     *
+     * @param request HTTP servlet request
+     * @return username from the token, or null when one can't be safely derived
+     */
+    String extractUsernameFromRequestAllowExpired(HttpServletRequest request);
 
     /**
      * Check if JWT authentication is enabled

@@ -3,7 +3,6 @@ package stirling.software.SPDF.service.pdfjson.type3.tool;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,13 +25,14 @@ import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontSignatureCalculator;
 import stirling.software.SPDF.service.pdfjson.type3.Type3GlyphExtractor;
 import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Small CLI helper that scans a PDF for Type3 fonts, computes their signatures, and optionally
@@ -48,7 +48,7 @@ import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
 public final class Type3SignatureTool {
 
     private static final ObjectMapper OBJECT_MAPPER =
-            new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+            JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT).build();
 
     private Type3SignatureTool() {}
 
@@ -284,9 +284,9 @@ public final class Type3SignatureTool {
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
                 if ("--pdf".equals(arg) && i + 1 < args.length) {
-                    pdf = Paths.get(args[++i]);
+                    pdf = Path.of(args[++i]);
                 } else if ("--output".equals(arg) && i + 1 < args.length) {
-                    output = Paths.get(args[++i]);
+                    output = Path.of(args[++i]);
                 } else if ("--pretty".equals(arg)) {
                     pretty = true;
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {

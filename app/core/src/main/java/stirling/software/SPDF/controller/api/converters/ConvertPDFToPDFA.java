@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -71,38 +72,57 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @Slf4j
-@Tag(name = "Convert", description = "Convert APIs")
-@RequiredArgsConstructor
 public class ConvertPDFToPDFA {
 
     private static final Pattern NON_PRINTABLE_ASCII = Pattern.compile("[^\\x20-\\x7E]");
     private final RuntimePathConfig runtimePathConfig;
+    private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
+    // Level A needs the proprietary tagger; core builds convert at level B instead.
+    private final PdfaLevelAServiceInterface pdfaLevelAService;
+    private final TempFileManager tempFileManager;
+
+    public ConvertPDFToPDFA(
+            RuntimePathConfig runtimePathConfig,
+            stirling.software.SPDF.service.VeraPDFService veraPDFService,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
+            TempFileManager tempFileManager) {
+        this.runtimePathConfig = runtimePathConfig;
+        this.veraPDFService = veraPDFService;
+        this.pdfaLevelAService = pdfaLevelAService;
+        this.tempFileManager = tempFileManager;
+    }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int PDFA_COMPATIBILITY_POLICY = 1;
@@ -483,15 +503,22 @@ public class ConvertPDFToPDFA {
         command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
         command.add("-sDEVICE=pdfwrite");
         command.add("-sColorConversionStrategy=RGB");
-        command.add("-dProcessColorModel=/DeviceRGB");
         command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
         command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
         command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=false"); // Embed complete fonts to avoid incomplete glyphs
+        command.add("-dSubsetFonts=true");
         command.add("-dCompressFonts=true");
         command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-        command.add("-dPDFSETTINGS=/prepress");
+
+        // Explicitly tune downsampling/compression for high-quality print
+        command.add("-dColorImageDownsampleType=/Bicubic");
+        command.add("-dColorImageResolution=300");
+        command.add("-dGrayImageDownsampleType=/Bicubic");
+        command.add("-dGrayImageResolution=300");
+        command.add("-dMonoImageDownsampleType=/Bicubic");
+        command.add("-dMonoImageResolution=1200");
+
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-dNOOUTERSAVE");
@@ -562,12 +589,18 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/pdfa")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/pdfa",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
-                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
+                            + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
+                            + " long-term archiving, while PDF/X is optimized for print production.")
+    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -584,7 +617,11 @@ public class ConvertPDFToPDFA {
         if (isPdfX) {
             return handlePdfXConversion(inputFile, outputFormat);
         } else {
-            return handlePdfAConversion(inputFile, outputFormat);
+            return handlePdfAConversion(
+                    inputFile,
+                    outputFormat,
+                    request.getStrict() != null && request.getStrict(),
+                    request.getPdfUa() != null && request.getPdfUa());
         }
     }
 
@@ -602,7 +639,7 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<byte[]> handlePdfXConversion(
+    private ResponseEntity<Resource> handlePdfXConversion(
             MultipartFile inputFile, String outputFormat) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
@@ -633,8 +670,14 @@ public class ConvertPDFToPDFA {
 
             log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
 
-            return WebResponseUtils.bytesToWebResponse(
-                    converted, outputFilename, MediaType.APPLICATION_PDF);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                Files.write(tempOut.getPath(), converted);
+            } catch (Exception ex) {
+                tempOut.close();
+                throw ex;
+            }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
 
         } catch (IOException | InterruptedException e) {
             log.error("PDF/X conversion failed", e);
@@ -1789,8 +1832,64 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    private ResponseEntity<byte[]> handlePdfAConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+    /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
+    private PdfaLevelAServiceInterface.Result applyLevelA(
+            byte[] converted,
+            Path original,
+            PdfaProfile profile,
+            String baseFileName,
+            boolean declarePdfUa) {
+        if (!profile.requiresTagging()) {
+            return new PdfaLevelAServiceInterface.Result(converted, true, List.of());
+        }
+        if (pdfaLevelAService == null) {
+            return new PdfaLevelAServiceInterface.Result(
+                    converted,
+                    false,
+                    List.of(
+                            "Level A tagging is not available in this build, so the file was left"
+                                    + " at conformance level B."));
+        }
+        // Prefer the document's own title/language; hardcoding "en" mislabelled German reports.
+        // Read the original, not the converted bytes: Ghostscript discards /Lang, so probing its
+        // output always yields null and every document would be relabelled with the default.
+        String language = null;
+        String title = null;
+        try (PDDocument probe = Loader.loadPDF(original.toFile())) {
+            language = probe.getDocumentCatalog().getLanguage();
+            title = probe.getDocumentInformation().getTitle();
+        } catch (IOException e) {
+            log.debug("Could not read original title/language: {}", e.getMessage());
+        }
+        if (language == null || language.isBlank()) {
+            try (PDDocument probe = Loader.loadPDF(converted)) {
+                language = probe.getDocumentCatalog().getLanguage();
+                if (title == null || title.isBlank()) {
+                    title = probe.getDocumentInformation().getTitle();
+                }
+            } catch (IOException e) {
+                log.debug("Could not read converted title/language: {}", e.getMessage());
+            }
+        }
+        PdfaLevelAServiceInterface.Result result =
+                pdfaLevelAService.upgradeToLevelA(
+                        converted,
+                        profile.getPart(),
+                        language,
+                        title != null && !title.isBlank() ? title : baseFileName,
+                        declarePdfUa);
+        result.warnings().forEach(warning -> log.info("PDF/A level A: {}", warning));
+        if (!result.levelA()) {
+            log.warn(
+                    "{} requested but the document could not be tagged; returning level B",
+                    profile.getDisplayName());
+        }
+        return result;
+    }
+
+    private ResponseEntity<Resource> handlePdfAConversion(
+            MultipartFile inputFile, String outputFormat, boolean strict, boolean declarePdfUa)
+            throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
         // Get the original filename without extension
@@ -1815,12 +1914,25 @@ public class ConvertPDFToPDFA {
                 log.info("Using Ghostscript for PDF/A conversion to {}", profile.getDisplayName());
                 try {
                     converted = convertWithGhostscript(inputPath, workingDir, profile);
-                    String outputFilename = baseFileName + profile.outputSuffix();
+                    var levelA =
+                            applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
+                    converted = levelA.pdfBytes();
+                    String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
 
-                    return WebResponseUtils.bytesToWebResponse(
-                            converted, outputFilename, MediaType.APPLICATION_PDF);
+                    if (strict) {
+                        verifyStrictCompliance(converted, profile, levelA.levelA());
+                    }
+
+                    TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+                    try {
+                        Files.write(tempOut.getPath(), converted);
+                    } catch (Exception ex) {
+                        tempOut.close();
+                        throw ex;
+                    }
+                    return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
                 } catch (IOException | InterruptedException e) {
                     log.warn(
                             "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
@@ -1831,16 +1943,99 @@ public class ConvertPDFToPDFA {
             }
 
             converted = convertWithPdfBoxMethod(inputPath, profile);
-            String outputFilename = baseFileName + profile.outputSuffix();
+            var levelA = applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
+            converted = levelA.pdfBytes();
+            String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 
             // Validate with PDFBox preflight and warn if issues found
             validateAndWarnPdfA(converted, profile, "PDFBox/LibreOffice");
 
-            return WebResponseUtils.bytesToWebResponse(
-                    converted, outputFilename, MediaType.APPLICATION_PDF);
+            if (strict) {
+                verifyStrictCompliance(converted, profile, levelA.levelA());
+            }
 
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                Files.write(tempOut.getPath(), converted);
+            } catch (Exception ex) {
+                tempOut.close();
+                throw ex;
+            }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
         } finally {
             deleteQuietly(workingDir);
+        }
+    }
+
+    /** True for a PDF/UA or WCAG result, which says nothing about archival conformance. */
+    private static boolean isAccessibilityProfile(
+            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+        String profile = result.getValidationProfile();
+        if (profile == null) {
+            return false;
+        }
+        String normalised = profile.toLowerCase(Locale.ROOT);
+        return normalised.contains("ua") || normalised.contains("wcag");
+    }
+
+    /**
+     * True when a result speaks for the requested profile. Only archival results count, and a level
+     * B pass must never satisfy a level A request.
+     */
+    private static boolean answersRequest(
+            PdfaProfile profile,
+            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+        if (isAccessibilityProfile(result)) {
+            return false;
+        }
+        String standard = result.getStandard();
+        if (standard == null || standard.length() < 2) {
+            return false;
+        }
+        if (standard.charAt(0) != Character.forDigit(profile.getPart(), 10)) {
+            return false;
+        }
+        return !profile.requiresTagging() || Character.toLowerCase(standard.charAt(1)) == 'a';
+    }
+
+    private void verifyStrictCompliance(byte[] pdfBytes, PdfaProfile profile, boolean levelAReached)
+            throws IOException {
+        // Tagging is the only route to level A, so an untagged file cannot answer a strict request.
+        if (!levelAReached) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Strict PDF/A mode enabled: the document could not be tagged, so "
+                            + profile.getDisplayName()
+                            + " was not reached. It is valid at level B.");
+        }
+        try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
+            List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
+                    veraPDFService.validatePDF(is);
+            boolean isCompliant =
+                    results.stream()
+                            .filter(result -> answersRequest(profile, result))
+                            .anyMatch(
+                                    stirling.software.SPDF.model.api.security.PDFVerificationResult
+                                            ::isCompliant);
+            if (!isCompliant) {
+                String details =
+                        results.stream()
+                                .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
+                                .collect(Collectors.joining("; "));
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Strict PDF/A mode enabled: the output is not perfectly compliant with "
+                                + profile.getDisplayName()
+                                + ". Details: "
+                                + details);
+            }
+        } catch (Exception e) {
+            if (e instanceof ResponseStatusException) {
+                throw (ResponseStatusException) e;
+            }
+            log.error("Error during strict PDF/A verification", e);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Error during strict PDF/A verification");
         }
     }
 
@@ -2396,11 +2591,16 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfaProfile {
-        PDF_A_1B(1, "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
-        PDF_A_2B(2, "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
-        PDF_A_3B(3, "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b");
+        PDF_A_1B(1, "B", "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
+        PDF_A_2B(2, "B", "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
+        PDF_A_3B(3, "B", "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b"),
+        // Level A = level B plus tagging, declared language and Unicode text; tagged post-convert.
+        PDF_A_1A(1, "A", "PDF/A-1a", "_PDFA-1a.pdf", "1.4", Format.PDF_A1B, "pdfa-1a"),
+        PDF_A_2A(2, "A", "PDF/A-2a", "_PDFA-2a.pdf", "1.7", null, "pdfa-2a"),
+        PDF_A_3A(3, "A", "PDF/A-3a", "_PDFA-3a.pdf", "1.7", null, "pdfa-3a");
 
         private final int part;
+        private final String conformanceLevel;
         private final String displayName;
         private final String suffix;
         private final String compatibilityLevel;
@@ -2409,12 +2609,14 @@ public class ConvertPDFToPDFA {
 
         PdfaProfile(
                 int part,
+                String conformanceLevel,
                 String displayName,
                 String suffix,
                 String compatibilityLevel,
                 Format preflightFormat,
                 String... requestTokens) {
             this.part = part;
+            this.conformanceLevel = conformanceLevel;
             this.displayName = displayName;
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
@@ -2423,6 +2625,10 @@ public class ConvertPDFToPDFA {
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))
                             .toList();
+        }
+
+        boolean requiresTagging() {
+            return "A".equals(conformanceLevel);
         }
 
         static PdfaProfile fromRequest(String requestToken) {
@@ -2438,8 +2644,11 @@ public class ConvertPDFToPDFA {
             return match.orElse(PDF_A_2B);
         }
 
-        String outputSuffix() {
-            return suffix;
+        /**
+         * Names the file at the level actually reached; a level A name over level B content lies.
+         */
+        String outputSuffix(boolean levelAReached) {
+            return levelAReached ? suffix : "_PDFA-" + part + "b.pdf";
         }
 
         Optional<Format> preflightFormat() {
@@ -2449,9 +2658,7 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X_1("PDF/X-1", "_PDFX-1.pdf", "1.3", "2001", "pdfx-1", "pdfx"),
-        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", "1.3", "2003", "pdfx-3"),
-        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", "1.4", "2008", "pdfx-4");
+        PDF_X("PDF/X", "_PDFX.pdf", "1.6", "2008", "pdfx");
 
         private final String displayName;
         private final String suffix;
@@ -2477,7 +2684,7 @@ public class ConvertPDFToPDFA {
 
         static PdfXProfile fromRequest(String requestToken) {
             if (requestToken == null) {
-                return PDF_X_4;
+                return PDF_X;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
             Optional<PdfXProfile> match =
@@ -2485,7 +2692,7 @@ public class ConvertPDFToPDFA {
                             .filter(profile -> profile.requestTokens.contains(normalized))
                             .findFirst();
 
-            return match.orElse(PDF_X_4);
+            return match.orElse(PDF_X);
         }
 
         String outputSuffix() {

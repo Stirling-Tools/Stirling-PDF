@@ -113,10 +113,10 @@ class UserTest {
 
         // Use an existing value from your AuthenticationType enum (e.g. OAUTH2/SAML2/DATABASE)
         // If the name differs, simply adjust below.
-        AuthenticationType at = AuthenticationType.SSO;
+        AuthenticationType at = AuthenticationType.OAUTH2;
         u.setAuthenticationType(at);
 
-        assertEquals("sso", u.getAuthenticationType());
+        assertEquals("oauth2", u.getAuthenticationType());
     }
 
     @Test

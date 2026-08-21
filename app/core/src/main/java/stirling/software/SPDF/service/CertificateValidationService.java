@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -114,7 +115,8 @@ public class CertificateValidationService {
             log.info("Enabled AIA certificate fetching and revocation checking");
         }
 
-        // Trust only what we explicitly opt into:
+        // Trust only what we explicitly opt into. Desktop follows the same flags as the server -
+        // our own signing cert is trusted via serverAsAnchor, not by force-loading every system CA.
         if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
         if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
         if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();
@@ -426,7 +428,8 @@ public class CertificateValidationService {
             try (InputStream certStream =
                     getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
-                    log.warn("Bundled Mozilla CA certificate file not found in resources");
+                    log.debug(
+                            "Bundled Mozilla CA certificate file not found in resources — using Java system trust store only");
                     return;
                 }
 
@@ -510,7 +513,7 @@ public class CertificateValidationService {
     private byte[] downloadTrustList(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10_000);
@@ -610,9 +613,11 @@ public class CertificateValidationService {
      */
     private int parseSecuritySettingsXML(InputStream xmlStream) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
 
@@ -700,7 +705,7 @@ public class CertificateValidationService {
     private byte[] downloadXml(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10_000);
@@ -836,9 +841,11 @@ public class CertificateValidationService {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         // Secure processing hardening
+        factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
         return factory;
