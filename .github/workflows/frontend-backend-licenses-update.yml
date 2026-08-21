@@ -157,7 +157,7 @@ jobs:
         if: github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check.yml"
+          echo "Comments are handled by pr-validation-comments.yml"
 
       - name: Summarize results (fork PRs)
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true) || github.actor == 'dependabot[bot]'
@@ -183,7 +183,7 @@ jobs:
         if: github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check.yml"
+          echo "Comments are handled by pr-validation-comments.yml"
 
       - name: Fail workflow if license warnings exist (PR only)
         if: github.event_name == 'pull_request' && env.LICENSE_WARNINGS_EXIST == 'true'
@@ -341,13 +341,13 @@ jobs:
         if: github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check.yml"
+          echo "Comments are handled by pr-validation-comments.yml"
 
       - name: Comment on PR - Backend License Check Results
         if: github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check.yml"
+          echo "Comments are handled by pr-validation-comments.yml"
 
       - name: Fail workflow if license warnings exist (PR only)
         if: github.event_name == 'pull_request' && env.LICENSE_WARNINGS_EXIST == 'true'

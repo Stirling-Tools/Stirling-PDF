@@ -2,7 +2,7 @@ name: Check TOML Translation Files on PR
 
 # This reusable workflow validates TOML translation files.
 # It is called by the pull_request workflow and deliberately has no write
-# permissions. PR comments are handled by report-pr-check.yml via workflow_run.
+# permissions. PR comments are handled by pr-validation-comments.yml via workflow_run.
 
 on:
   workflow_call:
