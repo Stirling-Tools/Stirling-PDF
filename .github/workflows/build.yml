@@ -60,6 +60,16 @@ jobs:
         with:
           filters: .github/config/.files.yaml
 
+  contributing-agreement:
+    name: Check contributor agreement
+    needs: [files-changed]
+    permissions:
+      # The called workflow records merged contributors in CONTRIBUTORS.md.
+      contents: write
+      issues: write
+    uses: ./.github/workflows/contributing-agreement.yml
+    secrets: inherit
+
   gradle-cache-prime:
     environment: ci-unsigned
     name: Prime shared Gradle cache
@@ -335,6 +345,7 @@ jobs:
       - generated-models
       - pre-commit
       - dependency-review
+      - contributing-agreement
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -362,6 +373,7 @@ jobs:
             generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}
             dependency-review=${{ needs.dependency-review.result }}
+            contributing-agreement=${{ needs.contributing-agreement.result }}
         run: |
           ok=true
           while IFS='=' read -r name result; do

@@ -2,21 +2,22 @@ name: Contributing agreement
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
-    paths-ignore:
-      - "CONTRIBUTORS.md"
+    types: [closed]
+  workflow_call:
 
 concurrency:
-  group: contributing-agreement-${{ github.event.action == 'closed' && 'merged' || github.event.pull_request.number || github.ref }}
+  group: contributing-agreement-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
   check-agreement:
     permissions:
+      # Required to append the contributor agreement to CONTRIBUTORS.md after a merge.
+      # Read access is sufficient for the agreement validation itself.
       contents: write
       issues: write
     name: Check CONTRIBUTING.md agreement
-    if: github.event.action != 'closed' || github.event.pull_request.merged == true
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Validate agreement
@@ -28,10 +29,23 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
+            const pullRequest = context.payload.pull_request;
+            const openingDescription = pullRequest.body || '';
+
+            // Older PRs do not contain the marker because it was added to the
+            // template with this workflow. They are intentionally grandfathered
+            // in and must not be asked to provide a retroactive agreement.
+            if (!openingDescription.includes(process.env.AGREEMENT_MARKER)) {
+              core.info(
+                `Skipping contributor agreement for PR #${pullRequest.number}: ` +
+                'the agreement marker is not present in the opening description.',
+              );
+              return;
+            }
+
             const crypto = require('crypto');
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const pullRequest = context.payload.pull_request;
             const branch = context.payload.repository.default_branch;
             const login = pullRequest.user.login;
 
@@ -88,7 +102,7 @@ jobs:
               };
             }
 
-            const contributingRef = context.payload.action === 'closed'
+            const contributingRef = context.eventName === 'pull_request_target'
               ? pullRequest.merge_commit_sha
               : branch;
             const contributing = await getFile('CONTRIBUTING.md', contributingRef);
@@ -106,7 +120,6 @@ jobs:
             );
             // Only the PR's opening description is authoritative for the agreement.
             // Regular issue/PR comments, including the bot's reminder below, are ignored.
-            const openingDescription = pullRequest.body || '';
             const hasAgreement = agreementPattern.test(openingDescription);
 
             if (!alreadyAgreed && !hasAgreement) {
@@ -138,7 +151,7 @@ jobs:
             });
             core.info(`Agreement accepted for @${login} (CONTRIBUTING.md SHA-256: ${contributingHash}).`);
 
-            if (context.payload.action !== 'closed' || pullRequest.merged !== true) {
+            if (context.eventName !== 'pull_request_target' || pullRequest.merged !== true) {
               return;
             }
 
