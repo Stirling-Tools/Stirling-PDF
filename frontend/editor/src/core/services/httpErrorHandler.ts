@@ -147,10 +147,9 @@ export async function handleHttpError(error: any): Promise<boolean> {
 
   if (handleSaaSError(error)) return true;
 
-  // Compute title/body (friendly) from the error object
-  const { title, body } = extractAxiosErrorMessage(error);
-
-  // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
+  // Decode response data ONCE. Tool POSTs use responseType "blob", so
+  // error.response.data is an unread Blob here. The decoded body drives the
+  // toast message, file-ID extraction, and special-toast matching alike.
   const raw = error?.response?.data as any;
   let normalized: unknown = raw;
   try {
@@ -158,6 +157,9 @@ export async function handleHttpError(error: any): Promise<boolean> {
   } catch (e) {
     console.debug("normalizeAxiosErrorData", e);
   }
+
+  // Compute title/body (friendly) from the decoded body, not the raw Blob.
+  const { title, body } = extractAxiosErrorMessage(error, normalized);
 
   // 1) If server sends structured file IDs for failures, also mark them errored in UI
   try {
