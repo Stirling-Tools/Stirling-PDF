@@ -1,3 +1,4 @@
+import i18n from "@app/i18n";
 import { alert } from "@app/components/toast";
 
 interface ErrorToastMapping {
@@ -42,21 +43,11 @@ export function showSpecialErrorToast(
 
   for (const mapping of MAPPINGS) {
     if (mapping.regex.test(message)) {
-      // Best-effort translation without hard dependency on i18n config
       let body = mapping.defaultMessage;
       try {
-        const i18next = (
-          globalThis as {
-            i18next?: {
-              t?: (key: string, opts?: { defaultValue?: string }) => string;
-            };
-          }
-        ).i18next;
-        if (i18next && typeof i18next.t === "function") {
-          body = i18next.t(mapping.i18nKey, {
-            defaultValue: mapping.defaultMessage,
-          });
-        }
+        body = i18n.t(mapping.i18nKey, {
+          defaultValue: mapping.defaultMessage,
+        });
       } catch {
         /* ignore translation errors */
       }
