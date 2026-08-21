@@ -7,12 +7,20 @@
   overflow: hidden;
 }
 
+/* Bounds element — inset by FAB_GAP_PX, used as react-rnd drag+resize limit ── */
+
+.chat-fab-bounds {
+  position: absolute;
+  inset: 16px;
+  pointer-events: none;
+}
+
 /* FAB trigger button ─────────────────────────────────────────────────────── */
 
 .chat-fab-trigger {
   position: absolute;
   right: 16px;
-  bottom: calc(var(--footer-height, 2rem) + 16px);
+  bottom: 16px;
   pointer-events: auto;
   opacity: 1;
   /* Include box-shadow so the ChatFABButton hover shadow still animates */

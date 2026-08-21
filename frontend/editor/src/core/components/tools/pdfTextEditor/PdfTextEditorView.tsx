@@ -7,11 +7,9 @@ import React, {
   useState,
 } from "react";
 import {
-  ActionIcon,
   Alert,
   Badge,
   Box,
-  Button,
   Card,
   Divider,
   Group,
@@ -24,6 +22,8 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
@@ -51,6 +51,14 @@ import {
 
 const MAX_RENDER_WIDTH = 820;
 const MIN_BOX_SIZE = 18;
+
+// Firefox-only fallback for document.caretRangeFromPoint (not in lib.dom.d.ts).
+const docWithCaret = document as Document & {
+  caretPositionFromPoint?: (
+    x: number,
+    y: number,
+  ) => { offsetNode: Node; offset: number } | null;
+};
 
 const normalizeFontFormat = (format?: string | null): string => {
   if (!format) {
@@ -352,7 +360,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
     new Map(),
   );
   const draggingImageRef = useRef<string | null>(null);
-  const rndRefs = useRef<Map<string, any>>(new Map());
+  const rndRefs = useRef<Map<string, Rnd>>(new Map());
   const pendingDragUpdateRef = useRef<number | null>(null);
   const [fontFamilies, setFontFamilies] = useState<Map<string, string>>(
     new Map(),
@@ -1378,7 +1386,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       const cssTop = (pageHeight - bounds.top) * scale;
 
       // Get current position from Rnd component
-      const currentState = rndRef.state || {};
+      const currentState = (rndRef.state as { x?: number; y?: number }) || {};
       const currentX = currentState.x ?? 0;
       const currentY = currentState.y ?? 0;
 
@@ -1553,10 +1561,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       {resizeHandle}
       {activeGroupId === groupId && (
         <ActionIcon
-          size="xs"
-          variant="filled"
-          color="red"
-          radius="xl"
+          aria-label={t("pdfTextEditor.actions.clearText", "Clear text")}
+          size="sm"
+          variant="tertiary"
+          accent="danger"
           style={{
             position: "absolute",
             top: -8,
@@ -1683,7 +1691,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
           >
             <Stack align="center" gap="md" style={{ pointerEvents: "none" }}>
               <UploadFileIcon
-                sx={{ fontSize: 48, color: "var(--mantine-color-blue-5)" }}
+                sx={{ fontSize: 48, color: "var(--c-accent-text)" }}
               />
               <Text size="lg" fw={600}>
                 {t("pdfTextEditor.empty.title", "No document loaded")}
@@ -2008,7 +2016,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm" mt="xs">
                   <Button
-                    variant="default"
+                    variant="secondary"
                     onClick={handleDismissWelcomeBanner}
                   >
                     {t("pdfTextEditor.welcomeBanner.gotIt", "Got it")}
@@ -2126,8 +2134,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.merge",
                                 "Merge selection",
@@ -2147,8 +2154,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.ungroup",
                                 "Ungroup selection",
@@ -2168,8 +2174,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           <Menu.Target>
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.widthMenu",
                                 "Width options",
@@ -2854,11 +2859,13 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                         }
                                       }
                                     } else if (
-                                      (document as any).caretPositionFromPoint
+                                      docWithCaret.caretPositionFromPoint
                                     ) {
-                                      const pos = (
-                                        document as any
-                                      ).caretPositionFromPoint(clickX, clickY);
+                                      const pos =
+                                        docWithCaret.caretPositionFromPoint(
+                                          clickX,
+                                          clickY,
+                                        );
                                       if (pos) {
                                         const range = document.createRange();
                                         range.setStart(

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -57,5 +59,31 @@ class McpAuthenticationEntryPointTest {
         ArgumentCaptor<String> header = ArgumentCaptor.forClass(String.class);
         verify(resp).setHeader(eq("WWW-Authenticate"), header.capture());
         assertTrue(header.getValue().contains("http://localhost:8080" + META), header.getValue());
+    }
+
+    @Test
+    void surfacesRejectionReasonWhenTokenPresented() throws Exception {
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getScheme()).thenReturn("https");
+        when(req.getServerName()).thenReturn("mcp.example.com");
+        when(req.getServerPort()).thenReturn(443);
+        when(req.getHeader("Authorization")).thenReturn("Bearer bad.token");
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+
+        OAuth2Error error =
+                new OAuth2Error(
+                        "invalid_token",
+                        "Token audience does not include this server's resource id"
+                                + " (https://mcp.example.com/mcp).",
+                        null);
+
+        entryPoint.commence(req, resp, new OAuth2AuthenticationException(error));
+
+        ArgumentCaptor<String> header = ArgumentCaptor.forClass(String.class);
+        verify(resp).setHeader(eq("WWW-Authenticate"), header.capture());
+        String www = header.getValue();
+        assertTrue(
+                www.contains("error_description=\"invalid_token - Token audience does not include"),
+                "must surface the rejection reason, got: " + www);
     }
 }

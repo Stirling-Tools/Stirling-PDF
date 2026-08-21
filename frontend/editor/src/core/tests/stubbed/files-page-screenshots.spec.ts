@@ -141,7 +141,14 @@ async function settle(page: Page, ms = 350): Promise<void> {
 }
 
 test.describe("Files page screenshots", () => {
-  test.use({ autoGoto: false, viewport: { width: 1600, height: 900 } });
+  // Seed a logged-in session: the cloud-folder surfaces (move-dialog
+  // create-folder, the seeded "Reports" folder) only render once a confirmed,
+  // non-anonymous user triggers the folder pull (see FolderContext gating).
+  test.use({
+    autoGoto: false,
+    viewport: { width: 1600, height: 900 },
+    seedJwt: true,
+  });
 
   test("01_empty_state_ctas", async ({ page }) => {
     await stubStorageApis(page);
@@ -438,8 +445,17 @@ test.describe("Files page screenshots", () => {
       localStorage.setItem("i18nextLng", "ar-AR");
       localStorage.setItem("stirling-language", "ar-AR");
       localStorage.setItem("stirling-language-source", "user");
-      document.documentElement.setAttribute("dir", "rtl");
-      document.documentElement.setAttribute("lang", "ar-AR");
+      // On webkit, `document.documentElement` is still null when Playwright
+      // runs init scripts, so calling setAttribute directly throws - and that
+      // uncaught error aborts the *following* init script (the IndexedDB seed
+      // in seedFiles), leaving the grid stuck on skeletons. Guard the access
+      // and defer to DOMContentLoaded when the element isn't there yet.
+      const applyDir = () => {
+        document.documentElement.setAttribute("dir", "rtl");
+        document.documentElement.setAttribute("lang", "ar-AR");
+      };
+      if (document.documentElement) applyDir();
+      else document.addEventListener("DOMContentLoaded", applyDir);
     });
   }
 

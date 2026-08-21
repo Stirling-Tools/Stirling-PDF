@@ -1,4 +1,5 @@
 import { useImperativeHandle, forwardRef, useCallback } from "react";
+import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { PdfAnnotationSubtype, PdfAnnotationIcon } from "@embedpdf/models";
 import type {
@@ -9,6 +10,7 @@ import type {
   AnnotationPatch,
   AnnotationRect,
   AnnotationSelection,
+  ClearDocumentAnnotationsResult,
 } from "@app/components/viewer/viewerTypes";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
@@ -98,6 +100,8 @@ type AnnotationDefaults =
     }
   | null;
 
+const EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS = "deleteAllAnnotations";
+
 type AnnotationApiSurface = {
   setActiveTool: (toolId: AnnotationToolId | null) => void;
   getActiveTool?: () => { id: AnnotationToolId } | null;
@@ -116,6 +120,8 @@ type AnnotationApiSurface = {
   deleteAnnotations?: (
     annotations: Array<{ pageIndex: number; id: string }>,
   ) => void;
+  getAnnotations?: () => unknown[];
+  [EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS]?: () => void | Promise<void>;
   createAnnotation?: (
     pageIndex: number,
     annotation: Record<string, unknown>,
@@ -493,6 +499,30 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
             | undefined;
           api?.deleteAnnotations?.(annotations);
         },
+
+        clearDocumentAnnotations:
+          async (): Promise<ClearDocumentAnnotationsResult> => {
+            const api = annotationApi;
+            const clearAnnotations = api?.[EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS];
+
+            if (!api || !clearAnnotations || !api.getAnnotations) {
+              return { available: false, cleared: false };
+            }
+
+            let annotations: TrackedAnnotation[];
+            try {
+              annotations = api.getAnnotations();
+            } catch {
+              return { available: false, cleared: false };
+            }
+
+            if (annotations.length === 0) {
+              return { available: true, cleared: false };
+            }
+
+            await clearAnnotations.call(api);
+            return { available: true, cleared: true };
+          },
 
         createAnnotation: (
           pageIndex: number,

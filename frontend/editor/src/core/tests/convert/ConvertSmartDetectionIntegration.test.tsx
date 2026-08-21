@@ -66,6 +66,8 @@ const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
+  // FileContext subscribes to this to drop files whose bytes are unreadable.
+  onRecordUnreadable: () => () => {},
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
@@ -79,6 +81,7 @@ vi.mock("../../services/fileStorage", () => ({
       });
     }),
     storeStirlingFile: vi.fn().mockResolvedValue(undefined),
+    persistVersionedOutputs: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -173,9 +176,9 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         },
       );
 
-      // The output file must be persisted via fileStorage.storeStirlingFile
+      // The output file must be persisted via fileStorage.persistVersionedOutputs
       // so downstream tools see it in the registry.
-      expect(fileStorage.storeStirlingFile).toHaveBeenCalled();
+      expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
     });
 
     test("should handle unknown file type with file-to-pdf fallback", async () => {

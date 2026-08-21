@@ -6,10 +6,16 @@ import {
 } from "@core/components/shared/config/configNavSections";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
-import Plan from "@app/components/shared/config/configSections/Plan";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
+import HelpSection from "@app/components/shared/config/configSections/HelpSection";
+import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import {
+  createCloudBillingSection,
+  createCloudTeamNavItem,
+} from "@app/components/shared/config/cloudConfigNavSections";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
@@ -17,6 +23,8 @@ interface CreateSaasConfigNavSectionsOptions {
   isDev?: boolean;
   isAnonymous?: boolean;
   t: TFunction<"translation", undefined>;
+  /** Close the settings modal — the Help tours need it to start the tour. */
+  onRequestClose?: () => void;
 }
 
 function ensurePreferencesSection(
@@ -93,20 +101,9 @@ function appendBillingSection(
     return sections;
   }
 
-  return [
-    ...sections,
-    {
-      title: "Billing",
-      items: [
-        {
-          key: "plan",
-          label: t("config.plan", "Plan"),
-          icon: "credit-card",
-          component: <Plan />,
-        },
-      ],
-    },
-  ];
+  // The Plan/Billing section is the shared cloud surface (wallet-driven PAYG
+  // dashboard + spend cap), so both saas and desktop reference one source.
+  return [...sections, createCloudBillingSection(t)];
 }
 
 // Add an "MCP Server" tab in the Developer section. Always shown in SaaS;
@@ -147,10 +144,76 @@ function appendMcpSection(
   );
 }
 
+function appendHelpSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+  onRequestClose: () => void,
+): ConfigNavSection[] {
+  const hasHelp = sections.some((section) =>
+    section.items.some((item) => item.key === "help"),
+  );
+
+  if (hasHelp) {
+    return sections;
+  }
+
+  return [
+    ...sections,
+    {
+      title: t("settings.help.title", "Help"),
+      items: [
+        {
+          key: "help" as const,
+          label: t("settings.help.label", "Tours"),
+          icon: "help-rounded",
+          component: (
+            <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
+          ),
+        },
+      ],
+    },
+  ];
+}
+
+// Legal links (privacy policy, terms, etc.). Shown to anonymous users too —
+// it's public information.
+function appendLegalSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+): ConfigNavSection[] {
+  const hasLegal = sections.some((section) =>
+    section.items.some((item) => item.key === "legal"),
+  );
+
+  if (hasLegal) {
+    return sections;
+  }
+
+  return [
+    ...sections,
+    {
+      title: t("settings.legal.title", "Legal"),
+      items: [
+        {
+          key: "legal" as const,
+          label: t("settings.legal.label", "Legal"),
+          icon: "gavel-rounded",
+          component: <LegalSection />,
+        },
+      ],
+    },
+  ];
+}
+
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
+  {
+    isDev = false,
+    isAnonymous = false,
+    t,
+    onRequestClose = () => {},
+  }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 
@@ -173,6 +236,11 @@ export function createSaasConfigNavSections(
     ],
   };
 
+  if (!isAnonymous) {
+    // Shared cloud team item — same management UI on saas and desktop.
+    accountSection.items.push(createCloudTeamNavItem(t));
+  }
+
   let sections = [accountSection, ...baseSections];
 
   // Suppress OSS-only sections (update checker, login config banner) not relevant in SaaS
@@ -182,7 +250,9 @@ export function createSaasConfigNavSections(
       item.key === "general"
         ? {
             ...item,
-            component: <GeneralSection hideUpdateSection hideAdminBanner />,
+            component: (
+              <GeneralWithLoginLanding hideUpdateSection hideAdminBanner />
+            ),
           }
         : item,
     ),
@@ -193,8 +263,14 @@ export function createSaasConfigNavSections(
   sections = appendMcpSection(sections, t);
 
   if (!isAnonymous) {
+    // The Plan tab is now the single billing surface — it internally branches
+    // free vs subscribed × leader vs member via useWallet(). The old separate
+    // "Pay-as-you-go" tab and paygEnabled / isLeader options were removed.
     sections = appendBillingSection(sections, t);
   }
+
+  sections = appendHelpSection(sections, t, onRequestClose);
+  sections = appendLegalSection(sections, t);
 
   if (isDev) {
     console.debug("[AppConfigModal] SaaS navigation sections", sections);

@@ -26,27 +26,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Fires policies the moment a file lands in one of their folder sources, instead of polling on a
- * timer. The trigger only reads that location; turning it into files is still the source's job.
+ * Fires policies when a file lands in one of their folder sources, rather than polling on a timer.
  *
- * <p>The watcher is a latency optimisation, not a source of truth, so this pairs an event watch
- * with a low-frequency <b>reconcile</b> sweep ({@code watchReconcileSeconds}). The reconcile both
- * (a) re-syncs which directories are watched as policies are created/edited/deleted and folders
- * appear on disk, and (b) runs every folder-watch policy once, catching files that pre-dated the
- * watch, events lost to inotify-queue overflow, and changes on filesystems that do not deliver
- * events at all (NFS, many container bind mounts). Both paths just call {@link PolicyRunner#run};
- * the {@link InputSource} does the claiming, so a redundant run finds nothing to claim and is
- * harmless.
+ * <p>The watch is a latency optimisation, not a source of truth: a periodic reconcile sweep ({@code
+ * watchReconcileSeconds}) re-syncs watched dirs and re-runs every policy, covering files that
+ * pre-dated the watch, dropped events, and filesystems that emit none (NFS, bind mounts). Redundant
+ * runs are harmless since {@link InputSource} does the claiming.
  *
- * <p>Like {@link ScheduleTrigger}, watch state is per-node and in memory; this assumes a single
- * node and rebuilds its registrations on restart from the {@link PolicyStore}.
+ * <p>Watch state is in memory, so this assumes a single node and rebuilds registrations on restart.
  */
 @Slf4j
 @Service
@@ -58,6 +58,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
     private final PolicyStore policyStore;
     private final PolicyRunner policyRunner;
     private final List<InputSource> inputSources;
+    private final SourceStore sourceStore;
     private final ApplicationProperties applicationProperties;
 
     private final Map<Path, WatchKey> keysByDir = new ConcurrentHashMap<>();
@@ -65,7 +66,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
 
     private volatile boolean running;
 
-    // Package-visible (not private) so tests can drive syncRegistrations() against a real service.
+    // Package-visible so tests can drive syncRegistrations() against a real service.
     volatile WatchService watchService;
 
     private volatile ScheduledExecutorService reconciler;
@@ -76,10 +77,20 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     @Override
-    public void validate(Policy policy) {
-        if (watchDirsOf(policy).isEmpty()) {
+    public boolean requiresSource() {
+        return true;
+    }
+
+    @Override
+    public Set<String> supportedSourceTypes() {
+        return Set.of(FolderAccessGuard.FOLDER_TYPE);
+    }
+
+    @Override
+    public void validate(Policy policy, PipelineInput input) {
+        if (watchDirsOf(input).isEmpty()) {
             throw new IllegalArgumentException(
-                    "folder-watch trigger requires at least one watchable (folder) input source");
+                    "folder-watch trigger requires a watchable (folder) input source");
         }
     }
 
@@ -124,9 +135,16 @@ public class FolderWatchTrigger implements PolicyTrigger {
         dirByKey.clear();
     }
 
+    @Override
+    public void onPoliciesChanged() {
+        // A created/updated/deleted policy may add or drop a watched directory: register/cancel now
+        // instead of waiting up to watchReconcileSeconds for the next reconcile. A no-op until the
+        // trigger is started (watchService null), where the first reconcile picks everything up.
+        syncRegistrations();
+    }
+
     private void watchLoop() {
-        // Capture the service once: stop() may null the field, and a local avoids racing that to an
-        // NPE (close() still wakes take()/poll() on this same instance).
+        // Capture once: stop() may null the field; close() still wakes take()/poll() on this local.
         WatchService watcher = watchService;
         if (watcher == null) {
             return;
@@ -146,9 +164,8 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     /**
-     * Collect the directories touched by {@code first} and any further events that arrive within
-     * the quiet period, so a burst of file-system events becomes a single set of affected
-     * directories. The event kinds are irrelevant: any event on a watched dir just means "go look".
+     * Coalesce a burst of file-system events into one set of affected directories: drain everything
+     * arriving within the quiet period. Event kinds are irrelevant; any event means "go look".
      */
     private Set<Path> drainBurst(WatchService watcher, WatchKey first) {
         long quietPeriodMs = applicationProperties.getPolicies().getWatchQuietPeriodMs();
@@ -170,23 +187,30 @@ public class FolderWatchTrigger implements PolicyTrigger {
         return changed;
     }
 
-    /** Run every folder-watch policy that draws from one of the changed directories. */
+    /** Fire every folder-watch input that draws from one of the changed directories. */
     void runForChangedDirs(Set<Path> changedDirs) {
         if (changedDirs.isEmpty()) {
             return;
         }
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             List<Path> dirs;
             try {
-                dirs = watchDirsOf(policy);
+                dirs = watchDirsOf(binding.input());
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch policy {} is misconfigured: {}", policy.id(), e.getMessage());
+                        "Folder-watch input {}/{} is misconfigured: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
+                        e.getMessage());
                 continue;
             }
             if (dirs.stream().anyMatch(changedDirs::contains)) {
-                log.debug("Folder-watch policy {} ({}) saw activity", policy.id(), policy.name());
-                policyRunner.run(policy);
+                log.debug(
+                        "Folder-watch input {}/{} saw activity",
+                        binding.policy().id(),
+                        binding.input().sourceId());
+                // Light: the periodic reconcile does the full sweep.
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.LIGHT);
             }
         }
     }
@@ -200,24 +224,22 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
     }
 
-    /** The reconcile safety net: run every folder-watch policy regardless of watch events. */
+    /** Reconcile safety net: run every folder-watch input regardless of watch events. */
     void runAll() {
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             try {
-                policyRunner.run(policy);
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.FULL);
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch reconcile run failed for policy {}: {}",
-                        policy.id(),
+                        "Folder-watch reconcile run failed for input {}/{}: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
                         e.getMessage());
             }
         }
     }
 
-    /**
-     * Bring the set of watched directories in line with the current folder-watch policies: register
-     * newly required directories that exist on disk, and cancel ones no longer wanted.
-     */
+    /** Register newly-wanted dirs that exist on disk, cancel ones no longer wanted. */
     synchronized void syncRegistrations() {
         if (watchService == null) {
             return;
@@ -256,39 +278,43 @@ public class FolderWatchTrigger implements PolicyTrigger {
         return Set.copyOf(keysByDir.keySet());
     }
 
-    /** Every existing directory any current folder-watch policy wants watched. */
+    /** Every existing directory any current folder-watch input wants watched. */
     private Set<Path> desiredDirs() {
         Set<Path> dirs = new HashSet<>();
-        for (Policy policy : policyStore.findByTriggerType(TYPE)) {
+        for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             try {
-                for (Path dir : watchDirsOf(policy)) {
+                for (Path dir : watchDirsOf(binding.input())) {
                     if (Files.isDirectory(dir)) {
                         dirs.add(dir);
                     }
                 }
             } catch (RuntimeException e) {
                 log.warn(
-                        "Folder-watch policy {} is misconfigured: {}", policy.id(), e.getMessage());
+                        "Folder-watch input {}/{} is misconfigured: {}",
+                        binding.policy().id(),
+                        binding.input().sourceId(),
+                        e.getMessage());
             }
         }
         return dirs;
     }
 
-    /**
-     * The normalised, absolute directories this policy's sources expose to watch. Normalisation
-     * makes registration keys and event-time matching comparable regardless of how the path was
-     * configured.
-     */
-    private List<Path> watchDirsOf(Policy policy) {
+    // Absolute + normalised so registration keys and event-time matching compare regardless of how
+    // the path was configured. Empty for a non-folder or missing source (that input is never
+    // watched), so a folder-watch trigger paired with an S3 input is simply inert.
+    private List<Path> watchDirsOf(PipelineInput input) {
         List<Path> dirs = new ArrayList<>();
-        for (InputSpec spec : policy.sources()) {
-            InputSource source = sourceFor(spec);
-            if (source == null) {
-                continue;
-            }
-            for (Path dir : source.watchTargets(spec)) {
-                dirs.add(dir.toAbsolutePath().normalize());
-            }
+        Source source = sourceStore.get(input.sourceId()).orElse(null);
+        if (source == null) {
+            return dirs;
+        }
+        InputSpec spec = source.toInputSpec();
+        InputSource inputSource = sourceFor(spec);
+        if (inputSource == null) {
+            return dirs;
+        }
+        for (Path dir : inputSource.watchTargets(spec)) {
+            dirs.add(dir.toAbsolutePath().normalize());
         }
         return dirs;
     }

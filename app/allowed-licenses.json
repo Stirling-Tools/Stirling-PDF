@@ -34,6 +34,14 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Revised BSD"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "ISC"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "MIT"
     },
     {
@@ -47,6 +55,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "MIT-0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT license"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
@@ -82,7 +94,15 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Apache License version 2.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache License, version 2.0"
     },
     {
       "moduleName": ".*",
@@ -110,6 +130,10 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Mozilla Public License Version 2.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": 	"CDDL+GPL License"
     },
     {
@@ -131,6 +155,14 @@
     {
       "moduleName": ".*",
       "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "GNU Lesser Public License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The GNU Lesser General Public License"
     },
     {
       "moduleName": "com.martiansoftware:jsap",
@@ -174,6 +206,14 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "EPL-2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "LGPL-2.1-only"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "Ubuntu Font Licence 1.0"
     },
     {
@@ -187,6 +227,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "The W3C License"
+    },
+    {
+      "moduleName": "com.google.re2j:re2j",
+      "moduleLicense": "Go License"
     },
     {
       "moduleName": ".*",

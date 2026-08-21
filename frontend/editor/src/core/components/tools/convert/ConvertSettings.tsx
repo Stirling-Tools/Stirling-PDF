@@ -1,20 +1,15 @@
 import { useMemo } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  Divider,
-  UnstyledButton,
-  useMantineTheme,
-} from "@mantine/core";
+import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import { isImageFormat, isWebFormat } from "@app/utils/convertUtils";
+import {
+  isImageFormat,
+  isWebFormat,
+  getAvailableToExtensions as defaultGetAvailableToExtensions,
+} from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
-import { useFileSelection } from "@app/contexts/FileContext";
-import { useFileState } from "@app/contexts/FileContext";
-import { detectFileExtension } from "@app/utils/fileUtils";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
@@ -25,6 +20,7 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
 import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
@@ -47,25 +43,29 @@ interface ConvertSettingsProps {
     key: K,
     value: ConvertParameters[K],
   ) => void;
-  getAvailableToExtensions: (
+  getAvailableToExtensions?: (
     fromExtension: string,
   ) => Array<{ value: string; label: string; group: string }>;
-  selectedFiles: StirlingFile[];
+  selectedFiles?: StirlingFile[];
+  /**
+   * Called with the newly chosen source format. The editor uses this to select the loaded files
+   * that match; surfaces without loaded files (automation, pipeline builder) simply omit it. Keeping
+   * the file-selection side effect out of here is what lets this component render outside FileContext.
+   */
+  onSourceFormatSelected?: (fromExtension: string) => void;
   disabled?: boolean;
 }
 
 const ConvertSettings = ({
   parameters,
   onParameterChange,
-  getAvailableToExtensions,
-  selectedFiles,
+  getAvailableToExtensions = defaultGetAvailableToExtensions,
+  selectedFiles = [],
+  onSourceFormatSelected,
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { setSelectedFiles } = useFileSelection();
-  const { state, selectors } = useFileState();
-  const activeFiles = state.files.ids;
   const { preferences } = usePreferences();
 
   const allEndpoints = useMemo(() => {
@@ -236,39 +236,12 @@ const ConvertSettings = ({
     onParameterChange("toExtension", autoTarget);
   };
 
-  const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles
-      .map((fileId) => selectors.getFile(fileId))
-      .filter(Boolean) as StirlingFile[];
-    return files.filter((file) => {
-      const fileExtension = detectFileExtension(file.name);
-
-      if (extension === "any") {
-        return true;
-      } else if (extension === "image") {
-        return isImageFormat(fileExtension);
-      } else {
-        return fileExtension === extension;
-      }
-    });
-  };
-
-  const updateFileSelection = (files: StirlingFile[]) => {
-    const fileIds = files.map((file) => file.fileId);
-    setSelectedFiles(fileIds);
-  };
-
   const handleFromExtensionChange = (value: string) => {
     onParameterChange("fromExtension", value);
     setAutoTargetExtension(value);
     resetParametersToDefaults();
-
-    if (activeFiles.length > 0) {
-      const matchingFiles = filterFilesByExtension(value);
-      updateFileSelection(matchingFiles);
-    } else {
-      updateFileSelection([]);
-    }
+    // Editor-only: let the host select the loaded files matching this source format.
+    onSourceFormatSelected?.(value);
   };
 
   const handleToExtensionChange = (value: string) => {
@@ -332,7 +305,11 @@ const ConvertSettings = ({
           {t("convert.convertTo", "Convert to")}:
         </Text>
         {!parameters.fromExtension ? (
-          <UnstyledButton
+          <Button
+            variant="tertiary"
+            hover={false}
+            fullWidth
+            disabled
             style={{
               padding: "0.5rem 0.75rem",
               border: `0.0625rem solid ${theme.colors.gray[4]}`,
@@ -342,7 +319,7 @@ const ConvertSettings = ({
               cursor: "not-allowed",
             }}
           >
-            <Group justify="space-between">
+            <Group justify="space-between" style={{ width: "100%" }}>
               <Text size="sm">
                 {t(
                   "convert.selectSourceFormatFirst",
@@ -356,7 +333,7 @@ const ConvertSettings = ({
                 }}
               />
             </Group>
-          </UnstyledButton>
+          </Button>
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"
@@ -472,6 +449,20 @@ const ConvertSettings = ({
           <>
             <Divider />
             <ConvertToPdfaSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
+
+      {/* PDF to PDF/UA options */}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfua" && (
+          <>
+            <Divider />
+            <ConvertToPdfUaSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
               selectedFiles={selectedFiles}

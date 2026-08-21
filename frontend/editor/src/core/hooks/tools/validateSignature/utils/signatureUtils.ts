@@ -66,6 +66,8 @@ export const normalizeBackendResult = (
   chainValid: Boolean(item.chainValid),
   trustValid: Boolean(item.trustValid),
   notExpired: Boolean(item.notExpired),
+  // Default to covered when the backend omits it (older payloads) to avoid false alarms.
+  coversEntireDocument: item.coversEntireDocument !== false,
   revocationChecked:
     item.revocationChecked === null || item.revocationChecked === undefined
       ? null

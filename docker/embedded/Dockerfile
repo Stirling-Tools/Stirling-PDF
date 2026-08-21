@@ -1,17 +1,17 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.2
+ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3d119eb2bf9a82e
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.5.1-jdk25@sha256:8de3543f1772bb66be3b275893e5977b6d8bd2b0d25551faa5846a821d1f0600 AS app-build
+FROM gradle:9.7.1-jdk25@sha256:a80276ab804c348989df46016e2b5d58cad07c5b29e06f2112434d28ca5b2844 AS app-build
 
-ARG TASK_VERSION=3.49.1
+ARG TASK_VERSION=3.52.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && ARCH=$(dpkg --print-architecture) \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
@@ -30,6 +30,8 @@ WORKDIR /app
 
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
+COPY buildSrc/build.gradle                 buildSrc/
+COPY buildSrc/src/main/                    buildSrc/src/main/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
@@ -42,16 +44,24 @@ COPY . .
 ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+# Embed the admin portal app at /portal. Set true by the deploy workflow when the
+# portal or AI layers change; defaults false so normal builds skip the extra app.
+ARG BUILD_PORTAL=false
 
-RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
+# Bundle only the JPDFium native for this image's target arch.
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
+      -PbuildWithPortal=${BUILD_PORTAL} \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b27ca47660a8fa837e47a8533b9b1a3a430295cf29ca28d91af4fd121572dc29 AS jar-extract
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS jar-extract
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers

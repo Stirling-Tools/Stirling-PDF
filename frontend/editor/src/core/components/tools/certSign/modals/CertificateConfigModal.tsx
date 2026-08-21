@@ -2,12 +2,12 @@ import {
   Modal,
   Stack,
   Group,
-  Button,
   Text,
   Collapse,
   TextInput,
   Loader,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -249,7 +249,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
               fontSize="small"
               style={{ color: "var(--mantine-color-green-6)" }}
             />
-            <Text size="sm" c="green">
+            <Text size="sm" c="var(--color-green-dark)">
               {t(
                 "certSign.collab.signRequest.certModal.certValidUntil",
                 "Certificate valid until {{date}}",
@@ -271,7 +271,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
               fontSize="small"
               style={{ color: "var(--mantine-color-red-6)" }}
             />
-            <Text size="sm" c="red">
+            <Text size="sm" c="var(--color-red-dark)">
               {t(
                 "certSign.collab.signRequest.certModal.certInvalid",
                 "Certificate invalid: {{error}}",
@@ -286,8 +286,8 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         {/* Advanced Settings - Optional */}
         <div>
           <Button
-            variant="subtle"
-            size="xs"
+            variant="tertiary"
+            size="sm"
             onClick={() => setShowAdvanced(!showAdvanced)}
             disabled={disabled || signing}
             style={{ marginBottom: "8px" }}
@@ -331,7 +331,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         </div>
 
         <Group justify="space-between" wrap="wrap" mt="md">
-          <Button variant="default" onClick={onClose} disabled={signing}>
+          <Button variant="secondary" onClick={onClose} disabled={signing}>
             {t("cancel", "Cancel")}
           </Button>
           <Button
