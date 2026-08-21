@@ -5,7 +5,9 @@ import java.util.regex.Pattern;
 public class RequestUriUtils {
 
     private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
-    private static final Pattern INVITE_LINK_PATTERN = Pattern.compile("^/invite/[^/]+/?$");
+    // Invite tokens are UUIDs; cap charset and length to keep the public surface tight
+    private static final Pattern INVITE_LINK_PATTERN =
+            Pattern.compile("^/invite/[A-Za-z0-9_-]{1,128}/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);

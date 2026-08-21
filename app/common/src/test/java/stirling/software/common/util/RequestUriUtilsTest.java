@@ -274,4 +274,24 @@ class RequestUriUtilsTest {
         // "/inviteX" must not match the invite pattern
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/inviteX", ""));
     }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteTokenMaxLength() {
+        // 128-char token is still accepted (real tokens are 36-char UUIDs)
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + "a".repeat(128), ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteTokenTooLongNotPublic() {
+        // Tokens are capped at 128 chars
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/" + "a".repeat(129), ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteTokenInvalidCharsNotPublic() {
+        // Only [A-Za-z0-9_-] tokens are treated as invite links
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc$123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc..123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc%2F123", ""));
+    }
 }
