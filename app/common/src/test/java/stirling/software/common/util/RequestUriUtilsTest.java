@@ -236,4 +236,42 @@ class RequestUriUtilsTest {
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/storage/share-links/abc123/metadata", ""));
     }
+
+    // --- invite-accept SPA bootstrap ---
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkToken() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkTokenTrailingSlash() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkWithContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/invite/abc123", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteRootNotPublic() {
+        // Avoid matching bare "/invite" or "/invite/" - must have a token segment
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteNestedPathNotPublic() {
+        // Guard against future additions like /invite/<token>/foo becoming accidentally public
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123/foo", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_invitePrefixDoesNotOvermatch() {
+        // "/inviteX" must not match the invite pattern
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/inviteX", ""));
+    }
 }
