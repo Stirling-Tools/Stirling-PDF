@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useDroppable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
@@ -21,6 +21,9 @@ import {
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 export const trackDroppableId = (fileId: FileId) => `track:${fileId}`;
+/** Whole-track drop zone, used when a track header is being dragged. */
+export const trackZoneId = (fileId: FileId) => `zone:${fileId}`;
+export const trackHandleId = (fileId: FileId) => `trackhandle:${fileId}`;
 
 export interface DropHint {
   fileId: FileId;
@@ -35,6 +38,12 @@ export interface TrackRowProps {
   selectedIds: Set<string>;
   draggingIds: Set<string>;
   dropHint: DropHint | null;
+  /** Draw the track-reorder line above this track. */
+  trackDropBefore: boolean;
+  /** Draw it below (last track, moving to the end). */
+  trackDropAfterLast: boolean;
+  /** This track's header is the one being dragged. */
+  trackDragging: boolean;
   changed: boolean;
   thumbnails: TrackThumbnailStore;
   onSelectPage: (
@@ -57,6 +66,9 @@ function TrackRowImpl({
   selectedIds,
   draggingIds,
   dropHint,
+  trackDropBefore,
+  trackDropAfterLast,
+  trackDragging,
   changed,
   thumbnails,
   onSelectPage,
@@ -70,6 +82,21 @@ function TrackRowImpl({
   const { setNodeRef, isOver } = useDroppable({
     id: trackDroppableId(track.fileId),
     data: { type: "track", fileId: track.fileId },
+  });
+
+  // Reordering tracks: the header is the handle, the whole section the target.
+  // Only the pointer listeners are applied, deliberately NOT dnd-kit's ARIA
+  // attributes: those would make the header a role="button" whose accessible
+  // name is everything inside it, with the real controls nested inside.
+  const { listeners: handleListeners, setNodeRef: setHandleRef } = useDraggable(
+    {
+      id: trackHandleId(track.fileId),
+      data: { type: "trackHandle", fileId: track.fileId },
+    },
+  );
+  const { setNodeRef: setZoneRef } = useDroppable({
+    id: trackZoneId(track.fileId),
+    data: { type: "zone", fileId: track.fileId },
   });
 
   // A lane can hold hundreds of pages. Mounting them all is what made a single
@@ -126,15 +153,27 @@ function TrackRowImpl({
 
   return (
     <section
+      ref={setZoneRef}
       style={geometry.cssVars}
-      className={[styles.track, isOver ? styles.trackDropActive : ""]
+      className={[
+        styles.track,
+        isOver ? styles.trackDropActive : "",
+        trackDragging ? styles.trackDragging : "",
+        trackDropBefore ? styles.trackDropBefore : "",
+        trackDropAfterLast ? styles.trackDropAfterLast : "",
+      ]
         .filter(Boolean)
         .join(" ")}
       data-track-file-id={track.fileId}
       data-changed={changed}
+      data-track-drop-before={trackDropBefore || undefined}
       aria-label={name}
     >
-      <header className={styles.trackHeader}>
+      <header
+        ref={setHandleRef}
+        className={styles.trackHeader}
+        {...handleListeners}
+      >
         <span className={styles.trackName} title={name}>
           {name}
         </span>

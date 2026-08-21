@@ -14,7 +14,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -32,17 +32,30 @@ import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 const PAGE_PREFIX = "page:";
 const TRACK_PREFIX = "track:";
+const ZONE_PREFIX = "zone:";
+const HANDLE_PREFIX = "trackhandle:";
 
 /**
- * Prefer the page under the pointer over the track that contains it: the
- * lane is a droppable too, so nested hits need an explicit ordering.
+ * Droppables nest (zone > lane > page), so the hit has to be picked by what is
+ * being dragged: a track header only ever lands on a whole track, while a page
+ * prefers the tile under the pointer and falls back to the track around it.
  */
 const collisionDetection: CollisionDetection = (args) => {
   const within = pointerWithin(args);
-  const page = within.find((c) => String(c.id).startsWith(PAGE_PREFIX));
+  const first = (prefix: string) =>
+    within.find((c) => String(c.id).startsWith(prefix));
+
+  if (args.active.data.current?.type === "trackHandle") {
+    const zone = first(ZONE_PREFIX);
+    return zone ? [zone] : [];
+  }
+
+  const page = first(PAGE_PREFIX);
   if (page) return [page];
-  const track = within.find((c) => String(c.id).startsWith(TRACK_PREFIX));
-  if (track) return [track];
+  const lane = first(TRACK_PREFIX);
+  if (lane) return [lane];
+  const zone = first(ZONE_PREFIX);
+  if (zone) return [zone];
   return rectIntersection(args);
 };
 
@@ -58,6 +71,17 @@ const sameHint = (a: DropHint | null, b: DropHint | null): boolean =>
  * the drag delta. Using this rather than a live pointermove listener keeps the
  * side-of-tile decision consistent with the reported collision.
  */
+function pointerYOf(event: DragMoveEvent | DragEndEvent): number {
+  const activator = event.activatorEvent;
+  const originY =
+    activator instanceof MouseEvent
+      ? activator.clientY
+      : activator instanceof TouchEvent && activator.touches.length > 0
+        ? activator.touches[0].clientY
+        : 0;
+  return originY + event.delta.y;
+}
+
 function pointerXOf(event: DragMoveEvent | DragEndEvent): number {
   const activator = event.activatorEvent;
   const originX =
@@ -123,6 +147,11 @@ export default function PageTracks() {
     () => new Set<string>(),
   );
   const [dropHint, setDropHint] = useState<DropHint | null>(null);
+  const [draggingTrack, setDraggingTrack] = useState<FileId | null>(null);
+  // undefined = no target, null = append to the end.
+  const [trackDropTarget, setTrackDropTarget] = useState<
+    FileId | null | undefined
+  >(undefined);
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
@@ -152,6 +181,40 @@ export default function PageTracks() {
 
   const clearSelection = selection.clear;
 
+  const { actions: fileActions } = useFileActions();
+
+  /**
+   * Moves one track before `beforeFileId` (or to the end when null). Track
+   * order IS the workbench file order, and REORDER_FILES replaces the whole id
+   * list, so non-PDFs (which have no track) must be written back in place or
+   * they would drop out of the workbench entirely.
+   */
+  const reorderTracks = useCallback(
+    (sourceFileId: FileId, beforeFileId: FileId | null) => {
+      if (sourceFileId === beforeFileId) return;
+      const trackOrder = workspace.order.filter((id) => id !== sourceFileId);
+      const at =
+        beforeFileId == null
+          ? trackOrder.length
+          : trackOrder.indexOf(beforeFileId);
+      const insertAt = at === -1 ? trackOrder.length : at;
+      const nextTrackOrder = [
+        ...trackOrder.slice(0, insertAt),
+        sourceFileId,
+        ...trackOrder.slice(insertAt),
+      ];
+      if (nextTrackOrder.every((id, i) => workspace.order[i] === id)) return;
+
+      const isTrack = new Set(workspace.order);
+      let next = 0;
+      const merged = fileState.files.ids.map((id) =>
+        isTrack.has(id) ? nextTrackOrder[next++] : id,
+      );
+      fileActions.reorderFiles(merged);
+    },
+    [fileActions, fileState.files.ids, workspace.order],
+  );
+
   // ── Drag and drop ────────────────────────────────────────────────────────
 
   const sensors = useSensors(
@@ -179,8 +242,10 @@ export default function PageTracks() {
     (overId: string | null, pointerX: number): DropHint | null => {
       if (!overId) return null;
 
-      if (overId.startsWith(TRACK_PREFIX)) {
-        const fileId = overId.slice(TRACK_PREFIX.length) as FileId;
+      // The lane, or anywhere else on the track: append to it.
+      for (const prefix of [TRACK_PREFIX, ZONE_PREFIX]) {
+        if (!overId.startsWith(prefix)) continue;
+        const fileId = overId.slice(prefix.length) as FileId;
         if (!workspace.tracks[fileId]) return null;
         return { fileId, beforePageId: null };
       }
@@ -206,9 +271,34 @@ export default function PageTracks() {
     [trackByPageId, workspace],
   );
 
+  /**
+   * Track reorder target: insert before this file, or append when null.
+   */
+  const resolveTrackHint = useCallback(
+    (overId: string | null, pointerY: number): FileId | null | undefined => {
+      if (!overId || !overId.startsWith(ZONE_PREFIX)) return undefined;
+      const overFileId = overId.slice(ZONE_PREFIX.length) as FileId;
+      const index = workspace.order.indexOf(overFileId);
+      if (index === -1) return undefined;
+
+      const element = document.querySelector<HTMLElement>(
+        `[data-track-file-id="${overFileId}"]`,
+      );
+      const rect = element?.getBoundingClientRect();
+      const dropAfter = rect ? pointerY > rect.top + rect.height / 2 : false;
+      return workspace.order[dropAfter ? index + 1 : index] ?? null;
+    },
+    [workspace.order],
+  );
+
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      const pageId = String(event.active.id).slice(PAGE_PREFIX.length);
+      const activeId = String(event.active.id);
+      if (activeId.startsWith(HANDLE_PREFIX)) {
+        setDraggingTrack(activeId.slice(HANDLE_PREFIX.length) as FileId);
+        return;
+      }
+      const pageId = activeId.slice(PAGE_PREFIX.length);
       // Dragging a page that is part of the selection moves the whole
       // selection; dragging an unselected page moves only that page.
       const ids = selection.selectedIds.has(pageId)
@@ -224,6 +314,14 @@ export default function PageTracks() {
   // latter. Recomputing per move is what keeps the marker and the drop in sync.
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
+      if (draggingTrack) {
+        const target = resolveTrackHint(
+          event.over ? String(event.over.id) : null,
+          pointerYOf(event),
+        );
+        setTrackDropTarget(target === undefined ? undefined : target);
+        return;
+      }
       const next = resolveHint(
         event.over ? String(event.over.id) : null,
         pointerXOf(event),
@@ -232,11 +330,23 @@ export default function PageTracks() {
       // object bails the re-render out, so only a real change costs anything.
       setDropHint((prev) => (sameHint(prev, next) ? prev : next));
     },
-    [resolveHint],
+    [draggingTrack, resolveHint, resolveTrackHint],
   );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      if (draggingTrack) {
+        const target = resolveTrackHint(
+          event.over ? String(event.over.id) : null,
+          pointerYOf(event),
+        );
+        const source = draggingTrack;
+        setDraggingTrack(null);
+        setTrackDropTarget(undefined);
+        if (target !== undefined) reorderTracks(source, target);
+        return;
+      }
+
       const hint = resolveHint(
         event.over ? String(event.over.id) : null,
         pointerXOf(event),
@@ -251,12 +361,21 @@ export default function PageTracks() {
         beforePageId: hint.beforePageId,
       });
     },
-    [dispatch, draggingIds, resolveHint],
+    [
+      dispatch,
+      draggingIds,
+      draggingTrack,
+      reorderTracks,
+      resolveHint,
+      resolveTrackHint,
+    ],
   );
 
   const handleDragCancel = useCallback(() => {
     setDraggingIds(new Set());
     setDropHint(null);
+    setDraggingTrack(null);
+    setTrackDropTarget(undefined);
   }, []);
 
   // ── Save + navigation guard ──────────────────────────────────────────────
@@ -388,6 +507,15 @@ export default function PageTracks() {
                 selectedIds={selection.selectedIds}
                 draggingIds={draggingIds}
                 dropHint={dropHint}
+                trackDropBefore={
+                  draggingTrack != null && trackDropTarget === fileId
+                }
+                trackDropAfterLast={
+                  draggingTrack != null &&
+                  trackDropTarget === null &&
+                  fileId === workspace.order[workspace.order.length - 1]
+                }
+                trackDragging={draggingTrack === fileId}
                 changed={changedSet.has(fileId)}
                 thumbnails={thumbnails}
                 onSelectPage={selection.selectPage}
