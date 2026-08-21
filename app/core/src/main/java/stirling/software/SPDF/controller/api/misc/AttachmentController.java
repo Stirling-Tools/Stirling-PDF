@@ -1,11 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,9 +28,14 @@ import stirling.software.SPDF.model.api.misc.RenameAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -43,13 +49,18 @@ public class AttachmentController {
 
     private final ConvertPDFToPDFA convertPDFToPDFA;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-attachments")
+    private final TempFileManager tempFileManager;
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add attachments to PDF",
-            description =
-                    "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> addAttachments(@ModelAttribute AddAttachmentRequest request)
+            description = "This endpoint adds attachments to a PDF.")
+    public ResponseEntity<Resource> addAttachments(@ModelAttribute AddAttachmentRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
         List<MultipartFile> attachments = request.getAttachments();
@@ -79,13 +90,9 @@ public class AttachmentController {
 
                 ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                pdfaDocument.save(baos);
-                byte[] resultBytes = baos.toByteArray();
-
                 String outputFilename = baseFileName + "_with_attachments_PDFA-3b.pdf";
-                return WebResponseUtils.bytesToWebResponse(
-                        resultBytes, outputFilename, MediaType.APPLICATION_PDF);
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfaDocument, outputFilename, tempFileManager);
             }
         } else {
             try (PDDocument document = pdfDocumentFactory.load(request, false)) {
@@ -94,7 +101,8 @@ public class AttachmentController {
                         document,
                         GeneralUtils.generateFilename(
                                 Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                                "_with_attachments.pdf"));
+                                "_with_attachments.pdf"),
+                        tempFileManager);
             }
         }
     }
@@ -135,13 +143,14 @@ public class AttachmentController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/extract-attachments")
+            value = "/extract-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.ZIP)
     @Operation(
             summary = "Extract attachments from PDF",
             description =
-                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive."
-                            + " Input:PDF Output:ZIP Type:SISO")
-    public ResponseEntity<byte[]> extractAttachments(
+                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
+    public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             Optional<byte[]> extracted = pdfAttachmentService.extractAttachments(document);
@@ -159,16 +168,25 @@ public class AttachmentController {
                     Filenames.toSimpleFileName(
                             GeneralUtils.generateFilename(sourceName, "_attachments.zip"));
 
-            return WebResponseUtils.bytesToWebResponse(
-                    extracted.get(), outputName, MediaType.APPLICATION_OCTET_STREAM);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".zip");
+            try {
+                Files.write(tempOut.getFile().toPath(), extracted.get());
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
+            return WebResponseUtils.zipFileToWebResponse(tempOut, outputName);
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/list-attachments")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/list-attachments",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "List attachments in PDF",
-            description =
-                    "This endpoint lists all embedded attachments in a PDF. Input:PDF Output:JSON Type:SISO")
+            description = "This endpoint lists all embedded attachments in a PDF.")
     public ResponseEntity<List<stirling.software.SPDF.model.api.misc.AttachmentInfo>>
             listAttachments(@ModelAttribute ListAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
@@ -181,14 +199,15 @@ public class AttachmentController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/rename-attachment")
+            value = "/rename-attachment",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rename attachment in PDF",
-            description =
-                    "This endpoint renames an embedded attachment in a PDF. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> renameAttachment(@ModelAttribute RenameAttachmentRequest request)
-            throws Exception {
+            description = "This endpoint renames an embedded attachment in a PDF.")
+    public ResponseEntity<Resource> renameAttachment(
+            @ModelAttribute RenameAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
         String newName = request.getNewName();
@@ -209,20 +228,22 @@ public class AttachmentController {
                     document,
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                            "_attachment_renamed.pdf"));
+                            "_attachment_renamed.pdf"),
+                    tempFileManager);
         }
     }
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/delete-attachment")
+            value = "/delete-attachment",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Delete attachment from PDF",
-            description =
-                    "This endpoint deletes an embedded attachment from a PDF. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> deleteAttachment(@ModelAttribute DeleteAttachmentRequest request)
-            throws Exception {
+            description = "This endpoint deletes an embedded attachment from a PDF.")
+    public ResponseEntity<Resource> deleteAttachment(
+            @ModelAttribute DeleteAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
 
@@ -238,7 +259,8 @@ public class AttachmentController {
                     document,
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                            "_attachment_deleted.pdf"));
+                            "_attachment_deleted.pdf"),
+                    tempFileManager);
         }
     }
 }

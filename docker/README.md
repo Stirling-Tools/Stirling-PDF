@@ -2,6 +2,23 @@
 
 This directory contains the organized Docker configurations for the split frontend/backend architecture.
 
+## Using Taskfile (Recommended)
+
+All Docker commands can be run from the project root using [Task](https://taskfile.dev/):
+
+```bash
+task docker:build            # Build standard image
+task docker:build:fat        # Build fat image (all features)
+task docker:build:ultra-lite # Build ultra-lite image
+task docker:build:frontend   # Build frontend-only image
+task docker:build:engine     # Build engine image
+task docker:up               # Start standard compose stack
+task docker:up:fat           # Start fat compose stack
+task docker:up:ultra-lite    # Start ultra-lite compose stack
+task docker:down             # Stop all running stacks
+task docker:logs             # Tail compose logs
+```
+
 ## Directory Structure
 
 ```

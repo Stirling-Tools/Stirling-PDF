@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,9 +27,13 @@ import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.FilterApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @FilterApi
@@ -36,13 +41,14 @@ import stirling.software.common.util.WebResponseUtils;
 public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-text")
-    @Operation(
-            summary = "Checks if a PDF contains set text, returns true if does",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-contains-text",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains set text, returns true if does")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -53,7 +59,7 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> containsText(@ModelAttribute ContainsTextRequest request)
+    public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String text = request.getText();
@@ -62,7 +68,9 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();
@@ -70,10 +78,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-image")
-    @Operation(
-            summary = "Checks if a PDF contains an image",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-contains-image",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains an image")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -84,7 +92,7 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> containsImage(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
@@ -92,7 +100,9 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasImages(pdfDocument, pageNumber)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();
@@ -100,10 +110,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-count")
-    @Operation(
-            summary = "Checks if a PDF is greater, less or equal to a setPageCount",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-page-count",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is greater, less or equal to a setPageCount")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -131,10 +141,12 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
-    @Operation(
-            summary = "Checks if a PDF is of a certain size",
-            description = "Input:PDF Output:Boolean Type:SISO")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain size")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -168,10 +180,12 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
-    @Operation(
-            summary = "Checks if a PDF is a set file size",
-            description = "Input:PDF Output:Boolean Type:SISO")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-file-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is a set file size")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -198,10 +212,10 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-rotation")
-    @Operation(
-            summary = "Checks if a PDF is of a certain rotation",
-            description = "Input:PDF Output:Boolean Type:SISO")
+            value = "/filter-page-rotation",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain rotation")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

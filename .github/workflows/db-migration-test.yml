@@ -1,0 +1,88 @@
+name: DB migration smoke test
+
+# Boots the current Stirling-PDF JAR against H2 fixtures captured from past
+# releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still works.
+# Catches schema changes that would break existing user databases under
+# Hibernate's `ddl-auto=update` upgrade path.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  migration-test:
+    environment:
+      name: ci-unsigned
+      deployment: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Restore cache Gradle User Home
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: 25
+          distribution: temurin
+
+      # Keep the normal formatting path here so this smoke test exercises the
+      # same Gradle configuration as the backend build.
+      - name: Build Stirling-PDF JAR
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+        run: ./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon
+
+      - name: Locate built JAR
+        id: jar
+        run: |
+          jar=$(find app/core/build/libs -maxdepth 1 -name 'Stirling-PDF*.jar' -o -name 'stirling-pdf*.jar' 2>/dev/null \
+              | grep -vE '(-plain|-sources)\.jar$' | head -n 1)
+          if [[ -z "$jar" ]]; then
+            echo "::error::No JAR under app/core/build/libs"
+            ls -lah app/core/build/libs || true
+            exit 1
+          fi
+          # Absolute path - the migration script pushd's into a temp workdir
+          # before invoking java, which would dangle a relative path.
+          jar=$(realpath "$jar")
+          echo "path=$jar" >> "$GITHUB_OUTPUT"
+          echo "Built JAR: $jar"
+
+      - name: Run migration smoke test
+        env:
+          STIRLING_JAR: ${{ steps.jar.outputs.path }}
+        run: bash scripts/db-migration/run-migration-test.sh
+
+      - name: Upload app logs on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-migration-app-logs
+          # Path matches the preserved workdir in run-migration-test.sh -
+          # only failing fixtures leave a directory behind.
+          path: /tmp/stirling-migration-failed-*/app.log
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -rf /tmp/stirling-migration-failed-*
+        continue-on-error: true

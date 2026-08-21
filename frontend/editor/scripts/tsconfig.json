@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "types": ["node"],
+    "noEmit": true,
+    // sync-portal-docs.mts imports the shared transform by its .ts path (run via tsx).
+    "allowImportingTsExtensions": true
+  },
+  "include": ["./**/*.ts", "./**/*.mts", "../../oxlint.config.ts"]
+}

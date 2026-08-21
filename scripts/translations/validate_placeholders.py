@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validate that translation files have the same placeholders as en-GB (source of truth).
+Validate that translation files have the same placeholders as en-US (source of truth).
 
 Usage:
     python scripts/translations/validate_placeholders.py [--language LANG] [--fix]
@@ -9,23 +9,22 @@ Usage:
     --fix: Automatically remove extra placeholders (use with caution)
 """
 
+import argparse
 import json
 import re
 import sys
-from pathlib import Path
-from typing import Dict, List, Set
-import argparse
 import tomllib  # Python 3.11+ (stdlib)
+from pathlib import Path
 
 
-def find_placeholders(text: str) -> Set[str]:
+def find_placeholders(text: str) -> set[str]:
     """Find all placeholders in text like {n}, {{var}}, {0}, etc."""
     if not isinstance(text, str):
         return set()
     return set(re.findall(r"\{\{?[^}]+\}\}?", text))
 
 
-def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> Dict[str, str]:
+def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> dict[str, str]:
     """Flatten nested dict to dot-notation keys."""
     items = []
     for k, v in d.items():
@@ -37,17 +36,15 @@ def flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> Dict[str, str
     return dict(items)
 
 
-def validate_language(
-    en_gb_flat: Dict[str, str], lang_flat: Dict[str, str], lang_code: str
-) -> List[Dict]:
-    """Validate placeholders for a language against en-GB."""
+def validate_language(en_us_flat: dict[str, str], lang_flat: dict[str, str], lang_code: str) -> list[dict]:
+    """Validate placeholders for a language against en-US."""
     issues = []
 
-    for key in en_gb_flat:
+    for key in en_us_flat:
         if key not in lang_flat:
             continue
 
-        en_placeholders = find_placeholders(en_gb_flat[key])
+        en_placeholders = find_placeholders(en_us_flat[key])
         lang_placeholders = find_placeholders(lang_flat[key])
 
         if en_placeholders != lang_placeholders:
@@ -59,7 +56,7 @@ def validate_language(
                 "key": key,
                 "missing": missing,
                 "extra": extra,
-                "en_text": en_gb_flat[key],
+                "en_text": en_us_flat[key],
                 "lang_text": lang_flat[key],
             }
             issues.append(issue)
@@ -67,7 +64,7 @@ def validate_language(
     return issues
 
 
-def print_issues(issues: List[Dict], verbose: bool = False):
+def print_issues(issues: list[dict], verbose: bool = False):
     """Print validation issues in a readable format."""
     if not issues:
         print("✅ No placeholder validation issues found!")
@@ -93,9 +90,7 @@ def print_issues(issues: List[Dict], verbose: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate translation placeholder consistency"
-    )
+    parser = argparse.ArgumentParser(description="Validate translation placeholder consistency")
     parser.add_argument(
         "--language",
         help="Specific language code to validate (e.g., es-ES)",
@@ -112,27 +107,27 @@ def main():
     args = parser.parse_args()
 
     # Define paths
-    locales_dir = Path("frontend/public/locales")
-    en_gb_path = locales_dir / "en-GB" / "translation.toml"
+    locales_dir = Path("frontend/editor/public/locales")
+    en_us_path = locales_dir / "en-US" / "translation.toml"
 
-    if not en_gb_path.exists():
-        print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
+    if not en_us_path.exists():
+        print(f"❌ Error: en-US translation file not found at {en_us_path}")
         sys.exit(1)
 
-    # Load en-GB (source of truth)
-    with open(en_gb_path, "rb") as f:
-        en_gb = tomllib.load(f)
+    # Load en-US (source of truth)
+    with open(en_us_path, "rb") as f:
+        en_us = tomllib.load(f)
 
-    en_gb_flat = flatten_dict(en_gb)
+    en_us_flat = flatten_dict(en_us)
 
     # Get list of languages to validate
     if args.language:
         languages = [args.language]
     else:
-        # Validate all languages except en-GB
+        # Validate all languages except en-US
         languages = []
         for d in locales_dir.iterdir():
-            if d.is_dir() and d.name != "en-GB":
+            if d.is_dir() and d.name != "en-US":
                 if (d / "translation.toml").exists():
                     languages.append(d.name)
 
@@ -151,7 +146,7 @@ def main():
             lang_data = tomllib.load(f)
 
         lang_flat = flatten_dict(lang_data)
-        issues = validate_language(en_gb_flat, lang_flat, lang_code)
+        issues = validate_language(en_us_flat, lang_flat, lang_code)
         all_issues.extend(issues)
 
     # Output results

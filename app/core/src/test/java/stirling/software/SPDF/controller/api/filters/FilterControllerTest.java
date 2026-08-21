@@ -13,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +28,25 @@ import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class FilterControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private FilterController filterController;
 
@@ -59,19 +74,22 @@ class FilterControllerTest {
         PDDocument mockDoc = mock(PDDocument.class);
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(new byte[] {1, 2, 3});
+        ResponseEntity<Resource> expectedResponse = streamingOk(new byte[] {1, 2, 3});
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.hasText(mockDoc, "all", "hello")).thenReturn(true);
-            webMock.when(() -> WebResponseUtils.pdfDocToWebResponse(mockDoc, "test.pdf"))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.pdfDocToWebResponse(
+                                            mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.containsText(request);
+            ResponseEntity<Resource> result = filterController.containsText(request);
 
             assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertArrayEquals(new byte[] {1, 2, 3}, result.getBody());
+            assertArrayEquals(new byte[] {1, 2, 3}, drainBody(result));
         }
     }
 
@@ -88,7 +106,7 @@ class FilterControllerTest {
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class)) {
             pdfUtilsMock.when(() -> PdfUtils.hasText(mockDoc, "all", "missing")).thenReturn(false);
 
-            ResponseEntity<byte[]> result = filterController.containsText(request);
+            ResponseEntity<Resource> result = filterController.containsText(request);
 
             assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
             assertNull(result.getBody());
@@ -106,19 +124,22 @@ class FilterControllerTest {
         PDDocument mockDoc = mock(PDDocument.class);
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDoc);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(new byte[] {4, 5, 6});
+        ResponseEntity<Resource> expectedResponse = streamingOk(new byte[] {4, 5, 6});
 
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class);
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.hasImages(mockDoc, "all")).thenReturn(true);
-            webMock.when(() -> WebResponseUtils.pdfDocToWebResponse(mockDoc, "test.pdf"))
+            webMock.when(
+                            () ->
+                                    WebResponseUtils.pdfDocToWebResponse(
+                                            mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> result = filterController.containsImage(request);
+            ResponseEntity<Resource> result = filterController.containsImage(request);
 
             assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertArrayEquals(new byte[] {4, 5, 6}, result.getBody());
+            assertArrayEquals(new byte[] {4, 5, 6}, drainBody(result));
         }
     }
 
@@ -134,7 +155,7 @@ class FilterControllerTest {
         try (MockedStatic<PdfUtils> pdfUtilsMock = mockStatic(PdfUtils.class)) {
             pdfUtilsMock.when(() -> PdfUtils.hasImages(mockDoc, "1")).thenReturn(false);
 
-            ResponseEntity<byte[]> result = filterController.containsImage(request);
+            ResponseEntity<Resource> result = filterController.containsImage(request);
 
             assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
         }

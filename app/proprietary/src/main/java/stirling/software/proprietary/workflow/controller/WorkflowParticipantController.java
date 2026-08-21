@@ -101,7 +101,9 @@ public class WorkflowParticipantController {
         }
 
         WorkflowSession session = participant.getWorkflowSession();
-        return ResponseEntity.ok(WorkflowMapper.toResponse(session));
+        // Strip peer share tokens — a single participant token must not enumerate peer bearer
+        // tokens (GHSA-qgg6-mxw4-xg62).
+        return ResponseEntity.ok(WorkflowMapper.toResponse(session, null, false));
     }
 
     @Operation(
@@ -122,7 +124,7 @@ public class WorkflowParticipantController {
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
 
-        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
@@ -181,7 +183,7 @@ public class WorkflowParticipantController {
                     participant.getEmail(),
                     participant.getWorkflowSession().getSessionId());
 
-            return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+            return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
 
         } catch (ResponseStatusException e) {
             throw e;
@@ -235,7 +237,7 @@ public class WorkflowParticipantController {
                 participant.getEmail(),
                 participant.getWorkflowSession().getSessionId());
 
-        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
@@ -402,18 +404,16 @@ public class WorkflowParticipantController {
             certSubmission.put("reason", request.getReason());
             certSubmission.put("showLogo", request.getShowLogo());
 
-            // Store certificate files as base64
+            // Store the certificate keystores encrypted at rest.
             if (request.getP12File() != null && !request.getP12File().isEmpty()) {
                 certSubmission.put(
                         "p12Keystore",
-                        java.util.Base64.getEncoder()
-                                .encodeToString(request.getP12File().getBytes()));
+                        metadataEncryptionService.encryptBytes(request.getP12File().getBytes()));
             }
             if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
                 certSubmission.put(
                         "jksKeystore",
-                        java.util.Base64.getEncoder()
-                                .encodeToString(request.getJksFile().getBytes()));
+                        metadataEncryptionService.encryptBytes(request.getJksFile().getBytes()));
             }
 
             metadata.put("certificateSubmission", certSubmission);

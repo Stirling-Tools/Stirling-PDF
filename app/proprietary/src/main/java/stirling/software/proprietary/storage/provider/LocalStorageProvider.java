@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -20,10 +21,14 @@ import stirling.software.proprietary.security.model.User;
 @RequiredArgsConstructor
 public class LocalStorageProvider implements StorageProvider {
 
+    private static final Pattern CONTROL_CHARACTER_PATTERN = Pattern.compile("\\p{Cntrl}");
     private final Path basePath;
 
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
         String storageKey =
                 owner.getId()
@@ -77,6 +82,10 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        return Paths.get(filename).getFileName().toString();
+        String stripped =
+                CONTROL_CHARACTER_PATTERN
+                        .matcher(Paths.get(filename).getFileName().toString())
+                        .replaceAll("");
+        return stripped.isBlank() ? "file" : stripped;
     }
 }
