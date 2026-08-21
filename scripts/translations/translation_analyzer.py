@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
 Translation Analyzer for Stirling PDF Frontend
-Compares language files against en-GB golden truth file.
+Compares language files against en-US golden truth file.
 """
 
+import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, List, Set
-import argparse
 import tomllib
+from pathlib import Path
 
 
 class TranslationAnalyzer:
@@ -19,12 +18,12 @@ class TranslationAnalyzer:
         ignore_file: str = "scripts/ignore_translation.toml",
     ):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_truth = self._load_translation_file(self.golden_truth_file)
         self.ignore_file = Path(ignore_file)
         self.ignore_patterns = self._load_ignore_patterns()
 
-    def _load_translation_file(self, file_path: Path) -> Dict:
+    def _load_translation_file(self, file_path: Path) -> dict:
         """Load TOML translation file with error handling."""
         try:
             with open(file_path, "rb") as f:
@@ -36,7 +35,7 @@ class TranslationAnalyzer:
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
-    def _load_ignore_patterns(self) -> Dict[str, Set[str]]:
+    def _load_ignore_patterns(self) -> dict[str, set[str]]:
         """Load ignore patterns from TOML file."""
         if not self.ignore_file.exists():
             return {}
@@ -56,9 +55,7 @@ class TranslationAnalyzer:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 
-    def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, str]:
+    def _flatten_dict(self, d: dict, parent_key: str = "", separator: str = ".") -> dict[str, str]:
         """Flatten nested dictionary into dot-notation keys."""
         items = []
         for k, v in d.items():
@@ -69,18 +66,18 @@ class TranslationAnalyzer:
                 items.append((new_key, str(v)))
         return dict(items)
 
-    def get_all_language_files(self) -> List[Path]:
-        """Get all translation files except en-GB."""
+    def get_all_language_files(self) -> list[Path]:
+        """Get all translation files except en-US."""
         files = []
         for lang_dir in self.locales_dir.iterdir():
-            if lang_dir.is_dir() and lang_dir.name != "en-GB":
+            if lang_dir.is_dir() and lang_dir.name != "en-US":
                 toml_file = lang_dir / "translation.toml"
                 if toml_file.exists():
                     files.append(toml_file)
         return sorted(files)
 
-    def find_missing_translations(self, target_file: Path) -> Set[str]:
-        """Find keys that exist in en-GB but missing in target file."""
+    def find_missing_translations(self, target_file: Path) -> set[str]:
+        """Find keys that exist in en-US but missing in target file."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -93,8 +90,8 @@ class TranslationAnalyzer:
         ignore_set = self.ignore_patterns.get(lang_code, set())
         return missing - ignore_set
 
-    def find_untranslated_entries(self, target_file: Path) -> Set[str]:
-        """Find entries that appear to be untranslated (identical to en-GB)."""
+    def find_untranslated_entries(self, target_file: Path) -> set[str]:
+        """Find entries that appear to be untranslated (identical to en-US)."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -109,11 +106,8 @@ class TranslationAnalyzer:
                 target_value = target_flat[key]
                 golden_value = golden_flat[key]
 
-                # Check if marked as [UNTRANSLATED] or identical to en-GB
-                if (
-                    isinstance(target_value, str)
-                    and target_value.startswith("[UNTRANSLATED]")
-                ) or (
+                # Check if marked as [UNTRANSLATED] or identical to en-US
+                if (isinstance(target_value, str) and target_value.startswith("[UNTRANSLATED]")) or (
                     golden_value == target_value
                     and key not in ignore_set
                     and not self._is_expected_identical(key, golden_value)
@@ -138,8 +132,8 @@ class TranslationAnalyzer:
 
         return False
 
-    def find_extra_translations(self, target_file: Path) -> Set[str]:
-        """Find keys that exist in target file but not in en-GB."""
+    def find_extra_translations(self, target_file: Path) -> set[str]:
+        """Find keys that exist in target file but not in en-US."""
         target_data = self._load_translation_file(target_file)
 
         golden_flat = self._flatten_dict(self.golden_truth)
@@ -147,7 +141,7 @@ class TranslationAnalyzer:
 
         return set(target_flat.keys()) - set(golden_flat.keys())
 
-    def analyze_file(self, target_file: Path) -> Dict:
+    def analyze_file(self, target_file: Path) -> dict:
         """Complete analysis of a single translation file."""
         lang_code = target_file.parent.name
 
@@ -172,14 +166,10 @@ class TranslationAnalyzer:
             if key in target_flat:
                 value = target_flat[key]
                 if not (isinstance(value, str) and value.startswith("[UNTRANSLATED]")):
-                    if (
-                        key not in untranslated
-                    ):  # Not identical to en-GB (unless expected)
+                    if key not in untranslated:  # Not identical to en-US (unless expected)
                         properly_translated += 1
 
-        completion_rate = (
-            (properly_translated / total_keys) * 100 if total_keys > 0 else 0
-        )
+        completion_rate = (properly_translated / total_keys) * 100 if total_keys > 0 else 0
 
         return {
             "language": lang_code,
@@ -194,7 +184,7 @@ class TranslationAnalyzer:
             "completion_rate": completion_rate,
         }
 
-    def analyze_all_files(self) -> List[Dict]:
+    def analyze_all_files(self) -> list[dict]:
         """Analyze all translation files."""
         results = []
         for file_path in self.get_all_language_files():
@@ -203,9 +193,7 @@ class TranslationAnalyzer:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Analyze translation files against en-GB golden truth"
-    )
+    parser = argparse.ArgumentParser(description="Analyze translation files against en-US golden truth")
     parser.add_argument(
         "--locales-dir",
         default="frontend/editor/public/locales",
@@ -217,20 +205,14 @@ def main():
         help="Path to ignore patterns TOML file",
     )
     parser.add_argument("--language", help="Analyze specific language only")
-    parser.add_argument(
-        "--missing-only", action="store_true", help="Show only missing translations"
-    )
+    parser.add_argument("--missing-only", action="store_true", help="Show only missing translations")
     parser.add_argument(
         "--untranslated-only",
         action="store_true",
         help="Show only untranslated entries",
     )
-    parser.add_argument(
-        "--summary", action="store_true", help="Show summary statistics only"
-    )
-    parser.add_argument(
-        "--format", choices=["text", "json"], default="text", help="Output format"
-    )
+    parser.add_argument("--summary", action="store_true", help="Show summary statistics only")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
 
     args = parser.parse_args()
 
@@ -260,7 +242,7 @@ def main():
         print(f"Language: {lang}")
         print(f"File: {result['file']}")
         print(f"Completion Rate: {result['completion_rate']:.1f}%")
-        print(f"Total Keys in en-GB: {result['total_keys']}")
+        print(f"Total Keys in en-US: {result['total_keys']}")
 
         if not args.summary:
             if not args.untranslated_only:
@@ -278,7 +260,7 @@ def main():
                     print(f"  ... and {len(result['untranslated_keys']) - 10} more")
 
             if result["extra_count"] > 0:
-                print(f"\nExtra Keys Not in en-GB ({result['extra_count']}):")
+                print(f"\nExtra Keys Not in en-US ({result['extra_count']}):")
                 for key in result["extra_keys"][:5]:
                     print(f"  - {key}")
                 if len(result["extra_keys"]) > 5:
@@ -287,16 +269,12 @@ def main():
     print(f"\n{'=' * 60}")
     print("SUMMARY")
     print(f"{'=' * 60}")
-    avg_completion = (
-        sum(r["completion_rate"] for r in results) / len(results) if results else 0
-    )
+    avg_completion = sum(r["completion_rate"] for r in results) / len(results) if results else 0
     print(f"Average Completion Rate: {avg_completion:.1f}%")
     print(f"Languages Analyzed: {len(results)}")
 
     # Top languages by completion
-    sorted_by_completion = sorted(
-        results, key=lambda x: x["completion_rate"], reverse=True
-    )
+    sorted_by_completion = sorted(results, key=lambda x: x["completion_rate"], reverse=True)
     print("\nTop 5 Most Complete Languages:")
     for result in sorted_by_completion[:5]:
         print(f"  {result['language']}: {result['completion_rate']:.1f}%")

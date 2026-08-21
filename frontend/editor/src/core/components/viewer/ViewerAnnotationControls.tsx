@@ -1,11 +1,15 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
-import { useFileState, useFileContext } from "@app/contexts/FileContext";
+import {
+  useAllFiles,
+  useFileSelectors,
+  useFileContext,
+} from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import {
   useNavigationState,
@@ -39,9 +43,9 @@ export default function ViewerAnnotationControls({
   const { historyApiRef, isPlacementMode } = useSignature();
 
   // File state for save functionality
-  const { state, selectors } = useFileState();
+  const selectors = useFileSelectors();
+  const { files: activeFiles, fileIds } = useAllFiles();
   const { actions: fileActions } = useFileContext();
-  const activeFiles = selectors.getFiles();
 
   // Check if we're in sign mode or redaction mode
   const { selectedTool } = useNavigationState();
@@ -83,7 +87,7 @@ export default function ViewerAnnotationControls({
       !historyApiRef?.current?.canUndo()
     )
       return;
-    if (activeFiles.length === 0 || state.files.ids.length === 0) return;
+    if (activeFiles.length === 0 || fileIds.length === 0) return;
 
     try {
       const arrayBuffer = await viewerContext.exportActions.saveAsCopy();
@@ -92,7 +96,7 @@ export default function ViewerAnnotationControls({
       const file = new File([new Blob([arrayBuffer])], activeFiles[0].name, {
         type: "application/pdf",
       });
-      const parentStub = selectors.getStirlingFileStub(state.files.ids[0]);
+      const parentStub = selectors.getStirlingFileStub(fileIds[0]);
       if (!parentStub) return;
 
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
@@ -100,11 +104,7 @@ export default function ViewerAnnotationControls({
         parentStub,
         "redact",
       );
-      await fileActions.consumeFiles(
-        [state.files.ids[0]],
-        stirlingFiles,
-        stubs,
-      );
+      await fileActions.consumeFiles([fileIds[0]], stirlingFiles, stubs);
 
       // Clear unsaved changes flags after successful save
       setHasUnsavedChanges(false);
@@ -186,12 +186,15 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <ActionIcon
-          variant={isRedactMode ? "filled" : "subtle"}
-          color={isRedactMode ? "blue" : undefined}
-          radius="md"
+          variant={isRedactMode ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
+          aria-label={
+            isRedactMode
+              ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+              : t("workbenchBar.redact", "Redact")
+          }
         >
           <LocalIcon
             icon="scan-delete-rounded"
@@ -212,9 +215,7 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <ActionIcon
-          variant={annotationsHidden ? "filled" : "subtle"}
-          color={annotationsHidden ? "blue" : undefined}
-          radius="md"
+          variant={annotationsHidden ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
           disabled={
@@ -225,6 +226,10 @@ export default function ViewerAnnotationControls({
           }
           data-active={annotationsHidden ? "true" : undefined}
           aria-pressed={annotationsHidden}
+          aria-label={t(
+            "workbenchBar.toggleAnnotations",
+            "Toggle Annotations Visibility",
+          )}
         >
           <LocalIcon
             icon={

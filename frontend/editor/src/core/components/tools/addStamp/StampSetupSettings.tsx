@@ -5,7 +5,6 @@ import {
   Textarea,
   TextInput,
   Select,
-  Button,
   Text,
   Divider,
   Accordion,
@@ -15,6 +14,7 @@ import {
   Box,
   Paper,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
@@ -236,7 +236,6 @@ const StampSetupSettings = ({
             { value: "image", label: t("watermark.type.2", "Image") },
           ]}
           disabled={disabled}
-          buttonClassName={styles.modeToggleButton}
           textClassName={styles.modeToggleButtonText}
         />
       </div>
@@ -673,8 +672,8 @@ const StampSetupSettings = ({
             id="stamp-image-input"
           />
           <Button
-            size="xs"
-            component="label"
+            size="sm"
+            as="label"
             htmlFor="stamp-image-input"
             disabled={disabled}
           >

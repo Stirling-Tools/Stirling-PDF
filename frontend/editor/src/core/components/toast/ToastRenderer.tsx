@@ -1,6 +1,10 @@
+import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import "@app/components/toast/ToastRenderer.css";
 
 const locationToClass: Record<ToastLocation, string> = {
@@ -38,6 +42,7 @@ function getDefaultIconName(t: ToastInstance): string {
 }
 
 export default function ToastRenderer() {
+  const { t: translate } = useTranslation();
   const { toasts, dismiss } = useToast();
 
   const grouped = toasts.reduce<Record<ToastLocation, ToastInstance[]>>(
@@ -62,7 +67,16 @@ export default function ToastRenderer() {
         <div key={loc} className={`toast-container ${locationToClass[loc]}`}>
           {grouped[loc].map((t) => {
             return (
-              <div key={t.id} role="status" className={getToastItemClass(t)}>
+              <div
+                key={t.id}
+                role="status"
+                className={`${getToastItemClass(t)}${t.glowColor ? " toast-item--glow" : ""}`}
+                style={
+                  t.glowColor
+                    ? ({ "--toast-glow": t.glowColor } as CSSProperties)
+                    : undefined
+                }
+              >
                 {/* Top row: Icon + Title + Controls */}
                 <div className="toast-header">
                   {/* Icon */}
@@ -87,8 +101,12 @@ export default function ToastRenderer() {
                   {/* Controls */}
                   <div className="toast-controls">
                     {t.expandable && (
-                      <button
-                        aria-label="Toggle details"
+                      <ActionIcon
+                        variant="tertiary"
+                        aria-label={translate(
+                          "toast.toggleDetails",
+                          "Toggle details",
+                        )}
                         onClick={() => {
                           const evt = new CustomEvent("toast:toggle", {
                             detail: { id: t.id },
@@ -98,15 +116,16 @@ export default function ToastRenderer() {
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
                       >
                         <LocalIcon icon="expand-more-rounded" />
-                      </button>
+                      </ActionIcon>
                     )}
-                    <button
-                      aria-label="Dismiss"
+                    <ActionIcon
+                      variant="tertiary"
+                      aria-label={translate("toast.dismiss", "Dismiss")}
                       onClick={() => dismiss(t.id)}
                       className="toast-button"
                     >
-                      <LocalIcon icon="close" width={20} height={20} />
-                    </button>
+                      &times;
+                    </ActionIcon>
                   </div>
                 </div>
                 {/* Progress bar - always show when present */}
@@ -127,12 +146,12 @@ export default function ToastRenderer() {
                 {/* Button - always show when present, positioned below body */}
                 {t.buttonText && t.buttonCallback && (
                   <div className="toast-action-container">
-                    <button
+                    <Button
                       onClick={t.buttonCallback}
                       className={getActionButtonClass(t)}
                     >
                       {t.buttonText}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

@@ -8,6 +8,7 @@ import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 import { UpgradeBannerInitializer } from "@app/components/shared/UpgradeBannerInitializer";
 import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 import { UpdateSeatsProvider } from "@app/contexts/UpdateSeatsContext";
+import { ChatProvider } from "@app/components/chat/ChatContext";
 
 export function AppProviders({
   children,
@@ -15,22 +16,22 @@ export function AppProviders({
   appConfigProviderProps,
 }: AppProvidersProps) {
   return (
-    <CoreAppProviders
-      appConfigRetryOptions={appConfigRetryOptions}
-      appConfigProviderProps={appConfigProviderProps}
-    >
-      <AuthProvider>
+    <AuthProvider>
+      <CoreAppProviders
+        appConfigRetryOptions={appConfigRetryOptions}
+        appConfigProviderProps={appConfigProviderProps}
+      >
         <LicenseProvider>
           <UpdateSeatsProvider>
             <ServerExperienceProvider>
               <CheckoutProvider>
                 <UpgradeBannerInitializer />
-                {children}
+                <ChatProvider>{children}</ChatProvider>
               </CheckoutProvider>
             </ServerExperienceProvider>
           </UpdateSeatsProvider>
         </LicenseProvider>
-      </AuthProvider>
-    </CoreAppProviders>
+      </CoreAppProviders>
+    </AuthProvider>
   );
 }

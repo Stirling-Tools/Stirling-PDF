@@ -6,9 +6,18 @@
  * Vite automatically layers these `.local` files on top of the committed ones.
  *
  * Usage:
- *   tsx scripts/setup-env.ts              # ensures .env.local
- *   tsx scripts/setup-env.ts --desktop    # also ensures .env.desktop.local
- *   tsx scripts/setup-env.ts --saas       # also ensures .env.saas.local
+ *   tsx scripts/setup-env.mts              # ensures .env.local
+ *   tsx scripts/setup-env.mts --desktop    # also ensures .env.desktop.local
+ *   tsx scripts/setup-env.mts --saas       # also ensures .env.saas.local
+ *
+ * Why .mts (and not .ts)?
+ *   This script needs `import.meta.url` to resolve paths relative to itself,
+ *   because Task invokes it from the workspace root (frontend/) but the .env
+ *   files live one level deeper at frontend/editor/. `import.meta` is only
+ *   valid in ESM output; `editor/scripts/tsconfig.json` extends the editor
+ *   tsconfig which uses `module: node16`, treating plain .ts as CommonJS
+ *   (TS1470 error on `import.meta`). The .mts extension explicitly marks
+ *   the file as ESM, which tsx already runs at runtime anyway.
  */
 
 import { existsSync, writeFileSync } from "fs";
@@ -17,8 +26,6 @@ import { fileURLToPath } from "url";
 
 // .env files live next to the editor's vite.config.ts (frontend/editor/).
 // Resolve relative to this script regardless of where the build was invoked.
-// `import.meta.dirname` would be tidier but isn't available under tsx's CJS
-// transpilation today, so go via fileURLToPath for portability.
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scriptDir, "..");
 const args = process.argv.slice(2);

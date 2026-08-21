@@ -1,8 +1,6 @@
 import { PageEditorFunctions } from "@app/types/pageEditor";
-import {
-  type ToolPanelMode,
-  DEFAULT_TOOL_PANEL_MODE,
-} from "@app/constants/toolPanel";
+import { type ToolPanelMode } from "@app/constants/toolPanel";
+import { preferencesService } from "@app/services/preferencesService";
 
 export interface ToolWorkflowState {
   // UI State
@@ -43,7 +41,7 @@ export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
 
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
-  toolPanelMode: DEFAULT_TOOL_PANEL_MODE,
+  toolPanelMode: preferencesService.getPreference("defaultToolPanelMode"),
 });
 
 export function toolWorkflowReducer(

@@ -22,6 +22,7 @@ import {
   List,
 } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
+import StopIcon from "@mui/icons-material/Stop";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -206,10 +207,22 @@ function ChatMessageBubble({
   );
 }
 
-export function ChatPanel() {
+export interface ChatPanelProps {
+  onBack?: () => void;
+  backLabel?: string;
+}
+
+export function ChatPanel(_props: ChatPanelProps = {}) {
   const { t } = useTranslation();
-  const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
-    useChat();
+  const {
+    messages,
+    isOpen,
+    isLoading,
+    progress,
+    toggleOpen,
+    sendMessage,
+    cancelMessage,
+  } = useChat();
   const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -268,7 +281,7 @@ export function ChatPanel() {
             {/* Header */}
             <div className="chat-panel-header">
               <Text fw={600} size="sm">
-                AI Assistant
+                {t("chat.header.assistant")}
               </Text>
               <ActionIcon
                 variant="subtle"
@@ -285,8 +298,7 @@ export function ChatPanel() {
               <Stack gap="sm" p="sm">
                 {messages.length === 0 && (
                   <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Ask a question about your documents or get help with PDF
-                    tools.
+                    {t("chat.emptyState.text")}
                   </Text>
                 )}
                 {messages.map((msg) => (
@@ -324,23 +336,36 @@ export function ChatPanel() {
             <div className="chat-panel-input">
               <TextInput
                 ref={inputRef}
-                placeholder="Type a message..."
+                placeholder={t("chat.input.placeholder")}
                 value={input}
                 onChange={(e) => setInput(e.currentTarget.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
                 rightSection={
-                  <ActionIcon
-                    variant="filled"
-                    color="blue"
-                    size="sm"
-                    onClick={handleSend}
-                    disabled={!input.trim() || isLoading}
-                    aria-label="Send message"
-                  >
-                    <SendIcon sx={{ fontSize: 14 }} />
-                  </ActionIcon>
+                  isLoading ? (
+                    <ActionIcon
+                      variant="filled"
+                      color="red"
+                      size="sm"
+                      onClick={cancelMessage}
+                      aria-label="Stop generating"
+                    >
+                      <StopIcon sx={{ fontSize: 14 }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="filled"
+                      color="blue"
+                      size="sm"
+                      onClick={handleSend}
+                      disabled={!input.trim()}
+                      aria-label="Send message"
+                    >
+                      <SendIcon sx={{ fontSize: 14 }} />
+                    </ActionIcon>
+                  )
                 }
+                rightSectionPointerEvents="all"
                 rightSectionWidth={36}
                 style={{ flex: 1 }}
               />

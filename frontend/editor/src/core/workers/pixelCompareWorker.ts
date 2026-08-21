@@ -14,6 +14,7 @@ import type {
   PixelCompareWorkerResponse,
   PixelCompareWorkerWarnings,
 } from "@app/types/compare";
+import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -155,7 +156,7 @@ const renderPageToBitmap = async (
   return { imageData, bitmap };
 };
 
-const ENCODE_OPTS: ImageEncodeOptions = { type: "image/webp", quality: 0.85 };
+const ENCODE_QUALITY = 0.85;
 
 const bitmapToBlob = async (
   bitmap: ImageBitmap,
@@ -168,7 +169,7 @@ const bitmapToBlob = async (
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return await canvas.convertToBlob(ENCODE_OPTS);
+  return await canvas.convertToBlob(await lossyEncodeOptions(ENCODE_QUALITY));
 };
 
 const diffDataToBlob = async (
@@ -183,7 +184,7 @@ const diffDataToBlob = async (
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
   ctx.putImageData(diff, 0, 0);
-  return await canvas.convertToBlob(ENCODE_OPTS);
+  return await canvas.convertToBlob(await lossyEncodeOptions(ENCODE_QUALITY));
 };
 
 interface PageTotals {
@@ -390,12 +391,11 @@ self.addEventListener(
     let compDoc: PDFDocumentProxy | null = null;
 
     try {
-      // `CanvasFactory`/`FilterFactory` are supported at runtime but not declared on legacy types.
-      // pdfjs-dist 5.x renamed the option to `CanvasFactory` (capital C); without a FilterFactory
-      // the default DOMFilterFactory crashes in a worker calling document.createElementNS.
-      // Resolve CMap/standard-font URLs against the worker's own origin. Vite copies these
-      // directories from pdfjs-dist at build time via viteStaticCopy (see vite.config.ts).
-      const assetsBase = new URL("/pdfjs/", self.location.origin).toString();
+      // Resolve pdfjs CMap/standard-font URLs against the worker's origin + subpath.
+      const assetsBase = new URL(
+        `${import.meta.env.BASE_URL}pdfjs/`,
+        self.location.origin,
+      ).toString();
       const loaderOpts = (data: ArrayBuffer) =>
         ({
           data,

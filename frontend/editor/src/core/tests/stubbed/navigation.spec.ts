@@ -31,23 +31,23 @@ test.describe("Navigation", () => {
     await page.locator('a[href="/merge"]').first().click();
     await expect(page).toHaveURL(/\/merge/);
 
-    // In the redesigned UI, "Back to tools" button replaces the old "Tools" link
+    // In the redesigned UI, "Back to all tools" button replaces the old "Tools" link
     await page
-      .getByRole("button", { name: /Back to tools/i })
+      .getByRole("button", { name: /Back to all tools/i })
       .first()
       .click();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
 
     await page.locator('a[href="/split"]').first().click();
     await expect(page).toHaveURL(/\/split/);
 
     await page.goBack();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
 
     await page.goBack();
     await expect(page).toHaveURL(/\/merge/);
 
     await page.goForward();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/editor");
   });
 });

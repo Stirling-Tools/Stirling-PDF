@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { Button, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -10,7 +11,7 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { saveOperationResults } from "@app/services/operationResultsSaveService";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { useFileActions, useFileSelectors } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/fileContext";
 import i18n from "@app/i18n";
 
@@ -39,7 +40,7 @@ function ReviewStepContent<TParams = unknown>({
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
 
   const handleUndo = async () => {
     try {
@@ -128,8 +129,8 @@ function ReviewStepContent<TParams = unknown>({
         >
           <Button
             leftSection={<UndoIcon />}
-            variant="outline"
-            color="var(--mantine-color-gray-6)"
+            variant="secondary"
+            accent="neutral"
             onClick={handleUndo}
             fullWidth
           >
@@ -141,9 +142,8 @@ function ReviewStepContent<TParams = unknown>({
         <Button
           data-testid="download-result-button"
           leftSection={<DownloadIcon />}
-          color="blue"
           fullWidth
-          mb="md"
+          style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
         >
           {terminology.download}

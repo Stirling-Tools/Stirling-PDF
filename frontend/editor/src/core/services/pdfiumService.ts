@@ -12,8 +12,33 @@
  * `getSignatures`, `saveAsCopy`, …) wrap the `PdfEngine` interface so callers
  * never have to deal with raw pointers or Tasks.
  */
-import { init, type WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
+  init,
+  type WrappedPdfiumModule,
+  type PdfiumModule,
+} from "@embedpdf/pdfium";
+import {
+  pdfiumWasmModulePromise,
+  startEagerWasmCompilation,
+  pdfiumWasmUrl,
+} from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
+
+interface ExtendedPdfiumRuntime {
+  HEAPU8: Uint8Array;
+  HEAPF32: Float32Array;
+}
+
+interface PdfiumModuleOverrides extends Partial<PdfiumModule> {
+  locateFile?: (url: string, scriptDirectory?: string) => string;
+  instantiateWasm?: (
+    imports: WebAssembly.Imports,
+    successCallback: (
+      instance: WebAssembly.Instance,
+      module: WebAssembly.Module,
+    ) => void,
+  ) => void;
+}
 
 // PDF form field type constants (matching PDFium C API FPDF_FORMFIELD_* values)
 const FPDF_FORMFIELD_UNKNOWN = 0;
@@ -46,8 +71,7 @@ let _module: WrappedPdfiumModule | null = null;
  * Resolve the absolute WASM URL using the same pattern as LocalEmbedPDF.
  */
 function wasmUrl(): string {
-  const base = (import.meta as any).env?.BASE_URL ?? "/";
-  return `${base}pdfium/pdfium.wasm`.replace(/\/\//g, "/");
+  return pdfiumWasmUrl;
 }
 
 /**
@@ -56,20 +80,59 @@ function wasmUrl(): string {
  * This is the low-level PDFium WASM interface with all C functions wrapped.
  * Prefer `withDocument()` for document-scoped work.
  */
+/** Reuses the WASM pre-compiled at boot. Every failure must reach this promise:
+ *  `instantiateWasm` reports success by callback, so a rejection inside it leaves
+ *  `init()` pending forever - and with it every thumbnail, parse and form read. */
+async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
+  // Ensure eager compilation has started if PDF service is requested before idle timeout
+  startEagerWasmCompilation();
+
+  const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
+  const precompiled = await pdfiumWasmModulePromise;
+
+  let reportFailure: (error: unknown) => void = () => {};
+  const instantiateFailed = new Promise<never>((_, reject) => {
+    reportFailure = reject;
+  });
+
+  // No pre-compiled module: leave instantiateWasm alone so emscripten fetches the
+  // WASM itself and rejects init() on failure, instead of a fallback that can't.
+  if (precompiled) {
+    overrides.instantiateWasm = (
+      imports: WebAssembly.Imports,
+      successCallback: (
+        instance: WebAssembly.Instance,
+        module: WebAssembly.Module,
+      ) => void,
+    ) => {
+      WebAssembly.instantiate(precompiled, imports)
+        .then((instance) => successCallback(instance, precompiled))
+        .catch(reportFailure);
+    };
+  }
+
+  const m = await Promise.race([
+    init(overrides as Partial<PdfiumModule>),
+    instantiateFailed,
+  ]);
+  // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
+  try {
+    m.PDFiumExt_Init();
+  } catch {
+    /* already initialized */
+  }
+  _module = m;
+  return m;
+}
+
 export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
   if (_module) return _module;
   if (!_initPromise) {
-    _initPromise = init({
-      locateFile: () => wasmUrl(),
-    } as any).then((m) => {
-      // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
-      try {
-        m.PDFiumExt_Init();
-      } catch {
-        /* already initialized */
-      }
-      _module = m;
-      return m;
+    _initPromise = initPdfiumModule().catch((error: unknown) => {
+      // Don't cache the failure: every PDF feature in the app goes through here,
+      // so a transient WASM fetch would take them all down for the session.
+      _initPromise = null;
+      throw error;
     });
   }
   return _initPromise;
@@ -110,9 +173,9 @@ export function readAnnotRectAdjusted(
   annotPtr: number,
   rectBuf: number,
 ): boolean {
-  const ext = (m as any).EPDFAnnot_GetRect;
+  const ext = m.EPDFAnnot_GetRect;
   if (typeof ext === "function") {
-    return ext.call(m, annotPtr, rectBuf);
+    return ext(annotPtr, rectBuf);
   }
   return m.FPDFAnnot_GetRect(annotPtr, rectBuf);
 }
@@ -186,15 +249,13 @@ export function readEffectivePageBox(
   let result: PageBox | null = null;
   try {
     // CropBox is the effective visible area
-    if (
-      (m as any).FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
-    ) {
+    if (m.FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)) {
       result = read();
     }
     // Fall back to MediaBox
     if (
       !result &&
-      (m as any).FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
+      m.FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
     ) {
       result = read();
     }
@@ -226,7 +287,7 @@ function copyToWasmHeap(
   bytes: Uint8Array,
   ptr: number,
 ): void {
-  new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(bytes, ptr);
+  (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(bytes, ptr);
 }
 
 /**
@@ -1106,6 +1167,24 @@ export async function importPages(
 }
 
 /**
+ * Convert degrees (0, 90, 180, 270) to the PDFium rotation enum (0, 1, 2, 3).
+ * Lives here beside setPageRotation, which is the only thing that consumes it.
+ */
+export function degreesToPdfiumRotation(degrees: number): number {
+  const normalized = ((degrees % 360) + 360) % 360;
+  switch (normalized) {
+    case 90:
+      return 1;
+    case 180:
+      return 2;
+    case 270:
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+/**
  * Set page rotation on a raw document.
  * @param rotation 0, 1, 2, 3 for 0°, 90°, 180°, 270°
  */
@@ -1338,9 +1417,13 @@ async function renderWidgetAppearance(
   formEnvPtr: number,
   dpr: number,
 ): Promise<ImageData | null> {
-  const pdfiumWasm = m.pdfium as any;
   const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-  const matrixView = new Float32Array(pdfiumWasm.HEAPF32.buffer, matrixPtr, 6);
+  const pdfiumRuntime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
+  const matrixView = new Float32Array(
+    pdfiumRuntime.HEAPF32.buffer,
+    matrixPtr,
+    6,
+  );
   const sx = wDev / pdfW;
   const sy = hDev / pdfH;
   matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
@@ -1364,7 +1447,7 @@ async function renderWidgetAppearance(
   let imageData: ImageData | null = null;
   if (ok) {
     const rgba = new Uint8ClampedArray(
-      pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+      pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
     );
     let hasVisible = false;
     for (let i = 3; i < rgba.length; i += 4) {
@@ -1417,7 +1500,7 @@ async function renderWidgetAppearance(
     m.FPDFBitmap_Destroy(bmp2);
 
     const rgba2 = new Uint8ClampedArray(
-      pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+      pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
     );
     let hasVisible2 = false;
     for (let i = 3; i < rgba2.length; i += 4) {
@@ -1560,8 +1643,6 @@ export async function renderSignatureFieldAppearances(
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
           const bytes = stride * hDev;
-          const pdfiumWasm = m.pdfium as any;
-
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
           const bitmapPtr = m.FPDFBitmap_CreateEx(
             wDev,
@@ -1577,8 +1658,10 @@ export async function renderSignatureFieldAppearances(
           const sx = wDev / pdfW;
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+          const pdfiumRuntime = m.pdfium as typeof m.pdfium &
+            ExtendedPdfiumRuntime;
           const matrixView = new Float32Array(
-            pdfiumWasm.HEAPF32.buffer,
+            pdfiumRuntime.HEAPF32.buffer,
             matrixPtr,
             6,
           );
@@ -1603,7 +1686,7 @@ export async function renderSignatureFieldAppearances(
 
           if (ok) {
             const rgba = new Uint8ClampedArray(
-              pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+              pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
             );
             let hasVisible = false;
             for (let i = 3; i < rgba.length; i += 4) {
@@ -1663,7 +1746,7 @@ export async function renderSignatureFieldAppearances(
             m.FPDFBitmap_Destroy(bmp2);
 
             const rgba2 = new Uint8ClampedArray(
-              pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+              pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
             );
             let hasVisible2 = false;
             for (let i = 3; i < rgba2.length; i += 4) {

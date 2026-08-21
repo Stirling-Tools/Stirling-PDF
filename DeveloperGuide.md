@@ -46,11 +46,22 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Docker
 - Git
 - Java JDK 25
-- Node.js 18+ and npm (required for frontend development)
-- Gradle 7.0 or later (Included within the repo)
+- Node.js 22+ and npm (required for frontend development)
+- Gradle 9.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
+
+### Optional System Dependencies
+
+These are not required to run the app but enable specific features. The app detects them at startup and disables the relevant features if they are missing.
+
+| Dependency | Feature | Install |
+|---|---|---|
+| LibreOffice | File-to-PDF conversions | `brew install libreoffice` / `apt install libreoffice` |
+| Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
+| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
+| qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
 
 ### Setup Steps
 
@@ -81,7 +92,7 @@ Visit the [Lombok website](https://projectlombok.org/setup/) for installation in
 
 5. Add environment variable
 For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
-5. **Frontend Setup (Required for Stirling 2.0)**
+6. **Frontend Setup (Required for Stirling 2.0)**
    Navigate to the frontend directory and install dependencies using npm.
 
 ### Verify Setup
@@ -147,7 +158,7 @@ Stirling-PDF/
 │   │   │   └── locales/       # Internationalization files (JSON)
 │   │   └── vite.config.ts     # Vite configuration
 │   ├── package.json       # Shared workspace dependencies
-│   └── eslint.config.mjs  # Shared lint config
+│   └── oxlint.config.ts   # Shared lint config
 ├── customFiles/           # Custom static files and templates (generated at runtime used to replace existing files)
 ├── docs/                  # Documentation files
 ├── exampleYmlFiles/       # Example YAML configuration files
@@ -264,7 +275,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false to enable login and security features for builds
    ```
 
 2. Build the project:
@@ -294,7 +305,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
-Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
+Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. However, to improve build times these can often be removed depending on your use case
 
 ## 7. Testing
 
@@ -493,7 +504,8 @@ For Stirling 2.0, new features are built as React components:
 1. **Create a New Controller:**
    - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
-   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
+   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates.")`.
+   - If the endpoint transforms a document, declare what it accepts and produces with `@ToolIO`, for example `@ToolIO(produces = ToolFormat.PDF)`. This is what lets a pipeline containing the step be checked before it runs, so a chain that cannot work is caught in the builder rather than part-way through a job. Endpoints under the tool namespaces are required to carry it - `ToolIODeclarationCoverageTest` fails the build otherwise. See [Declaring tool inputs and outputs](#declaring-tool-inputs-and-outputs).
 
    ```java
    package stirling.software.SPDF.controller.api;
@@ -567,6 +579,38 @@ For Stirling 2.0, new features are built as React components:
   }
   ```
 
+### Declaring tool inputs and outputs
+
+An endpoint that transforms a document declares what it accepts and produces with `@ToolIO`. This is the single source of truth: it is published into the OpenAPI spec as an `x-stirling-io` extension, and generated from there into the frontend (`toolIO.ts`) and the AI engine (`tool_io.py`). A pipeline can therefore be checked while it is being edited, instead of failing part-way through a job.
+
+```java
+@ToolIO(produces = ToolFormat.PDF)
+```
+
+`accepts` defaults to `{ ToolFormat.PDF }` and `arity` to `ToolArity.SISO`, so most tools only declare what they produce.
+
+- **`ToolFormat`** is the kind of file: `PDF`, `PDF_ENCRYPTED`, `IMAGE`, `ZIP`, `WORD`, `PPT`, `EXCEL`, `CSV`, `HTML`, `XML`, `JSON`, `TEXT`, `MARKDOWN`, `JAVASCRIPT`, `EBOOK`, `EMAIL`, `POSTSCRIPT`, `VIDEO`, `CBZ`, `CBR`, plus `ANY` (accepts or produces anything) and `NONE` (returns a report, not a file). Encryption is a format rather than a flag, so the default `accepts = PDF` means an endpoint rejects an encrypted PDF unless it opts in.
+- **`ToolArity`** is how many files go in and out: `SISO`, `SIMO`, `MISO`, `MIMO`. This axis carries ZIP-as-transport. A splitter is `produces = PDF, arity = SIMO`, and the caller unpacks the archive; an endpoint whose deliverable really is an archive declares `produces = ZIP` with a single-output arity and stays packed.
+
+When the output depends on a parameter, declare the exception as a case rather than picking one answer. Add Password produces an encrypted PDF unless both passwords are blank, in which case it has only set permissions:
+
+```java
+@ToolIO(
+        produces = ToolFormat.PDF_ENCRYPTED,
+        cases =
+                @ToolIOCase(
+                        when = {
+                            @ToolIOWhen(param = "password", matches = ""),
+                            @ToolIOWhen(param = "ownerPassword", matches = "")
+                        },
+                        produces = ToolFormat.PDF,
+                        arity = ToolArity.SISO))
+```
+
+Every condition in a `when` must hold for the case to apply, and `matches` is compared as a string, case-insensitively, with an empty string matching an absent or blank value. If a case reads a parameter that is not set yet, the output is reported as uncertain and the chain warns rather than erroring.
+
+Endpoints under the tool namespaces must carry a declaration; `ToolIODeclarationCoverageTest` fails the build for any that does not, with a short allowlist for endpoints that manage a session, a device or a stored resource rather than transforming a document. The matching rules are implemented three times (Java `ToolChainValidator`, `toolIOCompat.ts`, `tool_io_compat.py`) and pinned to the same answers by the shared fixtures in `testing/tool-io-cases.json`, so a behaviour change belongs in that file first.
+
 ## Adding New Translations to Existing Language Files in Stirling-PDF
 
 When adding a new feature or modifying existing ones in Stirling-PDF, you'll need to add new translation entries to the existing language files. Here's a step-by-step guide:
@@ -576,7 +620,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
-- `messages_en_GB.properties`
+- `messages_en_US.properties`
 - `messages_fr_FR.properties`
 - `messages_de_DE.properties`
 - etc.
