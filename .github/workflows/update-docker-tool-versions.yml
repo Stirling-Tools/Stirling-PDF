@@ -1,4 +1,15 @@
+# Checks pinned versions used by the Docker build and opens one pull request
+# per tool. All occurrences of a shared tool version are updated together,
+# including the common base image and the embedded/engine Dockerfiles.
+#
+# The workflow covers externally released tools and images with stable release
+# APIs. Distribution packages installed through Ubuntu/APT are intentionally
+# excluded because their versions are resolved by the configured repositories
+# during the image build.
+
 name: Update Docker tool versions
+
+run-name: Update Docker tool versions (${{ github.event_name }})
 
 on:
   schedule:
