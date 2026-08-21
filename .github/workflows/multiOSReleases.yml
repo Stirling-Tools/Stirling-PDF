@@ -38,7 +38,9 @@ permissions:
 
 jobs:
   determine-matrix:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
@@ -116,7 +118,9 @@ jobs:
         env:
           INPUT_PLATFORM: ${{ github.event.inputs.platform }}
   build-jars:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     needs: determine-matrix
     runs-on: ubuntu-latest
     strategy:
@@ -692,6 +696,17 @@ jobs:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
           retention-days: 1
+
+      - name: Cleanup temporary files
+        if: always()
+        shell: bash
+        run: |
+          rm -f certificate.p12
+          rm -rf "$RUNNER_TEMP/msi-verify"
+          if [ "${{ matrix.platform }}" = "macos-15" ]; then
+            security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          fi
+        continue-on-error: true
 
   collect-and-release:
     needs: [determine-matrix, build, build-jars]
