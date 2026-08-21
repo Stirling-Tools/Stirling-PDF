@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXCertPathBuilderResult;
@@ -56,6 +58,8 @@ import stirling.software.common.util.ExceptionUtils;
 @RequiredArgsConstructor
 public class ValidateSignatureController {
 
+    private static final int SKIP_BUFFER_SIZE = 8192;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
 
@@ -107,12 +111,7 @@ public class ValidateSignatureController {
             }
         }
 
-        // Read the upload once. PDFBox walks the /ByteRange by skipping the signature hole, and
-        // InputStream.skip() is allowed to return 0 - servlet part streams do, which failed
-        // validation on documents other verifiers accept.
-        byte[] pdfBytes = file.getBytes();
-
-        try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -120,7 +119,7 @@ public class ValidateSignatureController {
             // furthest any signature reaches stops short of the file length, the tail is unsigned.
             // Taking the max across all signatures avoids false positives on legitimately
             // multi-signed PDFs, where an earlier signature intentionally omits later revisions.
-            long fileLength = pdfBytes.length;
+            long fileLength = file.getSize();
             long maxCovered = 0;
             for (PDSignature sig : signatures) {
                 int[] byteRange = sig.getByteRange();
@@ -138,8 +137,13 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
-                    byte[] signedContent = sig.getSignedContent(pdfBytes);
-                    byte[] signatureBytes = sig.getContents(pdfBytes);
+                    byte[] signedContent;
+                    byte[] signatureBytes;
+                    try (InputStream contentStream = skipByReading(file.getInputStream());
+                            InputStream signatureStream = skipByReading(file.getInputStream())) {
+                        signedContent = sig.getSignedContent(contentStream);
+                        signatureBytes = sig.getContents(signatureStream);
+                    }
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.
@@ -355,6 +359,33 @@ public class ValidateSignatureController {
         }
 
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * Wrap a stream so {@code skip()} always makes progress.
+     *
+     * <p>PDFBox walks a signature's /ByteRange by skipping the hole where /Contents sits, and
+     * treats a {@code skip()} of 0 as a hard failure. Returning 0 is legal - servlet container part
+     * streams do it - so signatures on perfectly good documents were rejected with
+     * "FilterInputStream.skip() returns 0". Reading and discarding keeps this streaming: the upload
+     * is never held in memory in full.
+     */
+    private static InputStream skipByReading(InputStream source) {
+        return new FilterInputStream(source) {
+            @Override
+            public long skip(long n) throws IOException {
+                long remaining = n;
+                byte[] scratch = new byte[SKIP_BUFFER_SIZE];
+                while (remaining > 0) {
+                    int read = in.read(scratch, 0, (int) Math.min(scratch.length, remaining));
+                    if (read < 0) {
+                        break;
+                    }
+                    remaining -= read;
+                }
+                return n - remaining;
+            }
+        };
     }
 
     /**

@@ -24,7 +24,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 /**
- * Signature validation must not depend on the upload's stream supporting skip().
+ * Signature validation must not depend on the upload's stream supporting skip(), and must not buy
+ * that independence by loading the whole upload into memory.
  *
  * <p>InputStream.skip() is allowed to return 0, and servlet container part streams do. PDFBox walks
  * the /ByteRange by skipping the signature hole, so reading the signed content straight off the
@@ -87,6 +88,18 @@ class ValidateSignatureStreamHandlingTest {
         assertThat(actual.getSubjectDN()).isEqualTo(expected.getSubjectDN());
     }
 
+    @Test
+    @DisplayName("Never materialises the whole upload in memory")
+    void streamsTheUploadRatherThanBufferingIt() throws Exception {
+        SignatureValidationRequest request = new SignatureValidationRequest();
+        request.setFileInput(new StreamOnlyMultipartFile(signedPdf));
+
+        List<SignatureValidationResult> results = controller.validateSignature(request).getBody();
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).isValid()).isTrue();
+    }
+
     /** Upload whose stream honours the InputStream contract that skip() may return 0. */
     private static final class NonSkippingMultipartFile extends MockMultipartFile {
 
@@ -105,6 +118,30 @@ class ValidateSignatureStreamHandlingTest {
                     return 0;
                 }
             };
+        }
+    }
+
+    /**
+     * Upload that refuses to hand over its bytes in one piece. PDFBox already materialises the
+     * signed content, so buffering the upload on top of that doubles peak memory on large files.
+     */
+    private static final class StreamOnlyMultipartFile extends MockMultipartFile {
+
+        private final byte[] content;
+
+        StreamOnlyMultipartFile(byte[] content) {
+            super("fileInput", "doc.pdf", "application/pdf", content);
+            this.content = content;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            throw new AssertionError("validation must stream the upload, not buffer it whole");
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(content);
         }
     }
 }
