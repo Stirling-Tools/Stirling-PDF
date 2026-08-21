@@ -554,6 +554,7 @@ tasks:
     deps: [install, ":backend:swagger"]
     cmds:
       - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
+      - task: format
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
@@ -563,9 +564,9 @@ tasks:
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
-    deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
+      - task: tool-models
+      - git diff --exit-code -- editor/src/core/types/toolApiTypes.ts editor/src/core/types/toolIO.ts
 
   licenses:generate:
     desc: "Generate frontend license report"
