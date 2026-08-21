@@ -250,4 +250,27 @@ class S3FileStoreTest {
             return toWrite;
         }
     }
+
+    @Test
+    void store_withOwner_persistsOwnerMetadata() throws IOException {
+        FileStore.Stored stored =
+                store.store(
+                        new ByteArrayInputStream("owned".getBytes(StandardCharsets.UTF_8)),
+                        "o.txt",
+                        "alice");
+        assertThat(store.getOwner(stored.fileId())).isEqualTo("alice");
+    }
+
+    @Test
+    void store_withoutOwner_yieldsNullFromGetOwner() throws IOException {
+        FileStore.Stored stored =
+                store.store(
+                        new ByteArrayInputStream("anon".getBytes(StandardCharsets.UTF_8)), "a.txt");
+        assertThat(store.getOwner(stored.fileId())).isNull();
+    }
+
+    @Test
+    void getOwner_returnsNullForUnknownFileId() throws IOException {
+        assertThat(store.getOwner("00000000-0000-0000-0000-000000000000")).isNull();
+    }
 }

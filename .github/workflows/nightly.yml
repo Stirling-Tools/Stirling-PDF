@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 2 * * *" # 2 AM UTC every night
   workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/nightly.yml
+      - testing/cucumber/**
+      - docker/embedded/compose/test_cicd.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,16 +18,12 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -30,16 +31,21 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Install all Playwright browsers
         run: task e2e:install
+
+      - name: Build frontend (production bundle for vite preview)
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
 
       - name: Run E2E tests (all browsers)
         run: task e2e:cross-browser
@@ -48,6 +54,144 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-nightly-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          name: playwright-report-nightly-${{ github.run_id }}
+          path: frontend/playwright-report/
           retention-days: 14
+
+  # Whole-suite accessibility sweep. Pull requests only scan the stories they
+  # touch (frontend-a11y.yml) because a full pass takes ~30 minutes; this covers
+  # everything else, so a violation introduced by a change somewhere other than
+  # the story itself — a shared component, a theme token — still surfaces within
+  # a day.
+  a11y-all-stories:
+    name: a11y (every story)
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [light, dark]
+    runs-on: ubuntu-latest
+    # One full sweep (~30 minutes of browser time).
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
+      - name: a11y gate (every story, ${{ matrix.theme }})
+        run: task frontend:storybook:a11y:${{ matrix.theme }}
+
+      - name: Upload scan reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: a11y-scan-nightly-${{ matrix.theme }}-${{ github.run_id }}
+          path: frontend/.a11y-scan/
+          retention-days: 14
+          if-no-files-found: ignore
+          # The reports live in a dot-directory, which upload-artifact treats as
+          # hidden and silently skips by default.
+          include-hidden-files: true
+
+  # Builds all desktop platforms on a schedule so the Rust dependency cache is
+  # written on main, where PR and merge-queue tauri builds can restore it.
+  #
+  # The only job here still pinned to schedule/main: it primes a cache rather than
+  # testing anything, and Actions scopes a cache written on a PR branch to that PR
+  # alone, so a PR run costs three platform builds and produces nothing reusable.
+  warm-tauri-cache:
+    name: Warm Tauri Rust cache
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/tauri-build.yml
+    with:
+      platform: all
+      sign: false
+    secrets: inherit
+
+  # Runs the @nightly tag (conversion scenarios) plus a 10-shard concurrency run
+  # of every other feature.
+  cucumber-nightly:
+    environment:
+      name: ci-unsigned
+      deployment: false
+    name: Cucumber (nightly scenarios + full concurrency)
+    runs-on: ubuntu-latest
+    # Fork pull requests get no MAVEN_* secrets, so the image build cannot work.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
+      - name: Start the fat image with login and storage enabled
+        run: docker compose -f docker/embedded/compose/test_cicd.yml up -d --build
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Wait for the server
+        # Throwaway key from test_cicd.yml; out of the header literal for gitleaks.
+        env:
+          TEST_API_KEY: "123456789"
+        run: |
+          curl --retry 90 --retry-delay 3 --retry-connrefused --retry-all-errors \
+            -sf -H "X-API-KEY: $TEST_API_KEY" http://localhost:8080/api/v1/info/status
+
+      # Heavy LibreOffice/Calibre/Ghostscript conversions, excluded from the PR run.
+      # Both tasks install the behave deps themselves, so there is no separate uv sync step.
+      - name: Run @nightly scenarios
+        run: task cucumber:nightly
+
+      # Genuinely different payloads contending on one backend.
+      - name: Sharded concurrency validation
+        run: task cucumber:parallel SHARDS=10
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker compose -f docker/embedded/compose/test_cicd.yml logs --tail 400
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker/embedded/compose/test_cicd.yml down -v

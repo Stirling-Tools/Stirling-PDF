@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,6 +37,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 public class S3FileStore implements FileStore, AutoCloseable {
 
     public static final String DEFAULT_KEY_PREFIX = "transient/";
+    static final String OWNER_METADATA_KEY = "owner";
 
     private final S3Client s3Client;
     private final String bucket;
@@ -64,7 +67,7 @@ public class S3FileStore implements FileStore, AutoCloseable {
     }
 
     @Override
-    public Stored store(InputStream in, String originalName) throws IOException {
+    public Stored store(InputStream in, String originalName, String owner) throws IOException {
         String fileId = UUID.randomUUID().toString();
         // S3 PUT requires a known content-length; spool to a temp file first so memory stays
         // bounded for large payloads, then stream the file to S3 via RequestBody.fromFile.
@@ -75,10 +78,13 @@ public class S3FileStore implements FileStore, AutoCloseable {
                 Files.copy(src, tempFile, StandardCopyOption.REPLACE_EXISTING);
             }
             size = Files.size(tempFile);
-            PutObjectRequest request =
-                    PutObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+            PutObjectRequest.Builder builder =
+                    PutObjectRequest.builder().bucket(bucket).key(resolveKey(fileId));
+            if (owner != null && !owner.isBlank()) {
+                builder.metadata(Map.of(OWNER_METADATA_KEY, owner));
+            }
             try {
-                s3Client.putObject(request, RequestBody.fromFile(tempFile));
+                s3Client.putObject(builder.build(), RequestBody.fromFile(tempFile));
             } catch (SdkException e) {
                 throw new IOException("Failed to upload object to S3", e);
             }
@@ -186,6 +192,36 @@ public class S3FileStore implements FileStore, AutoCloseable {
     }
 
     @Override
+    public String getOwner(String fileId) throws IOException {
+        try {
+            validateFileId(fileId);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        HeadObjectRequest request =
+                HeadObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        try {
+            HeadObjectResponse response = s3Client.headObject(request);
+            Map<String, String> metadata =
+                    Optional.ofNullable(response.metadata()).orElse(Collections.emptyMap());
+            String owner = metadata.get(OWNER_METADATA_KEY);
+            if (owner != null && !owner.isBlank()) {
+                return owner;
+            }
+            return null;
+        } catch (NoSuchKeyException e) {
+            return null;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                return null;
+            }
+            throw new IOException("Failed to read owner metadata from S3", e);
+        } catch (SdkException e) {
+            throw new IOException("Failed to read owner metadata from S3", e);
+        }
+    }
+
+    @Override
     public void close() {
         if (!ownsClient) {
             return;
@@ -205,7 +241,7 @@ public class S3FileStore implements FileStore, AutoCloseable {
         if (fileId == null || fileId.isBlank()) {
             throw new IllegalArgumentException("File ID must not be blank");
         }
-        if (fileId.contains("..") || fileId.contains("/") || fileId.contains("\\")) {
+        if (fileId.contains(".") || fileId.contains("/") || fileId.contains("\\")) {
             throw new IllegalArgumentException("Invalid file ID");
         }
     }

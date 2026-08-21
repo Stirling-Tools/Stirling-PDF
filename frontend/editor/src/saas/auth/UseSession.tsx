@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
   useCallback,
@@ -14,19 +15,11 @@ import type {
   User as SupabaseUser,
   AuthError,
 } from "@supabase/supabase-js";
-import {
-  CreditSummary,
-  SubscriptionInfo,
-  CreditCheckResult,
-  ApiCredits,
-} from "@app/types/credits";
-import apiClient, {
-  setGlobalCreditUpdateCallback,
-} from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,
   getProfilePictureMetadata,
+  getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
 
@@ -56,15 +49,6 @@ export function deriveDisplayName(
   );
 }
 
-export interface TrialStatus {
-  isTrialing: boolean;
-  trialEnd: string;
-  daysRemaining: number;
-  hasPaymentMethod: boolean;
-  hasScheduledSub: boolean;
-  status: string;
-}
-
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -77,50 +61,40 @@ interface AuthContextType {
    *   consumers can fall back to whatever makes sense.
    */
   displayName: string | null;
+  /** Whether the current session is an anonymous (Supabase `is_anonymous`) guest. */
+  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
-  creditBalance: number | null;
-  subscription: SubscriptionInfo | null;
-  creditSummary: CreditSummary | null;
   isPro: boolean | null;
-  trialStatus: TrialStatus | null;
   profilePictureUrl: string | null;
   profilePictureMetadata: ProfilePictureMetadata | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  hasSufficientCredits: (requiredCredits: number) => CreditCheckResult;
-  updateCredits: (newBalance: number) => void;
-  refreshCredits: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
-  refreshTrialStatus: () => Promise<void>;
   refreshProfilePicture: () => Promise<void>;
   refreshProfilePictureMetadata: () => Promise<void>;
+  /**
+   * Session-level permission flags (see the core auth seam). Supabase
+   * sessions don't carry them — consumers treat undefined as "not granted"
+   * and fall back to app-config gates.
+   */
+  isAdmin?: boolean;
+  portalAccess?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   displayName: null,
+  isAnonymous: false,
   loading: true,
   error: null,
-  creditBalance: null,
-  subscription: null,
-  creditSummary: null,
   isPro: null,
-  trialStatus: null,
   profilePictureUrl: null,
   profilePictureMetadata: null,
   signOut: async () => {},
   refreshSession: async () => {},
-  hasSufficientCredits: () => ({
-    hasSufficientCredits: false,
-    currentBalance: 0,
-    requiredCredits: 0,
-  }),
-  updateCredits: () => {},
-  refreshCredits: async () => {},
   refreshProStatus: async () => {},
-  refreshTrialStatus: async () => {},
   refreshProfilePicture: async () => {},
   refreshProfilePictureMetadata: async () => {},
 });
@@ -129,82 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
-  const [creditBalance, setCreditBalance] = useState<number | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
-    null,
-  );
-  const [creditSummary, setCreditSummary] = useState<CreditSummary | null>(
-    null,
-  );
   const [isPro, setIsPro] = useState<boolean | null>(null);
-  const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
-
-  const fetchCredits = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping credit fetch");
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-        return;
-      }
-
-      try {
-        console.debug(
-          "[Auth Debug] Fetching credits for user:",
-          currentSession.user.id,
-        );
-        const response = await apiClient.get<ApiCredits>("/api/v1/credits");
-        const apiCredits = response.data;
-
-        // Map server payload to app CreditSummary
-        const credits: CreditSummary = {
-          currentCredits: apiCredits.totalAvailableCredits,
-          maxCredits:
-            apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
-          creditsUsed:
-            apiCredits.weeklyCreditsAllocated -
-            apiCredits.weeklyCreditsRemaining +
-            (apiCredits.totalBoughtCredits - apiCredits.boughtCreditsRemaining),
-          creditsRemaining: apiCredits.totalAvailableCredits,
-          resetDate: apiCredits.weeklyResetDate,
-          weeklyAllowance: apiCredits.weeklyCreditsAllocated,
-        };
-
-        setCreditSummary(credits);
-        setCreditBalance(credits.creditsRemaining);
-
-        const subscriptionInfo: SubscriptionInfo = {
-          status: "active",
-          tier: (credits.weeklyAllowance || 0) > 100 ? "premium" : "free",
-          creditsPerWeek: credits.weeklyAllowance,
-          maxCredits: credits.maxCredits,
-        };
-        setSubscription(subscriptionInfo);
-
-        console.debug("[Auth Debug] Credits fetched successfully:", credits);
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch credits:", error);
-        // Don't set error state for credit fetching failures to avoid disrupting auth flow
-        // Credits might not be available in all deployments
-        setCreditBalance(null);
-        setCreditSummary(null);
-        setSubscription(null);
-      }
-    },
-    [session],
-  );
-
-  const refreshCredits = useCallback(async () => {
-    await fetchCredits();
-  }, [fetchCredits]);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -245,74 +149,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProStatus();
   }, [fetchProStatus]);
 
-  const fetchTrialStatus = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug(
-          "[Auth Debug] No user session, skipping trial status fetch",
-        );
-        setTrialStatus(null);
-        return;
-      }
-
+  // Provider photo as interim fallback when the bucket copy is missing —
+  // skipped when the user explicitly chose upload/removal (source "upload").
+  const providerAvatarFallback = useCallback(
+    async (user: SupabaseUser): Promise<string | null> => {
       try {
-        console.debug(
-          "[Auth Debug] Fetching trial status for user:",
-          currentSession.user.id,
-        );
-        const { data, error } = await supabase
-          .from("billing_subscriptions")
-          .select(
-            "status, trial_end, has_payment_method, scheduled_subscription_id",
-          )
-          .in("status", ["trialing", "incomplete_expired", "canceled"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error("[Auth Debug] Error fetching trial status:", error);
-          setTrialStatus(null);
-          return;
-        }
-
-        if (data?.trial_end) {
-          const trialEnd = new Date(data.trial_end);
-          const now = new Date();
-          const daysRemaining = Math.ceil(
-            (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          );
-
-          setTrialStatus({
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-            trialEnd: data.trial_end,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method || false,
-            hasScheduledSub: !!data.scheduled_subscription_id,
-            status: data.status,
-          });
-          console.debug("[Auth Debug] Trial status fetched:", {
-            status: data.status,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method,
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-          });
-        } else {
-          setTrialStatus(null);
-        }
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch trial status:", error);
-        setTrialStatus(null);
+        const metadata = await getProfilePictureMetadata(user.id);
+        if (metadata?.source === "upload") return null;
+        return getProviderAvatarUrl(user);
+      } catch {
+        return getProviderAvatarUrl(user);
       }
     },
-    [session],
+    [],
   );
-
-  const refreshTrialStatus = useCallback(async () => {
-    await fetchTrialStatus();
-  }, [fetchTrialStatus]);
 
   const fetchProfilePicture = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -344,7 +194,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             "[Auth Debug] Profile picture not available:",
             error.message,
           );
-          setProfilePictureUrl(null);
+          setProfilePictureUrl(
+            await providerAvatarFallback(currentSession.user),
+          );
         } else {
           setProfilePictureUrl(data.signedUrl);
           console.debug(
@@ -353,10 +205,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
-        setProfilePictureUrl(null);
+        setProfilePictureUrl(await providerAvatarFallback(currentSession.user));
       }
     },
-    [session],
+    [session, providerAvatarFallback],
   );
 
   const refreshProfilePicture = useCallback(async () => {
@@ -403,44 +255,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProfilePictureMetadata();
   }, [fetchProfilePictureMetadata]);
 
-  const updateCredits = useCallback(
-    (newBalance: number) => {
-      console.debug("[Auth Debug] Updating credit balance:", {
-        from: creditBalance,
-        to: newBalance,
-      });
-      setCreditBalance(newBalance);
-      // Also update the creditSummary if it exists
-      if (creditSummary) {
-        const updatedSummary: CreditSummary = {
-          ...creditSummary,
-          creditsRemaining: newBalance,
-          currentCredits: newBalance,
-        };
-        setCreditSummary(updatedSummary);
-      }
-    },
-    [creditSummary],
+  // Refs, not state: the auth effect below has an empty dep array.
+  const loadedForRef = useRef<string | null>(null);
+  const inFlightRef = useRef<{ key: string; promise: Promise<void> } | null>(
+    null,
   );
 
-  const hasSufficientCredits = useCallback(
-    (requiredCredits: number): CreditCheckResult => {
-      const currentBalance = creditBalance ?? 0;
-      const hasSufficient = currentBalance >= requiredCredits;
-      console.debug("[Auth Debug] Credit check:", {
-        requiredCredits,
-        currentBalance,
-        hasSufficient,
-      });
+  /**
+   * Sole owner of the per-user data fetching: mount-time init and every auth
+   * event route through here. Idempotent per identity, since Supabase re-fires
+   * SIGNED_IN and TOKEN_REFRESHED on token refresh and tab wakeups; pass
+   * `force` for a genuine reload. The returned promise excludes the profile
+   * picture, so awaiting it never blocks on an image download.
+   */
+  const loadUserData = useCallback(
+    (
+      sessionToLoad: Session | null,
+      opts?: { force?: boolean },
+    ): Promise<void> => {
+      const user = sessionToLoad?.user;
+      if (!user) {
+        loadedForRef.current = null;
+        return Promise.resolve();
+      }
 
-      return {
-        hasSufficientCredits: hasSufficient,
-        currentBalance,
-        requiredCredits,
-        shortfall: hasSufficient ? undefined : requiredCredits - currentBalance,
-      };
+      // Not the access token, which changes every refresh. The anonymous flag
+      // matters: a guest upgrade keeps the same id and must still refetch.
+      const key = `${user.id}:${Boolean(user.is_anonymous)}`;
+      if (!opts?.force && loadedForRef.current === key)
+        return Promise.resolve();
+
+      // The second of a concurrent init/SIGNED_IN pair adopts this promise so it
+      // still awaits the load. A forced reload must not: the guest upgrade
+      // would be silently dropped.
+      if (!opts?.force && inFlightRef.current?.key === key)
+        return inFlightRef.current.promise;
+
+      const run = (async () => {
+        // Off the awaited path: a first login re-uploads the provider avatar.
+        // The signed-URL read chains behind it because reading first 404s and
+        // silently falls back to the provider photo.
+        const avatarSync = syncOAuthAvatar(user).catch((err) => {
+          console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
+          return false;
+        });
+        void avatarSync
+          .then(() => fetchProfilePicture(sessionToLoad))
+          .catch((err) => {
+            console.debug("[Auth Debug] Failed to fetch profile picture:", err);
+          });
+
+        await Promise.all([
+          fetchProStatus(sessionToLoad),
+          fetchProfilePictureMetadata(sessionToLoad),
+        ]);
+        // Only on success: set up front, a concurrent caller short-circuits on
+        // it and returns to a still-empty state. Also lets a failure retry.
+        loadedForRef.current = key;
+      })()
+        .catch((err) => {
+          console.debug("[Auth Debug] Failed to load user data:", err);
+        })
+        .finally(() => {
+          // Only clear our own entry; a newer load may have superseded us.
+          if (inFlightRef.current?.promise === run) inFlightRef.current = null;
+        });
+
+      inFlightRef.current = { key, promise: run };
+      return run;
     },
-    [creditBalance],
+    [fetchProStatus, fetchProfilePictureMetadata, fetchProfilePicture],
   );
 
   const refreshSession = async () => {
@@ -486,11 +370,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Set up global credit update callback
-  useEffect(() => {
-    setGlobalCreditUpdateCallback(updateCredits);
-  }, [updateCredits]);
-
   useEffect(() => {
     let mounted = true;
 
@@ -513,26 +392,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setSession(data.session);
 
-          // Fetch credits, pro status, trial status, profile picture metadata, and profile picture using the session from the response
-          if (data.session?.user) {
-            // Sync OAuth avatar in background
-            syncOAuthAvatar(data.session.user).catch((err) => {
-              console.debug(
-                "[Auth Debug] Failed to sync OAuth avatar on init:",
-                err,
-              );
-            });
-
-            await fetchCredits(data.session);
-            await fetchProStatus(data.session);
-            await fetchTrialStatus(data.session);
-            await fetchProfilePictureMetadata(data.session);
-
-            // Small delay to allow avatar sync to complete if quick
-            setTimeout(() => {
-              fetchProfilePicture(data.session);
-            }, 500);
-          }
+          // Awaited so the spinner does not clear before pro status is known.
+          await loadUserData(data.session);
         }
       } catch (err) {
         console.error(
@@ -574,65 +435,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Additional handling for specific events
           if (event === "SIGNED_OUT") {
             console.debug("[Auth Debug] User signed out, clearing session");
-            // Clear credit data, pro status, trial status, profile picture, and metadata on sign out
-            setCreditBalance(null);
-            setCreditSummary(null);
-            setSubscription(null);
+            // Clear pro status, profile picture, and metadata on sign out
             setIsPro(null);
-            setTrialStatus(null);
             setProfilePictureUrl(null);
             setProfilePictureMetadata(null);
-          } else if (event === "SIGNED_IN") {
-            console.debug("[Auth Debug] User signed in successfully");
-            if (newSession?.user) {
-              // Note: we deliberately do NOT toggle `loading` here. Supabase
-              // also fires SIGNED_IN on tab visibility / token-refresh wakeups
-              // (per its docs: "SIGNED_IN is fired when a user signs in OR
-              // when the access token is refreshed"), and gating the UI on
-              // `loading` would unmount Landing -> HomePage every time the
-              // user switches tabs back. Initial-mount loading is handled by
-              // `initializeAuth` above; downstream fetches expose their own
-              // null/loading states.
-
-              // Sync OAuth avatar in background (don't block other fetches)
-              syncOAuthAvatar(newSession.user).catch((err) => {
-                console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
-              });
-
-              // Fetch user data in parallel
-              Promise.all([
-                fetchCredits(newSession),
-                fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
-                fetchProfilePictureMetadata(newSession),
-              ]).then(() => {
-                // Fetch profile picture AFTER sync has had time to complete
-                // Use a small delay to allow avatar sync to finish if it's quick
-                setTimeout(() => {
-                  fetchProfilePicture(newSession).finally(() => {
-                    console.debug(
-                      "[Auth Debug] User data fully loaded after sign in",
-                    );
-                  });
-                }, 500);
-              });
-            }
-          } else if (event === "TOKEN_REFRESHED") {
-            console.debug("[Auth Debug] Token refreshed");
-            // Optionally refresh credits, pro status, trial status, profile picture metadata, and profile picture on token refresh
-            if (newSession?.user) {
-              Promise.all([
-                fetchCredits(newSession),
-                fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
-                fetchProfilePictureMetadata(newSession),
-                fetchProfilePicture(newSession),
-              ]).then(() => {
-                console.debug(
-                  "[Auth Debug] User data refreshed after token refresh",
-                );
-              });
-            }
+            loadedForRef.current = null;
+          } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            console.debug("[Auth Debug] Signed in or token refreshed");
+            // Deliberately does not touch `loading`: Supabase also fires
+            // SIGNED_IN on tab wakeups, and gating the UI on it would unmount
+            // Landing -> HomePage on every tab switch. Pinned by a test.
+            void loadUserData(newSession);
           } else if (event === "USER_UPDATED") {
             console.debug("[Auth Debug] User updated");
 
@@ -661,16 +474,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     "[Auth Debug] User upgrade synchronized successfully",
                   );
 
-                  // Refresh credits, pro status, trial status, profile picture metadata, and profile picture after upgrade
-                  if (newSession?.user) {
-                    return Promise.all([
-                      fetchCredits(newSession),
-                      fetchProStatus(newSession),
-                      fetchTrialStatus(newSession),
-                      fetchProfilePictureMetadata(newSession),
-                      fetchProfilePicture(newSession),
-                    ]);
-                  }
+                  // Forced: same user id, so the guest's data must be replaced.
+                  return loadUserData(newSession, { force: true });
                 })
                 .then(() => {
                   console.debug(
@@ -693,6 +498,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
+    // Empty and load-bearing: must subscribe once. The closures are recreated
+    // when `session` changes, so listing deps would re-subscribe on every auth
+    // event; every call above passes its session explicitly instead. No lint
+    // rule enforces this, so do not "fix" these deps.
   }, []);
 
   const { t } = useTranslation();
@@ -701,22 +510,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     displayName: deriveDisplayName(user, t),
+    isAnonymous: Boolean(user?.is_anonymous),
     loading,
     error,
-    creditBalance,
-    subscription,
-    creditSummary,
     isPro,
-    trialStatus,
     profilePictureUrl,
     profilePictureMetadata,
     signOut,
     refreshSession,
-    hasSufficientCredits,
-    updateCredits,
-    refreshCredits,
     refreshProStatus,
-    refreshTrialStatus,
     refreshProfilePicture,
     refreshProfilePictureMetadata,
   };

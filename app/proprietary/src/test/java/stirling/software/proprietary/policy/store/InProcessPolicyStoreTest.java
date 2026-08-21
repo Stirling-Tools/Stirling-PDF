@@ -12,11 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 
-/** Tests for {@link InProcessPolicyStore}: id assignment, upsert, trigger-type lookup, delete. */
+/** Tests for {@link InProcessPolicyStore}: id assignment, upsert, binding lookup, delete. */
 class InProcessPolicyStoreTest {
 
     private PolicyStore store;
@@ -28,7 +30,7 @@ class InProcessPolicyStoreTest {
 
     @Test
     void savedPolicyGetsAnIdAndIsRetrievable() {
-        Policy saved = store.save(policy(null, "compress", "manual", true));
+        Policy saved = store.save(policy(null, "compress", null, true));
 
         assertNotNull(saved.id());
         assertFalse(saved.id().isBlank());
@@ -37,7 +39,7 @@ class InProcessPolicyStoreTest {
 
     @Test
     void savingWithAnExistingIdUpdatesInPlace() {
-        Policy created = store.save(policy(null, "before", "manual", true));
+        Policy created = store.save(policy(null, "before", null, true));
 
         store.save(
                 new Policy(
@@ -45,7 +47,7 @@ class InProcessPolicyStoreTest {
                         "after",
                         "owner",
                         true,
-                        TriggerConfig.manual(),
+                        List.of(),
                         List.of(),
                         OutputSpec.inline()));
 
@@ -54,20 +56,21 @@ class InProcessPolicyStoreTest {
     }
 
     @Test
-    void findByTriggerTypeReturnsOnlyEnabledMatches() {
-        store.save(policy(null, "watch", "folder", true));
-        store.save(policy(null, "watch-disabled", "folder", false));
+    void findBindingsByTriggerTypeReturnsOnlyEnabledMatches() {
         store.save(policy(null, "nightly", "schedule", true));
+        store.save(policy(null, "nightly-disabled", "schedule", false));
+        store.save(policy(null, "hooked", "webhook", true));
+        store.save(policy(null, "on-demand", null, true)); // manual-only: no trigger
 
-        List<Policy> folder = store.findByTriggerType("folder");
+        List<PolicyBinding> scheduled = store.findBindingsByTriggerType("schedule");
 
-        assertEquals(1, folder.size());
-        assertEquals("watch", folder.get(0).name());
+        assertEquals(1, scheduled.size());
+        assertEquals("nightly", scheduled.get(0).policy().name());
     }
 
     @Test
     void deleteRemovesThePolicy() {
-        Policy saved = store.save(policy(null, "p", "manual", true));
+        Policy saved = store.save(policy(null, "p", null, true));
 
         assertTrue(store.delete(saved.id()));
         assertTrue(store.get(saved.id()).isEmpty());
@@ -75,12 +78,16 @@ class InProcessPolicyStoreTest {
     }
 
     private static Policy policy(String id, String name, String triggerType, boolean enabled) {
+        PipelineInput input =
+                triggerType == null
+                        ? PipelineInput.manual("src")
+                        : new PipelineInput("src", new TriggerConfig(triggerType, Map.of()));
         return new Policy(
                 id,
                 name,
                 "owner",
                 enabled,
-                new TriggerConfig(triggerType, Map.of()),
+                List.of(input),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

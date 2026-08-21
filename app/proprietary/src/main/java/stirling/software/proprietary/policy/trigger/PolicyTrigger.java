@@ -1,24 +1,54 @@
 package stirling.software.proprietary.policy.trigger;
 
+import java.util.Set;
+
+import stirling.software.proprietary.policy.model.PipelineInput;
+import stirling.software.proprietary.policy.model.Policy;
+
 /**
- * Activates policies of one trigger type. A trigger owns a {@link #type()} (matching {@code
- * TriggerConfig.type()}); when its condition fires it runs the relevant {@code Policy} through the
- * {@code PolicyEngine}.
- *
- * <p>Background triggers (folder watcher, schedule) are driven by configuration: on {@link
- * #start()} they begin watching/scheduling for the policies returned by {@code
- * PolicyStore.findByTriggerType(type())}, and stop on {@link #stop()}. Request-driven triggers
- * (manual) have no background lifecycle and run a policy directly in response to a call. New
- * trigger kinds are new beans of this type; the engine and the {@code Policy} model do not change.
+ * Decides <em>when</em> a policy input runs. On firing it hands the binding to {@code
+ * PolicyRunner}, which pulls only that input's source; it never resolves sources itself. New
+ * trigger kinds are just new beans of this type.
  */
 public interface PolicyTrigger {
 
-    /** Stable identifier for this trigger kind, matching {@code TriggerConfig.type()}. */
+    /** Matches {@code TriggerConfig.type()}. */
     String type();
 
-    /** Begin activating policies of this type (e.g. start a folder watcher). No-op for manual. */
+    /**
+     * Whether this trigger needs at least one compatible input source to function. A schedule fires
+     * on the clock regardless of sources, so it is false; folder-watch derives the directories it
+     * watches from the policy's sources, so it is true. Drives whether the UI offers the trigger.
+     */
+    default boolean requiresSource() {
+        return false;
+    }
+
+    /**
+     * The source {@code type()}s this trigger is compatible with (e.g. {@code "folder"}). Empty
+     * means source-agnostic (no constraint). Lets the UI offer a trigger only when a compatible
+     * source is selected, without hard-coding the relationship.
+     */
+    default Set<String> supportedSourceTypes() {
+        return Set.of();
+    }
+
+    /**
+     * Validate one input's use of this trigger at save time so misconfiguration fails fast, not at
+     * fire time. Receives the owning {@link Policy} and the specific {@link PipelineInput} so a
+     * trigger that depends on the input's source (folder-watch) can check it.
+     */
+    default void validate(Policy policy, PipelineInput input) {}
+
     default void start() {}
 
-    /** Stop activating and release any resources. */
     default void stop() {}
+
+    /**
+     * React to a policy being created, updated, or deleted. A trigger that caches per-policy state
+     * (folder-watch tracks which directories to watch) re-syncs it now, so a new policy is acted on
+     * immediately and a deleted one stops at once, rather than waiting for the next periodic sweep.
+     * Default no-op for triggers that read the store fresh on every fire.
+     */
+    default void onPoliciesChanged() {}
 }

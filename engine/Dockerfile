@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.5
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
 
-ARG TASK_VERSION=3.49.1
+ARG TASK_VERSION=3.52.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && ARCH=$(dpkg --print-architecture) \
@@ -10,18 +10,25 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-COPY pyproject.toml uv.lock Taskfile.yml .env ./
-COPY .taskfiles/ ./.taskfiles/
-COPY scripts/ ./scripts/
+# Source under /app/engine/ to match root Taskfile's `includes.engine.dir: engine`.
+WORKDIR /app/engine
+COPY engine/pyproject.toml engine/uv.lock engine/.env ./
+COPY engine/scripts/ ./scripts/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --group engine
 
-COPY src/ ./src/
+COPY engine/src/ ./src/
+WORKDIR /app
+COPY Taskfile.yml ./
+COPY .taskfiles/ ./.taskfiles/
 
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/app/engine/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+ENV STIRLING_ENGINE_WORKERS=4
+# Container runs on a fixed port; skip the host-only free-port probe (its script
+# is not shipped in the image). engine:run honours these.
+ENV ENGINE_PORT_PROBE=false
+ENV STIRLING_ENGINE_PORT=5001
 
 EXPOSE 5001
 

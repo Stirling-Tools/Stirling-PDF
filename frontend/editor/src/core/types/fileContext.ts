@@ -51,6 +51,22 @@ export interface StirlingFileStub extends BaseFileMetadata {
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
   isDirty?: boolean; // Has unsaved changes (only for files with localFilePath)
+  /**
+   * Cached classification label ids — the source of truth the Files sidebar
+   * groups by (so it never re-reads PDF bytes); resolve to display names via the
+   * label-display seam. Written when the classify policy runs (SaaS) and CARRIED
+   * FORWARD onto every later version via the stub (see {@code createChildStub} +
+   * the CONSUME_FILES reducer), so a second policy or a tool edit keeps the file
+   * in its label groups instead of dropping to "Other". Undefined for
+   * unclassified files / non-SaaS builds.
+   */
+  classificationLabels?: string[];
+  /**
+   * This session proved the stored bytes unreadable (WebKit losing a blob's
+   * backing store). The row renders as "data lost" instead of pretending the
+   * file can open; re-uploading is the only recovery.
+   */
+  dataUnavailable?: boolean;
   // Note: File object stored in provider ref, not in state
 }
 
@@ -274,6 +290,9 @@ export type FileContextAction =
       payload: {
         inputFileIds: FileId[];
         outputStirlingFileStubs: StirlingFileStub[];
+        /** Replace inputs in place without auto-selecting/reordering the outputs
+         *  (background enforcement). Defaults to false — normal tool behaviour. */
+        silent?: boolean;
       };
     }
   | {
@@ -306,7 +325,11 @@ export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (
     files: File[],
-    options?: { insertAfterPageId?: string; selectFiles?: boolean },
+    options?: {
+      insertAfterPageId?: string;
+      selectFiles?: boolean;
+      skipUploadTracking?: boolean;
+    },
   ) => Promise<StirlingFile[]>;
   addFilesWithOptions: (
     files: File[],
@@ -321,6 +344,7 @@ export interface FileContextActions {
         fileName: string,
       ) => Promise<boolean>;
       allowDuplicates?: boolean;
+      skipUploadTracking?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   addStirlingFileStubs: (
@@ -348,6 +372,7 @@ export interface FileContextActions {
     inputFileIds: FileId[],
     outputStirlingFiles: StirlingFile[],
     outputStirlingFileStubs: StirlingFileStub[],
+    options?: { silent?: boolean },
   ) => Promise<FileId[]>;
   undoConsumeFiles: (
     inputFiles: File[],

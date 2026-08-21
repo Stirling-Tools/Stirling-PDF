@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -19,7 +20,8 @@ class FileStorageDelegationTest {
         FileStorage fs =
                 new FileStorage(
                         mock(FileOrUploadService.class),
-                        new LocalDiskFileStore(tempDir.toString()));
+                        new LocalDiskFileStore(tempDir.toString()),
+                        Optional.empty());
         byte[] payload = "round-trip".getBytes();
         String id = fs.storeBytes(payload, "x.bin");
         assertArrayEquals(payload, fs.retrieveBytes(id));

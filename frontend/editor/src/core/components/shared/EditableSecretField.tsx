@@ -1,12 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import {
-  PasswordInput,
-  Group,
-  ActionIcon,
-  Tooltip,
-  TextInput,
-} from "@mantine/core";
+import { useId, useState, useRef, useEffect } from "react";
+import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface EditableSecretFieldProps {
@@ -32,11 +27,13 @@ export default function EditableSecretField({
   description,
   value,
   onChange,
-  placeholder = "Enter value",
+  placeholder,
   disabled = false,
   error,
 }: EditableSecretFieldProps) {
   const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("common.enterValue");
+  const fieldId = useId();
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,6 +68,7 @@ export default function EditableSecretField({
     <div>
       {label && (
         <label
+          htmlFor={fieldId}
           style={{
             display: "block",
             marginBottom: 4,
@@ -83,7 +81,11 @@ export default function EditableSecretField({
       )}
       {description && (
         <p
-          style={{ margin: "4px 0 12px 0", fontSize: "0.75rem", color: "#666" }}
+          style={{
+            margin: "4px 0 12px 0",
+            fontSize: "0.75rem",
+            color: "var(--c-text-muted)",
+          }}
         >
           {description}
         </p>
@@ -92,10 +94,16 @@ export default function EditableSecretField({
       {isMasked && !isEditing ? (
         // Masked value from backend: show display + Edit button
         <Group gap="xs" align="flex-end">
-          <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
+          <TextInput
+            id={fieldId}
+            value="••••••••"
+            disabled
+            style={{ flex: 1 }}
+            readOnly
+          />
           <Tooltip label={t("editSecret")} withArrow>
             <ActionIcon
-              variant="light"
+              variant="secondary"
               onClick={handleEdit}
               disabled={disabled}
               title={t("editableSecretField.edit", "Edit")}
@@ -111,10 +119,11 @@ export default function EditableSecretField({
       ) : isEditing ? (
         // Edit mode: normal password input
         <PasswordInput
+          id={fieldId}
           ref={inputRef}
           value={tempValue}
           onChange={(e) => setTempValue(e.currentTarget.value)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           error={error}
           autoComplete="new-password"
@@ -126,9 +135,10 @@ export default function EditableSecretField({
       ) : (
         // Normal password input: empty or user typing
         <PasswordInput
+          id={fieldId}
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           error={error}
           autoComplete="new-password"

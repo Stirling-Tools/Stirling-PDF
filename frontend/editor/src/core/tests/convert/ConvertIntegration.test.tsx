@@ -29,6 +29,8 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+import { expectConsole } from "@app/tests/failOnConsole";
+import { fileStorage } from "@app/services/fileStorage";
 import { StirlingFile } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
@@ -66,6 +68,8 @@ const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
+  // FileContext subscribes to this to drop files whose bytes are unreadable.
+  onRecordUnreadable: () => () => {},
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
@@ -78,6 +82,8 @@ vi.mock("../../services/fileStorage", () => ({
         thumbnail: thumbnail,
       });
     }),
+    storeStirlingFile: vi.fn().mockResolvedValue(undefined),
+    persistVersionedOutputs: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -119,7 +125,7 @@ describe("Convert Tool Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
-    mockedApiClient.post = vi.fn() as any;
+    mockedApiClient.post = vi.fn() as typeof mockedApiClient.post;
   });
 
   afterEach(() => {
@@ -178,6 +184,14 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -209,6 +223,10 @@ describe("Convert Tool Integration Tests", () => {
       expect(result.current.downloadFilename).toBe("test.png");
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
+
+      // The output file must be persisted via fileStorage.persistVersionedOutputs
+      // so downstream tools see it in the registry.
+      expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
     });
 
     test("should handle API error responses correctly", async () => {
@@ -267,6 +285,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -330,6 +356,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -399,6 +433,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -475,6 +517,14 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -550,6 +600,14 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -559,8 +617,14 @@ describe("Convert Tool Integration Tests", () => {
         await result.current.executeOperation(parameters, [testFile]);
       });
 
-      // Verify integration: utils validation prevents API call, hook shows error
-      expect(mockedApiClient.post).not.toHaveBeenCalled();
+      // Verify integration: utils validation prevents the conversion call, hook shows
+      // error. Failure reporting posts separately and is not a conversion request.
+      const conversionCalls = vi
+        .mocked(mockedApiClient.post)
+        .mock.calls.filter(
+          ([url]) => !String(url).includes("/file-run-events/"),
+        );
+      expect(conversionCalls).toHaveLength(0);
       expect(result.current.errorMessage).toContain(
         "Unsupported conversion format",
       );
@@ -571,6 +635,9 @@ describe("Convert Tool Integration Tests", () => {
 
   describe("File Upload Integration", () => {
     test("should handle multiple file uploads correctly", async () => {
+      // Test mocks only one apiClient.post response; the second file hits an
+      // undefined response and production warns about the conversion failure.
+      expectConsole.warn(/Failed to convert file test2\.pdf/);
       const mockBlob = new Blob(["zip-content"], { type: "application/zip" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 
@@ -618,6 +685,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -682,6 +757,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -753,6 +836,14 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -816,6 +907,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,
@@ -886,6 +985,14 @@ describe("Convert Tool Integration Tests", () => {
         cbzOptions: {
           optimizeForEbook: false,
         },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
+        },
         cbzOutputOptions: {
           dpi: 150,
         },
@@ -954,6 +1061,14 @@ describe("Convert Tool Integration Tests", () => {
         },
         cbzOptions: {
           optimizeForEbook: false,
+        },
+        pdfUaOptions: {
+          profile: "ua1",
+          language: "en-GB",
+          overrideLanguage: false,
+          title: "",
+          embedFonts: true,
+          altText: "",
         },
         cbzOutputOptions: {
           dpi: 150,

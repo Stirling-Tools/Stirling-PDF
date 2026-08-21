@@ -1,13 +1,15 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
-import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -17,11 +19,12 @@ import "@app/styles/index.css";
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";
 
-// Minimal providers for mobile scanner - no API calls, no authentication
-function MobileScannerProviders({ children }: { children: React.ReactNode }) {
+// Minimal providers for the public, no-auth mobile-scanner page - no API
+// calls, no authentication
+function PublicRouteProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }
@@ -34,9 +37,19 @@ export default function App() {
         <Route
           path="/mobile-scanner"
           element={
-            <MobileScannerProviders>
+            <PublicRouteProviders>
               <MobileScannerPage />
-            </MobileScannerProviders>
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
+            </PublicRouteProviders>
           }
         />
 

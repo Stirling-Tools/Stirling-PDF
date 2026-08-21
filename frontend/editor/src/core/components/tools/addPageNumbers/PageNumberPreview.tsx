@@ -5,6 +5,7 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import styles from "@app/components/tools/addPageNumbers/PageNumberPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { Button } from "@app/ui/Button";
 
 // Simple utilities for page numbers (adapted from stamp)
 const A4_ASPECT_RATIO = 0.707;
@@ -219,7 +220,7 @@ export default function PageNumberPreview({
       width: "100%",
       aspectRatio: `${(pageSize?.widthPts ?? 595.28) / (pageSize?.heightPts ?? 841.89)} / 1`,
       backgroundColor: pageThumbnail ? "white" : "rgba(255,255,255,0.03)",
-      border: "1px solid var(--border-default, #333)",
+      border: "1px solid var(--c-border, #333)",
       overflow: "hidden" as const,
     }),
     [pageSize, pageThumbnail],
@@ -256,11 +257,16 @@ export default function PageNumberPreview({
               const idx = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
               const selected = parameters.position === idx;
               return (
-                <button
+                <Button
+                  variant="tertiary"
                   key={idx}
-                  type="button"
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
-                  onClick={() => onParameterChange("position", idx as any)}
+                  onClick={() =>
+                    onParameterChange(
+                      "position",
+                      idx as AddPageNumbersParameters["position"],
+                    )
+                  }
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}
                   style={{
@@ -272,7 +278,7 @@ export default function PageNumberPreview({
                   }}
                 >
                   {idx}
-                </button>
+                </Button>
               );
             })}
           </div>

@@ -1,5 +1,12 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import { installFailOnConsole } from "@app/tests/failOnConsole";
+
+// jsdom is missing the same APIs WebKit is, so tests must agree with the
+// browser. Same module `src/index.tsx` installs.
+import "@app/utils/engineShims";
+
+installFailOnConsole();
 
 // Mock localStorage for tests
 class LocalStorageMock implements Storage {

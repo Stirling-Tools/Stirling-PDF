@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -41,8 +40,8 @@ public class SharedSignatureService {
     public boolean hasAccessToFile(String username, String fileName) throws IOException {
         validateFileName(fileName);
         // Check if file exists in user's personal folder or ALL_USERS folder
-        Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);
-        Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
+        Path userPath = Path.of(SIGNATURE_BASE_PATH, username, fileName);
+        Path allUsersPath = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
 
         return Files.exists(userPath) || Files.exists(allUsersPath);
     }
@@ -52,7 +51,7 @@ public class SharedSignatureService {
 
         // Get signatures from user's personal folder
         if (StringUtils.hasText(username)) {
-            Path userFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+            Path userFolder = Path.of(SIGNATURE_BASE_PATH, username);
             if (Files.exists(userFolder)) {
                 try {
                     signatures.addAll(getSignaturesFromFolder(userFolder, "Personal"));
@@ -63,7 +62,7 @@ public class SharedSignatureService {
         }
 
         // Get signatures from ALL_USERS folder
-        Path allUsersFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        Path allUsersFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
         if (Files.exists(allUsersFolder)) {
             try {
                 signatures.addAll(getSignaturesFromFolder(allUsersFolder, "Shared"));
@@ -90,7 +89,7 @@ public class SharedSignatureService {
      */
     public byte[] getSharedSignatureBytes(String fileName) throws IOException {
         validateFileName(fileName);
-        Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
+        Path allUsersPath = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
         if (!Files.exists(allUsersPath)) {
             throw new FileNotFoundException("Shared signature file not found");
         }
@@ -142,7 +141,7 @@ public class SharedSignatureService {
         }
 
         String folderName = "shared".equals(scope) ? ALL_USERS_FOLDER : username;
-        Path targetFolder = Paths.get(SIGNATURE_BASE_PATH, folderName);
+        Path targetFolder = Path.of(SIGNATURE_BASE_PATH, folderName);
         Files.createDirectories(targetFolder);
 
         long timestamp = System.currentTimeMillis();
@@ -193,7 +192,7 @@ public class SharedSignatureService {
         List<SavedSignatureResponse> signatures = new ArrayList<>();
 
         // Load personal signatures
-        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         if (Files.exists(personalFolder)) {
             try (Stream<Path> stream = Files.list(personalFolder)) {
                 stream.filter(this::isImageFile)
@@ -224,7 +223,7 @@ public class SharedSignatureService {
         }
 
         // Load shared signatures
-        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
         if (Files.exists(sharedFolder)) {
             try (Stream<Path> stream = Files.list(sharedFolder)) {
                 stream.filter(this::isImageFile)
@@ -262,7 +261,7 @@ public class SharedSignatureService {
         validateFileName(signatureId);
 
         // Try to find and delete image file in personal folder
-        Path personalFolder = Paths.get(SIGNATURE_BASE_PATH, username);
+        Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         boolean deleted = false;
 
         if (Files.exists(personalFolder)) {
@@ -283,7 +282,7 @@ public class SharedSignatureService {
 
         // Try shared folder if not found in personal
         if (!deleted) {
-            Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+            Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
             if (Files.exists(sharedFolder)) {
                 try (Stream<Path> stream = Files.list(sharedFolder)) {
                     List<Path> matchingFiles =

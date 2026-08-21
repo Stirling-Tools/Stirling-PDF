@@ -1,4 +1,28 @@
 /* AppConfigModal styles */
+
+/* Deep-link highlight: pulses the control the super search jumped to
+   (navigated via /settings/{section}?focus={anchor}). */
+@keyframes settings-focus-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--mantine-color-blue-5);
+    background: color-mix(
+      in srgb,
+      var(--mantine-color-blue-5) 16%,
+      transparent
+    );
+  }
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+    background: transparent;
+  }
+}
+
+.settings-focus-target {
+  animation: settings-focus-pulse 1.8s ease-out;
+  border-radius: 8px;
+  scroll-margin: 1rem;
+}
+
 .modal-container {
   display: flex;
   gap: 0;
@@ -63,7 +87,8 @@
 }
 
 .modal-nav-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-nav-scroll::-webkit-scrollbar {
@@ -81,11 +106,11 @@
 }
 
 .modal-nav-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-nav-section {
@@ -106,6 +131,15 @@
   margin-bottom: 0.25rem; /* 4px */
 }
 
+.modal-nav-item-badge {
+  display: none;
+}
+.modal-nav-item:hover .modal-nav-item-badge,
+.modal-nav-item:focus-within .modal-nav-item-badge,
+.modal-nav-item.active .modal-nav-item-badge {
+  display: inline-flex;
+}
+
 .modal-content {
   flex: 1;
   display: flex;
@@ -122,7 +156,8 @@
 }
 
 .modal-content-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-content-scroll::-webkit-scrollbar {
@@ -140,11 +175,11 @@
 }
 
 .modal-content-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-content-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-header {
@@ -160,16 +195,6 @@
 .modal-body {
   padding: 2rem;
   padding-top: 1rem;
-}
-
-.settings-search-select {
-  min-width: 10rem;
-}
-
-.settings-search-option {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
 }
 
 .confirm-modal-content {
@@ -203,8 +228,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--modal-content-bg);
-  border-top: 1px solid var(--modal-header-border);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 1rem 2rem;
   margin: 0 -2rem;
   margin-bottom: -1rem;

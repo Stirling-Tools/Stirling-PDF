@@ -8,18 +8,19 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  ActionIcon,
-  Button,
   Drawer,
   Group,
   MultiSelect,
-  SegmentedControl,
   Select,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
-import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
@@ -28,12 +29,13 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
+import { stripBasePath } from "@app/constants/app";
+import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
@@ -57,6 +59,8 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -65,21 +69,26 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
+import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@app/utils/duplicateFile";
+import { downloadFileFromStorage } from "@app/utils/downloadUtils";
+import { fileStorage } from "@app/services/fileStorage";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
-import {
-  clearFilesPageReturnRoute,
-  setFilesPageReturnRoute,
-} from "@app/components/filesPage/filesPageReturnRoute";
+import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -94,6 +103,9 @@ export default function FileManagerView() {
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
+  // Version-history modal target (opened from the card kebab).
+  const [versionHistoryFile, setVersionHistoryFile] =
+    useState<StirlingFileStub | null>(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -106,17 +118,27 @@ export default function FileManagerView() {
   const isMobile = useIsMobile();
   const isMobileUploadAvailable =
     Boolean(appConfig?.enableMobileScanner) && !isMobile;
+  // Guests (anonymous sessions) have no server-side storage, so every cloud
+  // action is account-only. Rather than let the click fire a guaranteed 401
+  // (which surfaced as an error toast), we disable the control and explain why
+  // on hover - the same affordance the storage-disabled / wrong-tab gates use.
+  const { isAnonymous } = useAuth();
+  const signInRequiredReason = isAnonymous
+    ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
+    : null;
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
   // hiding - mirrors the New folder / Manage sharing gates in this view).
   const uploadEnabled = appConfig?.storageEnabled === true;
-  const saveToServerDisabledReason: string | null = uploadEnabled
-    ? null
-    : t(
-        "filesPage.saveToServerDisabledHint",
-        "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
-      );
+  const saveToServerDisabledReason: string | null =
+    signInRequiredReason ??
+    (uploadEnabled
+      ? null
+      : t(
+          "filesPage.saveToServerDisabledHint",
+          "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
+        ));
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
@@ -154,12 +176,25 @@ export default function FileManagerView() {
     moveFilesTo,
     moveFolderTo,
     removeFiles,
+    deleteDialogFileIds,
+    deleteDialogOpen,
+    closeDeleteDialog,
+    confirmRemoveFiles,
     promptDeleteFolder,
     deleteFolder,
     deleteFolderDialog,
     closeDeleteFolderDialog,
     setFolderAppearance,
   } = filesPage;
+
+  // Resolve queued delete ids into stubs for the DeleteFilesDialog.
+  const deleteDialogFiles = useMemo(
+    () =>
+      deleteDialogFileIds
+        .map((id) => fileMap.get(id))
+        .filter((s): s is StirlingFileStub => Boolean(s)),
+    [deleteDialogFileIds, fileMap],
+  );
 
   const setCurrentFolderId = folders.setCurrentFolderId;
   const foldersById = folders.foldersById;
@@ -190,10 +225,11 @@ export default function FileManagerView() {
 
   // Push folder selection into the URL while still on /files.
   useEffect(() => {
-    if (!window.location.pathname.startsWith("/files")) return;
+    const stripped = stripBasePath(window.location.pathname);
+    if (!stripped.startsWith("/files")) return;
     const target =
       currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-    if (window.location.pathname !== target) {
+    if (stripped !== target) {
       navigate(target, { replace: true });
     }
   }, [currentFolderId, navigate]);
@@ -525,30 +561,16 @@ export default function FileManagerView() {
     [handleNativeUpload],
   );
 
-  // ─── add to workspace vs quick view ─────────────────────────────────────
-  // addToWorkspace: commit; no back affordance.
-  // quickView: peek; "Back to My Files" pill in WorkbenchBar.
+  // ─── add to workspace ───────────────────────────────────────────────────
   const openFilesInWorkbench = useCallback(
-    async (fileIds: FileId[], options: { trackReturn: boolean }) => {
+    async (fileIds: FileId[]) => {
       const stubs = fileIds
         .map((id) => fileMap.get(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
       if (stubs.length === 0) return;
 
       const proceed = async () => {
-        if (options.trackReturn) {
-          const returnRoute =
-            currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-          const folderRecord = currentFolderId
-            ? (foldersById.get(currentFolderId) ?? null)
-            : null;
-          const returnLabel = folderRecord
-            ? folderRecord.name
-            : t("filesPage.myFiles", "My Files");
-          setFilesPageReturnRoute(returnRoute, returnLabel);
-        } else {
-          clearFilesPageReturnRoute();
-        }
+        clearFilesPageReturnRoute();
 
         // Server-only stubs have no bytes in IDB; download + ingest first.
         const materialized = await materializeServerStubs(stubs, {
@@ -572,7 +594,7 @@ export default function FileManagerView() {
         } else if (materialized.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
-        navigate("/");
+        navigate(EDITOR_BASENAME);
       };
 
       requestNavigation(() => {
@@ -586,20 +608,12 @@ export default function FileManagerView() {
       navActions,
       navigate,
       requestNavigation,
-      currentFolderId,
-      foldersById,
-      t,
+      clearFilesPageReturnRoute,
     ],
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) =>
-      openFilesInWorkbench(fileIds, { trackReturn: false }),
-    [openFilesInWorkbench],
-  );
-
-  const handleQuickView = useCallback(
-    (fileId: FileId) => openFilesInWorkbench([fileId], { trackReturn: true }),
+    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
     [openFilesInWorkbench],
   );
 
@@ -683,16 +697,15 @@ export default function FileManagerView() {
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
-    navigate("/");
+    navigate(EDITOR_BASENAME);
   }, [navigate]);
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  // External focus trigger (used by the FileSidebar rail Search button).
-  useEffect(() => {
-    const onFocus = () => searchInputRef.current?.focus();
-    window.addEventListener("files-page:focus-search", onFocus);
-    return () => window.removeEventListener("files-page:focus-search", onFocus);
+  // Focus the super-search input (stable id), used by the "/" shortcut.
+  const focusSearch = useCallback(() => {
+    (
+      document.getElementById("super-search-input") as HTMLInputElement | null
+    )?.focus();
   }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -736,13 +749,19 @@ export default function FileManagerView() {
       // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        focusSearch();
         return;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visibleFiles, selectedFileIds, removeFiles, setSelectedFileIds]);
+  }, [
+    visibleFiles,
+    selectedFileIds,
+    removeFiles,
+    setSelectedFileIds,
+    focusSearch,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -779,6 +798,92 @@ export default function FileManagerView() {
     [removeFiles],
   );
 
+  // ─── per-file kebab: download / rename / duplicate ───────────────────────
+  // Same actions the file sidebar's kebab offers, so both surfaces match.
+
+  /** Cloud-only rows hold no bytes; pull them local before acting on them. */
+  const localCopyOf = useCallback(
+    async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
+      const [materialized] = await materializeServerStubs([file], {
+        addFiles: fileActions.addFilesWithOptions,
+        updateStub: fileActions.updateStirlingFileStub,
+      });
+      return materialized ?? null;
+    },
+    [fileActions],
+  );
+
+  const handleDownloadFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        await downloadFileFromStorage(local);
+      } catch (err) {
+        console.error("[FilesPage] Download failed", err);
+        folders.setError(
+          t("filesPage.error.downloadFailed", "Could not download the file."),
+        );
+      }
+    },
+    [localCopyOf, folders, t],
+  );
+
+  const handleDuplicateFile = useCallback(
+    async (file: StirlingFileStub) => {
+      try {
+        const local = await localCopyOf(file);
+        if (!local) return;
+        const copyId = await duplicateStoredFile(
+          local,
+          allFiles.map((f) => f.name),
+          addFiles,
+        );
+        if (!copyId) {
+          throw new Error(`File "${local.name}" not found in storage`);
+        }
+        await refresh();
+      } catch (err) {
+        console.error("[FilesPage] Duplicate failed", err);
+        folders.setError(
+          t("filesPage.error.duplicateFailed", "Could not duplicate the file."),
+        );
+      }
+    },
+    [localCopyOf, allFiles, addFiles, refresh, folders, t],
+  );
+
+  const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
+    null,
+  );
+
+  // The stub name is what the UI and exports read, so a rename is a metadata
+  // write; the workbench copy (if any) is updated in the same breath.
+  const handleConfirmRename = useCallback(
+    async (name: string) => {
+      const file = renameTarget;
+      if (!file) return;
+      const local = await localCopyOf(file);
+      if (!local) return;
+      // quickKey is name|size|lastModified; a stale one would make a re-upload
+      // of the original look like a duplicate of the renamed file.
+      const quickKey = `${name}|${local.size}|${local.lastModified}`;
+      const saved = await fileStorage.updateFileMetadata(local.id, {
+        name,
+        quickKey,
+      });
+      if (!saved) {
+        throw new Error(
+          t("fileSidebar.rename.error", "Could not rename the file."),
+        );
+      }
+      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
+      setRenameTarget(null);
+      await refresh();
+    },
+    [renameTarget, localCopyOf, fileActions, refresh, t],
+  );
+
   // ─── derived UI bits ────────────────────────────────────────────────────
   const currentFolderRecord = currentFolderId
     ? (foldersById.get(currentFolderId) ?? null)
@@ -803,6 +908,11 @@ export default function FileManagerView() {
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
+    // Guests can't use cloud folders at all - say so before any tab/storage
+    // hint, since switching tabs wouldn't help them.
+    if (signInRequiredReason) {
+      return signInRequiredReason;
+    }
     if (currentTab === "local") {
       return t(
         "filesPage.localFoldersUnavailable",
@@ -826,7 +936,7 @@ export default function FileManagerView() {
       );
     }
     return null;
-  }, [currentTab, folders.serverReachable, t]);
+  }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
@@ -842,7 +952,7 @@ export default function FileManagerView() {
               fontSize: "0.95rem",
               fontWeight: 600,
               padding: "0.25rem 0.5rem",
-              color: "var(--text-primary)",
+              color: "var(--c-text)",
             }}
           >
             {currentTab === "local"
@@ -886,21 +996,22 @@ export default function FileManagerView() {
           };
           return (
             <>
-              <SearchField
-                ref={searchInputRef}
-                value={search}
-                onChange={setSearch}
-              />
+              <div className="files-page-header-search">
+                <SuperSearch scopes={searchScopes} />
+              </div>
               <div className="files-page-header-actions">
                 <Tooltip
-                  label={t("filesPage.refresh", "Refresh from server")}
+                  label={
+                    signInRequiredReason ??
+                    t("filesPage.refresh", "Refresh from server")
+                  }
                   withinPortal
                 >
                   <ActionIcon
-                    variant="default"
-                    size="md"
+                    variant="secondary"
+                    size="sm"
                     loading={refreshing}
-                    disabled={refreshing}
+                    disabled={refreshing || Boolean(signInRequiredReason)}
                     aria-busy={refreshing}
                     onClick={handleRefresh}
                     aria-label={t("filesPage.refresh", "Refresh from server")}
@@ -917,11 +1028,11 @@ export default function FileManagerView() {
                   >
                     <span style={{ display: "inline-flex" }}>
                       <Button
-                        variant="default"
+                        variant="secondary"
                         size="sm"
                         leftSection={<CreateNewFolderIcon fontSize="small" />}
                         disabled
-                        styles={{ root: { pointerEvents: "auto" } }}
+                        style={{ pointerEvents: "auto" }}
                       >
                         {t("filesPage.newFolder", "New folder")}
                       </Button>
@@ -929,7 +1040,7 @@ export default function FileManagerView() {
                   </Tooltip>
                 ) : (
                   <Button
-                    variant="default"
+                    variant="secondary"
                     size="sm"
                     leftSection={<CreateNewFolderIcon fontSize="small" />}
                     onClick={() => openNewFolderDialog()}
@@ -953,9 +1064,8 @@ export default function FileManagerView() {
                     withinPortal
                   >
                     <ActionIcon
-                      size="lg"
-                      variant="default"
-                      radius="md"
+                      size="sm"
+                      variant="secondary"
                       onClick={() => setMobileUploadModalOpen(true)}
                       aria-label={t(
                         "filesPage.uploadFromMobile",
@@ -986,9 +1096,9 @@ export default function FileManagerView() {
           style={{
             padding: "0.6rem 1.25rem",
             background:
-              "color-mix(in srgb, var(--mantine-color-red-6, #e03131) 12%, transparent)",
-            color: "var(--text-primary)",
-            borderBottom: "1px solid var(--border-subtle)",
+              "color-mix(in srgb, var(--mantine-color-red-6) 12%, transparent)",
+            color: "var(--c-text)",
+            borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",
             display: "flex",
             justifyContent: "space-between",
@@ -999,11 +1109,11 @@ export default function FileManagerView() {
           <span>{folders.error}</span>
           <ActionIcon
             size="sm"
-            variant="subtle"
+            variant="tertiary"
             aria-label={t("filesPage.dismissError", "Dismiss")}
             onClick={() => folders.setError(null)}
           >
-            <CloseIcon fontSize="small" />
+            &times;
           </ActionIcon>
         </div>
       )}
@@ -1078,15 +1188,15 @@ export default function FileManagerView() {
                     style={{
                       background:
                         currentTab === tab.id
-                          ? "var(--hover-bg)"
+                          ? "var(--c-hover)"
                           : "transparent",
                       border: "none",
                       borderRadius: "0.3rem",
                       padding: "0.2rem 0.6rem",
                       color:
                         currentTab === tab.id
-                          ? "var(--text-primary)"
-                          : "var(--text-muted)",
+                          ? "var(--c-text)"
+                          : "var(--c-text-subtle)",
                       fontWeight: currentTab === tab.id ? 500 : 400,
                       fontSize: "0.75rem",
                       cursor: "pointer",
@@ -1134,8 +1244,8 @@ export default function FileManagerView() {
                   w={280}
                 >
                   <Button
-                    variant="subtle"
-                    size="xs"
+                    variant="tertiary"
+                    size="sm"
                     onClick={() => {
                       if (allSelected) {
                         setSelectedFileIds(new Set());
@@ -1168,7 +1278,6 @@ export default function FileManagerView() {
                         );
                   const moveLabel = t("filesPage.moveTo", "Move to…");
                   const removeLabel = t("filesPage.remove", "Remove");
-                  const quickViewLabel = t("filesPage.quickView", "Quick view");
                   return (
                     // wrap="nowrap" keeps the row single-line.
                     <Group gap="xs" wrap="nowrap">
@@ -1183,19 +1292,6 @@ export default function FileManagerView() {
                           {addLabel}
                         </Button>
                       </Tooltip>
-                      {selectedFiles.length === 1 && (
-                        <Tooltip label={quickViewLabel} withinPortal>
-                          <Button
-                            size="sm"
-                            variant="subtle"
-                            leftSection={<VisibilityIcon fontSize="small" />}
-                            onClick={() => handleQuickView(selectedFiles[0]!)}
-                            aria-label={quickViewLabel}
-                          >
-                            {quickViewLabel}
-                          </Button>
-                        </Tooltip>
-                      )}
                       {/* Save to server; shown whenever local-only files are
                           selected. When storage is off it stays visible but
                           disabled, tooltip pointing at the admin. */}
@@ -1211,19 +1307,17 @@ export default function FileManagerView() {
                         >
                           <Button
                             size="sm"
-                            variant="default"
+                            variant="secondary"
                             leftSection={<CloudUploadIcon fontSize="small" />}
                             disabled={Boolean(saveToServerDisabledReason)}
                             onClick={() =>
                               setSaveToServerTarget(localOnlySelectedStubs)
                             }
-                            styles={{
-                              root: {
-                                // Keep the tooltip hoverable while disabled.
-                                pointerEvents: saveToServerDisabledReason
-                                  ? "auto"
-                                  : undefined,
-                              },
+                            style={{
+                              // Keep the tooltip hoverable while disabled.
+                              pointerEvents: saveToServerDisabledReason
+                                ? "auto"
+                                : undefined,
                             }}
                             aria-label={t(
                               "filesPage.saveToServer",
@@ -1243,7 +1337,7 @@ export default function FileManagerView() {
                           >
                             <Button
                               size="sm"
-                              variant="default"
+                              variant="secondary"
                               leftSection={
                                 <InfoOutlinedIcon fontSize="small" />
                               }
@@ -1260,7 +1354,7 @@ export default function FileManagerView() {
                       <Tooltip label={moveLabel} withinPortal>
                         <Button
                           size="sm"
-                          variant="default"
+                          variant="secondary"
                           leftSection={<DriveFileMoveIcon fontSize="small" />}
                           onClick={() => promptMoveFiles(selectedFiles)}
                           aria-label={moveLabel}
@@ -1271,8 +1365,8 @@ export default function FileManagerView() {
                       <Tooltip label={removeLabel} withinPortal>
                         <Button
                           size="sm"
-                          color="red"
-                          variant="light"
+                          accent="danger"
+                          variant="secondary"
                           leftSection={<DeleteIcon fontSize="small" />}
                           onClick={() => handleRemoveFiles(selectedFiles)}
                           aria-label={removeLabel}
@@ -1285,7 +1379,7 @@ export default function FileManagerView() {
                         withinPortal
                       >
                         <ActionIcon
-                          variant="subtle"
+                          variant="tertiary"
                           size="md"
                           onClick={() => clearSelection()}
                           aria-label={t(
@@ -1293,7 +1387,7 @@ export default function FileManagerView() {
                             "Clear selection",
                           )}
                         >
-                          <CloseIcon fontSize="small" />
+                          &times;
                         </ActionIcon>
                       </Tooltip>
                     </Group>
@@ -1353,6 +1447,27 @@ export default function FileManagerView() {
                   aria-label={t("filesPage.typeFilter.label", "Filter by type")}
                 />
               )}
+              <TextInput
+                size="xs"
+                value={search}
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                placeholder={t("filesPage.search.placeholder", "Filter files…")}
+                leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                rightSection={
+                  search ? (
+                    <ActionIcon
+                      variant="tertiary"
+                      size="sm"
+                      onClick={() => setSearch("")}
+                      aria-label={t("filesPage.search.clear", "Clear filter")}
+                    >
+                      <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                    </ActionIcon>
+                  ) : null
+                }
+                aria-label={t("filesPage.search.label", "Filter files by name")}
+                style={{ width: 180 }}
+              />
               <Select
                 size="xs"
                 value={sortMode}
@@ -1389,7 +1504,7 @@ export default function FileManagerView() {
               />
               <span className="files-page-toolbar-divider" aria-hidden="true" />
               <SegmentedControl
-                size="xs"
+                size="sm"
                 value={viewMode}
                 onChange={(v) => {
                   // Mantine only emits values declared in `data[].value`, but
@@ -1402,7 +1517,7 @@ export default function FileManagerView() {
                   setViewMode(v as (typeof FILES_PAGE_VIEW_MODES)[number]);
                 }}
                 aria-label={t("filesPage.viewMode.label", "View mode")}
-                data={[
+                options={[
                   {
                     value: "grid",
                     label: (
@@ -1444,6 +1559,7 @@ export default function FileManagerView() {
               entries={entries}
               loading={loading}
               currentTab={currentTab}
+              searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
@@ -1454,7 +1570,6 @@ export default function FileManagerView() {
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
               onOpenFile={handleOpenFile}
-              onQuickView={(file) => handleQuickView(file.id)}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
               onRenameFolder={openRenameFolderDialog}
@@ -1477,6 +1592,10 @@ export default function FileManagerView() {
               onRemoveFiles={handleRemoveFiles}
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
+              onVersionHistory={(file) => setVersionHistoryFile(file)}
+              onDownloadFile={handleDownloadFile}
+              onRenameFile={setRenameTarget}
+              onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
               // Center-of-grid CTAs when the empty state shows - same
               // handlers the corner header buttons use so behaviour
@@ -1519,7 +1638,6 @@ export default function FileManagerView() {
             currentFolder={currentFolderRecord}
             onClose={() => clearSelection()}
             onAddToWorkspace={handleAddToWorkspace}
-            onQuickView={handleQuickView}
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
             onSaveToServer={(files) => setSaveToServerTarget(files)}
@@ -1546,11 +1664,18 @@ export default function FileManagerView() {
               currentFolder={currentFolderRecord}
               onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
-              onQuickView={handleQuickView}
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
               onSaveToServer={(files) => setSaveToServerTarget(files)}
               saveToServerDisabledReason={saveToServerDisabledReason}
+              compactVersions
+              onOpenVersionHistory={() => {
+                const f = fileMap.get(selectedFiles[0]);
+                if (f) {
+                  setMobileDetailsOpen(false);
+                  setVersionHistoryFile(f);
+                }
+              }}
             />
           )}
         </Drawer>
@@ -1622,6 +1747,30 @@ export default function FileManagerView() {
         }}
       />
 
+      {/* Cloud-aware delete; offers local/cloud/both when a file lives in both. */}
+      <DeleteFilesDialog
+        opened={deleteDialogOpen}
+        files={deleteDialogFiles}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmRemoveFiles}
+      />
+
+      {/* Rename (opened from the card kebab). */}
+      <RenameFileDialog
+        opened={Boolean(renameTarget)}
+        fileName={renameTarget?.name ?? ""}
+        onClose={() => setRenameTarget(null)}
+        onSubmit={handleConfirmRename}
+      />
+
+      {/* Version journey in a modal (opened from the card kebab). */}
+      <VersionHistoryModal
+        opened={Boolean(versionHistoryFile)}
+        onClose={() => setVersionHistoryFile(null)}
+        file={versionHistoryFile}
+        onChanged={refresh}
+      />
+
       {/* Save-to-server modal; keyed on target so updates don't retarget. */}
       <BulkUploadToServerModal
         key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
@@ -1644,39 +1793,6 @@ export default function FileManagerView() {
   );
 }
 
-const SearchField = React.forwardRef<
-  HTMLInputElement,
-  { value: string; onChange: (v: string) => void }
->(function SearchField({ value, onChange }, ref) {
-  const { t } = useTranslation();
-  return (
-    <div className="files-page-search">
-      <SearchIcon fontSize="small" style={{ color: "var(--text-muted)" }} />
-      <input
-        ref={ref}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        placeholder={t(
-          "filesPage.searchPlaceholder",
-          "Search this folder & subfolders",
-        )}
-        aria-label={t("filesPage.search", "Search")}
-      />
-      {value && (
-        <ActionIcon
-          variant="subtle"
-          size="xs"
-          onClick={() => onChange("")}
-          aria-label={t("filesPage.clearSearch", "Clear search")}
-        >
-          <CloseIcon fontSize="small" />
-        </ActionIcon>
-      )}
-    </div>
-  );
-});
-
 function Breadcrumbs() {
   const { t } = useTranslation();
   const folders = useFolders();
@@ -1691,8 +1807,8 @@ function Breadcrumbs() {
         const isLast = idx === trail.length - 1;
         return (
           <React.Fragment key={entry.id ?? "root"}>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
               onClick={() => folders.setCurrentFolderId(entry.id)}
               onDragOver={(e) => {
@@ -1751,7 +1867,7 @@ function Breadcrumbs() {
               }}
             >
               {entry.name}
-            </button>
+            </Button>
             {!isLast && (
               <KeyboardArrowRightIcon
                 className="files-page-breadcrumb-sep"

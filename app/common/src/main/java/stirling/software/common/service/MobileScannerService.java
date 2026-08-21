@@ -3,7 +3,6 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +34,7 @@ public class MobileScannerService {
     public MobileScannerService() throws IOException {
         // Create temp directory for mobile scanner uploads
         this.tempDirectory =
-                Paths.get(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
+                Path.of(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
         Files.createDirectories(tempDirectory);
         log.info("Mobile scanner temp directory: {}", tempDirectory);
     }
@@ -226,19 +225,21 @@ public class MobileScannerService {
                 Path sessionDir = getSafeSessionDirectory(sessionId);
                 if (Files.exists(sessionDir)) {
                     // Delete all files in session directory
-                    Files.walk(sessionDir)
-                            .sorted(
-                                    (a, b) ->
-                                            -a.compareTo(b)) // Reverse order to delete files before
-                            // directory
-                            .forEach(
-                                    path -> {
-                                        try {
-                                            Files.deleteIfExists(path);
-                                        } catch (IOException e) {
-                                            log.warn("Failed to delete file: {}", path, e);
-                                        }
-                                    });
+                    try (var paths = Files.walk(sessionDir)) {
+                        paths.sorted(
+                                        (a, b) ->
+                                                -a.compareTo(
+                                                        b)) // Reverse order to delete files before
+                                // directory
+                                .forEach(
+                                        path -> {
+                                            try {
+                                                Files.deleteIfExists(path);
+                                            } catch (IOException e) {
+                                                log.warn("Failed to delete file: {}", path, e);
+                                            }
+                                        });
+                    }
                 }
                 log.info("Deleted session: {}", sessionId);
             } catch (IllegalArgumentException e) {

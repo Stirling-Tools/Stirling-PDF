@@ -22,7 +22,9 @@ const ToolChain: React.FC<ToolChainProps> = ({
   maxWidth = "100%",
   displayStyle = "text",
   size = "xs",
-  color = "var(--mantine-color-blue-7)",
+  // A fixed palette shade cannot follow the colour scheme; the accent's text
+  // token carries the readable step for whichever theme is active.
+  color = "var(--c-accent-text)",
 }) => {
   const { t } = useTranslation();
   if (!toolChain || toolChain.length === 0) return null;
