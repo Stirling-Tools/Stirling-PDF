@@ -3,29 +3,43 @@ import {
   fetchNotifications,
   type AppNotification,
 } from "@app/services/notifications";
-import { hasLocalFile } from "@app/services/localFilePresence";
+import {
+  hasLocalFile,
+  loadRetryPayload,
+  type RetryPayload,
+} from "@app/services/notificationRetry";
 
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because
  * the portal mounts its bell as a sibling of AppProviders, so there is no single tree to provide in.
+ *
+ * TODO: read state lives in this browser, so it does not survive a cache clear or follow the user to
+ * another one. It belongs on the server once notifications have a table of their own.
  */
 
 // TODO: read state is per-browser. Move it server-side when notifications get their own table.
 const POLL_INTERVAL_MS = 30_000;
-const SEEN_STORAGE_KEY = "stirling.notifications.lastSeenId";
+const SEEN_STORAGE_KEY = "stirling.notifications.readThroughAt";
 
-function readLastSeenId(): string | null {
+/** What the read marker measures against. A time, not an id: ids point at nothing once a row leaves. */
+function orderedAt(notification: AppNotification): number {
+  // Ordered server-side by when the failure last occurred, so a repeat is news again.
+  return Date.parse(notification.lastSeenAt);
+}
+
+function readReadThrough(): number | null {
   try {
-    return window.localStorage.getItem(SEEN_STORAGE_KEY);
+    const stored = Number(window.localStorage.getItem(SEEN_STORAGE_KEY));
+    return Number.isFinite(stored) && stored > 0 ? stored : null;
   } catch {
     // Private mode: everything reads as unseen, which errs towards showing failures.
     return null;
   }
 }
 
-function writeLastSeenId(id: string): void {
+function writeReadThrough(at: number): void {
   try {
-    window.localStorage.setItem(SEEN_STORAGE_KEY, id);
+    window.localStorage.setItem(SEEN_STORAGE_KEY, String(at));
   } catch {
     // The marker just will not survive a reload.
   }
@@ -33,10 +47,12 @@ function writeLastSeenId(id: string): void {
 
 export interface NotificationDocumentState {
   hasLocalFile: boolean;
+  retryPayload: RetryPayload | null;
 }
 
 const NO_DOCUMENT: NotificationDocumentState = {
   hasLocalFile: false,
+  retryPayload: null,
 };
 
 /**
@@ -51,13 +67,14 @@ interface NotificationsSnapshot {
   notifications: AppNotification[];
   /** Keyed by fileId, so several rows about one document cost one lookup. */
   documents: Record<string, NotificationDocumentState>;
-  lastSeenId: string | null;
+  /** Everything up to and including this time has been read. Epoch millis, never a row id. */
+  readThroughAt: number | null;
 }
 
 const NOTHING_LOADED: NotificationsSnapshot = {
   notifications: [],
   documents: {},
-  lastSeenId: null,
+  readThroughAt: null,
 };
 
 let snapshot: NotificationsSnapshot = NOTHING_LOADED;
@@ -87,7 +104,8 @@ function publish(next: NotificationsSnapshot): void {
 }
 
 async function read(forCycle: number): Promise<void> {
-  const listed = await fetchNotifications();
+  const { notifications: listed, viewerReviewsTeam } =
+    await fetchNotifications();
   if (forCycle !== cycle) return;
 
   const fileIds = [
@@ -105,17 +123,23 @@ async function read(forCycle: number): Promise<void> {
           fileId,
           {
             hasLocalFile: await hasLocalFile(fileId),
+            retryPayload: await loadRetryPayload(fileId),
           },
         ] as const,
     ),
   );
   if (forCycle !== cycle) return;
 
-  publish({
-    ...snapshot,
-    notifications: listed,
-    documents: Object.fromEntries(resolved),
-  });
+  const documents = Object.fromEntries(resolved);
+  // A member sees only their own failures, and one whose document is not in this browser is noise:
+  // they cannot open it, and are not the reviewer who could fix the policy. A reviewer keeps all.
+  const visible = viewerReviewsTeam
+    ? listed
+    : listed.filter((n) =>
+        Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
+      );
+
+  publish({ ...snapshot, notifications: visible, documents });
 }
 
 /** A caller arriving mid-read joins the one already running. */
@@ -131,7 +155,7 @@ function load(): Promise<void> {
 function startPolling(): void {
   cycle += 1;
   // From disk, not memory: another tab may have moved the marker on.
-  snapshot = { ...NOTHING_LOADED, lastSeenId: readLastSeenId() };
+  snapshot = { ...NOTHING_LOADED, readThroughAt: readReadThrough() };
   pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
   void load();
 }
@@ -158,10 +182,15 @@ function subscribe(onStoreChange: () => void): () => void {
 }
 
 function markAllSeen(): void {
-  const newest = snapshot.notifications[0];
-  if (!newest || snapshot.lastSeenId === newest.id) return;
-  writeLastSeenId(newest.id);
-  publish({ ...snapshot, lastSeenId: newest.id });
+  // The newest time in the list, not the first row's, so a re-sorted list cannot under-mark.
+  const newest = Math.max(
+    ...snapshot.notifications.map(orderedAt).filter(Number.isFinite),
+  );
+  if (!Number.isFinite(newest)) return;
+  if (snapshot.readThroughAt !== null && newest <= snapshot.readThroughAt)
+    return;
+  writeReadThrough(newest);
+  publish({ ...snapshot, readThroughAt: newest });
 }
 
 function refresh(): void {
@@ -189,18 +218,18 @@ export interface NotificationsState {
 }
 
 export function useNotifications(): NotificationsState {
-  const { notifications, documents, lastSeenId } = useSyncExternalStore(
+  const { notifications, documents, readThroughAt } = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getSnapshot,
   );
 
-  // A marker no longer in the list means we cannot tell how far the user got, so everything reads
-  // as unread rather than being silently marked seen.
-  const seenIndex = lastSeenId
-    ? notifications.findIndex((n) => n.id === lastSeenId)
-    : -1;
-  const unreadCount = seenIndex === -1 ? notifications.length : seenIndex;
+  // Newer than the watermark is new, so a resolved row leaves without dragging the rest back into
+  // unread. A time that will not parse counts as new, which errs towards telling the user.
+  const unreadCount =
+    readThroughAt === null
+      ? notifications.length
+      : notifications.filter((n) => !(orderedAt(n) <= readThroughAt)).length;
 
   return {
     notifications,

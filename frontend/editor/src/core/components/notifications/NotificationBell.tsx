@@ -8,9 +8,12 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { BellIcon } from "@app/components/notifications/BellIcon";
 import DividerWithText from "@app/components/shared/DividerWithText";
+import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import {
   isResolvableHere,
   useNotifications,
@@ -18,8 +21,10 @@ import {
 import {
   useNotificationActions,
   type ClientActionRegistry,
+  type ClientActionSpec,
   type NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
+import { promoteActions } from "@app/components/notifications/notificationActionSlots";
 import type {
   AppNotification,
   NotificationActionOffer,
@@ -33,7 +38,7 @@ import "@app/components/notifications/NotificationBell.css";
  */
 export function NotificationBell() {
   const { t } = useTranslation();
-  const { notifications, unreadCount, documentStateFor, markAllSeen } =
+  const { notifications, unreadCount, documentStateFor, markAllSeen, refresh } =
     useNotifications();
   const registry = useNotificationActions();
   const [open, setOpen] = useState(false);
@@ -49,6 +54,46 @@ export function NotificationBell() {
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
+  /**
+   * The action waiting on a password, held by the panel rather than the row that offered it: the
+   * panel closes on any click beyond itself, which would tear down a prompt a row owned.
+   */
+  const [prompt, setPrompt] = useState<PasswordPrompt | null>(null);
+  // Held only while the prompt is open, and dropped as soon as it closes. Never stashed, never logged.
+  const [password, setPassword] = useState("");
+  const [promptBusy, setPromptBusy] = useState(false);
+  const [promptError, setPromptError] = useState<string | null>(null);
+
+  const closePrompt = () => {
+    setPrompt(null);
+    setPassword("");
+    setPromptError(null);
+  };
+
+  const submitPrompt = async () => {
+    if (!prompt || promptBusy || password === "") return;
+    setPromptBusy(true);
+    setPromptError(null);
+    const outcome = await prompt.spec.run(prompt.context, password);
+    setPromptBusy(false);
+    // A wrong password lands here carrying the server's own words. The prompt stays open on top of
+    // them, so the next attempt costs a keystroke rather than a re-open.
+    if (outcome && !outcome.ok) {
+      setPromptError(
+        outcome.message ??
+          t(
+            "notifications.action.failed",
+            "That did not work. Try again in a moment.",
+          ),
+      );
+      return;
+    }
+    closePrompt();
+    // A password action resolves the incident server-side, so the list is re-read rather than
+    // patched here.
+    refresh();
+    if (prompt.spec.closesPanel) setOpen(false);
+  };
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -94,7 +139,11 @@ export function NotificationBell() {
     if (!open) return;
     const closeOnOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!container.current?.contains(target)) setOpen(false);
+      if (container.current?.contains(target)) return;
+      // An overflow menu is portaled outside the panel, so a click in it reads as outside; keep the
+      // panel open for it, or picking a menu action would tear the panel down before it ran.
+      if (target.closest(".notification-bell__menu")) return;
+      setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -140,7 +189,7 @@ export function NotificationBell() {
 
           {notifications.length === 0 ? (
             <p className="notification-bell__empty">
-              {t("notifications.empty", "Nothing to report.")}
+              {t("notifications.empty", "You're all caught up.")}
             </p>
           ) : (
             <ul className="notification-bell__list">
@@ -149,6 +198,7 @@ export function NotificationBell() {
                   {index === 0 && dividedAt > 0 && (
                     <li aria-hidden>
                       <DividerWithText
+                        className="notification-bell__divider notification-bell__divider--new"
                         text={t("notifications.section.new", "New")}
                       />
                     </li>
@@ -158,6 +208,7 @@ export function NotificationBell() {
                   {index === dividedAt && dividedAt > 0 && (
                     <li aria-hidden>
                       <DividerWithText
+                        className="notification-bell__divider"
                         text={t("notifications.section.earlier", "Earlier")}
                       />
                     </li>
@@ -168,6 +219,7 @@ export function NotificationBell() {
                     documentState={documentStateFor(notification)}
                     registry={registry}
                     onDismissPanel={() => setOpen(false)}
+                    onRequestPassword={setPrompt}
                   />
                 </Fragment>
               ))}
@@ -175,14 +227,46 @@ export function NotificationBell() {
           )}
         </div>
       )}
+
+      {/* Rendered beside the panel rather than inside it: the same modal the app uses for a locked
+          upload, and it has to outlive the panel dismissing behind it. */}
+      <EncryptedPdfUnlockModal
+        opened={prompt !== null}
+        fileName={prompt?.rowTitle}
+        password={password}
+        errorMessage={promptError}
+        isProcessing={promptBusy}
+        confirmLabel={
+          prompt
+            ? t(prompt.offer.labelKey, prompt.offer.defaultLabel)
+            : undefined
+        }
+        onPasswordChange={setPassword}
+        onUnlock={() => void submitPrompt()}
+        onSkip={closePrompt}
+      />
     </div>
   );
+}
+
+/** An action that asked for a password, with everything running it needs. */
+interface PasswordPrompt {
+  offer: NotificationActionOffer;
+  spec: ClientActionSpec;
+  context: NotificationActionContext;
+  /** The row's title, so the prompt can say which failure it is unlocking for. */
+  rowTitle: string;
 }
 
 /**
  * The server's reason wins, being about the failure rather than this browser. Otherwise only what we
  * actually looked up, so a row we never probed is never called absent.
  */
+/** The kind's own sentence, sharing the portal's copy. Empty for a kind this build has none for. */
+function summaryKeyOf(titleKey: string): string {
+  return titleKey.replace(/\.title$/, ".description");
+}
+
 function noteFor(
   notification: AppNotification,
   documentState: NotificationDocumentState,
@@ -201,12 +285,12 @@ function noteFor(
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",
-      "This failure is not linked to a specific document, so there is nothing to open here.",
+      "This failure is not linked to a specific document, so it cannot be opened or retried here.",
     );
   return isResolvableHere(notification)
     ? t(
         "notifications.notOnThisDevice",
-        "This document is not on this device, so it cannot be opened here.",
+        "This document is not on this device, so it cannot be opened or retried here.",
       )
     : null;
 }
@@ -217,45 +301,41 @@ interface NotificationItemProps {
   documentState: NotificationDocumentState;
   registry: ClientActionRegistry;
   onDismissPanel: () => void;
+  /** Hand a password-collecting action to the panel, which owns the prompt. */
+  onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
-/** Its own component because the last attempt's message and its expanded state are per-row. */
+/** Its own component because the last attempt's message and the copy state are per-row. */
 function NotificationItem({
   notification,
   unread,
   documentState,
   registry,
   onDismissPanel,
+  onRequestPassword,
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const title = t(notification.titleKey, notification.defaultTitle);
   const context: NotificationActionContext = {
     notification,
     hasLocalFile: documentState.hasLocalFile,
+    retryPayload: documentState.retryPayload,
   };
 
-  // An id this build has never heard of is skipped rather than rendered unwired: the server ships
-  // new kinds, and new actions, ahead of the clients that understand them.
-  const usable = notification.actions.filter((offer) => {
-    if (!offer.enabled) return false;
-    const spec = registry[offer.id];
-    return spec ? spec.available(context) : false;
-  });
-
-  // Only from an action this build would otherwise have rendered: a reason about one it cannot
-  // perform anyway is not this row's explanation.
-  const withheldReasonKey =
-    notification.actions.find(
-      (offer) =>
-        !offer.enabled &&
-        offer.disabledReasonKey !== null &&
-        registry[offer.id] !== undefined,
-    )?.disabledReasonKey ?? null;
+  const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
+    notification.actions,
+    (offer) => {
+      const spec = registry[offer.id];
+      // An id this build has never heard of: skipped, not rendered unwired. The server ships new kinds
+      // and their actions ahead of the clients that understand them.
+      if (!spec) return false;
+      return spec.available(context);
+    },
+  );
 
   const labelOf = (offer: NotificationActionOffer) =>
     t(offer.labelKey, offer.defaultLabel);
@@ -266,6 +346,11 @@ function NotificationItem({
 
     const spec = registry[offer.id];
     if (!spec) return;
+    // A password action is handed to the panel, which prompts for it and runs it from there.
+    if (spec.needsPassword) {
+      onRequestPassword({ offer, spec, context, rowTitle: title });
+      return;
+    }
 
     setBusy(offer.id);
     const outcome = await spec.run(context);
@@ -295,6 +380,7 @@ function NotificationItem({
   };
 
   const note = noteFor(notification, documentState, withheldReasonKey, t);
+  const summary = t(summaryKeyOf(notification.titleKey), { defaultValue: "" });
 
   return (
     <li
@@ -317,62 +403,70 @@ function NotificationItem({
         </span>
       )}
 
-      {notification.detail && (
-        <>
-          <span
-            className={
-              expanded
-                ? "notification-bell__detail notification-bell__detail--full"
-                : "notification-bell__detail"
-            }
-          >
-            {notification.detail}
-          </span>
-          <span className="notification-bell__chrome">
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-label={`${t("notifications.detail.copy", "Copy error")}: ${title}`}
-              onClick={() => void copyDetail()}
-            >
-              {copied
-                ? t("notifications.detail.copied", "Copied")
-                : t("notifications.detail.copy", "Copy error")}
-            </button>
-            <button
-              type="button"
-              className="notification-bell__chip"
-              aria-expanded={expanded}
-              aria-label={`${
-                expanded
-                  ? t("notifications.detail.less", "Show less")
-                  : t("notifications.detail.more", "Show full message")
-              }: ${title}`}
-              onClick={() => setExpanded((wasExpanded) => !wasExpanded)}
-            >
-              {expanded
-                ? t("notifications.detail.less", "Show less")
-                : t("notifications.detail.more", "Show full message")}
-            </button>
-          </span>
-        </>
-      )}
+      {summary && <span className="notification-bell__detail">{summary}</span>}
 
       {note && <span className="notification-bell__note">{note}</span>}
 
-      {/* In the kind's declared order, the first leading. */}
-      {usable.length > 0 && (
+      {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
+          out of the way so a row of near-equal buttons never competes for the click. */}
+      {primary && (
         <span className="notification-bell__actions">
-          {usable.map((offer, index) => (
+          <ActionButton
+            variant="primary"
+            rowTitle={title}
+            label={labelOf(primary)}
+            busy={busy === primary.id}
+            onRun={() => void run(primary)}
+          />
+          {secondary && (
             <ActionButton
-              key={offer.id}
-              variant={index === 0 ? "primary" : "secondary"}
+              variant="secondary"
               rowTitle={title}
-              label={labelOf(offer)}
-              busy={busy === offer.id}
-              onRun={() => void run(offer)}
+              label={labelOf(secondary)}
+              busy={busy === secondary.id}
+              onRun={() => void run(secondary)}
             />
-          ))}
+          )}
+          {(overflow.length > 0 || notification.detail) && (
+            <Menu withinPortal position="bottom-end" shadow="md" width={180}>
+              <Menu.Target>
+                <Tooltip
+                  label={t("notifications.action.more", "More options")}
+                  withinPortal
+                >
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    className="notification-bell__more"
+                    aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
+                  >
+                    <MoreIcon />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown className="notification-bell__menu">
+                {overflow.map((offer) => (
+                  <Menu.Item
+                    key={offer.id}
+                    disabled={busy === offer.id}
+                    onClick={() => void run(offer)}
+                  >
+                    {labelOf(offer)}
+                  </Menu.Item>
+                ))}
+                {notification.detail && (
+                  <Menu.Item
+                    closeMenuOnClick={false}
+                    onClick={() => void copyDetail()}
+                  >
+                    {copied
+                      ? t("notifications.action.copiedLog", "Copied")
+                      : t("notifications.action.copyLog", "Copy log")}
+                  </Menu.Item>
+                )}
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </span>
       )}
 
@@ -386,7 +480,8 @@ function NotificationItem({
 }
 
 interface ActionButtonProps {
-  variant: "primary" | "secondary";
+  /** Solid for the row's answer, outlined for its runner-up, ghost for the rest. */
+  variant: "primary" | "secondary" | "tertiary";
   rowTitle: string;
   label: string;
   busy: boolean;
@@ -413,5 +508,27 @@ function ActionButton({
     >
       {label}
     </Button>
+  );
+}
+
+const ICON_PROPS = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+function MoreIcon() {
+  return (
+    <svg {...ICON_PROPS} strokeWidth={2.5}>
+      <circle cx="5" cy="12" r="0.5" />
+      <circle cx="12" cy="12" r="0.5" />
+      <circle cx="19" cy="12" r="0.5" />
+    </svg>
   );
 }

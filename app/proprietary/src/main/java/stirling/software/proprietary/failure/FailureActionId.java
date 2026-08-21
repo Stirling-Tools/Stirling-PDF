@@ -15,6 +15,12 @@ public enum FailureActionId {
 
     DISMISS(Execution.SERVER, "Dismiss"),
 
+    /** Run the failed operation again on the document the client still holds. */
+    RETRY(Execution.CLIENT, "Retry"),
+
+    /** Ask the owner for the password, unlock the document in their client, then retry. */
+    DECRYPT_AND_RETRY(Execution.CLIENT, "Decrypt and retry"),
+
     /** Only the owner's client can resolve the id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 

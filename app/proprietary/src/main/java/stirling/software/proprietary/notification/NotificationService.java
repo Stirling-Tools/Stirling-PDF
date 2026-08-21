@@ -25,6 +25,38 @@ public class NotificationService {
         return fileRunEvents.list(null, null, limit).stream().map(this::fromFailure).toList();
     }
 
+    /**
+     * Whether the caller sees the whole team's incidents rather than only their own. The client
+     * uses it to hide a member's rows whose document is not in this browser, which it alone knows.
+     */
+    public boolean callerReviewsTeam() {
+        return fileRunEvents.reviewsTeam();
+    }
+
+    /**
+     * Record that the client's own retry of this notification worked. Takes the prefixed id, so the
+     * bell cannot reach a failure endpoint even by accident.
+     *
+     * @throws IllegalArgumentException if the id names no source this build has
+     * @throws stirling.software.proprietary.failure.FailureActionException if the source refuses,
+     *     e.g. a row a reviewer has since dismissed
+     */
+    public NotificationView resolve(String notificationId) {
+        NotificationSource.QualifiedId qualified = qualify(notificationId);
+        return switch (qualified.source()) {
+            case FAILURE -> fromFailure(fileRunEvents.resolve(qualified.rowId()));
+        };
+    }
+
+    /** The source and row id behind a notification id, refusing anything that is not one. */
+    private static NotificationSource.QualifiedId qualify(String notificationId) {
+        return NotificationSource.parse(notificationId)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "Not a notification id: " + notificationId));
+    }
+
     /** Prefixes the row id on the way out, so it is never sent bare. */
     private NotificationView fromFailure(FileRunEvent event) {
         return new NotificationView(

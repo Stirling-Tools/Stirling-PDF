@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import type { AppNotification } from "@app/services/notifications";
+import type {
+  AppNotification,
+  FetchedNotifications,
+} from "@app/services/notifications";
 
 /**
  * The bell is mounted several times over, so what is pinned here is that they share one read: one
@@ -15,12 +18,22 @@ vi.mock("@app/services/notifications", () => ({
 
 // Counted here so "resolved once per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
+const loadRetryPayload = vi.fn((_fileId: string) => Promise.resolve(null));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
+  loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
 const { useNotifications } = await import("@app/hooks/useNotifications");
+
+/** A fetch result. Reviewer by default, so a test says nothing about filtering unless it means to. */
+function feed(
+  notifications: AppNotification[],
+  viewerReviewsTeam = true,
+): FetchedNotifications {
+  return { notifications, viewerReviewsTeam };
+}
 
 function notification(
   id: string,
@@ -51,12 +64,13 @@ function notification(
 describe("useNotifications", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    fetchNotifications.mockReset().mockResolvedValue([]);
-    hasLocalFile.mockClear();
+    fetchNotifications.mockReset().mockResolvedValue(feed([]));
+    hasLocalFile.mockReset().mockResolvedValue(true);
+    loadRetryPayload.mockReset().mockResolvedValue(null);
   });
 
   it("reads the list once however many bells are mounted", async () => {
-    fetchNotifications.mockResolvedValue([notification("a")]);
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
 
     const first = renderHook(() => useNotifications());
     const second = renderHook(() => useNotifications());
@@ -69,33 +83,38 @@ describe("useNotifications", () => {
   });
 
   it("looks a document up once for the list, not once per row", async () => {
-    fetchNotifications.mockResolvedValue([
-      notification("a", { fileId: "f-1" }),
-      notification("b", { fileId: "f-1" }),
-      notification("c", { fileId: "f-2" }),
-    ]);
+    fetchNotifications.mockResolvedValue(
+      feed([
+        notification("a", { fileId: "f-1" }),
+        notification("b", { fileId: "f-1" }),
+        notification("c", { fileId: "f-2" }),
+      ]),
+    );
 
     const { result } = renderHook(() => useNotifications());
 
     await waitFor(() => expect(result.current.notifications).toHaveLength(3));
     expect(hasLocalFile).toHaveBeenCalledTimes(2);
+    expect(loadRetryPayload).toHaveBeenCalledTimes(2);
   });
 
   it("looks up an attended run's document but never an unattended run's", async () => {
-    // Asking storage about a source's hash can only miss, and would then be shown as "not on this
-    // device" about a document that never was.
-    fetchNotifications.mockResolvedValue([
-      notification("attended", {
-        origin: "POLICY",
-        sourceId: null,
-        fileId: "editor-file-1",
-      }),
-      notification("unattended", {
-        origin: "POLICY",
-        sourceId: "src-s3-invoices",
-        fileId: "hashed-identity",
-      }),
-    ]);
+    // Only the attended row names a reference this browser could resolve; a source's hash can only
+    // miss, and would then read as "not on this device" about a document that never was.
+    fetchNotifications.mockResolvedValue(
+      feed([
+        notification("attended", {
+          origin: "POLICY",
+          sourceId: null,
+          fileId: "editor-file-1",
+        }),
+        notification("unattended", {
+          origin: "POLICY",
+          sourceId: "src-s3-invoices",
+          fileId: "hashed-identity",
+        }),
+      ]),
+    );
 
     const { result } = renderHook(() => useNotifications());
 
@@ -110,6 +129,48 @@ describe("useNotifications", () => {
       result.current.documentStateFor(result.current.notifications[1])
         .hasLocalFile,
     ).toBe(false);
+  });
+
+  it("hides a member's row whose document is not in this browser, keeps the one that is", async () => {
+    hasLocalFile.mockImplementation((id: string) =>
+      Promise.resolve(id === "here"),
+    );
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("gone", { fileId: "gone" }),
+          notification("kept", { fileId: "here" }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("kept");
+    // The hidden row is not news either: it must not light the badge.
+    expect(result.current.unreadCount).toBe(1);
+  });
+
+  it("shows a reviewer both rows, document here or not", async () => {
+    // A reviewer keeps a row for a file they cannot open: it is how they see a policy needs fixing.
+    hasLocalFile.mockImplementation((id: string) =>
+      Promise.resolve(id === "here"),
+    );
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("gone", { fileId: "gone" }),
+          notification("kept", { fileId: "here" }),
+        ],
+        true,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(2));
   });
 
   it("polls on one timer and stops it when the last bell unmounts", async () => {
@@ -143,10 +204,9 @@ describe("useNotifications", () => {
   });
 
   it("marks every bell read, not just the one the user opened", async () => {
-    fetchNotifications.mockResolvedValue([
-      notification("b"),
-      notification("a"),
-    ]);
+    fetchNotifications.mockResolvedValue(
+      feed([notification("b"), notification("a")]),
+    );
     const first = renderHook(() => useNotifications());
     const second = renderHook(() => useNotifications());
     await waitFor(() => expect(first.result.current.unreadCount).toBe(2));
@@ -158,15 +218,36 @@ describe("useNotifications", () => {
     expect(first.result.current.unreadCount).toBe(0);
     expect(second.result.current.unreadCount).toBe(0);
     expect(
-      window.localStorage.getItem("stirling.notifications.lastSeenId"),
-    ).toBe("b");
+      window.localStorage.getItem("stirling.notifications.readThroughAt"),
+    ).toBe(String(Date.parse("2026-08-05T00:00:00Z")));
+  });
+
+  it("keeps earlier rows read once the row that was newest has gone", async () => {
+    fetchNotifications.mockResolvedValue(
+      feed([
+        notification("new", { lastSeenAt: "2026-08-05T01:00:00Z" }),
+        notification("old"),
+      ]),
+    );
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.unreadCount).toBe(2));
+    await act(async () => result.current.markAllSeen());
+    expect(result.current.unreadCount).toBe(0);
+
+    // Resolved, so it leaves the list. A marker holding its id would have nothing left to measure
+    // from, and the row below it would read as unread again.
+    fetchNotifications.mockResolvedValue(feed([notification("old")]));
+    await act(async () => result.current.refresh());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.unreadCount).toBe(0);
   });
 
   it("joins the read in flight rather than starting a second one", async () => {
-    let release: (listed: AppNotification[]) => void = () => {};
+    let release: (fetched: FetchedNotifications) => void = () => {};
     fetchNotifications.mockImplementation(
       () =>
-        new Promise<AppNotification[]>((resolve) => {
+        new Promise<FetchedNotifications>((resolve) => {
           release = resolve;
         }),
     );
@@ -182,26 +263,27 @@ describe("useNotifications", () => {
     const second = renderHook(() => useNotifications());
     expect(fetchNotifications).toHaveBeenCalledTimes(1);
 
-    await act(async () => release([notification("a")]));
+    await act(async () => release(feed([notification("a")])));
     expect(first.result.current.notifications).toHaveLength(1);
     expect(second.result.current.notifications).toHaveLength(1);
 
     // Once it has landed, the next refresh does go and read again.
-    fetchNotifications.mockResolvedValue([]);
+    fetchNotifications.mockResolvedValue(feed([]));
     await act(async () => second.result.current.refresh());
     expect(fetchNotifications).toHaveBeenCalledTimes(2);
   });
 
   it("keeps its own list rather than one left by a bell that has gone", async () => {
-    fetchNotifications.mockResolvedValue([notification("a")]);
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
     const first = renderHook(() => useNotifications());
     await waitFor(() =>
       expect(first.result.current.notifications).toHaveLength(1),
     );
     first.unmount();
 
-    // It must not show the old row while its own read is in flight.
-    fetchNotifications.mockResolvedValue([]);
+    // Nothing to report by the time the next bell appears: it must not show the old row while its
+    // own read is in flight.
+    fetchNotifications.mockResolvedValue(feed([]));
     const second = renderHook(() => useNotifications());
 
     expect(second.result.current.notifications).toHaveLength(0);
