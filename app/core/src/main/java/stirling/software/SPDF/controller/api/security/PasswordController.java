@@ -5,11 +5,11 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -20,6 +20,12 @@ import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -33,15 +39,21 @@ public class PasswordController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-password")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-password",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove password from a PDF file",
             description =
                     "This endpoint removes the password from a protected PDF file. Users need to"
-                            + " provide the existing password. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> removePassword(
-            @ModelAttribute PDFPasswordRequest request) throws IOException {
+                            + " provide the existing password.")
+    public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
 
@@ -62,16 +74,28 @@ public class PasswordController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-password")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-password",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(
+            produces = ToolFormat.PDF_ENCRYPTED,
+            cases =
+                    @ToolIOCase(
+                            when = {
+                                @ToolIOWhen(param = "password", matches = ""),
+                                @ToolIOWhen(param = "ownerPassword", matches = "")
+                            },
+                            produces = ToolFormat.PDF,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Add password to a PDF file",
             description =
                     "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file. Input:PDF"
-                            + " Output:PDF")
-    public ResponseEntity<StreamingResponseBody> addPassword(
-            @ModelAttribute AddPasswordRequest request) throws IOException {
+                            + " of permissions that should be applied to the file.")
+    public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();
@@ -100,15 +124,15 @@ public class PasswordController {
             StandardProtectionPolicy spp =
                     new StandardProtectionPolicy(ownerPassword, password, ap);
 
-            if ((ownerPassword != null && ownerPassword.length() > 0)
-                    || (password != null && password.length() > 0)) {
+            if ((ownerPassword != null && !ownerPassword.isEmpty())
+                    || (password != null && !password.isEmpty())) {
                 spp.setEncryptionKeyLength(keyLength);
             }
             spp.setPermissions(ap);
             document.protect(spp);
 
-            if ((ownerPassword == null || ownerPassword.length() == 0)
-                    && (password == null || password.length() == 0))
+            if ((ownerPassword == null || ownerPassword.isEmpty())
+                    && (password == null || password.isEmpty()))
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(

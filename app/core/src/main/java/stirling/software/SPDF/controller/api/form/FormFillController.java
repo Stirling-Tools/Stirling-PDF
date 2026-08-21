@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.opencsv.CSVWriter;
 
@@ -63,7 +63,7 @@ public class FormFillController {
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
-    private ResponseEntity<StreamingResponseBody> saveDocument(PDDocument document, String baseName)
+    private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
             throws IOException {
         return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
     }
@@ -262,7 +262,7 @@ public class FormFillController {
             summary = "Modify existing form fields",
             description =
                     "Updates existing fields in the provided PDF and returns the updated file")
-    public ResponseEntity<StreamingResponseBody> modifyFields(
+    public ResponseEntity<Resource> modifyFields(
             @Parameter(
                             description = "The input PDF file",
                             required = true,
@@ -293,7 +293,7 @@ public class FormFillController {
     @Operation(
             summary = "Delete form fields",
             description = "Removes the specified fields from the PDF and returns the updated file")
-    public ResponseEntity<StreamingResponseBody> deleteFields(
+    public ResponseEntity<Resource> deleteFields(
             @Parameter(
                             description = "The input PDF file",
                             required = true,
@@ -329,7 +329,7 @@ public class FormFillController {
             description =
                     "Populates the supplied PDF form using values from the provided JSON payload"
                             + " and returns the filled PDF")
-    public ResponseEntity<StreamingResponseBody> fillForm(
+    public ResponseEntity<Resource> fillForm(
             @Parameter(
                             description = "The input PDF file",
                             required = true,
@@ -356,7 +356,7 @@ public class FormFillController {
                 document -> FormUtils.applyFieldValues(document, values, flatten, true));
     }
 
-    private ResponseEntity<StreamingResponseBody> processSingleFile(
+    private ResponseEntity<Resource> processSingleFile(
             MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
         requirePdf(file);
 

@@ -9,9 +9,10 @@ NC='\033[0m'
 echo -e "${YELLOW}Validating OAuth test environment...${NC}"
 echo ""
 
-# Check Keycloak health
+# Check Keycloak health — Keycloak 24+ moved /health off the main listener,
+# so probe the realm directly which is the meaningful liveness check anyway.
 echo -n "Checking Keycloak health... "
-if curl -sf http://localhost:9080/health/ready > /dev/null 2>&1; then
+if curl -sf http://localhost:9080/realms/stirling-oauth > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC}"
 else
     echo -e "${RED}✗ Keycloak is not ready${NC}"

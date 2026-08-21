@@ -6,12 +6,13 @@ import java.nio.file.Files;
 import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.HtmlUtils;
 
 import io.github.pixee.security.Filenames;
@@ -24,7 +25,10 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlToPdf;
@@ -42,17 +46,20 @@ public class ConvertEmlToPDF {
     private final TempFileManager tempFileManager;
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/eml/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/eml/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(accepts = ToolFormat.EMAIL, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert EML/MSG to PDF",
             description =
-                    "This endpoint converts EML (email) and MSG (Outlook) files to PDF format"
-                            + " with extensive customization options. Features include font settings,"
-                            + " image constraints, display modes, attachment handling, and HTML debug"
-                            + " output. Input: EML or MSG file, Output: PDF or HTML file. Type: SISO")
-    public ResponseEntity<StreamingResponseBody> convertEmlToPdf(
-            @ModelAttribute EmlToPdfRequest request) {
+                    "This endpoint converts EML (email) and MSG (Outlook) files to PDF format with"
+                            + " extensive customization options. Features include font settings, image"
+                            + " constraints, display modes, attachment handling, and HTML debug output. or MSG"
+                            + " file, or HTML file.")
+    public ResponseEntity<Resource> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();
         String originalFilename = inputFile.getOriginalFilename();
@@ -159,14 +166,11 @@ public class ConvertEmlToPDF {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> errorResponse(HttpStatus status, String message) {
+    private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        StreamingResponseBody streaming =
-                os -> {
-                    os.write(body);
-                    os.flush();
-                };
-        return ResponseEntity.status(status).body(streaming);
+        return ResponseEntity.status(status)
+                .contentLength(body.length)
+                .body(new ByteArrayResource(body));
     }
 
     private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {

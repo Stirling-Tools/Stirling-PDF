@@ -76,7 +76,7 @@ public class SigningSessionController {
                             .map(
                                     stirling.software.proprietary.workflow.util.WorkflowMapper
                                             ::toResponse)
-                            .collect(java.util.stream.Collectors.toList());
+                            .toList();
             return ResponseEntity.ok(responses);
         } catch (Exception e) {
             log.error("Error listing sessions for user {}", principal.getName(), e);
@@ -93,7 +93,7 @@ public class SigningSessionController {
             summary = "Create a shared signing session",
             description =
                     "Starts a collaboration session, distributes share links, and optionally notifies"
-                            + " participants. Input:PDF Output:JSON Type:SISO")
+                            + " participants.")
     public ResponseEntity<?> createSession(
             @org.springframework.web.bind.annotation.RequestParam("file")
                     org.springframework.web.multipart.MultipartFile file,

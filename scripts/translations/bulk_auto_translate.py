@@ -7,16 +7,13 @@ Supports concurrent translation with configurable thread pool.
 
 import argparse
 import os
-import sys
-import time
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import subprocess
-from typing import List, Tuple, Optional
+import sys
 import threading
-
+import time
 import tomllib
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # Thread-safe print lock
 print_lock = threading.Lock()
@@ -28,7 +25,7 @@ def safe_print(*args, **kwargs):
         print(*args, **kwargs)
 
 
-def get_all_languages(locales_dir: Path) -> List[str]:
+def get_all_languages(locales_dir: Path) -> list[str]:
     """Get all language codes from locales directory."""
     languages = []
 
@@ -37,7 +34,7 @@ def get_all_languages(locales_dir: Path) -> List[str]:
         return []
 
     for lang_dir in sorted(locales_dir.iterdir()):
-        if lang_dir.is_dir() and lang_dir.name != "en-GB":
+        if lang_dir.is_dir() and lang_dir.name != "en-US":
             toml_file = lang_dir / "translation.toml"
             if toml_file.exists():
                 languages.append(lang_dir.name)
@@ -45,7 +42,7 @@ def get_all_languages(locales_dir: Path) -> List[str]:
     return languages
 
 
-def get_language_completion(locales_dir: Path, language: str) -> Optional[float]:
+def get_language_completion(locales_dir: Path, language: str) -> float | None:
     """Get completion percentage for a language."""
     lang_dir = locales_dir / language
     toml_file = lang_dir / "translation.toml"
@@ -57,10 +54,10 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
         with open(toml_file, "rb") as f:
             target_data = tomllib.load(f)
 
-        # Load en-GB reference
-        en_gb_file = locales_dir / "en-GB" / "translation.toml"
-        with open(en_gb_file, "rb") as f:
-            en_gb_data = tomllib.load(f)
+        # Load en-US reference
+        en_us_file = locales_dir / "en-US" / "translation.toml"
+        with open(en_us_file, "rb") as f:
+            en_us_data = tomllib.load(f)
 
         # Flatten and count
         def flatten(d, parent=""):
@@ -73,16 +70,12 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
                     items[key] = v
             return items
 
-        en_gb_flat = flatten(en_gb_data)
+        en_us_flat = flatten(en_us_data)
         target_flat = flatten(target_data)
 
-        # Count translated (not equal to en-GB)
-        translated = sum(
-            1
-            for k in en_gb_flat
-            if k in target_flat and target_flat[k] != en_gb_flat[k]
-        )
-        total = len(en_gb_flat)
+        # Count translated (not equal to en-US)
+        translated = sum(1 for k in en_us_flat if k in target_flat and target_flat[k] != en_us_flat[k])
+        total = len(en_us_flat)
 
         return (translated / total * 100) if total > 0 else 0.0
 
@@ -98,7 +91,8 @@ def translate_language(
     timeout: int,
     skip_verification: bool,
     include_existing: bool,
-) -> Tuple[str, bool, str]:
+    model: str,
+) -> tuple[str, bool, str]:
     """
     Translate a single language.
     Returns: (language_code, success, message)
@@ -115,6 +109,8 @@ def translate_language(
         str(batch_size),
         "--timeout",
         str(timeout),
+        "--model",
+        model,
     ]
 
     if skip_verification:
@@ -139,11 +135,11 @@ def translate_language(
             safe_print(f"[{language}] ✓ Success")
             return (language, True, "Success")
         else:
-            error_msg = (
-                result.stderr.strip() or result.stdout.strip() or "Unknown error"
-            )
-            safe_print(f"[{language}] ✗ Failed: {error_msg[:100]}")
-            return (language, False, error_msg[:200])  # Truncate long errors
+            # Show the actual error (last line of output), not the header
+            output = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            error_msg = output.splitlines()[-1][:200]
+            safe_print(f"[{language}] ✗ Failed: {error_msg}")
+            return (language, False, error_msg)
 
     except subprocess.TimeoutExpired:
         safe_print(f"[{language}] ✗ Timeout exceeded")
@@ -175,8 +171,11 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 """,
     )
 
+    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
     parser.add_argument(
-        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
+        "--model",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
     )
     parser.add_argument(
         "--parallel",
@@ -209,7 +208,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(
@@ -233,9 +232,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     # Verify API key (unless dry run)
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not args.dry_run and not api_key:
-        print(
-            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
-        )
+        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
 
     locales_dir = Path(args.locales_dir)
@@ -246,7 +243,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         print(f"Translating specified languages: {', '.join(languages)}")
     else:
         languages = get_all_languages(locales_dir)
-        print(f"Found {len(languages)} languages (excluding en-GB)")
+        print(f"Found {len(languages)} languages (excluding en-US)")
 
     if not languages:
         print("No languages to translate!")
@@ -277,6 +274,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     print("Bulk Translation Configuration")
     print(f"{'=' * 60}")
     print(f"Languages to translate: {len(languages)}")
+    print(f"Model: {args.model}")
     print(f"Parallel threads: {args.parallel}")
     print(f"Batch size: {args.batch_size}")
     print(f"Timeout per batch: {args.timeout}s")
@@ -308,6 +306,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.timeout,
                 args.skip_verification,
                 args.include_existing,
+                args.model,
             ): lang
             for lang in languages
         }

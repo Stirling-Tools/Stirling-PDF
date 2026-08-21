@@ -1,0 +1,384 @@
+package stirling.software.proprietary.failure;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * {@link FileRunEventStore} against the real JPQL on a real (H2) database. Every other test in this
+ * package substitutes {@link InMemoryFileRunEventRepository}, whose Java filters would keep passing
+ * if the queries themselves regressed — the team-isolation clause could be deleted from the JPQL
+ * and no in-memory test would notice.
+ *
+ * <p>{@code NOT_SUPPORTED} suspends {@code @DataJpaTest}'s per-test transaction, so every store
+ * call commits in its own transaction as at runtime. That is what makes the stale-snapshot test
+ * meaningful: inside one shared persistence context, both reads would hand back the same managed
+ * instance and the bug could not show.
+ */
+@DataJpaTest
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+class FileRunEventStoreDbTest {
+
+    private static final Long TEAM = 7L;
+    private static final Long OTHER_TEAM = 9L;
+
+    @Autowired private FileRunEventRepository repository;
+
+    private FileRunEventStore store;
+
+    @BeforeEach
+    void setUp() {
+        store = new FileRunEventStore(repository);
+    }
+
+    @AfterEach
+    void wipe() {
+        repository.deleteAllInBatch();
+    }
+
+    private RecordFailure failure(FailureKind kind, Long teamId, String fileId) {
+        return failure(kind, teamId, "author@example.com", fileId);
+    }
+
+    /** As {@link #failure} but naming the actor, which is what the read scope narrows by. */
+    private RecordFailure failure(FailureKind kind, Long teamId, String actor, String fileId) {
+        return new RecordFailure(
+                kind,
+                FailureOrigin.POLICY,
+                teamId,
+                actor,
+                "policy-1",
+                "run-1",
+                null,
+                fileId,
+                "detail");
+    }
+
+    @Test
+    @DisplayName("team isolation is enforced by the query, including the unteamed rows")
+    void teamIsolationIsEnforcedBySql() {
+        store.record(failure(FailureKind.UNKNOWN, TEAM, "ours"));
+        store.record(failure(FailureKind.UNKNOWN, OTHER_TEAM, "theirs"));
+        store.record(failure(FailureKind.UNKNOWN, null, "unteamed"));
+
+        assertThat(store.list(TEAM, null, null, null, 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("ours");
+        // A plain `e.teamId = :teamId` would return nothing here: SQL equality against NULL is
+        // never true, which is what the explicit null branch in the JPQL exists for.
+        assertThat(store.list(null, null, null, null, 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("unteamed");
+    }
+
+    @Test
+    @DisplayName("actor narrowing is enforced by the query, within the team")
+    void actorNarrowingIsEnforcedBySql() {
+        // The clause that makes a member read only their own rows. Exercised here rather than only
+        // against the in-memory repository, which reimplements the filter in Java and would agree
+        // with a query that had lost it.
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "mine@example.com", "f1"));
+        store.record(
+                failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "theirs@example.com", "f2"));
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, null, "f3"));
+
+        assertThat(store.list(TEAM, null, null, "mine@example.com", 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("f1");
+        // A null actor is "no filter", which is what a leader reads with: the whole team, including
+        // the rows nobody is named on.
+        assertThat(store.list(TEAM, null, null, null, 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactlyInAnyOrder("f1", "f2", "f3");
+    }
+
+    @Test
+    @DisplayName("a fold lands on the row's current state, not the caller's snapshot")
+    void foldTargetsTheCurrentRowNotACallersSnapshot() {
+        // The lost-update shape: record reads the row, a reviewer dismisses it, then the fold
+        // applies. A save() of the stale snapshot would merge status = NEW back over the dismiss.
+        FileRunEvent event = store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f"));
+        store.applyStatus(event.id(), TEAM, FileRunEventStatus.DISMISSED, "reviewer@example.com");
+
+        FileRunEvent folded =
+                store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f"));
+
+        assertThat(folded.status()).isEqualTo(FileRunEventStatus.DISMISSED);
+        assertThat(folded.statusActor()).isEqualTo("reviewer@example.com");
+        assertThat(folded.occurrences()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("a dismiss landing mid-fold is not reverted by the folder's stale snapshot")
+    void aDismissLandingMidFoldIsNotReverted() {
+        // The reviewer's repro, made deterministic: the fold's read happens, then a dismiss lands,
+        // then the fold applies. The old save()-based absorb merged the pre-dismiss snapshot back
+        // over the row, reverting status to NEW and erasing the reviewer's action.
+        FileRunEvent event = store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f"));
+        AtomicBoolean interleaved = new AtomicBoolean();
+        FileRunEventRepository interleaving =
+                (FileRunEventRepository)
+                        Proxy.newProxyInstance(
+                                getClass().getClassLoader(),
+                                new Class<?>[] {FileRunEventRepository.class},
+                                (proxy, method, args) -> {
+                                    Object result;
+                                    try {
+                                        result = method.invoke(repository, args);
+                                    } catch (InvocationTargetException e) {
+                                        throw e.getCause();
+                                    }
+                                    if ("findByTeamAndDedupKey".equals(method.getName())
+                                            && interleaved.compareAndSet(false, true)) {
+                                        store.applyStatus(
+                                                event.id(),
+                                                TEAM,
+                                                FileRunEventStatus.DISMISSED,
+                                                "reviewer@example.com");
+                                    }
+                                    return result;
+                                });
+
+        FileRunEvent folded =
+                new FileRunEventStore(interleaving)
+                        .record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f"));
+
+        assertThat(folded.status()).isEqualTo(FileRunEventStatus.DISMISSED);
+        assertThat(folded.statusActor()).isEqualTo("reviewer@example.com");
+        assertThat(folded.occurrences()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("a row deleted between the dedup read and the fold is re-inserted, not lost")
+    void aVanishedRowIsReinsertedRatherThanLost() {
+        // Retention or a manual purge can delete the row a fold was about to land on. The fold
+        // then matches nothing, and treating that as an error would drop the incident entirely:
+        // the recorder swallows what record() throws, leaving the failure as only a log line.
+        FileRunEvent first = store.record(failure(FailureKind.UNKNOWN, TEAM, "f"));
+        AtomicBoolean deleted = new AtomicBoolean();
+        FileRunEventRepository vanishing =
+                (FileRunEventRepository)
+                        Proxy.newProxyInstance(
+                                getClass().getClassLoader(),
+                                new Class<?>[] {FileRunEventRepository.class},
+                                (proxy, method, args) -> {
+                                    if ("fold".equals(method.getName())
+                                            && deleted.compareAndSet(false, true)) {
+                                        repository.deleteById(first.id());
+                                    }
+                                    try {
+                                        return method.invoke(repository, args);
+                                    } catch (InvocationTargetException e) {
+                                        throw e.getCause();
+                                    }
+                                });
+
+        FileRunEvent replacement =
+                new FileRunEventStore(vanishing).record(failure(FailureKind.UNKNOWN, TEAM, "f"));
+
+        assertThat(replacement.id()).isNotEqualTo(first.id());
+        assertThat(replacement.occurrences()).isEqualTo(1);
+        assertThat(store.list(TEAM, null, null, null, 10)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("the same broken file folds across runs, and distinct files do not")
+    void repeatsFoldOnTheDocumentNotTheRun() {
+        // The point of the rollup. Each sweep starts a new run, so keying on the run id alone
+        // meant a file that failed every sweep opened a new incident every sweep, and several
+        // files failing in one run collapsed into one. Both are wrong; the document is the key.
+        RecordFailure firstSweep = locked("run-1", "file-hash-a");
+        RecordFailure secondSweep = locked("run-2", "file-hash-a");
+        RecordFailure otherFile = locked("run-1", "file-hash-b");
+
+        store.record(firstSweep);
+        store.record(otherFile);
+        FileRunEvent folded = store.record(secondSweep);
+
+        assertThat(folded.occurrences()).isEqualTo(2);
+        assertThat(store.list(TEAM, null, null, null, 10))
+                .as("one incident per document, however many runs it failed in")
+                .extracting(FileRunEvent::fileId)
+                .containsExactlyInAnyOrder("file-hash-a", "file-hash-b");
+    }
+
+    private RecordFailure locked(String runId, String fileId) {
+        return RecordFailure.forRun(
+                FailureKind.INPUT_PASSWORD_PROTECTED,
+                TEAM,
+                null,
+                null,
+                "policy-1",
+                runId,
+                fileId,
+                "locked");
+    }
+
+    @Test
+    @DisplayName("closing deleted files touches only that owner's own open editor rows")
+    void markFilesRemovedIsScopedBySqlNotByTheCaller() {
+        // The scoping is entirely in the JPQL, so the in-memory fake proves nothing about it:
+        // it implements the same rules by hand and would agree with a wrong query.
+        FileRunEvent mine =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
+        FileRunEvent theirs =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "colleague@example.com", "f-1", "boom"));
+        FileRunEvent otherTeam =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN,
+                                OTHER_TEAM,
+                                "owner@example.com",
+                                "f-1",
+                                "boom"));
+        FileRunEvent fromProcessor = store.record(failure(FailureKind.UNKNOWN, TEAM, "f-1"));
+
+        int closed = store.markFilesRemoved(TEAM, "owner@example.com", List.of("f-1"));
+
+        assertThat(closed).isEqualTo(1);
+        assertThat(store.find(mine.id(), TEAM).orElseThrow().status())
+                .isEqualTo(FileRunEventStatus.FILE_REMOVED);
+        assertThat(store.find(theirs.id(), TEAM).orElseThrow().status())
+                .as("another person's incident about their own file")
+                .isEqualTo(FileRunEventStatus.NEW);
+        assertThat(store.find(otherTeam.id(), OTHER_TEAM).orElseThrow().status())
+                .as("another team entirely")
+                .isEqualTo(FileRunEventStatus.NEW);
+        assertThat(store.find(fromProcessor.id(), TEAM).orElseThrow().status())
+                .as("nothing was deleted from an editor here")
+                .isEqualTo(FileRunEventStatus.NEW);
+    }
+
+    @Test
+    @DisplayName("a row already closed by a reviewer is left as they left it")
+    void markFilesRemovedLeavesClosedRowsAlone() {
+        FileRunEvent event =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
+        store.applyStatus(event.id(), TEAM, FileRunEventStatus.DISMISSED, "reviewer@example.com");
+
+        assertThat(store.markFilesRemoved(TEAM, "owner@example.com", List.of("f-1"))).isZero();
+        assertThat(store.find(event.id(), TEAM).orElseThrow().statusActor())
+                .isEqualTo("reviewer@example.com");
+    }
+
+    @Test
+    @DisplayName("the kind filter applies before the limit, not after")
+    void kindFilterAppliesBeforeTheLimit() {
+        store.record(failure(FailureKind.UNKNOWN, TEAM, "old-unknown"));
+        for (int i = 0; i < 3; i++) {
+            store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "newer-" + i));
+        }
+
+        assertThat(store.list(TEAM, null, "UNKNOWN", null, 1))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("old-unknown");
+    }
+
+    @Test
+    @DisplayName("two racing closes resolve to one winner")
+    void twoClosesResolveToOneWinner() {
+        FileRunEvent event = store.record(failure(FailureKind.UNKNOWN, TEAM, "f"));
+        store.applyStatus(event.id(), TEAM, FileRunEventStatus.DISMISSED, "first@example.com");
+
+        // The second close passed the service's terminal() pre-check in its own request; the
+        // guarded UPDATE is what refuses it here.
+        assertThatThrownBy(
+                        () ->
+                                store.applyStatus(
+                                        event.id(),
+                                        TEAM,
+                                        FileRunEventStatus.DISMISSED,
+                                        "second@example.com"))
+                .isInstanceOf(FailureActionException.class)
+                .extracting(e -> ((FailureActionException) e).getReason())
+                .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+
+        assertThat(store.find(event.id(), TEAM).orElseThrow().statusActor())
+                .isEqualTo("first@example.com");
+    }
+
+    @Test
+    @DisplayName("losing a delete race reports the row missing, not closed")
+    void aDeletedRowIsReportedMissingRatherThanClosed() {
+        // Both refusals come from the same guarded UPDATE returning zero rows, so the store has to
+        // tell them apart afterwards. Getting it wrong answers 400 for a row that is simply gone,
+        // where every other "no such event" answers 404.
+        FileRunEvent event = store.record(failure(FailureKind.UNKNOWN, TEAM, "f"));
+        repository.deleteById(event.id());
+
+        assertThatThrownBy(
+                        () ->
+                                store.applyStatus(
+                                        event.id(),
+                                        TEAM,
+                                        FileRunEventStatus.DISMISSED,
+                                        "reviewer@example.com"))
+                .isInstanceOf(FailureActionException.class)
+                .extracting(e -> ((FailureActionException) e).getReason())
+                .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("a reopened incident only flips from RESOLVED, never from DISMISSED")
+    void reopenFlipsOnlyResolved() {
+        FileRunEvent resolved = store.record(failure(FailureKind.UNKNOWN, TEAM, "resolved-file"));
+        store.applyStatus(resolved.id(), TEAM, FileRunEventStatus.RESOLVED, "system");
+
+        FileRunEvent reopened = store.record(failure(FailureKind.UNKNOWN, TEAM, "resolved-file"));
+
+        assertThat(reopened.status()).isEqualTo(FileRunEventStatus.NEW);
+        assertThat(reopened.statusActor()).isNull();
+    }
+
+    @Test
+    @DisplayName("the unique constraint exists in the DDL, not only in the entity annotation")
+    void duplicateIncidentInsertTripsTheUniqueConstraint() {
+        store.record(failure(FailureKind.UNKNOWN, TEAM, "f"));
+        String dedupKey = failure(FailureKind.UNKNOWN, TEAM, "f").dedupKey();
+
+        FileRunEventEntity duplicate = new FileRunEventEntity();
+        duplicate.setId(UUID.randomUUID().toString());
+        duplicate.setTeamId(TEAM);
+        duplicate.setKindId(FailureKind.UNKNOWN.getId());
+        duplicate.setStage(FailureStage.INTERNAL);
+        duplicate.setSeverity(FailureSeverity.ERROR);
+        duplicate.setScope(FailureScope.RUN);
+        duplicate.setOrigin(FailureOrigin.POLICY);
+        duplicate.setDedupKey(dedupKey);
+        duplicate.setOccurrences(1);
+        duplicate.setStatus(FileRunEventStatus.NEW);
+        duplicate.setCreatedAt(Instant.now());
+        duplicate.setLastSeenAt(Instant.now());
+
+        assertThatThrownBy(() -> repository.saveAndFlush(duplicate))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @SpringBootConfiguration
+    @AutoConfigurationPackage
+    static class TestApp {}
+}

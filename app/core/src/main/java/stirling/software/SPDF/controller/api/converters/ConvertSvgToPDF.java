@@ -9,12 +9,13 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +28,12 @@ import stirling.software.SPDF.model.api.converters.SvgToPdfRequest;
 import stirling.software.SPDF.utils.SvgToPdf;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.SvgSanitizer;
@@ -43,19 +50,29 @@ public class ConvertSvgToPDF {
     private final SvgSanitizer svgSanitizer;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/svg/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/svg/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(
+            accepts = ToolFormat.IMAGE,
+            produces = ToolFormat.PDF,
+            arity = ToolArity.MIMO,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "combineIntoSinglePdf", matches = "true"),
+                            produces = ToolFormat.PDF,
+                            arity = ToolArity.MISO))
     @Operation(
             summary = "Convert SVG to PDF",
             description =
-                    "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF format. "
-                            + "Each SVG is converted to a separate PDF file. "
-                            + "The conversion preserves vector graphics for crisp output at any resolution - no rasterization occurs. "
-                            + "SVG dimensions (width/height) determine the PDF page size; defaults to A4 if not specified. "
-                            + "SVG content is sanitized to prevent XSS attacks. "
-                            + "Input: SVG file(s), Output: PDF file(s) or ZIP. Type: MIMO")
-    public ResponseEntity<StreamingResponseBody> convertSvgToPdf(
-            @ModelAttribute SvgToPdfRequest request) {
+                    "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF"
+                            + " format. Each SVG is converted to a separate PDF file. The conversion preserves"
+                            + " vector graphics for crisp output at any resolution - no rasterization occurs."
+                            + " SVG dimensions (width/height) determine the PDF page size; defaults to A4 if"
+                            + " not specified. SVG content is sanitized to prevent XSS attacks.")
+    public ResponseEntity<Resource> convertSvgToPdf(@ModelAttribute SvgToPdfRequest request) {
 
         MultipartFile[] inputFiles = request.getFileInput();
         boolean combineIntoSinglePdf = Boolean.TRUE.equals(request.getCombineIntoSinglePdf());
@@ -95,10 +112,7 @@ public class ConvertSvgToPDF {
                     filenames.add(Filenames.toSimpleFileName(originalFilename));
 
                 } catch (IOException e) {
-                    log.error(
-                            "SVG sanitization/reading failed for {}: {}",
-                            originalFilename,
-                            e.getMessage());
+                    log.error("SVG sanitization/reading failed for {}", originalFilename, e);
                 }
             }
 
@@ -121,17 +135,14 @@ public class ConvertSvgToPDF {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> errorResponse(HttpStatus status, String message) {
+    private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        StreamingResponseBody streaming =
-                os -> {
-                    os.write(body);
-                    os.flush();
-                };
-        return ResponseEntity.status(status).body(streaming);
+        return ResponseEntity.status(status)
+                .contentLength(body.length)
+                .body(new ByteArrayResource(body));
     }
 
-    private ResponseEntity<StreamingResponseBody> handleCombinedConversion(
+    private ResponseEntity<Resource> handleCombinedConversion(
             List<byte[]> sanitizedSvgs, List<String> filenames) {
         try {
             log.info("Combining {} SVG files into single PDF", sanitizedSvgs.size());
@@ -149,7 +160,7 @@ public class ConvertSvgToPDF {
             String outputFilename =
                     filenames.isEmpty()
                             ? "combined_svgs.pdf"
-                            : GeneralUtils.generateFilename(filenames.get(0), "_combined.pdf");
+                            : GeneralUtils.generateFilename(filenames.getFirst(), "_combined.pdf");
 
             log.info("Successfully combined {} SVGs into single PDF", sanitizedSvgs.size());
 
@@ -169,7 +180,7 @@ public class ConvertSvgToPDF {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> handleSeparateConversion(
+    private ResponseEntity<Resource> handleSeparateConversion(
             List<byte[]> sanitizedSvgs, List<String> filenames) {
         List<ConvertedPdf> convertedPdfs = new ArrayList<>();
 
@@ -205,7 +216,7 @@ public class ConvertSvgToPDF {
 
         try {
             if (convertedPdfs.size() == 1) {
-                ConvertedPdf pdf = convertedPdfs.get(0);
+                ConvertedPdf pdf = convertedPdfs.getFirst();
                 TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
                 try {
                     Files.write(tempOut.getPath(), pdf.content);
@@ -220,7 +231,7 @@ public class ConvertSvgToPDF {
                     filenames.isEmpty()
                             ? "converted_svgs.zip"
                             : GeneralUtils.generateFilename(
-                                    filenames.get(0), "_converted_svgs.zip");
+                                    filenames.getFirst(), "_converted_svgs.zip");
             TempFile zipFile = createZipFromPdfs(convertedPdfs);
             return WebResponseUtils.zipFileToWebResponse(zipFile, zipFilename);
         } catch (IOException e) {

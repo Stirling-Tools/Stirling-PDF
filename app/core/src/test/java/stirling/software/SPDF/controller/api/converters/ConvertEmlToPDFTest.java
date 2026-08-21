@@ -23,11 +23,12 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
@@ -40,14 +41,15 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertEmlToPDFTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -82,7 +84,7 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(emptyFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+        ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
@@ -98,7 +100,7 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+        ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
@@ -113,7 +115,7 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+        ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -126,7 +128,7 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+        ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
@@ -146,7 +148,7 @@ class ConvertEmlToPDFTest {
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(pdfBytes);
+        ResponseEntity<Resource> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -170,7 +172,7 @@ class ConvertEmlToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertArrayEquals(pdfBytes, drainBody(response));
@@ -188,7 +190,7 @@ class ConvertEmlToPDFTest {
         request.setFileInput(file);
         request.setDownloadHtml(true);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse =
+        ResponseEntity<Resource> expectedResponse =
                 streamingOk(htmlContent.getBytes(StandardCharsets.UTF_8));
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
@@ -209,7 +211,7 @@ class ConvertEmlToPDFTest {
                                             any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -235,7 +237,7 @@ class ConvertEmlToPDFTest {
                                             eq(customHtmlSanitizer)))
                     .thenThrow(new IOException("Parse error"));
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(
@@ -263,7 +265,7 @@ class ConvertEmlToPDFTest {
                                             any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(null);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(
@@ -287,7 +289,7 @@ class ConvertEmlToPDFTest {
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(pdfBytes);
+        ResponseEntity<Resource> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -305,7 +307,7 @@ class ConvertEmlToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -330,7 +332,7 @@ class ConvertEmlToPDFTest {
                                             any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new InterruptedException("interrupted"));
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
+            ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(

@@ -28,11 +28,11 @@ import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampRequestGenerator;
 import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampToken;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -43,7 +43,10 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -78,17 +81,20 @@ public class TimestampController {
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/timestamp-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/timestamp-pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add RFC 3161 document timestamp to a PDF",
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
-                            + " document timestamp into the PDF. Only a SHA-256 hash of the"
-                            + " document is sent to the TSA — the PDF itself never leaves the"
-                            + " server. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> timestampPdf(
-            @ModelAttribute TimestampPdfRequest request) throws Exception {
+                            + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
+                            + " to the TSA - the PDF itself never leaves the server.")
+    public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
+            throws Exception {
         MultipartFile inputFile = request.getFileInput();
         ApplicationProperties.Security.Timestamp tsConfig =
                 applicationProperties.getSecurity().getTimestamp();

@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -32,22 +33,28 @@ public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/page-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/page-count",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
-            description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
+            description = "Returns total number of pages in PDF.")
     public ResponseEntity<?> getPageCount(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             return ResponseEntity.ok(Map.of("pageCount", document.getNumberOfPages()));
         }
     }
 
-    @AutoJobPostMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/basic-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
-            description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
+            description = "Returns page count, version, file size.")
     public ResponseEntity<?> getBasicInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> info = new HashMap<>();
@@ -60,11 +67,12 @@ public class AnalysisController {
 
     @AutoJobPostMapping(
             value = "/document-properties",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
-            description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
+            description = "Returns title, author, subject, etc.")
     public ResponseEntity<?> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
         // Load the document in read-only mode to prevent modifications and ensure the integrity of
@@ -90,11 +98,14 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/page-dimensions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/page-dimensions",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
-            description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
+            description = "Returns width and height of each page.")
     public ResponseEntity<?> getPageDimensions(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             List<Map<String, Float>> dimensions = new ArrayList<>();
@@ -110,12 +121,14 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/form-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/form-fields",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get form field information",
-            description =
-                    "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and details of form fields.")
     public ResponseEntity<?> getFormFields(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> formInfo = new HashMap<>();
@@ -134,11 +147,14 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/annotation-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/annotation-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
-            description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
+            description = "Returns count and types of annotations.")
     public ResponseEntity<?> getAnnotationInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> annotInfo = new HashMap<>();
@@ -159,12 +175,14 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/font-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/font-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get font information",
-            description =
-                    "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
+            description = "Returns list of fonts used in the document.")
     public ResponseEntity<?> getFontInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> fontInfo = new HashMap<>();
@@ -185,12 +203,14 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/security-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/security-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get security information",
-            description =
-                    "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
+            description = "Returns encryption and permission details.")
     public ResponseEntity<?> getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> securityInfo = new HashMap<>();

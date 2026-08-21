@@ -10,10 +10,10 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -26,6 +26,12 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -45,13 +51,16 @@ public class PdfVectorExportController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/vector/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/vector/pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert PostScript formats to PDF",
             description =
-                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
-                            + " Input:PS/EPS Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertGhostscriptInputsToPdf(
+                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
+    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =
@@ -92,13 +101,31 @@ public class PdfVectorExportController {
         return WebResponseUtils.pdfFileToWebResponse(outputTemp, outputName);
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/vector")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/vector",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    // One case per non-default value of outputFormat; the base covers the default, eps.
+    @ToolIO(
+            produces = ToolFormat.IMAGE,
+            cases = {
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "ps"),
+                        produces = ToolFormat.POSTSCRIPT,
+                        arity = ToolArity.SISO),
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "pcl"),
+                        produces = ToolFormat.PCL,
+                        arity = ToolArity.SISO),
+                @ToolIOCase(
+                        when = @ToolIOWhen(param = "outputFormat", matches = "xps"),
+                        produces = ToolFormat.XPS,
+                        arity = ToolArity.SISO)
+            })
     @Operation(
             summary = "Convert PDF to vector format",
-            description =
-                    "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS)."
-                            + " Input:PDF Output:VECTOR Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertPdfToVector(
+            description = "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS).")
+    public ResponseEntity<Resource> convertPdfToVector(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =

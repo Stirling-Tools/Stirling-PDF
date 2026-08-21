@@ -17,11 +17,11 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -32,7 +32,11 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
@@ -56,16 +60,17 @@ public class ExtractImageScansController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/extract-image-scans")
+            value = "/extract-image-scans",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract image scans from an input file",
             description =
                     "This endpoint extracts image scans from a given file based on certain"
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
-                            + " Type:SIMO")
-    public ResponseEntity<StreamingResponseBody> extractImageScans(
+                            + " minimum contour area, and border size.")
+    public ResponseEntity<Resource> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -198,7 +203,7 @@ public class ExtractImageScansController {
                     }
                 }
 
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.zipFileToWebResponse(finalOutput, outputZipFilename);
                 finalOutputOwnershipTransferred = true;
                 return response;
@@ -209,13 +214,13 @@ public class ExtractImageScansController {
             } else {
 
                 // Return the processed image as a response
-                byte[] imageBytes = processedImageBytes.get(0);
+                byte[] imageBytes = processedImageBytes.getFirst();
                 finalOutput = tempFileManager.createManagedTempFile(".png");
                 try (OutputStream out = Files.newOutputStream(finalOutput.getPath())) {
                     out.write(imageBytes);
                 }
 
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.fileToWebResponse(
                                 finalOutput,
                                 GeneralUtils.generateFilename(fileName, ".png"),

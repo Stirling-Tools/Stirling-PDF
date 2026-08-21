@@ -12,10 +12,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -26,6 +26,9 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -126,13 +129,17 @@ public class CropController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    @AutoJobPostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/crop",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Crops a PDF document",
             description =
                     "This operation takes an input PDF file and crops it according to the given"
-                            + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> cropPdf(@ModelAttribute CropPdfForm request)
+                            + " coordinates.")
+    public ResponseEntity<Resource> cropPdf(@ModelAttribute CropPdfForm request)
             throws IOException {
         if (request.isAutoCrop()) {
             return cropWithAutomaticDetection(request);
@@ -153,8 +160,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithAutomaticDetection(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
+            throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
             try (PDDocument newDocument =
@@ -207,8 +214,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithPDFBox(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithPDFBox(@ModelAttribute CropPdfForm request)
+            throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
             try (PDDocument newDocument =
@@ -263,8 +270,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithGhostscript(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
+            throws IOException {
         TempFile tempInputFile = null;
         TempFile tempOutputFile = null;
 
@@ -301,7 +308,7 @@ public class CropController {
             processExecutor.runCommandWithOutputHandling(command);
 
             TempFile out = tempOutputFile;
-            tempOutputFile = null; // ownership transferred to StreamingResponseBody
+            tempOutputFile = null; // ownership transferred to response Resource
             return WebResponseUtils.pdfFileToWebResponse(
                     out,
                     GeneralUtils.generateFilename(

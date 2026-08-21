@@ -12,11 +12,11 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +28,9 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -56,13 +59,17 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/ebook/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/ebook/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(accepts = ToolFormat.EBOOK, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an eBook file to PDF",
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
-                            + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertEbookToPdf(
+                            + " to PDF using Calibre.")
+    public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
@@ -162,7 +169,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;

@@ -25,10 +25,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
@@ -255,7 +255,7 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<StreamingResponseBody> result =
+        ResponseEntity<Resource> result =
                 editTableOfContentsController.editTableOfContents(request);
 
         // Then
@@ -319,7 +319,7 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<StreamingResponseBody> result =
+        ResponseEntity<Resource> result =
                 editTableOfContentsController.editTableOfContents(request);
 
         // Then
@@ -373,7 +373,7 @@ class EditTableOfContentsControllerTest {
                 .save(any(File.class));
 
         // When
-        ResponseEntity<StreamingResponseBody> result =
+        ResponseEntity<Resource> result =
                 editTableOfContentsController.editTableOfContents(request);
 
         // Then

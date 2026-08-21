@@ -2,11 +2,11 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.nio.file.Files;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +17,10 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
@@ -33,14 +36,20 @@ public class ConvertHtmlToPDF {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/html/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/html/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    // A ZIP of HTML plus its CSS is a first-class input here, and is what convert/pdf/html emits.
+    @ToolIO(
+            accepts = {ToolFormat.HTML, ToolFormat.ZIP},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
-                            + " Input:HTML Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
+    public ResponseEntity<Resource> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
 

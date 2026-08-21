@@ -24,10 +24,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
@@ -122,8 +122,7 @@ class PdfVectorExportControllerTest {
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
-        ResponseEntity<StreamingResponseBody> response =
-                controller.convertGhostscriptInputsToPdf(request);
+        ResponseEntity<Resource> response = controller.convertGhostscriptInputsToPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
@@ -140,13 +139,14 @@ class PdfVectorExportControllerTest {
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
-        ResponseEntity<StreamingResponseBody> response =
-                controller.convertGhostscriptInputsToPdf(request);
+        ResponseEntity<Resource> response = controller.convertGhostscriptInputsToPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         java.io.ByteArrayOutputStream baosVerify = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baosVerify);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baosVerify);
+        }
         assertThat(baosVerify.toByteArray()).contains(content);
     }
 

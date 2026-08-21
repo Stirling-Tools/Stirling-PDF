@@ -13,11 +13,11 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,11 +29,15 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
@@ -49,6 +53,7 @@ public class ConvertOfficeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
+    private final OfficeDocumentSanitizer officeDocumentSanitizer;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
 
@@ -82,14 +87,16 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Check if the file is HTML and apply sanitization if needed
+        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
         if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            // Read and sanitize HTML content
             String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+            byte[] sanitized =
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            Files.write(inputPath, sanitized);
         } else {
-            // copy file content
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
@@ -200,14 +207,16 @@ public class ConvertOfficeController {
                 .matches();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/file/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/file/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
-            description =
-                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
-                            + " Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processFileToPDF(
-            @ModelAttribute GeneralFile generalFile) throws Exception {
+            description = "This endpoint converts a given file to a PDF using LibreOffice API")
+    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
+            throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
@@ -223,7 +232,7 @@ public class ConvertOfficeController {
             String filename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
             tempOut = null;
             return response;

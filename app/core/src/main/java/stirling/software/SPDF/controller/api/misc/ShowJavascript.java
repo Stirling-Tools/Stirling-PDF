@@ -7,11 +7,11 @@ import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +21,10 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.JavaScriptResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -34,13 +37,16 @@ public class ShowJavascript {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/show-javascript",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
+    @ToolIO(produces = ToolFormat.JAVASCRIPT)
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
-            description = "desc. Input:PDF Output:JS Type:SISO")
-    public ResponseEntity<StreamingResponseBody> extractHeader(@ModelAttribute PDFFile file)
-            throws Exception {
+            description = "desc.")
+    public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         StringBuilder script = new StringBuilder();
         boolean foundScript = false;

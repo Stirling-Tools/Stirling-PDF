@@ -21,10 +21,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.converters.SvgToPdfRequest;
 import stirling.software.SPDF.utils.SvgToPdf;
@@ -37,14 +38,15 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertSvgToPDFTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -75,7 +77,7 @@ class ConvertSvgToPDFTest {
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(null);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
@@ -88,7 +90,7 @@ class ConvertSvgToPDFTest {
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[0]);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -102,7 +104,7 @@ class ConvertSvgToPDFTest {
         request.setFileInput(new MockMultipartFile[] {txtFile});
         request.setCombineIntoSinglePdf(false);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
@@ -118,7 +120,7 @@ class ConvertSvgToPDFTest {
         request.setFileInput(new MockMultipartFile[] {emptyFile});
         request.setCombineIntoSinglePdf(false);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -141,7 +143,7 @@ class ConvertSvgToPDFTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
+        ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<SvgToPdf> svgMock = Mockito.mockStatic(SvgToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -159,7 +161,7 @@ class ConvertSvgToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+            ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -188,7 +190,7 @@ class ConvertSvgToPDFTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(combinedPdf))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
+        ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<SvgToPdf> svgMock = Mockito.mockStatic(SvgToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -206,7 +208,7 @@ class ConvertSvgToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+            ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -221,7 +223,7 @@ class ConvertSvgToPDFTest {
         request.setFileInput(new MockMultipartFile[] {nullNameFile});
         request.setCombineIntoSinglePdf(false);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -238,7 +240,7 @@ class ConvertSvgToPDFTest {
 
         when(svgSanitizer.sanitize(svgContent)).thenThrow(new IOException("sanitization error"));
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
+        ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }

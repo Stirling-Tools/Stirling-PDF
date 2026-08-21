@@ -27,12 +27,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
@@ -44,14 +45,15 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PasswordControllerTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -120,8 +122,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyString()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.removePassword(request);
+            ResponseEntity<Resource> response = passwordController.removePassword(request);
 
             assertNotNull(response.getBody());
             assertTrue(drainBody(response).length > 0);
@@ -145,8 +146,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyString()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.removePassword(request);
+            ResponseEntity<Resource> response = passwordController.removePassword(request);
 
             assertNotNull(response);
             assertNotNull(response.getBody());
@@ -209,8 +209,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyString()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.removePassword(request);
+            ResponseEntity<Resource> response = passwordController.removePassword(request);
             assertNotNull(response.getBody());
         }
 
@@ -228,8 +227,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyString()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.removePassword(request);
+            ResponseEntity<Resource> response = passwordController.removePassword(request);
             assertNotNull(response.getBody());
         }
     }
@@ -257,8 +255,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
 
             assertNotNull(response.getBody());
             assertTrue(drainBody(response).length > 0);
@@ -283,8 +280,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
 
             assertNotNull(response.getBody());
         }
@@ -310,8 +306,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
         }
 
@@ -334,8 +329,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
         }
 
@@ -366,8 +360,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
             assertTrue(drainBody(response).length > 0);
         }
@@ -392,8 +385,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
         }
 
@@ -416,8 +408,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
         }
 
@@ -440,8 +431,7 @@ class PasswordControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<StreamingResponseBody> response =
-                    passwordController.addPassword(request);
+            ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
         }
     }
