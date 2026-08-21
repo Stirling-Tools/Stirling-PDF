@@ -311,4 +311,53 @@ test.describe("Page Editor tracks", () => {
     await page.mouse.up();
     expect(await readRotations(rotated, 4)).toEqual([0, 90, 180, 270]);
   });
+
+  test("clicking pages accumulates the selection instead of replacing it", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+    const selected = rotated.locator('[data-page-id][data-selected="true"]');
+
+    await tiles.nth(0).click();
+    await expect(selected).toHaveCount(1);
+
+    // The second click must ADD, not move the selection onto page 2.
+    await tiles.nth(1).click();
+    await expect(selected).toHaveCount(2);
+
+    // Clicking a selected page takes it back out again.
+    await tiles.nth(1).click();
+    await expect(selected).toHaveCount(1);
+    await expect(tiles.nth(0)).toHaveAttribute("data-selected", "true");
+
+    // Shift extends from the last clicked page across the whole run.
+    await tiles.nth(3).click({ modifiers: ["Shift"] });
+    await expect(selected).toHaveCount(4);
+
+    // A selection spanning tracks is allowed too.
+    const sample = track(page, "sample.pdf");
+    await sample.locator("[data-page-id]").first().click();
+    await expect(
+      page.locator('[data-page-id][data-selected="true"]'),
+    ).toHaveCount(5);
+  });
+
+  test("a bar action applies to every page the clicks accumulated", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 270, 180]);
+
+    await tiles.nth(0).click();
+    await tiles.nth(2).click();
+    await page.getByRole("button", { name: "Rotate right" }).first().click();
+
+    // Only the two clicked pages turn; the ones in between are untouched.
+    expect(await readRotations(rotated, 4)).toEqual([90, 90, 0, 180]);
+  });
 });
