@@ -19,7 +19,10 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
@@ -48,14 +51,18 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/repair")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/repair",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
-                            + " first saved to a temporary location, repaired, read back, and then"
-                            + " returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
+                            + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
+                            + " to a temporary location, repaired, read back, and then returned as a response.")
     public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();

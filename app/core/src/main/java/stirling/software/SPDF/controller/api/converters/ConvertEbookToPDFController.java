@@ -28,6 +28,9 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -56,12 +59,16 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/ebook/pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/ebook/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(accepts = ToolFormat.EBOOK, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an eBook file to PDF",
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
-                            + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
+                            + " to PDF using Calibre.")
     public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
         if (!isCalibreEnabled()) {

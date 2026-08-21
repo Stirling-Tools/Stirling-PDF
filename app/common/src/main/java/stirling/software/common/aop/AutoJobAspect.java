@@ -5,7 +5,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -297,6 +299,7 @@ public class AutoJobAspect {
 
                         // Store the fileId for later reference
                         pdfFile.setFileId(fileId);
+                        recordPendingInputFile(fileId);
 
                         // Replace the original MultipartFile with our persistent copy
                         MultipartFile persistentFile = fileStorage.retrieveFile(fileId);
@@ -312,6 +315,29 @@ public class AutoJobAspect {
         }
 
         return originalArgs;
+    }
+
+    /**
+     * Queue an input copy for attribution to the job. The job id does not exist yet at this point,
+     * so {@link JobExecutorService} drains this list once it mints one.
+     */
+    @SuppressWarnings("unchecked")
+    private void recordPendingInputFile(String fileId) {
+        try {
+            Object existing = request.getAttribute(JobExecutorService.PENDING_INPUT_FILE_IDS_ATTR);
+            List<String> ids;
+            if (existing instanceof List<?> list) {
+                ids = (List<String>) list;
+            } else {
+                ids = new ArrayList<>();
+                request.setAttribute(JobExecutorService.PENDING_INPUT_FILE_IDS_ATTR, ids);
+            }
+            ids.add(fileId);
+        } catch (RuntimeException ex) {
+            // Without a bound request the copy cannot be attributed; the periodic sweep is the
+            // only backstop, so make the miss visible rather than silently leaking the file.
+            log.warn("Could not record input copy {} for cleanup: {}", fileId, ex.getMessage());
+        }
     }
 
     private String getJobIdFromContext() {

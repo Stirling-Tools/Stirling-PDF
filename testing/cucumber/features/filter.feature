@@ -18,6 +18,7 @@ Feature: Filter API Endpoints
             | pageCount  | <pageCount>  |
             | comparator | <comparator> |
         When I send the API request to the endpoint "/api/v1/filter/filter-page-count"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -59,6 +60,7 @@ Feature: Filter API Endpoints
             | fileSize   | <fileSize>   |
             | comparator | <comparator> |
         When I send the API request to the endpoint "/api/v1/filter/filter-file-size"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -93,6 +95,7 @@ Feature: Filter API Endpoints
             | rotation   | 0     |
             | comparator | Equal |
         When I send the API request to the endpoint "/api/v1/filter/filter-page-rotation"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -170,6 +173,7 @@ Feature: Filter API Endpoints
             | standardPageSize | LETTER |
             | comparator       | Equal  |
         When I send the API request to the endpoint "/api/v1/filter/filter-page-size"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -242,6 +246,7 @@ Feature: Filter API Endpoints
             | text        | FINDME |
             | pageNumbers | all    |
         When I send the API request to the endpoint "/api/v1/filter/filter-contains-text"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -281,6 +286,7 @@ Feature: Filter API Endpoints
             | parameter   | value |
             | pageNumbers | all   |
         When I send the API request to the endpoint "/api/v1/filter/filter-contains-image"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0

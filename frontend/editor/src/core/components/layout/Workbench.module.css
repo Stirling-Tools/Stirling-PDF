@@ -1,0 +1,71 @@
+/* Positioning context for the viewer toolbar's reopen tab, which hangs below
+   the bar and so must sit outside the overflow-clipped wrapper below. */
+.workbenchBarShell {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 51;
+}
+
+/* Little pull-tab shown while the viewer tool row is retracted. Anchored to the
+   bar's bottom-right edge (where the retract handle sat). Small by design - it
+   just brings the row back. */
+.workbenchBarReopenTab {
+  position: absolute;
+  top: 100%;
+  /* Right-align with the retract handle inside the bar: the bar's right
+     margin (--nav-gutter) + 1px border + 8px bar padding + the handle's own
+     6px inset. */
+  right: calc(var(--nav-gutter) + 15px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 0.875rem;
+  border: 1px solid var(--c-border-subtle);
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  background: var(--c-bg-raised);
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  z-index: 52;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.workbenchBarReopenTab:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+
+.workbenchBarWrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.workbenchBarInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workbenchScrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.workbenchScrollable::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.workbenchScrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workbenchScrollable::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 0.1875rem;
+}
+
+.workbenchScrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-gray-5);
+}

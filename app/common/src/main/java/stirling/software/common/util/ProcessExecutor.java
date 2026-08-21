@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import io.github.pixee.security.BoundedLineReader;
@@ -214,7 +215,15 @@ public class ProcessExecutor {
         boolean useSemaphore = true;
         List<String> commandToRun = command;
         if (shouldUseUnoServerPool(command)) {
-            unoLease = unoServerPool.acquireEndpoint();
+            try {
+                unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
+            } catch (TimeoutException e) {
+                throw new IOException(
+                        "All unoserver endpoints busy; request timed out after "
+                                + timeoutDuration
+                                + " minutes",
+                        e);
+            }
             commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
             useSemaphore = false;
         }
@@ -319,7 +328,7 @@ public class ProcessExecutor {
             boolean isQpdf =
                     commandToRun != null
                             && !commandToRun.isEmpty()
-                            && commandToRun.get(0).contains("qpdf");
+                            && commandToRun.getFirst().contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
@@ -382,7 +391,7 @@ public class ProcessExecutor {
         }
 
         // Check if this is a UNO conversion by looking for unoconvert executable
-        String executable = command.get(0);
+        String executable = command.getFirst();
         if (executable != null) {
             // Extract basename from path for matching
             String basename = executable;
@@ -516,7 +525,7 @@ public class ProcessExecutor {
         }
 
         // Validate executable (first argument)
-        String executable = command.get(0);
+        String executable = command.getFirst();
         if (executable == null || executable.isBlank()) {
             throw new IllegalArgumentException("Command executable must not be empty");
         }

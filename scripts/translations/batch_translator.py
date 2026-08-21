@@ -9,11 +9,11 @@ Automatically translates JSON batch files to target language while preserving:
 Note: Works with JSON batch files. Translation files can be TOML or JSON format.
 """
 
+import argparse
 import json
 import sys
-import argparse
-from pathlib import Path
 import time
+from pathlib import Path
 
 try:
     from openai import OpenAI
@@ -22,11 +22,32 @@ except ImportError:
     sys.exit(1)
 
 
+# USD per 1M tokens (input, output)
+MODEL_PRICING = {
+    "gpt-5.5": (5.0, 30.0),
+    "gpt-5.6-sol": (5.0, 30.0),
+    "gpt-5.6-terra": (2.5, 15.0),
+    "gpt-5.6-luna": (1.0, 6.0),
+    "gpt-5": (1.25, 10.0),
+}
+
+
+def estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:
+    """Estimate USD cost for a call; 0.0 if model pricing is unknown."""
+    if model not in MODEL_PRICING:
+        return 0.0
+    in_price, out_price = MODEL_PRICING[model]
+    return (prompt_tokens * in_price + completion_tokens * out_price) / 1_000_000
+
+
 class BatchTranslator:
-    def __init__(self, api_key: str, model: str = "gpt-5"):
+    def __init__(self, api_key: str, model: str = "gpt-5.5"):
         """Initialize translator with OpenAI API key."""
         self.client = OpenAI(api_key=api_key)
         self.model = model
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.total_cost = 0.0
 
     def get_translation_prompt(self, language_name: str, language_code: str) -> str:
         """Generate the system prompt for translation."""
@@ -79,9 +100,24 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
 
 Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
 
-    def translate_batch(
-        self, batch_data: dict, target_language: str, language_code: str
-    ) -> dict:
+    def _record_usage(self, response) -> None:
+        """Accumulate token usage/cost and print a per-batch line."""
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return
+
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        cost = estimate_cost(self.model, prompt_tokens, completion_tokens)
+
+        self.total_prompt_tokens += prompt_tokens
+        self.total_completion_tokens += completion_tokens
+        self.total_cost += cost
+
+        cost_note = f", ~${cost:.4f}" if cost else ""
+        print(f"  Tokens: {prompt_tokens:,} in / {completion_tokens:,} out{cost_note}")
+
+    def translate_batch(self, batch_data: dict, target_language: str, language_code: str) -> dict:
         """Translate a batch file using OpenAI API."""
         # Convert batch to compact JSON for API
         input_json = json.dumps(batch_data, ensure_ascii=False, separators=(",", ":"))
@@ -90,15 +126,13 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
         print(f"Input size: {len(input_json)} characters")
 
         try:
-            # GPT-5 only supports temperature=1, so we don't include it
+            # GPT-5.x models only support the default temperature, so we omit it
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": self.get_translation_prompt(
-                            target_language, language_code
-                        ),
+                        "content": self.get_translation_prompt(target_language, language_code),
                     },
                     {
                         "role": "user",
@@ -106,6 +140,8 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
                     },
                 ],
             )
+
+            self._record_usage(response)
 
             translated_text = response.choices[0].message.content.strip()
 
@@ -158,9 +194,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
             trans_placeholders = set(re.findall(placeholder_pattern, trans_value))
 
             if orig_placeholders != trans_placeholders:
-                issues.append(
-                    f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}"
-                )
+                issues.append(f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}")
 
         if issues:
             print("\n⚠ Validation warnings:")
@@ -236,12 +270,8 @@ Examples:
         """,
     )
 
-    parser.add_argument(
-        "input_files", nargs="+", help="Input batch JSON file(s) or pattern"
-    )
-    parser.add_argument(
-        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
-    )
+    parser.add_argument("input_files", nargs="+", help="Input batch JSON file(s) or pattern")
+    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
     parser.add_argument(
         "--language",
         "-l",
@@ -250,17 +280,15 @@ Examples:
     )
     parser.add_argument(
         "--model",
-        default="gpt-5",
-        help="OpenAI model to use (default: gpt-5, options: gpt-5-mini, gpt-5-nano)",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
     )
     parser.add_argument(
         "--output-suffix",
         default="_translated",
         help="Suffix for output files (default: _translated)",
     )
-    parser.add_argument(
-        "--skip-validation", action="store_true", help="Skip validation checks"
-    )
+    parser.add_argument("--skip-validation", action="store_true", help="Skip validation checks")
     parser.add_argument(
         "--delay",
         type=float,
@@ -275,9 +303,7 @@ Examples:
 
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print(
-            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
-        )
+        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
 
     # Get language info
@@ -316,13 +342,11 @@ Examples:
 
         try:
             # Load input file
-            with open(input_file, "r", encoding="utf-8") as f:
+            with open(input_file, encoding="utf-8") as f:
                 batch_data = json.load(f)
 
             # Translate
-            translated_data = translator.translate_batch(
-                batch_data, language_name, language_code
-            )
+            translated_data = translator.translate_batch(batch_data, language_name, language_code)
 
             # Validate
             if not args.skip_validation:
@@ -353,6 +377,12 @@ Examples:
     print(f"Successful: {successful}/{len(input_files)}")
     if failed > 0:
         print(f"Failed: {failed}/{len(input_files)}")
+
+    # Cost summary
+    print("-" * 60)
+    print(f"Total tokens: {translator.total_prompt_tokens:,} in / {translator.total_completion_tokens:,} out")
+    if translator.total_cost:
+        print(f"Estimated cost ({args.model}): ${translator.total_cost:.4f}")
 
     sys.exit(0 if failed == 0 else 1)
 

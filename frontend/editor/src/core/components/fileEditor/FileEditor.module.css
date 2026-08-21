@@ -1,0 +1,398 @@
+/* =========================
+   FileEditor Card UI Styles
+   ========================= */
+
+.card {
+  background: var(--c-surface-raised);
+  border-radius: 0.0625rem;
+  cursor: pointer;
+  transition:
+    box-shadow 0.18s ease,
+    outline-color 0.18s ease,
+    transform 0.18s ease;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card[data-selected="true"] {
+  box-shadow: var(--shadow-sm);
+}
+
+/* While dragging */
+.card.dragging,
+.card:global(.dragging) {
+  outline: 1px solid var(--c-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: none !important;
+}
+
+/* -------- Header -------- */
+.header {
+  height: 2.25rem;
+  border-radius: 0.0625rem 0.0625rem 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  user-select: none;
+  background: var(--c-bg-raised);
+  color: var(--c-text);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.headerResting {
+  background: var(
+    --c-file-header-resting
+  ); /* branded navy for unselected files */
+  color: var(--c-text-on-primary);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.headerSelected {
+  background: var(--header-selected-bg);
+  color: var(--header-selected-fg);
+  border-bottom: 1px solid var(--header-selected-bg);
+}
+
+/* Error highlight (transient) */
+.headerError {
+  background: var(--color-red-200);
+  color: var(--c-text);
+  border-bottom: 2px solid var(--color-red-500);
+}
+
+/* Unsupported (but not errored) header appearance */
+.headerUnsupported {
+  background: var(--c-bg-raised); /* neutral gray */
+  color: var(--c-text-on-primary);
+  border-bottom: 1px solid var(--c-border);
+}
+
+/* Selected border color in light mode */
+:global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
+  outline-color: var(--c-primary);
+}
+
+/* Reserve space for checkbox instead of logo */
+.logoMark {
+  margin-left: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerIndex {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.headerIconButton {
+  color: var(--c-text-on-primary) !important;
+}
+
+/* Menu dropdown */
+.menuDropdown {
+  min-width: 210px;
+}
+
+/* -------- Title / Meta -------- */
+.title {
+  line-height: 1.2;
+  color: var(--c-text);
+}
+
+.meta {
+  margin-top: 2px;
+  color: var(--c-text-muted);
+}
+
+/* -------- Preview area -------- */
+.previewBox {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-surface-raised);
+}
+
+.previewPaper {
+  width: 100%;
+  height: calc(100% - 6px);
+  min-height: 9rem;
+  justify-content: center;
+  display: grid;
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface-raised);
+}
+
+/* Thumbnail fallback */
+.previewPaper[data-thumb-missing="true"]::after {
+  content: "No preview";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Drag handle grip */
+.dragHandle {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  color: var(--c-text-muted);
+  z-index: 1;
+  cursor: grab;
+  display: inline-flex;
+}
+
+/* Actions Overlay */
+.actionsOverlay {
+  position: absolute;
+  left: 0;
+  top: 44px; /* just below header */
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
+  z-index: 20;
+  overflow: hidden;
+  animation: slideDown 140ms ease-out;
+  color: var(--c-text);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.actionRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: var(--c-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.actionRow:hover {
+  background: var(--c-hover);
+}
+
+.actionDanger {
+  color: var(--text-brand-accent);
+}
+
+.actionsDivider {
+  height: 1px;
+  background: var(--c-border);
+  margin: 4px 0;
+}
+
+/* Pin indicator */
+.pinIndicator {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 1;
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.pinned {
+  color: var(--c-warning) !important;
+}
+
+/* Unsupported file indicator */
+.unsupportedPill {
+  margin-left: 1.75rem;
+  background: var(--c-neutral-fill);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 20px;
+}
+
+/* Error pill shown when a file failed processing */
+.errorPill {
+  margin-left: 1.75rem;
+  background: var(--color-red-500);
+  color: var(--c-text-on-primary);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 20px;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 1s infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .menuDropdown {
+    transition: none !important;
+  }
+}
+
+/* =========================
+   DARK MODE OVERRIDES
+   ========================= */
+:global([data-mantine-color-scheme="dark"]) .card {
+  outline-color: var(--c-border); /* deselected stroke */
+}
+
+:global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
+  outline-color: var(--c-primary); /* selected stroke (subtle navy) */
+}
+
+:global([data-mantine-color-scheme="dark"]) .headerResting {
+  /* Background flips via the themed --c-file-header-resting token. */
+  color: var(--c-accent-fg, var(--c-primary));
+  border-bottom-color: var(--c-border);
+}
+
+:global([data-mantine-color-scheme="dark"]) .headerSelected {
+  background: var(--c-border);
+  color: var(--c-accent-fg, var(--c-primary));
+  border-bottom-color: var(--c-border);
+}
+
+:global([data-mantine-color-scheme="dark"]) .title {
+  color: var(--c-text); /* title text */
+}
+
+:global([data-mantine-color-scheme="dark"]) .meta {
+  color: var(--c-text-muted); /* subtitle text */
+}
+
+/* =========================
+   Add File Card Styles
+   ========================= */
+
+.addFileCard {
+  /* Fill the same slot a portrait page thumbnail does. Height: the 310px
+     .thumbWrap minus the always-reserved 26px toolchain bar (22px + 4px) that
+     sits above the page. Width: the file card's 260px minus its 10px side
+     padding. Offset 36px down (that padding-top + the bar) so the two line up.
+     A fixed size rather than an aspect-ratio, because each thumbnail derives
+     --thumb-aspect from its own PDF's page dimensions. */
+  height: calc(310px - 26px);
+  width: calc(260px - 20px);
+  max-width: 100%;
+  margin: 36px auto auto;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.625rem;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.2s ease,
+    border-color 0.18s ease;
+  overflow: hidden;
+}
+
+.addFileCard:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  border-color: var(--c-primary);
+}
+
+.addFileCard:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.addFileContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  gap: 0.5rem;
+}
+
+.addFileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  transition: background-color 0.18s ease;
+}
+
+.addFileCard:hover .addFileIcon {
+  background: var(--color-blue-50);
+}
+
+.addFileText {
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.addFileCard:hover .addFileText {
+  color: var(--c-text);
+}
+
+.addFileSubtext {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}

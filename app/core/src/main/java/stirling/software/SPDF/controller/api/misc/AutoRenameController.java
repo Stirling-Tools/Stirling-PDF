@@ -23,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
@@ -39,12 +42,16 @@ public class AutoRenameController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/auto-rename")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/auto-rename",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Extract header from PDF file",
             description =
                     "This endpoint accepts a PDF file and attempts to extract its title or header"
-                            + " based on heuristics. Input:PDF Output:PDF Type:SISO")
+                            + " based on heuristics.")
     public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
@@ -109,7 +116,9 @@ public class AutoRenameController {
                             mergedLineInfos.sort(
                                     Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
                             String title =
-                                    mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
+                                    mergedLineInfos.isEmpty()
+                                            ? null
+                                            : mergedLineInfos.getFirst().text;
 
                             return title != null
                                     ? title
