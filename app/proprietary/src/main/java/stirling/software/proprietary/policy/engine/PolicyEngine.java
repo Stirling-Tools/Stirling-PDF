@@ -34,6 +34,7 @@ import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -82,6 +83,7 @@ public class PolicyEngine {
     private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
+    private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -128,25 +130,35 @@ public class PolicyEngine {
         // worker.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
-                principal, principal, policyId, definition, inputs, null, listener);
+                principal,
+                principal,
+                principal,
+                policyId,
+                definition,
+                inputs,
+                listener,
+                null,
+                null);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        return runPolicy(policy, inputs, null, listener);
+        return runPolicy(policy, inputs, listener, null, null);
     }
 
     /**
-     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, with the source's opaque
-     * reference to the document being run. Carried so a failure can say which document it was
-     * about, and so the same document failing again folds into one incident.
+     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
+     * fed the run and its opaque reference to the document. The first says where an unattended
+     * failure came from; the second says which document, and is what lets the same document failing
+     * again fold into one incident. Both null for a user's upload.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,
             PolicyInputs inputs,
-            String fileIdentity,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -154,8 +166,15 @@ public class PolicyEngine {
         // they can download their enforced file; otherwise an org-wide policy's output is owned by
         // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
         // the owner owns those outputs.
+        //
+        // The triggering user is also carried on the run, as the actor of any failure it records:
+        // null for a trigger-fired run, which is what makes an unattended incident ownerless rather
+        // than the owner's problem. Three identities, deliberately not interchangeable.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Stored supporting files (certificates, watermark images, ...) load here, before the
+        // async hop: worker threads have no principal, so assets bind by the policy's own team.
+        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
         // Resolve the referenced output destinations live (like sourceIds), so a stored policy
         // delivers to each of its saved Source destinations. Unreferenced policies fall back to
         // their inline output.
@@ -163,17 +182,29 @@ public class PolicyEngine {
                 new PipelineDefinition(
                         policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), definition, inputs, fileIdentity, listener);
+                policy.owner(),
+                fileOwner,
+                triggeringUser,
+                policy.id(),
+                definition,
+                // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
+                // images bind here, before the async hop, because worker threads have no principal.
+                resolved,
+                listener,
+                sourceId,
+                fileIdentity);
     }
 
     private PolicyRunHandle submitForPrincipal(
             String billingPrincipal,
             String fileOwner,
+            String triggeringUser,
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
-            String fileIdentity,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -182,7 +213,8 @@ public class PolicyEngine {
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
-        PolicyRun run = new PolicyRun(runId, policyId, definition, fileIdentity);
+        PolicyRun run =
+                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -347,8 +379,15 @@ public class PolicyEngine {
             taskManager.setError(run.getRunId(), message);
             // No exception to classify here: nothing was thrown by a tool, the run simply was not
             // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
+            // Attributed like any other failure: a user whose run was refused is still the person
+            // holding that document, and an unattended sweep's run carries no triggering user.
             failureRecorder.recordRunFailureAs(
-                    FailureKind.UNKNOWN, run.getRunId(), run.getPolicyId(), null, message);
+                    FailureKind.UNKNOWN,
+                    run.getRunId(),
+                    run.getPolicyId(),
+                    run.getSourceId(),
+                    run.getTriggeringUser(),
+                    message);
             completion.complete(run);
         }
         return null;
@@ -357,13 +396,19 @@ public class PolicyEngine {
     /**
      * Record why a run failed. Called after the run's own state transition and task-manager update,
      * so a recording problem cannot change the outcome the caller observes.
+     *
+     * <p>The actor is the run's triggering user, not the MDC audit principal: that carries the
+     * BILLING identity, which for a stored policy is always its owner. Reading it here filed every
+     * failure under the owner — hiding an attended failure from the member who caused it and holds
+     * the document, and leaving an unattended sweep's failure looking attended.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
         failureRecorder.recordRunFailure(
                 run.getRunId(),
                 run.getPolicyId(),
-                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                run.getSourceId(),
                 run.getFileIdentity(),
+                run.getTriggeringUser(),
                 message,
                 cause);
     }

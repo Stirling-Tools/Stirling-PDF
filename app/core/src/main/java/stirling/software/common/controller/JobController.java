@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -144,7 +145,7 @@ public class JobController {
         if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
                 List<ResultFile> files = result.getAllResultFiles();
-                ResultFile singleFile = files.get(0);
+                ResultFile singleFile = files.getFirst();
                 long size = fileStorage.getFileSize(singleFile.getFileId());
                 InputStream in = fileStorage.retrieveInputStream(singleFile.getFileId());
                 return ResponseEntity.ok()
@@ -219,6 +220,35 @@ public class JobController {
                         .body(Map.of("message", "Failed to cancel job for unknown reason"));
             }
         }
+    }
+
+    /**
+     * Self-service counterpart to the admin-only {@code POST /api/v1/admin/job/cleanup}: that one
+     * sweeps every user's jobs and needs ROLE_ADMIN, this one releases only the caller's own and so
+     * is safe for any authenticated user. Both run the same sweep inside {@link TaskManager}.
+     */
+    @PostMapping("/jobs/cleanup")
+    @Operation(
+            summary = "Release finished jobs and their stored files now",
+            description =
+                    "Force-expires this node's finished jobs instead of waiting out the retention"
+                            + " window, deleting their result files and the persistent copies made of"
+                            + " their inputs. Only jobs the caller may access are touched, and jobs"
+                            + " still running are left alone. Admins can sweep every user's jobs"
+                            + " with POST /api/v1/admin/job/cleanup?force=true.")
+    public ResponseEntity<?> cleanupFinishedJobs() {
+        TaskManager.CleanupSummary summary =
+                taskManager.cleanupFinishedJobsNow(this::validateJobAccess);
+        log.info(
+                "On-demand job cleanup removed {} job(s) and {} file(s), retained {} job(s)",
+                summary.jobsRemoved(),
+                summary.filesDeleted(),
+                summary.jobsRetained());
+        return ResponseEntity.ok(
+                Map.of(
+                        "jobsRemoved", summary.jobsRemoved(),
+                        "filesDeleted", summary.filesDeleted(),
+                        "jobsRetained", summary.jobsRetained()));
     }
 
     @GetMapping("/job/{jobId}/result/files")
