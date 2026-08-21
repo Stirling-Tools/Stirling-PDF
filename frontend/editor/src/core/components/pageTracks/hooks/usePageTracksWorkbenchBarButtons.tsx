@@ -9,6 +9,9 @@ import {
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 export interface PageTracksBarParams {
   totalPages: number;
@@ -151,15 +154,32 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       },
       {
         id: "tracks-save",
-        icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
         tooltip: labels.save,
         ariaLabel: labels.save,
         section: "bottom" as const,
         order: 30,
-        active: isDirty,
         disabled: !isDirty || saving,
         visible: hasPages,
         onClick: onSave,
+        // Custom render for the unsaved-changes dot. A custom render also
+        // bypasses the bar's own tooltip wrapper, hence the Tooltip here.
+        render: ({ disabled, triggerAction }) => (
+          <Tooltip content={labels.save} position="bottom" offset={6} arrow>
+            <ActionIcon
+              variant="quiet"
+              hover={false}
+              // The bar's own class carries the muted colour and 24px clamp the
+              // default renderer would have applied.
+              className={`workbench-bar-action-icon ${styles.saveButton}`}
+              onClick={triggerAction}
+              disabled={disabled}
+              aria-label={labels.save}
+            >
+              <LocalIcon icon="save" width="1.5rem" height="1.5rem" />
+              {isDirty && <span className={styles.unsavedDot} aria-hidden />}
+            </ActionIcon>
+          </Tooltip>
+        ),
       },
     ],
     [

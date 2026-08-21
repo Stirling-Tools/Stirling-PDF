@@ -233,6 +233,25 @@
   pointer-events: auto;
 }
 
+/* ── Unsaved-changes marker on the save button ───────────────────────────── */
+
+.saveButton {
+  position: relative;
+}
+
+.unsavedDot {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background: var(--c-danger);
+  /* Ringed in the bar's own surface so it reads against the icon behind it. */
+  box-shadow: 0 0 0 1.5px var(--c-bg-raised);
+  pointer-events: none;
+}
+
 /* ── Track reorder ───────────────────────────────────────────────────────── */
 
 .trackDragging {
