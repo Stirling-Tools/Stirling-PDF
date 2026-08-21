@@ -66,45 +66,6 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
-      - name: Comment on backend format check failure
-        # Only post a comment on PRs. github-script's PR helpers need an
-        # issue/PR number, which doesn't exist on merge_group runs.
-        if: steps.spotless-check.outcome == 'failure' && github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const marker = '<!-- java-formatting-check -->';
-            const body = [
-              marker,
-              '### Backend Format Check Failed',
-              '',
-              'There are formatting issues in your Java code that will need to be fixed before they can be merged in.',
-              '',
-              'Run `task backend:format` to auto-fix, then commit and push the changes.',
-            ].join('\n');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
       - name: Fail if backend format check failed
         if: steps.spotless-check.outcome == 'failure'
         run: |
@@ -120,27 +81,6 @@ jobs:
           echo "commit and push the changes."
           echo "============================================"
           exit 1
-
-      - name: Remove backend format check comment on success
-        if: steps.spotless-check.outcome == 'success' && github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const marker = '<!-- java-formatting-check -->';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.deleteComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-              });
-            }
 
       - name: Build with Gradle (flavor=${{ matrix.flavor }})
         # STIRLING_FLAVOR is read by settings.gradle and expands into the
