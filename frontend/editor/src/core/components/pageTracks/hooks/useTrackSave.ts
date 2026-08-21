@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import {
   createChildStub,
@@ -19,6 +19,15 @@ const SAVE_TOOL_ID = "multiTool" as const;
 export interface TrackSaveProgress {
   done: number;
   total: number;
+}
+
+export interface TrackSaveOptions {
+  /**
+   * Called per committed file with its old and new ids. Saving replaces a file
+   * with a new version under a NEW id, so anything holding the old one (the
+   * viewer's active file, for instance) has to be re-pointed.
+   */
+  onVersioned?: (previousId: FileId, nextId: FileId) => void;
 }
 
 export interface TrackSaveHook {
@@ -62,9 +71,12 @@ function toExportDocument(
 export function useTrackSave(
   workspace: TrackWorkspace,
   changedFileIds: FileId[],
+  options: TrackSaveOptions = {},
 ): TrackSaveHook {
   const { selectors } = useFileState();
   const { actions } = useFileActions();
+  const onVersionedRef = useRef(options.onVersioned);
+  onVersionedRef.current = options.onVersioned;
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<TrackSaveProgress | null>(null);
 
@@ -133,6 +145,7 @@ export function useTrackSave(
           [outputStub],
           { silent: true },
         );
+        onVersionedRef.current?.(entry.fileId, outputStub.id);
       }
 
       if (emptied.length > 0) {
