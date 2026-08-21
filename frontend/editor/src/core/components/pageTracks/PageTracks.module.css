@@ -45,13 +45,6 @@
   min-width: 0;
 }
 
-.trackAccent {
-  width: 0.25rem;
-  align-self: stretch;
-  border-radius: 999px;
-  flex: 0 0 auto;
-}
-
 .trackName {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -176,14 +169,6 @@
 
 .tileIndex {
   font-variant-numeric: tabular-nums;
-}
-
-/* Marks a page whose bytes come from a different file than its track. */
-.foreignDot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  flex: 0 0 auto;
 }
 
 /* Kept out of the way until the tile is hovered or already selected: a

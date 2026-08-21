@@ -17,8 +17,6 @@ import {
 import { useFileState } from "@app/contexts/FileContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { FileId } from "@app/types/file";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
-import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
 import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThumbnails";
@@ -83,12 +81,6 @@ export default function PageTracks() {
     () => new Set<string>(),
   );
   const [dropHint, setDropHint] = useState<DropHint | null>(null);
-
-  const colorIndexes = useFileColorMap(workspace.order);
-  const colorForFile = useCallback(
-    (fileId: FileId) => getFileColor(colorIndexes.get(fileId) ?? 0),
-    [colorIndexes],
-  );
 
   const totalPages = useMemo(() => totalPageCount(workspace), [workspace]);
   const changedSet = useMemo(() => new Set(changedFileIds), [changedFileIds]);
@@ -350,8 +342,6 @@ export default function PageTracks() {
                 track={track}
                 name={stub?.name ?? fileId}
                 versionNumber={stub?.versionNumber}
-                color={colorForFile(fileId)}
-                colorForFile={colorForFile}
                 selectedIds={selection.selectedIds}
                 draggingIds={draggingIds}
                 dropHint={dropHint}
