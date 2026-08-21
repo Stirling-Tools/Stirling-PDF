@@ -23,6 +23,7 @@ export const useConfigNavSections = (
   runningEE: boolean = false,
   loginEnabled: boolean = false,
   onRequestClose: () => void = () => {},
+  showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
@@ -53,6 +54,7 @@ export const useConfigNavSections = (
     runningEE,
     loginEnabled,
     onRequestClose,
+    showSettingsWhenNoLogin,
   );
 
   const connectionModeSection: ConfigNavSection = {

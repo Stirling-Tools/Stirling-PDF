@@ -266,12 +266,12 @@ public class HardwareKeyStoreService {
             combined.append(env);
         }
         if (prop != null && !prop.isBlank()) {
-            if (combined.length() > 0) {
+            if (!combined.isEmpty()) {
                 combined.append(java.io.File.pathSeparator);
             }
             combined.append(prop);
         }
-        if (combined.length() == 0) {
+        if (combined.isEmpty()) {
             return List.of();
         }
         return Arrays.stream(combined.toString().split("[,;" + java.io.File.pathSeparator + "]"))

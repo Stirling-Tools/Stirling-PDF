@@ -406,7 +406,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 {certValidation.status === "valid" && (
                   <Text
                     size="sm"
-                    c="green"
+                    c="var(--color-green-dark)"
                     data-testid="cert-validation-feedback"
                   >
                     {t(
@@ -432,7 +432,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 {certValidation.status === "error" && (
                   <Text
                     size="sm"
-                    c="red"
+                    c="var(--color-red-dark)"
                     data-testid="cert-validation-feedback"
                   >
                     {t(

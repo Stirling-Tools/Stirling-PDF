@@ -15,6 +15,7 @@ import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -42,30 +43,47 @@ public class PolicyRunner {
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
 
-    /** Full-listing sweep: resolve every source, then reconcile the ledger. */
+    /** Full-listing sweep over every input: resolve each source, then reconcile the ledger. */
     public SweepOutcome run(Policy policy) {
         return run(policy, SweepKind.FULL);
     }
 
-    /**
-     * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
-     * one failure does not affect the others. No sources means one run with no input (generator
-     * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
-     * rest. Returns the ids of the runs it started plus what the sweep skipped, so a manual trigger
-     * can report which runs to follow or why nothing ran.
-     */
+    /** Sweep every input of the policy at the given listing depth. */
     public SweepOutcome run(Policy policy, SweepKind sweep) {
+        return run(policy, policy.inputs(), sweep);
+    }
+
+    /**
+     * Fire one input binding: a background trigger pulling its own source without touching the
+     * policy's other inputs. Never reconciles the ledger (it sees a single source, so pruning would
+     * wrongly forget the rest); a full-policy sweep handles that.
+     */
+    public SweepOutcome runInput(Policy policy, PipelineInput input, SweepKind sweep) {
+        return run(policy, List.of(input), sweep);
+    }
+
+    /**
+     * Core sweep: pulls each of the given inputs' sources; each yielded unit becomes its own run so
+     * one failure does not affect the others. No inputs means one run with no input (generator
+     * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
+     * rest. Presence cleanup only runs when the sweep covered every input of the policy - a
+     * single-binding fire cannot reconcile the whole policy's ledger. Returns the ids of the runs
+     * it started plus what the sweep skipped, so a manual trigger can report which runs to follow
+     * or why nothing ran.
+     */
+    public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
         long sweepStart = System.currentTimeMillis();
         PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
         List<String> runIds = new ArrayList<>();
-        List<String> sourceIds = policy.sourceIds();
-        if (sourceIds.isEmpty()) {
+        if (inputs.isEmpty()) {
             // Generator pipeline: one run with no input. Still fall through to the cleanup
             // below so rows recorded for its folder outputs are pruned like anything else,
             // instead of accumulating until the policy is deleted.
-            runIds.add(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
+            // Generator pipeline: no input, so neither a source nor a document to attribute to.
+            runIds.add(startRun(policy, null, null, PolicyInputs.of(List.of()), unused -> {}));
         }
-        for (String sourceId : sourceIds) {
+        for (PipelineInput input : inputs) {
+            String sourceId = input.sourceId();
             Source source = sourceStore.get(sourceId).orElse(null);
             if (source == null) {
                 // No veto: a deleted source's rows should age out via the cleanup below.
@@ -84,7 +102,8 @@ public class PolicyRunner {
             }
             runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context));
         }
-        if (context.cleanupAllowed()) {
+        boolean fullPolicy = inputs.size() == policy.inputs().size();
+        if (fullPolicy && context.cleanupAllowed()) {
             processedLedger.markSeen(policy.id(), context.presentIdentities());
             int removed = processedLedger.deleteUnseen(policy.id(), sweepStart);
             if (removed > 0) {
@@ -149,17 +168,29 @@ public class PolicyRunner {
         List<String> runIds = new ArrayList<>();
         long docsFed = 0;
         for (ResolvedInput unit : work) {
-            runIds.add(startRun(policy, unit.inputs(), unit.onComplete()));
+            runIds.add(
+                    startRun(
+                            policy,
+                            sourceId,
+                            unit.fileIdentity(),
+                            unit.inputs(),
+                            unit.onComplete()));
             docsFed += unit.inputs().primary().size();
         }
         docCounter.record(sourceId, docsFed);
         return runIds;
     }
 
-    private String startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
+    private String startRun(
+            Policy policy,
+            String sourceId,
+            String fileIdentity,
+            PolicyInputs inputs,
+            Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
-                policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
+                policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, sourceId, fileIdentity);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();

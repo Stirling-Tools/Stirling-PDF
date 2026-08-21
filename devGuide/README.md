@@ -9,6 +9,7 @@ This directory contains all development-related documentation for Stirling PDF.
 - **[Taskfile.yml](../Taskfile.yml)** - Unified task runner for all build/dev/test/lint commands
 - **[EXCEPTION_HANDLING_GUIDE.md](./EXCEPTION_HANDLING_GUIDE.md)** - Exception handling patterns and i18n best practices
 - **[HowToAddNewLanguage.md](./HowToAddNewLanguage.md)** - Internationalization and translation guide
+- **[STORAGE_ENCRYPTION_AT_REST.md](./STORAGE_ENCRYPTION_AT_REST.md)** - Encryption at rest for stored files: key setup, migration, revocation, rotation
 
 ### Features & Documentation
 - **[AGENTS.md](./AGENTS.md)** - Agent-based functionality documentation

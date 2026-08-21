@@ -7,45 +7,27 @@ export type ViewId =
   | "editor"
   | "users"
   | "sources"
-  | "agent-builder"
+  | "integrations"
   | "policies"
   | "pipelines"
   | "documents"
   | "infrastructure"
   | "usage"
   | "docs"
-  | "procurement"
   | "settings";
-
-export const VIEW_LABELS: Record<ViewId, string> = {
-  home: "Home",
-  editor: "Editor",
-  users: "Users",
-  sources: "Sources",
-  "agent-builder": "Agent Builder",
-  policies: "Policies",
-  pipelines: "Pipelines",
-  documents: "Documents",
-  infrastructure: "Infrastructure",
-  usage: "Usage & Billing",
-  docs: "Developer Docs",
-  procurement: "Procurement",
-  settings: "Settings",
-};
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
   editor: "/editor",
   users: "/users",
   sources: "/sources",
-  "agent-builder": "/agent-builder",
+  integrations: "/integrations",
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
-  procurement: "/procurement",
   settings: "/settings",
 };
 

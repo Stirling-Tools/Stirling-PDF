@@ -1,0 +1,112 @@
+name: Update Gradle
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+concurrency:
+  group: update-gradle
+  cancel-in-progress: true
+
+jobs:
+  update-gradle:
+    name: Update Gradle and Docker images
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Find latest Gradle release
+        id: gradle
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(curl --fail --silent --show-error --retry 3 \
+            https://services.gradle.org/versions/current | jq -r '.version')
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Could not determine a stable Gradle version: $version" >&2
+            exit 1
+          }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Find matching Docker image digest
+        id: docker
+        env:
+          GRADLE_VERSION: ${{ steps.gradle.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GRADLE_VERSION}-jdk25"
+          digest=$(curl --fail --silent --show-error --retry 3 \
+            "https://hub.docker.com/v2/repositories/library/gradle/tags/${tag}" \
+            | jq -r '.digest // empty')
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+            echo "Docker image gradle:${tag} was not found" >&2
+            exit 1
+          }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Update Gradle wrapper
+        env:
+          GRADLE_VERSION: ${{ steps.gradle.outputs.version }}
+        run: ./gradlew wrapper --gradle-version "$GRADLE_VERSION" --distribution-type bin
+
+      - name: Update Gradle Docker images
+        env:
+          DOCKER_TAG: ${{ steps.docker.outputs.tag }}
+          DOCKER_DIGEST: ${{ steps.docker.outputs.digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          find docker -type f -name 'Dockerfile*' -print0 |
+            xargs -0 sed -E -i \
+              "s#gradle:[^@[:space:]]+-jdk25(@sha256:[^[:space:]]+)?#gradle:${DOCKER_TAG}@${DOCKER_DIGEST}#g"
+
+      - name: Verify Gradle update
+        env:
+          EXPECTED_VERSION: ${{ steps.gradle.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual=$(./gradlew --version | sed -n 's/^Gradle \([0-9.]*\)$/\1/p')
+          [[ "$actual" == "$EXPECTED_VERSION" ]] || {
+            echo "Wrapper resolved Gradle $actual, expected $EXPECTED_VERSION" >&2
+            exit 1
+          }
+          if git diff --quiet; then
+            echo "Gradle is already up to date."
+            exit 0
+          fi
+          git diff --check
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/update-gradle
+          delete-branch: true
+          commit-message: "chore: update Gradle"
+          title: "chore: update Gradle to ${{ steps.gradle.outputs.version }}"
+          body: |
+            Automated update of the Gradle wrapper and Gradle Docker build images.
+
+            Gradle version: `${{ steps.gradle.outputs.version }}`
+            Docker image: `gradle:${{ steps.docker.outputs.tag }}`
+          labels: dependencies

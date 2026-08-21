@@ -13,6 +13,10 @@ import classicBlack from "@app/assets/brand/classic-logo/StirlingPDFLogoBlackTex
 import classicWhite from "@app/assets/brand/classic-logo/StirlingPDFLogoWhiteText.svg";
 import classicGrey from "@app/assets/brand/classic-logo/StirlingPDFLogoGreyText.svg";
 
+// Fixed swatch so the light-on-dark mark variant previews on a dark
+// surface in either theme.
+const DARK_SWATCH = "#1a1a1a"; // theme-allow-color fixed preview swatch
+
 type Asset = { label: string; src: string; onDark?: boolean };
 type VariantSet = { variant: string; mark: Asset[]; wordmark: Asset[] };
 
@@ -55,13 +59,13 @@ function Swatch({ label, src, onDark, h }: Asset & { h: number }) {
           padding: 16,
           minWidth: 140,
           borderRadius: 8,
-          border: "1px solid rgba(128,128,128,0.25)",
-          background: onDark ? "#1a1a1a" : "#ffffff",
+          border: "1px solid var(--c-border)",
+          background: onDark ? DARK_SWATCH : "#ffffff",
         }}
       >
         <img src={src} alt={label} style={{ height: h, maxWidth: 200 }} />
       </div>
-      <figcaption style={{ fontSize: 12, color: "var(--text-muted, #71717a)" }}>
+      <figcaption style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
         {label}
       </figcaption>
     </figure>
