@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Center, Loader, LoadingOverlay, Stack, Text } from "@mantine/core";
 import {
@@ -15,7 +15,11 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useFileState } from "@app/contexts/FileContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationGuard,
+} from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { FileId } from "@app/types/file";
 import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
@@ -82,7 +86,38 @@ export default function PageTracks() {
 
   const selection = useTrackSelection(workspace);
   const thumbnails = useTrackThumbnails();
-  const { saving, progress, save } = useTrackSave(workspace, changedFileIds);
+  const { actions: navActions } = useNavigationActions();
+  const { setActiveFileId } = useViewer();
+
+  // The file the user asked to view, held across a save: committing gives it a
+  // new id, and the viewer drops an active file that has left the workbench.
+  const viewTargetRef = useRef<FileId | null>(null);
+  const handleVersioned = useCallback(
+    (previousId: FileId, nextId: FileId) => {
+      if (viewTargetRef.current !== previousId) return;
+      viewTargetRef.current = nextId;
+      setActiveFileId(nextId as string);
+    },
+    [setActiveFileId],
+  );
+
+  const { saving, progress, save } = useTrackSave(workspace, changedFileIds, {
+    onVersioned: handleVersioned,
+  });
+
+  /**
+   * Opens one track's file in the Viewer. Routed through setWorkbench so the
+   * unsaved-changes prompt still fires: viewing a file whose pending edits
+   * haven't been written would show stale pages.
+   */
+  const openInViewer = useCallback(
+    (fileId: FileId) => {
+      viewTargetRef.current = fileId;
+      setActiveFileId(fileId as string);
+      navActions.setWorkbench("viewer");
+    },
+    [navActions, setActiveFileId],
+  );
 
   const [draggingIds, setDraggingIds] = useState<Set<string>>(
     () => new Set<string>(),
@@ -357,6 +392,7 @@ export default function PageTracks() {
                 thumbnails={thumbnails}
                 onSelectPage={selection.selectPage}
                 onSelectTrack={selection.selectTrack}
+                onOpenInViewer={openInViewer}
                 onClearSelection={clearSelection}
                 onRotate={rotatePages}
                 onDelete={deletePages}
