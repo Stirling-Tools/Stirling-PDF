@@ -36,6 +36,8 @@ export interface ChipProps extends Omit<
   onClick?: () => void;
   /** Leading status dot. Use for status-style chips. */
   showDot?: boolean;
+  /** Dashed "box-cut" outline with no fill - for add/placeholder affordances. */
+  dashed?: boolean;
   style?: CSSProperties;
   children?: ReactNode;
   className?: string;
@@ -52,6 +54,7 @@ export function Chip({
   onRemove,
   onClick,
   showDot,
+  dashed,
   style,
   children,
   className,
@@ -63,6 +66,7 @@ export function Chip({
     `sui-chip--${variant}`,
     onClick ? "sui-chip--interactive" : "",
     loading ? "sui-chip--loading" : "",
+    dashed ? "sui-chip--dashed" : "",
     className ?? "",
   ]
     .filter(Boolean)
@@ -70,11 +74,11 @@ export function Chip({
 
   // Interactive chips are a <span>, so add button semantics + Enter/Space activation.
   const interactive = !!onClick && !loading;
-  const interactiveProps = interactive
+  const removable = !!onRemove && !loading;
+  const buttonProps = interactive
     ? {
         role: "button",
         tabIndex: 0,
-        onClick,
         onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -83,6 +87,14 @@ export function Chip({
         },
       }
     : {};
+  // A removable chip carries Mantine's remove <button> inside the pill root, and
+  // a control may not nest inside a control — so the button semantics move to
+  // the label, leaving the two as siblings. The click handler stays on the root
+  // either way, so the whole chip remains the pointer target.
+  const rootProps = {
+    ...(interactive ? { onClick } : {}),
+    ...(removable ? {} : buttonProps),
+  };
 
   return (
     <MantinePill
@@ -90,9 +102,9 @@ export function Chip({
       className={classes}
       style={style}
       size={size}
-      withRemoveButton={!!onRemove && !loading}
+      withRemoveButton={removable}
       onRemove={onRemove}
-      {...interactiveProps}
+      {...rootProps}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}
       {loading ? (
@@ -102,7 +114,9 @@ export function Chip({
           {leadingIcon}
         </span>
       ) : null}
-      <span className="sui-chip__label">{children}</span>
+      <span className="sui-chip__label" {...(removable ? buttonProps : {})}>
+        {children}
+      </span>
       {trailingIcon && !onRemove && (
         <span className="sui-chip__icon" aria-hidden>
           {trailingIcon}

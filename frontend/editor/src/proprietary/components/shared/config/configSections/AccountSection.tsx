@@ -19,7 +19,7 @@ import { accountService } from "@app/services/accountService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@app/extensions/accountLogout";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
 
 const AccountSection: React.FC = () => {
@@ -80,7 +80,7 @@ const AccountSection: React.FC = () => {
   );
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign("/login");
+    window.location.assign(withBasePath("/login"));
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -604,7 +604,7 @@ const AccountSection: React.FC = () => {
                   {t("account.mfa.manualKey", "Manual setup key")}:{" "}
                   <strong>{mfaSetupData.secret}</strong>
                 </Text>
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t(
                     "account.mfa.secretWarning",
                     "Keep this key private. Anyone with access can generate valid authentication codes.",

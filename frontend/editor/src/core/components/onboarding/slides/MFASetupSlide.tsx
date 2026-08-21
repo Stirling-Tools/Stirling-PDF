@@ -23,9 +23,10 @@ import { accountService } from "@app/services/accountService";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+import i18n from "@app/i18n";
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;
@@ -62,12 +63,15 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       const axiosError = err as { response?: { data?: { error?: string } } };
       setMfaError(
         axiosError.response?.data?.error ||
-          "Unable to start two-factor setup. Please try again.",
+          t(
+            "onboarding.mfa.setupError",
+            "Unable to start two-factor setup. Please try again.",
+          ),
       );
     } finally {
       setMfaLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     setupCompleteRef.current = setupComplete;
@@ -84,7 +88,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   }, [fetchMfaSetup]);
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign("/login");
+    window.location.assign(withBasePath("/login"));
   }, []);
 
   const onLogout = useCallback(async () => {
@@ -96,7 +100,12 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       event.preventDefault();
 
       if (!mfaSetupCode.trim()) {
-        setMfaError("Enter the authentication code to continue.");
+        setMfaError(
+          t(
+            "onboarding.mfa.enterCodeError",
+            "Enter the authentication code to continue.",
+          ),
+        );
         return;
       }
 
@@ -110,13 +119,16 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setMfaError(
           axiosError.response?.data?.error ||
-            "Unable to enable two-factor authentication. Check the code and try again.",
+            t(
+              "onboarding.mfa.enableError",
+              "Unable to enable two-factor authentication. Check the code and try again.",
+            ),
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [mfaSetupCode, onMfaSetupComplete],
+    [mfaSetupCode, onMfaSetupComplete, t],
   );
 
   const isReady = Boolean(mfaSetupData);
@@ -138,15 +150,30 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
 
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          Step-by-step
+          {t("onboarding.mfa.stepByStep", "Step-by-step")}
         </Text>
         <ol className={styles.mfaSteps}>
-          <li>Open Google Authenticator, Authy, or 1Password.</li>
-          <li>Scan the QR code or enter the setup key below.</li>
-          <li>Enter the 6-digit code from your app.</li>
+          <li>
+            {t(
+              "onboarding.mfa.openAuthenticator",
+              "Open Google Authenticator, Authy, or 1Password.",
+            )}
+          </li>
+          <li>
+            {t(
+              "onboarding.mfa.scanQrCode",
+              "Scan the QR code or enter the setup key below.",
+            )}
+          </li>
+          <li>
+            {t(
+              "onboarding.mfa.enterCode",
+              "Enter the 6-digit code from your app.",
+            )}
+          </li>
         </ol>
         <Text size="xs" c="dimmed">
-          Setup key (manual entry)
+          {t("onboarding.mfa.setupKey", "Setup key (manual entry)")}
         </Text>
         <TextInput
           value={mfaSetupData.secret ?? ""}
@@ -163,9 +190,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       <div className={styles.mfaCard}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Secure your account by linking an authenticator app. Scan the QR
-            code or enter the setup key, then confirm the 6-digit code to
-            finish.
+            {t(
+              "onboarding.mfa.description",
+              "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish.",
+            )}
           </Text>
 
           {mfaError && (
@@ -215,7 +243,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                   onClick={fetchMfaSetup}
                   disabled={mfaLoading || submitting || setupComplete}
                 >
-                  Regenerate QR code
+                  {t("onboarding.mfa.regenerateQrCode", "Regenerate QR code")}
                 </Button>
                 <Button
                   type="submit"
@@ -224,16 +252,19 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                     !isReady || setupComplete || mfaSetupCode.length < 6
                   }
                 >
-                  Enable MFA
+                  {t("onboarding.mfa.enable", "Enable MFA")}
                 </Button>
                 <Button variant="secondary" type="button" onClick={onLogout}>
-                  Logout
+                  {t("onboarding.mfa.logout", "Logout")}
                 </Button>
               </Group>
 
               {setupComplete && (
                 <Alert color="green" variant="light">
-                  MFA has been enabled. You can now continue.
+                  {t(
+                    "onboarding.mfa.success",
+                    "MFA has been enabled. You can now continue.",
+                  )}
                 </Alert>
               )}
             </Stack>
@@ -249,7 +280,7 @@ export default function MFASetupSlide({
 }: MFASetupSlideProps = {}): SlideConfig {
   return {
     key: "mfa-setup-slide",
-    title: "Multi-Factor Authentication Setup",
+    title: i18n.t("onboarding.mfa.title", "Multi-Factor Authentication Setup"),
     body: <MFASetupContent onMfaSetupComplete={onMfaSetupComplete} />,
     background: {
       gradientStops: ["#059669", "#0891B2"], // Green to teal - security/trust colors

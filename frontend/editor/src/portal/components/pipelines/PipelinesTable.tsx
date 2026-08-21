@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import {
-  Chip,
-  StatusBadge,
+  column,
+  DataTable,
+  type DataTableColumn,
   type StatusTone,
-  Table,
-  type TableColumn,
 } from "@app/ui";
 import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
 
@@ -16,107 +16,62 @@ const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
 
 interface PipelinesTableProps {
   pipelines: PipelineView[];
-  /** Id of the row whose detail panel is open, drives the caret state. */
-  expandedId: string | null;
+  /** A row opens that pipeline's own page. */
   onRowClick: (pipeline: PipelineView) => void;
 }
 
-export function PipelinesTable({
-  pipelines,
-  expandedId,
-  onRowClick,
-}: PipelinesTableProps) {
+export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
-  const columns = useMemo<TableColumn<PipelineView>[]>(
+  const columns = useMemo<DataTableColumn<PipelineView>[]>(
     () => [
-      {
+      column.entity({
         key: "name",
         header: t("portal.pipelines.table.name"),
-        render: (p) => (
-          <div className="portal-pipelines__name-cell">
-            <span className="portal-pipelines__pipe-dot" aria-hidden>
-              ⛓
-            </span>
-            <div className="portal-pipelines__name-text">
-              <strong>{p.name}</strong>
-              <Chip accent="neutral" size="sm">
-                {t(`portal.pipelines.trigger.${p.trigger}`, {
-                  defaultValue: p.trigger,
-                })}
-              </Chip>
-            </div>
-          </div>
-        ),
-      },
-      {
+        sortable: true,
+        icon: () => <AccountTreeRounded />,
+        primary: (p) => p.name,
+      }),
+      column.text({
+        key: "trigger",
+        header: t("portal.pipelines.table.trigger", "Trigger"),
+        sortable: true,
+        get: (p) =>
+          t(`portal.pipelines.trigger.${p.trigger}`, {
+            defaultValue: p.trigger,
+          }),
+      }),
+      column.badge({
         key: "status",
         header: t("portal.pipelines.table.status"),
-        render: (p) => (
-          <StatusBadge
-            tone={STATUS_TONE[p.status]}
-            size="sm"
-            pulse={p.status === "active"}
-          >
-            {t(`portal.pipelines.status.${p.status}`)}
-          </StatusBadge>
-        ),
-      },
-      {
+        sortable: true,
+        get: (p) => ({
+          tone: STATUS_TONE[p.status],
+          label: t(`portal.pipelines.status.${p.status}`),
+        }),
+      }),
+      column.number({
         key: "steps",
         header: t("portal.pipelines.table.steps"),
-        align: "right",
-        render: (p) => (
-          <span
-            className={
-              p.steps.length === 0 ? "portal-pipelines__muted" : undefined
-            }
-          >
-            {p.steps.length}
-          </span>
-        ),
-      },
-      {
+        sortable: true,
+        get: (p) => p.steps.length,
+      }),
+      column.number({
         key: "sources",
         header: t("portal.pipelines.table.sources"),
-        align: "right",
-        render: (p) => (
-          <span
-            className={
-              p.sources.length === 0 ? "portal-pipelines__muted" : undefined
-            }
-          >
-            {p.sources.length}
-          </span>
-        ),
-      },
-      {
-        key: "expand",
-        header: "",
-        align: "right",
-        width: "2.5rem",
-        render: (p) => (
-          <span
-            className={
-              "portal-pipelines__caret" +
-              (expandedId === p.id ? " is-open" : "")
-            }
-            aria-hidden
-          >
-            ▸
-          </span>
-        ),
-      },
+        sortable: true,
+        get: (p) => p.sources.length,
+      }),
     ],
-    [expandedId, t],
+    [t],
   );
 
   return (
-    <Table<PipelineView>
-      className="portal-pipelines__table"
+    <DataTable<PipelineView>
       columns={columns}
       rows={pipelines}
       rowKey={(p) => p.id}
       onRowClick={onRowClick}
+      rowAffordance="chevron"
     />
   );
 }

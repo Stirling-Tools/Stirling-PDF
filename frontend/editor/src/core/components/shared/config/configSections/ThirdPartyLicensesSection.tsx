@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
-import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // eslint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import frontendLicenses from "../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
 
 interface Dependency {
   moduleName?: string;
@@ -31,6 +31,9 @@ interface LicensesSectionBodyProps {
   description: string;
   dependencies: Dependency[];
 }
+
+const getModuleUrl = (dependency: Dependency) =>
+  dependency.moduleUrl || dependency.moduleLicenseUrl;
 
 function LicensesSectionBody({
   title,
@@ -106,9 +109,9 @@ function LicensesSectionBody({
                 sortedDependencies.map((dependency) => (
                   <Table.Tr key={getDependencyKey(dependency)}>
                     <Table.Td>
-                      {dependency.moduleUrl ? (
+                      {getModuleUrl(dependency) ? (
                         <Anchor
-                          href={dependency.moduleUrl}
+                          href={getModuleUrl(dependency)}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

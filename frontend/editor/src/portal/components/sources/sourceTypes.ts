@@ -11,26 +11,52 @@ import type { ChipAccent } from "@app/ui";
 
 export interface SourceTypeMeta {
   labelKey: string;
-  icon: string;
   accent: ChipAccent;
 }
+
+/**
+ * The built-in editor source. It is virtual (never created/edited/deleted like a folder), always
+ * present in the list, and only tracks throughput - so rows of this type render without a config,
+ * a type chip, or edit/pause/delete actions.
+ */
+export const EDITOR_SOURCE_TYPE = "editor";
+
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
-    icon: "⛁",
     accent: "default",
   },
   editor: {
     labelKey: "portal.sources.types.editor.label",
-    icon: "✏",
     accent: "success",
+  },
+  s3: {
+    labelKey: "portal.sources.types.s3.label",
+    accent: "brand",
+  },
+  sftp: {
+    labelKey: "portal.sources.types.sftp.label",
+    accent: "default",
+  },
+  ftp: {
+    labelKey: "portal.sources.types.ftp.label",
+    accent: "default",
+  },
+  network: {
+    labelKey: "portal.sources.types.network.label",
+    accent: "default",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    accent: "warning",
   },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
   labelKey: "portal.sources.types.unknown.label",
-  icon: "◇",
   accent: "neutral",
 };
 
@@ -42,12 +68,17 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "select";
+  control: "text" | "password" | "select" | "s3Connection" | "connection";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
+  /**
+   * For `control: "connection"` - the connection-catalogue entry id this slot accepts (e.g.
+   * "sftp"). Filters the picker to matching connections and pins the inline "new connection" form.
+   */
+  connectionTypeId?: string;
 }
 
 /** A source type the wizard can create, with the fields its config needs. */
@@ -56,6 +87,64 @@ export interface CreatableSourceType {
   labelKey: string;
   descriptionKey: string;
   fields: SourceFieldDef[];
+}
+
+/**
+ * The config a network source (SFTP/FTP/SMB) needs: a stored connection of the matching protocol,
+ * the folder to poll, and the same consume/snapshot + recursion choices as a folder source. Shared
+ * copy across the three protocols, since only the connection type differs.
+ */
+function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
+  return [
+    {
+      key: "connectionId",
+      labelKey: "portal.sources.networkFields.connection.label",
+      control: "connection",
+      connectionTypeId,
+      required: true,
+      helperTextKey: "portal.sources.networkFields.connection.helperText",
+    },
+    {
+      key: "directory",
+      labelKey: "portal.sources.networkFields.directory.label",
+      control: "text",
+      placeholderKey: "portal.sources.networkFields.directory.placeholder",
+      helperTextKey: "portal.sources.networkFields.directory.helperText",
+    },
+    {
+      key: "mode",
+      labelKey: "portal.sources.networkFields.mode.label",
+      control: "select",
+      defaultValue: "consume",
+      helperTextKey: "portal.sources.networkFields.mode.helperText",
+      options: [
+        {
+          value: "consume",
+          labelKey: "portal.sources.networkFields.mode.options.consume",
+        },
+        {
+          value: "snapshot",
+          labelKey: "portal.sources.networkFields.mode.options.snapshot",
+        },
+      ],
+    },
+    {
+      key: "recursive",
+      labelKey: "portal.sources.networkFields.recursive.label",
+      control: "select",
+      defaultValue: "false",
+      options: [
+        {
+          value: "false",
+          labelKey: "portal.sources.networkFields.recursive.options.top",
+        },
+        {
+          value: "true",
+          labelKey: "portal.sources.networkFields.recursive.options.all",
+        },
+      ],
+    },
+  ];
 }
 
 export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
@@ -91,9 +180,133 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
           },
         ],
       },
+      {
+        key: "recursive",
+        labelKey: "portal.sources.types.folder.fields.recursive.label",
+        control: "select",
+        defaultValue: "false",
+        options: [
+          {
+            value: "false",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.top",
+          },
+          {
+            value: "true",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.all",
+          },
+        ],
+      },
+      {
+        key: "identity",
+        labelKey: "portal.sources.types.folder.fields.identity.label",
+        control: "select",
+        defaultValue: "stat",
+        helperTextKey: "portal.sources.types.folder.fields.identity.helperText",
+        options: [
+          {
+            value: "stat",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.stat",
+          },
+          {
+            value: "hash",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.hash",
+          },
+        ],
+      },
     ],
   },
+  {
+    type: "s3",
+    labelKey: "portal.sources.types.s3.label",
+    descriptionKey: "portal.sources.types.s3.description",
+    fields: [
+      {
+        key: "connectionId",
+        labelKey: "portal.sources.types.s3.fields.connection.label",
+        control: "s3Connection",
+        required: true,
+        helperTextKey: "portal.sources.types.s3.fields.connection.helperText",
+      },
+      {
+        key: "prefix",
+        labelKey: "portal.sources.types.s3.fields.prefix.label",
+        control: "text",
+        placeholderKey: "portal.sources.types.s3.fields.prefix.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.prefix.helperText",
+      },
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.s3.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "sftp",
+    labelKey: "portal.sources.types.sftp.label",
+    descriptionKey: "portal.sources.types.sftp.description",
+    fields: networkSourceFields("sftp"),
+  },
+  {
+    type: "ftp",
+    labelKey: "portal.sources.types.ftp.label",
+    descriptionKey: "portal.sources.types.ftp.description",
+    fields: networkSourceFields("ftp"),
+  },
+  {
+    type: "network",
+    labelKey: "portal.sources.types.network.label",
+    descriptionKey: "portal.sources.types.network.description",
+    fields: networkSourceFields("smb"),
+  },
+  {
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [],
+  },
 ];
+
+/** A source type on the roadmap: shown greyed out in the picker, not creatable. */
+export interface ComingSoonSourceType {
+  type: string;
+  labelKey: string;
+  descriptionKey: string;
+}
+
+/**
+ * Connectors we intend to support, listed so the picker answers "do you
+ * support X?" honestly instead of hiding the roadmap. Purely presentational -
+ * nothing here can be created and the backend never sees these type strings.
+ */
+export const COMING_SOON_SOURCE_TYPES: ComingSoonSourceType[] = [
+  "sharepoint",
+  "onedrive",
+  "googledrive",
+  "dropbox",
+  "box",
+  "email",
+].map((type) => ({
+  type,
+  labelKey: `portal.sources.types.${type}.label`,
+  descriptionKey: `portal.sources.types.${type}.description`,
+}));
 
 /** Default option values for a type's create form. */
 export function defaultOptions(

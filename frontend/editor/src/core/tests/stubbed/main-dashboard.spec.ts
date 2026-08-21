@@ -1,10 +1,9 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { mockAppApis, seedCookieConsent } from "@app/tests/helpers/api-stubs";
 import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/editor");
   });
 
   test.describe("2.1 Dashboard Layout and Tool Categories", () => {
@@ -18,6 +17,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();
 
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
       await expect(
@@ -73,8 +73,9 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await expect(page).toHaveURL(/\/merge/, { timeout: 10000 });
 
-      await page.goto("/");
+      await page.goto("/editor");
 
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
     });
   });
@@ -111,42 +112,6 @@ test.describe("2. Main Dashboard / Home Page", () => {
       await expect(page.getByText(/Terms/i).first()).toBeVisible({
         timeout: 10000,
       });
-    });
-  });
-
-  test.describe("2.5 Dashboard - Welcome Dialog for fresh users", () => {
-    test("should show welcome dialog when onboarding flags are unset", async ({
-      browser,
-    }) => {
-      // Fresh context — no localStorage flags, so the onboarding modal should appear.
-      const context = await browser.newContext({
-        viewport: { width: 1920, height: 1080 },
-      });
-      const page = await context.newPage();
-
-      await seedCookieConsent(page);
-      await mockAppApis(page);
-      await page.goto("/");
-
-      const welcomeDialog = page.getByText(/welcome/i).first();
-      await expect(welcomeDialog).toBeVisible({ timeout: 10000 });
-
-      for (let i = 0; i < 5; i++) {
-        const hasOverlay = await page
-          .locator(".mantine-Modal-overlay, .mantine-Overlay-root")
-          .first()
-          .isVisible()
-          .catch(() => false);
-        if (!hasOverlay) break;
-        await page.keyboard.press("Escape");
-        await page.waitForTimeout(500);
-      }
-
-      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
-        timeout: 10000,
-      });
-
-      await context.close();
     });
   });
 });

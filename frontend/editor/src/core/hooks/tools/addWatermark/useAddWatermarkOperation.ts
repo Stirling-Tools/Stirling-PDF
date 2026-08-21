@@ -10,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateAddWatermarkParameters,
   AddWatermarkParameters,
   defaultParameters,
 } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
@@ -88,6 +89,7 @@ export const buildAddWatermarkFormData = (
 
 // Static configuration object
 export const addWatermarkOperationConfig = defineSingleFileTool({
+  validateParams: validateAddWatermarkParameters,
   buildFormData: buildAddWatermarkFormData,
   toApiParams: addWatermarkToApiParams,
   fromApiParams: addWatermarkFromApiParams,

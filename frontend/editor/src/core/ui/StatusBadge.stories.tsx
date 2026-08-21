@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { StatusBadge } from "@app/ui/StatusBadge";
 
 const meta: Meta<typeof StatusBadge> = {
@@ -33,7 +33,7 @@ export const AllTones: Story = {
 };
 
 export const Live: Story = {
-  args: { tone: "success", pulse: true, children: "Live" },
+  args: { tone: "success", children: "Live" },
 };
 
 export const Sizes: Story = {

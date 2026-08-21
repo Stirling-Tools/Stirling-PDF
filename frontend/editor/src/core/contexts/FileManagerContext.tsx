@@ -22,6 +22,7 @@ import { alert } from "@app/components/toast";
 import {
   extractLatestFilesFromBundle,
   parseContentDispositionFilename,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 import { useTranslation } from "react-i18next";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
@@ -1003,16 +1004,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             skipAuthRedirect: true,
           } as any,
         );
-        const contentType =
-          (response.headers &&
-            (response.headers["content-type"] ||
-              response.headers["Content-Type"])) ||
-          "";
-        const disposition =
-          (response.headers &&
-            (response.headers["content-disposition"] ||
-              response.headers["Content-Disposition"])) ||
-          "";
+        const contentType = readResponseHeader(
+          response.headers,
+          "content-type",
+        );
+        const disposition = readResponseHeader(
+          response.headers,
+          "content-disposition",
+        );
         const filename =
           parseContentDispositionFilename(disposition) ||
           file.name ||
@@ -1270,6 +1269,3 @@ export const useFileManagerContext = (): FileManagerContextValue => {
 
   return context;
 };
-
-// Export the context for advanced use cases
-export { FileManagerContext };

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 
 from stirling.agents import (
+    DocumentClassifierAgent,
     ExecutionPlanningAgent,
     OrchestratorAgent,
     PdfEditAgent,
@@ -53,6 +54,10 @@ def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
 
 def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:
     return request.app.state.pdf_comment_agent
+
+
+def get_document_classifier_agent(request: Request) -> DocumentClassifierAgent:
+    return request.app.state.document_classifier_agent
 
 
 def require_user_id() -> UserId:

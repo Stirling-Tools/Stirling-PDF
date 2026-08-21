@@ -28,6 +28,7 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -106,6 +107,19 @@ export default function HomePage() {
     const isSettings = location.pathname.startsWith("/settings");
     setConfigModalOpen(isSettings);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = () => setConfigModalOpen(true);
+    window.addEventListener("appConfig:open", handler);
+    return () => window.removeEventListener("appConfig:open", handler);
+  }, []);
+
+  const handleCloseConfig = useCallback(() => {
+    setConfigModalOpen(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate(EDITOR_BASENAME, { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -477,7 +491,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </div>
         ) : (
@@ -486,6 +500,7 @@ export default function HomePage() {
             gap={0}
             h="100%"
             className="flex-nowrap flex"
+            bg="var(--c-bg)"
           >
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
@@ -509,7 +524,7 @@ export default function HomePage() {
               }
               onToggleCollapse={() => {
                 if (navigationState.workbench === "myFiles") {
-                  navigate("/");
+                  navigate(EDITOR_BASENAME);
                   return;
                 }
                 setFileSidebarCollapsed((c) => {
@@ -526,7 +541,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </Group>
         )}
@@ -584,11 +599,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onSearchClick={() => {
-          // Just focus the central search field; don't toggle collapse
-          // (which on /files navigates back home).
-          window.dispatchEvent(new Event("files-page:focus-search"));
-        }}
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{

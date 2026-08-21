@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import "@app/ui/Avatar.css";
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg";
+export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarTone =
   | "blue"
   | "purple"
@@ -23,10 +24,12 @@ export interface AvatarProps {
   className?: string;
 }
 
-function initialsOf(name: string): string {
+function avatarInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  // Single word (a username or an email) reads as one letter — two letters of
+  // "admin" ("AD") looks like a different person's initials, not a truncation.
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
@@ -43,6 +46,13 @@ export function Avatar({
   ariaLabel,
   className,
 }: AvatarProps) {
+  // A picture URL that 404s (expired signed URL, deleted upload) must not leave
+  // an empty disc — fall back to the same initials the no-picture case shows, so
+  // every surface rendering this identity agrees on what it draws.
+  const [srcFailed, setSrcFailed] = useState(false);
+  useEffect(() => setSrcFailed(false), [src]);
+  const showImage = Boolean(src) && !srcFailed;
+
   const classes = [
     "sui-avatar",
     `sui-avatar--${size}`,
@@ -53,10 +63,17 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
-  const content = src ? (
-    <img src={src} alt={ariaLabel ?? name} className="sui-avatar__img" />
+  const content = showImage ? (
+    <img
+      src={src}
+      alt={ariaLabel ?? name}
+      className="sui-avatar__img"
+      onError={() => setSrcFailed(true)}
+    />
   ) : (
-    <span aria-hidden>{initialsOf(name)}</span>
+    <span className="sui-avatar__initials" aria-hidden>
+      {avatarInitials(name)}
+    </span>
   );
 
   if (onClick) {

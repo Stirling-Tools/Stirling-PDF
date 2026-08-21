@@ -5,11 +5,10 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  border: none;
-  background: var(--color-blue, #3b82f6);
-  color: #fff;
+  border: 1px solid var(--c-btn-secondary-border);
+  background: var(--c-btn-secondary);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-md);
   transition:
     transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 180ms ease;
@@ -20,7 +19,7 @@
 
 .chat-fab-btn:hover {
   transform: scale(1.09);
-  box-shadow: 0 6px 22px rgba(59, 130, 246, 0.52);
+  box-shadow: var(--shadow-lg);
 }
 
 .chat-fab-btn:active {
@@ -85,7 +84,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--c-success);
   animation: chat-fab-pulse 1.5s ease-in-out infinite;
 }
 
@@ -109,7 +108,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--c-success);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -5,10 +5,17 @@ import type { ProcurementSnapshot } from "@portal/api/procurement";
 const base: ProcurementSnapshot = {
   dealId: 1,
   stage: "trial",
+  deployment: "cloud",
+  seats: 250,
   trialStartedAt: "2026-06-25T00:00:00Z",
   trialEndsAt: "2026-07-09T00:00:00Z",
   trialExtensionsUsed: 0,
   licensed: false,
+  licenseKey: null,
+  businessName: null,
+  contactName: null,
+  contactEmail: null,
+  agreementSignedVersion: null,
   latestQuote: null,
 };
 
@@ -18,12 +25,13 @@ const meta: Meta<typeof DealStatusHero> = {
   component: DealStatusHero,
   parameters: { layout: "padded" },
   args: {
+    canSchedule: true,
     onExpand: () => {},
-    onKeyDocs: () => {},
+    onAcceptQuote: () => {},
+    onLicense: () => {},
     onInvite: () => {},
     onSchedule: () => {},
     onManageTrial: () => {},
-    onNavigate: () => {},
   },
 };
 export default meta;
