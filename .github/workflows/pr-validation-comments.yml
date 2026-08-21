@@ -1,0 +1,294 @@
+name: PR validation comments
+
+# Runs from the default branch after validation completes. It never checks
+# out or executes code from the pull request.
+on:
+  workflow_run:
+    workflows: ['Build and Test Workflow']
+    types: [completed]
+
+jobs:
+  frontend:
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    name: Frontend validation comment
+    runs-on: ubuntu-latest
+    env:
+      CHECK_JOB: "frontend-validation"
+      CHECK_STEP: "Quality-check frontend"
+      COMMENT_MARKER: "<!-- frontend-check -->"
+      COMMENT_BODY: |
+        <!-- frontend-check -->
+        ### Frontend Check Failed
+        
+        There are issues with your frontend code that will need to be fixed before they can be merged in.
+        
+        Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.
+    steps:
+      - name: Update frontend comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              per_page: 100,
+            });
+            const matchingJobs = jobs.filter(job => job.name.includes(process.env.CHECK_JOB));
+            if (matchingJobs.length === 0) return;
+            const matchingSteps = process.env.CHECK_STEP
+              ? matchingJobs.flatMap(job => (job.steps ?? [])
+                .filter(step => step.name === process.env.CHECK_STEP))
+              : matchingJobs;
+            if (matchingSteps.length === 0) return;
+            
+            const pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) return;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullRequest.number,
+            });
+            const existing = comments.find(comment => comment.body?.includes(process.env.COMMENT_MARKER));
+            const failed = matchingSteps.some(step => step.conclusion === 'failure');
+            
+            if (failed && !existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pullRequest.number,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (failed && existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (!failed && existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+  engine:
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    name: Engine validation comment
+    runs-on: ubuntu-latest
+    env:
+      CHECK_JOB: "engine"
+      CHECK_STEP: "Quality-check engine"
+      COMMENT_MARKER: "<!-- engine-check -->"
+      COMMENT_BODY: |
+        <!-- engine-check -->
+        ### Engine Check Failed
+        
+        There are issues with your Python code that will need to be fixed before they can be merged in.
+        
+        Run `task engine:fix` to auto-fix what can be fixed automatically, then run `task engine:check` to see what still needs fixing manually.
+    steps:
+      - name: Update engine comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              per_page: 100,
+            });
+            const matchingJobs = jobs.filter(job => job.name.includes(process.env.CHECK_JOB));
+            if (matchingJobs.length === 0) return;
+            const matchingSteps = process.env.CHECK_STEP
+              ? matchingJobs.flatMap(job => (job.steps ?? [])
+                .filter(step => step.name === process.env.CHECK_STEP))
+              : matchingJobs;
+            if (matchingSteps.length === 0) return;
+            
+            const pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) return;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullRequest.number,
+            });
+            const existing = comments.find(comment => comment.body?.includes(process.env.COMMENT_MARKER));
+            const failed = matchingSteps.some(step => step.conclusion === 'failure');
+            
+            if (failed && !existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pullRequest.number,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (failed && existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (!failed && existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+  backend-format:
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    name: Backend format validation comment
+    runs-on: ubuntu-latest
+    env:
+      CHECK_JOB: "build (25, core)"
+      CHECK_STEP: "Check Java formatting (Spotless)"
+      COMMENT_MARKER: "<!-- java-formatting-check -->"
+      COMMENT_BODY: |
+        <!-- java-formatting-check -->
+        ### Backend Format Check Failed
+        
+        There are formatting issues in your Java code that will need to be fixed before they can be merged in.
+        
+        Run `task backend:format` to auto-fix, then commit and push the changes.
+    steps:
+      - name: Update backend-format comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              per_page: 100,
+            });
+            const matchingJobs = jobs.filter(job => job.name.includes(process.env.CHECK_JOB));
+            if (matchingJobs.length === 0) return;
+            const matchingSteps = process.env.CHECK_STEP
+              ? matchingJobs.flatMap(job => (job.steps ?? [])
+                .filter(step => step.name === process.env.CHECK_STEP))
+              : matchingJobs;
+            if (matchingSteps.length === 0) return;
+            
+            const pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) return;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullRequest.number,
+            });
+            const existing = comments.find(comment => comment.body?.includes(process.env.COMMENT_MARKER));
+            const failed = matchingSteps.some(step => step.conclusion === 'failure');
+            
+            if (failed && !existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pullRequest.number,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (failed && existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (!failed && existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+  generated-models:
+    if: github.event.workflow_run.event == 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    name: Generated models validation comment
+    runs-on: ubuntu-latest
+    env:
+      CHECK_JOB: "generated-models"
+      CHECK_STEP: "Verify generated models are up to date"
+      COMMENT_MARKER: "<!-- generated-models-check -->"
+      COMMENT_BODY: |
+        <!-- generated-models-check -->
+        ### Generated Models Check Failed
+        
+        One or more generated files are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.
+        
+        Run `task tool-models` to regenerate them, then commit the updated files.
+    steps:
+      - name: Update generated-models comment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              per_page: 100,
+            });
+            const matchingJobs = jobs.filter(job => job.name.includes(process.env.CHECK_JOB));
+            if (matchingJobs.length === 0) return;
+            const matchingSteps = process.env.CHECK_STEP
+              ? matchingJobs.flatMap(job => (job.steps ?? [])
+                .filter(step => step.name === process.env.CHECK_STEP))
+              : matchingJobs;
+            if (matchingSteps.length === 0) return;
+            
+            const pullRequest = run.pull_requests?.[0];
+            if (!pullRequest) return;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullRequest.number,
+            });
+            const existing = comments.find(comment => comment.body?.includes(process.env.COMMENT_MARKER));
+            const failed = matchingSteps.some(step => step.conclusion === 'failure');
+            
+            if (failed && !existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pullRequest.number,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (failed && existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: process.env.COMMENT_BODY,
+              });
+            } else if (!failed && existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
