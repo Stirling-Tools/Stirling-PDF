@@ -239,21 +239,23 @@ class RequestUriUtilsTest {
 
     // --- invite-accept SPA bootstrap ---
 
+    private static final String INVITE_TOKEN = "06a20e7e-2e35-4e26-be7d-2dce14f28f12";
+
     @Test
     void testIsPublicAuthEndpoint_inviteLinkToken() {
-        assertTrue(
-                RequestUriUtils.isPublicAuthEndpoint(
-                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f12", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN, ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_inviteLinkTokenTrailingSlash() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123/", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/", ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_inviteLinkWithContextPath() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/invite/abc123", "/app"));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/invite/" + INVITE_TOKEN, "/app"));
     }
 
     @Test
@@ -266,7 +268,9 @@ class RequestUriUtilsTest {
     @Test
     void testIsPublicAuthEndpoint_inviteNestedPathNotPublic() {
         // Guard against future additions like /invite/<token>/foo becoming accidentally public
-        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123/foo", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/" + INVITE_TOKEN + "/foo", ""));
     }
 
     @Test
@@ -276,22 +280,46 @@ class RequestUriUtilsTest {
     }
 
     @Test
-    void testIsPublicAuthEndpoint_inviteTokenMaxLength() {
-        // 128-char token is still accepted (real tokens are 36-char UUIDs)
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + "a".repeat(128), ""));
+    void testIsPublicAuthEndpoint_inviteNonUuidTokenNotPublic() {
+        // Only exactly-shaped 36-char lowercase UUID tokens are treated as invite links
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123", ""));
     }
 
     @Test
-    void testIsPublicAuthEndpoint_inviteTokenTooLongNotPublic() {
-        // Tokens are capped at 128 chars
-        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/" + "a".repeat(129), ""));
+    void testIsPublicAuthEndpoint_inviteUppercaseUuidNotPublic() {
+        // Tokens are generated lowercase by UUID.randomUUID().toString()
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06A20E7E-2E35-4E26-BE7D-2DCE14F28F12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongLengthNotPublic() {
+        // 35-char and 37-char UUID-like tokens are not valid UUIDs
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f122", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongGroupingNotPublic() {
+        // Groups of 8-4-4-4-4 must not be shifted around (e.g. 4-4-4-4-8)
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a2-0e7e-2e35-4e26-be7d2dce14f28f12", ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_inviteTokenInvalidCharsNotPublic() {
-        // Only [A-Za-z0-9_-] tokens are treated as invite links
+        // Hex-only; anything outside [0-9a-f] or the UUID hyphens is rejected
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc$123", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc..123", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc%2F123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1g", ""));
     }
 }
