@@ -382,10 +382,13 @@ start_unoserver_pool() {
 }
 
 # ---------- VERSION_TAG ----------
-# Load VERSION_TAG from file if not provided via environment.
-if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
-  VERSION_TAG="$(tr -d '\r\n' < /etc/stirling_version)"
-  export VERSION_TAG
+# The version baked into the image wins over a VERSION_TAG carried over from a previous
+# container by the container manager.
+INIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -r "${INIT_SCRIPT_DIR}/resolve-version-tag.sh" ]; then
+  # shellcheck source=resolve-version-tag.sh
+  . "${INIT_SCRIPT_DIR}/resolve-version-tag.sh"
+  resolve_version_tag
 fi
 
 # ---------- AOT ----------
