@@ -1,4 +1,8 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+
+import { PDFDocument, StandardFonts } from "@cantoo/pdf-lib";
 
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles, dismissTourTooltip } from "@app/tests/helpers/ui-helpers";
@@ -414,5 +418,61 @@ test.describe("Page Editor tracks", () => {
     await expect(
       page.locator('[data-page-id][data-selected="true"]'),
     ).toHaveCount(2);
+  });
+
+  test("a long track mounts only a window of its pages", async ({ page }) => {
+    // Built here rather than committed as a fixture: the point is the page
+    // COUNT, and 300 pages of real PDF is a lot of bytes to carry in the repo.
+    const doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    for (let i = 1; i <= 300; i++) {
+      doc
+        .addPage([595, 842])
+        .drawText(`page ${i}`, { x: 60, y: 700, size: 28, font });
+    }
+    const longPdf = path.join(os.tmpdir(), `tracks-long-${process.pid}.pdf`);
+    fs.writeFileSync(longPdf, await doc.save());
+
+    try {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.goto("/editor", {
+        waitUntil: "domcontentloaded",
+        timeout: 120_000,
+      });
+      await uploadFiles(page, longPdf);
+      await dismissTourTooltip(page);
+      await switchView(page, "Page Editor");
+
+      const lane = page.locator("[data-track-lane]");
+      await expect(page.locator("section[aria-label]").first()).toContainText(
+        "300 pages",
+        { timeout: 60_000 },
+      );
+
+      // Mounting all 300 is what made a click cost ~700ms and a drag ~300ms per
+      // pointer move, since every tile is a dnd-kit draggable AND droppable.
+      const mounted = await page.locator("[data-page-id]").count();
+      expect(mounted).toBeGreaterThan(0);
+      expect(mounted).toBeLessThan(40);
+
+      // The window follows the lane's scroll rather than being a fixed prefix.
+      const firstBefore = await page
+        .locator("[data-page-id]")
+        .first()
+        .getAttribute("data-page-id");
+      await lane.evaluate((el) => {
+        el.scrollLeft = 9000;
+      });
+      await expect
+        .poll(
+          async () =>
+            page.locator("[data-page-id]").first().getAttribute("data-page-id"),
+          { timeout: 30_000 },
+        )
+        .not.toBe(firstBefore);
+      expect(await page.locator("[data-page-id]").count()).toBeLessThan(40);
+    } finally {
+      fs.rmSync(longPdf, { force: true });
+    }
   });
 });
