@@ -29,8 +29,8 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -45,8 +45,12 @@ interface AppConfigModalProps {
   /** Section to land on when opening. Only honoured when urlSync is off (URL
    *  deep links win otherwise). */
   initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 // Extract section from URL path (e.g., /settings/people -> people)
@@ -64,7 +68,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   onClose,
   urlSync = true,
   initialSection,
+  initialFocus,
   extraSections,
+  hiddenSectionKeys,
 }) => {
   const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
@@ -146,6 +152,35 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     [navigate, urlSync],
   );
 
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, initialFocus, location.search, urlSync]);
+
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.
   useEffect(() => {
@@ -165,13 +200,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
 
   const colors = useMemo(
     () => ({
-      navBg: "var(--modal-nav-bg)",
-      sectionTitle: "var(--modal-nav-section-title)",
+      navBg: "var(--c-bg-raised)",
+      sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
-      navItemActive: "var(--modal-nav-item-active)",
-      navItemActiveBg: "var(--modal-nav-item-active-bg)",
-      contentBg: "var(--modal-content-bg)",
-      headerBorder: "var(--modal-header-border)",
+      navItemActive: "var(--c-accent-fg)",
+      navItemActiveBg: "var(--c-primary-subtle)",
+      contentBg: "var(--c-surface)",
+      headerBorder: "var(--c-border-subtle)",
     }),
     [],
   );
@@ -181,21 +216,23 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  /** Resolves false when a dirty-state confirm kept the modal open. */
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
+    if (!canProceed) return false;
 
     // Only unwind history if settings was opened via the URL; opened via state
     // there's no /settings entry to pop and navigate(-1) would jump to /files.
     if (urlSync && location.pathname.startsWith("/settings")) {
       // "default" key = first entry (deep link/refresh); nothing to pop to.
       if (location.key === "default") {
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       } else {
         navigate(-1);
       }
     }
     onClose();
+    return true;
   }, [
     confirmIfDirty,
     location.key,
@@ -210,6 +247,24 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     void handleClose();
   }, [handleClose]);
 
+  // Cmd/Ctrl+K: hand over to the global super search. The bar's own shortcut
+  // is inert while a dialog traps focus, so the modal closes itself (through
+  // the same dirty-check as any other close) and asks the bar to take focus.
+  // Settings results deep-link straight back into this modal.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo || e.code !== "KeyK") return;
+      e.preventDefault();
+      void handleClose().then((closed) => {
+        if (closed) window.dispatchEvent(new Event("superSearch:focus"));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opened, handleClose]);
+
   // Left navigation structure and icons
   const registrySections = useConfigNavSections(
     isAdmin,
@@ -218,13 +273,17 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     handleCloseSync,
     config?.showSettingsWhenNoLogin ?? true,
   );
-  const configNavSections = useMemo(
-    () =>
-      extraSections?.length
-        ? [...registrySections, ...extraSections]
-        : registrySections,
-    [registrySections, extraSections],
-  );
+  const configNavSections = useMemo(() => {
+    const base = hiddenSectionKeys?.length
+      ? registrySections
+          .map((s) => ({
+            ...s,
+            items: s.items.filter((i) => !hiddenSectionKeys.includes(i.key)),
+          }))
+          .filter((s) => s.items.length > 0)
+      : registrySections;
+    return extraSections?.length ? [...base, ...extraSections] : base;
+  }, [registrySections, extraSections, hiddenSectionKeys]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {
@@ -405,11 +464,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
                 <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"

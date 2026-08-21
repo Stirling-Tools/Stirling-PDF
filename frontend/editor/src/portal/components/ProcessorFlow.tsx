@@ -2,16 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, SegmentedControl, Skeleton, StatusBadge } from "@app/ui";
+import "@app/ui/Surface.css";
 import {
   useView,
   VIEW_PATHS,
   toPortalPath,
 } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import {
-  fetchProcessorFlow,
-  type ProcessorFlow as ProcessorFlowModel,
-} from "@portal/api/processorFlow";
+import { useProcessorFlow } from "@portal/queries/processorFlow";
+import { type ProcessorFlow as ProcessorFlowModel } from "@portal/api/processorFlow";
 import {
   DEV_KEEP_FLOWING,
   DEV_SYNTH_RATE,
@@ -37,7 +35,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   const navigate = useNavigate();
-  const fetched = useAsync<ProcessorFlowModel>(() => fetchProcessorFlow(), []);
+  const fetched = useProcessorFlow();
   const data = dataOverride ?? fetched.data;
   const loading = dataOverride ? false : fetched.loading;
 
@@ -105,7 +103,9 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
 
   return (
     <Card padding="loose" className="portal-pf">
-      <header className="portal-pf__head">
+      {/* A div, not <header>: the card sits in page content, and a <header> here
+          would register a second banner landmark alongside the page's own. */}
+      <div className="portal-pf__head">
         <div className="portal-pf__head-text">
           <span
             className={
@@ -133,7 +133,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             ]}
           />
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="portal-pf__loading" aria-hidden>

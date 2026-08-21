@@ -1,28 +1,35 @@
-import { useNavigate } from "react-router-dom";
-import { useMantineColorScheme } from "@mantine/core";
-import { useAuth } from "@app/auth/context";
-import { AppSwitch } from "@app/components/shared/AppSwitch";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { Logo } from "@app/ui/Logo";
+import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
+import { type AppSwitcherProps } from "@core/components/shared/AppSwitcher";
+import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 
 /**
- * Sidebar app switcher between the editor and the admin portal. Both are
- * route-sets of one SPA (the portal mounts at PORTAL_BASENAME), so switching
- * is a client-side navigation. Hidden for users without portal access — they
- * have nowhere to switch to. Renders the same AppSwitch element as the
- * portal's sidebar.
+ * Sidebar brand header for builds that ship the processor. When this user can
+ * open it, the Stirling logo doubles as the editor⇄processor switcher: the mark
+ * morphs into a chevron and opens the switch menu (the same BrandSwitcher the
+ * processor sidebar uses). Users without access get a plain logo.
+ *
+ * The access gate lives in {@link useOtherAppSwitch} so this header and the
+ * sidebar footer's "Open PDF Processor" row are driven by one answer.
  */
-export function AppSwitcher() {
-  const { portalAccess } = useAuth();
-  const navigate = useNavigate();
-  const { colorScheme } = useMantineColorScheme();
+export function AppSwitcher({ collapsed }: AppSwitcherProps) {
+  const otherApp = useOtherAppSwitch();
 
-  if (!portalAccess) return null;
+  if (!otherApp) {
+    return (
+      <Logo
+        variant={collapsed ? "iconOnly" : "iconAndText"}
+        iconHeight="1.6rem"
+        textHeight="1.3rem"
+      />
+    );
+  }
 
   return (
-    <AppSwitch
+    <BrandSwitcher
       current="editor"
-      theme={colorScheme === "dark" ? "dark" : "light"}
-      onSwitch={() => navigate(PORTAL_BASENAME)}
+      onSwitch={otherApp.onOpen}
+      collapsed={collapsed}
     />
   );
 }

@@ -1,0 +1,83 @@
+/**
+ * NodeCard — a selectable labelled tile (icon badge + title + sub-line) on a raised surface.
+ * Shared surface, selection ring and content layout; feature-specific state is layered by callers.
+ */
+
+.sui-node-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    opacity var(--motion-fast);
+}
+
+/* The whole card selects. Re-assert the tile look over the shared Button base (which otherwise
+   imposes a fixed height, its own padding and an accent text colour). */
+.sui-node-card__select.sui-btn {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  border: none;
+  background: none;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-weight: 400;
+  color: var(--c-text);
+  border-radius: inherit;
+}
+
+/* Mantine wraps a button's children in its label element, so the glyph and text are laid out
+   there - a gap on the button root would only space the wrapper, not what is inside it. */
+.sui-node-card__select.sui-btn .mantine-Button-label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+.sui-node-card__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.0625rem;
+}
+
+.sui-node-card__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sui-node-card__detail {
+  font-size: 0.6875rem;
+  /* --c-text-subtle does not clear 4.5:1 at this size in either theme (axe: 4.39 light, 3.66
+     dark); --c-text-muted is the next rung up and does. */
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Selected: the primary ring. Wins over hover and the warning tone. */
+.sui-node-card.is-selected {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
+}
+
+.sui-node-card:hover:not(.is-selected) {
+  border-color: var(--c-border-strong);
+}
+
+.sui-node-card--warning:not(.is-selected) {
+  border-color: var(--c-warning);
+}

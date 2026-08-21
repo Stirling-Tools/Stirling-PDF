@@ -10,19 +10,19 @@ dependencies {
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
-    api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
+    api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
+    api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:8.12.6'
-    api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
+    api 'org.simplejavamail:simple-java-mail:9.3.1'
+    api 'org.simplejavamail:outlook-module:9.3.1' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 
@@ -36,18 +36,24 @@ dependencies {
 
     api "com.stirling:jpdfium:${jpdfiumVersion}"
 
-    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
+    // -PjpdfiumPlatforms=all|none|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
+    // 'none' skips natives entirely (windows-arm64 builds, until JPDFium ships that platform).
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
     def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
-    def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'
-            ? jpdfiumAllPlatforms
-            : jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    def jpdfiumPlatforms
+    if (jpdfiumPlatformsProp == 'all') {
+        jpdfiumPlatforms = jpdfiumAllPlatforms
+    } else if (jpdfiumPlatformsProp == 'none') {
+        jpdfiumPlatforms = []
+    } else {
+        jpdfiumPlatforms = jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    }
     def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
     if (jpdfiumInvalid) {
         throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
-                "Valid: ${jpdfiumAllPlatforms.join(', ')} or 'all'.")
+                "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'all' or 'none'.")
     }
-    logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
+    logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
     }

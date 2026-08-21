@@ -393,6 +393,7 @@ export default function StampPreview({
           <div
             className={`${styles.stampItem} ${styles.stampItemGridMode}`}
             style={style.item as React.CSSProperties}
+            data-user-content-preview=""
           >
             {(parameters.stampText || "").split("\n").map((line, idx) => (
               <span

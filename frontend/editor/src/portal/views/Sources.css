@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 
@@ -25,14 +26,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__sub {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -57,9 +58,11 @@
 .portal-sources__name-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
+/* The connector's real mark, no tinted plate: the box only reserves space so
+   rows align; neutral (currentColor) marks read in the muted text tone. */
 .portal-sources__type-dot {
   display: inline-flex;
   align-items: center;
@@ -67,114 +70,23 @@
   width: 1.875rem;
   height: 1.875rem;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  color: var(--dot-c, var(--color-text-3));
-  background: color-mix(
-    in srgb,
-    var(--dot-c, var(--color-text-3)) 14%,
-    transparent
-  );
-}
-
-/* Neutral keeps a plain muted surface rather than an accent tint. */
-.portal-sources__type-dot--neutral {
-  background: var(--color-bg-muted);
-  color: var(--color-text-3);
-}
-.portal-sources__type-dot--default {
-  --dot-c: var(--color-blue-dark);
-}
-.portal-sources__type-dot--premium {
-  --dot-c: var(--color-purple-dark);
-}
-.portal-sources__type-dot--success {
-  --dot-c: var(--color-green-dark);
-}
-.portal-sources__type-dot--warning {
-  --dot-c: var(--color-amber-dark);
-}
-.portal-sources__type-dot--danger {
-  --dot-c: var(--color-red-dark);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__muted {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__caret {
   display: inline-block;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   transition: transform var(--motion-fast);
 }
 
 .portal-sources__caret.is-open {
   transform: rotate(90deg);
-  color: var(--color-blue);
-}
-
-/* Expanded detail panel */
-.portal-sources__expanded {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1.25rem;
-  animation: portal-sources-reveal var(--motion-fast) ease-out;
-}
-
-@keyframes portal-sources-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(-0.25rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.portal-sources__expanded-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.875rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-sources__expanded-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-sources__expanded-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-.portal-sources__expanded-close {
-  margin-left: auto;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-4);
-  font-size: 1.125rem;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-sources__expanded-close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  color: var(--c-accent-text);
 }
 
 /* Detail body */
@@ -196,12 +108,18 @@
   }
 }
 
+@media (max-width: 30rem) {
+  .portal-sources__stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Stat tiles now use the shared <StatTile>. */
 
 .portal-sources__url {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   word-break: break-all;
 }
 
@@ -217,12 +135,12 @@
   align-items: baseline;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__bar-head strong {
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-family: var(--font-mono);
 }
 
@@ -237,7 +155,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -245,7 +163,7 @@
   display: block;
   width: 100%;
   margin-top: 0.5rem;
-  color: var(--color-blue);
+  color: var(--c-accent-text);
 }
 
 .portal-sources__chips {
@@ -268,7 +186,7 @@
   gap: 0.625rem;
   padding: 0.4375rem 0.625rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -279,7 +197,7 @@
 .portal-sources__endpoint-path {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -287,7 +205,7 @@
 
 .portal-sources__endpoint-calls {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   font-family: var(--font-mono);
 }
@@ -317,28 +235,36 @@
   padding: 0;
 }
 
+/* Phones: labelled step pills don't fit side by side — stack them */
+@media (max-width: 30rem) {
+  .portal-sources__steps {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+}
+
 .portal-sources__step {
   display: flex;
   align-items: center;
   gap: 0.4375rem;
   flex: 1;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   padding: 0.5rem 0.625rem;
   border-radius: var(--radius-md);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
 }
 
 .portal-sources__step.is-active {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
-  border-color: color-mix(in srgb, var(--color-blue) 40%, transparent);
-  background: var(--color-blue-light);
+  border-color: color-mix(in srgb, var(--c-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
 }
 
 .portal-sources__step.is-done {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__step-mark {
@@ -350,14 +276,14 @@
   border-radius: 50%;
   font-size: 0.6875rem;
   font-weight: 600;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__step.is-active .portal-sources__step-mark {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
   color: var(--color-text-on-accent);
 }
 
@@ -379,53 +305,13 @@
   }
 }
 
-/* Override the shared Button's flex-row label to a centred icon-over-label
-   column so the SVG sits above the name with real spacing. */
-.portal-sources__type-card .mantine-Button-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.portal-sources__type-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-sources__type-card:hover {
-  border-color: var(--color-border-strong, var(--color-border));
-  background: var(--color-bg-hover);
-}
-
-.portal-sources__type-card.is-selected {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
-  box-shadow: 0 0 0 1px var(--color-blue) inset;
-}
-
 /* Icon inside the type picker: a plain stroke icon above the label (no badge
    box — the tinted box read as an extra bordered chip floating on the tile). */
 .portal-sources__type-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-3);
-}
-
-.portal-sources__type-card.is-selected .portal-sources__type-icon {
-  color: var(--color-blue);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__type-icon .portal-sources__type-svg {
@@ -433,17 +319,17 @@
   height: 1.6rem;
 }
 
-/* Sized to sit centred inside the 1.875rem table badge / picker dot. */
+/* Sized to sit centred inside the 1.875rem table cell / picker dot. */
 .portal-sources__type-svg {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.25rem;
+  height: 1.25rem;
   display: block;
 }
 
 .portal-sources__type-name {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-sources__wizard-body {
@@ -456,13 +342,13 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-sources__wizard-note {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-sources__wizard-footer {
@@ -470,102 +356,4 @@
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
-}
-
-.portal-sources__connection-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.portal-sources__connection-picker .sui-select,
-.portal-sources__connection-picker > div:first-child {
-  align-self: stretch;
-}
-
-.portal-sources__connection-create {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border-2);
-  border-radius: 0.5rem;
-  align-self: stretch;
-}
-
-.portal-sources__connection-create-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.portal-sources__connection-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.portal-sources__connections {
-  margin-top: 1.5rem;
-}
-
-.portal-sources__connections-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-2);
-  margin: 0 0 0.5rem;
-}
-
-.portal-sources__connections-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.portal-sources__connections-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.375rem 0;
-  border-bottom: 1px solid var(--color-border-2);
-}
-
-.portal-sources__connections-name {
-  font-weight: 500;
-  color: var(--color-text-1);
-}
-
-.portal-sources__connections-bucket {
-  color: var(--color-text-4);
-  font-size: 0.8125rem;
-}
-
-.portal-sources__connections-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 0.25rem;
-}
-
-.portal-sources__connections-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.portal-sources__connections-sub {
-  color: var(--color-text-4);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.portal-sources__connections-actions {
-  display: inline-flex;
-  gap: 0.25rem;
-  justify-content: flex-end;
 }
