@@ -34,6 +34,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
+import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 
@@ -1216,32 +1217,12 @@ export default function FileManagerView() {
           })()}
 
           <div className="files-page-toolbar">
-            <span className="files-page-toolbar-info">
-              {/* The selection bar drops the folder total - on a phone the room
-                  is better spent on the actions than on "3 items · 3 selected". */}
-              {mobileSelection ? (
-                t("filesPage.selectedCount", "{{count}} selected", {
-                  count: selectedFiles.length,
-                })
-              ) : (
-                <>
-                  {loading
-                    ? t("filesPage.loading", "Loading…")
-                    : t("filesPage.summary", "{{count}} items", {
-                        count: totalCount,
-                      })}
-                  {selectedFiles.length > 0 && (
-                    <span>
-                      {" "}
-                      ·{" "}
-                      {t("filesPage.selectedCount", "{{count}} selected", {
-                        count: selectedFiles.length,
-                      })}
-                    </span>
-                  )}
-                </>
-              )}
-            </span>
+            <FilesToolbarCount
+              loading={loading}
+              totalCount={totalCount}
+              selectedCount={selectedFiles.length}
+              selectionOnly={mobileSelection}
+            />
             {(() => {
               // Select all / Clear toggle over visible files.
               if (visibleFiles.length === 0) return null;
@@ -1281,7 +1262,7 @@ export default function FileManagerView() {
               );
             })()}
             <div className="files-page-toolbar-actions">
-              {mobileSelection && (
+              {mobileSelection ? (
                 <FilesToolbarBulkMenu
                   selectedCount={selectedFiles.length}
                   onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
@@ -1301,283 +1282,307 @@ export default function FileManagerView() {
                   onMove={() => promptMoveFiles(selectedFiles)}
                   onRemove={() => handleRemoveFiles(selectedFiles)}
                 />
-              )}
-              {!mobileSelection &&
-                selectedFiles.length > 0 &&
-                (() => {
-                  // Bulk-action labels; CSS collapses to icon-only below 900px.
-                  const addLabel =
-                    selectedFiles.length === 1
-                      ? t("filesPage.addToWorkspace", "Add to workspace")
-                      : t(
-                          "filesPage.addToWorkspaceCount",
-                          "Add {{count}} to workspace",
-                          { count: selectedFiles.length },
-                        );
-                  const moveLabel = t("filesPage.moveTo", "Move to…");
-                  const removeLabel = t("filesPage.remove", "Remove");
-                  return (
-                    // wrap="nowrap" keeps the row single-line.
-                    <Group gap="xs" wrap="nowrap">
-                      <Tooltip label={addLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          leftSection={<OpenInNewIcon fontSize="small" />}
-                          onClick={() => handleAddToWorkspace(selectedFiles)}
-                          aria-label={addLabel}
-                          data-testid="add-to-workspace"
-                        >
-                          {addLabel}
-                        </Button>
-                      </Tooltip>
-                      {/* Save to server; shown whenever local-only files are
+              ) : (
+                <>
+                  {selectedFiles.length > 0 &&
+                    (() => {
+                      // Bulk-action labels; CSS collapses to icon-only below 900px.
+                      const addLabel =
+                        selectedFiles.length === 1
+                          ? t("filesPage.addToWorkspace", "Add to workspace")
+                          : t(
+                              "filesPage.addToWorkspaceCount",
+                              "Add {{count}} to workspace",
+                              { count: selectedFiles.length },
+                            );
+                      const moveLabel = t("filesPage.moveTo", "Move to…");
+                      const removeLabel = t("filesPage.remove", "Remove");
+                      return (
+                        // wrap="nowrap" keeps the row single-line.
+                        <Group gap="xs" wrap="nowrap">
+                          <Tooltip label={addLabel} withinPortal>
+                            <Button
+                              size="sm"
+                              leftSection={<OpenInNewIcon fontSize="small" />}
+                              onClick={() =>
+                                handleAddToWorkspace(selectedFiles)
+                              }
+                              aria-label={addLabel}
+                              data-testid="add-to-workspace"
+                            >
+                              {addLabel}
+                            </Button>
+                          </Tooltip>
+                          {/* Save to server; shown whenever local-only files are
                           selected. When storage is off it stays visible but
                           disabled, tooltip pointing at the admin. */}
-                      {localOnlySelectedStubs.length > 0 && (
-                        <Tooltip
-                          label={
-                            saveToServerDisabledReason ??
-                            t("filesPage.saveToServer", "Save to server")
-                          }
-                          withinPortal
-                          multiline={Boolean(saveToServerDisabledReason)}
-                          w={saveToServerDisabledReason ? 240 : undefined}
-                        >
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftSection={<CloudUploadIcon fontSize="small" />}
-                            disabled={Boolean(saveToServerDisabledReason)}
-                            onClick={() =>
-                              setSaveToServerTarget(localOnlySelectedStubs)
-                            }
-                            style={{
-                              // Keep the tooltip hoverable while disabled.
-                              pointerEvents: saveToServerDisabledReason
-                                ? "auto"
-                                : undefined,
-                            }}
-                            aria-label={t(
-                              "filesPage.saveToServer",
-                              "Save to server",
+                          {localOnlySelectedStubs.length > 0 && (
+                            <Tooltip
+                              label={
+                                saveToServerDisabledReason ??
+                                t("filesPage.saveToServer", "Save to server")
+                              }
+                              withinPortal
+                              multiline={Boolean(saveToServerDisabledReason)}
+                              w={saveToServerDisabledReason ? 240 : undefined}
+                            >
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                leftSection={
+                                  <CloudUploadIcon fontSize="small" />
+                                }
+                                disabled={Boolean(saveToServerDisabledReason)}
+                                onClick={() =>
+                                  setSaveToServerTarget(localOnlySelectedStubs)
+                                }
+                                style={{
+                                  // Keep the tooltip hoverable while disabled.
+                                  pointerEvents: saveToServerDisabledReason
+                                    ? "auto"
+                                    : undefined,
+                                }}
+                                aria-label={t(
+                                  "filesPage.saveToServer",
+                                  "Save to server",
+                                )}
+                              >
+                                {t("filesPage.saveToServer", "Save to server")}
+                              </Button>
+                            </Tooltip>
+                          )}
+                          {/* Show details button on compact viewports. */}
+                          {selectedFiles.length === 1 &&
+                            isCompactDetailsViewport && (
+                              <Tooltip
+                                label={t(
+                                  "filesPage.showDetails",
+                                  "Show details",
+                                )}
+                                withinPortal
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  leftSection={
+                                    <InfoOutlinedIcon fontSize="small" />
+                                  }
+                                  onClick={() => setMobileDetailsOpen(true)}
+                                  aria-label={t(
+                                    "filesPage.showDetails",
+                                    "Show details",
+                                  )}
+                                >
+                                  {t("filesPage.showDetails", "Show details")}
+                                </Button>
+                              </Tooltip>
                             )}
-                          >
-                            {t("filesPage.saveToServer", "Save to server")}
-                          </Button>
-                        </Tooltip>
-                      )}
-                      {/* Show details button on compact viewports. */}
-                      {selectedFiles.length === 1 &&
-                        isCompactDetailsViewport && (
-                          <Tooltip
-                            label={t("filesPage.showDetails", "Show details")}
-                            withinPortal
-                          >
+                          <Tooltip label={moveLabel} withinPortal>
                             <Button
                               size="sm"
                               variant="secondary"
                               leftSection={
-                                <InfoOutlinedIcon fontSize="small" />
+                                <DriveFileMoveIcon fontSize="small" />
                               }
-                              onClick={() => setMobileDetailsOpen(true)}
-                              aria-label={t(
-                                "filesPage.showDetails",
-                                "Show details",
-                              )}
+                              onClick={() => promptMoveFiles(selectedFiles)}
+                              aria-label={moveLabel}
                             >
-                              {t("filesPage.showDetails", "Show details")}
+                              {moveLabel}
                             </Button>
                           </Tooltip>
-                        )}
-                      <Tooltip label={moveLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          leftSection={<DriveFileMoveIcon fontSize="small" />}
-                          onClick={() => promptMoveFiles(selectedFiles)}
-                          aria-label={moveLabel}
-                        >
-                          {moveLabel}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip label={removeLabel} withinPortal>
-                        <Button
-                          size="sm"
-                          accent="danger"
-                          variant="secondary"
-                          leftSection={<DeleteIcon fontSize="small" />}
-                          onClick={() => handleRemoveFiles(selectedFiles)}
-                          aria-label={removeLabel}
-                        >
-                          {removeLabel}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip
-                        label={t("filesPage.clearSelection", "Clear selection")}
-                        withinPortal
-                      >
-                        <ActionIcon
-                          variant="tertiary"
-                          size="md"
-                          onClick={() => clearSelection()}
-                          aria-label={t(
-                            "filesPage.clearSelection",
-                            "Clear selection",
-                          )}
-                        >
-                          &times;
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  );
-                })()}
-              {!mobileSelection && selectedFiles.length > 0 && (
-                <span
-                  className="files-page-toolbar-divider"
-                  aria-hidden="true"
-                />
-              )}
-              {mobileSelection ? null : isMobile ? (
-                /* Side by side these need ~480px and were truncating to
-                   stubs like "All sour"; collapsed they read in full. */
-                <>
-                  <FilesToolbarFilterMenu
-                    originFilter={originFilter}
-                    onOriginChange={setOriginFilter}
-                    availableTypes={availableTypes}
-                    typeFilter={typeFilter}
-                    onTypeChange={setTypeFilter}
-                    search={search}
-                    onSearchChange={setSearch}
-                  />
-                  <FilesToolbarSortMenu
-                    value={sortMode}
-                    onChange={setSortMode}
-                  />
-                </>
-              ) : (
-                <>
-                  <Select
-                    size="xs"
-                    value={originFilter}
-                    onChange={(value) =>
-                      value && setOriginFilter(value as FilesPageOriginFilter)
-                    }
-                    data={[
-                      {
-                        value: "all",
-                        label: t("filesPage.origin.all", "All sources"),
-                      },
-                      {
-                        value: "local",
-                        label: t("filesPage.origin.local", "Local"),
-                      },
-                      {
-                        value: "cloud",
-                        label: t("filesPage.origin.cloud", "Cloud"),
-                      },
-                      {
-                        value: "shared-with-me",
-                        label: t("filesPage.origin.shared", "Shared"),
-                      },
-                    ]}
-                    style={{ width: 140 }}
-                    aria-label={t("filesPage.originFilter", "Filter by source")}
-                  />
-                  {availableTypes.length > 1 && (
-                    <MultiSelect
-                      size="xs"
-                      value={typeFilter}
-                      onChange={setTypeFilter}
-                      data={availableTypes.map((ext) => ({
-                        value: ext,
-                        label: ext,
-                      }))}
-                      placeholder={
-                        typeFilter.length === 0
-                          ? t("filesPage.typeFilter.allTypes", "All types")
-                          : undefined
-                      }
-                      clearable
-                      hidePickedOptions
-                      searchable={false}
-                      style={{ width: 160 }}
-                      aria-label={t(
-                        "filesPage.typeFilter.label",
-                        "Filter by type",
-                      )}
+                          <Tooltip label={removeLabel} withinPortal>
+                            <Button
+                              size="sm"
+                              accent="danger"
+                              variant="secondary"
+                              leftSection={<DeleteIcon fontSize="small" />}
+                              onClick={() => handleRemoveFiles(selectedFiles)}
+                              aria-label={removeLabel}
+                            >
+                              {removeLabel}
+                            </Button>
+                          </Tooltip>
+                          <Tooltip
+                            label={t(
+                              "filesPage.clearSelection",
+                              "Clear selection",
+                            )}
+                            withinPortal
+                          >
+                            <ActionIcon
+                              variant="tertiary"
+                              size="md"
+                              onClick={() => clearSelection()}
+                              aria-label={t(
+                                "filesPage.clearSelection",
+                                "Clear selection",
+                              )}
+                            >
+                              &times;
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      );
+                    })()}
+                  {selectedFiles.length > 0 && (
+                    <span
+                      className="files-page-toolbar-divider"
+                      aria-hidden="true"
                     />
                   )}
-                  <TextInput
-                    size="xs"
-                    value={search}
-                    onChange={(e) => setSearch(e.currentTarget.value)}
-                    placeholder={t(
-                      "filesPage.search.placeholder",
-                      "Filter files…",
-                    )}
-                    leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
-                    rightSection={
-                      search ? (
-                        <ActionIcon
-                          variant="tertiary"
-                          size="sm"
-                          onClick={() => setSearch("")}
+                  {isMobile ? (
+                    /* Side by side these need ~480px and were truncating to
+                   stubs like "All sour"; collapsed they read in full. */
+                    <>
+                      <FilesToolbarFilterMenu
+                        originFilter={originFilter}
+                        onOriginChange={setOriginFilter}
+                        availableTypes={availableTypes}
+                        typeFilter={typeFilter}
+                        onTypeChange={setTypeFilter}
+                        search={search}
+                        onSearchChange={setSearch}
+                      />
+                      <FilesToolbarSortMenu
+                        value={sortMode}
+                        onChange={setSortMode}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Select
+                        size="xs"
+                        value={originFilter}
+                        onChange={(value) =>
+                          value &&
+                          setOriginFilter(value as FilesPageOriginFilter)
+                        }
+                        data={[
+                          {
+                            value: "all",
+                            label: t("filesPage.origin.all", "All sources"),
+                          },
+                          {
+                            value: "local",
+                            label: t("filesPage.origin.local", "Local"),
+                          },
+                          {
+                            value: "cloud",
+                            label: t("filesPage.origin.cloud", "Cloud"),
+                          },
+                          {
+                            value: "shared-with-me",
+                            label: t("filesPage.origin.shared", "Shared"),
+                          },
+                        ]}
+                        style={{ width: 140 }}
+                        aria-label={t(
+                          "filesPage.originFilter",
+                          "Filter by source",
+                        )}
+                      />
+                      {availableTypes.length > 1 && (
+                        <MultiSelect
+                          size="xs"
+                          value={typeFilter}
+                          onChange={setTypeFilter}
+                          data={availableTypes.map((ext) => ({
+                            value: ext,
+                            label: ext,
+                          }))}
+                          placeholder={
+                            typeFilter.length === 0
+                              ? t("filesPage.typeFilter.allTypes", "All types")
+                              : undefined
+                          }
+                          clearable
+                          hidePickedOptions
+                          searchable={false}
+                          style={{ width: 160 }}
                           aria-label={t(
-                            "filesPage.search.clear",
-                            "Clear filter",
+                            "filesPage.typeFilter.label",
+                            "Filter by type",
                           )}
-                        >
-                          <CloseIcon sx={{ fontSize: "0.9rem" }} />
-                        </ActionIcon>
-                      ) : null
-                    }
-                    aria-label={t(
-                      "filesPage.search.label",
-                      "Filter files by name",
-                    )}
-                    style={{ width: 180 }}
-                  />
-                  <Select
-                    size="xs"
-                    value={sortMode}
-                    onChange={(value) =>
-                      value && setSortMode(value as FilesPageSortMode)
-                    }
-                    data={[
-                      {
-                        value: "modified-desc",
-                        label: t("filesPage.sort.modifiedDesc", "Recent first"),
-                      },
-                      {
-                        value: "modified-asc",
-                        label: t("filesPage.sort.modifiedAsc", "Oldest first"),
-                      },
-                      {
-                        value: "name-asc",
-                        label: t("filesPage.sort.nameAsc", "Name A→Z"),
-                      },
-                      {
-                        value: "name-desc",
-                        label: t("filesPage.sort.nameDesc", "Name Z→A"),
-                      },
-                      {
-                        value: "size-desc",
-                        label: t("filesPage.sort.sizeDesc", "Largest first"),
-                      },
-                      {
-                        value: "size-asc",
-                        label: t("filesPage.sort.sizeAsc", "Smallest first"),
-                      },
-                    ]}
-                    style={{ width: 160 }}
-                  />
-                </>
-              )}
-              {/* A phone showing the selection bar has no room for these;
-                  they return as soon as the selection clears. */}
-              {!mobileSelection && (
-                <>
+                        />
+                      )}
+                      <TextInput
+                        size="xs"
+                        value={search}
+                        onChange={(e) => setSearch(e.currentTarget.value)}
+                        placeholder={t(
+                          "filesPage.search.placeholder",
+                          "Filter files…",
+                        )}
+                        leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                        rightSection={
+                          search ? (
+                            <ActionIcon
+                              variant="tertiary"
+                              size="sm"
+                              onClick={() => setSearch("")}
+                              aria-label={t(
+                                "filesPage.search.clear",
+                                "Clear filter",
+                              )}
+                            >
+                              <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                            </ActionIcon>
+                          ) : null
+                        }
+                        aria-label={t(
+                          "filesPage.search.label",
+                          "Filter files by name",
+                        )}
+                        style={{ width: 180 }}
+                      />
+                      <Select
+                        size="xs"
+                        value={sortMode}
+                        onChange={(value) =>
+                          value && setSortMode(value as FilesPageSortMode)
+                        }
+                        data={[
+                          {
+                            value: "modified-desc",
+                            label: t(
+                              "filesPage.sort.modifiedDesc",
+                              "Recent first",
+                            ),
+                          },
+                          {
+                            value: "modified-asc",
+                            label: t(
+                              "filesPage.sort.modifiedAsc",
+                              "Oldest first",
+                            ),
+                          },
+                          {
+                            value: "name-asc",
+                            label: t("filesPage.sort.nameAsc", "Name A→Z"),
+                          },
+                          {
+                            value: "name-desc",
+                            label: t("filesPage.sort.nameDesc", "Name Z→A"),
+                          },
+                          {
+                            value: "size-desc",
+                            label: t(
+                              "filesPage.sort.sizeDesc",
+                              "Largest first",
+                            ),
+                          },
+                          {
+                            value: "size-asc",
+                            label: t(
+                              "filesPage.sort.sizeAsc",
+                              "Smallest first",
+                            ),
+                          },
+                        ]}
+                        style={{ width: 160 }}
+                      />
+                    </>
+                  )}
                   <span
                     className="files-page-toolbar-divider"
                     aria-hidden="true"
