@@ -38,6 +38,8 @@ Run `task --list` to see all available commands.
 Please make sure your Pull Request adheres to the following guidelines:
 
 - Use the PR template provided.
+- The agreement statement in the Pull Request template is mandatory for your first merged Pull Request. If `CONTRIBUTING.md` changes, you must confirm the updated version again.
+- After a Pull Request is merged, contributors who have agreed to the current guidelines are listed in [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - Keep your Pull Request title succinct, detailed, and to the point.
 - Keep commits atomic. One commit should contain one change. If you want to make multiple changes, submit multiple Pull Requests.
 - Commits should be clear, concise, and easy to understand.
