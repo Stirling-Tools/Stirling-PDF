@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+// Native HTTP client - see the note in ServerSelection.tsx.
+import { fetch } from "@tauri-apps/plugin-http";
 import { Stack, Text, Alert, Loader, Center } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { DesktopAuthLayout } from "@app/components/SetupWizard/DesktopAuthLayout";

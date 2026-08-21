@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+// Native HTTP client: the webview's fetch is CORS-restricted and fails instantly with
+// "Load failed" against servers that are perfectly reachable.
+import { fetch } from "@tauri-apps/plugin-http";
 import { Stack, TextInput, Alert, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
