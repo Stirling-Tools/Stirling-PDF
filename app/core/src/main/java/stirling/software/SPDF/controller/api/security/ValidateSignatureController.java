@@ -107,7 +107,12 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        // Read the upload once. PDFBox walks the /ByteRange by skipping the signature hole, and
+        // InputStream.skip() is allowed to return 0 - servlet part streams do, which failed
+        // validation on documents other verifiers accept.
+        byte[] pdfBytes = file.getBytes();
+
+        try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -115,7 +120,7 @@ public class ValidateSignatureController {
             // furthest any signature reaches stops short of the file length, the tail is unsigned.
             // Taking the max across all signatures avoids false positives on legitimately
             // multi-signed PDFs, where an earlier signature intentionally omits later revisions.
-            long fileLength = file.getSize();
+            long fileLength = pdfBytes.length;
             long maxCovered = 0;
             for (PDSignature sig : signatures) {
                 int[] byteRange = sig.getByteRange();
@@ -133,8 +138,8 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
-                    byte[] signedContent = sig.getSignedContent(file.getInputStream());
-                    byte[] signatureBytes = sig.getContents(file.getInputStream());
+                    byte[] signedContent = sig.getSignedContent(pdfBytes);
+                    byte[] signatureBytes = sig.getContents(pdfBytes);
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.
