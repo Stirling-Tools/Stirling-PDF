@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -12,6 +13,10 @@ import { Track } from "@app/components/pageTracks/types";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import { PageClickModifiers } from "@app/components/pageTracks/hooks/useTrackSelection";
 import TrackPageTile from "@app/components/pageTracks/TrackPageTile";
+import {
+  TRACK_GEOMETRY,
+  rootFontSizePx,
+} from "@app/components/pageTracks/constants";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 export const trackDroppableId = (fileId: FileId) => `track:${fileId}`;
@@ -64,6 +69,40 @@ function TrackRowImpl({
     data: { type: "track", fileId: track.fileId },
   });
 
+  // A lane can hold hundreds of pages. Mounting them all is what made a single
+  // click cost ~700ms and a drag ~300ms per pointer move: every tile is a
+  // dnd-kit draggable AND droppable, so the whole set gets re-registered on
+  // each render, re-measured on drag start and hit-tested on every move.
+  const laneRef = useRef<HTMLDivElement | null>(null);
+  const geometry = useMemo(() => {
+    const px = rootFontSizePx();
+    return {
+      tileWidth: TRACK_GEOMETRY.tileWidthRem * px,
+      stride: (TRACK_GEOMETRY.tileWidthRem + TRACK_GEOMETRY.gapRem) * px,
+      cssVars: {
+        "--pt-tile-w": `${TRACK_GEOMETRY.tileWidthRem}rem`,
+        "--pt-tile-h": `${TRACK_GEOMETRY.tileCanvasHeightRem}rem`,
+        "--pt-tile-footer-h": `${TRACK_GEOMETRY.tileFooterHeightRem}rem`,
+      } as React.CSSProperties,
+    };
+  }, []);
+
+  const virtualizer = useVirtualizer({
+    count: track.pages.length,
+    horizontal: true,
+    getScrollElement: () => laneRef.current,
+    estimateSize: () => geometry.stride,
+    overscan: TRACK_GEOMETRY.overscan,
+  });
+
+  const setLaneRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      laneRef.current = element;
+      setNodeRef(element);
+    },
+    [setNodeRef],
+  );
+
   // Track-level actions apply to the selection inside this track, falling back
   // to the whole track so the buttons stay useful with nothing selected.
   const targetIds = useMemo(() => {
@@ -84,6 +123,7 @@ function TrackRowImpl({
 
   return (
     <section
+      style={geometry.cssVars}
       className={[styles.track, isOver ? styles.trackDropActive : ""]
         .filter(Boolean)
         .join(" ")}
@@ -164,7 +204,7 @@ function TrackRowImpl({
       </header>
 
       <div
-        ref={setNodeRef}
+        ref={setLaneRef}
         data-track-lane={track.fileId}
         className={[
           styles.lane,
@@ -187,26 +227,38 @@ function TrackRowImpl({
             )}
           </span>
         )}
-        {track.pages.map((page, index) => (
-          <TrackPageTile
-            key={page.id}
-            page={page}
-            trackFileId={track.fileId}
-            position={index + 1}
-            selected={selectedIds.has(page.id)}
-            dragging={draggingIds.has(page.id)}
-            dropBefore={hintActive && dropHint?.beforePageId === page.id}
-            dropAfterLast={
-              hintActive &&
-              dropHint?.beforePageId == null &&
-              index === track.pages.length - 1
-            }
-            thumbnails={thumbnails}
-            onSelect={onSelectPage}
-            onRotate={onRotate}
-            onDelete={onDelete}
-          />
-        ))}
+        {track.pages.length > 0 && (
+          <div
+            className={styles.laneInner}
+            style={{ width: virtualizer.getTotalSize() }}
+          >
+            {virtualizer.getVirtualItems().map((item) => {
+              const page = track.pages[item.index];
+              if (!page) return null;
+              return (
+                <TrackPageTile
+                  key={page.id}
+                  page={page}
+                  trackFileId={track.fileId}
+                  position={item.index + 1}
+                  offsetX={item.start}
+                  selected={selectedIds.has(page.id)}
+                  dragging={draggingIds.has(page.id)}
+                  dropBefore={hintActive && dropHint?.beforePageId === page.id}
+                  dropAfterLast={
+                    hintActive &&
+                    dropHint?.beforePageId == null &&
+                    item.index === track.pages.length - 1
+                  }
+                  thumbnails={thumbnails}
+                  onSelect={onSelectPage}
+                  onRotate={onRotate}
+                  onDelete={onDelete}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
