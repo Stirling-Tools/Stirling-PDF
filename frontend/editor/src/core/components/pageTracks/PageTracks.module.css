@@ -1,0 +1,324 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+}
+
+.scroller {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ── Track ───────────────────────────────────────────────────────────────── */
+
+.track {
+  position: relative;
+  /* --pt-tile-w / --pt-tile-h / --pt-tile-footer-h / --pt-gap come from
+     constants.ts, so the virtualiser and the CSS agree on tile geometry. */
+  /* The scroller is a flex column: without this, an overflowing stack of
+     tracks squeezes each lane below its tiles and clips them. */
+  flex: 0 0 auto;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.trackDropActive {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+
+.trackHeader {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-sunken);
+  min-width: 0;
+}
+
+/* Sits after the page count, so a long filename must not squeeze it. */
+.trackLeadAction {
+  flex: 0 0 auto;
+}
+
+.trackName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.trackMeta {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.trackActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex: 0 0 auto;
+}
+
+.lane {
+  position: relative;
+  padding: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Sized by the virtualiser; the tiles inside are absolutely placed, so the
+   height has to be stated rather than derived from content. */
+.laneInner {
+  position: relative;
+  height: calc(var(--pt-tile-h) + var(--pt-tile-footer-h));
+}
+
+.laneHint {
+  pointer-events: none;
+}
+
+.laneEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--pt-tile-h) + 2.5rem);
+  color: var(--c-text-subtle);
+  font-size: 0.8125rem;
+}
+
+/* ── Tile ────────────────────────────────────────────────────────────────── */
+
+.tile {
+  position: absolute;
+  top: 0;
+  width: var(--pt-tile-w);
+  cursor: grab;
+  user-select: none;
+  border-radius: var(--radius-sm);
+  outline: 1px solid var(--c-border-subtle);
+  outline-offset: -1px;
+  background: var(--c-surface-raised);
+  transition:
+    outline-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tile:hover {
+  outline-color: var(--c-border-strong);
+}
+
+.tileSelected {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 22%, transparent);
+}
+
+.tileDragging {
+  opacity: 0.35;
+}
+
+.canvas {
+  position: relative;
+  height: var(--pt-tile-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--c-surface-sunken);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.thumb {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  transition: transform 0.2s ease-in-out;
+}
+
+/*
+ * A quarter turn is applied after layout, so the pre-rotation box has to be
+ * constrained by the OPPOSITE axis or the rotated page overflows and clips.
+ */
+.thumbQuarterTurn {
+  max-width: var(--pt-tile-h);
+  max-height: var(--pt-tile-w);
+}
+
+.thumbPending {
+  width: 60%;
+  height: 78%;
+  border-radius: 2px;
+  background: var(--c-hover);
+}
+
+.tileFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  height: var(--pt-tile-footer-h);
+  padding: 0 0.375rem;
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  min-width: 0;
+}
+
+.tileIndex {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kept out of the way until the tile is hovered or already selected: a
+   permanent checkbox over every page reads as noise at this density. */
+.tileCheckbox {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  z-index: 2;
+  display: flex;
+  padding: 0.125rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tile:hover .tileCheckbox,
+.tile:focus-within .tileCheckbox,
+.tileSelected .tileCheckbox {
+  opacity: 1;
+}
+
+/*
+ * Compacted from the shared pill's defaults: the same component carries up to
+ * six actions on a 20rem file card, and three at that scale would overflow a
+ * page tile a third of the width.
+ */
+.pagePill {
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  z-index: 2;
+}
+
+/* CSS-hover driven visibility, matching the file cards in Active Files. */
+.tile [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tile:hover
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.tile:focus-within
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Unsaved-changes marker on the save button ───────────────────────────── */
+
+.saveButton {
+  position: relative;
+}
+
+.unsavedDot {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background: var(--c-danger);
+  /* Ringed in the bar's own surface so it reads against the icon behind it. */
+  box-shadow: 0 0 0 1.5px var(--c-bg-raised);
+  pointer-events: none;
+}
+
+/* ── Track reorder ───────────────────────────────────────────────────────── */
+
+.trackDragging {
+  opacity: 0.4;
+}
+
+/* Same trick as the page marker: drawn on the track rather than inserted
+   between them, so nothing shifts while the pointer is deciding. */
+.trackDropBefore::before,
+.trackDropAfterLast::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Drawn just inside the edge, not in the gap above it: .track clips its own
+   overflow to round the lane's corners, so an outside offset is invisible. */
+.trackDropBefore::before {
+  top: 0;
+}
+
+.trackDropAfterLast::after {
+  bottom: 0;
+}
+
+/* ── Drop indicator ──────────────────────────────────────────────────────── */
+
+/*
+ * Drawn on the tile it inserts against, not as a flex item of its own: a real
+ * element in the lane adds another `gap`, shifting every tile to its right by
+ * 8px — including the tile whose midpoint decides which side to drop on.
+ */
+.dropBefore::before,
+.dropAfterLast::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  pointer-events: none;
+}
+
+.dropBefore::before {
+  left: -5px;
+}
+
+.dropAfterLast::after {
+  right: -5px;
+}
+
+.dragBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 25%);
+}
