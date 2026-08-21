@@ -6,6 +6,7 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { FileId } from "@app/types/file";
@@ -42,6 +43,7 @@ export interface TrackRowProps {
     modifiers: PageClickModifiers,
   ) => void;
   onSelectTrack: (fileId: FileId) => void;
+  onOpenInViewer: (fileId: FileId) => void;
   /** Called when the click landed on empty lane surface, not on a page. */
   onClearSelection: () => void;
   onRotate: (pageIds: string[], delta: number) => void;
@@ -59,6 +61,7 @@ function TrackRowImpl({
   thumbnails,
   onSelectPage,
   onSelectTrack,
+  onOpenInViewer,
   onClearSelection,
   onRotate,
   onDelete,
@@ -148,6 +151,19 @@ function TrackRowImpl({
             .filter(Boolean)
             .join(" · ")}
         </span>
+        <Tooltip content={t("openInViewer", "Open in Viewer")}>
+          <ActionIcon
+            className={styles.trackLeadAction}
+            variant="quiet"
+            size="sm"
+            aria-label={t("openInViewer", "Open in Viewer")}
+            // An emptied track has nothing to show: saving closes the file.
+            disabled={track.pages.length === 0}
+            onClick={() => onOpenInViewer(track.fileId)}
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: "1rem" }} />
+          </ActionIcon>
+        </Tooltip>
 
         <div className={styles.trackActions}>
           <Tooltip

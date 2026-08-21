@@ -45,6 +45,11 @@
   min-width: 0;
 }
 
+/* Sits after the page count, so a long filename must not squeeze it. */
+.trackLeadAction {
+  flex: 0 0 auto;
+}
+
 .trackName {
   font-size: 0.8125rem;
   font-weight: 600;

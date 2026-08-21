@@ -86,6 +86,14 @@ async function dragPageOver(
   }
 }
 
+/**
+ * The file the viewer is showing, per the sidebar's "viewed" row marker. Note
+ * `.selected` is workbench selection, which is a different thing.
+ */
+function viewerActiveFile(page: import("@playwright/test").Page) {
+  return page.locator(".file-sidebar-file-item.viewed .file-sidebar-file-name");
+}
+
 /** The tile the insertion line is currently drawn against. */
 function dropTarget(page: import("@playwright/test").Page) {
   return page.locator("[data-page-id][data-drop-before]");
@@ -474,5 +482,58 @@ test.describe("Page Editor tracks", () => {
     } finally {
       fs.rmSync(longPdf, { force: true });
     }
+  });
+
+  test("the eye opens that track's file in the viewer", async ({ page }) => {
+    await openPageEditor(page);
+    const sample = track(page, "sample.pdf");
+    await expect(sample.locator("[data-page-id]")).toHaveCount(1, {
+      timeout: 30_000,
+    });
+
+    // Second track, so landing on the first file would look like success.
+    await sample.getByRole("button", { name: "Open in Viewer" }).click();
+
+    await expect(page.getByTestId("page-tracks")).toHaveCount(0);
+    await expect(viewerActiveFile(page)).toHaveText("sample.pdf");
+  });
+
+  test("the eye prompts when edits are pending, then views the saved version", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+
+    // Dirty the very file being opened: the save gives it a new id, so the
+    // viewer target has to follow the version bump.
+    const last = tiles.nth(3);
+    await last.hover();
+    await last.getByRole("button", { name: "Delete page" }).click();
+    await expect(tiles).toHaveCount(3);
+
+    await rotated.getByRole("button", { name: "Open in Viewer" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Unsaved Changes" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Save & Leave" }).click();
+
+    // Landed in the viewer on the file the eye named. Saving gives every
+    // changed file a NEW id, and the viewer drops an active file that has left
+    // the workbench, so this only holds if the target is re-pointed.
+    await expect(page.getByTestId("page-tracks")).toHaveCount(0, {
+      timeout: 90_000,
+    });
+    await expect(viewerActiveFile(page)).toHaveText("rotated-pages.pdf", {
+      timeout: 60_000,
+    });
+
+    // And the pending edit was written rather than dropped.
+    await switchView(page, "Page Editor");
+    const saved = track(page, "rotated-pages.pdf");
+    await expect(saved).toContainText("v2", { timeout: 90_000 });
+    await expect(saved.locator("[data-page-id]")).toHaveCount(3);
   });
 });
