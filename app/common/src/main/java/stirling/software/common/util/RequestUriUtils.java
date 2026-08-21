@@ -7,7 +7,8 @@ public class RequestUriUtils {
     private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
     // Invite tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
     private static final Pattern INVITE_LINK_PATTERN =
-            Pattern.compile("^/invite/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
+            Pattern.compile(
+                    "^/invite/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);

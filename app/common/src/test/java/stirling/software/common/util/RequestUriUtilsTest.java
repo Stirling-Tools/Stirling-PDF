@@ -253,9 +253,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_inviteLinkWithContextPath() {
-        assertTrue(
-                RequestUriUtils.isPublicAuthEndpoint(
-                        "/app/invite/" + INVITE_TOKEN, "/app"));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/invite/" + INVITE_TOKEN, "/app"));
     }
 
     @Test
@@ -268,9 +266,7 @@ class RequestUriUtilsTest {
     @Test
     void testIsPublicAuthEndpoint_inviteNestedPathNotPublic() {
         // Guard against future additions like /invite/<token>/foo becoming accidentally public
-        assertFalse(
-                RequestUriUtils.isPublicAuthEndpoint(
-                        "/invite/" + INVITE_TOKEN + "/foo", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/foo", ""));
     }
 
     @Test
