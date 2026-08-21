@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": ["../../src/proprietary/*", "../../src/core/*"],
+      "@portal/*": ["../../src/portal/*"],
+      "@core/*": ["../../src/core/*"]
+    }
+  },
+  "include": [
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import pytest
 
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
-from stirling.agents.pdf_edit import PdfEditPlanOutput
+from stirling.agents.pdf_edit import PdfEditNeedContentSelection, PdfEditPlanOutput
 from stirling.contracts import (
     AiFile,
     EditCannotDoResponse,
@@ -28,6 +28,7 @@ from stirling.models.tool_models import (
     EditTextParams,
     FlattenParams,
     RotatePdfParams,
+    SplitPagesParams,
     ToolEndpoint,
 )
 from stirling.services.runtime import AppRuntime
@@ -76,18 +77,22 @@ class StubPdfEditAgent(PdfEditAgent):
         runtime: AppRuntime,
         selection: PdfEditPlanOutput,
         parameter_selector: RecordingParameterSelector | PdfEditParameterSelector | None = None,
+        later_selections: list[PdfEditPlanOutput] | None = None,
     ) -> None:
         super().__init__(runtime)
         self.selection = selection
+        # Selections handed out on retry, in order, so a test can drive the repair loop.
+        self.later_selections = list(later_selections or [])
+        self.repair_notes: list[str] = []
         if parameter_selector is not None:
             self.parameter_selector = parameter_selector
 
-    def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
+    def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
         # Tests construct requests without `enabled_endpoints`; pretend everything is enabled
         # unless the test explicitly supplies an enabled set.
-        if request.enabled_endpoints:
-            return request.enabled_endpoints
-        return OPERATIONS
+        if not request.enabled_endpoints:
+            return list(OPERATIONS), []
+        return super()._classify_operations(request)
 
     async def _select_plan(
         self,
@@ -96,7 +101,11 @@ class StubPdfEditAgent(PdfEditAgent):
         unavailable_operations: Iterable[ToolEndpoint],
         *,
         allow_need_content: bool = True,
+        repair_note: str = "",
     ) -> PdfEditPlanOutput:
+        self.repair_notes.append(repair_note)
+        if repair_note and self.later_selections:
+            return self.later_selections.pop(0)
         return self.selection
 
 
@@ -126,6 +135,121 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     assert [step.tool for step in response.steps] == [ToolEndpoint.ROTATE_PDF, ToolEndpoint.FLATTEN]
     assert isinstance(response.steps[0].parameters, RotatePdfParams)
     assert isinstance(response.steps[1].parameters, FlattenParams)
+
+
+_ANY_SELECTION = PdfEditPlanSelection(operations=[ToolEndpoint.ROTATE_PDF], summary="s", rationale="r")
+
+
+def test_selection_prompt_says_nothing_about_output_formats(runtime: AppRuntime) -> None:
+    # Compatibility is only raised once a plan has actually failed, so the operation list stays
+    # about what each tool does. Leaking format hints here re-inflates an already large prompt.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(PdfEditRequest(user_message="anything", files=[]), list(OPERATIONS), [])
+    assert "outputs:" not in prompt
+    assert "IMAGE (several files)" not in prompt
+
+
+def test_repair_prompt_offers_reorder_or_telling_the_user(runtime: AppRuntime) -> None:
+    # The model decides which: it has the user's intent, and a reorder that changes the result
+    # is worse than saying it cannot be done.
+    agent = StubPdfEditAgent(runtime, _ANY_SELECTION)
+    prompt = agent._build_selection_prompt(
+        PdfEditRequest(user_message="anything", files=[]),
+        list(OPERATIONS),
+        [],
+        "step 3 (SANITIZE_PDF) accepts PDF but the previous step produces IMAGE.",
+    )
+    assert "SANITIZE_PDF" in prompt
+    assert "different order" in prompt
+    assert "cannot_do" in prompt
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_retries_a_plan_whose_steps_cannot_chain(runtime: AppRuntime) -> None:
+    # Extracting images emits images, which rotate cannot take. The agent should be told exactly
+    # that and get one chance to produce something workable rather than shipping a plan that
+    # would fail part-way through execution.
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EXTRACT_IMAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Extract the images, then rotate.",
+            rationale="Initial attempt.",
+        ),
+        later_selections=[
+            PdfEditPlanSelection(
+                operations=[ToolEndpoint.ROTATE_PDF],
+                summary="Rotate the PDF.",
+                rationale="Repaired attempt.",
+            )
+        ],
+        parameter_selector=RecordingParameterSelector(),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Pull out the images and rotate them.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert [step.tool for step in response.steps] == [ToolEndpoint.ROTATE_PDF]
+    # First attempt gets no note; the retry is told which transition failed.
+    assert agent.repair_notes[0] == ""
+    assert "ROTATE_PDF" in agent.repair_notes[1]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_gives_up_when_the_repaired_plan_still_cannot_chain(
+    runtime: AppRuntime,
+) -> None:
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EXTRACT_IMAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Extract the images, then rotate.",
+            rationale="Initial attempt.",
+        ),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Pull out the images and rotate them.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    assert isinstance(response, EditCannotDoResponse)
+    assert "No workable order" in response.reason
+    # Exactly one retry, not an unbounded loop.
+    assert len(agent.repair_notes) == 2
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_accepts_a_chain_that_lines_up(runtime: AppRuntime) -> None:
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.SPLIT_PAGES, ToolEndpoint.ROTATE_PDF],
+            summary="Split then rotate.",
+            rationale="Splitting fans out; rotate runs per file.",
+        ),
+        parameter_selector=RecordingParameterSelector(
+            [SplitPagesParams(page_numbers="all"), RotatePdfParams(angle=Angle(90))]
+        ),
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Split the pages and rotate each one.",
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
+        )
+    )
+
+    # A fan-out is information, not a problem, so no retry.
+    assert isinstance(response, EditPlanResponse)
+    assert agent.repair_notes == [""]
 
 
 @pytest.mark.anyio
@@ -194,12 +318,8 @@ async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
         runtime,
-        NeedContentResponse(
-            resume_with=SupportedCapability.PDF_EDIT,
+        PdfEditNeedContentSelection(
             reason="Need page text to locate the NEW PAGE markers.",
-            files=[],
-            max_pages=0,
-            max_characters=0,
         ),
         parameter_selector=parameter_selector,
     )
@@ -274,8 +394,8 @@ async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_n
     can_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=True)
     cannot_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=False)
 
-    assert NeedContentResponse in _agent_output_types(can_request)
-    assert NeedContentResponse not in _agent_output_types(cannot_request)
+    assert PdfEditNeedContentSelection in _agent_output_types(can_request)
+    assert PdfEditNeedContentSelection not in _agent_output_types(cannot_request)
 
 
 def _agent_output_types(agent: object) -> list[type]:
@@ -336,7 +456,7 @@ async def test_pdf_edit_agent_supported_operations_defaults_to_empty(
     runtime: AppRuntime,
 ) -> None:
     agent = PdfEditAgent(runtime)
-    supported = agent._get_supported_operations(PdfEditRequest(user_message="hi"))
+    supported, _ = agent._classify_operations(PdfEditRequest(user_message="hi"))
 
     assert list(supported) == []
 
@@ -351,7 +471,7 @@ async def test_pdf_edit_agent_supported_operations_uses_provided_list(
         enabled_endpoints=[ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF],
     )
 
-    supported = agent._get_supported_operations(request)
+    supported, _ = agent._classify_operations(request)
 
     assert list(supported) == [ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF]
 
@@ -372,8 +492,7 @@ def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppR
         user_message="Run OCR.",
         enabled_endpoints=[ToolEndpoint.FLATTEN],
     )
-    supported = agent._get_supported_operations(request)
-    unavailable = agent._get_unavailable_operations(supported)
+    supported, unavailable = agent._classify_operations(request)
 
     prompt = agent._build_selection_prompt(request, supported, unavailable)
 

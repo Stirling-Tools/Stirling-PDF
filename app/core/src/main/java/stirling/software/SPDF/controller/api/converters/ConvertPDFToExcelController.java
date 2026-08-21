@@ -25,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -45,12 +48,16 @@ public class ConvertPDFToExcelController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(value = "/pdf/xlsx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/pdf/xlsx",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(produces = ToolFormat.EXCEL)
     @Operation(
             summary = "Convert a PDF to an Excel spreadsheet (XLSX)",
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
-                            + " workbook, one sheet per table. Input:PDF Output:XLSX Type:SISO")
+                            + " workbook, one sheet per table.")
     public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
             throws Exception {
         String baseName =

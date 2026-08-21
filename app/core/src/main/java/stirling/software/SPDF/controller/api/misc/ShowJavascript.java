@@ -21,7 +21,10 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.JavaScriptResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -34,11 +37,15 @@ public class ShowJavascript {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/show-javascript",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
+    @ToolIO(produces = ToolFormat.JAVASCRIPT)
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
-            description = "desc. Input:PDF Output:JS Type:SISO")
+            description = "desc.")
     public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         StringBuilder script = new StringBuilder();

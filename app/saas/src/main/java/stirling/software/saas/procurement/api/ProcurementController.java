@@ -1,0 +1,681 @@
+package stirling.software.saas.procurement.api;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
+import stirling.software.saas.procurement.legal.AgreementSigning;
+import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
+import stirling.software.saas.procurement.model.ProcurementDeal;
+import stirling.software.saas.procurement.model.ProcurementQuote;
+import stirling.software.saas.procurement.model.QuoteDetails;
+import stirling.software.saas.procurement.pricing.ProcurementPricingService;
+import stirling.software.saas.procurement.pricing.QuoteConfig;
+import stirling.software.saas.procurement.pricing.QuoteLineItem;
+import stirling.software.saas.procurement.service.ProcurementService;
+import stirling.software.saas.util.AuthenticationUtils;
+
+/**
+ * The enterprise procurement journey for a linked team: read the deal snapshot, start/extend a
+ * (mock-licensed) trial, build a server-priced quote, and accept it. Stripe checkout itself is a
+ * Supabase edge function the portal calls with the accepted quote — this controller never touches
+ * Stripe. The caller's team is resolved from the authenticated principal; a team id is never
+ * trusted from the request. Mutations require the team leader.
+ */
+@Slf4j
+@Hidden
+@RestController
+@RequestMapping("/api/v1/procurement")
+@Profile("saas")
+public class ProcurementController {
+
+    // Local mapper to parse the stored line-items JSON; the saas context exposes no injectable
+    // ObjectMapper bean.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private final ProcurementService procurement;
+    private final ProcurementPricingService pricing;
+    private final TeamMembershipRepository memberRepo;
+    private final UserRepository userRepository;
+    private final ProcurementConfigurationProperties config;
+
+    public ProcurementController(
+            ProcurementService procurement,
+            ProcurementPricingService pricing,
+            TeamMembershipRepository memberRepo,
+            UserRepository userRepository,
+            ProcurementConfigurationProperties config) {
+        this.procurement = Objects.requireNonNull(procurement);
+        this.pricing = Objects.requireNonNull(pricing);
+        this.memberRepo = Objects.requireNonNull(memberRepo);
+        this.userRepository = Objects.requireNonNull(userRepository);
+        this.config = Objects.requireNonNull(config);
+    }
+
+    // ---- request / response DTOs -------------------------------------------
+
+    public record QuoteRequest(
+            long volume,
+            int users,
+            int intensity, // policy posture (runs/PDF): 2 / 4 / 7; 0 → default Governed
+            double sizeMult, // PDF-size tier multiplier: 1.0 / 1.4 / 2.4; 0 → no uplift
+            String deployment,
+            int termYears,
+            String serviceLevel,
+            boolean indemnification,
+            boolean training,
+            boolean qbr,
+            String currency,
+            String businessName,
+            // Buyer / AP details (all optional). Country + currency intentionally out of scope.
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {
+        QuoteConfig toConfig() {
+            return new QuoteConfig(
+                    volume,
+                    users,
+                    intensity,
+                    sizeMult,
+                    deployment,
+                    termYears,
+                    serviceLevel,
+                    indemnification,
+                    training,
+                    qbr,
+                    currency);
+        }
+
+        QuoteDetails toDetails() {
+            return new QuoteDetails(
+                    businessName,
+                    contactName,
+                    contactEmail,
+                    addressLine1,
+                    addressLine2,
+                    city,
+                    region,
+                    postalCode,
+                    poNumber,
+                    taxId);
+        }
+    }
+
+    public record QuoteResponse(
+            Long quoteId,
+            String quoteNumber,
+            String status,
+            String currency,
+            long annualNetMinor,
+            long tcvMinor,
+            // First post-term renewal fee after the CPI escalator, and that escalator as a whole
+            // percent — the committed term is flat, so these describe only the auto-renewal.
+            long renewalAnnualNetMinor,
+            int cpiRatePct,
+            List<QuoteLineItem> lineItems,
+            String validUntil,
+            String stripeQuoteId,
+            String invoiceUrl,
+            String invoicePdf,
+            QuoteConfigEcho config) {}
+
+    /**
+     * The inputs the quote was priced from, echoed back so the builder can seed itself when the
+     * buyer re-edits an existing quote. {@code users} is not persisted (only the resulting volume
+     * is), so it is always 0 here; the builder treats the seeded volume as manually set.
+     */
+    public record QuoteConfigEcho(
+            long volume,
+            int users,
+            int intensity,
+            double sizeMult,
+            String deployment,
+            int termYears,
+            String serviceLevel,
+            boolean indemnification,
+            boolean training,
+            boolean qbr,
+            String currency,
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {}
+
+    /** Trial setup captured before the trial starts: deployment target + seat count. */
+    /**
+     * Setup step 2 collects the buying entity; all of it is optional so an older client still
+     * starts.
+     */
+    public record StartTrialRequest(
+            String deployment,
+            int users,
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String inviteEmails) {}
+
+    public record SnapshotResponse(
+            Long dealId,
+            String stage,
+            String deployment,
+            int seats,
+            String trialStartedAt,
+            String trialEndsAt,
+            int trialExtensionsUsed,
+            boolean licensed,
+            String licenseKey,
+            // Version label of the signed agreement PDF available for download, else null.
+            String agreementSignedVersion,
+            // Buying entity captured at trial setup; null on deals started before that step.
+            String businessName,
+            String contactName,
+            String contactEmail,
+            QuoteResponse latestQuote) {}
+
+    /** The filled agreement for review: registry metadata + the rendered markdown body. */
+    public record AgreementDocumentResponse(
+            String docId,
+            String version,
+            String versionLabel,
+            String displayName,
+            String effectiveDate,
+            String status,
+            String markdown) {}
+
+    /** Buyer-supplied signing inputs from the agreement stage. */
+    public record SignAgreementRequest(
+            String customerLegalName,
+            String signatoryName,
+            String signatoryTitle,
+            boolean authorityConfirmed) {}
+
+    public record SignAgreementResponse(Long signatureId, String versionLabel, boolean pdfStored) {}
+
+    // ---- endpoints ----------------------------------------------------------
+
+    /**
+     * The team's deal snapshot. Always 200 with a single shape; an unstarted procurement returns an
+     * empty snapshot ({@code dealId == null}) so the portal can render the "start" state without
+     * special-casing an empty body.
+     */
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> snapshot(Authentication auth) {
+        Optional<TeamMembership> membership = primaryMembership(auth);
+        if (membership.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Long teamId = membership.get().getTeam().getId();
+        // The licence key is the team's secret entitlement — leader-only. Members still see the
+        // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
+        boolean leader = membership.get().getRole() == TeamRole.LEADER;
+        return ResponseEntity.ok(
+                procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
+    }
+
+    private static final SnapshotResponse EMPTY_SNAPSHOT =
+            new SnapshotResponse(
+                    null, null, null, 0, null, null, 0, false, null, null, null, null, null, null);
+
+    /**
+     * Download the offline / air-gapped licence file (.lic) for the team — available for an
+     * air-gapped deployment from the trial licence onward. 404 when there's no licence yet or the
+     * deployment isn't air-gapped, so we don't leak that a licence exists.
+     */
+    @GetMapping("/license/file")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> licenseFile(Authentication auth) {
+        // Leader-only: the offline .lic is the team's portable entitlement, not a member artefact.
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .offlineLicenseFile(teamId)
+                .<ResponseEntity<String>>map(
+                        cert ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"stirling-enterprise.lic\"")
+                                        .contentType(MediaType.TEXT_PLAIN)
+                                        .body(cert))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /** Mark the account as looking at enterprise. Idempotent; never disturbs an existing deal. */
+    @PostMapping("/interest")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> recordInterest(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.ok(toSnapshot(procurement.recordInterest(teamId), true));
+    }
+
+    @PostMapping("/trial/start")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> startTrial(
+            @RequestBody(required = false) StartTrialRequest request, Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        // Body is optional so an older client (no setup step) still starts a cloud trial.
+        String deployment = request != null ? request.deployment() : null;
+        int seats = request != null ? request.users() : 0;
+        ProcurementDeal deal;
+        try {
+            deal =
+                    procurement.startTrial(
+                            teamId,
+                            deployment,
+                            seats,
+                            request != null ? request.businessName() : null,
+                            request != null ? request.contactName() : null,
+                            request != null ? request.contactEmail() : null,
+                            request != null ? request.inviteEmails() : null);
+        } catch (IllegalStateException e) {
+            // Past the trial the deal holds a committed licence; restarting would replace it.
+            log.warn("[procurement] trial start rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        // After the trial exists, so a rejected invite can never stop it starting.
+        if (request != null) {
+            procurement.sendTrialInvites(
+                    teamId,
+                    primaryMembership(auth).map(TeamMembership::getUser).orElse(null),
+                    request.inviteEmails());
+        }
+        return ResponseEntity.ok(toSnapshot(deal, true));
+    }
+
+    @PostMapping("/trial/extend")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> extendTrial(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId), true));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    @PostMapping("/quote")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<QuoteResponse> buildQuote(
+            @RequestBody QuoteRequest request, Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(
+                    toQuote(
+                            procurement.buildQuote(
+                                    teamId, request.toConfig(), request.toDetails())));
+        } catch (IllegalStateException e) {
+            // Below the minimum deal size, or the deal is already live. A client error, not a
+            // fault.
+            log.warn("[procurement] quote rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
+    // draft into a finalized Stripe Quote; accept-procurement-quote accepts it into a subscription.
+    // Both persist their results via SECURITY DEFINER RPCs; the snapshot above reflects them.
+
+    /**
+     * Advance an issued quote to the agreement (security) stage, where the buyer reviews + agrees.
+     */
+    @PostMapping("/agreement")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> startAgreement(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId), true));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /**
+     * The filled Stirling Enterprise Agreement (MSA + Order Form + DPA) for the team's current
+     * quote, as markdown, for the buyer to review before signing. 404 when there's no quote yet.
+     */
+    @GetMapping("/agreement/document")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AgreementDocumentResponse> agreementDocument(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocument(teamId)
+                .<ResponseEntity<AgreementDocumentResponse>>map(
+                        a ->
+                                ResponseEntity.ok(
+                                        new AgreementDocumentResponse(
+                                                a.docId(),
+                                                a.version(),
+                                                a.versionLabel(),
+                                                a.displayName(),
+                                                a.effectiveDate(),
+                                                a.status(),
+                                                a.markdown())))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Record a signed agreement: capture the typed legal name / signatory / title / authority, pin
+     * the exact document version + content hash + variable snapshot, and store the rendered PDF
+     * (best-effort). The caller then proceeds to accept the quote as before.
+     */
+    @PostMapping("/agreement/sign")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SignAgreementResponse> signAgreement(
+            @RequestBody SignAgreementRequest request,
+            Authentication auth,
+            HttpServletRequest http) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (request == null
+                || request.signatoryName() == null
+                || request.signatoryName().isBlank()
+                || !request.authorityConfirmed()) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            ProcurementAgreementSignature sig =
+                    procurement.signAgreement(
+                            teamId,
+                            new AgreementSigning(
+                                    request.customerLegalName(),
+                                    request.signatoryName(),
+                                    request.signatoryTitle(),
+                                    request.authorityConfirmed()),
+                            clientIp(http));
+            return ResponseEntity.ok(
+                    new SignAgreementResponse(
+                            sig.getSignatureId(), sig.getDocumentLabel(), sig.getPdf() != null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /** Download the stored signed-agreement PDF for the team. 404 if none was rendered/stored. */
+    @GetMapping("/agreement/signature/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> signaturePdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .signedAgreementPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Download the current (unsigned) agreement as a PDF — the document shown at the sign step. 404
+     * when there's no quote yet or the render runtime is unavailable.
+     */
+    @GetMapping("/agreement/document/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> agreementDocumentPdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocumentPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Provision on accept: upgrade the team's licence to the committed annual term, valid
+     * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
+     * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
+     * stays in the payment step until the invoice settles. Idempotent.
+     */
+    @PostMapping("/provision")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
+        try {
+            procurement.provisionLicense(teamId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            log.warn("[procurement] provision rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /**
+     * Go live once payment settles: advance the deal to active and re-affirm the annual licence.
+     * Called server-side by the {@code invoice.paid} webhook (ROLE_ADMIN via X-API-Key), alongside
+     * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
+     *
+     * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
+     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
+     * non-2xx would have Stripe retry a webhook that can never succeed.
+     *
+     * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same
+     * invoice twice is a redelivery, a different one is next year's payment and has to re-issue the
+     * licence. Optional so an older caller still works, at the cost of that distinction.
+     */
+    @PostMapping("/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activate(
+            @RequestParam("teamId") long teamId,
+            @RequestParam(value = "invoiceId", required = false) String invoiceId) {
+        try {
+            procurement.markLive(teamId, invoiceId);
+        } catch (IllegalStateException e) {
+            log.info(
+                    "[procurement] activate skipped, no deal for team={}: {}",
+                    teamId,
+                    e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Demo/manual stand-in for the {@code invoice.paid} webhook: mark the deal live (issue the
+     * annual licence, advance to active). Production go-live runs through {@code /activate}.
+     */
+    @PostMapping("/go-live")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> goLive(Authentication auth) {
+        if (!config.isDemoControlsEnabled()) return ResponseEntity.notFound().build();
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId), true));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /** Reset the team's procurement (delete the deal + quotes); returns the empty snapshot. */
+    @PostMapping("/reset")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> reset(Authentication auth) {
+        if (!config.isDemoControlsEnabled()) return ResponseEntity.notFound().build();
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        procurement.resetDeal(teamId);
+        return ResponseEntity.ok(EMPTY_SNAPSHOT);
+    }
+
+    // ---- helpers ------------------------------------------------------------
+
+    /** The caller's primary team membership; empty when unauthenticated/teamless. */
+    private Optional<TeamMembership> primaryMembership(Authentication auth) {
+        User user;
+        try {
+            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        } catch (SecurityException e) {
+            return Optional.empty();
+        }
+        return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
+    }
+
+    /** Team id only when the caller is the team leader; null otherwise (commercial actions). */
+    private Long requireLeader(Authentication auth) {
+        return primaryMembership(auth)
+                .filter(m -> m.getRole() == TeamRole.LEADER)
+                .map(m -> m.getTeam().getId())
+                .orElse(null);
+    }
+
+    /**
+     * Best-effort client IP for the signature record: first X-Forwarded-For hop, else the peer.
+     *
+     * <p>Informational only. That header is client-set, so {@code signer_ip} is spoofable and is
+     * not evidence of where a signature came from — the document hash and version are what make the
+     * record trustworthy. Treat the address as a hint, never as proof.
+     */
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * Build the snapshot for a deal. {@code includeLicenseKey} is true only for the team leader; a
+     * member sees {@code licensed} but not the key itself (see {@link #snapshot}). Mutation
+     * endpoints are leader-gated, so they always pass true.
+     */
+    private SnapshotResponse toSnapshot(ProcurementDeal deal, boolean includeLicenseKey) {
+        QuoteResponse latest =
+                procurement.quotesForDeal(deal.getDealId()).stream()
+                        .findFirst()
+                        .map(this::toQuote)
+                        .orElse(null);
+        return new SnapshotResponse(
+                deal.getDealId(),
+                deal.getStage(),
+                deal.getDeployment(),
+                deal.getSeats(),
+                str(deal.getTrialStartedAt()),
+                str(deal.getTrialEndsAt()),
+                deal.getTrialExtensionsUsed(),
+                deal.getLicenseRef() != null,
+                includeLicenseKey ? deal.getLicenseRef() : null,
+                procurement.signedAgreementLabel(deal.getDealId()).orElse(null),
+                deal.getBusinessName(),
+                deal.getContactName(),
+                deal.getContactEmail(),
+                latest);
+    }
+
+    private QuoteResponse toQuote(ProcurementQuote q) {
+        return new QuoteResponse(
+                q.getQuoteId(),
+                q.getQuoteNumber(),
+                q.getStatus(),
+                q.getCurrency(),
+                q.getAnnualNetMinor(),
+                q.getTcvMinor(),
+                // Prefer the renewal locked at quote time; fall back to a live projection for
+                // quotes
+                // priced before the column existed.
+                q.getRenewalAnnualMinor() > 0
+                        ? q.getRenewalAnnualMinor()
+                        : pricing.renewalAnnualMinor(q.getAnnualNetMinor()),
+                pricing.cpiRatePct(),
+                parseLineItems(q.getLineItemsJson()),
+                q.getValidUntil() == null ? null : q.getValidUntil().toString(),
+                q.getStripeQuoteId(),
+                q.getStripeInvoiceUrl(),
+                q.getStripeInvoicePdf(),
+                new QuoteConfigEcho(
+                        q.getVolume(),
+                        0,
+                        q.getIntensity(),
+                        q.getSizeMult(),
+                        q.getDeployment(),
+                        q.getTermYears(),
+                        q.getServiceLevel(),
+                        q.isIndemnification(),
+                        q.isTraining(),
+                        q.isQbr(),
+                        q.getCurrency(),
+                        q.getBusinessName(),
+                        q.getContactName(),
+                        q.getContactEmail(),
+                        q.getAddressLine1(),
+                        q.getAddressLine2(),
+                        q.getCity(),
+                        q.getRegion(),
+                        q.getPostalCode(),
+                        q.getPoNumber(),
+                        q.getTaxId()));
+    }
+
+    private List<QuoteLineItem> parseLineItems(String json) {
+        if (json == null || json.isBlank()) return List.of();
+        try {
+            return OBJECT_MAPPER.readValue(
+                    json,
+                    OBJECT_MAPPER
+                            .getTypeFactory()
+                            .constructCollectionType(List.class, QuoteLineItem.class));
+        } catch (Exception e) {
+            log.warn("[procurement] failed to parse line items", e);
+            return List.of();
+        }
+    }
+
+    private static String str(Object o) {
+        return o == null ? null : o.toString();
+    }
+}

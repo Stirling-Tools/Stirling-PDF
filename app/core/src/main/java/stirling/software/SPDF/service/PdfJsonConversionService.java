@@ -588,7 +588,7 @@ public class PdfJsonConversionService {
                                                             .replaceAll("");
                                             return String.format("%s (%s)", cleanName, subtype);
                                         })
-                                .collect(java.util.stream.Collectors.toList());
+                                .toList();
                 long type3Fonts =
                         responseFonts.stream().filter(f -> "Type3".equals(f.getSubtype())).count();
 
@@ -1554,7 +1554,7 @@ public class PdfJsonConversionService {
                                                                 .glyphName(outline.getGlyphName())
                                                                 .unicode(outline.getUnicode())
                                                                 .build())
-                                        .collect(Collectors.toList());
+                                        .toList();
                     }
                 } catch (Exception ex) {
                     log.debug(
@@ -2688,7 +2688,7 @@ public class PdfJsonConversionService {
 
                     // Find which page the field is on
                     PDAnnotationWidget widget =
-                            field.getWidgets().isEmpty() ? null : field.getWidgets().get(0);
+                            field.getWidgets().isEmpty() ? null : field.getWidgets().getFirst();
                     if (widget != null) {
                         PDPage fieldPage = widget.getPage();
                         if (fieldPage != null) {
@@ -3164,7 +3164,7 @@ public class PdfJsonConversionService {
                         && imageObjectNames != null
                         && !imageObjectNames.isEmpty()
                         && !targetTokens.isEmpty()) {
-                    Object previous = targetTokens.get(targetTokens.size() - 1);
+                    Object previous = targetTokens.getLast();
                     if (previous instanceof COSName cosName
                             && imageObjectNames.contains(cosName.getName())) {
                         targetTokens.remove(targetTokens.size() - 1);
@@ -5246,7 +5246,7 @@ public class PdfJsonConversionService {
                 throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
-                    && operands.get(0) instanceof COSName name) {
+                    && operands.getFirst() instanceof COSName name) {
                 currentXObjectName = name;
             }
             super.processOperator(operator, operands);
@@ -6490,7 +6490,8 @@ public class PdfJsonConversionService {
         objectMapper.writeValue(out, pageFonts);
     }
 
-    public byte[] exportUpdatedPages(String jobId, PdfJsonDocument updates) throws IOException {
+    public void exportUpdatedPages(String jobId, PdfJsonDocument updates, OutputStream outputStream)
+            throws IOException {
         if (jobId == null || jobId.isBlank()) {
             throw new IllegalArgumentException("jobId is required for incremental export");
         }
@@ -6513,7 +6514,8 @@ public class PdfJsonConversionService {
             log.debug(
                     "Incremental export requested with no page updates; returning cached PDF for jobId {}",
                     jobId);
-            return cached.getPdfBytes();
+            outputStream.write(cached.getPdfBytes());
+            return;
         }
 
         try (PDDocument document = pdfDocumentFactory.load(cached.getPdfBytes(), true)) {
@@ -6580,7 +6582,8 @@ public class PdfJsonConversionService {
                 log.debug(
                         "Incremental export for jobId {} resulted in no page updates; returning cached PDF",
                         jobId);
-                return cached.getPdfBytes();
+                outputStream.write(cached.getPdfBytes());
+                return;
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -6603,7 +6606,7 @@ public class PdfJsonConversionService {
                     "Incremental export complete for jobId {} (pages updated: {})",
                     jobId,
                     updatedPages.stream().map(i -> i + 1).sorted().toList());
-            return updatedBytes;
+            outputStream.write(updatedBytes);
         }
     }
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,19 +46,21 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @AdminApi
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 public class AdminSettingsController {
 
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
+    private final AiEngineConfigSync aiEngineConfigSync;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -172,6 +175,26 @@ public class AdminSettingsController {
                         .body(Map.of("error", "No settings provided to update"));
             }
 
+            // Mutable copy so we can drop masked "********" values: a UI round-trip must not
+            // overwrite a real secret (e.g. an API key) with the placeholder from the GET.
+            settings = new LinkedHashMap<>(settings);
+            settings.entrySet()
+                    .removeIf(
+                            e -> {
+                                if (!"********".equals(e.getValue())) {
+                                    return false;
+                                }
+                                String key = e.getKey();
+                                String leaf =
+                                        key.contains(".")
+                                                ? key.substring(key.lastIndexOf('.') + 1)
+                                                : key;
+                                return isSensitiveFieldWithPath(leaf, key);
+                            });
+            if (settings.isEmpty()) {
+                return ResponseEntity.ok(Map.of("message", "No changed settings to update."));
+            }
+
             // Validate all settings first before applying any changes
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
@@ -188,6 +211,9 @@ public class AdminSettingsController {
 
                 // Validate pipeline path settings
                 String validationError = validatePipelinePathSetting(key, value);
+                if (validationError == null) {
+                    validationError = validateAiEngineNumericSetting(key, value);
+                }
                 if (validationError != null) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
@@ -202,9 +228,12 @@ public class AdminSettingsController {
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                log.info("Admin updating setting: {} = {}", key, value);
+                log.info("Admin updating setting: {} = {}", key, logSafeValue(key, value));
                 pendingChanges.put(key, value != null ? value : "");
             }
+
+            // Push changed AI settings live so model/RAG/limit changes skip the restart.
+            maybePushAiEngineLive(settings);
 
             return ResponseEntity.ok(
                     Map.of(
@@ -350,7 +379,10 @@ public class AdminSettingsController {
                                                     + HtmlUtils.htmlEscape(fullKey)));
                 }
 
-                log.info("Admin updating section setting: {} = {}", fullKey, value);
+                log.info(
+                        "Admin updating section setting: {} = {}",
+                        fullKey,
+                        logSafeValue(fullKey, value));
                 GeneralUtils.saveKeyToSettings(fullKey, value);
 
                 // Track this as a pending change
@@ -469,7 +501,7 @@ public class AdminSettingsController {
                 }
             }
 
-            log.info("Admin updating single setting: {} = {}", key, value);
+            log.info("Admin updating single setting: {} = {}", key, logSafeValue(key, value));
             GeneralUtils.saveKeyToSettings(key, value);
 
             // Track this as a pending change
@@ -600,6 +632,27 @@ public class AdminSettingsController {
         }
     }
 
+    /**
+     * Forward pending {@code aiEngine.*} changes to the engine after a save. Sends all accumulated
+     * pending changes, not just this save's: the running bean doesn't reflect unrestarted values.
+     */
+    private void maybePushAiEngineLive(Map<String, Object> changedSettings) {
+        boolean aiChangedNow =
+                changedSettings.keySet().stream().anyMatch(k -> k.startsWith("aiEngine."));
+        if (!aiChangedNow) {
+            return;
+        }
+        Map<String, Object> aiEnginePending = new HashMap<>();
+        for (Map.Entry<String, Object> entry : pendingChanges.entrySet()) {
+            if (entry.getKey().startsWith("aiEngine.")) {
+                aiEnginePending.put(entry.getKey(), entry.getValue());
+            }
+        }
+        if (!aiEnginePending.isEmpty()) {
+            aiEngineConfigSync.pushLiveAfterSave(aiEnginePending);
+        }
+    }
+
     private Object getSectionData(String sectionName) {
         if (sectionName == null || sectionName.trim().isEmpty()) {
             return null;
@@ -618,6 +671,9 @@ public class AdminSettingsController {
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
             case "telegram" -> applicationProperties.getTelegram();
+            case "aiengine", "aiEngine" -> applicationProperties.getAiEngine();
+            case "mcp" -> applicationProperties.getMcp();
+            case "policies" -> applicationProperties.getPolicies();
             default -> null;
         };
     }
@@ -641,7 +697,11 @@ public class AdminSettingsController {
                     "autoPipeline",
                     "autopipeline",
                     "legal",
-                    "telegram");
+                    "telegram",
+                    "aiEngine",
+                    "aiengine",
+                    "mcp",
+                    "policies");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =
@@ -679,6 +739,38 @@ public class AdminSettingsController {
         return true;
     }
 
+    /**
+     * Minimum accepted value per bounded {@code aiEngine.*} numeric. A saved out-of-range value
+     * would make the engine reject every later push, including the one that fixes it.
+     */
+    private static final Map<String, Integer> AI_ENGINE_NUMERIC_MINIMUMS =
+            Map.of(
+                    "aiEngine.models.smartMaxTokens", 1,
+                    "aiEngine.models.fastMaxTokens", 1,
+                    "aiEngine.rag.topK", 1,
+                    "aiEngine.rag.maxSearches", 0,
+                    "aiEngine.limits.maxPages", 1,
+                    "aiEngine.limits.maxCharacters", 1,
+                    "aiEngine.limits.modelMaxConcurrency", 1);
+
+    private String validateAiEngineNumericSetting(String key, Object value) {
+        Integer min = AI_ENGINE_NUMERIC_MINIMUMS.get(key);
+        if (min == null || value == null) {
+            return null;
+        }
+        long parsed;
+        if (value instanceof Number number) {
+            parsed = number.longValue();
+        } else {
+            try {
+                parsed = Long.parseLong(value.toString().trim());
+            } catch (NumberFormatException e) {
+                return key + " must be a whole number";
+            }
+        }
+        return parsed < min ? key + " must be at least " + min : null;
+    }
+
     private String validatePipelinePathSetting(String key, Object value) {
         // Validate pipeline path settings
         if (key.startsWith("system.customPaths.pipeline.watchedFoldersDirs")
@@ -697,7 +789,7 @@ public class AdminSettingsController {
                 if (path != null && !path.trim().isEmpty()) {
                     try {
                         java.nio.file.Path normalized =
-                                java.nio.file.Paths.get(path.trim()).toAbsolutePath().normalize();
+                                java.nio.file.Path.of(path.trim()).toAbsolutePath().normalize();
                         String normalizedStr = normalized.toString();
 
                         // Check for duplicates
@@ -714,9 +806,9 @@ public class AdminSettingsController {
             // Check for overlapping paths
             java.util.List<String> pathList = new java.util.ArrayList<>(normalizedPaths);
             for (int i = 0; i < pathList.size(); i++) {
-                java.nio.file.Path path1 = java.nio.file.Paths.get(pathList.get(i));
+                java.nio.file.Path path1 = java.nio.file.Path.of(pathList.get(i));
                 for (int j = i + 1; j < pathList.size(); j++) {
-                    java.nio.file.Path path2 = java.nio.file.Paths.get(pathList.get(j));
+                    java.nio.file.Path path2 = java.nio.file.Path.of(pathList.get(j));
                     if (path1.startsWith(path2) || path2.startsWith(path1)) {
                         return "Overlapping paths detected: " + path1 + " and " + path2;
                     }
@@ -823,6 +915,15 @@ public class AdminSettingsController {
         return masked;
     }
 
+    /**
+     * Value to log for a settings key, with secrets redacted: API keys, client secrets and mail
+     * passwords travel this path and must not land in the log in cleartext.
+     */
+    private Object logSafeValue(String key, Object value) {
+        String leaf = key.contains(".") ? key.substring(key.lastIndexOf('.') + 1) : key;
+        return isSensitiveFieldWithPath(leaf, key) ? "<redacted>" : value;
+    }
+
     /** Check if a field name indicates sensitive data with full path context */
     private boolean isSensitiveFieldWithPath(String fieldName, String fullPath) {
         String lowerField = fieldName.toLowerCase();
@@ -838,8 +939,12 @@ public class AdminSettingsController {
             return true;
         }
 
-        // Check for fields containing 'password' or 'secret'
-        return lowerField.contains("password") || lowerField.contains("secret");
+        // Match secret-bearing names (apikey covers provider creds). "token" is a suffix
+        // match only, so it doesn't swallow numeric fields like smartMaxTokens.
+        return lowerField.contains("password")
+                || lowerField.contains("secret")
+                || lowerField.contains("apikey")
+                || lowerField.endsWith("token");
     }
 
     /** Create a masked representation for sensitive fields */

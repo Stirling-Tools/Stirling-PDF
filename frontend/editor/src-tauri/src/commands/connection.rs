@@ -1,0 +1,577 @@
+use crate::state::connection_state::{
+    AppConnectionState,
+    ConnectionMode,
+    ServerConfig,
+};
+use crate::utils::{add_log, app_data_dir, system_provisioning_dir};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager, State};
+use tauri_plugin_store::StoreExt;
+
+const STORE_FILE: &str = "connection.json";
+const FIRST_LAUNCH_KEY: &str = "setup_completed";
+const CONNECTION_MODE_KEY: &str = "connection_mode";
+const SERVER_CONFIG_KEY: &str = "server_config";
+const LOCK_CONNECTION_KEY: &str = "lock_connection_mode";
+const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
+pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
+/// When `true` the update mode was written by a provisioning file and cannot
+/// be changed from the UI. Only another provisioning file (from MDM) can
+/// override it. We track this separately from `lock_connection_mode` because
+/// an admin may want to lock updates without locking the connection URL,
+/// or vice versa.
+pub(crate) const UPDATE_MODE_LOCKED_KEY: &str = "update_mode_locked";
+const PROVISIONING_FILE_NAME: &str = "stirling-provisioning.json";
+
+/// How the desktop auto-updater should behave on startup.
+///
+/// * `Prompt`   – default. Show the update popup when a new version is available
+///               and let the user decide whether to install.
+/// * `Auto`     – silently download and install updates on startup, then restart.
+///               Intended for managed deployments (Intune/MDM) where the user
+///               cannot (or should not) be prompted.
+/// * `Disabled` – never check for updates, never show the update UI. Administrators
+///                are expected to push updates through their normal packaging flow.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateMode {
+    Prompt,
+    Auto,
+    Disabled,
+}
+
+impl Default for UpdateMode {
+    fn default() -> Self {
+        UpdateMode::Prompt
+    }
+}
+
+/// Current update mode plus whether the UI is allowed to change it. Returned
+/// by [`get_update_mode`] so the settings page can show a "managed by
+/// administrator" hint instead of silently ignoring clicks.
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateModeInfo {
+    pub mode: UpdateMode,
+    pub locked: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConnectionConfig {
+    pub mode: ConnectionMode,
+    pub server_config: Option<ServerConfig>,
+    pub lock_connection_mode: bool,
+}
+
+#[tauri::command]
+pub async fn get_connection_config(
+    app_handle: AppHandle,
+    state: State<'_, AppConnectionState>,
+) -> Result<ConnectionConfig, String> {
+    // Try to load from store
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    let mode = store
+        .get(CONNECTION_MODE_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or(ConnectionMode::SaaS);
+
+    let server_config: Option<ServerConfig> = store
+        .get(SERVER_CONFIG_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok());
+
+    let lock_connection_mode = store
+        .get(LOCK_CONNECTION_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    // Update in-memory state
+    if let Ok(mut conn_state) = state.0.lock() {
+        conn_state.mode = mode.clone();
+        conn_state.server_config = server_config.clone();
+        conn_state.lock_connection_mode = lock_connection_mode;
+    }
+
+    Ok(ConnectionConfig {
+        mode,
+        server_config,
+        lock_connection_mode,
+    })
+}
+
+#[tauri::command]
+pub async fn set_connection_mode(
+    app_handle: AppHandle,
+    state: State<'_, AppConnectionState>,
+    mode: ConnectionMode,
+    server_config: Option<ServerConfig>,
+    lock_connection_mode: Option<bool>,
+) -> Result<(), String> {
+    log::info!("Setting connection mode: {:?}", mode);
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    // If the store is already locked, protect connection_mode, server_config, and the lock
+    // flag from being overwritten by any JS-side call.
+    // Only allow marking setup_completed and updating auth-related fields.
+    let already_locked = store
+        .get(LOCK_CONNECTION_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    if already_locked {
+        log::warn!("set_connection_mode called while lock_connection_mode=true — preserving connection settings, but marking setup as completed");
+        // Still allow setup_completed to be written so the onboarding doesn't repeat.
+        store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+        store
+            .save()
+            .map_err(|e| format!("Failed to save store: {}", e))?;
+        return Ok(());
+    }
+
+    // Update in-memory state
+    if let Ok(mut conn_state) = state.0.lock() {
+        conn_state.mode = mode.clone();
+        conn_state.server_config = server_config.clone();
+        if let Some(lock) = lock_connection_mode {
+            conn_state.lock_connection_mode = lock;
+        }
+    }
+
+    store.set(
+        CONNECTION_MODE_KEY,
+        serde_json::to_value(&mode).map_err(|e| format!("Failed to serialize mode: {}", e))?,
+    );
+
+    if let Some(config) = &server_config {
+        store.set(
+            SERVER_CONFIG_KEY,
+            serde_json::to_value(config)
+                .map_err(|e| format!("Failed to serialize config: {}", e))?,
+        );
+    } else {
+        store.delete(SERVER_CONFIG_KEY);
+    }
+
+    if let Some(lock) = lock_connection_mode {
+        store.set(
+            LOCK_CONNECTION_KEY,
+            serde_json::to_value(lock)
+                .map_err(|e| format!("Failed to serialize lock flag: {}", e))?,
+        );
+    }
+
+    // Mark setup as completed
+    store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    log::info!("Connection mode saved successfully");
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProvisioningConfig {
+    server_url: Option<String>,
+    lock_connection_mode: Option<bool>,
+    login_agreement_enabled: Option<bool>,
+    /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
+    /// When omitted the existing stored mode is left unchanged.
+    update_mode: Option<UpdateMode>,
+}
+
+fn provisioning_file_paths() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+    paths.push(app_data_dir().join(PROVISIONING_FILE_NAME));
+
+    if let Some(system_dir) = system_provisioning_dir() {
+        paths.push(system_dir.join(PROVISIONING_FILE_NAME));
+    }
+
+    paths
+}
+
+/// A provisioning file should only lock the update-mode UI when it was placed
+/// somewhere that requires administrator rights to write to — i.e. the
+/// system-wide provisioning dir written by MSI/Intune. A file in the per-user
+/// `app_data_dir()` is just a user dropping JSON in their own profile; locking
+/// the UI based on that would let any local user permanently disable the
+/// Settings selector for themselves with no way back, because the file is
+/// deleted after apply but the lock flag persists in the store.
+pub(crate) fn provisioning_path_is_admin_owned(
+    provisioning_path: &std::path::Path,
+    system_dir: Option<&std::path::Path>,
+) -> bool {
+    match system_dir {
+        Some(dir) => provisioning_path.starts_with(dir),
+        None => false,
+    }
+}
+
+pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), String> {
+    let provisioning_paths = provisioning_file_paths();
+    let provisioning_path = provisioning_paths
+        .into_iter()
+        .find(|path| path.exists());
+
+    let provisioning_path = match provisioning_path {
+        Some(path) => path,
+        None => return Ok(()),
+    };
+
+    add_log(format!(
+        "🧩 Provisioning file detected: {}",
+        provisioning_path.display()
+    ));
+
+    let raw = fs::read_to_string(&provisioning_path)
+        .map_err(|e| format!("Failed to read provisioning file: {}", e))?;
+    let parsed: ProvisioningConfig = serde_json::from_str(&raw)
+        .map_err(|e| format!("Failed to parse provisioning file: {}", e))?;
+
+    // Login agreement can be provisioned independently of a server URL so it also applies to
+    // local, no-login desktop installs. Persist it before the server-URL handling below, which
+    // may early-return when no URL is present.
+    if let Some(login_agreement_enabled) = parsed.login_agreement_enabled {
+        if let Ok(store) = app_handle.store(STORE_FILE) {
+            store.set(LOGIN_AGREEMENT_KEY, serde_json::json!(login_agreement_enabled));
+            let _ = store.save();
+        }
+        add_log(format!(
+            "🧩 Provisioned login agreement enabled = {}",
+            login_agreement_enabled
+        ));
+    }
+
+    let server_url = parsed
+        .server_url
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+
+    // Only short-circuit when there is nothing left to apply. login_agreement is handled above,
+    // but it must still be in this guard so a login-agreement-only file falls through to the
+    // deletion block at the end (otherwise the per-user file would linger and re-apply forever).
+    if server_url.is_none()
+        && parsed.update_mode.is_none()
+        && parsed.login_agreement_enabled.is_none()
+    {
+        add_log(
+            "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
+                .to_string(),
+        );
+        return Ok(());
+    }
+
+    let lock_flag = parsed.lock_connection_mode.unwrap_or(false);
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    // Apply server URL / connection settings only when a URL was supplied — a
+    // provisioning file containing just `updateMode` should be allowed to configure
+    // the headless update policy without forcing self-hosted mode.
+    let server_config = if let Some(url) = server_url {
+        store.set(
+            CONNECTION_MODE_KEY,
+            serde_json::to_value(&ConnectionMode::SelfHosted)
+                .map_err(|e| format!("Failed to serialize mode: {}", e))?,
+        );
+
+        let cfg = ServerConfig { url };
+        store.set(
+            SERVER_CONFIG_KEY,
+            serde_json::to_value(&cfg)
+                .map_err(|e| format!("Failed to serialize config: {}", e))?,
+        );
+
+        store.set(
+            LOCK_CONNECTION_KEY,
+            serde_json::to_value(lock_flag)
+                .map_err(|e| format!("Failed to serialize lock flag: {}", e))?,
+        );
+
+        store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+        Some(cfg)
+    } else {
+        None
+    };
+
+    if let Some(mode) = parsed.update_mode {
+        store.set(
+            UPDATE_MODE_KEY,
+            serde_json::to_value(&mode)
+                .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
+        );
+        // Only lock the UI when the provisioning file came from a path that
+        // requires admin rights to write — i.e. the system provisioning dir
+        // populated by MSI/Intune. A user dropping a file in their own
+        // `app_data_dir` must NOT lock themselves out of the Settings
+        // selector permanently (the file is deleted after apply, but the
+        // lock flag persists in the store).
+        let system_dir = system_provisioning_dir();
+        let locked = provisioning_path_is_admin_owned(
+            &provisioning_path,
+            system_dir.as_deref(),
+        );
+        store.set(UPDATE_MODE_LOCKED_KEY, serde_json::json!(locked));
+        add_log(format!(
+            "🧩 Provisioning set update mode to {:?} (locked={})",
+            mode, locked
+        ));
+    }
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    if let (Some(cfg), Ok(mut conn_state)) =
+        (server_config.as_ref(), app_handle.state::<AppConnectionState>().0.lock())
+    {
+        conn_state.mode = ConnectionMode::SelfHosted;
+        conn_state.server_config = Some(cfg.clone());
+        conn_state.lock_connection_mode = lock_flag;
+    }
+
+    let user_app_data = app_data_dir();
+    if provisioning_path.starts_with(&user_app_data) {
+        match fs::remove_file(&provisioning_path) {
+            Ok(_) => add_log("✅ Provisioning file applied and removed".to_string()),
+            Err(err) => add_log(format!(
+                "⚠️ Provisioning applied but failed to remove file: {}",
+                err
+            )),
+        }
+    } else {
+        add_log("ℹ️ Provisioning applied from system location; leaving file in place".to_string());
+    }
+
+    Ok(())
+}
+
+/// Whether the login agreement was provisioned as enabled. Read by the backend launcher to pass
+/// the `-Dlegal.loginAgreement.enabled` flag to the bundled JVM in local desktop mode.
+pub fn login_agreement_enabled(app_handle: &AppHandle) -> bool {
+    app_handle
+        .store(STORE_FILE)
+        .ok()
+        .and_then(|store| store.get(LOGIN_AGREEMENT_KEY))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
+#[tauri::command]
+pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    let setup_completed = store
+        .get(FIRST_LAUNCH_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    Ok(!setup_completed)
+}
+
+/// Read the configured update mode from the tauri store.
+///
+/// Returns [`UpdateMode::Prompt`] when the store is unavailable or no mode
+/// has been set — the prompt-the-user flow is the safe default for normal,
+/// non-managed installs.
+pub(crate) fn read_update_mode(app_handle: &AppHandle) -> UpdateMode {
+    read_update_mode_info(app_handle).mode
+}
+
+/// Read the configured update mode AND whether it's locked by provisioning.
+pub(crate) fn read_update_mode_info(app_handle: &AppHandle) -> UpdateModeInfo {
+    match app_handle.store(STORE_FILE) {
+        Ok(store) => {
+            let mode = store
+                .get(UPDATE_MODE_KEY)
+                .and_then(|v| serde_json::from_value(v.clone()).ok())
+                .unwrap_or_default();
+            let locked = store
+                .get(UPDATE_MODE_LOCKED_KEY)
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            UpdateModeInfo { mode, locked }
+        }
+        Err(_) => UpdateModeInfo {
+            mode: UpdateMode::default(),
+            locked: false,
+        },
+    }
+}
+
+#[tauri::command]
+pub async fn get_update_mode(app_handle: AppHandle) -> Result<UpdateModeInfo, String> {
+    Ok(read_update_mode_info(&app_handle))
+}
+
+/// Update the stored update mode from the UI.
+///
+/// Refuses to overwrite a provisioned (locked) value so an MDM-managed
+/// deployment can't be subverted by a user clicking in Settings.
+#[tauri::command]
+pub async fn set_update_mode(
+    app_handle: AppHandle,
+    mode: UpdateMode,
+) -> Result<(), String> {
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    let locked = store
+        .get(UPDATE_MODE_LOCKED_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    if locked {
+        add_log(format!(
+            "⚠️ set_update_mode({:?}) rejected — mode is locked by provisioning",
+            mode
+        ));
+        return Err("Update mode is locked by your administrator".to_string());
+    }
+
+    store.set(
+        UPDATE_MODE_KEY,
+        serde_json::to_value(&mode)
+            .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
+    );
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+    add_log(format!("⚙️ User set update mode to {:?}", mode));
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn reset_setup_completion(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Resetting setup completion flag");
+
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    // Reset setup completion flag to force SetupWizard on next launch
+    store.set(FIRST_LAUNCH_KEY, serde_json::json!(false));
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+
+    log::info!("Setup completion flag reset successfully");
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    // Windows-path tests are cfg-gated because `Path::starts_with` is
+    // component-wise: on Linux, `"C:\\foo\\bar"` is a SINGLE path component
+    // (since backslash is a literal character there, not a separator) so
+    // the prefix never matches the way it would on Windows.
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn user_app_data_provisioning_does_not_lock_ui() {
+        // A user dropping a provisioning file in their own roaming AppData
+        // (per-user, user-writable) must NOT permanently lock the update-mode
+        // selector. The file is deleted after apply but the lock flag would
+        // persist in the store, locking the user out with no way back.
+        let user_path = PathBuf::from(
+            "C:\\Users\\alice\\AppData\\Roaming\\Stirling-PDF\\stirling-provisioning.json",
+        );
+        let system_dir = PathBuf::from("C:\\ProgramData\\Stirling-PDF");
+
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn system_provisioning_dir_does_lock_ui() {
+        // A provisioning file in ProgramData\Stirling-PDF (or /Library, /etc)
+        // requires admin/root rights to write — those locations are how MSI
+        // and Intune deliver policy — so locking the UI here is correct.
+        let system_path = PathBuf::from(
+            "C:\\ProgramData\\Stirling-PDF\\stirling-provisioning.json",
+        );
+        let system_dir = PathBuf::from("C:\\ProgramData\\Stirling-PDF");
+
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn linux_etc_provisioning_does_lock_ui() {
+        let system_path = PathBuf::from("/etc/stirling-pdf/stirling-provisioning.json");
+        let system_dir = PathBuf::from("/etc/stirling-pdf");
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn linux_home_config_does_not_lock_ui() {
+        let user_path =
+            PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
+        let system_dir = PathBuf::from("/etc/stirling-pdf");
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn macos_library_provisioning_does_lock_ui() {
+        let system_path = PathBuf::from(
+            "/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
+        );
+        let system_dir =
+            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        assert!(provisioning_path_is_admin_owned(
+            &system_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn macos_user_library_does_not_lock_ui() {
+        let user_path = PathBuf::from(
+            "/Users/alice/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
+        );
+        let system_dir =
+            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        assert!(!provisioning_path_is_admin_owned(
+            &user_path,
+            Some(&system_dir),
+        ));
+    }
+
+    #[test]
+    fn no_system_dir_means_no_lock() {
+        // Defensive: when the platform has no defined system_provisioning_dir,
+        // refuse to lock — the user-AppData file is the only thing we'd be
+        // matching against, and that's the case we explicitly want to leave
+        // unlocked.
+        let user_path = PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
+        assert!(!provisioning_path_is_admin_owned(&user_path, None));
+    }
+}

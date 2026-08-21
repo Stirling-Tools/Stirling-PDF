@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic import BaseModel
 
+from stirling.agents.shared.chunked_mapper import _ChunkExtraction
 from stirling.agents.shared.chunked_reasoner import ChunkedReasoner, ChunkNotes
 from stirling.contracts import WholeDocSliceDone
 from stirling.contracts.documents import Page
@@ -83,14 +85,20 @@ class TestReason:
     async def test_runs_one_chunk_per_slice_and_synthesises(self, runtime: AppRuntime) -> None:
         """Three small pages with a generous budget produce one chunk and one extractor call;
         the synthesis stage receives notes from all chunks and returns the final answer."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=1000)
         pages = [_page(1, "alpha"), _page(2, "beta"), _page(3, "gamma")]
 
-        canned_notes = ChunkNotes(pages=[1, 2, 3], summary="all three pages", facts=["fact-1"])
+        canned_extracted = _ExtractedNotes(summary="all three pages", facts=["fact-1"])
         canned_answer = _Answer(answer="final answer")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(return_value=(canned_notes, 0.0))) as chunk_mock,
+            patch.object(
+                reasoner._mapper,
+                "_extract_chunk",
+                AsyncMock(return_value=_ChunkExtraction(output=canned_extracted, duration_seconds=0.0)),
+            ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -107,20 +115,29 @@ class TestReason:
         assert synth_args is not None
         # _synthesise(question, notes, answer_prompt, answer_type)
         _, notes_arg, _, type_arg = synth_args.args
-        assert notes_arg == [canned_notes]
+        assert len(notes_arg) == 1
+        assert notes_arg[0].pages == [1, 2, 3]
+        assert notes_arg[0].summary == "all three pages"
+        assert notes_arg[0].facts == ["fact-1"]
         assert type_arg is _Answer
 
     @pytest.mark.anyio
     async def test_fans_out_when_pages_exceed_slice_budget(self, runtime: AppRuntime) -> None:
         """Pages that don't fit into a single slice produce one extractor call per slice."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
         pages = [_page(i, "x" * 8) for i in range(1, 6)]
 
-        canned_notes = ChunkNotes(pages=[0], summary="placeholder")
+        canned_extracted = _ExtractedNotes(summary="placeholder")
         canned_answer = _Answer(answer="ok")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(return_value=(canned_notes, 0.0))) as chunk_mock,
+            patch.object(
+                reasoner._mapper,
+                "_extract_chunk",
+                AsyncMock(return_value=_ChunkExtraction(output=canned_extracted, duration_seconds=0.0)),
+            ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)),
         ):
             await reasoner.reason(
@@ -138,22 +155,24 @@ class TestReason:
         """First-round chunks have no fallback notes, so a failure is dropped
         rather than preserving anything; the surviving notes still flow into
         synthesis."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
         pages = [_page(i, "x" * 8) for i in range(1, 4)]
 
-        good = ChunkNotes(pages=[1], summary="ok")
-        async_results = [good, RuntimeError("chunk boom"), good]
+        good = _ExtractedNotes(summary="ok")
+        async_results: list[_ExtractedNotes | BaseException] = [good, RuntimeError("chunk boom"), good]
 
-        async def _chunk(*_args: object, **_kwargs: object) -> tuple[ChunkNotes, float]:
+        async def _chunk(*_args: object, **_kwargs: object) -> _ChunkExtraction[_ExtractedNotes]:
             value = async_results.pop(0)
             if isinstance(value, BaseException):
                 raise value
-            return value, 0.0
+            return _ChunkExtraction(output=value, duration_seconds=0.0)
 
         canned_answer = _Answer(answer="resilient")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(side_effect=_chunk)),
+            patch.object(reasoner._mapper, "_extract_chunk", AsyncMock(side_effect=_chunk)),
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -175,7 +194,7 @@ class TestReason:
         pages = [_page(i, "x" * 8) for i in range(1, 3)]
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(side_effect=RuntimeError("boom"))),
+            patch.object(reasoner._mapper, "_extract_chunk", AsyncMock(side_effect=RuntimeError("boom"))),
             patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
             pytest.raises(RuntimeError, match="no notes"),
         ):
@@ -310,9 +329,13 @@ class TestPromptConstruction:
     def test_extraction_prompt_includes_question_and_page_markers(self, runtime: AppRuntime) -> None:
         """A first-round chunk's content carries ``[Page N]`` markers; the
         extraction prompt prepends the user question."""
+        from stirling.agents.shared.chunked_mapper import ChunkedMapper
+
         reasoner = ChunkedReasoner(runtime)
-        chunk = reasoner._chunk_from_pages([_page(2, "page two body"), _page(3, "page three body")])
-        prompt = reasoner._build_extraction_prompt(chunk.content, "what is on page two?")
+        # Render chunk content through the mapper's public helper — the
+        # first-round chunk shape lives in ChunkedMapper.
+        content = ChunkedMapper.format_chunk_content([_page(2, "page two body"), _page(3, "page three body")])
+        prompt = reasoner._build_extraction_prompt(content, "what is on page two?")
 
         assert "what is on page two?" in prompt
         assert "[Page 2]" in prompt
@@ -334,10 +357,11 @@ class TestPromptConstruction:
 
 # Hierarchical compression
 #
-# The compression loop is part of ``_run_chunks`` and isn't exposed
-# directly, so these tests drive it end-to-end via ``gather_notes`` with a
-# stubbed extractor that controls per-call output (and per-call failure
-# patterns) by counting calls.
+# The compression loop is part of ``_compress_until_fits`` /
+# ``_run_compression_round`` and isn't exposed directly, so these tests
+# drive it end-to-end via ``gather_notes`` with a stubbed extractor that
+# controls per-call output (and per-call failure patterns) by counting
+# calls.
 
 
 class TestCompression:
@@ -503,9 +527,56 @@ class TestExtractChunk:
             "run",
             AsyncMock(return_value=_StubAgentResult(output=canned)),
         ):
-            note, _ = await reasoner._extract_chunk(chunk, "anything")
+            extraction = await reasoner._extract_compression_chunk(chunk, "compress these")
 
+        note = extraction.output
         assert note.pages == [1, 2, 3, 4, 5]
         assert note.summary == "merged"
         assert note.facts == ["x"]
         assert note.relevant_excerpts == ["y"]
+        assert extraction.duration_seconds >= 0
+
+    @pytest.mark.anyio
+    async def test_compression_rounds_receive_user_question_through_gather_notes(self, runtime: AppRuntime) -> None:
+        """Regression — every extractor call (first round AND every
+        compression round) MUST carry the same user question. The pre-fix
+        bug passed ``""`` to the compression-round prompt builder, so the
+        model consolidated notes against different relevance criteria
+        than it extracted them under. Flagged by Aikido on PR #6369;
+        pinned end-to-end here by capturing every prompt the extractor
+        sees while ``gather_notes`` forces a compression round through a
+        tight notes budget.
+        """
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
+        # Small notes budget forces a compression round; small slice
+        # budget produces multiple first-round chunks that overflow it.
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=200, notes_char_budget=200)
+        pages = [_page(i, "x" * 150) for i in range(1, 5)]
+
+        call_count = 0
+
+        async def _stub(*_args: object, **_kwargs: object) -> _StubAgentResult[object]:
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 4:
+                # Round 1: each note ~60 chars rendered. 4 * 80 = 320 chars,
+                # over the 200 budget so a compression round must fire.
+                return _StubAgentResult(output=_ExtractedNotes(summary="x" * 60))
+            # Round 2: smaller note so the post-round set fits the budget.
+            return _StubAgentResult(output=_ExtractedNotes(summary="ok"))
+
+        seen_prompts: list[str] = []
+
+        async def _capture(prompt: str, *_a: Any, **_kw: Any) -> Any:
+            seen_prompts.append(prompt)
+            return await _stub()
+
+        with patch.object(reasoner._extractor, "run", side_effect=_capture):
+            await reasoner.gather_notes(pages, "what is the deadline?")
+
+        # At least four first-round calls plus the compression-round
+        # calls — every single one must carry the user question.
+        assert len(seen_prompts) >= 5
+        for prompt in seen_prompts:
+            assert "what is the deadline?" in prompt

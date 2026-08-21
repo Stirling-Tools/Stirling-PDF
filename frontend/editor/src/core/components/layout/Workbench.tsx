@@ -1,0 +1,312 @@
+import { useState, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useAllFiles } from "@app/contexts/FileContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
+import { isBaseWorkbench } from "@app/types/workbench";
+import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import styles from "@app/components/layout/Workbench.module.css";
+
+import WorkbenchBar from "@app/components/shared/WorkbenchBar";
+import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
+import LandingPage from "@app/components/shared/LandingPage";
+import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
+
+// Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
+// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// is open. Lazy-loading keeps all of that out of the initial bundle.
+const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
+const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
+const PageEditorControls = lazy(
+  () => import("@app/components/pageEditor/PageEditorControls"),
+);
+const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const FileManagerView = lazy(
+  () => import("@app/components/filesPage/FileManagerView"),
+);
+
+// No props needed - component uses contexts directly
+export default function Workbench() {
+  const { config } = useAppConfig();
+
+  // The consent banner used to be initialised by the footer; the legal links
+  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
+  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
+
+  // Use context-based hooks to eliminate all prop drilling
+  const { files: activeFiles, fileIds } = useAllFiles();
+  const { workbench: currentView } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const setCurrentView = navActions.setWorkbench;
+  const {
+    previewFile,
+    pageEditorFunctions,
+    sidebarsVisible,
+    setPreviewFile,
+    setPageEditorFunctions,
+    setSidebarsVisible,
+    customWorkbenchViews,
+  } = useToolWorkflow();
+
+  const { handleToolSelect } = useToolWorkflow();
+  const { overlay: signingOverlay } = useSigningOverlay();
+
+  // Get navigation state - this is the source of truth
+  const { selectedTool: selectedToolId } = useNavigationState();
+
+  // Get tool registry from context (instead of direct hook call)
+  const { toolRegistry } = useToolWorkflow();
+  const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
+  const { addFiles } = useFileHandler();
+  const hasFiles = activeFiles.length > 0;
+  const { t } = useTranslation();
+
+  // The viewer's tool row can be retracted to give the document more height.
+  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
+  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
+  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
+
+  // The WorkbenchBar carries file-scoped actions, so it only shows once a file
+  // is open or a custom view supplies content; otherwise the search floats.
+  const activeCustomView = customWorkbenchViews.find(
+    (v) => v.workbenchId === currentView,
+  );
+  const topControlsAvailable =
+    currentView !== "myFiles" && !activeCustomView?.hideTopControls;
+  const hasWorkbenchContent =
+    hasFiles ||
+    fileIds.length > 0 ||
+    !isBaseWorkbench(currentView) ||
+    // Shared signing drives the viewer from the sidebar with no file in context.
+    (currentView === "viewer" && !!signingOverlay?.file);
+  const showWorkbenchBar = topControlsAvailable && hasWorkbenchContent;
+  const showFloatingSearch = topControlsAvailable && !hasWorkbenchContent;
+
+  const handlePreviewClose = () => {
+    setPreviewFile(null);
+    const previousMode = sessionStorage.getItem("previousMode");
+    if (previousMode === "split") {
+      // Use context's handleToolSelect which coordinates tool selection and view changes
+      handleToolSelect("split");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "compress") {
+      handleToolSelect("compress");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "convert") {
+      handleToolSelect("convert");
+      sessionStorage.removeItem("previousMode");
+    } else {
+      setCurrentView("fileEditor");
+    }
+  };
+
+  const renderMainContent = () => {
+    // Check if we're showing a custom workbench first
+    // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
+    if (!isBaseWorkbench(currentView)) {
+      const customView = customWorkbenchViews.find(
+        (view) => view.workbenchId === currentView && view.data != null,
+      );
+      if (customView) {
+        const CustomComponent = customView.component;
+        return <CustomComponent data={customView.data} />;
+      }
+    }
+
+    // The "My Files" workbench is available regardless of whether files are
+    // currently loaded into the workbench - it lives on top of the IDB store.
+    if (currentView === "myFiles") {
+      return <FileManagerView />;
+    }
+
+    // Shared Signing drives the main viewer from the sidebar (document + overlays
+    // via context), ahead of the empty-state landing page.
+    if (currentView === "viewer" && signingOverlay?.file) {
+      return (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={signingOverlay.file}
+          signaturePreviews={signingOverlay.signaturePreviews}
+          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
+          signaturePlacementMode={signingOverlay.signaturePlacementMode}
+          signaturePlacementData={signingOverlay.signaturePlacementData}
+          signaturePlacementType={signingOverlay.signaturePlacementType}
+          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
+          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
+        />
+      );
+    }
+
+    if (activeFiles.length === 0) {
+      // Files are open but their bytes are still loading (a cold PDF engine can
+      // take seconds). Showing the drop zone here reads as "the click did nothing".
+      if (fileIds.length > 0) {
+        return (
+          <Center h="100%" w="100%">
+            <Stack align="center" gap="md">
+              <Loader size="lg" />
+              <Text c="dimmed" size="sm">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Stack>
+          </Center>
+        );
+      }
+      return <LandingPage />;
+    }
+
+    switch (currentView) {
+      case "fileEditor":
+        return (
+          <FileEditor
+            toolMode={!!selectedToolId}
+            supportedExtensions={
+              selectedTool?.supportedFormats || VIEWER_SUPPORTED_EXTENSIONS
+            }
+            {...(!selectedToolId && {
+              onOpenPageEditor: () => {
+                setCurrentView("pageEditor");
+              },
+              onMergeFiles: (filesToMerge) => {
+                addFiles(filesToMerge);
+                setCurrentView("viewer");
+              },
+            })}
+          />
+        );
+
+      case "viewer":
+        return (
+          <Viewer
+            sidebarsVisible={sidebarsVisible}
+            setSidebarsVisible={setSidebarsVisible}
+            previewFile={previewFile}
+            onClose={handlePreviewClose}
+          />
+        );
+
+      case "pageEditor":
+        return (
+          <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
+            <PageEditor onFunctionsReady={setPageEditorFunctions} />
+            {pageEditorFunctions && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                }}
+              >
+                <PageEditorControls
+                  onClosePdf={pageEditorFunctions.closePdf}
+                  onUndo={pageEditorFunctions.handleUndo}
+                  onRedo={pageEditorFunctions.handleRedo}
+                  canUndo={pageEditorFunctions.canUndo}
+                  canRedo={pageEditorFunctions.canRedo}
+                  onRotate={pageEditorFunctions.handleRotate}
+                  onDelete={pageEditorFunctions.handleDelete}
+                  onSplit={pageEditorFunctions.handleSplit}
+                  onSplitAll={pageEditorFunctions.handleSplitAll}
+                  onPageBreak={pageEditorFunctions.handlePageBreak}
+                  onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
+                  onExportAll={pageEditorFunctions.onExportAll}
+                  exportLoading={pageEditorFunctions.exportLoading}
+                  selectionMode={pageEditorFunctions.selectionMode}
+                  selectedPageIds={pageEditorFunctions.selectedPageIds}
+                  displayDocument={pageEditorFunctions.displayDocument}
+                  splitPositions={pageEditorFunctions.splitPositions}
+                  totalPages={pageEditorFunctions.totalPages}
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Box
+      className="flex-1 h-full min-w-0 relative flex flex-col"
+      data-tour="workbench"
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
+    >
+      {showWorkbenchBar && (
+        <div className={styles.workbenchBarShell}>
+          <div className={styles.workbenchBarWrapper}>
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+                viewerToolbarCollapsed={viewerToolbarCollapsed}
+                onCollapseViewerToolbar={setViewerToolbarCollapsed}
+              />
+            </div>
+          </div>
+          {/* Reopen tab for the retracted viewer tool row. */}
+          {showReopenTab && (
+            <Button
+              type="button"
+              variant="quiet"
+              className={styles.workbenchBarReopenTab}
+              onClick={() => setViewerToolbarCollapsed(false)}
+              aria-expanded={false}
+              aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+              title={t("workbenchBar.showToolbar", "Show toolbar")}
+              leftSection={<KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />}
+            />
+          )}
+        </div>
+      )}
+      {showFloatingSearch && <WorkbenchFloatingSearch />}
+
+      {/* Dismiss All Errors Button */}
+      <DismissAllErrorsButton />
+
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
+
+      {/* Main content area */}
+      <Box
+        className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
+        style={{
+          transition: "opacity 0.15s ease-in-out",
+          // Force min-width:0 so flex children (notably the files page
+          // toolbar with its 5 bulk-action buttons + 2 selects + view
+          // toggle) can shrink below their intrinsic content size on
+          // narrow viewports instead of overflowing horizontally.
+          minWidth: 0,
+          ...(currentView === "pageEditor" && { height: 0 }),
+        }}
+      >
+        <Suspense
+          fallback={
+            <Center style={{ height: "100%" }}>
+              <Loader />
+            </Center>
+          }
+        >
+          {renderMainContent()}
+        </Suspense>
+      </Box>
+    </Box>
+  );
+}

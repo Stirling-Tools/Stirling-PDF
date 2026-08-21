@@ -13,21 +13,16 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      contents: read # checkout + labeler fetching its config from the repo
+      pull-requests: write # read changed files, apply labels to the PR
+      issues: write # labels are applied through the issues API
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - uses: srvaroa/labeler@bf262763a8a8e191f5847873aecc0f29df84f957 # v1.14.0
         with:
@@ -35,4 +30,4 @@ jobs:
           use_local_config: false
           fail_on_error: true
         env:
-          GITHUB_TOKEN: "${{ steps.setup-bot.outputs.token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
