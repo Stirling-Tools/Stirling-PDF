@@ -23,14 +23,14 @@ import stirling.software.gradle.ModuleLicenseOverrideFilter
 ext {
     springBootVersion = "4.0.6"
     pdfboxVersion = "3.0.8"
-    imageioVersion = "3.13.1"
+    imageioVersion = "3.14.0"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.85"
     springSecuritySamlVersion = "7.1.0"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.35.0"
-    logback = "1.5.32"
+    logback = "1.6.1"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
@@ -44,9 +44,9 @@ ext {
     batikVersion = "1.19"
     jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
-    awsSdkVersion = "2.44.12"
+    awsSdkVersion = "2.51.3"
     jschVersion = "2.28.6"
-    commonsNetVersion = "3.11.1"
+    commonsNetVersion = "3.13.0"
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
@@ -108,7 +108,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.14.2'
+    version = '2.14.3'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
