@@ -92,7 +92,23 @@ jobs:
             }
 
             async function getFile(path, ref = branch) {
-              const response = await github.rest.repos.getContent({ owner, repo, path, ref });
+              let response;
+              try {
+                response = await github.rest.repos.getContent({ owner, repo, path, ref });
+              } catch (error) {
+                if (path !== process.env.CONTRIBUTORS_FILE || error.status !== 404) {
+                  throw error;
+                }
+
+                // CONTRIBUTORS.md may not exist yet on repositories upgrading
+                // to this workflow. Treat it as an empty file so the first
+                // accepted merge can create it.
+                return {
+                  content: '# Contributors\n\n| GitHub user | Merged Pull Request | `CONTRIBUTING.md` SHA-256 |\n| --- | --- | --- |\n',
+                  sha: null,
+                };
+              }
+
               if (Array.isArray(response.data) || response.data.encoding !== 'base64') {
                 throw new Error(`${path} is not a regular base64-encoded file.`);
               }
@@ -176,8 +192,8 @@ jobs:
                   path: process.env.CONTRIBUTORS_FILE,
                   message: `docs: record contributor agreement for #${pullRequest.number}`,
                   content: Buffer.from(updatedContent, 'utf8').toString('base64'),
-                  sha: latest.sha,
                   branch,
+                  ...(latest.sha ? { sha: latest.sha } : {}),
                   committer: {
                     name: 'github-actions[bot]',
                     email: '41898282+github-actions[bot]@users.noreply.github.com',
