@@ -116,6 +116,8 @@ export default function PageTracks() {
     [deletePages, selection.selectedIds],
   );
 
+  const clearSelection = selection.clear;
+
   // ── Drag and drop ────────────────────────────────────────────────────────
 
   const sensors = useSensors(
@@ -331,7 +333,13 @@ export default function PageTracks() {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className={styles.scroller} data-scrolling-container="true">
+        <div
+          className={styles.scroller}
+          data-scrolling-container="true"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) clearSelection();
+          }}
+        >
           {workspace.order.map((fileId) => {
             const track = workspace.tracks[fileId];
             if (!track) return null;
@@ -351,6 +359,7 @@ export default function PageTracks() {
                 thumbnails={thumbnails}
                 onSelectPage={selection.selectPage}
                 onSelectTrack={selection.selectTrack}
+                onClearSelection={clearSelection}
                 onRotate={rotatePages}
                 onDelete={deletePages}
               />

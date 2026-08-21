@@ -360,4 +360,59 @@ test.describe("Page Editor tracks", () => {
     // Only the two clicked pages turn; the ones in between are untouched.
     expect(await readRotations(rotated, 4)).toEqual([90, 90, 0, 180]);
   });
+
+  test("clicking the empty space around the pages deselects everything", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+    const anySelected = page.locator('[data-page-id][data-selected="true"]');
+
+    await tiles.nth(0).click();
+    await tiles.nth(2).click();
+    await expect(anySelected).toHaveCount(2);
+
+    // The lane runs past its last page; that surface is not a page.
+    const box = await rotated.locator("[data-track-lane]").boundingBox();
+    if (!box) throw new Error("lane is not laid out");
+    const last = await tiles.nth(3).boundingBox();
+    if (!last) throw new Error("tile is not laid out");
+    await page.mouse.click(
+      (last.x + last.width + box.x + box.width) / 2,
+      box.y + box.height / 2,
+    );
+    await expect(anySelected).toHaveCount(0);
+  });
+
+  test("a drag that lands on empty lane space keeps the moved selection", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const sample = track(page, "sample.pdf");
+    const tiles = rotated.locator("[data-page-id]");
+    await expect(tiles).toHaveCount(4, { timeout: 30_000 });
+
+    await tiles.nth(0).click();
+    await tiles.nth(1).click();
+    await expect(
+      page.locator('[data-page-id][data-selected="true"]'),
+    ).toHaveCount(2);
+
+    // sample.pdf has one page, so the lane past it is empty space: the drop
+    // releases over the lane, which is also where a deselect click would land.
+    await dragPageOnto(
+      page,
+      tiles.nth(0),
+      sample.locator("[data-page-id]").first(),
+      0.9,
+    );
+
+    await expect(sample.locator("[data-page-id]")).toHaveCount(3);
+    await expect(
+      page.locator('[data-page-id][data-selected="true"]'),
+    ).toHaveCount(2);
+  });
 });

@@ -86,6 +86,10 @@
   overflow-y: hidden;
 }
 
+.laneHint {
+  pointer-events: none;
+}
+
 .laneEmpty {
   align-items: center;
   justify-content: center;

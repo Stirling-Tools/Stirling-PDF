@@ -40,6 +40,8 @@ export interface TrackRowProps {
     modifiers: PageClickModifiers,
   ) => void;
   onSelectTrack: (fileId: FileId) => void;
+  /** Called when the click landed on empty lane surface, not on a page. */
+  onClearSelection: () => void;
   onRotate: (pageIds: string[], delta: number) => void;
   onDelete: (pageIds: string[]) => void;
 }
@@ -57,6 +59,7 @@ function TrackRowImpl({
   thumbnails,
   onSelectPage,
   onSelectTrack,
+  onClearSelection,
   onRotate,
   onDelete,
 }: TrackRowProps) {
@@ -168,15 +171,22 @@ function TrackRowImpl({
 
       <div
         ref={setNodeRef}
+        data-track-lane={track.fileId}
         className={[
           styles.lane,
           track.pages.length === 0 ? styles.laneEmpty : "",
         ]
           .filter(Boolean)
           .join(" ")}
+        // Only a click on the lane itself, never one that bubbled up from a
+        // page: clicking a tile would otherwise select it and immediately
+        // clear it again.
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onClearSelection();
+        }}
       >
         {track.pages.length === 0 && (
-          <span>
+          <span className={styles.laneHint}>
             {t(
               "pageTracks.emptyTrack",
               "No pages left. Drag pages here, or save to close this file.",
