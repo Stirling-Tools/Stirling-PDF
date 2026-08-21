@@ -36,30 +36,6 @@
   border-color: var(--c-primary);
 }
 
-/* Keyboard-shortcut hint pinned to the right of the input. */
-.super-search-kbd {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 0.7rem;
-  line-height: 1;
-  padding: 0.15rem 0.35rem;
-  border-radius: var(--radius-sm);
-  color: var(--c-text-subtle);
-  background: var(--c-hover);
-  border: 1px solid var(--c-border-subtle);
-  /* Tiny breathing room between the ⌘ glyph and the K. */
-  letter-spacing: 0.06em;
-}
-
-@media (pointer: coarse) {
-  .super-search-kbd {
-    display: none;
-  }
-}
-
 /* Portalled to <body>; coords are set inline from the input's viewport rect. */
 .super-search-dropdown {
   position: fixed;
