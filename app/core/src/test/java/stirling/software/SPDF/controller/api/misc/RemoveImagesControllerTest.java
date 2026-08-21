@@ -162,7 +162,7 @@ class RemoveImagesControllerTest {
     /** Counts every PDImageXObject reachable through page + nested form resources. */
     private int countImagesInSavedOutput() throws IOException {
         assertFalse(savedTempFiles.isEmpty(), "expected the controller to create a temp file");
-        File out = savedTempFiles.get(savedTempFiles.size() - 1);
+        File out = savedTempFiles.getLast();
         try (PDDocument doc = Loader.loadPDF(out)) {
             int count = 0;
             for (PDPage page : doc.getPages()) {
@@ -245,7 +245,7 @@ class RemoveImagesControllerTest {
 
             assertEquals(0, countImagesInSavedOutput());
             // page count must be preserved
-            File out = savedTempFiles.get(savedTempFiles.size() - 1);
+            File out = savedTempFiles.getLast();
             try (PDDocument result = Loader.loadPDF(out)) {
                 assertEquals(3, result.getNumberOfPages());
             }

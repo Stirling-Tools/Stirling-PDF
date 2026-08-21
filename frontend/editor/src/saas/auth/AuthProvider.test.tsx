@@ -52,7 +52,7 @@ vi.mock("@app/services/userService", () => ({
 }));
 
 // Imported after the mocks so the provider picks them up.
-const { AuthProvider, useAuth } = await import("./UseSession");
+const { AuthProvider, useAuth } = await import("@app/auth/UseSession");
 
 /** Surfaces `loading` so a test can assert on it rather than on the container. */
 function LoadingProbe() {

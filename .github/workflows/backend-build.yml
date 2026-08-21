@@ -20,6 +20,9 @@ permissions:
 
 jobs:
   build:
+    environment:
+      name: ci-unsigned
+      deployment: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,28 +31,25 @@ jobs:
         flavor: [core, proprietary, saas]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: ${{ matrix.jdk-version }}
-          distribution: "temurin"
-
-      - name: Cache Gradle User Home
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore cache Gradle User Home
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-${{ matrix.jdk-version }}-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
+          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Set up JDK ${{ matrix.jdk-version }}
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: ${{ matrix.jdk-version }}
+          distribution: "temurin"
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -153,6 +153,9 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_FLAVOR: ${{ matrix.flavor }}
+          # Configure the Gradle daemon explicitly; GRADLE_OPTS alone only
+          # configures the Gradle client JVM.
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -XX:+UseG1GC"
 
       - name: Check Test Reports Exist
         if: always()
@@ -192,12 +195,14 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
-      - name: Install defusedxml for coverage summary
-        # coverage-summary.py parses JaCoCo XML through defusedxml to
-        # silence security scanners that pattern-match on the stdlib
-        # xml.etree.ElementTree.parse call.
+      - name: Install uv
         if: always() && matrix.flavor == 'saas'
-        run: python -m pip install --quiet defusedxml
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
@@ -206,7 +211,7 @@ jobs:
         # near-identical tables crowding out the aggregate report.
         if: always() && matrix.flavor == 'saas'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }})" \
             --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
             --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \
