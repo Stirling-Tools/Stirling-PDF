@@ -17,9 +17,12 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * @see https://playwright.dev/docs/test-configuration
  */
+/** Shared by every stubbed project so a spec sees one layout on all engines. */
+const STUBBED_VIEWPORT = { width: 1920, height: 1080 };
+
 const chromiumViewport = {
   ...devices["Desktop Chrome"],
-  viewport: { width: 1920, height: 1080 },
+  viewport: STUBBED_VIEWPORT,
 };
 
 export default defineConfig({
@@ -30,7 +33,18 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : "50%",
-  reporter: [["html", { open: "never" }], ["list"]],
+  // In CI, add a JSON report alongside the HTML/list output so the workflow
+  // can flag flaky tests (passed only on retry) as warnings without failing
+  // the job. Path is pinned via PLAYWRIGHT_JSON_OUTPUT_FILE in the workflow;
+  // the outputFile here is just a sane default. Omitted locally to keep dev
+  // runs' terminal output clean.
+  reporter: process.env.CI
+    ? [
+        ["html", { open: "never" }],
+        ["list"],
+        ["json", { outputFile: "playwright-report/results.json" }],
+      ]
+    : [["html", { open: "never" }], ["list"]],
   timeout: 60_000,
   expect: { timeout: 10_000 },
 
@@ -44,7 +58,8 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed - no backend required, chromium-only for CI speed
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
@@ -82,16 +97,17 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser coverage for the stubbed suite (opt-in locally)
+    // Cross-browser coverage for the stubbed suite. Same viewport as `stubbed`,
+    // or a layout difference here reads as an engine outage.
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Firefox"] },
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"] },
+      use: { ...devices["Desktop Safari"], viewport: STUBBED_VIEWPORT },
     },
   ],
 

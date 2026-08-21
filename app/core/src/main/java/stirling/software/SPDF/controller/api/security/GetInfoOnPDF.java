@@ -58,8 +58,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -268,25 +269,6 @@ public class GetInfoOnPDF {
         }
     }
 
-    private static void validatePdfFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("PDF file is required");
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    file.getSize(),
-                    MAX_FILE_SIZE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType != null && !"application/pdf".equals(contentType)) {
-            log.warn("File content type is {}, expected application/pdf", contentType);
-        }
-    }
-
     private static ResponseEntity<byte[]> createErrorResponse(String errorMessage) {
         try {
             ObjectNode errorNode = objectMapper.createObjectNode();
@@ -304,6 +286,23 @@ public class GetInfoOnPDF {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    /**
+     * Info-dictionary keys exposed above via typed getters; any other key in the dictionary is
+     * surfaced as custom metadata (e.g. the classification policy's StirlingPDFClassification
+     * entry).
+     */
+    private static final java.util.Set<String> STANDARD_INFO_KEYS =
+            java.util.Set.of(
+                    "Title",
+                    "Author",
+                    "Subject",
+                    "Keywords",
+                    "Producer",
+                    "Creator",
+                    "CreationDate",
+                    "ModDate",
+                    "Trapped");
 
     private static ObjectNode extractMetadata(PDDocument document) {
         ObjectNode metadata = objectMapper.createObjectNode();
@@ -334,6 +333,18 @@ public class GetInfoOnPDF {
                                         : null);
                 if (modificationDate != null) {
                     metadata.put("ModificationDate", modificationDate);
+                }
+
+                // Surface custom Info-dictionary entries (anything beyond the
+                // standard fields above) — e.g. StirlingPDFClassification
+                for (String key : info.getMetadataKeys()) {
+                    if (STANDARD_INFO_KEYS.contains(key)) {
+                        continue;
+                    }
+                    String value = info.getCustomMetadataValue(key);
+                    if (value != null && !value.isBlank()) {
+                        metadata.put(key, value);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -1066,20 +1077,12 @@ public class GetInfoOnPDF {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/get-info-on-pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Get comprehensive PDF information",
-            description =
-                    "Extracts all available information from a PDF file. Input:PDF Output:JSON Type:SISO")
+            description = "Extracts all available information from a PDF file.")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
-
-        // Validate input
-        try {
-            validatePdfFile(inputFile);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid PDF file: {}", e.getMessage());
-            return createErrorResponse("Invalid PDF file: " + e.getMessage());
-        }
 
         List<PDFVerificationResult> verificationResults = null;
         try {

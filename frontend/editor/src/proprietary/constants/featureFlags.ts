@@ -13,11 +13,3 @@
  * Watched Folders implementation to navigate to).
  */
 export const WATCHED_FOLDERS_ENABLED: boolean = false;
-
-/**
- * Policies — automation-backed policy enforcement. A SaaS-only feature: runs
- * execute and bill through the cloud backend, so it's enabled only in the saas
- * build (which overrides this to `true`) and on desktop when connected to SaaS.
- * The self-hosted proprietary build and the core build keep it `false`.
- */
-export const POLICIES_ENABLED: boolean = false;

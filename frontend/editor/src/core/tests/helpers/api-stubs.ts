@@ -126,7 +126,11 @@ export interface MockAppApiOptions {
     username?: string;
     email?: string;
     roles?: string[];
-  };
+    /** Spring role string (e.g. "ROLE_ADMIN") — drives `isAdmin` in the auth seam. */
+    role?: string;
+    /** Portal (Processor) access flag — gates the super search's Processor lanes. */
+    portalAccess?: boolean;
+  } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
   /** Default locale. */
@@ -206,6 +210,12 @@ export async function mockAppApis(
 
   await page.route("**/api/v1/config/group-enabled*", (route: Route) =>
     route.fulfill({ json: true }),
+  );
+
+  // Login agreement / disclaimer — disabled by default so the blocking modal
+  // never shows; specs exercising it register a narrower route afterwards.
+  await page.route("**/api/v1/config/login-disclaimer*", (route: Route) =>
+    route.fulfill({ json: { enabled: false } }),
   );
 
   // Footer / branding — non-critical but proxied, so stub to avoid noise

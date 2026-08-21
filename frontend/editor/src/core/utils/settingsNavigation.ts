@@ -8,6 +8,13 @@ export function navigateToSettings(section: NavKey) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
+export function openSettings(section: NavKey) {
+  window.history.pushState({}, "", withBasePath(`/settings/${section}`));
+  window.dispatchEvent(
+    new CustomEvent("appConfig:open", { detail: { section } }),
+  );
+}
+
 /** URL for a settings section (subpath-aware). */
 export function getSettingsUrl(section: NavKey): string {
   return withBasePath(`/settings/${section}`);

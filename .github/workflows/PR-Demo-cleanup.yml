@@ -7,41 +7,33 @@ on:
 permissions:
   contents: read
 
-env:
-  SERVER_IP: ${{ secrets.NEW_VPS_IP }} # Add this to your GitHub secrets
-  CLEANUP_PERFORMED: "false" # Add flag to track if cleanup occurred
-
 jobs:
   cleanup:
+    # Tearing a preview down is not a deployment - no deployment object.
+    environment:
+      name: pr-preview
+      deployment: false
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
+      contents: read # actions/checkout
       pull-requests: write
-      issues: write
+      issues: write # list/remove labels, list/delete comments
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Remove 'pr-deployed' label if present
         id: remove-label-comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const prNumber = ${{ github.event.pull_request.number }};
             const owner = context.repo.owner;
@@ -100,14 +92,22 @@ jobs:
         if: steps.remove-label-comment.outputs.present == 'true'
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
       - name: Cleanup PR deployment
         if: steps.remove-label-comment.outputs.present == 'true'
         id: cleanup
+        # ENDSSH heredoc is quoted, so its body is sent literally: secrets inside it
+        # must stay as GitHub expressions, a shell var would be empty on the remote host.
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << 'ENDSSH'
             if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found PR directory, proceeding with cleanup..."
 
@@ -122,8 +122,8 @@ jobs:
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
 
               # Remove the Docker images
-              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
-              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ github.event.pull_request.number }} || true
 
               echo "PERFORMED_CLEANUP"
             else
@@ -131,6 +131,9 @@ jobs:
               echo "NO_CLEANUP_NEEDED"
             fi
           ENDSSH
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
 
       - name: Cleanup temporary files
         if: always()

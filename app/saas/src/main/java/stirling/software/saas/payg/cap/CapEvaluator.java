@@ -15,7 +15,9 @@ import stirling.software.saas.payg.model.FeatureSet;
  * <p>State transitions:
  *
  * <ul>
- *   <li>{@code capUnits == null} → {@code FULL} / {@link FeatureSet#FULL} unconditionally.
+ *   <li>{@code capUnits == null} → {@code FULL} / {@link FeatureSet#FULL} (uncapped).
+ *   <li>{@code capUnits <= 0} (an explicit $0 cap) → {@code DEGRADED}: metered work blocked, only
+ *       the free grant + manual tools run.
  *   <li>{@code spend / cap &lt; warnPct} → {@code FULL}.
  *   <li><b>MINIMAL semantics:</b> under DEGRADED+MINIMAL manual server-side tools (gated by {@link
  *       FeatureGate#OFFSITE_PROCESSING}) and client-side tools still work; only {@link
@@ -49,8 +51,18 @@ public final class CapEvaluator {
             int degradeAtPct,
             FeatureSet degradedFeatureSet) {
 
-        if (capUnits == null || capUnits <= 0) {
+        if (capUnits == null) {
+            // No cap configured → uncapped, full feature set.
             return full();
+        }
+        if (capUnits <= 0) {
+            // An explicit cap that buys zero paid documents (a $0 cap, or one set
+            // below the per-document rate): metered work is blocked outright —
+            // only the free grant and manual tools run. DEGRADED, same as hitting
+            // a positive cap.
+            FeatureSet effective =
+                    degradedFeatureSet != null ? degradedFeatureSet : FeatureSet.MINIMAL;
+            return new Evaluation(EntitlementState.DEGRADED, effective, gatesFor(effective));
         }
         if (warnAtPct < 0 || degradeAtPct <= 0 || degradeAtPct < warnAtPct) {
             // Defensive: misconfigured thresholds → treat as no-cap-effect to avoid surprise

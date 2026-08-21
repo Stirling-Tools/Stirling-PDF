@@ -28,6 +28,7 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -38,6 +39,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
+import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
@@ -104,6 +106,19 @@ export default function HomePage() {
     const isSettings = location.pathname.startsWith("/settings");
     setConfigModalOpen(isSettings);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = () => setConfigModalOpen(true);
+    window.addEventListener("appConfig:open", handler);
+    return () => window.removeEventListener("appConfig:open", handler);
+  }, []);
+
+  const handleCloseConfig = useCallback(() => {
+    setConfigModalOpen(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate(EDITOR_BASENAME, { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -403,7 +418,8 @@ export default function HomePage() {
               </div>
             )}
             <div className="mobile-bottom-bar">
-              <button
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
@@ -417,9 +433,10 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
-              </button>
+              </Button>
               {toolAvailability["automate"]?.available !== false && (
-                <button
+                <Button
+                  variant="tertiary"
                   className="mobile-bottom-button"
                   aria-label={t("quickAccess.automate", "Automate")}
                   onClick={() => {
@@ -437,9 +454,10 @@ export default function HomePage() {
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
@@ -452,8 +470,9 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={() => setConfigModalOpen(true)}
@@ -466,12 +485,12 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
-              </button>
+              </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </div>
         ) : (
@@ -480,6 +499,7 @@ export default function HomePage() {
             gap={0}
             h="100%"
             className="flex-nowrap flex"
+            bg="var(--c-bg)"
           >
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
@@ -503,7 +523,7 @@ export default function HomePage() {
               }
               onToggleCollapse={() => {
                 if (navigationState.workbench === "myFiles") {
-                  navigate("/");
+                  navigate(EDITOR_BASENAME);
                   return;
                 }
                 setFileSidebarCollapsed((c) => {
@@ -520,7 +540,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </Group>
         )}
@@ -578,11 +598,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onSearchClick={() => {
-          // Just focus the central search field; don't toggle collapse
-          // (which on /files navigates back home).
-          window.dispatchEvent(new Event("files-page:focus-search"));
-        }}
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{

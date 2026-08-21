@@ -10,7 +10,7 @@ import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 
 export interface ApiCallsConfig<TParams = void> {
-  endpoint: string | ((params: TParams) => string);
+  endpoint: string | null | ((params: TParams) => string | null);
   buildFormData: (params: TParams, file: File) => FormData;
   filePrefix?: string;
   responseHandler?: ResponseHandler;
@@ -37,6 +37,19 @@ export const useToolApiCalls = <TParams = void>() => {
       // Create cancel token for this operation
       cancelTokenRef.current = axios.CancelToken.source();
 
+      // Params are the same for every file, so resolve the endpoint once. A null
+      // endpoint means the tool has no backend call (e.g. client-side tools) and
+      // should never reach here, so fail loudly rather than POST to null.
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      if (!endpoint) {
+        throw new Error(
+          "This operation has no backend endpoint and cannot be executed directly.",
+        );
+      }
+
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
 
@@ -51,10 +64,6 @@ export const useToolApiCalls = <TParams = void>() => {
 
         try {
           const formData = config.buildFormData(params, file);
-          const endpoint =
-            typeof config.endpoint === "function"
-              ? config.endpoint(params)
-              : config.endpoint;
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response = await apiClient.post(endpoint, formData, {
             responseType: "blob",

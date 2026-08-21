@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@shared/auth/ui/EmailPasswordForm";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
 import { SelfHostedLink } from "@app/components/SetupWizard/SelfHostedLink";
 import { UserInfo } from "@app/services/authService";
-import "@shared/auth/ui/auth.css";
+import { Button } from "@app/ui/Button";
+import "@app/auth/ui/auth.css";
 
 interface SaaSLoginScreenProps {
   serverUrl: string;
@@ -107,8 +108,8 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         className="navigation-link-container"
         style={{ marginTop: "0.5rem", textAlign: "right" }}
       >
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={() => {
             setValidationError(null);
             onSwitchToSignup();
@@ -117,7 +118,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           disabled={loading}
         >
           {t("signup.signUp", "Sign Up")}
-        </button>
+        </Button>
       </div>
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
@@ -127,14 +128,14 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           className="navigation-link-container"
           style={{ marginTop: "0.5rem", textAlign: "center" }}
         >
-          <button
-            type="button"
+          <Button
+            variant="tertiary"
             onClick={onSkipSignIn}
             className="navigation-link-button"
             disabled={loading}
           >
             {t("setup.login.skipSignIn", "Continue without signing in")}
-          </button>
+          </Button>
         </div>
       )}
     </>

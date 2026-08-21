@@ -1,13 +1,12 @@
-accessInvite = "Dəvət et"
 alphabet = "Əlifba"
 apply = "Tətbiq et"
 applyAndContinue = "Saxla və çıx"
-areYouSure = "Çıxmaq istədiyinizə əminsiniz?"
 back = "Geri"
 black = "Qara"
 blue = "Mavi"
 cancel = "Ləğv et"
 chooseFile = "Fayl seç"
+clear = "Təmizlə"
 close = "Bağla"
 comingSoon = "Tezliklə"
 confirm = "Təsdiqlə"
@@ -46,19 +45,20 @@ filesSelected = "seçilmiş fayllar"
 font = "Şrift"
 fontSizeTooltip = "Səhifə nömrəsi mətninin ölçüsü (pt). Daha böyük rəqəmlər daha böyük mətn yaradır."
 fontTypeTooltip = "Səhifə nömrələri üçün şrift ailəsi. Sənəd üslubunuza uyğun seçin."
-genericSubmit = "Təsdiq Et"
 green = "Yaşıl"
 help = "Yardım"
-imgPrompt = "Şəkil(lər)i Seç"
 incorrectPasswordMessage = "Cari şifr yanlışdır."
 info = "Məlumat"
 invalidUndoData = "Geri alma mümkün deyil: etibarsız əməliyyat məlumatı"
 keepWorking = "İşə davam et"
 loading = "Yüklənir..."
+loginAgreementAccept = "Qəbul et"
+loginAgreementDecline = "İmtina et"
+loginAgreementProvider = "Bu bildiriş Stirling PDF Inc. tərəfindən deyil, administratorunuz tərəfindən təqdim edilib."
+loginAgreementTitle = "Giriş razılaşması"
 logOut = "Hesabdan çıx"
 marginTooltip = "Səhifə nömrəsi ilə səhifənin kənarı arasındakı məsafə."
 moreOptions = "Daha çox seçim"
-multiPdfPrompt = "PDFləri Seç (2+)"
 never = "Heç vaxt"
 no = "Xeyr"
 noFileSelected = "Fayl seçilməyib. Zəhmət olmasa bir fayl yükləyin."
@@ -76,7 +76,6 @@ pageOrderPrompt = "Xüsusi Səhifə Ardıcıllığı (Vergüllə ayrılmış sə
 pages = "Səhifələr"
 pageSelectionPrompt = "Xüsusi Səhifə Seçimi (1, 5, 6 tərzində vergüllə ayrılmış səhifə nömrələri listini və ya 2n+1 tərzində Funksiyalar daxil edin) :"
 password = "Şifr"
-pdfPrompt = "PDF(lər)i Seç"
 pin = "Faylı bərkid (alət icrasından sonra aktiv saxla)"
 pro = "Pro"
 processingComplete = "Faylınız hazırdır."
@@ -84,6 +83,7 @@ processingCompleteMultiple = "{{count}} fayl hazırdır."
 property = "Xüsusiyyət"
 quickPosition = "Sürətli mövqe"
 red = "Qırmızı"
+remove = "Sil"
 reset = "Sıfırla"
 review = "Gözdən geçir"
 save = "Saxla"
@@ -105,6 +105,7 @@ undoSuccess = "Əməliyyat uğurla geri alındı"
 unknown = "Bilinməyən"
 unpin = "Faylın bərkidilməsini ləğv et (alət icrasından sonra əvəzlə)"
 unsavedChanges = "PDF-də saxlanmamış dəyişiklikləriniz var."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Saxlanmamış dəyişikliklər"
 unsupported = "Dəstəklənmir"
 username = "İstifadəçi Adı"
@@ -177,6 +178,7 @@ addMoreFiles = "Daha çox fayl əlavə edin..."
 attachments = "Qoşmaları seçin"
 info = "PDF-inizə əlavə etmək üçün faylları seçin. Bu fayllar daxil ediləcək və PDF-in qoşmalar panelindən əlçatan olacaq."
 placeholder = "Faylları seçin..."
+removeFile = "Faylı sil"
 selectedFiles = "Seçilmiş Fayllar"
 submit = "Qoşmaları əlavə et"
 
@@ -350,6 +352,7 @@ text = "Bu icazələr istifadəçilərin PDF ilə nə edə biləcəyini idarə e
 title = "İcazələri Dəyişdir"
 
 [addStamp]
+preview = "Möhürə önbaxış"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -685,6 +688,165 @@ manualLinks = "Əl ilə endirmələr: keçidlərə klikləyin və faylları tess
 noLanguages = "Konfiqurasiya edilmiş qovluqda tessdata dilləri tapılmadı."
 permissionNotice = "tessdata yolu yazıla bilən deyil. Endirmələr brauzerdə açılacaq; .traineddata fayllarını əl ilə tessdata qovluğuna yadda saxlayın."
 
+[admin.settings.ai.documents]
+description = "Sənədlər üzrə suallara cavab vermək üçün istifadə olunan embedding modeli və axtarış parametrlərini konfiqurasiya edin. Saxlanıldıqda AI mühərrikinə tətbiq olunur."
+title = "Sənədlər və RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Mühərrikin öz mühit etimad məlumatından istifadə etmək üçün boş buraxın. Özünüzdə yerləşdirilən tək mühərrikli quraşdırmalara tətbiq olunur."
+generic = "Embedding API açarı"
+openai = "OpenAI API açarı"
+setPlaceholder = "Saxlanılıb - cari açarı saxlamaq üçün boş buraxın"
+voyageai = "VoyageAI API açarı"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "OpenAI-uyğun / Ollama embeddings endpoint-in baza URL-i, məsələn http://ollama:11434/v1. Etibarlı daxili endpoint-ə yönəlməlidir (SSRF-həssas)."
+label = "Embedding baza URL-i"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Embedding modelinin adı. Sərbəst mətn; təkliflər yalnız ipucudur."
+label = "Embedding modeli"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Sənəd mətnini vektor embedding-lərə çevirmək üçün istifadə olunan provayder."
+label = "Embedding provayderi"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Agentin hər sorğu üçün işlədə biləcəyi maksimum axtarış sayı."
+label = "Maks. axtarışlar"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Embedding modelinin dəyişdirilməsi dərhal qüvvəyə minir, lakin əvvəlki modellə indekslənmiş sənədlər axtarışın düzgün nəticə qaytarması üçün yenidən indekslənməlidir."
+title = "Yenidən indeksləmə tələb olunur"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "Embedding modelini dəyişmisinizsə, axtarışın yeni modeldən istifadə etməsi üçün mövcud sənədləri yenidən indeksləyin."
+
+[admin.settings.ai.documents.topK]
+description = "Hər axtarış üçün əldə edilən ən uyğun fraqmentlərin sayı."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Stirling-i Python AI mühərrikinə qoşun və hansı AI imkanlarının göstəriləcəyini seçin. Dəyişikliklər yenidən başladıldıqda tətbiq olunur."
+title = "AI mühərriki"
+
+[admin.settings.ai.general.capabilities]
+description = "Ayrı-ayrı AI funksiyalarını aktiv və ya deaktiv edin. Deaktiv funksiyalar tətbiqdə gizlədilir."
+title = "İmkanlar"
+
+[admin.settings.ai.general.enabled]
+description = "Əsas açar. Söndürülü olduqda heç bir AI aləti, agenti və ya mühərrik çağırışı əlçatan deyil."
+label = "AI-ni aktiv et"
+
+[admin.settings.ai.general.features.chat]
+description = "PDF-lərlə işləmək üçün danışıq köməkçisi."
+label = "Çat köməkçisi"
+
+[admin.settings.ai.general.features.classify]
+description = "Sənədləri növünə və ya məzmununa görə avtomatik kateqoriyalaşdırın."
+label = "Sənəd təsnifatı"
+
+[admin.settings.ai.general.features.createPdf]
+description = "AI agenti vasitəsilə yeni PDF yaradın (məsələn, HTML-dən)."
+label = "Sorğudan PDF yarat"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Yüklənmiş sənədə əsaslanan suallar verin və cavablar alın."
+label = "Sənəd sualları"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Sənədləri riyazi və ədədi səhvlərə görə yoxlayın."
+label = "Riyaziyyat auditoru"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "PDF-ə AI tərəfindən yazılmış rəy şərhləri və annotasiyalar əlavə edin."
+label = "PDF şərh agenti"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Sənəd yaratma kimi daha ağır agent əməliyyatları üçün vaxt limiti."
+label = "Uzunmüddətli vaxt limiti (saniyə)"
+
+[admin.settings.ai.general.note]
+body = "AI mühərriki ayrıca xidmət kimi işləyir. Onun paylaşılan sirri"
+body2 = "konteyner mühiti dəyişəni vasitəsilə təyin olunur. Provayder API açarları bu səhifələrdə daxil edilə və ya mühərrik mühiti dəyişənləri kimi verilə bilər; burada daxil edilən açarlar saxlanıldıqda mühərrikə göndərilir."
+title = "AI mühərriki haqqında"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Axınla (token-token) verilən çat cavabları üçün vaxt limiti."
+label = "Axın vaxt limiti (saniyə)"
+
+[admin.settings.ai.general.test]
+button = "Bağlantını test et"
+failBody = "AI mühərriki cavab vermədi. URL-i, mühərrik konteynerinin işlədiyini və AI-nin aktiv olduğunu yoxlayın (aktiv etdikdən sonra yenidən başlatmaq lazımdır)."
+failTitle = "AI mühərrikinə çatmaq olmur"
+okBody = "AI mühərriki sağlamlıq yoxlamasına cavab verdi."
+okTitle = "AI mühərrikinə çatmaq olur"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Mühərrikə standart AI sorğuları üçün vaxt limiti."
+label = "Sorğu vaxt limiti (saniyə)"
+
+[admin.settings.ai.general.url]
+description = "Python AI mühərrikinin daxili URL-i, məsələn http://stirling-pdf-engine:5001."
+label = "AI mühərriki URL-i"
+
+[admin.settings.ai.limits]
+description = "AI sorğularının nə qədər iş görə biləcəyi və eyni vaxtda neçə sorğunun işləyə biləcəyi üçün qoruyucu limitlər. Saxlanıldıqda AI mühərrikinə tətbiq olunur."
+title = "Limitlər və performans"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Qoruyucu limit: çıxarılan mətni bu uzunluğu aşan AI sorğularını rədd edin."
+label = "Sorğu başına maks. simvol"
+
+[admin.settings.ai.limits.maxPages]
+description = "Qoruyucu limit: bu qədər PDF səhifəsindən çox olan AI sorğularını rədd edin."
+label = "Sorğu başına maks. səhifə"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Bütün mühərrik üzrə eyni vaxtda işləyən model çağırışlarının maksimum sayı."
+label = "Modelin maks. paralelliyi"
+
+[admin.settings.ai.models]
+description = "LLM provayderini və AI mühərrikinin istifadə etdiyi ağıllı/sürətli modelləri seçin. Saxlanıldıqda AI mühərrikinə tətbiq olunur."
+title = "Modellər və provayderlər"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API açarı"
+description = "Mühərrikin öz mühit etimad məlumatından istifadə etmək üçün boş buraxın. Özünüzdə yerləşdirilən tək mühərrikli quraşdırmalara tətbiq olunur."
+generic = "API açarı"
+openai = "OpenAI API açarı"
+setPlaceholder = "Saxlanılıb - cari açarı saxlamaq üçün boş buraxın"
+
+[admin.settings.ai.models.baseUrl]
+description = "OpenAI-uyğun / Ollama endpoint-in baza URL-i, məsələn http://ollama:11434/v1."
+label = "Provayder baza URL-i"
+warning = "Baza URL etibarlı daxili endpoint-ə yönəlməlidir. Mühərrik ona server tərəfli sorğular göndərəcək, buna görə etibarsız dəyər SSRF-həssasdır."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Sürətli model üçün maksimum çıxış tokenləri."
+label = "Sürətli model maks. tokenləri"
+
+[admin.settings.ai.models.fastModel]
+description = "Yüngül tapşırıqlar üçün daha ucuz, daha sürətli model. Sərbəst mətn; təkliflər yalnız ipucudur."
+label = "Sürətli model"
+
+[admin.settings.ai.models.provider]
+description = "Mühərrikin hansı LLM provayderi ilə əlaqə saxlaması."
+label = "Provayder"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Ağıllı model üçün maksimum çıxış tokenləri."
+label = "Ağıllı model maks. tokenləri"
+
+[admin.settings.ai.models.smartModel]
+description = "Mürəkkəb əsaslandırma üçün yüksək imkanlı model. Sərbəst mətn; təkliflər yalnız ipucudur."
+label = "Ağıllı model"
+
+[admin.settings.ai.saved]
+body = "Dəyişikliklər avtomatik olaraq AI mühərrikinə göndərilir."
+bodyNoPush = "Parametrlər saxlanıldı. AI mühərriki konfiqurasiyasını növbəti dəfə götürəndə tətbiq olunacaq."
+title = "AI parametrləri saxlanıldı"
+
 [admin.settings.badge]
 clickToUpgrade = "Plan detalları üçün klikləyin"
 
@@ -932,6 +1094,25 @@ label = "Başlanğıcda yenidən yarat"
 description = "Sertifikatın etibarlı olacağı gün sayı"
 label = "Sertifikatın etibarlılığı (gün)"
 
+[admin.settings.folderAccess]
+description = "Qovluq mənbələri və qovluq çıxışlarının oxuya və yaza biləcəyi direktoriyalar. Bu təhlükəsizlik sərhədidir: avtomatlaşdırmalar heç vaxt bu siyahıdan kənar server yoluna yönəldilə bilməz."
+securityNote = "Qovluq mənbələri və çıxışlarını tamamilə deaktiv etmək üçün bunu boş buraxın. Stirling-in öz konfiqurasiya direktoriyası həmişə qadağandır."
+title = "Qovluq girişi"
+
+[admin.settings.folderAccess.implied]
+description = "Stirling tərəfindən idarə olunan bu direktoriyalara həmişə icazə verilir və burada dəyişdirilə bilməz."
+serverStorage = "Server fayl yaddaşı"
+title = "Həmişə icazəlidir"
+watchedFolder = "Pipeline izlənən qovluğu"
+
+[admin.settings.folderAccess.roots]
+add = "Əlavə et"
+empty = "Heç bir qovluğa icazə verilmir. Qovluq mənbələri və çıxışları hazırda deaktivdir."
+hint = "Mütləq yollar daxil edin, məsələn /data/inbox."
+label = "İcazə verilən qovluq kökləri"
+placeholder = "/data/inbox"
+remove = "Qovluq kökünü sil"
+
 [admin.settings.general]
 description = "Brendinq və standart davranış daxil olmaqla sistem üzrə tətbiq ayarlarını konfiqurasiya edin."
 system = "Sistem"
@@ -1071,6 +1252,30 @@ title = "Hüquqi Məsuliyyət Xəbərdarlığı"
 [admin.settings.legal.impressum]
 description = "Impressum üçün URL və ya fayl adı (bəzi yurisdiksiyalarda tələb olunur)"
 label = "Impressum"
+
+[admin.settings.legal.loginAgreement]
+defaultLocaleHint = "— hansısa dil üçün fayl olmadıqda ehtiyat variant kimi istifadə olunur."
+defaultLocaleLink = "Standart lokalı tənzimlə"
+description = "İstifadəçilər girişdən sonra qəbul etməli olduqları xəbərdarlığı göstər. Mətn hər istifadəçinin dilinə uyğun göstərilir."
+discardConfirm = "Yadda saxlanmamış dəyişiklikləriniz var və onlar itəcək. Yenə də dili dəyişmək istəyirsiniz?"
+editLabel = "Markdown"
+emptyPreview = "Hələlik önbaxış üçün heç nə yoxdur."
+language = "Dil"
+languageHelp = "Hər dilin öz faylı var. İstifadəçinin dili üçün fayl yoxdursa, razılaşma əvvəlcə standart lokalın faylına, sonra isə ehtiyat mətinə keçir."
+loadError = "{{locale}} üçün razılaşmanı yükləmək alınmadı. Yenidən cəhd üçün dili dəyişib geri qayıdın."
+previewLabel = "Önbaxış"
+restartNote = "Razılaşmanı aktivləşdirmək və ya söndürmək digər ayarlarda olduğu kimi yalnız yenidən başladıqdan sonra tətbiq olunur. Aşağıdakı mətn dəyişiklikləri isə dərhal tətbiq edilir."
+save = "Mətni yadda saxla"
+saved = "Yadda saxlandı"
+savedBody = "{{locale}} üçün giriş razılaşması yeniləndi"
+textDescription = "customFiles/disclaimer/{{locale}}.md faylına yadda saxlanır və növbəti girişdə canlı göstərilir. Bu dili silmək üçün boş buraxın."
+title = "Giriş razılaşması"
+
+[admin.settings.legal.loginAgreement.anonymous]
+label = "Anonim (girişsiz) rejimdə göstər"
+
+[admin.settings.legal.loginAgreement.enabled]
+label = "Giriş razılaşmasını aktivləşdir"
 
 [admin.settings.legal.privacyPolicy]
 description = "Məxfilik siyasətinin URL-i və ya fayl adı"
@@ -1601,6 +1806,9 @@ title = "Stirling PDF-i daha yaxşı etmək istəyirsinizmi?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Mərkəzə hizala"
+alignLeft = "Sola hizala"
+alignRight = "Sağa hizala"
 annotationStyle = "Annotasiya üslubu"
 backgroundColor = "Arxa fon rəngi"
 borderOff = "Kənarlıq: Bağlı"
@@ -1609,6 +1817,17 @@ changeColor = "Rəngi dəyişdir"
 chooseColor = "Rəng seçin"
 circle = "Dairə"
 clearBackground = "Arxa fonu sil"
+clearDocumentAnnotations = "Bütün anotasiyaları təmizlə"
+clearDocumentAnnotationsConfirm = "Hamısını təmizlə"
+clearDocumentAnnotationsDescription = "Bu, hazırda redaktorda yüklənmiş bütün anotasiyaları silir. Bunun PDF-də qalıcı olması üçün zəhmət olmasa dəyişiklikləri yadda saxlayın."
+clearDocumentAnnotationsEmptyBody = "Hazırda redaktorda yüklənmiş anotasiya yoxdur."
+clearDocumentAnnotationsEmptyTitle = "Təmizlənəcək anotasiya yoxdur"
+clearDocumentAnnotationsErrorTitle = "Anotasiyaları təmizləmək mümkün olmadı"
+clearDocumentAnnotationsSuccessBody = "Anotasiyaların silinməsinin PDF-də qalıcı olması üçün dəyişiklikləri yadda saxlayın."
+clearDocumentAnnotationsSuccessTitle = "Bütün anotasiyalar təmizləndi"
+clearDocumentAnnotationsTitle = "Bütün anotasiyalar təmizlənsin?"
+clearDocumentAnnotationsUnavailableBody = "Anotasiya qatı hələ yüklənir. Bir az sonra yenidən cəhd edin."
+clearDocumentAnnotationsUnavailableTitle = "Anotasiyalar hazır deyil"
 color = "Rəng"
 comment = "Şərh"
 comments = "Şərhlər"
@@ -1626,6 +1845,7 @@ imagePreview = "Ön baxış"
 insertText = "Mətn əlavə et"
 line = "Xətt"
 lineArrow = "Ox"
+moreActions = "Daha çox əməliyyat"
 noBackground = "Arxa fon yoxdur"
 note = "Qeyd"
 notesStamps = "Qeydlər və möhürlər"
@@ -1658,6 +1878,9 @@ width = "Genişlik"
 
 [app]
 description = "Pulsuz Adobe Acrobat alternativi (10M+ yükləmə)"
+
+[appBanner]
+dismiss = "Dismiss"
 
 [attachments]
 convertToPdfA3b = "PDF/A-3b-ə çevir"
@@ -1796,6 +2019,15 @@ export = "İxrac"
 [auth]
 accessDenied = "Giriş rədd edildi"
 insufficientPermissions = "Bu əməliyyatı yerinə yetirmək üçün icazəniz yoxdur."
+
+[auth.callback]
+completing = "Autentifikasiya tamamlanır"
+invalidToken = "OAuth girişi uğursuz oldu - etibarsız token."
+missingToken = "OAuth girişi uğursuz oldu - token alınmadı."
+oauthFailed = "OAuth girişi uğursuz oldu. Yenidən cəhd edin."
+pleaseWait = "Girişinizi tamamlayana qədər gözləyin."
+signedOut = "Siz hesabdan çıxmısınız. Yenidən daxil olun."
+windowMayClose = "Tamamlandıqdan sonra bu pəncərəni bağlaya bilərsiniz."
 
 [auth.displayName]
 guest = "Qonaq"
@@ -1941,6 +2173,73 @@ secureWorkflowDesc = "PDF sənədlərini JavaScript və daxil edilmiş fayllar k
 [autoRename]
 description = "Bu alət məzmununa əsasən PDF fayllarını avtomatik olaraq yenidən adlandırır. Sənədi analiz edərək mətndən ən uyğun başlığı tapır."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Avtomatik döndər"
+tags = "avtomatik döndər,orientasiyanı düzəlt,tərsinə,yan tərəfə,düzləndir,orientasiya,orientasiyanı aşkar et,dönməni düzəlt,avtomatik orientasiya,skan edilmiş,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Etibar həddi"
+
+[autoRotate.detectionMode]
+auto = "Avtomatik"
+osd = "Yalnız OCR"
+text = "Yalnız mətn"
+title = "Aşkarlama üsulu"
+
+[autoRotate.error]
+failed = "PDF avtomatik döndərilərkən xəta baş verdi."
+
+[autoRotate.inferUndetected]
+title = "Aşağı etibarlı səhifələri uyğunlaşdırmaq üçün döndər"
+
+[autoRotate.report]
+applied = "{{degrees}}° saat əqrəbi istiqamətində"
+confidenceValue = "Etibar {{value}}"
+noChange = "Dəyişiklik yoxdur"
+pageLabel = "Səhifə {{number}}"
+summary = "{{total}} səhifədən {{rotated}} döndərildi, {{unchanged}} olduğu kimi saxlanıldı"
+title = "Aşkarlama hesabatı"
+
+[autoRotate.report.method]
+inferred = "Uyğunlaşdırıldı"
+none = "Buraxıldı"
+osd = "OCR"
+text = "Mətn"
+
+[autoRotate.report.note]
+belowThreshold = "Həddən aşağı"
+blankPage = "Səhifə boşdur"
+inferredFromDocument = "Digər səhifələrlə eyni"
+noDominantDirection = "Qarışıq mətn istiqamətləri"
+osdFailed = "Oxuna bilən mətn tapılmadı"
+osdNoVerdict = "Hansı tərəfin yuxarı olduğunu müəyyən etmək olmadı"
+tesseractUnavailable = "OCR quraşdırılmayıb"
+tooFewGlyphs = "Çox az mətn"
+
+[autoRotate.results]
+title = "Avtomatik döndərmə nəticələri"
+
+[autoRotate.settings]
+title = "Parametrlər"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "Səhifə döndərilməzdən əvvəl yoxlamanın nə qədər əmin olmalı olduğu. Daha çox səhifə döndərmək üçün azaldın, daha çox səhifəni toxunulmaz saxlamaq üçün artırın."
+title = "Etibar həddi"
+
+[autoRotate.tooltip.description]
+text = "Hər səhifənin hansı tərəfinin yuxarı olmalı olduğunu müəyyən edir və onu düzgün istiqamətə döndərir. Artıq düz olan səhifələrə toxunulmur."
+
+[autoRotate.tooltip.detectionMode]
+text = "Avtomatik əvvəlcə səhifədəki mətni oxuyur, bu kifayət etməzsə səhifəyə şəkil kimi baxır. Yalnız mətn şəkil yoxlamasını buraxır və heç vaxt skan edilməmiş sənədlər üçün ən sürətlisidir. Yalnız OCR hər səhifəni şəkil kimi qəbul edir."
+title = "Aşkarlama üsulu"
+
+[autoRotate.tooltip.header]
+title = "Avtomatik döndər"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Boş və ya demək olar ki, boş səhifələr təkbaşına yoxlanıla bilməz. Oxuna bilən bütün səhifələr eyni döndərməni tələb edirsə, bu səhifələr də onlara uyğun döndərilir."
+title = "Aşağı etibarlı səhifələri uyğunlaşdırmaq üçün döndər"
 
 [autoSizeSplitPDF]
 tags = "pdf,ayır,sənəd,nizamla"
@@ -2144,33 +2443,6 @@ keywords = "Açar sözlər: odd, even"
 numbers = "Nömrələr/aralıqlar: 5, 10-20"
 progressions = "Proqressiyalar: 3n, 4n+1"
 
-[certificateChoice.tooltip]
-header = "Sertifikat Növləri"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Sistem administratorları tərəfindən idarə olunur"
-bullet2 = "Avtorizə olunmuş istifadəçilər arasında paylaşılır"
-bullet3 = "Fərdi deyil, şirkət kimliyini təmsil edir"
-bullet4 = "Ən uyğunu: Rəsmi sənədlər, komanda imzaları"
-description = "Təşkilatınız tərəfindən təqdim olunan paylaşılmış sertifikat. Şirkət miqyasında imzalama səlahiyyəti üçün istifadə olunur."
-title = "Təşkilat Sertifikatı"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "İlk istifadə zamanı avtomatik yaradılır"
-bullet2 = "İstifadəçi hesabınızla bağlıdır"
-bullet3 = "Başqa istifadəçilərlə paylaşıla bilməz"
-bullet4 = "Ən uyğunu: Şəxsi sənədlər, fərdi məsuliyyət"
-description = "İstifadəçi hesabınız üçün unikal, avtomatik yaradılan sertifikat. Fərdi imzalar üçün uyğundur."
-title = "Şəxsi Sertifikat"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "P12/PFX faylı və şifrə tələb edir"
-bullet2 = "Xarici Sertifikat Orqanları tərəfindən verilə bilər"
-bullet3 = "Hüquqi sənədlər üçün daha yüksək etibar səviyyəsi"
-bullet4 = "Ən uyğunu: Hüquqi qüvvəli müqavilələr, xarici təsdiqləmə"
-description = "Öz PKCS#12 sertifikat faylınızdan istifadə edin. Sertifikat xüsusiyyətlərinə tam nəzarət verir."
-title = "Fərdi P12 yüklə"
-
 [certSign]
 awaitingSignatures = "İmzalar gözlənir"
 chooseCertificate = "Sertifikat faylını seçin"
@@ -2185,10 +2457,11 @@ location = "Məkan"
 logoTitle = "Loqo"
 name = "Ad"
 noLogo = "Loqo yoxdur"
-notified = "Gözləmədə"
 pageNumber = "Səhifə nömrəsi"
 password = "Keystore və ya Şəxsi Açar daxil edin (Əgər varsa):"
 passwordOptional = "Parol yoxdursa boş buraxın"
+pemCertificateLabel = "Sertifikat (.pem / .crt)"
+pemPrivateKeyLabel = "Şəxsi açar (.pem / .key)"
 pending = "Gözləmədə"
 readyToFinalize = "Yekunlaşdırmağa hazır"
 reason = "Səbəb"
@@ -2279,7 +2552,6 @@ addParticipants = "İştirakçı əlavə et"
 addParticipantsError = "İştirakçıları əlavə etmək mümkün olmadı"
 backToList = "Sessiyalara qayıt"
 deleteConfirm = "Əminsiniz? Bu əməliyyatı geri qaytarmaq olmaz."
-deleted = "Sessiya silindi"
 deleteError = "Sessiyanı silmək mümkün olmadı"
 deleteSession = "Sessiyanı sil"
 dueDate = "Son tarix"
@@ -2295,7 +2567,6 @@ removeParticipant = "Sil"
 removeParticipantError = "İştirakçını silmək mümkün olmadı"
 selectUsers = "İstifadəçiləri seçin..."
 sessionInfo = "Sessiya məlumatı"
-workbenchTitle = "Sessiya İdarəetməsi"
 
 [certSign.collab.sessionList]
 active = "Aktiv"
@@ -2355,11 +2626,7 @@ usePersonalCert = "Şəxsi sertifikat"
 usePersonalCertDesc = "Hesabınız üçün avtomatik yaradılır"
 useServerCert = "Təşkilat sertifikatı"
 useServerCertDesc = "Paylaşılan təşkilat sertifikatı"
-workbenchTitle = "İmza Sorğusu"
-
-[certSign.collab.signRequest.canvas]
-colorPickerTitle = "Xətt rəngini seçin"
-continue = "Davam et"
+useSignature = "İmzadan istifadə et"
 
 [certSign.collab.signRequest.certModal]
 certInvalid = "Sertifikat etibarsızdır: {{error}}"
@@ -2383,8 +2650,8 @@ image = "Yüklə"
 text = "Yaz"
 
 [certSign.collab.signRequest.preview]
+create = "İmza əlavə et"
 imageAlt = "Seçilmiş imza"
-missing = "Ön baxış yoxdur"
 textFallback = "İmza"
 
 [certSign.collab.signRequest.saved]
@@ -2422,15 +2689,6 @@ visibility = "Görünürlük:"
 visible = "Görünən"
 yourSignatures = "İmzalarınız ({{count}})"
 
-[certSign.collab.signRequest.text]
-colorLabel = "Rəng"
-fontLabel = "Şrift"
-fontSizeLabel = "Ölçü"
-fontSizePlaceholder = "16"
-label = "İmza mətni"
-modalHint = "Adınızı daxil edin, sonra PDF üzərində yerləşdirmək üçün Davam et düyməsini klikləyin."
-placeholder = "Adınızı daxil edin..."
-
 [certSign.collab.userSelector]
 inviteUsers = "İstifadəçi əlavə et"
 loadError = "İstifadəçiləri yükləmək mümkün olmadı"
@@ -2438,13 +2696,38 @@ noTeam = "Komanda yoxdur"
 noUsers = "Başqa istifadəçi tapılmadı."
 placeholder = "İstifadəçiləri seçin..."
 
+[certSign.device]
+stepTitle = "Bu cihaz"
+
 [certSign.error]
 failed = "İmzaları emal edərkən xəta baş verdi."
 
-[certSign.mobile]
-panelActions = "Fəaliyyətlər"
-panelDocument = "Sənəd"
-panelPeople = "Şəxslər"
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Windows sertifikat anbarı"
+
+[certSign.hardware]
+certificate = "Sertifikat"
+customLibrary = "Xüsusi sürücü yolu…"
+driver = "PKCS#11 sürücüsü"
+driverPath = "Sürücü kitabxanasının yolu"
+driverPathPlaceholder = "PKCS#11 sürücünüzə tam yol (.dll, .so və ya .dylib)"
+expired = "müddəti bitib"
+expires = "başа çatır"
+listCerts = "Sertifikatları siyahıya al"
+loading = "Sertifikatlar oxunur…"
+noCerts = "İmzalama sertifikatları tapılmadı"
+noDriver = "Heç bir PKCS#11 sürücüsü aşkar edilmədi. Tokeninizin sürücüsünü (məs., OpenSC) quraşdırın, sonra bunu yenidən açın — və ya aşağıda sürücünün yolunu əl ilə daxil edin."
+notYetValid = "hələ etibarlı deyil"
+pin = "Token PIN-i"
+pkcs11Hint = "Tokeniniz üçün PKCS#11 sürücüsünü seçin, PIN-i daxil edin, sonra tokendəki sertifikatları siyahıya alın."
+pkcs11LoadError = "Tokendən sertifikatları oxumaq mümkün olmadı. PIN-i və sürücünü yoxlayın."
+refresh = "Yenilə"
+selectCert = "Sertifikatı seçin"
+selectDriver = "Sürücünü seçin"
+slot = "Slot (istəyə bağlı)"
+windowsHint = "Windows sertifikat anbarınızdan bir sertifikat seçin. İmzalama kartınızdakı/tokeninizdəki açardan istifadə edəcək — Windows PIN-i soruşacaq."
+windowsLoadError = "Windows sertifikat anbarını oxumaq mümkün olmadı"
 
 [certSign.sessions]
 deleted = "Sessiya silindi"
@@ -2457,9 +2740,6 @@ pdfNotReadyDesc = "İmzalanmış PDF yaradılır. Zəhmət olmasa bir qədər so
 [certSign.sign]
 results = "İmzalanmış PDF"
 submit = "PDF-i imzala"
-
-[certSign.signMode]
-stepTitle = "İmzalama rejimi"
 
 [certSign.signMode.tooltip.auto]
 text = "Server <b>self-signed</b> sertifikatla imzalayır. Eyni <b>tamper-evident seal</b> və <b>audit trail</b>; adətən baxışçılarda <b>Unverified</b> göstərir."
@@ -2482,33 +2762,12 @@ title = "İmzalar necə işləyir"
 text = "Qəbul edən tərəfdə <b>Trusted</b> statusu lazımdır? <b>Manual</b>. Quraşdırmasız, sürətli, müdaxilə-aşkar möhür və audit izi lazımdır? <b>Auto</b>."
 title = "Qayda"
 
-[certSign.tooltip.header]
-title = "İmzaların idarə olunması haqqında"
-
-[certSign.tooltip.overview]
-bullet1 = "Mövcud imzaları və onların etibarlılığını yoxlayın"
-bullet2 = "İmzalayanlar və sertifikatlar haqqında ətraflı məlumatı görün"
-bullet3 = "Sənədlərinizi qorumaq üçün yeni rəqəmsal imzalar əlavə edin"
-bullet4 = "Bir neçə fayl dəstəyi və asan naviqasiya"
-text = "Bu alət PDF-lərinizin rəqəmsal imza ilə imzalanıb-imzalanmadığını yoxlamağa və yeni rəqəmsal imzalar əlavə etməyə imkan verir. Rəqəmsal imzalar sənədi kimin yaratdığını və ya təsdiqlədiyini sübut edir və imzadan sonra dəyişdirilib-dəyişdirilmədiyini göstərir."
-title = "Bu alət nə edə bilər?"
-
-[certSign.tooltip.signing]
-bullet1 = "PEM, PKCS12, JKS və server sertifikatı formatlarını dəstəkləyir"
-bullet2 = "PDF-də imzanı göstərmək və ya gizlətmək seçimi"
-bullet3 = "Səbəb, məkan və imzalayanın adını əlavə edin"
-bullet4 = "Görünən imzaların yerləşdiriləcəyi səhifəni seçin"
-bullet5 = "Sadə 'Stirling-PDF ilə imzala' seçimi üçün server sertifikatından istifadə edin"
-text = "PDF-i imzalamaq üçün rəqəmsal sertifikat lazımdır (məsələn, PEM, PKCS12 və ya JKS). İmzanı sənəddə görünən etmək və ya yalnız təhlükəsizlik məqsədi ilə görünməz saxlamaq seçiminiz var."
-title = "İmzaların əlavə edilməsi"
-
-[certSign.tooltip.validation]
-bullet1 = "İmzaların etibarlı və ya etibarsız olduğunu göstərir"
-bullet2 = "İmzalayan barədə məlumatı və imzalama tarixini göstərir"
-bullet3 = "Sənədin imzadan sonra dəyişdirilib-dəyişdirilməsini yoxlayır"
-bullet4 = "Doğrulama üçün xüsusi sertifikatlardan istifadə edə bilər"
-text = "İmzaları yoxladıqda alət onların etibarlı olub-olmadığını, sənədi kimin və nə vaxt imzaladığını və imzadan sonra sənədin dəyişdirilib-dəyişdirilmədiyini bildirir."
-title = "İmzaların yoxlanması"
+[certSign.source]
+device = "Bu cihaz"
+noOtherSources = "Başqa sertifikat mənbələri mövcud deyil."
+server = "Server"
+stepTitle = "Sertifikat mənbəyi"
+upload = "Yüklə"
 
 [changeCreds]
 changeUsername = "İstifadəçi adınızı yeniləyin. Yenilədikdən sonra çıxış ediləcəksiniz."
@@ -2677,12 +2936,16 @@ text = "Bu icazələri dəyişdirilməz etmək üçün, Parol əlavə etmə alə
 [chat.actions]
 copy = "Mesajı kopyala"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent seçimləri"
+assistant = "AI Assistant"
 clearChat = "Söhbəti təmizlə"
 
 [chat.input]
@@ -2745,26 +3008,35 @@ tooltip = "Bu əməliyyat bulud kreditlərinizi istifadə edəcək"
 tooltip = "Ekrandan rəng seç"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Rəng seçin"
 
 [common]
+actions = "Actions"
 back = "Geri"
 cancel = "Ləğv et"
 close = "Bağla"
+codeSample = "Code sample"
 collapse = "Yığ"
+confirm = "Təsdiqlə"
 continue = "Davam et"
 copied = "Kopyalandı!"
 copy = "Kopyala"
 done = "Bitdi"
+enterValue = "Enter value"
 error = "Xəta"
 expand = "Genişləndir"
 loading = "Yüklənir..."
 next = "Növbəti"
+open = "Open"
 preview = "Önizləmə"
 previous = "Əvvəlki"
 refresh = "Yenilə"
+remaining = "Qalıb"
 retry = "Yenidən cəhd et"
 save = "Yadda saxla"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Seçilənləri təmizlə"
@@ -2927,6 +3199,7 @@ title = "Sıxma metodu"
 [compress.settings]
 desiredSize = "İstənilən fayl ölçüsü"
 desiredSizePlaceholder = "Ölçünü daxil edin"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Sıxma fayl ölçüsünü azaltmağın asan yoludur. 'Fayl ölçüsü'nü seçərək hədəf ölçünü daxil edin və keyfiyyəti sizin üçün tənzimləyək. 'Keyfiyyət'i seçərək sıxma gücünü əl ilə təyin edin."
@@ -3129,6 +3402,24 @@ pdfOptions = "PDF seçimləri"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Əvvəlcə mənbə formatını seçin"
 settings = "Parametrlər"
 single = "Tək"
@@ -3203,24 +3494,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analitika"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Qabaqcıl monitorinq"
-allInOneWorkspace = "Hər şey bir yerdə PDF iş məkanı (baxış, alətlər və agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Ayrı-ayrı dəstək və SLA-lar"
-fasterThroughput = "10x daha sürətli işləmə"
-fullyPrivateFiles = "Tam məxfi fayllar"
-largeFileProcessing = "Böyük faylların emalı"
-orgWideAccess = "Təşkilat üzrə giriş nəzarətləri"
-premiumAiModels = "Premium AI modelləri"
-prioritySupport = "Prioritet dəstək"
-privateDocCloud = "Məxfi Sənəd Buludu"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Təhlükəsiz API giriş"
-standardThroughput = "Standart işləmə"
-unlimitedApiAccess = "Limitsiz API girişi"
-unlimitedSeats = "Limitsiz istifadəçi yerləri"
-
 [crop]
 autoCrop = "Boşluqları avtomatik qırp"
 noFileSelected = "Kəsməyə başlamaq üçün bir PDF faylı seçin"
@@ -3285,6 +3558,7 @@ message = "Standart PDF işləyicisini təyin etmək alınmadı"
 title = "Xəta"
 
 [defaultApp.prompt]
+dontRemind = "Mənə bir daha xatırlatma"
 message = "PDF fayllarını açmaq üçün Stirling PDF-i standart tətbiqiniz edin."
 
 [defaultApp.settingsOpened]
@@ -3324,7 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Axtar..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Redaktə et"
@@ -3542,7 +3820,9 @@ makeCopy = "Surət yarat"
 mobileShort = "Mobil"
 mobileUpload = "Mobil yükləmə"
 mobileUploadNotAvailable = "Mobil yükləmə aktiv deyil"
+moreOptions = "Daha çox seçim"
 myFiles = "Fayllarım"
+nextFile = "Növbəti fayl"
 noFiles = "Fayl mövcud deyil"
 noFilesFound = "Axtarışınıza uyğun fayl tapılmadı"
 noRecentFiles = "Son fayl tapılmadı"
@@ -3552,6 +3832,7 @@ openInFileEditor = "Fayl Redaktorunda aç"
 openInPageEditor = "Səhifə Redaktorunda aç"
 owner = "Sahib"
 ownerUnknown = "Naməlum"
+previousFile = "Əvvəlki fayl"
 recent = "Son"
 removeBoth = "Hər ikisindən sil"
 removeFilePrompt = "Bu fayl bu cihazda və serverinizdə saxlanılır. Hansından silmək istəyirsiniz?"
@@ -3580,11 +3861,13 @@ shareSelected = "Seçilənləri paylaş"
 sharing = "Paylaşma"
 showAll = "Hamısını göstər"
 showHistory = "Tarixçəni göstər"
+sortBy = "Sort files"
 sortByDate = "Tarixə görə sırala"
 sortByName = "Ada görə sırala"
 sortBySize = "Ölçüyə görə sırala"
 storage = "Saxlama"
 storageState = "Saxlama"
+storageUsed = "Storage used"
 synced = "Sinxronlaşdırılıb"
 title = "PDF Fayllarını Yüklə"
 toolChain = "Tətbiq olunan alətlər"
@@ -3627,31 +3910,56 @@ workbench = "İş sahəsi"
 
 [fileSidebar]
 addFiles = "Fayllar əlavə et"
+addingFiles = "Fayllar əlavə edilir…"
 collapse = "Yan paneli yığ"
+customizeGroups = "Qrupları fərdiləşdir"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Başlamaq üçün faylları açın"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Yan paneli genişləndir"
-files = "Fayllar"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive konfiqurasiya edilməyib"
 leaveMyFiles = "Mənim Fayllarımdan çıx"
+library = "PDF kitabxanası"
 myFiles = "Mənim Fayllarım"
 noFiles = "Hələ fayl yoxdur"
 openFileManager = "Fayl menecerini aç"
 openFromComputer = "Kompüterdən aç"
 openSettings = "Ayarları aç"
-search = "Axtar"
-searchPlaceholder = "Fayllarda axtar..."
+other = "Digər"
+recent = "Son"
+viewAll = "Bütün {{count}} faylı göstər"
 
 [fileSidebar.fileItem]
 closeViewer = "Görüntüləyicini bağla"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Görüntüləyicidə aç"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
+
+[fileSidebar.groupsModal]
+done = "Hazırdır"
+reset = "Defoltlara sıfırla"
+subtitle = "Fayllarınızı əsas kateqoriyalara qruplaşdırın. Kateqoriyaya mövcud və ya yeni etiketlər əlavə edin, adını dəyişin və ya özünüz yaradın. Kateqoriyalarınızdan heç birində olmayan fayllar “Digər” altında görünür."
+title = "Yan panel kateqoriyaları"
+
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
 
 [filesPage]
 addToWorkspace = "İş sahəsinə əlavə et"
@@ -3662,7 +3970,7 @@ backToFolder = "{{folder}} qovluğuna geri"
 backToMyFiles = "Mənim Fayllarıma geri"
 breadcrumbs = "Qovluq yolu"
 cancel = "Ləğv et"
-clearSearch = "Axtarışı təmizlə"
+classification = "Təsnifat"
 clearSelection = "Seçimi təmizlə"
 closeDetails = "Təfərrüatları bağla"
 create = "Yarat"
@@ -3694,6 +4002,7 @@ downloadAll = "Hamısını endir"
 downloadVersion = "Bu versiyanı endir"
 dropOverlay = "Yükləmək üçün faylları buraxın"
 dropOverlaySub = "Fayllar əvvəlcə Lokal bölmədə başlayır. Onları qovluğa yerləşdirmək üçün 'Köçür' və ya 'Buluda saxla'dan istifadə edin."
+duplicate = "Duplicate"
 file = "Fayl"
 fileInfo = "File info"
 fileMenu = "Fayl əməliyyatları"
@@ -3721,13 +4030,12 @@ refresh = "Serverdən yenilə"
 remove = "Sil"
 removeVersion = "Bu versiyanı sil"
 rename = "Yenidən adlandır"
+renamed = "Adı dəyişdirildi"
 renameFolder = "Qovluğu yenidən adlandır"
 resizeFolderTree = "Qovluq ağacının ölçüsünü dəyiş (ox düymələri, daha böyük addımlar üçün Shift; avto-uyğunlaşdırmaq üçün iki dəfə kliklə)"
 save = "Saxla"
 saveToServer = "Serverə saxla"
 saveToServerDisabledHint = "Bu serverdə serverə saxlama aktiv deyil. Administratorunuzdan bunu aktivləşdirməsini xahiş edin."
-search = "Axtar"
-searchPlaceholder = "Bu qovluqda və alt qovluqlarda axtar"
 selectAll = "Hamısını seç"
 selectAllHint = "Hamısını seçmək üçün klikləyin. Məsləhət: faylları tək-tək əlavə etmək üçün Ctrl (və ya Cmd), aralığı seçmək üçün Shift basın."
 selectedCount = "{{count}} seçilib"
@@ -3787,6 +4095,10 @@ title = "Hələ bulud faylı yoxdur"
 hint = "Yüklənmədən saxlanılan fayllar burada qalır. Əlavə etmək üçün faylı buraxın."
 title = "Yalnız lokal fayl yoxdur"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "Açdığınız və ya redaktə etdiyiniz fayllar burada görünəcək."
 title = "Hələ heç nə dəyişdirilməyib"
@@ -3806,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Qovluğu silmək mümkün olmadı."
 deleteFolderFailedDetail = "Qovluğu silmək mümkün olmadı: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Qovluğun görünüşünü yeniləmək mümkün olmadı."
 folderAppearanceFailedDetail = "Qovluğun görünüşünü yeniləmək mümkün olmadı: {{message}}"
 moveFilesFailed = "Faylları köçürmək mümkün olmadı."
@@ -3821,11 +4135,9 @@ uploadFilesFailedDetail = "Faylları yükləmək mümkün olmadı: {{message}}"
 added = "Əlavə edilib"
 count = "Fayllar"
 folder = "Qovluq"
+labels = "Etiketlər"
 modified = "Dəyişdirilib"
-name = "Ad"
 size = "Ölçü"
-toolHistory = "Alət tarixçəsi"
-toolHistoryAtVersion = "Toplam alət zənciri"
 totalSize = "Ümumi ölçü"
 type = "Növ"
 versionHistory = "Versiya yolu"
@@ -3857,6 +4169,11 @@ local = "Lokal"
 localHint = "Yalnız bu brauzerdə saxlanılır"
 shared = "Paylaşılan"
 sharedHint = "Keçid vasitəsilə sizinlə paylaşılıb"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Ən köhnə əvvəlcə"
@@ -3913,6 +4230,7 @@ noFilesInStorageOpen = "Yaddaşda fayl yoxdur. Əvvəlcə bəzi faylları açın
 open = "Aç"
 openFile = "Faylı aç"
 openFiles = "Faylları aç"
+selectFile = "Select {{name}}"
 selectFromStorage = "Saxlamadan seç"
 upload = "Yüklə"
 uploadFile = "Fayl yüklə"
@@ -3985,10 +4303,22 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Hamısı saxlanıldı"
+analyzingFields = "Analysing form fields..."
+extractCsvError = "CSV çıxarmaq alınmadı"
+extractXlsxError = "XLSX çıxarmaq alınmadı"
+filled = "filled"
 flattenAfterFilling = "Doldurduqdan sonra yastılaşdır"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
+requiredAbbreviation = "təl."
+requiredFieldsError = "Bütün tələb olunan sahələri doldurun"
 rescanFields = "Sahələri yenidən skan et"
 rescanFormFields = "Forma sahələrini yenidən skan et"
 save = "Saxla"
+saveShortcut = "Saxlamaq üçün Ctrl+S"
+unsavedChanges = "Saxlanılmamış dəyişikliklər"
 
 [formFill.sidebar]
 close = "Yan paneli bağla"
@@ -4221,6 +4551,11 @@ title = "Avtomatlaşdır"
 desc = "Aşkarlanmış başlığa əsasən PDF faylını avtomatik adlandırır"
 tags = "avto-aşkarlama,başlığa əsasən,təşkil et,yenidən adlandır"
 title = "PDF faylını avtomatik adlandır"
+
+[home.autoRotate]
+desc = "Hər səhifənin orientasiyasını aşkar edin və avtomatik olaraq düz vəziyyətə döndərin."
+tags = "avtomatik döndər,orientasiyanı düzəlt,tərsinə,yan tərəfə,düzləndir,orientasiya,orientasiyanı aşkar et,dönməni düzəlt,avtomatik orientasiya,skan edilmiş,OSD"
+title = "Avtomatik döndər"
 
 [home.autoSizeSplitPDF]
 tags = "avto,böl,ölçü"
@@ -4457,6 +4792,10 @@ desc = "Skan olunmuş şəkilləri aşkarlayın və ayrıca səhifələrə böl�
 tags = "aşkarlama,böl,şəkillər"
 title = "Skan şəkilləri tap və böl"
 
+[home.sharedSign]
+desc = "Başqalarından imza tələb edin və imzalama sessiyalarını izləyin"
+title = "Birgə imzalama"
+
 [home.showJS]
 desc = "PDF-in tərkibinə əlavə edilmiş JS-i axtarır və göstərir"
 tags = "javascript,kod,skript"
@@ -4517,15 +4856,12 @@ hint = "PDF üzərinə yerləşdirmək üçün PNG, JPG, SVG və ya başqa şək
 label = "Şəkil yüklə"
 placeholder = "Şəkil faylını seç"
 
-[imageToPdf]
-tags = "çevirmə,şəkil,jpg,fotoşəkil,foto"
-
 [imageToPDF]
 header = "Şəkli PDF-ə"
 title = "Şəkli PDF-ə"
 
-[infoBanner]
-dismiss = "Bağla"
+[imageToPdf]
+tags = "çevirmə,şəkil,jpg,fotoşəkil,foto"
 
 [invite]
 acceptError = "Hesabın yaradılması alınmadı"
@@ -4556,8 +4892,6 @@ welcomeTitle = "Siz dəvət olunmusunuz!"
 
 [landing]
 addFiles = "Fayllar əlavə et"
-heroSubtitle = "Başlamaq üçün mövcud PDF-i sürüyüb buraxın və ya əlavə edin."
-heroTitle = "Stirling PDF"
 mobileUpload = "Mobil cihazdan yüklə"
 openFromComputer = "Komputerdən aç"
 uploadFromComputer = "Kompüterdən yüklə"
@@ -4600,7 +4934,6 @@ enterUsername = "İstifadəçi adını daxil edin"
 failedToSignIn = "{{provider}} ilə daxil olmaq alınmadı: {{message}}"
 forgotPassword = "Parolunuzu unutmusunuz?"
 loggingIn = "Daxil olunur..."
-logIn = "Daxil ol"
 login = "Daxil ol"
 magicLinkSent = "Sehrli link {{email}} ünvanına göndərildi! Zəhmət olmasa e-poçtunuzu yoxlayın və daxil olmaq üçün linkə klikləyin."
 mfaCode = "Doğrulama kodu"
@@ -4624,25 +4957,9 @@ signInWith = "Bununla daxil ol"
 title = "Daxil olun"
 unexpectedError = "Gözlənilməz xəta: {{message}}"
 updatePassword = "Şifrəni yenilə"
-useEmailInstead = "E-poçt ilə daxil olun"
 useMagicLink = "Sehrli linkdən istifadə et"
 username = "İstifadəçi adı"
 youAreLoggedIn = "Daxil oldunuz!"
-
-[login.slides.edit]
-alt = "PDF-ləri redaktə et"
-subtitle = "PDF-ləri məxfiləşdirmək, imzalamaq, oxumaq və onlarla işləmək üçün onlarla alətlə axtardığınızı tapacaqsınız."
-title = "İstədiyiniz məlumatı göstərmək/qorumaq üçün PDF-ləri redaktə edin"
-
-[login.slides.overview]
-alt = "Stirling PDF icmalı"
-subtitle = "PDF-lər üçün məxfilik-öncəli bulud paketi: sənədləri çevirməyə, imzalamağa, məzmunu məxfiləşdirməyə və idarə etməyə, üstəlik 50+ güclü alət."
-title = "PDF ehtiyaclarınız üçün tək ünvan."
-
-[login.slides.secure]
-alt = "PDF-ləri qoruyun"
-subtitle = "Şifrələr əlavə edin, məzmunu məxfiləşdirin və sertifikatları asanlıqla idarə edin."
-title = "PDF-lərinizdə həssas məlumatları qoruyun"
 
 [margin]
 large = "Böyük"
@@ -4727,6 +5044,34 @@ uploadSuccess = "Uğurla yükləndi!"
 uploadSuccessMessage = "Şəkilləriniz köçürüldü."
 validating = "Sessiya yoxlanılır..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Skan edib fotoları yükləyin. Şəkillər avtomatik olaraq PDF-ə çevrilir."
 descriptionNoConvert = "Mobil cihazınızdan fotoları yükləmək üçün skan edin."
@@ -4745,8 +5090,13 @@ title = "Mobil cihazdan yüklə"
 tags = "Multi-alət,Çoxlu əməliyyat,UI,tut-sürüşdür,front end,istifadəçi-tərəf,interaktiv,qarşılıqlı,yerini dəyiş,sil,köçür,böl"
 title = "PDF Multi-Alət"
 
-[navbar]
-search = "Axtar"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Təsdiqləmə uğurlu olmadı. Bu pəncərəni bağlayıb yenidən cəhd edə bilərsiniz."
@@ -4873,7 +5223,9 @@ title = "Çıxış"
 [onboarding]
 activeFiles = "<strong>Aktiv Fayllar</strong> görünüşü alətə yüklədiyiniz bütün PDF-ləri göstərir və emal etmək istədiklərinizi seçməyə imkan verir."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Bağla"
 cropSettings = "Artıq kəsmək istədiyimiz faylı seçdiyimizə görə, PDF-i kəsmək istədiyimiz sahəni seçmək üçün Kəsmə alətini tənzimləyə bilərik."
+dialogLabel = "Onboarding"
 fileCheckbox = "Fayllardan birinə klikləmək onu emal üçün seçir. Toplu əməliyyatlar üçün bir neçə faylı seçə bilərsiniz."
 fileReplacement = "Dəyişdirilmiş fayl İş Masasında orijinal faylı avtomatik əvəz edəcək və onu asanlıqla daha çox alətdən keçirməyə imkan verəcək."
 filesButton = "Sürətli Giriş panelindəki <strong>Fayllar</strong> düyməsi PDF-ləri alətlərdə istifadə etmək üçün yükləməyə imkan verir."
@@ -4884,6 +5236,7 @@ pinButton = "Alətlər işləndikdən sonra fayllarınızın aktiv qalmasını i
 results = "Alət işləməyi bitirdikdən sonra, <strong>Baxış</strong> addımı nəticələrin önizləməsini bu paneldə göstərəcək və əməliyyatı geri almağa və ya faylı endirməyə imkan verəcək."
 runButton = "Alət tənzimləndikdən sonra, bu düymə seçilmiş bütün PDF-lərdə aləti işə salmağa imkan verir."
 selectCropTool = "Gəlin, <strong>Kəsmə</strong> alətini seçərək alətlərdən birinin istifadəsini nümayiş etdirək."
+stepOf = "Addım {{current}} / {{total}}"
 toolInterface = "Bu, <strong>Kəsmə</strong> alətinin interfeysidir. Gördüyünüz kimi, hələ işləmək üçün PDF faylı əlavə etmədiyimiz üçün burada çox şey yoxdur."
 workbench = "Bu, <strong>İş Masası</strong>dır - PDF-lərinizi gördüyünüz və redaktə etdiyiniz əsas sahə."
 wrapUp = "Hər şey hazırdır! Tətbiqin əsas sahələri və onlardan necə istifadə etməyi öyrəndiniz. Bu turu yenidən görmək istədiyiniz zaman <strong>Kömək</strong> düyməsini klikləyin."
@@ -4896,14 +5249,49 @@ showMeAround = "Turu göstər"
 skipForNow = "Hələlik ötür"
 skipTheTour = "Turu keç"
 
+[onboarding.checklist]
+dismiss = "Bağla"
+title = "Stirling PDF-i qurun"
+
+[onboarding.checklist.downloadDesktop]
+description = "Stirling-i kompüterinizdə yerli olaraq işlədin"
+title = "Stirling for Desktop yüklə"
+
+[onboarding.checklist.inviteTeam]
+description = "Komandanızla əməkdaşlıq edin"
+title = "Komanda üzvlərini dəvət et"
+
+[onboarding.checklist.shareAnalytics]
+description = "Stirling-i yaxşılaşdırmağa kömək edin"
+title = "Anonim istifadə məlumatlarını paylaş"
+
+[onboarding.checklist.takeTour]
+description = "Qısa bələdçi ilə Stirling-in necə işlədiyini görün"
+title = "Tura başlayın"
+
 [onboarding.desktopInstall]
 body = "Stirling masaüstü tətbiq kimi ən yaxşı işləyir. Onu oflayn istifadə edə, sənədlərə daha sürətli baxa və düzəlişləri yerli olaraq kompüterinizdə edə bilərsiniz."
+selectOs = "Əməliyyat sistemini seçin"
 title = "Yüklə"
 titleWithOs = "{{osLabel}} üçün yüklə"
 
 [onboarding.mfa]
 authenticationCode = "Təsdiqləmə kodu"
+description = "Autentifikator tətbiqini əlaqələndirərək hesabınızı qoruyun. QR kodunu skan edin və ya quraşdırma açarını daxil edin, sonra tamamlanması üçün 6 rəqəmli kodu təsdiqləyin."
+enable = "MFA-ni aktiv et"
+enableError = "İkifaktorlu autentifikasiyanı aktiv etmək mümkün olmadı. Kodu yoxlayın və yenidən cəhd edin."
+enterCode = "Tətbiqinizdən 6 rəqəmli kodu daxil edin."
+enterCodeError = "Davam etmək üçün autentifikasiya kodunu daxil edin."
+logout = "Çıxış"
+openAuthenticator = "Google Authenticator, Authy və ya 1Password açın."
 qrCodeLoading = "QR kodunuz yaradılır…"
+regenerateQrCode = "QR kodunu yenidən yarat"
+scanQrCode = "QR kodunu skan edin və ya aşağıdakı quraşdırma açarını daxil edin."
+setupError = "İkifaktorlu quraşdırmanı başlatmaq mümkün olmadı. Yenidən cəhd edin."
+setupKey = "Quraşdırma açarı (əllə daxil etmə)"
+stepByStep = "Addım-addım"
+success = "MFA aktiv edildi. İndi davam edə bilərsiniz."
+title = "Çoxfaktorlu autentifikasiya quraşdırması"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Giriş rejimini aktivləşdirdikdən sonra istifadəçiləri idarə edə, ayarları konfiqurasiya edə və serverin vəziyyətini izləyə bilərsiniz. Serverinizdə ilk <strong>{{freeTierLimit}}</strong> nəfər Stirling-dən pulsuz istifadə edir."
@@ -4911,6 +5299,11 @@ adminBodyLoginEnabled = "Admin kimi istifadəçiləri idarə edə, ayarları kon
 adminTitle = "Admin icmalı"
 userBody = "Komanda yoldaşlarını dəvət edin, rollar təyin edin və sənədlərinizi bir təhlükəsiz iş mühitində səliqəli saxlayın. Tək istifadədən böyüməyə hazır olduqda giriş rejimini aktivləşdirin."
 userTitle = "Plan icmalı"
+
+[onboarding.processorIntro]
+body = "Stirling indi <strong>Siyasətlər</strong> işlədir — hər sənəd daxil olduqda onu təsnif edən, qoruyan və emal edən avtomatlaşdırılmış qaydalar. Onları qurun və icraları <strong>Processor</strong>-də izləyin."
+cta = "Processor-ə baxın"
+title = "Stirling Processor-ə baxın"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5269,6 +5662,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5308,6 +5702,28 @@ docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
 
+[payg.prepaid]
+chip = "Öncədən ödənilmiş il"
+
+[payg.prepaid.banner]
+exhausted = "Öncədən ödənilmiş tutumunuz bitib; ölçülü hesablaşma yenidən başladı. Endirimi saxlamaq üçün balansı artırın."
+expiring_one = "Öncədən ödənilmiş iliniz {{count}} günə bitir. İstifadə olunmamış tutumun müddəti bitəcək — yeni il başlatmaq üçün balansı artırın."
+expiring_other = "Öncədən ödənilmiş iliniz {{count}} günə bitir. İstifadə olunmamış tutumun müddəti bitəcək — yeni il başlatmaq üçün balansı artırın."
+low = "Öncədən ödənilmiş tutumunuzun {{pct}}%-i qalıb. Emalı fasiləsiz saxlamaq üçün istənilən vaxt balansı artırın."
+
+[payg.prepaid.card]
+subtitle = "Ölçülü hesablaşmadan əvvəl və xərc limitinizdən kənar istifadə olunur."
+title = "Öncədən ödənilmiş tutum"
+
+[payg.prepaid.meter]
+capSuffix = "{{total}} öncədən ödənilmiş kreditdən"
+expires = "Bitmə tarixi {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Bitib"
+healthy = "Kifayət qədər qalıb"
+low = "Azalır"
+
 [payg.role]
 leader = "Team owner"
 member = "Member"
@@ -5326,6 +5742,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5509,7 +5926,9 @@ viewLabel = "PDF redaktoru"
 
 [pdfTextEditor.actions]
 applyChanges = "Dəyişiklikləri tətbiq et"
+clearText = "Mətni təmizlə"
 downloadCopy = "Nüsxəni endir"
+moreOptions = "Daha çox seçim"
 reset = "Dəyişiklikləri sıfırla"
 
 [pdfTextEditor.badges]
@@ -5652,6 +6071,11 @@ header = "PDF-i PDF/A-ya"
 tags = "arxiv,uzunmüddətli,standard,çevirmə,yaddaş,saxlama"
 title = "PDF-i PDF/A-ya"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "çap,standart,çevrilmə,istehsal,prepress,arxiv"
 title = "PDF-dən PDF/X-ə"
@@ -5727,6 +6151,7 @@ small = "500 Credits"
 xsmall = "100 Credits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Ehtiyaclarınıza uyğun planı seçin"
 title = "Mövcud Planlar"
 
@@ -5842,108 +6267,2704 @@ keyDescription = "E-poçtunuzdakı lisenziya açarını yapışdırın"
 success = "Lisenziya aktivləşdirildi!"
 successMessage = "Lisenziyanız uğurla aktivləşdirildi. Bu pəncərəni indi bağlaya bilərsiniz."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
+[policies.activity]
+outputsUnavailable = "Siyasət çıxışlarını yükləmək artıq mümkün deyil."
+partialOutputsUnavailable = "Bəzi siyasət çıxışlarını yükləmək artıq mümkün deyil."
+runNotFound = "Tətbiq etmə icrası artıq tapılmır."
+timedOut = "Tətbiq etmə, icra tamamlanmadan vaxt aşımı oldu."
 
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
+[policies.enforcement]
+applying = "{{names}} tətbiq edilir"
+applyingProgress = "{{names}} tətbiq edilir ({{done}}/{{total}})"
+exportFailureBody = "Təhlükəsizlik siyasətləri tətbiq edilə bilmədi. Fayllar olduğu kimi ixrac edildi."
+exportFailureTitle = "Tətbiq etmədən ixrac edildi"
+failureBody = "{{total}} fayldan {{failures}} fayl işlənə bilmədi və olduğu kimi ixrac edildi."
+failureTitle = "Tam tətbiq edilmədən ixrac edildi"
+printPolicyAppliedBody = "Bu PDF siyasətə uyğunlaşdırmaq üçün yeniləndi. Dəyişiklikləri yoxlayın, sonra yenidən çap edin."
+printPolicyAppliedTitle = "Çapdan əvvəl siyasət tətbiq edildi"
+successTitle = "{{names}} tətbiq edildi"
+summaryMore = "{{first}}, {{second}} və daha {{more}}"
+summaryTwo = "{{first}} və {{second}}"
 
-[policies.detail]
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
+[policies.labels]
+categoryCount = "kateqoriyalar"
+hideCategory = "Kateqoriyanı gizlət"
+labelCount = "etiketlər"
+sharedNote = "Bu etiketlər daxili quruludur və bütün komandanızla paylaşılır."
+showCategory = "Kateqoriyanı göstər"
 
 [policies.pii]
+account = "Hesab nömrələri (etiketlənmiş)"
+card = "Kredit / debet kartları"
+email = "E-poçt ünvanları"
 fieldLabel = "PII to redact"
+iban = "IBAN-lar"
+phone = "Telefon nömrələri"
 placeholder = "Select PII types"
+routing = "ABŞ routing nömrələri (ABA)"
+ssn = "Sosial Təminat nömrələri"
 
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
+[policy]
+badgeEnforcing = "{{name}} tətbiq edilir..."
+badgeRan = "{{name}} siyasəti bu faylda işlədi"
+badgeRunning = "{{name}} işləyir..."
+blockingAction = "Siyasət tətbiq edilərkən {{action}} bloklandı, lütfən gözləyin..."
+dismiss = "Örtüyü bağla"
+enforcingTitle = "Siyasət tətbiq edilir..."
+viewAnyway = "Faylı göstər (siyasət hələ tətbiq edilir)"
 
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
+[policyOption]
+autoRedactPhi = "PHI-ni avtomatik redaktə et"
+blockExport = "Eksportu blokla"
+ccpa = "CCPA"
+contracts = "Müqavilələr"
+documents = "Sənədlər"
+fedramp = "FedRAMP"
+financialReports = "Maliyyə hesabatları"
+flagForReview = "Baxış üçün işarələ"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Saxla"
+hrRecords = "HR qeydləri"
+indefinite = "Qeyri-müəyyən"
+insurance = "Sığorta"
+invoices = "Fakturalar"
+iso27001 = "ISO 27001"
+legalFilings = "Hüquqi sənədlər"
+medicalPhi = "Tibbi / PHI"
+never = "Heç vaxt"
+ninetyDays = "90 gün"
+oneYear = "1 il"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Sənədi karantinə al"
+routeToBucket = "Bucket-ə yönləndir"
+s3Bucket = "S3 bucket"
+sevenYears = "7 il"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Vergi sənədləri"
+thirtyDays = "30 gün"
+threeYears = "3 il"
+webhook = "Webhook"
 
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
+[portal]
+comingSoon = "Tezliklə"
 
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
+[portal.accountLink.card]
+billingNote = "Nəzarətsiz emal təşkilatınızın pul kisəsindən hesablanır."
+eyebrow = "Hesab bağlantısı"
+linkButton = "Stirling hesabınızı bağlayın"
+linked = "Bağlanıb"
+linkedAs = "{{name}} kimi bağlanıb."
+linkedGeneric = "Bu instansiya bağlanıb."
+notLinked = "Bağlanmayıb"
+title = "Bu təşkilatı öz Stirling hesabına bağlayın"
+unlink = "Bağlantını kəs"
+
+[portal.accountLink.card.error]
+title = "Bağlamaq mümkün olmadı"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "host edilmiş Stirling hesabına qarşı hesab bağlanmasını aktivləşdirmək üçün. Dev-də bağlantı dialoqundan daxil olmanı simulyasiya edə bilərsiniz."
+before = "Ayarla"
+title = "SaaS girişi konfiqurasiya edilməyib"
+
+[portal.accountLink.gate]
+action = "Hesabı bağla"
+description = "Ödənişli funksiyalardan istifadə etmək üçün bu təşkilatın Stirling hesabını bağlayın."
+title = "Kilidi açmaq üçün bağlayın"
+titleFeature = "{{feature}} kilidini açmaq üçün bağlayın"
+
+[portal.accountLink.instances]
+active = "Aktiv"
+revoke = "Ləğv et"
+revoked = "Ləğv edilib"
+unnamed = "Adsız instansiya"
+
+[portal.accountLink.instances.columns]
+instance = "Instansiya"
+lastSeen = "Son görülmə"
+linked = "Bağlanıb"
+status = "Status"
+
+[portal.accountLink.instances.empty]
+description = "Bu təşkilatın hesabını bağlayın, sonra öz hostinqli instansiyalarınızı qeydiyyatdan keçirin ki, onları burada görəsiniz."
+title = "Bağlanmış instansiya yoxdur"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "{{count}} gün əvvəl"
+daysAgo_other = "{{count}} gün əvvəl"
+hoursAgo_one = "{{count}} saat əvvəl"
+hoursAgo_other = "{{count}} saat əvvəl"
+justNow = "indicə"
+minutesAgo_one = "{{count}} dəq əvvəl"
+minutesAgo_other = "{{count}} dəq əvvəl"
+never = "heç vaxt"
+
+[portal.accountLink.modal]
+linkSubtitle = "Bu serverin hesablanacağı hesaba daxil olun."
+linkTitle = "Stirling hesabınızı bağlayın"
+reauthSubtitle = "Sessiyanızın müddəti bitdi — Stirling hesabınıza yenidən daxil olun. Instansiyanız bağlı qalır."
+reauthTitle = "Yenidən daxil olun"
+simulateSignIn = "Daxil olmanı simulyasiya et (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "host edilmiş Stirling hesabına qarşı tətbiqdaxili bağlanmanı aktivləşdirmək üçün."
+and = "və"
+before = "Ayarla"
+title = "SaaS girişi konfiqurasiya edilməyib"
+
+[portal.accountLink.panel]
+instancesSub = "Bu təşkilata qeydiyyatdan keçirilmiş hər öz hostinqli instansiya. Nəzarətsiz girişi dərhal dayandırmaq üçün etimadnaməni ləğv edin."
+instancesTitle = "Bağlanmış instansiyalar"
+revokeError = "Instansiyanı ləğv etmək mümkün olmadı"
+sub = "Bu öz hostinqli təşkilatı Stirling hesabına bağlayın ki, nəzarətsiz emal təşkilatınızın pul kisəsindən hesablansın."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Yalnız komanda sahibi təşkilatın bağlanmış instansiyalarını görə bilər."
+generic = "Komandanın bağlanmış instansiyalarını yükləmək mümkün olmadı. Bir az sonra yenidən cəhd edin."
+title = "Bağlanmış instansiyaları yükləmək mümkün olmadı"
+
+[portal.accountLink.state]
+free = "Editor planı"
+subscribed = "Processor planı"
+unlinked = "Bağlanmayıb"
+
+[portal.assistant]
+close = "Köməkçini bağla"
+error = "Köməkçiyə çatmaq mümkün olmadı."
+errorWithDetail = "Köməkçiyə çatmaq mümkün olmadı: {{detail}}"
+inputAriaLabel = "Köməkçidən soruş"
+inputPlaceholder = "Stirling haqqında soruşun…"
+open = "Köməkçini aç"
+send = "Göndər"
+title = "Köməkçi"
+tryAsking = "Soruşmağa çalışın"
+typing = "Yazır"
+
+[portal.auth]
+loading = "Yüklənir"
+redirectingToEditor = "Redaktora yönləndirilir..."
+
+[portal.billing.activation]
+maybeLater = "Bəlkə sonra"
+title = "Processor-i aktiv edin"
+
+[portal.billing.activation.payg]
+sub = "Aylıq limit təyin edin. İşlətdiyiniz qədər ödəyin."
+title = "İstifadə etdikcə ödə"
+
+[portal.billing.activation.prepay]
+badge = "2 ay pulsuz"
+sub = "Bir faktura, kart və ya bank köçürməsi."
+title = "Bir ili öncədən ödə"
+
+[portal.billing.checkout]
+noClientSecret = "Edge funksiyası client_secret qaytarmadı."
+title = "Processor planını aktiv edin"
+
+[portal.billing.checkout.activationSlow]
+body = "Ödənişiniz uğurlu oldu, lakin aktivləşdirmə adətən olduğundan bir az uzun çəkir. Avtomatik aktiv olacaq - bunu bağlayın və qısa müddətdə burada görünəcək."
+close = "Bağla"
+title = "Demək olar hazırdır"
+
+[portal.billing.checkout.cap]
+amountAria = "Aylıq xərc limiti"
+back = "Geri"
+continue = "Ödənişə davam et"
+error = "Xərc limitinizi təyin etmək alınmadı"
+finePrint = "Fakturalar aylıq göndərilir. İstənilən vaxt ləğv edin."
+noLimit = "Limitsiz"
+note = "Heç vaxt limitinizdən artıq hesablanmır. Emal sadəcə dayandırılır."
+perMonth = "/ ay"
+title = "Xərc limitinizi təyin edin"
+
+[portal.billing.checkout.card]
+fields = "Kart nömrəsi · MM / YY · CVC · ZIP"
+label = "Kart məlumatları"
+note = "Kart məlumatları Stripe tərəfindən toplanır. Stirling heç vaxt PAN və ya CVC saxlamır."
+
+[portal.billing.checkout.error]
+title = "Checkout başlatmaq mümkün olmadı"
+
+[portal.billing.checkout.finalizing]
+body = "Ödənişiniz keçdi. Bağlanmış instansiyalarınızda ölçülü emalı aktivləşdiririk - bu adətən bir neçə saniyə çəkir."
+hint = "Lütfən, bu pəncərəni açıq saxlayın."
+title = "Processor planınız aktivləşdirilir..."
+
+[portal.billing.checkout.pay]
+limit = "Aylıq xərc limiti {{amount}}/ay. Limitə çatdıqda emal dayandırılır."
+limitNoCap = "Xərc limiti yoxdur. Emal dayandırılmayacaq. Fakturalar aylıq göndərilir."
+
+[portal.billing.enterpriseUpsell]
+cta = "Enterprise təklifinizi qurun"
+description = "Öhdəlikli həcm endirimləri, air-gapped yerləşdirmə, xüsusi MSA və təhlükəsizlik yoxlamaları, həmçinin 3-cü tərəf distribyutor tərəfdaşlıqları."
+eyebrow = "Həcm endirimi · 1M+ PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Bu ay aktiv"
+cost = "Xərc"
+editorsDeployed = "Yerləşdirilmiş redaktorlar"
+inviteTeammates = "Komanda yoldaşlarını dəvət et"
+pdfsEdited = "Redaktə edilmiş PDF-lər"
+subtitle = "Bütün komandanız üçün istənilən yerdə yerləşdirin."
+title = "Pulsuz PDF redaktorları"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Checkout başlatmaq mümkün olmadı"
+currentPlan = "Cari plan"
+freeForever = "Həmişə pulsuz"
+noTeamResolved = "Pul kisənizdə hələ komanda müəyyən edilməyib — yeniləyin və yenidən cəhd edin."
+ownerOnly = "Yalnız komanda sahibi Processor planını aktiv edə bilər."
+payInvoice = "Tamamlamaq üçün fakturanı ödə"
+planName = "Editor"
+ssoIncluded = "SSO daxildir"
+switchOnProcessor = "Processor-u aktiv et →"
+unlimitedUsers = "Limitsiz istifadəçi"
+viewQuote = "Təklifi göstər"
+
+[portal.billing.invoices]
+columnAmount = "Məbləğ"
+columnDate = "Tarix"
+columnDescription = "Təsvir"
+columnPdfsProcessed = "Emal edilmiş PDF-lər"
+columnStatus = "Status"
+descriptionFallback = "Faktura"
+downloadAriaLabel = "{{number}} fakturasını PDF kimi endir"
+emptyDescription = "Komandanız abunə olduqdan və ilk dövr bağlandıqdan sonra fakturalarınız burada görünəcək."
+emptyTitle = "Hələ faktura yoxdur"
+fetchLimitNote_one = "Ən son {{count}} fakturanız göstərilir. Daha köhnə fakturalar Stripe portalındadır."
+fetchLimitNote_other = "Ən son {{count}} fakturanız göstərilir. Daha köhnə fakturalar Stripe portalındadır."
+loadError = "Fakturaları yükləmək mümkün olmadı: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Hamısını göstər {{count}}"
+showAll_other = "Hamısını göstər {{count}}"
+showFewer_one = "Daha az göstər (ilk {{count}})"
+showFewer_other = "Daha az göstər (ilk {{count}})"
+showMostRecent_one = "Ən son {{count}} göstər"
+showMostRecent_other = "Ən son {{count}} göstər"
+title = "Faktura tarixçəsi"
+viewAriaLabel = "{{number}} fakturasını Stripe-də göstər"
+viewLink = "Göstər ↗"
+
+[portal.billing.linkPrompt]
+cta = "Stirling hesabını bağla"
+description = "Manual PDF redaktəsi — göstərmə, imzalama, birləşdirmə, bölmə, su nişanı, sıxma, çevirmə, manual OCR — bağlı olub-olmamasından asılı olmayaraq həmişə pulsuzdur. Ölçülü emalın (avtomatlaşdırma, AI və API) 500 pulsuz PDF haqqını əldə etmək üçün bağlayın; daha çox lazım olduqda Processor planını aktiv edin və yalnız istifadə etdiyiniz qədər ödəyin."
+title = "Stirling hesabınızı bağlayın"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Aylıq hesablanır"
+cardEnding = "{{last4}} ilə bitən {{brand}}"
+cardFallback = "Kart"
+expiresBilledMonthly = "{{expiry}} tarixində bitir · aylıq hesablanır"
+eyebrow = "Ödəniş üsulu"
+managedSub = "Kartınız və ödəniş məlumatlarınız Stripe müştəri portalında təhlükəsiz saxlanılır."
+managedTitle = "Stripe-də idarə olunur"
+update = "Yenilə"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "Bu dövrdə hələ ölçülü emal yoxdur."
+eyebrow = "Bu dövrdə emal edilmiş PDF-lər"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "Ölçülü PDF-lər kateqoriyaya görə bölünüb"
+segmentAgentsDesc = "AI agent hərəkətləri"
+segmentAgentsLabel = "Agentlər"
+segmentApiDesc = "Birbaşa API sorğuları"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Avtomatlaşdırmalar və boru xətləri"
+segmentAutomationLabel = "Avtomatlaşdırma"
+sizeMultiplier = "{{formatted}} PDF ölçü çarpanından istifadə etdi"
+summary = "{{unique}} unikal · {{units}} sayğac vahidi · PDF başına orta {{avg}}"
+summaryNoRate = "{{unique}} unikal · {{units}} sayğac vahidi"
+unit = "ölçülü PDF-lər"
+unitsPending_one = "{{units}} sayğac vahidi əlaqələndirilmiş instansiyalardan sinxronizasiya gözləyir"
+unitsPending_other = "{{units}} sayğac vahidi əlaqələndirilmiş instansiyalardan sinxronizasiya gözləyir"
+
+[portal.billing.prepaid]
+capSuffix = "{{total}} öncədən ödənilmiş kreditdən"
+expires = "Bitmə tarixi {{date}}"
+eyebrow = "Öncədən ödənilmiş tutum"
+note = "Ölçülü hesablaşmadan əvvəl və xərc limitinizdən kənar istifadə olunur."
+topUp = "Balansı artır"
+
+[portal.billing.prepaid.buy]
+back = "Geri"
+calcTitle = "İllik ödənişinizi hesablayın"
+cancel = "Ləğv et"
+cancelPurchase = "Alışı ləğv et"
+close = "Bağla"
+continueToPayment = "Ödənişə davam et"
+finalise = "Tamamla"
+invoiceErrorTitle = "Fakturanı yaratmaq alınmadı"
+loadingTitle = "Təklifiniz yüklənir"
+payTitle = "İliniz üçün ödəniş edin"
+step = "Addım {{current}} / {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Dəyiş"
+deployRow = "Yerləşdirmə"
+done = "Hazır"
+enterpriseHint = "Bu, enterprise miqyasındadır. Bu həcmdə enterprise tarifləri istənilən özünəxidmət endirimindən daha sərfəlidir. Tarif kilidi, şərtlər və dəqiqələr ərzində təklif."
+governanceRow = "İdarəetmə"
+governanceValue = "{{label}} · {{count}} siyasət"
+handlesLabel = "Processor-iniz"
+handlesValue = "{{volume}} kredit / ay emal edir"
+pipelinesLabel = "Pipeline-lar"
+policiesMeta = "{{count}} siyasət"
+poolCaption = "İl üçün {{credits}} kreditdən ibarət bir hovuz. Ağır aylar yüngül aylardan borc götürür."
+priceLabel = "İliniz · 10 ay qiymətinə 12 ay"
+rateUnknown = "Dəqiq qiyməti checkout-da göstərəcəyik."
+savings = "{{amount}} qənaət edirsiniz · 2 ay pulsuz."
+sizingRow = "Ölçüləndirmə"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Ümumi istifadəçilər"
+
+[portal.billing.prepaid.consent]
+label = "Anlayıram ki, öncədən ödənilmiş tutumum bitdikdə və ya 12 aydan sonra müddəti başa çatdıqda, ləğv etməsəm, emal standart ölçülü istifadə etdikcə ödə tarifi ilə (xərc limitimə qədər) avtomatik davam edəcək və istənilən vaxt billing portalından ləğv edə bilərəm."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Stirling tərəfindən idarə olunur. Dəqiqələr ərzində hazırdır."
+cloudValue = "Stirling Cloud · İdarə olunur"
+selfhost = "Self-hosted"
+selfhostDesc = "Şəxsi infrastrukturda işləyir. Eyni tarif."
+selfhostValue = "Self-hosted · Şəxsi infrastruktur"
+
+[portal.billing.prepaid.offer]
+cta = "Təklifi nəzərdən keçir"
+subtitle = "PDF emalının bir ilini öncədən ödəyin və iki ay pulsuz əldə edin; ölçülü hesablaşmadan əvvəl, xərc limitinizdən kənar istifadə olunur."
+title = "10 ay qiymətinə 12 ay əldə edin"
+
+[portal.billing.prepaid.pay]
+accountName = "Hesab sahibinin adı"
+accountNamePlaceholder = "məs. Jane Smith"
+companyName = "Şirkət adı (istəyə bağlı)"
+companyNamePlaceholder = "məs. Acme Inc."
+downloadInvoice = "Fakturanı yüklə"
+payOnline = "Onlayn ödə"
+poNumber = "PO nömrəsi (istəyə bağlı)"
+poNumberPlaceholder = "məs. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Təkmil"
+advancedDesc = "Pipeline-lar emalınızın çoxunu idarə edir."
+none = "Heç biri"
+noneDesc = "Hələ Pipeline işlətmirsiniz. İstənilən vaxt aktiv edin."
+standard = "Standart"
+standardDesc = "Bir neçə Pipeline daxil olan PDF-ləri yenidən emal edir."
+
+[portal.billing.prepaid.posture]
+essentials = "Əsaslar"
+essentialsDesc = "Təsnifat, standart olaraq, üstəlik Paylaşım"
+governed = "İdarə olunan"
+governedDesc = "Təhlükəsizlik və Marşrutlaşdırma əlavə edir"
+regulated = "Tənzimlənən"
+regulatedDesc = "Bütün kateqoriyalar, o cümlədən Uyğunluq, Saxlama, Daxiletmə"
+
+[portal.billing.prepaid.review]
+download = "Təklifi yüklə (PDF)"
+downloading = "Hazırlanır…"
+share = "təsdiq üçün paylaş"
+
+[portal.billing.prepaid.size]
+compact = "Kompakt"
+compactDesc = "25 MB-dan kiçik fayllar, məlumat haqqı yoxdur"
+heavy = "Ağır"
+heavyDesc = "Skan edilmiş və ya şəkil-ağırlıqlı, adətən 50 MB+"
+standard = "Standart"
+standardDesc = "Əsasən kiçik, bəzi skanlar 25 MB-dan yuxarı"
+
+[portal.billing.prepaid.state]
+exhausted = "Bitib"
+healthy = "Kifayət qədər qalıb"
+low = "Azalır"
+
+[portal.billing.spendLimit]
+adjustLimit = "Limiti tənzimlə"
+cancel = "Ləğv et"
+capControlNote = "Dəyişikliklər dərhal tətbiq olunur — tavanı istənilən vaxt artırın və ya azaldın."
+capSuffix = "/ ay"
+capSuffixWithDocs = "/ ay · ≈ {{documents}} sənəd"
+displaySub = "Siz yalnız avtomatik emal etdiyiniz üçün hesablanırsınız — heç vaxt tavandan yuxarı deyil."
+editTitle = "Aylıq tavanınızı təyin edin"
+eyebrow = "Xərc limiti"
+guardrailBody = "sərt tavandır — ondan yuxarı heç vaxt hesablanmırsınız. Limitə çatanda ölçülü emal dayandırılır (limitsiz PDF redaktəsi işləməyə davam edir) ta ki, limiti artırana və ya dövr sıfırlanana qədər. Heç nə itmir."
+guardrailLabel = "Qoruyucu limitiniz:"
+noCap = "tavan yoxdur"
+pctUsed = "{{pct}}% istifadə olunub"
+remaining = "{{amount}} qalıb"
+save = "Limiti saxla"
+saveError = "Limiti saxlamaq mümkün olmadı"
+thisPeriodUncapped = "bu dövrdə {{amount}} · tavansız"
+usedThisMonth = "bu ay {{amount}} istifadə olunub"
+useSuggested = "Təklif ediləni istifadə et · {{amount}} / ay"
+
+[portal.billing.spendLimit.projection]
+body_one = "{{rate}}/gün ilə limitə ~{{count}} günə çatırsınız (~{{monthEnd}} ay sonu). Təklif olunan limit ~{{suggested}}."
+body_other = "{{rate}}/gün ilə limitə ~{{count}} günə çatırsınız (~{{monthEnd}} ay sonu). Təklif olunan limit ~{{suggested}}."
+label = "Aşacağı proqnozlaşdırılır."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Bu ay xərc"
+freeRemaining_one = "{{formatted}} pulsuz PDF qalıb"
+freeRemaining_other = "{{formatted}} pulsuz PDF qalıb"
+processed_one = "{{formattedCount}} PDF emal edildi."
+processed_other = "{{formattedCount}} PDF emal edildi."
+processedWithRate_one = "{{formattedCount}} PDF emal edildi, hər biri {{rate}}."
+processedWithRate_other = "{{formattedCount}} PDF emal edildi, hər biri {{rate}}."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "İndi artırın ki, avtomatlaşdırılmış emal heç vaxt dayanmasın."
+approachingTitle = "Aylıq xərc limitinizin {{pct}}%-indəsiniz"
+raiseLimit = "Limiti artır"
+reachedBody = "Ölçülü emal limiti artırana və ya dövr sıfırlanana qədər dayandırılıb. Limitsiz PDF redaktəsi işləməyə davam edir."
+reachedTitle = "Aylıq xərc limitinə çatıldı"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Stripe portalını açmaq mümkün olmadı"
+
+[portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
+capSuffix_one = "{{allowance}} pulsuz PDF-dən istifadə olunub"
+capSuffix_other = "{{allowance}} pulsuz PDF-dən istifadə olunub"
+eyebrow = "Processor sınağı"
+statusLabel_one = "{{remaining}} qalıb"
+statusLabel_other = "{{remaining}} qalıb"
+sub = "PDF Editor-dan pulsuz istifadə edin. PDF-ləri avtomatik emal etmək üçün ödəyin."
+title_one = "{{allowance}} PDF-i pulsuz emal edin"
+title_other = "{{allowance}} PDF-i pulsuz emal edin"
+titleWithRate_one = "{{allowance}} PDF-i pulsuz emal edin, sonra {{rate}}/PDF"
+titleWithRate_other = "{{allowance}} PDF-i pulsuz emal edin, sonra {{rate}}/PDF"
+
+[portal.components.billingUnit]
+approval = "təsdiq"
+check = "yoxlama"
+event = "hadisə"
+render = "render"
+review = "baxış"
+session = "sessiya"
+signature = "imza"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.connections]
+createTitle = "Yeni bağlantı"
+createTitleFor = "{{name}} qoş"
+delete = "Sil"
+edit = "Redaktə et"
+editTitle = "Bağlantını redaktə et"
+unsupportedType = "Bu bağlantı növü burada redaktə edilə bilməz."
+
+[portal.connections.categories.advanced]
+description = "Hələ dəstəkləmədiyimiz xidmət üçün."
+label = "Təkmil"
+
+[portal.connections.categories.audit]
+description = "Sənədlə nə baş verdiyini auditorlarınızın artıq baxdığı yerdə qeyd edin."
+label = "Audit və uyğunluq jurnalı"
+
+[portal.connections.categories.notify]
+description = "Başqa sistemə nəyinsə baş verdiyini bildirin."
+label = "Bildiriş və iş axını"
+
+[portal.connections.categories.security]
+description = "Sənəd hərəkət etməzdən əvvəl onu skan edin və ya etiketləyin."
+label = "Təhlükəsizlik və təsnifat"
+
+[portal.connections.categories.signing]
+description = "Sənədi imzalanmaq və ya notarial təsdiq üçün göndərin."
+label = "Elektron imza və notarial təsdiq"
+
+[portal.connections.categories.storage]
+description = "Emal edilmiş sənədlərin getdiyi yer - bucket, drive, ticket və ya səhifə."
+label = "Fayl və əlavə"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling bunu şifrəli saxlayır və bir daha göstərmir."
+label = "Giriş tokeni"
+
+[portal.connections.commonFields.apiKey]
+label = "API açarı"
+
+[portal.connections.commonFields.apiToken]
+label = "API tokeni"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Bu bağlantıdan istifadə edən addımlar yalnız bu URL altındakı yollara müraciət edə bilər, başqa host-a yox."
+label = "Server URL-i"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Şifrə"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "İstifadəçi adı"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Xidmətin sizə verdiyi URL-i yapışdırın. Yalnız onun altındakı yollara müraciət edilə bilər."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Bağlantı adı"
+namePlaceholder = "məs. Production"
+
+[portal.connections.picker]
+cancel = "Ləğv et"
+createNew = "Yeni bağlantı..."
+placeholder = "Bağlantı seçin"
+save = "Bağlantını saxla"
+
+[portal.connections.picker2]
+back = "İnteqrasiyanı dəyiş"
+heading = "Nəyə qoşulmaq istəyirsiniz?"
+noResultsBody = "Bunu hələ dəstəkləmirik - bizə bu barədə məlumat verin və əlavə etməyi nəzərdən keçirək."
+noResultsTitle = "\"{{query}}\" ilə uyğun heç nə yoxdur"
+searchPlaceholder = "İnteqrasiyaları axtarın - \"sign\", \"ocr\" və ya məhsul adı sınayın"
+
+[portal.connections.types.api]
+description = "Siyasətdən istənilən HTTP API-ni çağırın. URL-i, autentifikasiyanı və payload-u siz seçirsiniz."
+label = "Fərdi API"
+
+[portal.connections.types.api.fields.authType]
+label = "Autentifikasiya"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "İstifadəçi adı və şifrə"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Fərdi header-də token"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "Heç biri"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Token üçün daxil ol"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Bu bağlantıdan istifadə edən addımlar yalnız bu URL altındakı yollara müraciət edə bilər, başqa host-a yox."
+label = "Baza URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Header adı"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Giriş yolu"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Şifrə"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "API yükləmə linki ilə cavab verərsə, yalnız bu host-lar əldə edilə bilər. Vergüllə ayırın. Yalnız baza URL-in öz host-una icazə vermək üçün boş buraxın."
+label = "İcazə verilən nəticə host-ları"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Tokeni bu header kimi göndər"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "Giriş çağırışının tokeni qaytardığı cavab header-i, məsələn X-Auth-Token."
+label = "Token cavab header-i"
+
+[portal.connections.types.api.fields.username]
+label = "İstifadəçi adı"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "İşlətdiyiniz serverdə sənədləri zərərli proqramlara görə skan edin - heç nə şəbəkənizdən çıxmır."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Siyasətdə sənədlər üçün virus və məzmun skanı."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Yalnız məlum zərərli proqramları deyil, makroslar, icra edilə bilən fayllar, skriptlər və ya daxil edilmiş obyektlər olan sənədləri bloklayın."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Emal edilmiş sənədləri Confluence səhifəsinə əlavə edin."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Sənədləri elektron imza və notarial təsdiq üçün ConsignO Cloud (Notarius)-a göndərin."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "/api/v1 daxil olmaqla ConsignO Cloud mühitiniz."
+label = "Server URL-i"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API açarı"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API sirri"
+
+[portal.connections.types.consigno.fields.password]
+label = "Şifrə"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Yalnız təşkilatınız tenant-lardan istifadə edirsə lazımdır."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "İstifadəçi adı"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Siyasət sənədi emal etdikdə Discord-a mesaj göndərin."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Siyasət hər sənədi işlədikdə Elasticsearch-də audit hadisəsini indeksləyin."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Yeni sənədlər üçün FTP və ya FTPS serverini yoxlayın."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Bağlantı rejimi"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Aktiv"
+passive = "Passiv (tövsiyə olunur)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Adi FTP etimad məlumatlarını və faylları şifrələmədən göndərir; server dəstəkləyirsə FTPS seçin."
+label = "Şifrələmə"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (açıq / AUTH TLS)"
+implicit = "FTPS (gizli)"
+none = "Heç biri (adi FTP)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Siyasət işlədikdə Google Chat məkanına mesaj göndərin."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Emal edilmiş sənədləri Jira məsələsinə əlavə edin."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Siyasət işlədikdə sənəd və ya bildirişi email ilə göndərin."
+label = "Mailgun"
+
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "Emal edilmiş sənədləri Nextcloud-a yerləşdirin."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "Tətbiq şifrəsi"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "İşlətdiyiniz Presidio serverindən istifadə edərək sənəd mətnində şəxsi məlumatları aşkar edin."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "PDF-lərdə Microsoft Purview həssaslıq etiketlərini oxuyun və tətbiq edin."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "İstəyə bağlı. Yalnız etiketləri adla seçmək üçün lazımdır; etiketləmə onsuz da işləyir."
+label = "Tətbiq (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client sirri"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Hər etiketə SiteId kimi vurulur ki, Purview-uyğun alətlər onu hansı təşkilatın tətbiq etdiyini bilsin."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "Mənbələrin oxuya və pipeline çıxışlarının yaza biləcəyi S3 bucket."
+label = "S3 yaddaş"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Giriş açarı ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "AWS üçün boş buraxın. MinIO və ya başqa S3-uyğun yaddaş üçün bunu təyin edin."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Gizli giriş açarı"
+
+[portal.connections.types.sendgrid]
+description = "Siyasət işlədikdə sənəd və ya bildirişi email ilə göndərin."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Yeni sənədlər üçün SFTP (SSH) serverini yoxlayın."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "İstəyə bağlı. Serverin SHA-256 host açarı barmaq izi (`ssh-keyscan host | ssh-keygen -lf -` nəticəsindən). Təyin edildikdə yalnız bu açarı təqdim edən server qəbul olunur; boş olduqda ilk qoşulmada görünən açar sabitlənir və sonrakı dəyişikliklər rədd edilir."
+label = "Host açarı barmaq izi"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Açar passphrase-i"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Əvəzində private key ilə autentifikasiya edirsinizsə boş buraxın."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "İstəyə bağlı. Şifrə əvəzinə açarla autentifikasiya etmək üçün OpenSSH private key yapışdırın."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Siyasət sənədi emal etdikdə Slack-ə mesaj göndərin."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "SMB / CIFS şəbəkə paylaşımını izləyin (Windows və ya Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Şəbəkə paylaşımı"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "İstəyə bağlı. Serveriniz istifadə edirsə Windows domain-i və ya iş qrupu."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Paylaşım"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Siyasət hər sənədi işlədikdə Splunk-a audit hadisəsi göndərin."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Sumo Logic HTTP kollektoruna audit hadisəsi göndərin."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Siyasət işlədikdə Teams kanalına mesaj göndərin."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Hər sənədi və ya sadəcə detalları seçdiyiniz URL-ə göndərin."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Siyasətdən Zap və ya Make ssenarisini tetikləyin."
+label = "Zapier və Make"
+
+[portal.docs]
+browse = "Sənədlərə bax"
+viewSource = "Mənbəni GitHub-da göstər"
+
+[portal.docs.authentication]
+codeCaption = "hər sorğu"
+eyebrow = "BAŞLANĞIC"
+lead = "Bütün sorğular bearer token ilə autentifikasiya olunur. Açarlar mühit üzrə əhatələnir və rotasiya edilmədikcə müddəti bitmir."
+liveKey = "Production açarları — hesablanır, planınıza görə rate-limit olunur."
+testKey = "Sandbox açarları — pulsuzdur, sintetik fixture-lar qaytarır."
+title = "Autentifikasiya"
+
+[portal.docs.components]
+codeCaption = "görüntüləyicini daxil et"
+eyebrow = "KOMPONENTLƏR"
+lead = "Baxış növbələri və sənəd yoxlaması üçün daxil edilə bilən UI. Öz üslublarınızı gətirin və ya göndərilmiş mövzudan istifadə edin."
+title = "Drop-in görüntüləyicilər"
+
+[portal.docs.endpoints]
+eyebrow = "API İSTİNADI"
+fieldCount_one = "{{count}} sahə"
+fieldCount_other = "{{count}} sahə"
+filterAll = "Hamısı"
+filterAriaLabel = "Endpoint-ləri vertikala görə filtr et"
+lead = "Hər sənəd tipi tipli endpoint-dir. Faylı POST edin, sxemlə doğrulanmış JSON alın. Aşağıda vertikala görə filtr edin."
+title = "Endpoint-lər"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API İSTİNADI"
+lead = "Xətalar sabit maşın-oxunaqlı kod və insan üçün mesaj qaytarır. 4xx gövdəsi dəstək üçün həmişə request_id ehtiva edir."
+title = "Xətalar"
+
+[portal.docs.nav]
+ariaLabel = "Sənədləşdirmə"
+
+[portal.docs.nav.empty]
+description = "Sənədləşdirmə indeksi yüklənə bilmədi."
+title = "Docs əlçatan deyil"
+
+[portal.docs.quickstart]
+eyebrow = "BAŞLANĞIC"
+lead = "İlk sənədinizi tipli endpoint-ə göndərin və üç addımda strukturlaşdırılmış JSON geri alın. Model təlimi və prompt mühəndisliyi yoxdur."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "copy-paste reseptləri üçün."
+bodyBeforeLink = "eyni çağırışı pipeline-a bağlayaraq doğrulama, redaktə və çatdırmanı zəncirləyin — və ya MCP üzərindən agentə təqdim edin. Baxın"
+label = "Növbəti:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "Infrastructure tabından əhatələnmiş açar yaradın. Açarlar rate limitləri və istəyə bağlı IP allowlist daşıyır. Onu shell-ə eksport edin:"
+title = "API açarı buraxın"
+
+[portal.docs.quickstart.step2]
+body = "Faylı istənilən tipli endpoint-ə POST edin. Endpoint geri alacağınız sxemi müəyyən edir — burada faktura çıxarıcısı."
+snippetCaption = "faktura çıxar"
+title = "Sənəd göndər"
+
+[portal.docs.quickstart.step3]
+body = "Hər cavab endpoint sxeminə qarşı, etibar balı və hər sahə üzrə mənşə ilə doğrulanır."
+codeCaption = "200 OK"
+title = "Strukturlaşdırılmış nəticəni oxu"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "Paralellik"
+eyebrow = "BAŞLANĞIC"
+lead = "Limitlər planınıza görə miqyaslanır. 429 cavabı Retry-After başlığı ehtiva edir; SDK-lar avtomatik geri çəkilir."
+requestsPerMinute = "Sorğular / dəqiqə"
+title = "Rate limitləri və kvotalar"
+
+[portal.docs.recipes]
+cloneButton = "Resepti klonla"
+eyebrow = "PLAYBOOKS"
+lead = "Mənbələri, əməliyyatları və təyinatları zəncirləyən başdan-başa nümunələr. Hər biri klonlaya biləcəyiniz pipeline-a uyğun gəlir."
+title = "Reseptlər"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "Tipli cavablar, avtomatik təkrar cəhdlər və axın yükləmələri olan first-party müştərilər. Hamısı eyni endpoint kataloqunu izləyir."
+title = "Rəsmi SDK-lar"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Köhnəlmiş"
+
+[portal.docs.skills]
+eyebrow = "BACARIQLAR"
+lead = "Agentinizin tək alət kimi çağırdığı paketlənmiş, adlandırılmış imkanlar. Hər bacarıq əlavə edilmiş qiymətləndirmələri olan deterministik əməliyyat zənciridir."
+title = "Agent bacarıqları"
+
+[portal.docs.toc]
+title = "Bu səhifədə"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API İSTİNADI"
+lead = "document.processed, pipeline.completed və quota.threshold hadisələrinə abunə olun. Payload-lar HMAC-SHA256 ilə imzalanır."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "köməkçisi göndərilir."
+beforeHelper = "başlığını imzalama sirrinizə qarşı yoxlayın, yalnız sonra payload-a etibar edin. SDK-larla birlikdə"
+beforeSignature = "Doğrulayın:"
+
+[portal.documents]
+exportCsv = "CSV eksport et"
+search = "Fayl adı, ID ilə axtar..."
+subtitle = "Təşkilatınızın emal etdiyi hər sənəd, tam emal qeydi ilə. Məzmun girişi sorğu ilə məhdudlaşdırılır."
+title = "Sənədlər"
+
+[portal.documents.audit]
+approved = "Təsdiqlənib"
+archived = "Arxivlənib"
+elevation = "Səlahiyyət artırımı"
+empty = "Hələ heç bir hadisə qeydə alınmayıb."
+extracted = "Emal edilib"
+flagged = "Nəzərdən keçirilməlidir"
+ingested = "Qəbul edilib"
+reviewed = "Nəzərdən keçirilir"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Sənəd detalları bölmələri"
+
+[portal.documents.drawer.tabs]
+audit = "Audit"
+extractions = "Çıxarışlar"
+overview = "İcmal"
+
+[portal.documents.elevation]
+requestAccess = "Giriş tələb et"
+
+[portal.documents.elevation.active]
+description = "Müvəqqəti icazə — giriş jurnala yazılır və vaxtla məhdudlaşdırılır."
+descriptionFourEyes = "Müvəqqəti icazə — həmkar rəyçi xəbərdar edildi (dörd göz prinsipi)."
+title = "Giriş {{time}} ərzində bitir"
+
+[portal.documents.elevation.gated]
+description = "Məzmun zero-standing-access ilə məhdudlaşdırılıb. Tələb göndərmək vaxtla məhdud icazə başladır."
+descriptionFourEyes = "Məzmun zero-standing-access ilə məhdudlaşdırılıb. Tələb göndərmək vaxtla məhdud icazə başladır və həmkar rəyçini xəbərdar edir (dörd göz prinsipi)."
+title = "Həssas sənəd"
+
+[portal.documents.extractions]
+empty = "Bu sənəddən heç bir sahə çıxarılmayıb."
+masked = "Çıxarılmış sahələr gizlədilib. Bu sənədin məzmununa baxmaq üçün vaxtlı giriş tələb edin."
+
+[portal.documents.extractions.columns]
+confidence = "Etibarlılıq"
+field = "Sahə"
+value = "Dəyər"
+
+[portal.documents.filters]
+all = "Hamısı"
+ariaLabel = "Sənədləri statusa görə filtrlə"
+flagged = "İşarələnib"
+inReview = "Nəzərdən keçirilir"
+processed = "Emal edilib"
+
+[portal.documents.overview]
+action = "Pipeline / Əməliyyat"
+product = "Məhsul"
+received = "Vaxt"
+status = "Status"
+type = "Növ"
+user = "İstifadəçi"
+
+[portal.documents.queue.empty]
+connectSource = "Mənbə qoş"
+createPipeline = "Pipeline yarat"
+description = "Mənbələr sənədləri pipeline-larınıza ötürdükcə onlar nəzərdən keçirmək üçün burada görünəcək."
+title = "Növbədə sənəd yoxdur"
+
+[portal.documents.status]
+error = "Xəta"
+flagged = "Nəzərdən keçirilməlidir"
+inReview = "Nəzərdən keçirilir"
+processed = "Emal edilib"
+
+[portal.documents.table]
+auto = "Avtomatik"
+editorAction = "Editor"
+empty = "Bu filtrə uyğun sənəd yoxdur."
+rowActions = "Sətir əməliyyatları"
+sensitiveLabel = "Həssas"
+
+[portal.documents.table.columns]
+action = "Pipeline / Əməliyyat"
+document = "Sənəd"
+labels = "Labels"
+product = "Məhsul"
+status = "Status"
+time = "Vaxt"
+user = "İstifadəçi"
+
+[portal.editorAdmin]
+subtitle = "Stirling PDF Editor yerləşdirin, öz hostinqinizdə olan instansiyaları təşkilatınızla cütləşdirin və işləyən parkı idarə edin — hədəflər, sağlamlıq, giriş məlumatları və offline aktivləşdirmə bir yerdə."
+title = "Editor yerləşdirilməsi"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Aktiv istifadəçilər"
+host = "Host"
+lastSeen = "Son görünmə"
+region = "Region"
+status = "Status"
+target = "Target"
+version = "Versiya"
+
+[portal.editorAdmin.health.empty]
+description = "Canlı instansiya sağlamlığını burada görmək üçün hədəf yerləşdirin və onu cütləşdirin."
+title = "Hesabat verən instansiya yoxdur"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Offline paket yarat"
+lockCopy = "Offline və on-prem aktivləşdirmə Enterprise-in bir hissəsidir."
+subtitle = "Çıxış şəbəkə yolu olmayan offline və ya on-prem quraşdırma üçün imzalanmış aktivləşdirmə paketi yaradın. Onu instansiyaya köçürün və ilk işə salma quraşdırması zamanı tətbiq edin."
+talkToSales = "Satışla danışın"
+title = "Şəbəkədən təcrid olunmuş aktivləşdirmə"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} imzalanıb və köçürməyə hazırdır. O, bir instansiyanı aktivləşdirir və 14 günə bitir."
+title = "Paket hazırdır"
+
+[portal.editorAdmin.pairing]
+generated = "Yaradıldı ✓"
+generateNewCode = "Yeni kod yarat"
+lockCopy = "IaC təminatı Enterprise-in bir hissəsidir."
+rotate = "Dövr et"
+talkToSales = "Satışla danışın"
+
+[portal.editorAdmin.sections.health]
+sub = "Hesabat verən hər Editor instansiyası — versiya, region, status, son görünmə və aktiv istifadəçilər."
+title = "Instansiya sağlamlığı"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Öz hostinqinizdə olan editor-u bu təşkilata qoşun. Token yaradın, qısa kod ötürün və ya onu IaC vasitəsilə birləşdirin."
+title = "Cütləşdirmə"
+
+[portal.editorAdmin.sections.targets]
+sub = "Editor-un işlədiyi yer. Öz hostinqinizdə instansiya qurmaq üçün snippet kopyalayın və ya əməliyyat yükü olmadan Managed Cloud istifadə edin."
+title = "Yerləşdirmə hədəfləri"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Cari token"
+lastRotated = "Son dövr edilmə"
+rotateButton = "Servis tokenini dövr et"
+subtitle = "Instansiyalar bu giriş məlumatı ilə təşkilata autentifikasiya olunur. Onu qrafik üzrə və ya sızıntı şübhəsindən dərhal sonra dövr edin."
+title = "Servis tokeni"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Yeni token verildi. Hər bir öz hostinqinizdəki instansiyanın STIRLING_SERVICE_TOKEN dəyərini 24 saatlıq güzəşt pəncərəsində yeniləyin, yoxsa onlar offline olacaq."
+title = "İşləyən instansiyaları dövr et"
+
+[portal.editorAdmin.status]
+degraded = "Zəifləmiş"
+healthy = "Sağlam"
+offline = "Offline"
+pairing = "Cütləşdirilir"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} instansiya"
+instanceCount_other = "{{count}} instansiya"
+talkToSales = "Satışla danışın"
+upgradePlan = "Planı yüksəlt"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "On-prem və Kubernetes öz hostinq yerləşdirməsi Enterprise-in bir hissəsidir."
+paid = "Docker və Kubernetes ilə öz hostinq yerləşdirməsi ödənişli planda açılır."
+
+[portal.editorAdmin.targets.state]
+available = "Əlçatandır"
+locked = "Kilidlənib"
+running = "İşləyir"
+
+[portal.errorBoundary]
+description = "Bu görünüşdə gözlənilməz xəta baş verdi. Yenidən cəhd edin və ya yan paneldən başqa bölmə seçin."
+retry = "Yenidən cəhd et"
+title = "Bu səhifədə nəsə səhv getdi"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
+
+[portal.home.download]
+back = "Geri"
+body = "Desktop tətbiqini yükləyin və ya serveri self-host edin."
+done = "Hazır"
+guide = "{{name}} bələdçisini aç"
+openInBrowser = "Əvəzinə brauzerdə aç"
+sectionDesktop = "Desktop tətbiqi"
+sectionSelfHosted = "Self-hosted"
+title = "Stirling PDF Editor quraşdır"
+
+[portal.home.download.docker]
+detailBody = "Rəsmi image-i serverinizdə işlədin."
+note = ":8080-da açılır. Standart giriş: admin / stirling."
+tagline = "Serveri konteynerdə işlədin"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standart"
+
+[portal.home.download.kubernetes]
+detailBody = "Rəsmi Helm chart-ını quraşdırın."
+note = "Ayarları saxlamaq üçün /configs üçün PVC əlavə edin."
+tagline = "Helm ilə cluster-ə yerləşdirin"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Distribusiyanız üçün native build-lər."
+guideBtn = "Linux quraşdırma seçimlərinə baxın"
+note = "Ümumi distro-lar üçün AppImage, .deb və .rpm build-ləri mövcuddur."
+tagline = "Distro-nuz üçün native desktop tətbiqi"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Və ya Homebrew vasitəsilə"
+detailBody = "Quraşdırıcını işə salın və ya Homebrew istifadə edin."
+downloadBtn = "macOS üçün endir"
+tagline = "Apple silicon və Intel üçün native tətbiq"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = ".jar faylını bare metal serverdə işə salın."
+downloadBtn = ".jar faylını endir"
+note = "Java 21+ tələb olunur. :8080-də açılır; standart giriş admin / stirling."
+runLabel = "Sonra bunu işə salın"
+tagline = ".jar faylını bare metal serverdə işə salın"
+title = "Manual server quraşdırması"
+
+[portal.home.download.windows]
+altLabel = "Və ya winget vasitəsilə"
+detailBody = "Quraşdırıcını işə salın və ya paket meneceri istifadə edin."
+downloadBtn = "Quraşdırıcını endir"
+tagline = "Microsoft Windows üçün native tətbiq"
+title = "Windows"
+
+[portal.home.editor]
+activeOfDeployed = "Bu ay {{total}}-dən {{active}} aktivdir"
+name = "Stirling PDF Editor"
+open = "Brauzerdə aç"
+updated = "{{time}} yeniləndi"
+
+[portal.home.editor.deploy]
+finish = "Yerləşdirməni tamamla"
+options = "Yerləşdirmə seçimlərinə bax"
+start = "Editor-u yerləşdir"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Öz hostinqinizdə · Docker"
+kubernetes = "Öz hostinqinizdə · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Günortanız xeyir"
+evening = "Axşamınız xeyir"
+morning = "Sabahınız xeyir"
+
+[portal.infrastructure]
+manageEditorDeployment = "Editor yerləşdirilməsini idarə et"
+sectionsAriaLabel = "İnfrastruktur bölmələri"
+subtitle = "Stirling iş sahəniz üçün yerləşdirmələr, giriş məlumatları, təhlükəsizlik vəziyyəti, saxlama və audit izi."
+title = "İnfrastruktur"
+
+[portal.infrastructure.apiKeys]
+createKey = "Açar yarat"
+heading = "API açarları"
+subheading = "Hər açar üzrə tezlik limitləri, icazələr və IP allowlist-ləri olan əhatəli giriş məlumatları."
+
+[portal.infrastructure.apiKeys.card]
+created = "Yaradılıb"
+lastUsed = "Son istifadə"
+revoke = "Açarı ləğv et"
+usageMonth = "Bu ay istifadə"
+usageToday = "Bu gün istifadə"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Stirling API çağırmağa başlamaq üçün əhatəli açar yaradın."
+title = "Hələ API açarı yoxdur"
+
+[portal.infrastructure.apiKeys.error]
+load = "API açarlarınızı yükləmək mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "\"{{name}}\" ləğv edilsin? Bu açarı hələ də istifadə edən hər hansı inteqrasiya dərhal 401 xətaları almağa başlayacaq. Bunu geri qaytarmaq mümkün deyil."
+cancel = "Ləğv et"
+confirm = "Açarı ləğv et"
+title = "API açarını ləğv et"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Audit hadisələrini kateqoriyaya görə filtrlə"
+heading = "Audit jurnalları"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "Bu kateqoriyada hadisə yoxdur."
+subheading = "İş sahənizdə hər autentifikasiya, konfiqurasiya və emal hadisəsi."
+
+[portal.infrastructure.audit.columns]
+actor = "İcraçı"
+event = "Hadisə"
+latency = "Gecikmə"
+status = "Status"
+target = "Resurs"
+timestamp = "Timestamp"
+
+[portal.infrastructure.audit.empty]
+description = "İş sahəsi fəaliyyəti baş verdikcə burada görünəcək."
+title = "Audit hadisəsi yoxdur"
+
+[portal.infrastructure.audit.export]
+cancel = "Ləğv et"
+error = "Eksport alınmadı. Zəhmət olmasa yenidən cəhd edin."
+exportButton = "Eksport et"
+exporting = "Eksport edilir…"
+fieldsLegend = "Sütunlar"
+format = "Format"
+open = "Eksport et"
+subtitle = "Audit hadisələrini CSV və ya JSON kimi endirin. Daxil ediləcək sütunları seçin."
+title = "Audit jurnalını eksport et"
+
+[portal.infrastructure.audit.export.fields]
+date = "Tarix"
+documentName = "Sənəd adı"
+ipAddress = "IP ünvanı"
+outcome = "Nəticə"
+tool = "Alət"
+username = "İstifadəçi adı"
+
+[portal.infrastructure.audit.filters]
+all = "Hamısı"
+auth = "Auth"
+config = "Konfiqurasiya"
+elevation = "Səlahiyyət artırımı"
+policy = "Siyasət"
+processing = "Emal"
+security = "Təhlükəsizlik"
+
+[portal.infrastructure.audit.forbidden]
+description = "Audit jurnalı komanda rəhbərləri və adminlər üçün əlçatandır. Giriş üçün komanda rəhbərinizdən və ya admindən soruşun."
+title = "Girişiniz yoxdur"
+
+[portal.infrastructure.audit.metrics]
+config = "Konfiqurasiya"
+policy = "Siyasət"
+processing = "Emal"
+totalEvents = "Ümumi hadisələr · 24s"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Konfiqurasiya"
+elevation = "Səlahiyyət artırma"
+policy = "Siyasət"
+processing = "Emal"
+security = "Təhlükəsizlik"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Xəta"
+info = "Məlumat"
+success = "Uğur"
+warning = "Xəbərdarlıq"
+
+[portal.infrastructure.createKey]
+cancel = "Ləğv et"
+createKey = "Açar yarat"
+done = "Hazırdır"
+keyNameLabel = "Açar adı"
+keyNamePlaceholder = "məs. Production · ingest"
+secretKeyCaption = "Gizli açar"
+secretWarning = "Bunu secrets manager-də saxlayın. Stirling yalnız hash saxlayır — onu sonradan bərpa etmək mümkün deyil."
+subtitle = "Açarı lazım olan minimum əhatə ilə məhdudlaşdırın. İstənilən vaxt dövr edə və ya ləğv edə bilərsiniz."
+subtitleCreated = "Bu sirri indi kopyalayın — bir daha göstərilməyəcək."
+title = "API açarı yarat"
+titleCreated = "Açar yaradıldı"
+
+[portal.infrastructure.keyLabel]
+active = "Aktiv"
+revoked = "Ləğv edilib"
+
+[portal.infrastructure.tabs]
+apiKeys = "API açarları"
+audit = "Audit jurnalları"
+deployments = "Yerləşdirmələr"
+models = "Modellər"
+security = "Təhlükəsizlik"
+storage = "Saxlama"
+
+[portal.integrations]
+availableHeading = "Mövcud"
+comingSoonHeading = "Tezliklə"
+connect = "Qoşul"
+connectionCount_one = "{{count}} bağlantı"
+connectionCount_other = "{{count}} bağlantı"
+customApi = "Xüsusi API"
+searchPlaceholder = "İnteqrasiyaları axtar"
+subtitle = "Stirling-in danışa bildiyi hər şey. Məlumatlar burada bir dəfə yaradılır, sonra mənbələr, siyasətlər və pipeline-lar tərəfindən istinad edilir."
+title = "İnteqrasiyalar"
+typedName = "{{tool}} adı"
+
+[portal.integrations.filters]
+all = "Hamısı"
+audit = "Audit"
+connected = "Qoşulub"
+notify = "Bildiriş"
+security = "Təhlükəsizlik"
+signing = "İmzalama"
+storage = "Yaddaş"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
+
+[portal.integrations.status]
+connected = "Qoşulub"
+
+[portal.integrations.table]
+integration = "İnteqrasiya"
+worksWith = "Bununla işləyir"
+
+[portal.integrations.worksWith]
+pipelines = "Pipeline-lar"
+policies = "Siyasətlər"
+sources = "Mənbələr"
+
+[portal.legal]
+draft = "{{label}} · qaralama"
+loadError = "Bu sənədi yükləmək mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
+loading = "Yüklənir…"
+title = "Hüquqi sənəd"
+
+[portal.nav]
+agent-builder = "Agent Builder"
+components = "Komponentlər"
+docs = "Developer Docs"
+documents = "Sənədlər"
+editor = "Editor"
+home = "Əsas səhifə"
+infrastructure = "İnfrastruktur"
+integrations = "İnteqrasiyalar"
+pipelines = "Pipeline-lar"
+policies = "Siyasətlər"
+procurement = "Satınalma"
+sources = "Mənbələr"
+usage = "İstifadə və fakturalama"
+users = "İstifadəçilər"
+
+[portal.nav.section]
+platform = "PDF Platforması"
+processor = "PDF Prosessoru"
+
+[portal.pipelines]
+subtitle = "Backend-də hər avtomatlaşdırılmış sənəd pipeline-ı: mənbələr dəsti üzərində əməliyyatların sıralı zənciri, trigger ilə işə salınır. Addımlarını və mənbələrini görmək üçün sətirə klikləyin."
+title = "Pipeline-lar"
+
+[portal.pipelines.actions]
+newPipeline = "Yeni pipeline"
+
+[portal.pipelines.builder]
+activate = "Activate"
+back = "Pipeline-lara qayıt"
+cannotFollow = "{{produced}} qəbul edə bilmir"
+chooseAccount = "Hesab seçin"
+chooseDestination = "Təyinat seçin"
+chooseOperation = "Bu addımın nə edəcəyini seçin"
+chooseSource = "Mənbə seçin"
+discard = "Dəyişiklikləri at"
+inputs = "Giriş"
+inputSource = "Giriş mənbəyi"
+inputTrigger = "Trigger"
+keepEditing = "Redaktəyə davam et"
+moreActions = "More actions"
+needsConfiguring = "Quraşdırma tələb olunur"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
+noToolMatches = "Axtarışınıza uyğun alət yoxdur."
+pause = "Pause"
+rename = "Rename pipeline"
+searchTools = "Alətləri axtar"
+sendToSystem = "Başqa sistemə göndər"
+stepsIncompatible = "Bu addımlar əvvəlki addımın yaratdığı ilə işləyə bilmir: {{tools}}."
+stepsNeedSetup = "Saxlamadan əvvəl bu addımların hələ quraşdırılması lazımdır: {{tools}}."
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
+unknownStep = "Tanınmayan əməliyyat, olduğu kimi saxlanıldı."
+unsavedBody = "Saxlanmamış dəyişiklikləriniz var. Çıxmadan əvvəl onları saxlayırsınız, yoxsa atırsınız?"
+unsavedTitle = "Saxlanmamış dəyişikliklər"
+usesDefaults = "Standart parametrlərlə işləyir"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Əvvəlki addımdan bütün faylları birləşdirir"
+fan-out = "Əvvəlki addımdan hər fayl üçün bir dəfə işləyir"
+format-mismatch = "{{accepts}} tələb olunur, lakin əvvəlki addım {{produced}} yaradır"
+output-uncertain = "İşləməyə bilər: əvvəlki addımın çıxışı onun necə quraşdırılmasından asılıdır"
+source-mismatch = "{{accepts}} tələb olunur, lakin bu pipeline-ın girişi {{produced}}-dir"
+undeclared-operation = "Bu addımın nə qəbul etdiyini yoxlamaq olmur"
+
+[portal.pipelines.composer]
+addTool = "Alət əlavə et"
+create = "Pipeline yarat"
+createPaused = "Create paused"
+editingUnsupported = "Bu alət parametrlərinin redaktə üçün göstərilməsi hələ dəstəklənmir."
+editSource = "Edit source"
+name = "Ad"
+namePlaceholder = "məs. Redaction sweep"
+noToolSettings = "Bu alətin konfiqurasiya edilə bilən parametri yoxdur."
+output = "Çıxış"
+save = "Dəyişiklikləri saxla"
+scheduleEvery = "Hər"
+trigger = "Trigger"
+triggerManual = "Yalnız manual"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
+
+[portal.pipelines.composer.unit]
+days = "gün"
+hours = "saat"
+minutes = "dəqiqə"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
+
+[portal.pipelines.delete]
+body = "\"{{name}}\" pipeline-ı silinsin? Bu əməliyyat geri qaytarıla bilməz."
+cancel = "Ləğv et"
+confirm = "Sil"
+title = "Pipeline silinsin?"
+
+[portal.pipelines.detail]
+clearHistory = "Tarixçəni təmizlə"
+delete = "Pipeline-ı sil"
+run = "İndi işə sal"
+
+[portal.pipelines.empty]
+action = "Pipeline yarat"
+connectSource = "Mənbə qoş"
+description = "İlk pipeline-ınızı yaradın: işləyəcəyi mənbələri seçin, əməliyyatları zəncirləyin və çıxışın hara gedəcəyini seçin."
+title = "Hələ pipeline yoxdur"
+
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
+[portal.pipelines.kpi]
+active = "Aktiv"
+paused = "Dayandırılıb"
+total = "Pipeline-lar"
+
+[portal.pipelines.run]
+allProcessed_one = "İşlədiləcək heç nə yoxdur: mənbənin {{count}} sənədi artıq emal edilib."
+allProcessed_other = "İşlədiləcək heç nə yoxdur: mənbələrdəki bütün {{count}} sənəd artıq emal edilib."
+completed_one = "İşlətmə tamamlandı."
+completed_other = "Bütün {{count}} işlətmə tamamlandı."
+empty = "İşlətmək üçün heç nə yoxdur: mənbələrdə emal ediləcək sənəd yox idi."
+failed = "İşlətmə alınmadı: {{error}}"
+inFlight = "İşlədiləcək yeni heç nə yoxdur: sənədlər əvvəlki işə salmadan hələ də emal olunur."
+parked_one = "İşlədiləcək heç nə yoxdur: {{count}} sənəd əvvəl uğursuz olub və gözləməyə qoyulub. Səbəbi düzəldin, sonra yenidən cəhd etmək üçün tarixçəni təmizləyin."
+parked_other = "İşlədiləcək heç nə yoxdur: {{count}} sənəd əvvəl uğursuz olub və gözləməyə qoyulub. Səbəbi düzəldin, sonra yenidən cəhd etmək üçün tarixçəni təmizləyin."
+running = "İşlətmə başladı; hələ davam edir."
+timeout = "İşlətmə gözləniləndən uzun çəkir; arxa planda hələ tamamlana bilər."
+
+[portal.pipelines.status]
+active = "Aktiv"
+paused = "Dayandırılıb"
+
+[portal.pipelines.table]
+name = "Pipeline"
+sources = "Mənbələr"
+status = "Status"
+steps = "Addımlar"
+trigger = "Trigger"
+
+[portal.pipelines.trigger]
+folder-watch = "Qovluq izləmə"
+manual = "Manual"
+schedule = "Planlaşdırılmış"
+
+[portal.policies]
+defaultName = "{{category}} Siyasəti"
+subtitle = "Hər sənədə alət pipeline-ını tətbiq edən daimi avtomatlaşdırmalar. Hər siyasət upload və ya export zamanı işə düşür, alət zəncirini icra edir və tətbiq edilmiş versiyanı orijinalın yanında saxlayır."
+title = "Siyasətlər"
+
+[portal.policies.card]
+comingSoon = "Enterprise-ə yüksəldin"
+notSetUp = "Qurulmayıb"
+requiresAiEngine = "AI mühərriki tələb olunur"
+
+[portal.policies.categories.classification]
+desc = "Yükləmə zamanı hər sənədin növünü müəyyən edin və arxivləşdirmə və axtarış üçün metadatasını etiketləyin."
+label = "Təsnifat"
+
+[portal.policies.categories.compliance]
+desc = "Hər sənəddə HIPAA, GDPR, SOC 2 və ya FedRAMP tələblərini tətbiq edin."
+label = "Uyğunluq"
+
+[portal.policies.categories.ingestion]
+desc = "Sənədləri təsnif edin, strukturlaşdırılmış data çıxarın, adlandırma qaydalarını tətbiq edin və səhifələri normallaşdırın."
+label = "Qəbul"
+
+[portal.policies.categories.retention]
+desc = "Sənədlərin nə qədər saxlanacağını, nə vaxt arxivləşdiriləcəyini və nə vaxt silinəcəyini təyin edin."
+label = "Saxlama müddəti"
+
+[portal.policies.categories.routing]
+desc = "Sənədləri avtomatik olaraq düzgün komandaya, qovluğa və ya sistemə yönləndirin."
+label = "Yönləndirmə"
+
+[portal.policies.categories.security]
+desc = "PII aşkar edin, redaktə edin, aktiv məzmunu çıxarın və sənədlərə su nişanı əlavə edin."
+label = "Təhlükəsizlik"
+
+[portal.policies.config]
+scopeAll = "Bütün sənədlər"
+
+[portal.policies.config.classification]
+summary = "Hər yüklənmiş sənədi komandanızın etiketlərinə görə təsnif edir və metadatasını etiketləyir."
+
+[portal.policies.config.classification.rules]
+0 = "Təsnif et"
+1 = "Metadatanı etiketlə"
+
+[portal.policies.config.compliance]
+summary = "Sənədlər sistemi tərk etməzdən əvvəl onları tənzimləyici framework-lərə qarşı yoxlayır."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Giriş jurnalı"
+auditTrail = "Audit izi"
+frameworks = "Framework-lər"
+onViolation = "Uyğunsuz olduqda"
+
+[portal.policies.config.compliance.rules]
+0 = "Framework skanı"
+1 = "Əməliyyatı tətbiq et"
+2 = "Audit izi"
+
+[portal.policies.config.ingestion]
+summary = "Sənədləri təsnif edir, strukturlaşdırılmış data çıxarır, adlandırmanı tətbiq edir və səhifələri normallaşdırır."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Həddən aşağı"
+minConfidence = "Minimum etibarlılıq"
+
+[portal.policies.config.ingestion.rules]
+0 = "Təsnif et"
+1 = "Çıxar"
+2 = "Adlandır"
+3 = "Normallaşdır"
+
+[portal.policies.config.purview]
+label = "Microsoft Purview həssaslıq etiketi tətbiq et"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Etiket ID-si"
+labelIdHelp = "Purview portalından etiketin GUID-i. Etiketin tətbiqi onun metadatasını PDF üzərinə yazır; şifrələyə bilməz, bunun üçün Microsoft müştərisi lazımdır."
+labelName = "Etiket adı (istəyə bağlı)"
+labelNameHelp = "ID ilə yanaşı qeyd olunur ki, insanlar və alətlər etiketi tanıya bilsin."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview siyasətin tətbiq etdiyi etiketi şəxsin seçdiyi etiketdən fərqləndirir."
+label = "Etiket necə qeyd olunur"
+privileged = "Şəxs tərəfindən seçilmiş kimi"
+standard = "Avtomatik tətbiq edilmiş kimi"
+
+[portal.policies.config.purviewRead]
+label = "Microsoft Purview etiketini oxu"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Sənədin artıq daşıdığı etiketi oxuyur ki, sonrakı addımlar ona görə hərəkət edə bilsin."
+
+[portal.policies.config.retention]
+summary = "Sənədlərin nə qədər saxlanacağını, nə vaxt arxivləşdiriləcəyini və nə vaxt silinəcəyini tətbiq edir."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Sonra arxivləşdir"
+immutableHold = "Dəyişməz saxlama"
+keepFor = "Bu müddətə saxla"
+
+[portal.policies.config.retention.rules]
+0 = "Saxlama bloklaması"
+1 = "Avtomatik arxivləşdir"
+2 = "Silinmə bloku"
+
+[portal.policies.config.routing]
+summary = "Sənədləri növ və təsnifata əsasən düzgün təyinat yerinə yönləndirir."
+
+[portal.policies.config.routing.fields]
+destination = "Təyinat yeri"
+notify = "Yönləndirmə zamanı xəbərdar et"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Avtomatik təsnif et"
+1 = "Qovluğa yönləndir"
+2 = "Webhook bildirişi"
+
+[portal.policies.config.security]
+summary = "PII aşkar edir və redaktə edir, aktiv məzmunu (JavaScript) çıxarır və sənədlərə su nişanı əlavə edir."
+
+[portal.policies.config.security.rules]
+0 = "PII redaktə et"
+1 = "JavaScript sil"
+2 = "Su nişanı"
+
+[portal.policies.detail]
+enforces = "Tətbiq edir"
+onEveryExport = "Hər export zamanı"
+onEveryUpload = "Hər upload zamanı"
+outputAsNewFile = "yeni fayl kimi"
+outputAsNewVersion = "yeni versiya kimi"
+recentActivity = "Son fəaliyyət"
+retry = "Yenidən cəhd et"
+showLess = "Daha az göstər"
+showMore = "Daha çox göstər"
+sources = "Mənbələr"
+
+[portal.policies.detail.actions]
+clearHistory = "Emal tarixçəsini təmizlə"
+delete = "Sil"
+editSettings = "Parametrləri redaktə et"
+pause = "Fasilə ver"
+resume = "Davam etdir"
+runNow = "İndi işə sal"
+
+[portal.policies.detail.clearHistory]
+body = "Bu siyasət artıq emal etdiyi hər bir faylı unudacaq və növbəti işə salmada mənbələrində hazırda olan hər şeyi yenidən emal edəcək. Faylların özü dəyişdirilmir. Bu əməliyyatı geri qaytarmaq mümkün deyil."
+cancel = "Ləğv et"
+confirm = "Tarixçəni təmizlə"
+title = "Emal tarixçəsi təmizlənsin?"
+
+[portal.policies.detail.emptyActivity]
+description = "Bu siyasət işə düşdükdən sonra sənədlər burada görünəcək."
+title = "Hələ fəaliyyət yoxdur"
+
+[portal.policies.endpoints]
+addWatermark = "Su nişanı"
+autoRedact = "PII redaktə et"
+classifyAndLabel = "Təsnif et"
+compressPdf = "Sıxışdır"
+flatten = "Yastılaşdır"
+ocrPdf = "OCR"
+sanitizePdf = "JavaScript-i sil"
+
+[portal.policies.offline]
+description = "Siyasətləriniz saxlanılıb və bağlantı bərpa olunanda görünəcək."
+retry = "Yenidən cəhd et"
+title = "Backend əlçatan deyil"
+
+[portal.policies.operations]
+change = "Bu addımın nə edəcəyini dəyiş"
+noResults = "Heç bir addım buna uyğun gəlmir. Məhsul adı və ya \"scan\", \"notify\", \"attach\" sınayın."
+searchPlaceholder = "Addımları axtarın - \"scan\", \"attach\" və ya məhsul adı sınayın"
+
+[portal.policies.operations.bodyMode]
+binary = "Xam fayl baytları"
+json = "JSON payload daxilində"
+multipart = "Fayl yükləməsi kimi (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Öz ClamAV serveriniz sənədi yoxlayır; şəbəkənizdən heç nə çıxmır."
+label = "Viruslara görə yoxla (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Makrolar, icra edilə bilən fayllar, skriptlər və ya yerləşdirilmiş obyektlər daşıyan sənədləri rədd edir."
+label = "Aktiv məzmunu blokla"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive sənədi yoxlayır və təmiz deyilsə, icra dayanır."
+label = "Viruslara görə yoxla"
+
+[portal.policies.operations.confluenceAttach]
+description = "Emal edilmiş sənədi səhifəyə yerləşdirir."
+label = "Confluence səhifəsinə əlavə et"
+
+[portal.policies.operations.consignoSubmit]
+description = "Sənədi imzalamaq üçün ConsignO Cloud-a təqdim edir."
+label = "İmzaya göndər (ConsignO)"
+note = "Sənədi təqdim edir. İmzalanmış nüsxənin əldə edilməsi hələ dəstəklənmir, çünki addım nəticəni sonrakı addıma ötürə bilmir."
+
+[portal.policies.operations.customApiCall]
+description = "Zəngi özünüz hazırlayın: path, method, body və cavabın emalı."
+label = "Xüsusi API çağır"
+
+[portal.policies.operations.discordNotify]
+description = "Siyasətin sənədi emal etdiyini kanala bildirir."
+label = "Discord-a mesaj göndər"
+
+[portal.policies.operations.elasticIndex]
+description = "Siyasətin nə etdiyini axtarıla bilən sənəd kimi qeyd edir."
+label = "Audit hadisəsini Elasticsearch-də indekslə"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart upload API-lərinə uyğundur; JSON faylı payload daxilində istəyən API-lərə uyğundur; binary xam baytları göndərir."
+label = "Sənədi necə göndərmək"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "Olduğu kimi göndərilən JSON body. {{document.base64}} faylı daşıyır; {{document.*}} və {{run.*}} hər sənəd üçün doldurulur."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Hesab"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "API-nin sənədi altında gözlədiyi forma sahəsi."
+label = "Fayl sahəsinin adı"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "Kimdən"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "Header adı/dəyəri cütlərindən ibarət JSON obyekt. Bağlantının credential-ı sizin üçün əlavə olunur."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "İndeks"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue açarı"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Mesaj body-si kimi göndərilir. {{document.*}} və {{run.*}} hər sənəd üçün doldurulur."
+label = "Mesaj"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Səhifə ID-si"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Bağlantının əsas URL-nə əlavə olunur. Heç vaxt başqa host-a çata bilməz."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Drive-da hara yazılacağı. {{document.filename}} hər sənəd üçün doldurulur."
+label = "Təyinat yolu"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Hesabat sənədə toxunmur. Əvəz et qayıdanla dəyişdirir."
+label = "Cavabla nə etmək"
+
+[portal.policies.operations.fields.signerEmail]
+label = "İmzalayanın email-i"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Mövzu"
+placeholder = "Emal edildi: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio bu mətni təhlil edir. {{document.title}} istifadə edin və ya yoxlanmasını istədiyiniz mətni yapışdırın."
+label = "Yoxlanacaq mətn"
+
+[portal.policies.operations.fields.to]
+label = "Kimə"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud istifadəçi adı"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Siyasətin sənədi emal etdiyini space-ə bildirir."
+label = "Google Chat-a mesaj göndər"
+
+[portal.policies.operations.jiraAttach]
+description = "Emal edilmiş sənədi issue-ya yerləşdirir."
+label = "Jira issue-suna əlavə et"
+
+[portal.policies.operations.mailgunEmail]
+description = "Emal edilmiş sənədi əlavə kimi göndərir."
+label = "Sənədi email ilə göndər (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+
+[portal.policies.operations.nextcloudUpload]
+description = "Emal edilmiş sənədi qovluğa yazır."
+label = "Nextcloud-a yüklə"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Öz Presidio serveriniz tapdığı şəxsi məlumatları bildirir."
+label = "Şəxsi məlumatları aşkar et"
+note = "Presidio faylları deyil, mətni oxuyur. Yoxlanmasını istədiyiniz mətni verin — sənədin özü yüklənmir."
+
+[portal.policies.operations.responseMode]
+replace = "Sənədi cavabla əvəz et"
+report = "Sənədi saxla, cavabı qeyd et"
+
+[portal.policies.operations.sendgridEmail]
+description = "Emal edilmiş sənədi əlavə kimi göndərir."
+label = "Sənədi email ilə göndər (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Siyasətin sənədi emal etdiyini kanala bildirir."
+label = "Slack-ə mesaj göndər"
+
+[portal.policies.operations.splunkEvent]
+description = "Siyasətin nə etdiyini auditorlarınızın artıq baxdığı yerdə qeyd edir."
+label = "Audit hadisəsini Splunk-a göndər"
+
+[portal.policies.operations.sumologicEvent]
+description = "Siyasətin nə etdiyini HTTP collector-a qeyd edir."
+label = "Audit hadisəsini Sumo Logic-ə göndər"
+
+[portal.policies.operations.teamsNotify]
+description = "Siyasətin sənədi emal etdiyini kanala bildirir."
+label = "Teams-ə mesaj göndər"
+
+[portal.policies.operations.webhookPost]
+description = "Sənədin özünü seçdiyiniz URL-ə göndərir."
+label = "Sənədi webhook-a göndər"
+
+[portal.policies.operations.zapierNotify]
+description = "İcra detalları avtomatlaşdırmanıza ötürür."
+label = "Zap və ya Make ssenarisini trigger et"
+
+[portal.policies.stats]
+activeFor = "Aktiv"
+dataProcessed = "Emal edilmiş data"
+docsEnforced = "Tətbiq edilmiş sənədlər"
+
+[portal.policies.status]
+active = "Aktiv"
+paused = "Fasilədə"
+
+[portal.policies.summary.active]
+description = "Yükləmə/ixrac zamanı tətbiq olunur"
+label = "Aktiv siyasətlər"
+
+[portal.policies.summary.categories]
+description = "Konfiqurasiya üçün əlçatandır"
+label = "Kateqoriyalar"
+
+[portal.policies.summary.docsEnforced]
+description = "Aktiv siyasətlər üzrə"
+label = "Tətbiq edilmiş sənədlər"
+
+[portal.policies.summary.paused]
+description = "Konfiqurasiya edilib, lakin işə düşmür"
+label = "Fasilədə"
+
+[portal.policies.table]
+appliesTo = "Buna tətbiq olunur"
+docs = "Tətbiq edilmiş sənədlər"
+enforces = "Tətbiq edir"
+policy = "Siyasət"
+status = "Status"
+
+[portal.policies.wizard.actions]
+back = "Geri"
+cancel = "Ləğv et"
+continue = "Davam et"
+enablePolicy = "Siyasəti aktiv et"
+saveChanges = "Dəyişiklikləri saxla"
+
+[portal.policies.wizard.capability.classify]
+desc = "Komandanızın etiketlərindən sənədin növünü müəyyən edir və onu etiketləyir ki, kateqoriyaya görə arxivlənsin və axtarılsın."
+label = "Sənədi təsnif et"
+
+[portal.policies.wizard.capability.compress]
+desc = "Sənədi daha kiçik fayl ölçüsünə sıxışdırır."
+label = "Fayl ölçüsünü azalt"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Forma sahələrini və annotasiyaları səhifəyə birləşdirir ki, onlar redaktə edilə bilməsin."
+label = "Sənədi yastılaşdır"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Skan edilmiş səhifələrin seçilə bilən, axtarıla bilən mətnə çevrilməsi üçün OCR işə salır."
+label = "Mətni axtarıla bilən et"
+
+[portal.policies.wizard.capability.redact]
+desc = "Sosial sığorta və kart nömrələri kimi həssas detalları tapır və qaraldır ki, oxuna bilməsin."
+label = "Həssas məlumatları redaktə et"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Gizli JavaScript-i silir ki, sənəd açıldıqda heç nə avtomatik işləməsin."
+label = "Aktiv məzmunu çıxar"
+
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Müstəqil timestamp authority istifadə edərək sənədin müəyyən vaxtda məhz bu formada mövcud olduğunu sübut edir. Yalnız hash göndərilir - sənəd serverinizi heç vaxt tərk etmir."
+label = "Etibarlı timestamp əlavə et"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Hər səhifəyə görünən nişan (məs. “Məxfi”) vurur."
+label = "Su nişanı tətbiq et"
+
+[portal.policies.wizard.classification]
+description = "Hər yüklənmiş sənəd daxili etiketlərə görə təsnif edilir və uyğun növlərlə etiketlənir. Etiket dəsti bütün komandanız üzrə paylaşılır."
+labelsHeading = "Təsnifat etiketləri"
+
+[portal.policies.wizard.errors]
+noTools = "Əvvəlcə iş axınında ən azı bir aləti aktiv edin."
+saveFailed = "Siyasəti saxlamaq mümkün olmadı. Lütfən, yenidən cəhd edin."
+
+[portal.policies.wizard.output]
+heading = "Çıxış və işə salma"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Avtomatik nömrələmə"
+label = "Fayl adı qaydası"
+placeholder = "Əlavə ediləcək mətn (istəyə bağlı)"
+prefix = "Prefiks"
+suffix = "Suffiks"
+
+[portal.policies.wizard.output.outputAs]
+label = "Çıxış kimi"
+newFile = "Yeni fayl"
+newVersion = "Yeni versiya"
+
+[portal.policies.wizard.output.runOn]
+export = "İxrac"
+helper = "Siyasət işə düşəndə: yükləmə zamanı və ya ixracdan əvvəl."
+label = "İşə salınma vaxtı"
+upload = "Yükləmə"
+
+[portal.policies.wizard.settings]
+heading = "Parametrlər"
+
+[portal.policies.wizard.sources]
+heading = "Mənbələr"
+loading = "Mənbələr yüklənir…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Quraşdırma addımları"
+settings = "Parametrlər"
+workflow = "Əməliyyatlar"
+
+[portal.policies.wizard.title]
+edit = "{{category}} siyasətini redaktə et"
+setUp = "{{category}} siyasətini qur"
+
+[portal.policies.wizard.workflow]
+description = "Bu siyasətin emal etdiyi hər sənədə nə edəcəyini seçin."
+
+[portal.policySummary.action]
+setUp = "Qur"
+
+[portal.processorFlow]
+footnote = "Saylar son 24 saat üzrədir. Axın sürəti illüstrativdir."
+liveBadge = "Canlı"
+stats = "{{connected}} qoşulub · {{processed}} PDF emal edilib"
+title = "PDF Prosessoru"
+
+[portal.processorFlow.lens]
+ariaLabel = "Baxış rejimi"
+flow = "Axın"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24s"
+failed = "Uğursuz"
+heading = "Nəticələr"
+success = "Çatdırılıb"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} aktiv"
+count = "{{n}} · 24s"
+heading = "Siyasətlər"
+setUp = "Quraşdır"
+soon = "Tezliklə"
+
+[portal.processorFlow.sankey]
+waist = "Siyasətlər · {{n}} aktiv"
+
+[portal.processorFlow.sankey.empty]
+description = "Sənədlərin prosessordan keçən axınını izləmək üçün mənbə qoşun və siyasəti aktiv edin."
+title = "Hələ axın yoxdur"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Qoş"
+editor = "Stirling PDF Editor"
+heading = "Mənbələr"
+perDay = "{{n}} / 24s"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email qəbulu"
+
+[portal.procurement]
+subtitle = "Komandanızın qiymətləndirilməsi, müqavilələşdirilməsi və işə qoşulmasını təmin edin. Hər sənəd bir yerdə."
+title = "Satınalma"
+
+[portal.procurement.agreement]
+agreeCta = "Razılaş və abunə ol"
+confidential = "Məxfi"
+confirm = "Stirling Enterprise Agreement-i oxudum və razıyam."
+docName = "Stirling Enterprise Agreement"
+docSub = "MSA, Order Form, EULA və DPA bir imzada birləşdirilib."
+download = "Endir"
+downloadDraftError = "Razılaşma PDF-i yaratmaq mümkün olmadı - sənəd renderer-i əlçatan deyil. Zəhmət olmasa, bir az sonra yenidən cəhd edin və ya dəstək ilə əlaqə saxlayın."
+downloadError = "İmzalanmış razılaşmanı endirmək mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
+legalName = "Hüquqi şəxsin adı"
+legalNamePlaceholder = "İmzalayacaq hüquqi şəxs"
+loadError = "Razılaşmanı yükləmək mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
+loading = "Razılaşma yüklənir..."
+ref = "İstinad {{ref}} · {{version}}"
+requestChanges = "Dəyişikliklər istə"
+scrollHint = "Nəzərdən keçirmək üçün sürüşdürün"
+signatory = "İmzalayanın adı"
+signatoryPlaceholder = "Tam ad"
+signatoryTitle = "İmzalayanın vəzifəsi"
+signatoryTitlePlaceholder = "məs. Baş hüquqşünas"
+signError = "İmzanızı qeyd etmək mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
+
+[portal.procurement.builder]
+addons = "Əlavələr"
+addressLine1 = "Ünvan sətri 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Ünvan sətri 2"
+addressLine2Placeholder = "Suite, mərtəbə, bina"
+back = "Geri"
+businessName = "Biznes adı"
+businessNamePlaceholder = "Şirkətiniz"
+city = "Şəhər"
+cityPlaceholder = "San Francisco"
+completeRequired = "Zəhmət olmasa, təklif yaratmadan əvvəl tələb olunan sahələri ( * ilə işarələnmiş) etibarlı email ilə tamamlayın."
+contactEmail = "Əlaqə email-i"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Əlaqə şəxsi"
+contactNamePlaceholder = "Jane Doe"
+continue = "Davam et"
+done = "Hazır"
+eula = "Stirling Enterprise EULA-nı oxudum və razıyam. O, bu təklifdən yaradılan razılaşmanı tənzimləyir."
+generate = "Təklif yarat"
+indemnification = "IP kompensasiyası"
+indemnificationSub = "EULA-ya əsasən uyğun IP iddialarını müdafiə edirik"
+paperEyebrow = "Enterprise təklifi"
+paperFor = "Bunun üçün hazırlanıb"
+pdfSize = "PDF ölçüsü"
+poNumber = "PO nömrəsi"
+poNumberPlaceholder = "İstəyə bağlı"
+postalCode = "Poçt indeksi"
+postalCodePlaceholder = "94105"
+posture = "İdarəetmə"
+posture_count = "~{{count}} siyasət"
+posture_essentials = "Əsaslar"
+posture_essentialsSub = "Təsnifat + Paylaşım — standartlar"
+posture_governed = "İdarə olunan"
+posture_governedSub = "Təhlükəsizlik və Yönləndirmə əlavə edir"
+posture_regulated = "Tənzimlənən"
+posture_regulatedSub = "Hər kateqoriya — Uyğunluq, Saxlama, Qəbul"
+qbr = "Rüblük biznes icmalları"
+qbrSub = "SE-niz hər rüb istifadəni və yol xəritəsini nəzərdən keçirir"
+region = "Ştat / region"
+regionPlaceholder = "California"
+running = "{{annual}} / il · {{years}} illik {{tcv}}"
+s1Sub = "Komandanız və hər il emal etməyi gözlədiyiniz PDF-lər."
+s1Title = "Nə qədər emal edəcəksiniz?"
+s2Sub = "Daha uzun müddətlər tarifə endirim edir; xidmət səviyyəniz dəstəyi müəyyən edir."
+s2Title = "Öhdəlik və xidmət"
+s3Sub = "Təklif və onun yaratdığı razılaşma üçün."
+s3Title = "Məlumatlarınız"
+serviceLevel = "Xidmət səviyyəsi"
+size_compact = "Yığcam"
+size_compactSub = "Əsasən mətn, 1 MB-dan az"
+size_heavy = "Ağır"
+size_heavySub = "Skan edilmiş və ya şəkil ağırlıqlı, 5 MB+"
+size_standard = "Standart"
+size_standardSub = "Qarışıq mətn və şəkillər, 1–5 MB"
+slDedicated = "Ayrılmış"
+slDedicatedSub = "4 iş saatı · ayrılmış hesab meneceri · +30%"
+slPriority = "Prioritet"
+slPrioritySub = "Eyni iş günü · adlı CSM · +15%"
+slStandard = "Standart"
+slStandardSub = "Növbəti iş günü · paylaşılan CSM · daxildir"
+stepOf = "Addım {{n}} / {{total}}"
+taxId = "VAT / Vergi ID-si"
+taxIdPlaceholder = "İstəyə bağlı"
+term = "Müddət"
+termDiscount = "{{pct}}% çoxillik öhdəlik endirimi tətbiq edildi"
+title = "Təklifinizi qurun"
+training = "İşə qoşulma və təlim"
+trainingSub = "Komandanızı işə salmaq üçün canlı sessiyalar"
+users = "Ümumi istifadəçilər"
+usersPlaceholder = "məs. 250"
+viewEula = "Oxu"
+volEstimated = "{{count}} istifadəçidən təxmin edilib (hər biri ~2,000 PDF, avtomatlaşdırma daxil). Daha yaxşı bilirsinizsə, redaktə edin."
+volManual = "Sizin rəqəminiz istifadə olunur. İstənilən vaxt komanda ölçüsündən yenidən təxmin edin."
+volNoUsers = "Əmin deyilsiniz? Komanda ölçüsünü daxil edin, biz təxmin edək."
+volume = "İllik PDF həcmi"
+volumePlaceholder = "məs. 1,000,000"
+years_one = "{{count}} il"
+years_other = "{{count}} il"
+
+[portal.procurement.documents]
+agreement = "Enterprise Agreement"
+agreementSub = "MSA, Order Form və DPA bir imzada."
+download = "Endir"
+eula = "EULA və Kommersiya Şərtləri"
+eulaSub = "Proqram təminatı və self-serve kommersiya şərtləri."
+invoice = "Faktura"
+invoiceSub = "İlk abunə fakturanız."
+laterInvoice = "Qəbul etdikdən sonra əlçatan olacaq"
+laterQuote = "Təklifiniz verildikdən sonra əlçatan olacaq"
+quote = "Təklif"
+quoteSub = "Maddələnmiş enterprise təklifiniz."
+sla = "SLA Əlavəsi"
+slaSub = "Dəstək səviyyələri və cavab hədəfləri."
+subprocessors = "Subprocessor-lar"
+subprocessorsSub = "Sizin adınıza məlumatları emal edən üçüncü tərəflər."
+subtitle = "Sövdələşmə sənədləriniz, istənilən vaxt əlçatan."
+title = "Sənədlər"
+view = "Bax"
+
+[portal.procurement.error]
+title = "Nəsə səhv getdi"
+
+[portal.procurement.hero]
+barAria = "Mərhələ {{current}} / {{total}}"
+ctaAgreement = "Razılaşmanı nəzərdən keçir və imzala"
+ctaExploring = "Sınağınızı quraşdırın"
+ctaQuote = "Təklifinizi nəzərdən keçirin"
+ctaReviewQuote = "Təklifi nəzərdən keçir"
+ctaTrial = "Təklifinizi qurun"
+documents = "Sənədlər"
+eyebrow = "Enterprise satınalması"
+eyebrowCompany = "{{company}} Enterprise"
+inviteTeammates = "Komanda yoldaşlarını dəvət et"
+licenseKey = "Lisenziya açarı"
+liveSub = "Təşkilatınız təmin edilib və lisenziyanız aktivdir."
+liveTitle = "Stirling Enterprise-də canlıdasınız"
+next = "Növbəti: {{stage}}"
+open = "Satınalmanı aç"
+scheduleCall = "Zəng planlaşdır"
+sentenceAgreement = "razılaşmanı nəzərdən keçirin və imzalayın"
+sentenceLive = "təminetmə və yayım"
+sentencePayment = "satınalma sifarişi və ödəniş"
+sentenceQuote = "təklifinizi nəzərdən keçirin və qəbul edin"
+sentenceTrial = "sınaq iş məkanınızı quraşdırın"
+
+[portal.procurement.journey]
+daysLeft_one = "{{count}} gün qalıb"
+daysLeft_other = "{{count}} gün qalıb"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Bir imza MSA, order form, EULA və DPA-nı əhatə edir."
+gatingAction = "Razılaşmanızı nəzərdən keçirin və imzalayın"
+label = "Razılaşma"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "İş sahənizi təmin edin və go-live playbook-u işə salın."
+gatingAction = "İş sahəniz təmin edilir"
+label = "Tətbiq"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Kart, bank köçürməsi və ya satınalma sifarişi əsasında ödəniş edin."
+gatingAction = "Ödənişi təsdiqlə"
+label = "Ödəniş"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Öhdəlikli həcm qiymətləndirməsini və müqavilə müddətini nəzərdən keçirin."
+gatingAction = "Təklifinizi qəbul edin"
+label = "Təklif"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Stirling-i sənədləriniz və iş axınlarınızla qiymətləndirin."
+gatingAction = "Təklifinizi qurun"
+label = "Sınaq"
+
+[portal.procurement.license]
+copied = "Kopyalandı"
+copy = "Açarı kopyala"
+downloadError = "Offline lisenziya faylını hələ yaratmaq mümkün olmadı — lütfən, bir azdan yenidən cəhd edin."
+downloadOffline = "Offline lisenziyanı endir (.lic)"
+hint = "Aktivləşdirmək üçün bu açarı self-hosted instansiyaya yapışdırın və ya qeydləriniz üçün saxlayın. Onu təhlükəsiz saxlayın."
+label = "Lisenziya açarınız"
+subtitle = "Bu açarla self-hosted instansiyanı aktivləşdirin və ya qeydləriniz üçün saxlayın."
+title = "Lisenziya açarınız"
+trialFileHint = "Bu, sınaq lisenziya faylınızdır. Razılaşmanız qüvvəyə mindikdən sonra qayıdıb onu yenidən endirin — onlayn lisenziya açarından fərqli olaraq, .lic faylı öz-özünə yenilənməyəcək."
+
+[portal.procurement.link]
+cta = "Hesabı əlaqələndir"
+description = "Satınalma əlaqələndirilmiş Stirling hesabınızda işləyir: sınağı təmin etməyimiz, təklifinizi qiymətləndirməyimiz və hesablaşmanı başlatmağımız belə olur. Başlamaq üçün hesabı əlaqələndirin."
+eyebrow = "Enterprise"
+title = "Başlamaq üçün hesabınızı əlaqələndirin"
+
+[portal.procurement.live]
+description = "Abunəliyiniz aktivdir və lisenziyanız verilib. Komandanız təmin edilib və hesablaşma başlayıb."
+eyebrow = "Canlı"
+title = "Stirling Enterprise-də canlıdasınız"
+
+[portal.procurement.milestone]
+downloadError = "Təklif PDF-ini hələ endirmək mümkün olmadı — lütfən, bir azdan yenidən cəhd edin."
+
+[portal.procurement.payment]
+description = "Təklifiniz qəbul edilib və lisenziyanız artıq aktivdir — komandanız dərhal başlaya bilər. Hazır olanda ilk fakturanı ödəyin; onu burada ödəyə və ya endirə bilərsiniz, email lazım deyil."
+downloadAgreement = "İmzalanmış razılaşmanı endir"
+downloadInvoice = "Fakturanı endir"
+eyebrow = "Ödəniş"
+title = "Abunəlik yaradıldı"
+viewInvoice = "Fakturaya bax və ödə"
+
+[portal.procurement.review]
+acceptCta = "Təklifi qəbul et"
+annual = "İllik haqq (1-ci il)"
+downloadCta = "Təklifi endir"
+poNumber = "Satınalma sifarişi: {{po}}"
+renewal = "Müddətdən sonra {{amount}}/il ilə yenilənir (+{{pct}}% CPI)"
+tcv = "{{years}} illik müddət, əvvəlcədən tam ödənilib: {{tcv}}"
+validUntil = "{{date}} tarixinədək etibarlıdır"
+
+[portal.procurement.schedule]
+fallback = "Planlaşdırıcını yükləmək mümkün olmadı."
+fallbackLink = "Planlaşdırmanı yeni tabda aç"
+loading = "Planlayıcı yüklənir..."
+subtitle = "Həllər mühəndisiniz komandanızı yayım boyunca yönləndirəcək. Sizə uyğun vaxt seçin."
+title = "Zəng planlaşdır"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Bağlı, outbound yoxdur"
+back = "Geri"
+businessName = "Biznes adı"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "İdarə olunan, ən sürətli başlanğıc"
+continue = "Davam et"
+deployment = "Harada yerləşdirilməlidir?"
+eula = "Stirling EULA və Kommersiya Şərtləri ilə razıyam."
+fullName = "Tam ad"
+fullNamePlaceholder = "Adınız"
+invites = "Komanda yoldaşlarını dəvət et · istəyə bağlı"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Zəng planlaşdır"
+seats = "Test edən insanlar"
+seatsPlaceholder = "məs. 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker və ya Kubernetes"
+start = "Sınağa başla"
+stepOf = "Addım {{n}} / {{total}}"
+subtitle = "14 gün pulsuz, kart tələb olunmur."
+subtitleDetails = "Təklifiniz və razılaşmanız üçün bir neçə detal."
+talkFirst = "Əvvəlcə danışmağa üstünlük verirsiniz?"
+title = "Sınağınızı quraşdırın"
+viewEula = "Oxu"
+workEmail = "İş email-i"
+workEmailPlaceholder = "you@company.com"
+
+[portal.procurement.trial]
+body = "Uzatma 7 gün əlavə edir və həllər mühəndisinizi xəbərdar edir."
+bodyMaxed = "Bütün uzatmalarınızı istifadə etmisiniz — daha çox vaxta ehtiyacınız varsa, həllər mühəndisinizlə danışın."
+cancel = "Sınağı ləğv et"
+extend = "7 gün uzat"
+maxed = "Limitə çatıb"
+subtitle = "Pulsuz sınağınız {{date}} tarixinə qədər davam edir. Kart tələb olunmur."
+title = "Enterprise sınağı"
+
+[portal.settings.groups]
+admin = "Admin"
+
+[portal.settings.sections]
+account-link = "Hesab bağlantısı"
+
+[portal.shell.sidebar]
+appEditor = "Editor"
+appProcessor = "Processor"
+linkAccount = "Stirling hesabını əlaqələndir"
+primaryNav = "Əsas naviqasiya"
+switchApp = "Tətbiqi dəyiş"
+
+[portal.shell.topbar]
+closeNav = "Naviqasiyanı bağla"
+openNav = "Naviqasiyanı aç"
+search = "Axtar"
+
+[portal.sources]
+subtitle = "Sənədləri Stirling-ə ötürən təkrar istifadə edilə bilən giriş bağlantıları. Bağlantını bir dəfə konfiqurasiya edin, sonra istənilən sayda siyasətdə ona istinad edin. Konfiqurasiyası və hansı siyasətlərin istifadə etməsi üçün sətrə klikləyin."
+title = "Mənbələr"
+
+[portal.sources.actions]
+connectSource = "Mənbə qoş"
+
+[portal.sources.builder]
+back = "Mənbələrə qayıt"
+backToTypes = "Bütün mənbə növləri"
+cancel = "Ləğv et"
+chooseHint = "Sənədlərin haradan gələcəyini seçin. Bozlaşdırılmış connector-lar yoldadır."
+comingSoon = "Tezliklə"
+comingSoonHeading = "Tezliklə"
+create = "Mənbə yarat"
+createTitle = "Mənbə qoş"
+delete = "Sil"
+editTitle = "Mənbəni redaktə et"
+enabled = "Aktivləşdirilib"
+save = "Dəyişiklikləri saxla"
+
+[portal.sources.builder.folderAccess]
+description = "Qovluq avtomatlaşdırmaları yalnız administratorun icazə verdiyi qovluqlardan istifadə edə bilər. Onu Qovluq Girişi ayarlarına əlavə edin, sonra yenidən cəhd edin."
+openSettings = "Qovluq Girişi ayarları"
+title = "Bu qovluğa icazə verilmir"
+
+[portal.sources.delete]
+body = "\"{{name}}\" silinsin? Bu əməliyyatı geri qaytarmaq mümkün deyil. Ona istinad edən siyasətlər yenilənməlidir."
+cancel = "Ləğv et"
+confirm = "Sil"
+title = "Mənbə silinsin?"
+
+[portal.sources.kpi]
+inUse = "İstifadədə"
+total = "Bağlantılar"
+unused = "İstifadə olunmur"
+
+[portal.sources.networkFields.connection]
+helperText = "Server ünvanı və credential-ları olan saxlanmış bağlantı. Ona istinad edən hər mənbə tərəfindən təkrar istifadə olunur."
+label = "Bağlantı"
+
+[portal.sources.networkFields.directory]
+helperText = "Serverdə yoxlanılacaq qovluq, login home və ya share root-a nisbətən. Root üçün boş buraxın."
+label = "Qovluq"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume hər siyasət onu emal etdikdən sonra hər faylı serverdən silir."
+label = "Oxuma rejimi"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: hər faylı bir dəfə emal et"
+snapshot = "Snapshot: hər icrada qovluğu yenidən oxu"
+
+[portal.sources.networkFields.recursive]
+label = "Qovluq dərinliyi"
+
+[portal.sources.networkFields.recursive.options]
+all = "Alt qovluqları daxil et"
+top = "Yalnız üst səviyyə"
+
+[portal.sources.status]
+active = "Aktiv"
+disabled = "Deaktiv"
+unused = "İstifadə olunmur"
+
+[portal.sources.table]
+documents = "Sənədlər"
+source = "Mənbə"
+status = "Status"
+type = "Type"
+usedBy = "Siyasətlər"
+
+[portal.sources.types.box]
+description = "Komandanızın artıq paylaşdığı Box qovluqlarından sənədləri çəkin."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Paylaşılan Dropbox qovluğundan sənədləri çəkin."
+label = "Dropbox"
+
+[portal.sources.types.editor]
+description = "Komandanızın editorda, siyasət və AI icraları üzrə emal etdiyi sənədlər."
+label = "Editor"
+noPolicies = "Editordan hələ heç bir siyasət işə salınmayıb."
+
+[portal.sources.types.email]
+description = "Xüsusi mailbox-a göndərilən əlavələri sənədlərə çevirin."
+label = "Email inbox"
+
+[portal.sources.types.folder]
+description = "Yeni sənədlər üçün serverdəki kataloqu izləyin."
+label = "Qovluq"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Stirling-in emal ediləcək faylları izlədiyi mütləq yol."
+label = "Kataloq yolu"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Məzmun yoxlaması hər dəyişdirilmiş faylı oxuyur, buna görə məzmunu dəyişməyən ad dəyişmələri və toxunmalar yenidən emal edilmir."
+label = "Dəyişiklik aşkarlanması"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Ölçü, tarix və məzmun yoxlaması"
+stat = "Ölçü və dəyişdirilmə tarixi"
+
+[portal.sources.types.folder.fields.mode]
+label = "Oxuma rejimi"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "İstehlak: hər faylı bir dəfə emal et"
+snapshot = "Snapshot: hər işə salmada qovluğu yenidən oxu"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Qovluq dərinliyi"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Alt qovluqları daxil et"
+top = "Yalnız üst səviyyə"
+
+[portal.sources.types.ftp]
+description = "Yeni sənədlər üçün FTP və ya FTPS server qovluğunu yoxlayın."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Paylaşılan Google Drive qovluqlarından sənədləri çəkin."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Yeni sənədlər üçün SMB network share-i izləyin."
+label = "Şəbəkə drive-ı"
+
+[portal.sources.types.onedrive]
+description = "Yeni sənədlər üçün OneDrive qovluqlarını izləyin."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Amazon S3 və ya S3-uyğun bucket-dən sənədləri çəkin."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "Bucket və credential-ları saxlayan bağlantı. Ona istinad edən hər mənbə və pipeline çıxışı tərəfindən təkrar istifadə olunur."
+label = "Bağlantı"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume hər siyasət onu emal etdikdən sonra hər object-i bucket-dən silir."
+label = "Oxuma rejimi"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: hər object-i bir dəfə emal et"
+snapshot = "Snapshot: hər icrada bucket-i yenidən oxu"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Yalnız açarları bu prefix ilə başlayan object-lər emal olunur."
+label = "Açar prefix-i"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Yeni sənədlər üçün SFTP drop qovluğunu yoxlayın."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "SharePoint sənəd kitabxanalarından sənədləri çəkin."
+label = "SharePoint"
+
+[portal.sources.types.unknown]
+label = "Mənbə"
+
+[portal.sources.types.webhook]
+createNote = "Bu webhook-u yaratdığınız zaman delivery URL və signing secret yaradılır. Göndərənlər sənədləri həmin URL-ə POST edir və istinad edən siyasətlər gəlişdə işləyir."
+description = "İstənilən xarici sistemdən imzalanmış HTTP POST ilə sənədləri qəbul edin."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "Signing secret webhook yaradıldıqda bir dəfə göstərilir. Onu dəyişmək üçün mənbəni yenidən yaradın."
+
+[portal.sources.types.webhook.reveal]
+copy = "Kopyala"
+done = "Hazır"
+secret = "Signing secret"
+secretHelp = "Hər delivery-nin raw body-sini bu açarla imzalayın (HMAC-SHA256) və X-Stirling-Signature header-i kimi göndərin."
+secretWarning = "Signing secret-i indi kopyalayın. Təhlükəsizliyiniz üçün o yalnız bir dəfə göstərilir və sonra əldə edilə bilməz."
+title = "Webhook yaradıldı"
+url = "Delivery URL"
+usage = "Hər sənədi binary content type (application/pdf və ya application/octet-stream) ilə raw request body kimi delivery URL-ə POST edin. İstinad edən siyasətlər gəlişdə avtomatik işləyir."
+
+[portal.sources.wizard]
+name = "Ad"
+namePlaceholder = "məs. İddiaların qəbulu"
+type = "Növ"
+
+[portal.stepModal]
+close = "Bağla"
+
+[portal.usage]
+managePayment = "Ödənişi idarə et"
+subtitle = "Stirling-in hesabladığı hər PDF üçün istehlak, fakturalar və plan idarəetməsi, bir konsolda."
+title = "İstifadə və hesablaşma"
+
+[portal.usage.error]
+loadWallet = "Cüzdanı yükləmək mümkün olmadı"
+openStripePortal = "Stripe portalını açmaq mümkün olmadı"
+walletUnavailable = "Cüzdan əlçatan deyil: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Yenidən daxil ol"
+body = "Stirling hesab sessiyanızın müddəti bitib. Hesablaşmaya baxmaq üçün yenidən daxil olun — instansiyanız əlaqəli qalır."
+title = "Sessiyanın müddəti bitib"
+
+[portal.users]
+title = "İstifadəçilər"
+
+[portal.users.roles.admin]
+label = "Admin (Təşkilat sahibi)"
+summary = "İş sahəsi, parametrlər və üzvlər üzərində tam idarəetmə."
+
+[portal.users.roles.admin.permissions]
+0 = "İstifadəçiləri, komandaları və rolları idarə et"
+1 = "S3 bağlantıları daxil olmaqla bütün inteqrasiyaları idarə et"
+2 = "Portal girişini ver və ya ləğv et"
+3 = "Team Owner-in edə bildiyi hər şey"
+
+[portal.users.roles.guest]
+label = "Qonaq"
+summary = "Məhdud və ya yalnız web girişi; şəxsi konfiqurasiyalar saxlaya bilməz."
+
+[portal.users.roles.guest.permissions]
+0 = "Yalnız web / demo istifadəsi"
+1 = "API açarları və ya inteqrasiyalar yoxdur"
+2 = "Portal girişi yoxdur"
+3 = "Paylaşılan yerlərdə yalnız oxuma"
+
+[portal.users.roles.member]
+label = "Üzv"
+summary = "Adi istifadəçi — paylaşılan resurslar və öz konfiqurasiyaları ilə işləyir."
+
+[portal.users.roles.member.permissions]
+0 = "Editor və paylaşılan inteqrasiyalardan istifadə et"
+1 = "Şəxsi API və MCP konfiqurasiyaları yarat"
+2 = "Onlarla paylaşılan komanda konfiqurasiyalarını gör"
+3 = "S3 və ya iş sahəsi idarəetməsi yoxdur"
+
+[portal.users.roles.team_owner]
+label = "Komanda sahibi"
+summary = "Komandaya sahibdir — onun üzvlərinin resurslarını və paylaşılan konfiqurasiyalarını idarə edir."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Komandanın S3 bağlantılarını yarat və idarə et"
+1 = "Komandaya məxsus inteqrasiya konfiqurasiyalarını idarə et"
+2 = "Defolt siyasət vasitəsilə portal girişi"
+3 = "Member-in edə bildiyi hər şey"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Limitsiz"
 
 [printFile]
 title = "Faylı çap edin"
@@ -6150,80 +9171,10 @@ description = "SMTP autentifikasiyası üçün istifadəçi adı"
 label = "SMTP Username"
 
 [quickAccess]
-access = "Giriş"
-accessAddPerson = "Başqa şəxs əlavə et"
-accessBack = "Geri"
-accessCopyLink = "Linki kopyala"
-accessEmail = "E-poçt ünvanı"
-accessEmailPlaceholder = "name@company.com"
-accessFileLabel = "Fayl"
-accessGeneral = "Ümumi giriş"
-accessInviteTitle = "İnsanları dəvət et"
-accessOwner = "Sahib"
-accessPanel = "Sənədə giriş"
-accessPeople = "Girişi olanlar"
-accessRemove = "Sil"
-accessRestricted = "Məhdudlaşdırılıb"
-accessRestrictedHint = "Yalnız girişi olanlar aça bilər"
-accessRole = "Rol"
-accessRoleCommenter = "Şərhçi"
-accessRoleEditor = "Redaktor"
-accessRoleViewer = "İzləyici"
-accessSelectedFile = "Seçilmiş fayl"
-accessSendInvite = "Dəvət göndər"
-accessTitle = "Sənədə giriş"
-accessYou = "Siz"
-activeSessions = "Aktiv sessiyalar"
-activeTab = "Aktiv"
-activity = "Aktivlik"
 allTools = "All Tools"
 automate = "Auto"
-back = "Geri"
-backToAllTools = "Bütün alətlərə qayıt"
-certSign = "Sertifikatla imzalama"
-completedSessions = "Tamamlanmış sessiyalar"
-completedTab = "Tamamlanmış"
 config = "Konfiq"
-createSession = "İmzalama sorğusu yarat"
-dueDate = "Son tarix (seçim üzrə)"
 files = "Fayllar"
-filterDeclined = "İmtina edilib"
-filterMine = "Mənim"
-filterOverdue = "Müddəti keçmiş"
-filterSigned = "İmzalanıb"
-help = "Kömək"
-newRequest = "Yeni sorğu"
-noActiveSessions = "Gözləyən imza sorğusu və ya aktiv sessiya yoxdur"
-noCompletedSessions = "Tamamlanmış sessiya yoxdur"
-noFile = "Fayl seçilməyib"
-read = "Oxu"
-reader = "Oxuyucu"
-refresh = "Yenilə"
-requestSignatures = "İmzalar tələb et"
-searchDocuments = "Sənədlərdə axtar…"
-selectedFile = "Seçilmiş fayl"
-selectSingleFileToRequest = "İmzalar istəmək üçün tək bir PDF faylı seçin"
-selectUsers = "İmzalama üçün istifadəçiləri seçin"
-selectUsersPlaceholder = "İştirakçıları seçin..."
-sendingRequest = "Göndərilir..."
-settings = "Ayarlar"
-sign = "İmzala"
-signatureRequests = "İmza sorğuları"
-signYourself = "Özünüz imzalayın"
-tours = "Turlar"
-wetSign = "İmza əlavə et"
-
-[quickAccess.helpMenu]
-adminTour = "Admin Turu"
-adminTourDesc = "Admin ayarlarını və funksiyaları kəşf edin"
-toolsTour = "Alətlər Turu"
-toolsTourDesc = "Alətlərin nələr etdiyini öyrənin"
-whatsNewTour = "V2-də yeniliklərə baxın"
-whatsNewTourDesc = "Yenilənmiş tərtibat turu"
-
-[quickAccess.toursTooltip]
-admin = "Bələdçiləri buradan izləyin: Alətlər turu, Yeni V2 tərtibat turu və Admin turu."
-user = "Bələdçiləri buradan izləyin: Alətlər turu və Yeni V2 tərtibat turu."
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -6596,6 +9547,14 @@ text = "PDF səhifələrinizi 90 dərəcəlik addımlarla saat istiqamətində v
 [rotate.tooltip.header]
 title = "Döndürmə parametrlərinin icmalı"
 
+[ruler]
+clearAll = "Hamısını təmizlə"
+hideAllLabels = "Bütün etiketləri gizlət"
+hideSmallLabels = "Kiçik etiketləri gizlət"
+physicalValues = "Fiziki"
+scaled = "Miqyaslı"
+showAllLabels = "Bütün etiketləri göstər"
+
 [sanitize]
 desc = "PDF fayllarından potensial zərərli elementləri silin."
 sanitizationResults = "Sanitizasiya Nəticələri"
@@ -6637,30 +9596,44 @@ label = "XMP Metaməlumatını sil"
 [sanitize.steps]
 settings = "Parametrlər"
 
-[sanitizePdf]
-tags = "təmiz,təhlükəsiz,güvənli,sil"
-
 [sanitizePDF]
 title = "PDF-i Təmizlə"
+
+[sanitizePdf]
+tags = "təmiz,təhlükəsiz,güvənli,sil"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Səhifə miqyasını tənzimləyin"
 
+[scaleSettings]
+activeScale = "Aktiv miqyas"
+apply = "Miqyası tətbiq et"
+applyCalibration = "Kalibrləməni tətbiq et"
+calculatedScale = "Hesablanmış miqyas"
+calibrate = "Kalibrlə"
+calibrating = "Kalibrlənir"
+calibrationDistanceRequired = "Sıfırdan böyük həqiqi məsafə daxil edin"
+calibrationInvalid = "Bu ölçmədən miqyası hesablamaq mümkün deyil"
+calibrationPaperDistance = "Ölçülmüş səhifə məsafəsi: {{distance}}"
+calibrationTitle = "Miqyası kalibrləyin"
+calibrationTooltip = "Miqyası avtomatik hesablamaq üçün məlum məsafəni ölçün"
+customScale = "Fərdi miqyas"
+noneSet = "Fərdi miqyas təyin edilməyib"
+presets = "Hazır miqyaslar"
+ratio = "Miqyas nisbəti"
+ratioHelp = "Nisbət: 1 səhifə vahidi = X həqiqi vahid"
+ratioPlaceholder = "məs., 100"
+ratioPositive = "Nisbət sıfırdan böyük olmalıdır"
+ratioRequired = "Nisbət tələb olunur"
+realDistance = "Həqiqi məsafə"
+realDistancePlaceholder = "məs., 5"
+reset = "Defolt ayarlara sıfırla"
+unit = "Vahid"
+unitInvalid = "Yanlış vahid: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Bucaq Aşağı Limiti:"
-10 = "Faylda ağ sərhədlərin olmasının qarşısını almaq üçün əlavə ediləcək sərhədin ölçüsünü təyin edir (defolt: 1)."
-2 = "Şəklin fırladılması üçün lazım olan minimal mütləq bucağı təyin edir (defolt: 10)."
-3 = "Rəng Toleransı:"
-4 = "Təxmin olunan arxaplan rənginin ətrafındakı rəng fərqliliyi intervalını təyin edir (defolt: 30)."
-5 = "Minimal Sahə:"
-6 = "Foto üçün minimal sahənin aşağı limitini təyin edir (defolt: 10000)."
-7 = "Minimal Kontur Sahəsi:"
-8 = "Fotonun kontur sahəsi üçün minimal aşağı limiti təyin edir"
-9 = "Sərhəd Ölçüsü:"
 
 [scannerImageSplit]
 submit = "Şəkil skanlarını çıxar"
@@ -6693,6 +9666,18 @@ whatThisDoes = "Nə edir"
 whatThisDoesDesc = "Skan edilmiş səhifə və ya kompozit şəkildəki hər fotonu avtomatik aşkar edib çıxarır — əl ilə kəsmə tələb olunmur."
 whenToUse = "Nə zaman istifadə etməli"
 
+[ScannerImageSplit.selectText]
+1 = "Bucaq Aşağı Limiti:"
+10 = "Faylda ağ sərhədlərin olmasının qarşısını almaq üçün əlavə ediləcək sərhədin ölçüsünü təyin edir (defolt: 1)."
+2 = "Şəklin fırladılması üçün lazım olan minimal mütləq bucağı təyin edir (defolt: 10)."
+3 = "Rəng Toleransı:"
+4 = "Təxmin olunan arxaplan rənginin ətrafındakı rəng fərqliliyi intervalını təyin edir (defolt: 30)."
+5 = "Minimal Sahə:"
+6 = "Foto üçün minimal sahənin aşağı limitini təyin edir (defolt: 10000)."
+7 = "Minimal Kontur Sahəsi:"
+8 = "Fotonun kontur sahəsi üçün minimal aşağı limiti təyin edir"
+9 = "Sərhəd Ölçüsü:"
+
 [search]
 noResults = "Nəticə tapılmadı"
 placeholder = "Axtarış sözünü daxil edin..."
@@ -6710,46 +9695,22 @@ toolNotAvailableLocally = "Sizin Stirling-PDF serveriniz oflayndır və \"{{endp
 [session]
 expired = "Sessiyanızın vaxtı bitdi. Səhifəni yeniləyin və yenidən cəhd edin."
 
-[sessionManagement.tooltip]
-header = "İmzalama sessiyalarının idarə edilməsi"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "Yeni iştirakçılar imzalama sırasının sonuna əlavə olunur"
-bullet2 = "Sessiya yekunlaşdırıldıqdan sonra iştirakçı əlavə etmək olmaz"
-bullet3 = "Növbəsi çatanda hər iştirakçıya bildiriş göndərilir"
-description = "Yekunlaşdırmadan əvvəl istənilən vaxt aktiv sessiyaya daha çox iştirakçı əlavə edə bilərsiniz."
-title = "İştirakçıların əlavə edilməsi"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Tam yekunlaşdırma</b>: Bütün iştirakçılar imzalayıb"
-bullet2 = "<b>Qismən yekunlaşdırma</b>: Bəzi iştirakçılar hələ imzalamayıb"
-bullet3 = "İmzalamayan iştirakçılar yekun sənəddən çıxarılacaq"
-bullet4 = "Yekunlaşdırdıqdan sonra imzalanmış PDF-i aktiv fayllara yükləyə bilərsiniz"
-description = "Yekunlaşdırma bütün imzaları tək imzalanmış PDF-də birləşdirir. Bu əməliyyatı geri qaytarmaq olmaz."
-title = "Sessiyanın Yekunlaşdırılması"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Artıq imzalamış iştirakçıları silmək olmaz"
-bullet2 = "Silinən iştirakçılar artıq bildiriş almayacaq"
-bullet3 = "İmzalama sırası avtomatik tənzimlənir"
-description = "İştirakçılar imzalamadan əvvəl sessiyalardan silinə bilər."
-title = "İştirakçıların Silinməsi"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Hər imza PDF-ə ardıcıllıqla tətbiq olunur"
-bullet2 = "Sonrakı imzalayanlar əvvəlki imzaları görə bilir"
-bullet3 = "Təsdiq axınları və hüquqi nəzarət zəncirləri üçün vacibdir"
-description = "Sessiyanı yaradan zaman göstərdiyiniz sıra birincinin kim olacağını müəyyən edir."
-title = "İmza Sırası"
-
 [settings]
 close = "Bağla"
+
+[settings.ai]
+documents = "Sənədlər və RAG"
+general = "Ümumi"
+limits = "Limitlər və performans"
+models = "Modellər və təminatçılar"
+title = "AI"
 
 [settings.configuration]
 advanced = "Qabaqcıl"
 database = "Məlumat bazası"
 endpoints = "Endpointlər"
 features = "Funksiyalar"
+folderAccess = "Qovluğa giriş"
 mcp = "MCP Server"
 storageSharing = "Fayl Saxlama və Paylaşma"
 systemSettings = "Sistem parametrləri"
@@ -6783,6 +9744,8 @@ defaultPdfEditor = "Standart PDF redaktoru"
 defaultPdfEditorActive = "Stirling PDF standart PDF redaktorunuzdur"
 defaultPdfEditorChecking = "Yoxlanılır..."
 defaultPdfEditorInactive = "Başqa tətbiq standart kimi təyin edilib"
+defaultPdfEditorRemind = "Defolt olaraq təyin etməyi xatırlat"
+defaultPdfEditorRemindDescription = "Stirling PDF defolt PDF tətbiqiniz olmadıqda banner göstər."
 defaultPdfEditorSet = "Artıq standartdır"
 defaultStartupView = "Başlanğıcda standart görünüş"
 defaultStartupViewDescription = "Tətbiq işə düşəndə sol sütunda hansı vərəqin aktiv olacağını seçin"
@@ -6800,9 +9763,18 @@ languageDescription = "Görüntüləmə dilini seçin"
 logout = "Hesabdan çıx"
 setAsDefault = "Standart et"
 theme = "Mövzu"
+themeAccent = "Vurğu rəngi"
+themeAccentCustom = "Fərdi rəng"
+themeAccentCustomHint = "Fərdi (defolt tövsiyə olunur)"
+themeAccentDark = "Qaranlıq rejim vurğu rəngi"
+themeAccentDefault = "Defolt"
+themeAccentDefaultHint = "Defolt tema (tövsiyə olunur)"
+themeAccentDescription = "Düymələr, linklər və vurğulamalar ona uyğunlaşır və o, tətbiqə incə rəng çaları verir. Açıq və qaranlıq rejimlərin hərəsinin öz rəngi var. Sistem hansı aktivdirsə, ondan istifadə edir."
+themeAccentLight = "Açıq rejim vurğu rəngi"
 themeDark = "Tünd"
 themeDescription = "Açıq və tünd rejim arasında keçid et"
 themeLight = "Açıq"
+themeReset = "Temanı defolt vəziyyətə bərpa et"
 themeSystem = "System"
 title = "Ümumi"
 user = "İstifadəçi"
@@ -6815,6 +9787,12 @@ dismiss = "Bağla"
 intro = "Təşkilatınız üçün istifadəçi identifikasiyası, komanda idarəetməsi və iş sahəsi funksiyalarını aktiv edin."
 learnMore = "Daha çoxu üçün sənədlərə baxın"
 title = "Sistem administratorları üçün"
+
+[settings.general.loginLanding]
+description = "Stirling Cloud-a daxil olduğunuzda hansı tətbiqin açılacağını seçin."
+editor = "Redaktor"
+processor = "Prosessor"
+title = "Daxil olduqdan sonra"
 
 [settings.general.mode]
 fullscreen = "Tam ekran"
@@ -6901,6 +9879,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Bu serverlə birlikdə paketlənmiş backend asılılıqları üçün lisenziyalar."
+backendLabel = "Backend Lisenziyaları"
+backendTitle = "Backend 3rd Party Lisenziyaları"
+empty = "Asılılıq tapılmadı."
+frontendDescription = "Release build-ə paketlənmiş frontend asılılıqları üçün lisenziyalar."
+frontendLabel = "Frontend Lisenziyaları"
+frontendTitle = "Frontend 3rd Party Lisenziyaları"
+license = "Lisenziya"
+listDescription = "Siyahı release bundle və ya backend endpoint-dən birbaşa UI-da göstərilir."
+listTitle = "Paketlənmiş asılılıqlar"
+loadError = "Üçüncü tərəf lisenziyalarını yükləmək alınmadı"
+module = "Modul"
+version = "Versiya"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plan"
@@ -6981,9 +9974,6 @@ title = "Siyasətlər və Məxfilik"
 [settings.preferences]
 title = "Seçimlər"
 
-[settings.search]
-placeholder = "Ayar səhifələrində axtarın..."
-
 [settings.security]
 description = "Hesabınızı təhlükəsiz saxlamaq üçün parolunuzu yeniləyin."
 title = "Təhlükəsizlik"
@@ -7008,6 +9998,11 @@ connections = "Bağlantılar"
 security = "Təhlükəsizlik"
 telegram = "Telegram"
 title = "Təhlükəsizlik və Autentifikasiya"
+
+[settings.signOut]
+confirm = "Çıxış etmək istədiyinizə əminsiniz?"
+submit = "Çıxış et"
+title = "Çıxış"
 
 [settings.team]
 title = "Komanda"
@@ -7077,6 +10072,28 @@ title = "Giriş aktiv deyil"
 description = "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
 label = "Server URL"
 
+[sharedSign]
+backToSessions = "Sessiyalara qayıt"
+createdOn = "Yaradılıb {{date}}"
+disabledBody = "Bu serverdə birgə imzalama aktiv deyil."
+disabledTitle = "Aktiv deyil"
+due = "Son tarix {{date}}"
+filterDeclined = "Rədd edilib"
+filterMine = "Mənim"
+filterOverdue = "Vaxtı keçib"
+filterSigned = "İmzalanıb"
+fromOwner = "{{owner}} tərəfindən"
+newRequest = "İmza tələb et"
+signedCount = "{{signed}}/{{total}} imzalanıb"
+
+[sharedSign.empty]
+active = "Gözləyən imza tələbi və ya aktiv sessiya yoxdur"
+completed = "Tamamlanmış sessiya yoxdur"
+
+[sharedSign.tab]
+active = "Aktiv"
+completed = "Tamamlanmış"
+
 [showJS]
 done = "JavaScript çıxarıldı"
 processing = "JavaScript çıxarılır..."
@@ -7102,10 +10119,14 @@ last = "Son səhifə"
 maintainRatio = "Nisbətin qorunmasını dəyiş"
 next = "Növbəti səhifə"
 noSavedSigs = "Saxlanmış imza tapılmadı"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Şəxsi İmzalar"
 previous = "Əvvəlki səhifə"
 redo = "Yenidən et"
 save = "İmzanı yadda Saxla"
+sharedSigningOpen = "Birgə imzalamanı aç"
+sharedSigningRequest = "İmza tələb et"
+sharedSigningStepDesc = "Bu sənədi özünüz imzalamaq əvəzinə, başqalarına imzalamaq üçün göndərin."
 sharedSigs = "Paylaşılan İmzalar"
 submit = "Sənədi imzala"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
@@ -7137,6 +10158,7 @@ backgroundRemovalFailedTitle = "Arxa fonun silinməsi alınmadı"
 hint = "İmzanızın PNG və ya JPG şəklini yükləyin"
 label = "İmza şəklini yüklə"
 placeholder = "Şəkil faylı seç"
+previewAlt = "Current image signature"
 processing = "Şəkil emal edilir..."
 removeBackground = "Ağ arxa fonu sil (şəffaf et)"
 
@@ -7149,6 +10171,17 @@ resumeHint = "İmzanı əlavə etmək üçün yerləşdirməni davam etdirin."
 saved = "Yuxarıdan saxlanmış imza seçin, sonra yerləşdirmək üçün PDF-in istənilən yerinə klikləyin."
 text = "Yuxarıda adınızı daxil etdikdən sonra, imzanızı yerləşdirmək üçün PDF üzərində istənilən yerə klikləyin."
 title = "İmza necə əlavə olunur"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "İmzanı hərəkət etdir"
@@ -7545,7 +10578,6 @@ noLinks = "Hələ aktiv paylaşma linki yoxdur."
 noSharedUsers = "Hələ heç bir istifadəçinin girişi yoxdur."
 openInApp = "Open in Stirling PDF"
 ownerLabel = "Sahib"
-ownerOnly = "Paylaşımı yalnız sahibi idarə edə bilər."
 ownerUnknown = "Naməlum"
 removeLink = "Linki sil"
 removeUser = "Sil"
@@ -7556,7 +10588,12 @@ roleCommenter = "Şərhçi"
 roleEditor = "Redaktor"
 roleLabel = "Rol"
 roleViewer = "İzləyici"
-selectSingleFile = "Paylaşımı idarə etmək üçün tək bir fayl seçin."
+saveAndShare = "Serverdə saxla və paylaş"
+saveFailed = "Faylı serverdə saxlamaq alınmadı. Zəhmət olmasa yenidən cəhd edin."
+saveFailedTitle = "Serverdə saxlamaq mümkün olmadı"
+saveFirstBody = "Paylaşma serverdə saxlanmış fayllar üçün işləyir. Onu əvvəlcə fayllarınıza saxlayacağıq, sonra paylaşmağa davam edəcəyik."
+saveFirstHeading = "Paylaşmaq üçün bu faylı serverdə saxlayın"
+saveFirstTitle = "Faylı paylaş"
 sharedUsersTitle = "Paylaşılan istifadəçilər"
 shareHeading = "Paylaşılan fayl"
 sharingDisabled = "Paylaşım deaktiv edilib."
@@ -7592,10 +10629,30 @@ title = "Serverə yüklə"
 updateButton = "Serverdə yenilə"
 uploadButton = "Serverə yüklə"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "buraya klikləyin"
+fallback = "Əgər avtomatik açılmadısa,"
+opening = "Swagger UI yeni tabda açılır..."
 tags = "api,sənədləşmə,swagger,endpointlər,inkişaf"
 title = "API sənədləşməsi"
 
@@ -7624,7 +10681,9 @@ memberRemoved = "Üzv uğurla silindi"
 namePlaceholder = "Komandanın adını daxil edin"
 personal = "Şəxsi"
 removeError = "Üzvü silmək mümkün olmadı"
+renameCancel = "Ad dəyişməsini ləğv et"
 renameError = "Komandanın adını dəyişmək mümkün olmadı"
+renameSubmit = "Komanda adını saxla"
 renameSuccess = "Komandanın adı uğurla dəyişdirildi"
 
 [team.invitationBanner]
@@ -7640,6 +10699,7 @@ sendButton = "Dəvətnamə göndər"
 title = "Komanda üzvünü dəvət et"
 
 [team.members]
+actions = "Üzv əməliyyatları"
 emailColumn = "E-poçt"
 empty = "Hələ komanda üzvü yoxdur"
 nameColumn = "Ad"
@@ -7700,12 +10760,39 @@ selectFilesHint = "Bu aləti işə salmaq üçün Aktiv Fayllarda faylları seç
 singleFileScope = "Yalnız buna tətbiq olunur: {{fileName}}"
 viewerMode = "Bir neçə fayl seçmək üçün fayl redaktoruna keçin."
 
+[toolFormat]
+ANY = "istənilən fayl"
+CBR = "komiks arxivi (CBR)"
+CBZ = "komiks arxivi (CBZ)"
+CSV = "CSV faylı"
+EBOOK = "elektron kitab"
+EMAIL = "e-poçt"
+EXCEL = "elektron cədvəl"
+HTML = "veb səhifə"
+IMAGE = "şəkillər"
+JAVASCRIPT = "JavaScript faylı"
+JSON = "JSON faylı"
+MARKDOWN = "Markdown faylı"
+NONE = "fayl yoxdur"
+PCL = "PCL çap faylı"
+PDF = "PDF"
+PDF_ENCRYPTED = "parolla qorunan PDF"
+POSTSCRIPT = "PostScript faylı"
+PPT = "təqdimat"
+TEXT = "mətn faylı"
+VIDEO = "video"
+WORD = "Word sənədi"
+XML = "XML faylı"
+XPS = "XPS sənədi"
+ZIP = "ZIP arxivi"
+
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Bütün alətlərə qayıt"
 collapse = "Paneli yığ"
 expand = "Paneli genişləndir"
 goBack = "Geri qayıt"
+pdfTools = "PDF alətləri"
 placeholder = "Başlamaq üçün alət seçin"
 premiumFeature = "Premium xüsusiyyət:"
 toolsHeader = "Alətlər"
@@ -7742,11 +10829,6 @@ noToolsFound = "Alət tapılmadı"
 quickAccess = "TEZ GİRİŞ"
 searchPlaceholder = "Alətlərdə axtar..."
 
-[toolPicker.categories]
-advancedTools = "Qabaqcıl Alətlər"
-recommendedTools = "Tövsiyə olunan Alətlər"
-standardTools = "Standart Alətlər"
-
 [toolPicker.subcategories]
 advancedFormatting = "Qabaqcıl Formatlama"
 automation = "Avtomatlaşdırma"
@@ -7759,6 +10841,9 @@ pageFormatting = "Səhifə Formatlama"
 removal = "Silmə"
 signing = "İmzalama"
 verification = "Yoxlama"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Heç bir alət tapılmadı"
@@ -7784,8 +10869,6 @@ allReleases = "Bütün buraxılışlar"
 breaking = "Uyğunluğu pozan"
 breakingChanges = "Uyğunluğu pozan dəyişikliklər"
 breakingChangesDefault = "Bu versiya uyğunluğu pozan dəyişikliklər ehtiva edir."
-breakingChangesDetected = "Uyğunluğu pozan dəyişikliklər aşkarlandı"
-breakingChangesMessage = "Bəzi versiyalar uyğunluğu pozan dəyişikliklər ehtiva edir. Yeniləməzdən əvvəl aşağıdakı miqrasiya bələdçilərini nəzərdən keçirin."
 close = "Bağla"
 closeModal = "Yeniləmə pəncərəsini bağla"
 current = "Cari versiya"
@@ -7873,6 +10956,181 @@ title = "Ətraflı statistika"
 unknownEndpoint = "Naməlum endpoint"
 visits = "Ziyarətlər"
 
+[users]
+lastActive = "Son aktivlik"
+learnMore = "Rollar və giriş haqqında daha çox öyrənin."
+locked = "Kilidlənib"
+roleFor = "{{name}} üçün rol"
+rowActions = "{{name}} üçün əməliyyatlar"
+showAll = "Hamısını göstər {{count}}"
+showLess = "Daha az göstər"
+subtitle2 = "İnsanlarınız, komandalarınız və giriş səviyyələriniz."
+suspended = "Dayandırılıb"
+teamActions = "Komanda əməliyyatları"
+title = "İstifadəçilər"
+you = "(siz)"
+
+[users.action]
+cancelInvite = "Dəvəti ləğv et"
+deleteTeam = "Komandanı sil"
+disableMfa = "MFA sıfırla"
+move = "Komandaya köçür"
+reinstate = "Bərpa et"
+remove = "Təşkilatdan çıxar"
+removeTeam = "Komandadan sil"
+rename = "Komandanın adını dəyiş"
+resetPw = "Şifrəni sıfırla"
+suspend = "Dayandır"
+unlock = "Hesabı kiliddən çıxar"
+
+[users.activity]
+daysAgo = "{{count}}g əvvəl"
+hoursAgo = "{{count}}s əvvəl"
+justNow = "Elə indi"
+minutesAgo = "{{count}}dəq əvvəl"
+monthsAgo_one = "{{count}} ay əvvəl"
+monthsAgo_other = "{{count}} ay əvvəl"
+never = "Heç vaxt"
+weeksAgo_one = "{{count}} həftə əvvəl"
+weeksAgo_other = "{{count}} həftə əvvəl"
+yearsAgo_one = "{{count}} il əvvəl"
+yearsAgo_other = "{{count}} il əvvəl"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Siyasəti təsdiqləyir"
+editor = "Editor"
+processor = "Processor"
+
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
+[users.confirm]
+cancelInviteBody = "{{email}} ünvanına dəvət ləğv edilsin? Onlar cari linklə qoşula bilməyəcəklər."
+cancelInviteTitle = "Dəvəti ləğv et"
+deleteTeamBody = "{{name}} komandası silinsin? Komanda əvvəlcə boş olmalıdır - üzvlərini başqa komandaya köçürün və o, hələ də heç bir inteqrasiya konfiqurasiyasına sahib olmamalıdır."
+deleteTeamTitle = "Komandanı sil"
+disableMfaBody = "{{name}} üçün MFA qeydiyyatı silinsin? Tələb olunarsa, növbəti girişdə yenidən quracaqlar."
+disableMfaTitle = "MFA sıfırla"
+removeBody = "{{name}} təşkilatdan həmişəlik çıxarılsın? Bu əməliyyatı geri qaytarmaq mümkün deyil."
+removeTeamBody = "{{name}} komandadan silinsin? Hesabı qalacaq, lakin bu komandanın resurslarına girişini itirəcək."
+removeTitle = "Üzvü çıxar"
+
+[users.empty]
+description = "Əməkdaşlığa başlamaq üçün komandanızı dəvət edin."
+title = "Hələ üzv yoxdur"
+
+[users.group]
+addToTeam = "Komandaya əlavə et"
+guestCount = "{{count}} qonaq"
+guests = "Qonaqlar"
+ledBy = "{{owner}} tərəfindən idarə olunur"
+org = "Təşkilat"
+owners = "{{count}} sahib"
+team = "{{name}} komandası"
+teamMeta = "{{count}} nəfər"
+
+[users.invite]
+access = "Giriş"
+action = "İnsanları dəvət et"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Daxilolma metodu"
+authWeb = "Şifrə"
+create = "Hesab yarat"
+createSubtitle = "Şifrə və ya SSO ilə self-hosted hesab yaradın."
+createTitle = "Hesab yarat"
+editorDesc = "Stirling PDF Editor-da PDF-ləri redaktə edin. Hər kəs bunu əldə edir."
+email = "Email ünvanı"
+emailError = "Etibarlı email ünvanı daxil edin"
+emailPlaceholder2 = "name@company.com"
+forceChange = "İlk girişdə şifrə dəyişikliyi tələb et"
+forceMfa = "İlk girişdə MFA quraşdırmasını tələb et"
+method = "Onları necə əlavə etməli"
+methodDirect = "Hesabı birbaşa yarat"
+methodEmail = "Email ilə dəvət et"
+password = "Şifrə"
+passwordError = "Şifrə ən azı 8 simvol olmalıdır"
+processorDeferred = "Dəvət göndərildi, lakin Processor girişi hələ verilə bilmədi - qoşulduqdan sonra onu siyahıdan təyin edin."
+processorDesc = "İdarəetmə səthi, pipeline-ları, agentləri və API-ni işə salır."
+role = "Rol"
+send2 = "Dəvət göndər"
+subtitle2 = "Stirling iş məkanınıza qoşulmaq üçün e-poçt alacaqlar."
+team = "Komanda"
+title = "İnsanları dəvət edin"
+username = "İstifadəçi adı"
+usernameError = "İstifadəçi adı ən azı 3 simvoldan ibarət olmalıdır"
+usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "{{who}} tərəfindən dəvət olunub"
+cancel = "Ləğv et"
+expiresInDays_one = "Müddəti {{count}} gün sonra bitir"
+expiresInDays_other = "Müddəti {{count}} gün sonra bitir"
+expiresToday = "Müddəti bu gün bitir"
+title = "Gözləmədə olan dəvətlər"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
+
+[users.loadError]
+description = "Backend-ə qoşularkən xəta baş verdi və ya giriş icazəniz yoxdur. Yenidən cəhd edin."
+title = "Üzvlər yüklənə bilmədi"
+
+[users.moveTeam]
+apply = "Köçür"
+team = "Komanda"
+title = "Komandaya köçür"
+
+[users.newTeam]
+action = "+ Yeni komanda"
+create = "Komanda yarat"
+emailError = "Etibarlı e-poçt ünvanı daxil edin"
+name = "Komanda adı"
+namePlaceholder = "məs. Maliyyə"
+nameRequired = "Komanda adı tələb olunur"
+owner = "Komanda sahibi"
+ownerFailed = "Komanda yaradıldı, lakin sahibi dəvət edilə bilmədi. Siyahıdan birini təyin edin."
+ownerHelper = "Hər komandanın lideri var. O, Processor aktiv olmaqla Komanda sahibi kimi dəvət ediləcək və qalanlarını əlavə edə biləcək. Daha sonra yenidən təyin edə bilərsiniz."
+ownerPlaceholder = "owner@company.com"
+subtitle = "İnsanları onların girişini idarə edən Komanda sahibinin altında qruplaşdırın."
+title = "Yeni komanda"
+
+[users.renameTeam]
+apply = "Adını dəyiş"
+name = "Komanda adı"
+title = "Komandanın adını dəyiş"
+
+[users.resetPw]
+apply = "Parolu sıfırla"
+confirm = "Parolu təsdiqlə"
+copied = "Mübadilə buferinə kopyalandı"
+copyHint = "Bunu indi kopyalayın - bir daha göstərilməyəcək."
+email = "Sıfırlama barədə istifadəçiyə e-poçt göndər"
+forceChange = "Növbəti girişdə parolun dəyişdirilməsini tələb et"
+generate = "Təhlükəsiz parol yarat"
+includePw = "Yeni parolu e-poçta daxil et"
+mismatch = "Parollar uyğun gəlmir"
+newPassword = "Yeni parol"
+regen = "Yenidən yarat"
+title = "Parolu sıfırla"
+tooShort = "Parol ən azı 8 simvoldan ibarət olmalıdır"
+
+[users.role]
+guest = "Qonaq"
+member = "Üzv"
+orgOwner = "Təşkilat sahibi"
+teamOwner = "Komanda sahibi"
+
+[users.team]
+grantProcessor = "Komandaya Processor ver"
+revokeProcessor = "Komandadan Processor-u geri al"
+
 [validateSignature]
 date = "Tarix"
 downloadCsv = "CSV yüklə"
@@ -7924,6 +11182,9 @@ certExpired = "Sertifikatın müddəti bitib"
 certRevocationUnknown = "Sertifikatın ləğv statusu naməlumdur"
 certRevoked = "Sertifikat ləğv edilib"
 chainInvalid = "Sertifikat zənciri etibarsızdır"
+documentModified = "İmzalanmadan sonra sənəd dəyişdirilib — imzalanmış sahədən kənarda məzmun əlavə edilib"
+revocationNotChecked = "Ləğv statusu yoxlanılmadı"
+selfSigned = "Öz-özünə imzalı — imzalayanın şəxsiyyəti təsdiqlənməyib"
 signatureInvalid = "İmzanın kriptoqrafik yoxlaması uğursuz oldu"
 trustInvalid = "Sertifikata etibar edilmir"
 
@@ -7931,7 +11192,8 @@ trustInvalid = "Sertifikata etibar edilmir"
 continued = "Davamı"
 downloads = "Yükləmələr"
 entryLabel = "İmza xülasəsi"
-filesEvaluated = "{{count}} fayl qiymətləndirildi"
+filesEvaluated_one = "{{count}} fayl qiymətləndirildi"
+filesEvaluated_other = "{{count}} fayl qiymətləndirildi"
 footer = "Stirling PDF vasitəsilə təsdiqlənib"
 generatedAt = "Yaradılma vaxtı"
 noPdf = "PDF hesabatı uğurlu doğrulamadan sonra əlçatan olacaq."
@@ -7941,6 +11203,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} etibarsız"
+signaturesUnverified_one = "{{count}} nəzərdən keçirmə tələb edir"
+signaturesUnverified_other = "{{count}} nəzərdən keçirmə tələb edir"
 signaturesValid = "{{count}} tam etibarlı"
 title = "İmza doğrulama hesabatı"
 
@@ -7960,7 +11225,9 @@ _value = "İmza"
 [validateSignature.status]
 complete = "Doğrulama tamamlandı"
 invalid = "Etibarsız"
+untrustedShort = "Təsdiqlənməmiş"
 valid = "Etibarlı"
+validUntrusted = "Etibarlıdır, imzalayan təsdiqlənməyib"
 
 [viewer]
 cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
@@ -7976,7 +11243,8 @@ nextPage = "Növbəti səhifə"
 onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
 pageNavigation = "Səhifə naviqasiyası"
 previousPage = "Əvvəlki səhifə"
-resetZoom = "Miqyası sıfırla"
+saveChangesErrorBody = "Sənədi yadda saxlamaq mümkün olmadı. Yenidən cəhd edin."
+saveChangesErrorTitle = "Dəyişiklikləri yadda saxlamaq mümkün olmadı"
 singlePageView = "Tək Səhifə Görünüşü"
 unknownFile = "Naməlum fayl"
 view = "Baxış"
@@ -7985,19 +11253,41 @@ zoomIn = "Böyüt"
 zoomOut = "Kiçilt"
 
 [viewer.attachments]
+addAttachment = "Qoşma əlavə et"
+close = "Qoşmaları bağla"
+closeSidebar = "Qoşmalar yan panelini bağla"
+download = "Qoşmanı endir"
 empty = "Bu sənəddə qoşma yoxdur"
 loading = "Qoşmalar yüklənir..."
 noDocument = "Qoşmalarını görmək üçün PDF açın."
 noMatch = "Axtarışınıza uyğun qoşma tapılmadı"
 noSupport = "Bu görüntüləyici üçün qoşma dəstəyi mövcud deyil."
+retry = "Yenidən cəhd et"
 searchPlaceholder = "Qoşmalarda axtar"
 title = "Qoşmalar"
+
+[viewer.bookmarks]
+addBookmark = "Add bookmark"
+bookmarkTitle = "Əlfəcin başlığı"
+bookmarkTitleRequired = "Əlfəcin başlığı tələb olunur"
+closeSidebar = "Əlfəcinlər yan panelini bağla"
+collapseAll = "Bütün əlfəcinləri yığ"
+empty = "No bookmarks in this document"
+expandAll = "Bütün əlfəcinləri genişləndir"
+searchPlaceholder = "Əlfəcinləri axtar"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Şərh əlavə et"
 addCommentPlaceholder = "Şərh əlavə et..."
 addLink = "Keçid əlavə et"
 addReplyPlaceholder = "Cavab əlavə et..."
+cancelClearAll = "Ləğv et"
+clearAll = "Bütün şərhləri təmizlə"
+clearAllDescription = "Bu, yan paneldən şərhləri və cavabları silir, lakin sənəddə bağlı anotasiyaları saxlayır."
+clearAllTitle = "Bütün şərhlər təmizlənsin?"
+close = "Şərhləri bağla"
+closeSidebar = "Şərhlər yan panelini bağla"
 deleteAnnotationAndComment = "Annotasiya və şərhi sil"
 deleteDescription = "Bu annotasiyaya qoşulmuş şərh var. Annotasiyanı saxlayaraq yalnız şərhi yan paneldən silə və ya hər ikisini silə bilərsiniz."
 deleteTitle = "Annotasiyanı şərhlərdən silək?"
@@ -8007,9 +11297,12 @@ locateAnnotation = "Sənəddə tap"
 moreActions = "Daha çox əməl"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Səhifə {{page}}"
+placingHint = "Yerləşdirmək üçün bir səhifəyə klikləyin… (ləğv et)"
 removeCommentOnly = "Yalnız şərhi sil"
 saveReply = "Cavabı saxla"
+searchPlaceholder = "Search comments"
 title = "Şərhlər"
 typeComment = "Şərh"
 typeInsertText = "Mətn əlavə et"
@@ -8027,6 +11320,12 @@ hasFieldsDesc = "Bu PDF-də doldurula bilən sahələr var"
 title = "Forma sahələri"
 unsavedBadge = "Saxlanılmayıb"
 unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
+
+[viewer.layers]
+closeSidebar = "Qatlar yan panelini bağla"
+hideAll = "Bütün qatları gizlət"
+showAll = "Bütün qatları göstər"
+title = "Layers"
 
 [viewer.link]
 delete = "Keçidi sil"
@@ -8057,6 +11356,9 @@ resultsOf = "cəmi {{total}}"
 
 [viewer.signature]
 delete = "İmzanı sil"
+
+[viewer.thumbnails]
+closeSidebar = "Miniatürlər yan panelini bağla"
 
 [viewPdf]
 tags = "bax,oxu,sitat götür,mətn,şəkil"
@@ -8367,30 +11669,6 @@ title = "Filigran mətni"
 image = "Şəkil"
 text = "Yazı"
 
-[wetSignature.tooltip]
-header = "İmza yaratma üsulları"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Qələm rəngini və qalınlığını fərdiləşdirin"
-bullet2 = "Bəyənənədək silin və yenidən çəkin"
-bullet3 = "Sensor qurğularda işləyir (planşetlər, telefonlar)"
-description = "Siçan və ya sensor ekran vasitəsilə əl yazısı imza yaradın. Şəxsi, autentik imzalar üçün ən uyğundur."
-title = "İmzanı çək"
-
-[wetSignature.tooltip.type]
-bullet1 = "Bir neçə şriftdən seçin"
-bullet2 = "Mətn ölçüsünü və rəngini fərdiləşdirin"
-bullet3 = "Standartlaşdırılmış imzalar üçün idealdır"
-description = "Yazılmış mətndən imza yaradın. Sürətli və ardıcıl, iş sənədləri üçün uyğundur."
-title = "İmzanı yaz"
-
-[wetSignature.tooltip.upload]
-bullet1 = "PNG, JPG və digər şəkil formatlarını dəstəkləyir"
-bullet2 = "Ən yaxşı nəticə üçün şəffaf fon məsləhətdir"
-bullet3 = "Şəkil imza sahəsinə uyğun ölçüləndiriləcək"
-description = "Öncədən yaradılmış imza şəklini yükləyin. Skan edilmiş imzanız və ya şirkət loqonuz varsa idealdır."
-title = "İmza şəklini yüklə"
-
 [workbenchBar]
 activeFiles = "Aktiv fayllar"
 annotations = "Annotasiyalar"
@@ -8404,6 +11682,7 @@ exitRedaction = "Gizlətmə rejimindən çıx"
 exportAll = "PDF-i ixrac et"
 exportSelected = "Seçilmiş səhifələri ixrac et"
 formFill = "Formu doldur"
+hideToolbar = "Hide toolbar"
 multiTool = "Çoxfunksiyalı alət"
 panMode = "Sürüşdürmə rejimi"
 print = "PDF-i çap et"
@@ -8414,6 +11693,7 @@ redact = "Gizlət"
 rotateLeft = "Sola çevir"
 rotateRight = "Sağa çevir"
 ruler = "Xətkeş / Ölçmə"
+rulerSettings = "Miqyas ayarları"
 save = "Yadda saxla"
 saveAll = "Hamısını yadda saxla"
 saveAs = "Fərqli yadda saxla"
@@ -8422,6 +11702,8 @@ search = "PDF-də axtar"
 selectAll = "Hamısını seç"
 selectByNumber = "Səhifə nömrələrinə görə seç"
 selectLanguage = "Dili seçin"
+share = "Paylaş"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
 toggleAttachments = "Qoşmaları aç/bağla"
 toggleBookmarks = "Əlfəcinləri aç/bağla"
@@ -8483,6 +11765,7 @@ loading = "İnsanlar yüklənir..."
 locked = "kilidli"
 lockedBadge = "Kilidli"
 loginRequired = "Əvvəlcə giriş rejimini aktivləşdirin"
+memberActions = "Üzv əməliyyatları"
 noMembersFound = "Üzv tapılmadı"
 role = "Rol"
 searchMembers = "Üzvlərdə axtar..."
@@ -8492,6 +11775,7 @@ unlockAccount = "Hesabın kilidini aç"
 unlockUserError = "İstifadəçi hesabının kilidini açmaq mümkün olmadı"
 unlockUserSuccess = "İstifadəçi hesabının kilidi uğurla açıldı"
 user = "İstifadəçi"
+userInfo = "İstifadəçi məlumatı"
 
 [workspace.people.actions]
 upgrade = "Yüksəlt"
@@ -8606,6 +11890,7 @@ disableByAdmin = "MFA-nı deaktiv et"
 
 [workspace.people.roleDescriptions]
 admin = "Ayarları idarə edə və üzvləri dəvət edə bilər, tam inzibati girişə malikdir."
+currentRole = "Hazırda təyin olunmuş rol."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
@@ -8636,6 +11921,7 @@ removeMemberError = "İstifadəçini komandadan çıxarmaq alınmadı"
 removeMemberSuccess = "İstifadəçi komandadan çıxarıldı"
 renameTeamLabel = "Komandanın adını dəyiş"
 system = "Sistem"
+teamActions = "Komanda əməliyyatları"
 teamName = "Komandanın adı"
 teamNotFound = "Komanda tapılmadı"
 title = "Komandalar"
