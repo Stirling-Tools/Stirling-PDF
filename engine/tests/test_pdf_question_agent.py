@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import replace
 
 import pytest
@@ -9,6 +10,7 @@ from stirling.contracts import (
     AiFile,
     ExtractedFileText,
     NeedIngestResponse,
+    PageText,
     PdfContentType,
     PdfQuestionAnswerResponse,
     PdfQuestionNotFoundResponse,
@@ -17,9 +19,25 @@ from stirling.contracts import (
     PdfTextSelection,
     SupportedCapability,
 )
-from stirling.models import FileId
-from stirling.rag import Document, RagService, SqliteVecStore
+from stirling.documents import Document, DocumentService, SqliteVecStore
+from stirling.models import FileId, OwnerId, PrincipalId, UserId
+from stirling.services import current_user_id
 from stirling.services.runtime import AppRuntime
+
+USER = UserId("test-user")
+OWNER = OwnerId("test-user")
+OWNER_PRINCIPALS = [PrincipalId("test-user")]
+
+
+@pytest.fixture(autouse=True)
+def _set_user_context() -> Iterator[None]:
+    """Set current_user_id to a fixed test user for every test in this module so
+    agent code calling require_current_user_id() doesn't fail closed."""
+    token = current_user_id.set(USER)
+    try:
+        yield
+    finally:
+        current_user_id.reset(token)
 
 
 class StubEmbedder:
@@ -41,7 +59,7 @@ class StubEmbedder:
         source: str = "",
         base_metadata: dict[str, str] | None = None,
     ) -> list[Document]:
-        from stirling.rag.chunker import chunk_text
+        from stirling.documents.chunker import chunk_text
 
         chunks = chunk_text(text, 100, 10)
         docs: list[Document] = []
@@ -65,13 +83,13 @@ class StubPdfQuestionAgent(PdfQuestionAgent):
 
 @pytest.fixture
 def runtime_with_stub_rag(runtime: AppRuntime) -> AppRuntime:
-    """A runtime whose RAG service uses a stub embedder + ephemeral store."""
-    stub = RagService(
+    """A runtime whose document service uses a stub embedder + ephemeral store."""
+    stub = DocumentService(
         embedder=StubEmbedder(),  # type: ignore[arg-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
-    return replace(runtime, rag_service=stub)
+    return replace(runtime, documents=stub)
 
 
 @pytest.mark.anyio
@@ -89,10 +107,13 @@ async def test_requests_ingest_when_file_missing_from_rag(runtime_with_stub_rag:
 
 @pytest.mark.anyio
 async def test_reports_only_missing_files(runtime_with_stub_rag: AppRuntime) -> None:
-    await runtime_with_stub_rag.rag_service.index_text(
-        collection=FileId("present-id"),
-        text="Invoice total: 120.00.",
+    await runtime_with_stub_rag.documents.ingest(
+        FileId("present-id"),
+        [PageText(page_number=1, text="Invoice total: 120.00.")],
         source="present.pdf",
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = PdfQuestionAgent(runtime_with_stub_rag)
 
@@ -106,10 +127,13 @@ async def test_reports_only_missing_files(runtime_with_stub_rag: AppRuntime) -> 
 
 @pytest.mark.anyio
 async def test_returns_grounded_answer_when_all_files_ingested(runtime_with_stub_rag: AppRuntime) -> None:
-    await runtime_with_stub_rag.rag_service.index_text(
-        collection=FileId("invoice-id"),
-        text="Invoice total: 120.00.",
+    await runtime_with_stub_rag.documents.ingest(
+        FileId("invoice-id"),
+        [PageText(page_number=1, text="Invoice total: 120.00.")],
         source="invoice.pdf",
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,
@@ -137,10 +161,13 @@ async def test_returns_grounded_answer_when_all_files_ingested(runtime_with_stub
 
 @pytest.mark.anyio
 async def test_returns_not_found_when_answer_not_in_doc(runtime_with_stub_rag: AppRuntime) -> None:
-    await runtime_with_stub_rag.rag_service.index_text(
-        collection=FileId("shipping-id"),
-        text="This page contains only a shipping address.",
+    await runtime_with_stub_rag.documents.ingest(
+        FileId("shipping-id"),
+        [PageText(page_number=1, text="This page contains only a shipping address.")],
         source="shipping.pdf",
+        owner_id=OWNER,
+        read_principals=OWNER_PRINCIPALS,
+        expires_at=None,
     )
     agent = StubPdfQuestionAgent(
         runtime_with_stub_rag,

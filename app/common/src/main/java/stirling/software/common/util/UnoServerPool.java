@@ -3,8 +3,11 @@ package stirling.software.common.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -39,6 +42,27 @@ public class UnoServerPool {
 
         // Block until an endpoint index becomes available
         Integer index = availableIndices.take();
+        return new UnoServerLease(endpoints.get(index), index, this);
+    }
+
+    /** Fail-fast variant; non-positive timeout falls back to unbounded acquire. */
+    public UnoServerLease acquireEndpoint(long timeout, TimeUnit unit)
+            throws InterruptedException, TimeoutException {
+        if (endpoints.isEmpty()) {
+            return new UnoServerLease(defaultEndpoint(), null, this);
+        }
+        if (timeout <= 0) {
+            return acquireEndpoint();
+        }
+
+        Integer index = availableIndices.poll(timeout, unit);
+        if (index == null) {
+            throw new TimeoutException(
+                    "Timed out waiting for a free unoserver endpoint after "
+                            + timeout
+                            + " "
+                            + unit.name().toLowerCase(Locale.ROOT));
+        }
         return new UnoServerLease(endpoints.get(index), index, this);
     }
 

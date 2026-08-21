@@ -1,8 +1,8 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs the consolidated `task frontend:check:all` (lint, types,
-# unit tests, build) and uploads the dist artifact for downstream jobs.
+# change. Runs `task frontend:check:all` and uploads the 
+# coverage + dist artifacts for downstream jobs.
 on:
   workflow_call:
 
@@ -15,19 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Quality-check frontend
         id: frontend-check
         run: task frontend:check:all
@@ -85,9 +85,52 @@ jobs:
           echo "to see what still needs fixing manually."
           echo "============================================"
           exit 1
+      - name: Remove frontend check comment on success
+        if: steps.frontend-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- frontend-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+      - name: Install uv
+        if: always()
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
+      - name: Vitest coverage step summary
+        if: always()
+        run: |
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
+            --title "Frontend Vitest coverage" \
+            --vitest frontend/editor/coverage/coverage-summary.json \
+            --github-step-summary
+      - name: Upload vitest coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-coverage
+          path: frontend/editor/coverage/
+          retention-days: 7
+          if-no-files-found: warn
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frontend-build
-          path: frontend/dist/
+          path: frontend/editor/dist/
           retention-days: 3

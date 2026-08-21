@@ -13,7 +13,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -70,11 +69,18 @@ import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
+import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -108,14 +114,17 @@ public class CertSignController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final TempFileManager tempFileManager;
+    private final HardwareKeyStoreService hardwareKeyStoreService;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            HardwareKeyStoreService hardwareKeyStoreService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
         this.tempFileManager = tempFileManager;
+        this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
     public static void sign(
@@ -170,19 +179,14 @@ public class CertSignController {
 
     /**
      * Builds the signature widget rectangle in PDF user space (bottom-left origin), or returns the
-     * legacy default (200×50 pt at the page origin) when {@code rect} fractions are not
-     * provided.
+     * legacy default (200×50 pt at the page origin) when {@code rect} fractions are not provided.
      *
      * <p>When provided, {@code x}/{@code y}/{@code width}/{@code height} are fractions of the page
      * media box with a <em>top-left</em> origin for {@code x}/{@code y}, matching wet-signature
      * metadata in this project.
      */
     static PDRectangle resolveVisibleSignatureRectangle(
-            PDPage page,
-            Double fracX,
-            Double fracY,
-            Double fracW,
-            Double fracH) {
+            PDPage page, Double fracX, Double fracY, Double fracW, Double fracH) {
         int setCount = 0;
         if (fracX != null) setCount++;
         if (fracY != null) setCount++;
@@ -222,15 +226,18 @@ public class CertSignController {
                 MediaType.MULTIPART_FORM_DATA_VALUE,
                 MediaType.APPLICATION_FORM_URLENCODED_VALUE
             },
-            value = "/cert-sign")
+            value = "/cert-sign",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + " file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
+                            + " file.")
+    public ResponseEntity<Resource> signPDFWithCert(
+            @ModelAttribute SignPDFWithCertRequest request, HttpServletRequest httpRequest)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
         String certType = request.getCertType();
@@ -260,6 +267,8 @@ public class CertSignController {
 
         KeyStore ks = null;
         String keystorePassword = password;
+        Provider signingProvider = null;
+        HardwareKeyStoreService.Pkcs11Session pkcs11Session = null;
 
         switch (certType) {
             case "PEM":
@@ -309,6 +318,31 @@ public class CertSignController {
                 ks = serverCertificateService.getServerKeyStore();
                 keystorePassword = serverCertificateService.getServerCertificatePassword();
                 break;
+            case "WINDOWS_STORE":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                ks = hardwareKeyStoreService.loadWindowsKeyStore();
+                signingProvider = hardwareKeyStoreService.windowsProvider();
+                // PIN is prompted by the Windows CSP / token middleware, not passed here.
+                keystorePassword = password;
+                break;
+            case "PKCS11":
+                hardwareKeyStoreService.assertLocalDesktop(httpRequest);
+                char[] pkcs11Pin = password != null ? password.toCharArray() : null;
+                try {
+                    pkcs11Session =
+                            hardwareKeyStoreService.openPkcs11(
+                                    request.getPkcs11LibraryPath(),
+                                    request.getPkcs11Slot(),
+                                    pkcs11Pin);
+                } finally {
+                    if (pkcs11Pin != null) {
+                        java.util.Arrays.fill(pkcs11Pin, '\0');
+                    }
+                }
+                ks = pkcs11Session.keyStore();
+                signingProvider = pkcs11Session.provider();
+                keystorePassword = password;
+                break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
@@ -316,7 +350,9 @@ public class CertSignController {
                         "certificate type: " + certType);
         }
 
-        CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
+        char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
+        CreateSignature createSignature =
+                new CreateSignature(ks, pin, request.getAlias(), signingProvider);
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
@@ -337,6 +373,14 @@ public class CertSignController {
         } catch (IOException e) {
             signedOut.close();
             throw e;
+        } finally {
+            // Clear the PIN copy and log out the token session once signing is done.
+            if (pin != null) {
+                java.util.Arrays.fill(pin, '\0');
+            }
+            if (pkcs11Session != null) {
+                pkcs11Session.close();
+            }
         }
         // Return the signed PDF
         return WebResponseUtils.pdfFileToWebResponse(
@@ -392,7 +436,22 @@ public class CertSignController {
                         NoSuchAlgorithmException,
                         IOException,
                         CertificateException {
-            super(keystore, pin);
+            this(keystore, pin, null, null);
+        }
+
+        public CreateSignature(
+                KeyStore keystore, char[] pin, String alias, Provider signingProvider)
+                throws KeyStoreException,
+                        UnrecoverableKeyException,
+                        NoSuchAlgorithmException,
+                        IOException,
+                        CertificateException {
+            super(keystore, pin, alias);
+            setSigningProvider(signingProvider);
+            loadLogo();
+        }
+
+        private void loadLogo() throws IOException {
             ClassPathResource resource = new ClassPathResource("static/images/signature.png");
             try (InputStream is = resource.getInputStream()) {
                 logoFile = Files.createTempFile("signature", ".png").toFile();
@@ -417,7 +476,7 @@ public class CertSignController {
                 PDAcroForm acroForm = new PDAcroForm(doc);
                 doc.getDocumentCatalog().setAcroForm(acroForm);
                 PDSignatureField signatureField = new PDSignatureField(acroForm);
-                PDAnnotationWidget widget = signatureField.getWidgets().get(0);
+                PDAnnotationWidget widget = signatureField.getWidgets().getFirst();
                 List<PDField> acroFormFields = acroForm.getFields();
                 acroForm.setSignaturesExist(true);
                 acroForm.setAppendOnly(true);

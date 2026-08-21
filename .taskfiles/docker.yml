@@ -20,6 +20,11 @@ tasks:
     cmds:
       - docker build -t stirling-pdf-ultra-lite -f {{.EMBEDDED_DIR}}/Dockerfile.ultra-lite .
 
+  build:backend:
+    desc: "Build backend-only Docker image (no embedded frontend)"
+    cmds:
+      - docker build -t stirling-pdf-backend -f docker/backend/Dockerfile .
+
   build:frontend:
     desc: "Build frontend-only Docker image"
     cmds:
@@ -55,3 +60,9 @@ tasks:
     desc: "Tail docker compose logs"
     cmds:
       - docker compose -f {{.COMPOSE_DIR}}/docker-compose.yml logs -f
+
+  test:
+    desc: "Run full Docker integration test suite (builds all variants and tests them)"
+    ignore_error: true
+    cmds:
+      - bash testing/test.sh {{.CLI_ARGS}}

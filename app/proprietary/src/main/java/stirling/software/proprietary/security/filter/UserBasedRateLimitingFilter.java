@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,6 +28,7 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.RegexPatternUtils;
 
 @Component
+@Profile("!saas")
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
@@ -56,22 +57,24 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Bucket by the resolved user (the auth filter runs first and populates the context, even
+        // for X-API-KEY requests), so all of a user's API keys share ONE per-user quota - minting
+        // extra keys can't multiply the daily limit. Fall back to the raw key / IP only when the
+        // request is unauthenticated.
         String identifier = null;
-        // Check for API key in the request headers
-        String apiKey = request.getHeader("X-API-KEY");
-        if (apiKey != null && !apiKey.trim().isEmpty()) {
-            identifier = // Prefix to distinguish between API keys and usernames
-                    "API_KEY_" + apiKey;
-        } else {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                identifier = userDetails.getUsername();
-            }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+            identifier = authentication.getName();
         }
-        // If neither API key nor an authenticated user is present, use IP address
         if (identifier == null) {
-            identifier = request.getRemoteAddr();
+            String apiKey = request.getHeader("X-API-KEY");
+            if (apiKey != null && !apiKey.trim().isEmpty()) {
+                identifier = "API_KEY_" + apiKey;
+            } else {
+                identifier = request.getRemoteAddr();
+            }
         }
         Role userRole =
                 getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());

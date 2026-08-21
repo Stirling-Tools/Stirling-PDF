@@ -6,7 +6,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "frontend/public/locales/*/translation.toml"
+      - "frontend/editor/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
       - ".github/workflows/check_toml.yml"
 
@@ -23,29 +23,23 @@ jobs:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
+      contents: read # Checkout, and read translation files via the contents API
       issues: write # Allow posting comments on issues/PRs
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Checkout main branch first
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Get PR data
         id: get-pr-data
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const prNumber = context.payload.pull_request.number;
             const repoOwner = context.payload.repository.owner.login;
@@ -66,17 +60,18 @@ jobs:
       - name: Fetch PR changed files
         id: fetch-pr-changes
         env:
-          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
           # Check if PR number exists
-          if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+          if [ -z "${PR_NUMBER}" ]; then
             echo "Error: PR number is empty"
             exit 1
           fi
           # Get changed files and filter for TOML translation files
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
+          gh pr view "${PR_NUMBER}" --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
           # Check if any files were found
           if [ ! -s changed_files.txt ]; then
             echo "No TOML translation files changed in this PR"
@@ -88,32 +83,36 @@ jobs:
       - name: Determine reference file
         id: determine-file
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Untrusted, fork-controlled values are passed via env, never interpolated into the script
+          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
+          REPO_OWNER: ${{ steps.get-pr-data.outputs.repo_owner }}
+          REPO_NAME: ${{ steps.get-pr-data.outputs.repo_name }}
+          PR_REPO_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
+          PR_REPO_NAME: ${{ github.event.pull_request.head.repo.name }}
+          PR_BRANCH: ${{ steps.get-pr-data.outputs.branch }}
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
 
-            const prNumber = ${{ steps.get-pr-data.outputs.pr_number }};
-            const repoOwner = "${{ steps.get-pr-data.outputs.repo_owner }}";
-            const repoName = "${{ steps.get-pr-data.outputs.repo_name }}";
-
-            const prRepoOwner = "${{ github.event.pull_request.head.repo.owner.login }}";
-            const prRepoName = "${{ github.event.pull_request.head.repo.name }}";
-            const branch = "${{ steps.get-pr-data.outputs.branch }}";
-
-            console.log(`Determining reference file for PR #${prNumber}`);
-
-            // Validate inputs
+            // Validate inputs before any use
             const validateInput = (input, regex, name) => {
-              if (!regex.test(input)) {
+              if (typeof input !== "string" || !regex.test(input)) {
                 throw new Error(`Invalid ${name}: ${input}`);
               }
+              return input;
             };
 
-            validateInput(repoOwner, /^[a-zA-Z0-9_-]+$/, "repository owner");
-            validateInput(repoName, /^[a-zA-Z0-9._-]+$/, "repository name");
-            validateInput(branch, /^[a-zA-Z0-9._/-]+$/, "branch name");
+            const repoOwner = validateInput(process.env.REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "repository owner");
+            const repoName = validateInput(process.env.REPO_NAME, /^[a-zA-Z0-9._-]+$/, "repository name");
+            const prRepoOwner = validateInput(process.env.PR_REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "PR repository owner");
+            const prRepoName = validateInput(process.env.PR_REPO_NAME, /^[a-zA-Z0-9._-]+$/, "PR repository name");
+            const branch = validateInput(process.env.PR_BRANCH, /^[a-zA-Z0-9._/-]+$/, "branch name");
+            const prNumber = Number(validateInput(process.env.PR_NUMBER, /^[0-9]+$/, "PR number"));
+
+            console.log(`Determining reference file for PR #${prNumber}`);
 
             // Get the list of changed files in the PR
             const { data: files } = await github.rest.pulls.listFiles({
@@ -126,7 +125,7 @@ jobs:
             const changedFiles = files
               .filter(file =>
                 file.status !== "removed" &&
-                /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
+                /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
               )
               .map(file => file.filename);
 
@@ -166,16 +165,16 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("frontend/public/locales/en-GB/translation.toml")) {
+            if (changedFiles.includes("frontend/editor/public/locales/en-US/translation.toml")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: branch,
               });
 
-              referenceFilePath = "pr-branch-translation-en-GB.toml";
+              referenceFilePath = "pr-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             } else {
@@ -183,11 +182,11 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: "main",
               });
 
-              referenceFilePath = "main-branch-translation-en-GB.toml";
+              referenceFilePath = "main-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             }
@@ -195,21 +194,26 @@ jobs:
             console.log(`Reference file path: ${referenceFilePath}`);
             core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       - name: Install Python dependencies
         run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
+          uv sync --project engine --locked --group tools
 
       - name: Run Python script to check files
         id: run-check
+        env:
+          PR_ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
           echo "Running Python script to check TOML files..."
-          python .github/scripts/check_language_toml.py \
-            --actor ${{ github.event.pull_request.user.login }} \
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py \
+            --actor "${PR_ACTOR}" \
             --reference-file "${REFERENCE_FILE}" \
             --branch "pr-branch" \
             --files "${FILES_LIST[@]}" > result.txt
@@ -242,7 +246,7 @@ jobs:
         if: env.SCRIPT_OUTPUT != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
@@ -258,7 +262,7 @@ jobs:
             const comment = comments.data.find(c => c.body.includes("## 🌐 TOML Translation Verification Summary"));
 
             // Only update or create comments by the action user
-            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
+            const expectedActor = "github-actions[bot]";
 
             if (comment && comment.user.login === expectedActor) {
               // Update existing comment
@@ -293,6 +297,6 @@ jobs:
         run: |
           echo "Cleaning up temporary files..."
           rm -rf pr-branch
-          rm -f pr-branch-translation-en-GB.toml main-branch-translation-en-GB.toml changed_files.txt result.txt
+          rm -f pr-branch-translation-en-US.toml main-branch-translation-en-US.toml changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

@@ -14,8 +14,10 @@ import stirling.software.common.model.api.PDFFile;
 public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
-            description = "The type of the digital certificate",
-            allowableValues = {"PEM", "PKCS12", "PFX", "JKS", "SERVER"},
+            description =
+                    "The type of the digital certificate. WINDOWS_STORE and PKCS11 are"
+                            + " hardware-backed and only available in the desktop app.",
+            allowableValues = {"PEM", "PKCS12", "PFX", "JKS", "SERVER", "WINDOWS_STORE", "PKCS11"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
@@ -39,8 +41,30 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(description = "The JKS keystore file (Java Key Store)")
     private MultipartFile jksFile;
 
-    @Schema(description = "The password for the keystore or the private key", format = "password")
+    @Schema(
+            description =
+                    "The password for the keystore / private key, or the token PIN for PKCS11",
+            format = "password")
     private String password;
+
+    @Schema(
+            description =
+                    "The alias of the certificate to sign with. Required for WINDOWS_STORE and"
+                            + " recommended for PKCS11 tokens holding multiple certificates.")
+    private String alias;
+
+    @Schema(
+            description =
+                    "Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must"
+                            + " be an allowed driver - a detected one or configured via"
+                            + " STIRLING_PKCS11_LIBRARIES.")
+    private String pkcs11LibraryPath;
+
+    @Schema(
+            description =
+                    "Optional PKCS#11 slot index. When omitted the first slot with a token is"
+                            + " used.")
+    private Integer pkcs11Slot;
 
     @Schema(
             description = "Whether to visually show the signature in the PDF file",
@@ -75,27 +99,27 @@ public class SignPDFWithCertRequest extends PDFFile {
                     "Left edge of the visible signature widget, as a fraction of the page width"
                             + " (0–1, top-left origin). Optional; omit all four rectangle fields to"
                             + " use the legacy default placement.",
-            minimum = 0,
-            maximum = 1)
+            minimum = "0",
+            maximum = "1")
     private Double signatureRectX;
 
     @Schema(
             description =
                     "Top edge of the visible signature widget, as a fraction of the page height"
                             + " (0–1, top-left origin).",
-            minimum = 0,
-            maximum = 1)
+            minimum = "0",
+            maximum = "1")
     private Double signatureRectY;
 
     @Schema(
             description = "Width of the visible signature widget as a fraction of the page width",
-            minimum = 0.01,
-            maximum = 1)
+            minimum = "0.01",
+            maximum = "1")
     private Double signatureRectWidth;
 
     @Schema(
             description = "Height of the visible signature widget as a fraction of the page height",
-            minimum = 0.01,
-            maximum = 1)
+            minimum = "0.01",
+            maximum = "1")
     private Double signatureRectHeight;
 }

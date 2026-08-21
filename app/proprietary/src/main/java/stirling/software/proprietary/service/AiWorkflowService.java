@@ -1,44 +1,46 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
-import stirling.software.common.service.InternalApiClient;
-import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.service.InternalApiTimeoutException;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
+import stirling.software.proprietary.model.api.ai.AiDocumentIngestRequest;
+import stirling.software.proprietary.model.api.ai.AiEngineProgressDetail;
 import stirling.software.proprietary.model.api.ai.AiFile;
-import stirling.software.proprietary.model.api.ai.AiRagIngestRequest;
-import stirling.software.proprietary.model.api.ai.AiRagPageText;
+import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -47,6 +49,14 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.policy.engine.PolicyExecutionResult;
+import stirling.software.proprietary.policy.engine.PolicyExecutor;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -57,25 +67,79 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiWorkflowService {
 
-    private static final String RAG_DOCUMENTS_ENDPOINT = "/api/v1/rag/documents";
+    private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
-    private final InternalApiClient internalApiClient;
     private final FileStorage fileStorage;
-    private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
+    private final PolicyExecutor policyExecutor;
+    private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
+
+    public AiWorkflowService(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            AiEngineClient aiEngineClient,
+            PdfContentExtractor pdfContentExtractor,
+            ObjectMapper objectMapper,
+            FileStorage fileStorage,
+            TempFileManager tempFileManager,
+            FileIdStrategy fileIdStrategy,
+            AiEngineEndpointResolver endpointResolver,
+            PolicyExecutor policyExecutor,
+            @Autowired(required = false) UserServiceInterface userService,
+            ApplicationProperties applicationProperties) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.aiEngineClient = aiEngineClient;
+        this.pdfContentExtractor = pdfContentExtractor;
+        this.objectMapper = objectMapper;
+        this.fileStorage = fileStorage;
+        this.tempFileManager = tempFileManager;
+        this.fileIdStrategy = fileIdStrategy;
+        this.endpointResolver = endpointResolver;
+        this.policyExecutor = policyExecutor;
+        this.userService = userService;
+        this.applicationProperties = applicationProperties;
+    }
+
+    /**
+     * How long an AI-workflow-ingested personal doc lives on the engine before the reaper deletes
+     * it. Mirrors the configured web JWT lifetime, so a stale cookie can never see data the user
+     * has lost their session to. Org-shared content (when we add it) bypasses this and sends a null
+     * {@code expiresAt} so it's persistent.
+     */
+    private Duration personalDocTtl() {
+        int minutes = DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
+        return Duration.ofMinutes(minutes);
+    }
+
+    /**
+     * Resolve the currently-authenticated user's id for X-User-Id propagation to the AI engine.
+     * Returns null when security is disabled (no UserServiceInterface bean) or no one is logged in.
+     * The engine rejects per-user routes (ingest, search) when this is null; non-tenant routes
+     * (health, orchestrate without RAG) still work.
+     */
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
+    }
 
     @FunctionalInterface
     public interface ProgressListener {
         void onProgress(AiWorkflowProgressEvent event);
+
+        /**
+         * Called when the engine emits a keep-alive heartbeat. Default is a no-op; consumers that
+         * forward to a downstream connection (e.g. an SSE emitter) override this to push a
+         * heartbeat through, so the next downstream-disconnect surfaces immediately rather than
+         * waiting for the next real progress event.
+         */
+        default void onHeartbeat() {}
     }
 
     private static final ProgressListener NOOP_LISTENER = event -> {};
@@ -86,16 +150,6 @@ public class AiWorkflowService {
         record Terminal(AiWorkflowResponse response) implements WorkflowState {}
     }
 
-    /**
-     * Internal value-class for tool responses. {@code files} holds any result files (typically one;
-     * multiple for ZIP-response tools). {@code report} holds an optional structured metadata
-     * payload the tool chose to surface alongside (or instead of) a file.
-     *
-     * <p>Tools populate the report either by returning a JSON body (whole body → report) or by
-     * adding the {@link AiToolResponseHeaders#TOOL_REPORT} header alongside a file body.
-     */
-    private record ToolResult(List<Resource> files, JsonNode report) {}
-
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         return orchestrate(request, NOOP_LISTENER);
     }
@@ -104,37 +158,41 @@ public class AiWorkflowService {
             throws IOException {
         validateRequest(request);
 
-        // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
-        // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
-        // by id in every response shape that asks Java to look a file up again.
-        Map<String, MultipartFile> filesById = new LinkedHashMap<>();
-        List<AiFile> files = new ArrayList<>();
-        for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-            MultipartFile multipartFile = fileInput.getFileInput();
-            AiFile aiFile =
-                    new AiFile(
-                            fileIdStrategy.idFor(multipartFile),
-                            multipartFile.getOriginalFilename());
-            filesById.put(aiFile.getId(), multipartFile);
-            files.add(aiFile);
+        // One AI orchestration = one automation run. Scope a run id (on whichever thread runs
+        // orchestrate — request thread for sync, stream-executor for streaming) so every tool
+        // sub-step it dispatches via PolicyExecutor → InternalApiClient groups into one charge.
+        try (AutomationRunContext.Scope ignored =
+                AutomationRunContext.open(UUID.randomUUID().toString())) {
+
+            // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
+            // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
+            // by id in every response shape that asks Java to look a file up again.
+            Map<String, MultipartFile> filesById = new LinkedHashMap<>();
+            List<AiFile> files = new ArrayList<>();
+            for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
+                MultipartFile multipartFile = fileInput.getFileInput();
+                AiFile aiFile =
+                        new AiFile(
+                                fileIdStrategy.idFor(multipartFile),
+                                multipartFile.getOriginalFilename());
+                filesById.put(aiFile.getId(), multipartFile);
+                files.add(aiFile);
+            }
+
+            WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
+            initialRequest.setUserMessage(request.getUserMessage().trim());
+            initialRequest.setFiles(files);
+            initialRequest.setConversationHistory(
+                    new ArrayList<>(request.getConversationHistory()));
+            initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+            listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
+
+            WorkflowState state = new WorkflowState.Pending(initialRequest);
+            while (state instanceof WorkflowState.Pending pending) {
+                state = advance(pending.request(), filesById, listener);
+            }
+            return ((WorkflowState.Terminal) state).response();
         }
-
-        WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
-        initialRequest.setUserMessage(request.getUserMessage().trim());
-        initialRequest.setFiles(files);
-        initialRequest.setConversationHistory(
-                request.getConversationHistory() == null
-                        ? new ArrayList<>()
-                        : new ArrayList<>(request.getConversationHistory()));
-        initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-
-        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
-
-        WorkflowState state = new WorkflowState.Pending(initialRequest);
-        while (state instanceof WorkflowState.Pending pending) {
-            state = advance(pending.request(), filesById, listener);
-        }
-        return ((WorkflowState.Terminal) state).response();
     }
 
     private WorkflowState advance(
@@ -143,13 +201,14 @@ public class AiWorkflowService {
             ProgressListener listener)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
-        AiWorkflowResponse response = invokeOrchestrator(request);
+        AiWorkflowResponse response = invokeOrchestrator(request, listener);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
+            case GENERATE_FILE -> onGenerateFile(response, listener);
             case NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
@@ -167,6 +226,12 @@ public class AiWorkflowService {
             WorkflowTurnRequest request,
             ProgressListener listener)
             throws IOException {
+        if (filesById.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "No files were uploaded. Please add a PDF to the workbench first."));
+        }
+
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
                     cannotContinue("AI engine requested content extraction more than once."));
@@ -276,29 +341,51 @@ public class AiWorkflowService {
         return new WorkflowState.Pending(nextRequest);
     }
 
+    private Resource toResource(MultipartFile file) throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
+        file.transferTo(tempFile.getPath());
+        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return new FileSystemResource(tempFile.getFile()) {
+            @Override
+            public String getFilename() {
+                return originalName;
+            }
+        };
+    }
+
     private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
-        List<AiRagPageText> pages = new ArrayList<>();
+        List<AiPageText> pages = new ArrayList<>();
         try (PDDocument document = pdfDocumentFactory.load(multipartFile, true)) {
             int pageCount = document.getNumberOfPages();
             for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
                 String pageText = pdfContentExtractor.extractPageTextRaw(document, pageNumber);
                 if (pageText != null && !pageText.isBlank()) {
-                    pages.add(new AiRagPageText(pageNumber, pageText));
+                    pages.add(new AiPageText(pageNumber, pageText));
                 }
             }
         }
-        AiRagIngestRequest ingestRequest =
-                new AiRagIngestRequest(file.getId(), file.getName(), pages);
+        // Personal-doc semantics for AI workflows today: caller owns the doc and is its only
+        // grantee, with a session-bounded expiry so the reaper cleans up if logout misses.
+        // When org / shared-doc ingestion lands, the caller chooses owner, grantees, and
+        // expiry (null = persistent) explicitly.
+        String callerId = currentUserId();
+        AiDocumentIngestRequest ingestRequest =
+                new AiDocumentIngestRequest(
+                        file.getId(),
+                        file.getName(),
+                        pages,
+                        callerId,
+                        callerId == null ? List.of() : List.of(callerId),
+                        Instant.now().plus(personalDocTtl()));
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(RAG_DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
         log.debug(
-                "Ingested file into RAG: id={}, name={}, pages={}",
+                "Ingested document: id={}, name={}, pages={}",
                 file.getId(),
                 file.getName(),
                 pages.size());
     }
 
-    @SuppressWarnings("unchecked")
     private WorkflowState onToolCall(
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesById,
@@ -315,18 +402,35 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesById);
-            listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
-            ToolResult result = executeStep(endpointPath, parameters, inputFiles);
+            PipelineDefinition definition =
+                    new PipelineDefinition(
+                            null,
+                            List.of(new PipelineStep(endpointPath, parameters)),
+                            OutputSpec.inline());
+            PolicyExecutionResult result =
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             response.getRationale(),
                             result.files(),
+                            result.origins(),
                             inputFileNames(filesById),
                             result.report()));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
+            return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow tool {} blocked by downstream entitlement gate ({})",
+                        endpointPath,
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue("Tool execution failed: " + e.getMessage()));
+            return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
     }
 
@@ -352,6 +456,30 @@ public class AiWorkflowService {
         return new WorkflowState.Terminal(response);
     }
 
+    private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener)
+            throws IOException {
+        String content = response.getGeneratedContent();
+        String filename = response.getGeneratedFilename();
+        if (content == null || filename == null || filename.isBlank()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine returned generate_file without content or filename."));
+        }
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
+        String safeFilename = Filenames.toSimpleFileName(filename);
+        byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        org.springframework.core.io.Resource resource =
+                new org.springframework.core.io.ByteArrayResource(bytes) {
+                    @Override
+                    public String getFilename() {
+                        return safeFilename;
+                    }
+                };
+        return new WorkflowState.Terminal(
+                buildCompletedResponse(
+                        response.getSummary(), List.of(resource), null, List.of(), null));
+    }
+
     @SuppressWarnings("unchecked")
     private WorkflowState runPlan(
             List<Map<String, Object>> steps,
@@ -365,38 +493,32 @@ public class AiWorkflowService {
                     cannotContinue("AI engine returned a plan with no steps."));
         }
 
-        try {
-            List<Resource> currentFiles = toResources(filesById);
-            // Propagate the *last* non-null report — the terminal step defines the output.
-            JsonNode lastReport = null;
-            String lastReportTool = null;
-
-            for (int i = 0; i < steps.size(); i++) {
-                Map<String, Object> step = steps.get(i);
-                String endpointPath = (String) step.get("tool");
-                Map<String, Object> parameters =
-                        step.containsKey("parameters")
-                                ? (Map<String, Object>) step.get("parameters")
-                                : Map.of();
-
-                if (endpointPath == null || endpointPath.isBlank()) {
-                    return new WorkflowState.Terminal(
-                            cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
-                }
-
-                listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
-                ToolResult stepResult = executeStep(endpointPath, parameters, currentFiles);
-                currentFiles = stepResult.files();
-                if (stepResult.report() != null) {
-                    lastReport = stepResult.report();
-                    lastReportTool = endpointPath;
-                }
+        List<PipelineStep> pipelineSteps = new ArrayList<>();
+        for (int i = 0; i < steps.size(); i++) {
+            Map<String, Object> step = steps.get(i);
+            String endpointPath = (String) step.get("tool");
+            if (endpointPath == null || endpointPath.isBlank()) {
+                return new WorkflowState.Terminal(
+                        cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
             }
+            Map<String, Object> parameters =
+                    step.containsKey("parameters")
+                            ? (Map<String, Object>) step.get("parameters")
+                            : Map.of();
+            pipelineSteps.add(new PipelineStep(endpointPath, parameters));
+        }
+
+        try {
+            List<Resource> inputFiles = toResources(filesById);
+            PipelineDefinition definition =
+                    new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
+            PolicyExecutionResult result =
+                    policyExecutor.execute(
+                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
             // Multi-turn: if the plan was emitted with resume_with set, the delegate wants
             // Java to re-invoke the orchestrator with any captured report as an artifact.
-            if (resumeWith != null && !resumeWith.isBlank() && lastReport != null) {
+            if (resumeWith != null && !resumeWith.isBlank() && result.report() != null) {
                 WorkflowTurnRequest resumeRequest = new WorkflowTurnRequest();
                 resumeRequest.setUserMessage(previousRequest.getUserMessage());
                 resumeRequest.setFiles(previousRequest.getFiles());
@@ -406,15 +528,34 @@ public class AiWorkflowService {
                         .getArtifacts()
                         .add(
                                 new PdfContentExtractor.ToolReportArtifact(
-                                        lastReportTool, lastReport));
+                                        result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
                 return new WorkflowState.Pending(resumeRequest);
             }
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            summary, currentFiles, inputFileNames(filesById), lastReport));
+                            summary,
+                            result.files(),
+                            result.origins(),
+                            inputFileNames(filesById),
+                            result.report()));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+        } catch (HttpServerErrorException e) {
+            String reason = extractDetailFromHttpError(e);
+            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
+            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow plan blocked by downstream entitlement gate ({})",
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
@@ -425,123 +566,61 @@ public class AiWorkflowService {
         return filesById.values().stream().map(MultipartFile::getOriginalFilename).toList();
     }
 
-    /**
-     * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
-     * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
-     * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
-     *
-     * <p>A structured {@code report} may be returned alongside (or instead of) files — see {@link
-     * ToolResult}. For per-file dispatch (single-input endpoints called once per input), the first
-     * non-null report wins.
-     */
-    private ToolResult executeStep(
-            String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
-            throws IOException {
-        List<Resource> files = new ArrayList<>();
-        JsonNode report = null;
-        if (toolMetadataService.isMultiInput(endpointPath)) {
-            ToolResult r = callEndpoint(endpointPath, parameters, inputFiles);
-            files.addAll(r.files());
-            report = r.report();
-        } else {
-            for (Resource file : inputFiles) {
-                ToolResult r = callEndpoint(endpointPath, parameters, List.of(file));
-                files.addAll(r.files());
-                if (report == null) {
-                    report = r.report();
-                }
-            }
-        }
-        return new ToolResult(files, report);
+    private static String toolTimeoutMessage(String endpointPath, InternalApiTimeoutException e) {
+        return String.format(
+                "The %s tool did not respond within %d seconds and was aborted. The underlying"
+                        + " operation may be hung; try again, run on a smaller file, or use a"
+                        + " different approach.",
+                endpointPath, e.getReadTimeout().toSeconds());
+    }
+
+    private static String toolFailureMessage(String endpointPath, Throwable cause) {
+        String reason =
+                cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        return String.format("The %s tool failed: %s", endpointPath, reason);
     }
 
     /**
-     * Call an endpoint and return its result files and optional report.
-     *
-     * <ul>
-     *   <li>JSON body (Content-Type: application/json) → the entire body is the report, no files
-     *       are returned.
-     *   <li>File body (PDF etc.) → the file is returned; if an {@link
-     *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
-     *       parsed as the report.
-     *   <li>ZIP responses declared by the tool metadata service are unpacked so callers always see
-     *       a flat list of result files.
-     * </ul>
+     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
+     * otherwise falls back to the exception message. This lets controller-level error messages
+     * (e.g. missing system dependency) surface cleanly in the chat response.
      */
-    private ToolResult callEndpoint(
-            String endpointPath, Map<String, Object> parameters, List<Resource> files)
-            throws IOException {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        for (Resource file : files) {
-            body.add("fileInput", file);
-        }
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            if (entry.getValue() instanceof List<?> list) {
-                for (Object item : list) {
-                    body.add(entry.getKey(), item);
-                }
-            } else {
-                body.add(entry.getKey(), entry.getValue());
-            }
-        }
-        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
-        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
-            throw new IOException(
-                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
-        }
-        Resource resource = response.getBody();
-        HttpHeaders headers = response.getHeaders();
-        MediaType contentType = headers.getContentType();
-
-        // JSON-only response — the whole body is the structured report, no result file.
-        if (contentType != null && MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
-            try (java.io.InputStream is = resource.getInputStream()) {
-                JsonNode report = objectMapper.readTree(is);
-                return new ToolResult(List.of(), report);
-            }
-        }
-
-        JsonNode report = parseReportHeader(headers, endpointPath);
-        if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
-            return new ToolResult(ZipExtractionUtils.extractZip(resource, tempFileManager), report);
-        }
-        return new ToolResult(List.of(resource), report);
-    }
-
-    /**
-     * Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header into a {@link JsonNode},
-     * or return null.
-     */
-    private JsonNode parseReportHeader(HttpHeaders headers, String endpointPath) {
-        String raw = headers.getFirst(AiToolResponseHeaders.TOOL_REPORT);
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
+    private String extractDetailFromHttpError(HttpServerErrorException e) {
         try {
-            return objectMapper.readTree(raw);
-        } catch (JacksonException e) {
-            log.warn(
-                    "Ignoring malformed {} header from {}: {}",
-                    AiToolResponseHeaders.TOOL_REPORT,
-                    endpointPath,
-                    e.getMessage());
-            return null;
+            String body = e.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode detail = node.get("detail");
+                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
+                    return detail.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to generic message
         }
+        return "The request could not be completed. Please try again or contact your system administrator.";
+    }
+
+    /**
+     * Adapt the AI workflow's {@link ProgressListener} to the engine's {@link
+     * PolicyProgressListener}: each step start maps to an {@code EXECUTING_TOOL} progress event
+     * carrying the tool path and 1-based step position, preserving the event shape the frontend
+     * already renders.
+     */
+    private static PolicyProgressListener stepProgress(ProgressListener listener) {
+        return new PolicyProgressListener() {
+            @Override
+            public void onStepStart(int stepIndex, int stepCount, String operation) {
+                listener.onProgress(
+                        AiWorkflowProgressEvent.executingTool(operation, stepIndex, stepCount));
+            }
+        };
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {
         List<Resource> resources = new ArrayList<>();
         for (MultipartFile file : filesById.values()) {
-            TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
-            file.transferTo(tempFile.getPath());
-            final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-            resources.add(
-                    new FileSystemResource(tempFile.getFile()) {
-                        @Override
-                        public String getFilename() {
-                            return originalName;
-                        }
-                    });
+            resources.add(toResource(file));
         }
         return resources;
     }
@@ -549,19 +628,35 @@ public class AiWorkflowService {
     private AiWorkflowResponse buildCompletedResponse(
             String summary,
             List<Resource> resultFiles,
+            List<Integer> origins,
             List<String> inputFileNames,
             JsonNode report)
             throws IOException {
         // Store every output file individually so each gets its own Stirling file ID and the
         // frontend can add them as independent variants without going through a zip.
-        boolean preserveInputNames = inputFileNames.size() == resultFiles.size();
+        // Count outputs per source so only a clean 1:1 transform (one output for a source) reuses
+        // the input's name; a split (one input → many outputs) keeps each entry's own name.
+        Map<Integer, Long> outputsPerOrigin =
+                origins == null
+                        ? Map.of()
+                        : origins.stream()
+                                .filter(o -> o != null)
+                                .collect(Collectors.groupingBy(o -> o, Collectors.counting()));
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
             String responseName = resource.getFilename();
-            String inputName = preserveInputNames ? inputFileNames.get(i) : null;
-            // Prefer the input name only for 1:1 operations where the output keeps the same
-            // extension (rotate, compress, etc.). For converters and other extension-changing
+            // The output's source input (from the executor), used both to name it and to tell the
+            // client which file to version in place.
+            Integer origin = origins != null && i < origins.size() ? origins.get(i) : null;
+            boolean uniqueOrigin =
+                    origin != null && outputsPerOrigin.getOrDefault(origin, 0L) == 1L;
+            String inputName =
+                    uniqueOrigin && origin >= 0 && origin < inputFileNames.size()
+                            ? inputFileNames.get(origin)
+                            : null;
+            // Prefer the source input's name only for 1:1 operations where the output keeps the
+            // same extension (rotate, compress, etc.). For converters and other extension-changing
             // tools, the response filename from Content-Disposition is authoritative.
             String name;
             if (inputName != null
@@ -581,7 +676,11 @@ public class AiWorkflowService {
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
             }
-            descriptors.add(new AiWorkflowResultFile(fileId, name, contentType));
+            // Only expose the source when this is a clean 1:1 transform, so the client can treat a
+            // present sourceIndex as "replace that input in place" without further disambiguation.
+            descriptors.add(
+                    new AiWorkflowResultFile(
+                            fileId, name, contentType, uniqueOrigin ? origin : null));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();
@@ -614,10 +713,85 @@ public class AiWorkflowService {
         return response;
     }
 
-    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {
+    /**
+     * If {@code e} is a downstream usage-limit block — a 401/402 from a tool call carrying the saas
+     * EntitlementGuard's {@code error} sentinel — build a terminal response that carries the
+     * structured code (+ {@code subscribed}) through to the client, so it can pop the matching
+     * usage-limit modal instead of surfacing the raw "tool failed: 402…" text. Returns null for any
+     * other failure, so the caller falls back to its normal tool-failure handling.
+     *
+     * <p>The agent's tool calls run server-side (loopback HTTP via {@link PolicyExecutor}), so this
+     * 402 never reaches the frontend's API-client interceptor that pops the modal for direct calls
+     * — same gap the policy auto-run path bridges in {@code PolicyEngine}.
+     */
+    private AiWorkflowResponse paygLimitResponseOrNull(Throwable e) {
+        if (!(e instanceof RestClientResponseException rce)) {
+            return null;
+        }
+        String code = DownstreamEntitlementError.extractCode(rce);
+        if (code == null) {
+            return null;
+        }
+        AiWorkflowResponse response = new AiWorkflowResponse();
+        response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
+        response.setReason("You've reached your current usage limit.");
+        response.setErrorCode(code);
+        response.setErrorSubscribed(DownstreamEntitlementError.extractSubscribed(rce));
+        return response;
+    }
+
+    /**
+     * Drive the engine's streaming orchestrator endpoint. Progress events are forwarded to {@code
+     * listener} as they arrive (each one keeps the SSE connection to the frontend alive too). The
+     * final {@code result} event carries the full {@link AiWorkflowResponse}; an {@code error}
+     * event surfaces engine-side failures.
+     */
+    private AiWorkflowResponse invokeOrchestrator(
+            WorkflowTurnRequest request, ProgressListener listener) throws IOException {
         String requestBody = objectMapper.writeValueAsString(request);
-        String responseBody = aiEngineClient.post("/api/v1/orchestrator", requestBody);
-        return objectMapper.readValue(responseBody, AiWorkflowResponse.class);
+        AiWorkflowResponse[] resultHolder = new AiWorkflowResponse[1];
+        String[] errorHolder = new String[1];
+
+        aiEngineClient.streamPost(
+                "/api/v1/orchestrator",
+                requestBody,
+                currentUserId(),
+                line -> handleStreamLine(line, listener, resultHolder, errorHolder));
+
+        if (errorHolder[0] != null) {
+            throw new IOException("AI engine returned error: " + errorHolder[0]);
+        }
+        if (resultHolder[0] == null) {
+            throw new IOException("AI engine stream ended without a result");
+        }
+        return resultHolder[0];
+    }
+
+    private void handleStreamLine(
+            String line,
+            ProgressListener listener,
+            AiWorkflowResponse[] resultHolder,
+            String[] errorHolder) {
+        try {
+            JsonNode node = objectMapper.readTree(line);
+            String event = node.path("event").asString();
+            switch (event) {
+                case "progress" -> {
+                    AiEngineProgressDetail detail =
+                            objectMapper.treeToValue(node, AiEngineProgressDetail.class);
+                    listener.onProgress(AiWorkflowProgressEvent.engineProgress(detail));
+                }
+                case "result" -> {
+                    JsonNode response = node.path("response");
+                    resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
+                }
+                case "error" -> errorHolder[0] = node.path("message").asString("unknown error");
+                case "heartbeat" -> listener.onHeartbeat();
+                default -> log.warn("Ignoring unknown engine stream event: {}", event);
+            }
+        } catch (JacksonException e) {
+            log.warn("Failed to parse engine stream line: {}", line, e);
+        }
     }
 
     @Data

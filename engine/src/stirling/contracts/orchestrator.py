@@ -12,6 +12,7 @@ from .common import (
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
+    GenerateFileResponse,
     NeedContentResponse,
     NeedIngestResponse,
     SupportedCapability,
@@ -29,7 +30,10 @@ class ExtractedTextArtifact(ApiModel):
     files: list[ExtractedFileText] = Field(default_factory=list)
 
 
-WorkflowArtifact = Annotated[ExtractedTextArtifact | ToolReportArtifact, Field(discriminator="kind")]
+WorkflowArtifact = Annotated[
+    ExtractedTextArtifact | ToolReportArtifact,
+    Field(discriminator="kind"),
+]
 
 
 class OrchestratorRequest(ApiModel):
@@ -53,6 +57,7 @@ class UnsupportedCapabilityResponse(ApiModel):
 type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
+    | GenerateFileResponse
     | NeedContentResponse
     | NeedIngestResponse
     | AgentDraftResponse

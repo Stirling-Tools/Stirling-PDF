@@ -2,6 +2,7 @@ package stirling.software.proprietary.storage.model.api;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -22,4 +23,10 @@ public class StoredFileResponse {
     private final List<SharedUserResponse> sharedUsers;
     private final List<ShareLinkResponse> shareLinks;
     private final String filePurpose;
+
+    /**
+     * Optional folder placement (Phase A). Null when the file lives at the root or when the server
+     * build doesn't have the folders feature enabled - existing clients should treat null as root.
+     */
+    private final UUID folderId;
 }

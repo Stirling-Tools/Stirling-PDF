@@ -6,16 +6,25 @@ All frontend commands are run from the repository root using [Task](https://task
 - `task frontend:build` — production build
 - `task frontend:test` — run tests
 - `task frontend:test:watch` — run tests in watch mode
-- `task frontend:lint` — run ESLint + cycle detection
+- `task frontend:lint` — run linting
 - `task frontend:typecheck` — run TypeScript type checking
 - `task frontend:check` — run typecheck + lint + test
 - `task frontend:install` — install npm dependencies
 
 For desktop app development, see the [Tauri](#tauri) section below.
 
+## Layout
+
+`frontend/` is a workspace containing one or more apps. Today it holds the
+PDF editor under `frontend/editor/`; new apps (the developer portal, etc.)
+will sit alongside it as siblings. Shared tooling — `package.json`, `node_modules`,
+`.storybook/`, oxlint, Prettier — lives at `frontend/` so every app installs
+once and lints with the same config.
+
 ## Environment Variables
 
-Environment variables live in committed `.env` files at the frontend root:
+The editor's environment variables live in committed `.env` files at
+`frontend/editor/`:
 
 - `.env` — used by all builds (core, proprietary, and as the base for desktop/SaaS)
 - `.env.desktop` — additional vars loaded in desktop (Tauri) mode
@@ -23,7 +32,7 @@ Environment variables live in committed `.env` files at the frontend root:
 
 These files contain non-secret defaults and are checked into Git, so most dev work needs no further setup.
 
-To override values locally (API keys, machine-specific settings), create an uncommitted sibling `.env.local` / `.env.desktop.local` / `.env.saas.local`. Vite automatically layers these on top of the committed files.
+To override values locally (API keys, machine-specific settings), create an uncommitted sibling `editor/.env.local` / `editor/.env.desktop.local` / `editor/.env.saas.local`. Vite automatically layers these on top of the committed files.
 
 ## Docker Setup
 

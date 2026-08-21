@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
@@ -19,6 +21,14 @@ public class AiWorkflowResponse {
 
     @Schema(description = "Answer returned by the AI workflow when applicable")
     private String answer;
+
+    @JsonProperty("content")
+    @Schema(description = "Text content to package as a file (generate_file outcomes)")
+    private String generatedContent;
+
+    @JsonProperty("filename")
+    @Schema(description = "Desired output filename for generate_file outcomes")
+    private String generatedFilename;
 
     @Schema(description = "Summary returned by the AI workflow when applicable")
     private String summary;
@@ -95,4 +105,19 @@ public class AiWorkflowResponse {
                             + " body or via the X-Stirling-Tool-Report header. May be null for tools"
                             + " that produce only a file.")
     private JsonNode report;
+
+    @Schema(
+            description =
+                    "Structured error code when a downstream tool call was blocked (e.g."
+                            + " PAYG_LIMIT_REACHED). Lets the client react — such as opening the"
+                            + " usage-limit modal — instead of only seeing a generic failure. Null"
+                            + " for ordinary outcomes.")
+    private String errorCode;
+
+    @Schema(
+            description =
+                    "Whether the team is subscribed, carried from a downstream usage-limit response."
+                            + " Selects which limit modal the client shows (free → subscribe,"
+                            + " subscribed → raise cap). Null when the downstream body omitted it.")
+    private Boolean errorSubscribed;
 }
