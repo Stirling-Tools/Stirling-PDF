@@ -6,11 +6,29 @@
  * One pass over one spec, so the two cannot drift apart.
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
-import * as prettier from "prettier";
+
+// Format through the same oxfmt binary and config discovery that
+// `task frontend:format:check` uses (--stdin-filepath walks up to .oxfmtrc.json),
+// so a committed file can't pass one formatting gate and fail the other.
+const localRequire = createRequire(import.meta.url);
+const OXFMT_BIN = resolve(
+  dirname(localRequire.resolve("oxfmt/package.json")),
+  "bin/oxfmt",
+);
+
+function formatWithOxfmt(source: string, filePath: string): string {
+  return execFileSync(
+    process.execPath,
+    [OXFMT_BIN, "--stdin-filepath", filePath],
+    { input: source, encoding: "utf-8", maxBuffer: 16 * 1024 * 1024 },
+  );
+}
 
 // The API namespaces whose endpoints a pipeline can reference. `/api/v1/ai/tools/`
 // is absent from the spec, so it cannot appear here. Extend this list when other
@@ -227,11 +245,11 @@ function collectToolIO(
   return { table, dropped };
 }
 
-async function renderToolIO(
+function renderToolIO(
   spec: Json,
   table: Record<string, unknown>,
   outputPath: string,
-): Promise<string> {
+): string {
   if (Object.keys(table).length === 0) {
     throw new Error(
       `No ${IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; regenerate with 'task backend:swagger'.`,
@@ -312,8 +330,7 @@ export function toolIOFor(
 }
 `;
 
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  return prettier.format(body, { ...prettierConfig, parser: "typescript" });
+  return formatWithOxfmt(body, outputPath);
 }
 
 /** In check mode, fail when the committed file is out of date. */
@@ -480,7 +497,7 @@ async function main(): Promise<void> {
   }
   writeOrCheck(
     ioOutputPath,
-    await renderToolIO(spec, ioDeclarations, ioOutputPath),
+    renderToolIO(spec, ioDeclarations, ioOutputPath),
     values.check ?? false,
     "task frontend:tool-models",
   );
@@ -597,11 +614,7 @@ async function compileAndWrite(
   ].join("\n");
 
   const body = `${FILE_HEADER}\n\n${models}\n\n${footer}\n`;
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  const formatted = await prettier.format(body, {
-    ...prettierConfig,
-    parser: "typescript",
-  });
+  const formatted = formatWithOxfmt(body, outputPath);
 
   writeOrCheck(outputPath, formatted, check, "task frontend:tool-models");
   console.log(
