@@ -2,11 +2,11 @@ import React, { useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useAutoAnonymousAuth } from "@app/hooks/useAutoAnonymousAuth";
-import { isToolRoute } from "@app/utils/pathUtils";
+import { isHomeRoute, isToolRoute } from "@app/utils/pathUtils";
 import HomePage from "@app/pages/HomePage";
 import Login from "@app/routes/Login";
 import GuestUserBanner from "@app/components/auth/GuestUserBanner";
-import { TrialStatusBanner } from "@app/components/shared/TrialStatusBanner";
+import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
 
 export default function Landing() {
   const { session, loading } = useAuth();
@@ -71,26 +71,41 @@ export default function Landing() {
     return (
       <>
         <GuestUserBanner />
-        <TrialStatusBanner />
+        <TeamInvitationBanner />
         <HomePage />
       </>
     );
   }
 
+  // Where to come back to after signing in. Carried in the URL (not just router
+  // state) so it survives a reload, and because `next` is what Login forwards
+  // through the OAuth round-trip. Landing on /editor signed out therefore
+  // returns to /editor after login rather than to the role router.
+  const returnTo = encodeURIComponent(location.pathname + location.search);
+
   // If auto-authentication failed, navigate to login with error state
   if (autoAuthError && shouldTriggerAutoAuth) {
     return (
-      <Navigate to="/login" replace state={{ autoAuthError, from: location }} />
+      <Navigate
+        to={`/login?next=${returnTo}`}
+        replace
+        state={{ autoAuthError, from: location }}
+      />
     );
   }
 
   // If we're at home route ("/"), show login directly (marketing/landing page)
   // Otherwise navigate to login (fixes URL mismatch for tool routes)
-  const isHome = location.pathname === "/" || location.pathname === "";
-  if (isHome) {
+  if (location.pathname === "" || isHomeRoute(location.pathname)) {
     return <Login />;
   }
 
-  // For non-home routes without auth, navigate to login (preserves from location)
-  return <Navigate to="/login" replace state={{ from: location }} />;
+  // For non-home routes without auth, navigate to login (preserves where we came from)
+  return (
+    <Navigate
+      to={`/login?next=${returnTo}`}
+      replace
+      state={{ from: location }}
+    />
+  );
 }

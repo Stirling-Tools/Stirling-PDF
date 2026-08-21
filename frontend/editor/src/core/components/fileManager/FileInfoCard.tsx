@@ -8,8 +8,8 @@ import {
   Group,
   Divider,
   ScrollArea,
-  Button,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { detectFileExtension, getFileSize } from "@app/utils/fileUtils";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -86,19 +86,29 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
       }}
     >
       <Box
-        bg="gray.4"
         p="sm"
         style={{
+          background: "var(--c-surface-raised)",
           borderTopLeftRadius: "var(--mantine-radius-md)",
           borderTopRightRadius: "var(--mantine-radius-md)",
           flexShrink: 0,
         }}
       >
-        <Text size="sm" fw={500} ta="center" c="white">
+        <Text size="sm" fw={500} ta="center">
           {t("fileManager.details", "File Details")}
         </Text>
       </Box>
-      <ScrollArea style={{ flex: 1, minHeight: 0 }} p="md">
+      {/* The viewport is focusable and named so keyboard users can scroll the
+          detail list once it overflows. */}
+      <ScrollArea
+        style={{ flex: 1, minHeight: 0 }}
+        p="md"
+        viewportProps={{
+          tabIndex: 0,
+          role: "group",
+          "aria-label": t("fileManager.details", "File Details"),
+        }}
+      >
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">
@@ -208,7 +218,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               <Divider />
               <Button
                 size="sm"
-                variant="light"
+                variant="secondary"
                 onClick={() => onMakeCopy(currentFile)}
                 fullWidth
               >
@@ -260,7 +270,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
                   </Group>
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="secondary"
                     onClick={() => setShowShareManageModal(true)}
                     fullWidth
                   >

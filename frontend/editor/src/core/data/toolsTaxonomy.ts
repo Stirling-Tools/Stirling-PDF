@@ -1,6 +1,10 @@
 import { type TFunction } from "i18next";
 import React from "react";
-import { ToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  type ErasedToolParams,
+  type ToolAutomationSettingsProps,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { BaseToolProps } from "@app/types/tool";
 import { WorkbenchType } from "@app/types/workbench";
 import {
@@ -58,10 +62,13 @@ export type ToolRegistryEntry = {
   kind?: ToolKind;
   // Workbench type for navigation
   workbench?: WorkbenchType;
-  // Operation configuration for automation
-  operationConfig?: ToolOperationConfig<any>;
-  // Settings component for automation configuration
-  automationSettings: React.ComponentType<any> | null;
+  // Operation configuration for automation. TParams is erased at the registry
+  // boundary; tools are authored type-safely via defineToolAutomation.
+  operationConfig?: ToolOperationConfig<ErasedToolParams>;
+  // Settings component for automation configuration.
+  automationSettings: React.ComponentType<
+    ToolAutomationSettingsProps<ErasedToolParams>
+  > | null;
   // Whether this tool supports automation (defaults to true)
   supportsAutomate?: boolean;
   // Synonyms for search (optional)
@@ -141,8 +148,6 @@ export const getSubcategoryIcon = (
   }
 };
 
-export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string =>
-  t(`toolPicker.categories.${id}`, id);
 export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string =>
   t(`toolPicker.subcategories.${id}`, id);
 export const getSubcategoryColor = (subcategory: SubcategoryId): string =>
@@ -210,6 +215,17 @@ export const isValidToolId = (
 ): boolean => {
   return toolId in registry;
 };
+
+/**
+ * A "coming soon" placeholder: listed in the catalogue but not openable — no
+ * UI component and no external link. "read" and "multiTool" are exempt as
+ * workbench-only tools that render without a component.
+ */
+export const isComingSoonTool = (
+  toolId: string,
+  tool: ToolRegistryEntry,
+): boolean =>
+  !tool.component && !tool.link && toolId !== "read" && toolId !== "multiTool";
 
 /**
  * Check if a tool supports automation (defaults to true)

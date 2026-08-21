@@ -34,14 +34,11 @@ permissions:
   pull-requests: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   check-comment:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout
+      issues: write # add reaction to the triggering issue comment
     if: |
       vars.CI_PROFILE != 'lite' && (
         github.event_name == 'workflow_dispatch' ||
@@ -58,7 +55,6 @@ jobs:
             github.event.comment.user.login == 'Ludy87' ||
             github.event.comment.user.login == 'balazs-szucs' ||
             github.event.comment.user.login == 'reecebrowne' ||
-            github.event.comment.user.login == 'DarioGii' ||
             github.event.comment.user.login == 'EthanHealy01' ||
             github.event.comment.user.login == 'jbrunton96' ||
             github.event.comment.user.login == 'ConnorYoh'
@@ -74,21 +70,12 @@ jobs:
       enable_prototypes: ${{ steps.check-prototypes-flag.outputs.enable_prototypes }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Get PR data
         id: get-pr
@@ -160,7 +147,7 @@ jobs:
         id: add-eyes-reaction
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
             try {
@@ -179,53 +166,47 @@ jobs:
             }
 
   deploy-pr:
-    needs: [pick, check-comment]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    environment: pr-preview
+    needs: check-comment
+    runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout, incl. the PR merge ref
+      issues: write # reactions, 'pr-deployed' label, deployment URL comment
       pull-requests: write
-      id-token: write
-    env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+      packages: write # push PR image to ghcr.io
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
-          token: ${{ steps.setup-bot.outputs.token }}
+          # untrusted tree gets built below - never leave credentials in .git/config
+          persist-credentials: false
+
+      - name: Cache Gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-deploy-pr-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          gradle-version: 9.3.1
-
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
@@ -240,78 +221,54 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_PDF_DESKTOP_UI: false
 
-      - name: Set up Depot CLI
-        if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
-
       - name: Set up Docker Buildx
-        if: env.USE_DEPOT != 'true'
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_API }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
 
-      - name: Build and push PR-specific image (Depot)
-        if: env.USE_DEPOT == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
-          build-args: |
-            VERSION_TAG=alpha
-            PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
-          platforms: linux/amd64
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
-      - name: Build and push PR-specific image (Docker fork fallback)
-        if: env.USE_DEPOT != 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+      - name: Build and push PR-specific image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
-      - name: Build and push engine image (Depot)
-        if: env.USE_DEPOT == 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+      - name: Build and push engine image
+        if: needs.check-comment.outputs.enable_prototypes == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: ./engine
-          file: ./engine/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
-          platforms: linux/amd64
-
-      - name: Build and push engine image (Docker fork fallback)
-        if: env.USE_DEPOT != 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        with:
-          context: ./engine
+          context: .
           file: ./engine/Dockerfile
           push: true
           cache-from: type=gha,scope=stirling-pdf-engine
           cache-to: type=gha,mode=max,scope=stirling-pdf-engine
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS
         id: deploy
         run: |
@@ -329,11 +286,11 @@ jobs:
           # Set pro/enterprise settings (enterprise implies pro)
           if [ "${{ needs.check-comment.outputs.enable_enterprise }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.ENTERPRISE_KEY }}"
+            PREMIUM_KEY="${ENTERPRISE_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           elif [ "${{ needs.check-comment.outputs.enable_pro }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.PREMIUM_KEY }}"
+            PREMIUM_KEY="${PRO_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           else
             PREMIUM_ENABLED="false"
@@ -343,7 +300,6 @@ jobs:
 
           ENABLE_PROTOTYPES="${{ needs.check-comment.outputs.enable_prototypes }}"
           PR_NUMBER="${{ needs.check-comment.outputs.pr_number }}"
-          DOCKER_USER="${{ secrets.DOCKER_HUB_USERNAME }}"
 
           # Build engine env vars for backend (only set when prototypes enabled)
           if [ "$ENABLE_PROTOTYPES" == "true" ]; then
@@ -353,9 +309,9 @@ jobs:
             ENGINE_SERVICE="
             stirling-pdf-engine:
               container_name: stirling-pdf-engine-pr-${PR_NUMBER}
-              image: ${DOCKER_USER}/test:engine-pr-${PR_NUMBER}
+              image: ${IMAGE_BASE}:engine-pr-${PR_NUMBER}
               environment:
-                ANTHROPIC_API_KEY: \"${{ secrets.ANTHROPIC_API_KEY }}\"
+                ANTHROPIC_API_KEY: \"${ANTHROPIC_API_KEY}\"
               networks:
                 - pr-network
               restart: on-failure:5"
@@ -378,7 +334,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-pr-${PR_NUMBER}
-              image: ${DOCKER_USER}/test:pr-${PR_NUMBER}
+              image: ${IMAGE_BASE}:pr-${PR_NUMBER}
               ports:
                 - "${PR_NUMBER}:8080"
               volumes:
@@ -402,9 +358,9 @@ jobs:
           EOF
 
           # Then copy the file and execute commands
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${PR_NUMBER}/{data,config,logs}
 
@@ -420,11 +376,19 @@ jobs:
           # Set output for use in PR comment
           echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 
+        env:
+          ENTERPRISE_KEY: ${{ secrets.ENTERPRISE_KEY }}
+          # named PRO_KEY, not PREMIUM_KEY, so the shell var it feeds is not self-referential
+          PRO_KEY: ${{ secrets.PREMIUM_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
       - name: Add success reaction to comment
         if: success() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -459,7 +423,7 @@ jobs:
         if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -478,15 +442,17 @@ jobs:
       - name: Post deployment URL to PR
         if: success()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
             const securityStatus = process.env.security_status || "Security Disabled";
 
-            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${prNumber}`;
+            const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
@@ -510,28 +476,23 @@ jobs:
 
   handle-label-commands:
     if: ${{ github.event.issue.pull_request != null }}
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout, reads repo_devs.json and labels.yml
+      issues: write # add/remove labels, delete the command comment
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Apply label commands
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require('fs');
             const path = require('path');

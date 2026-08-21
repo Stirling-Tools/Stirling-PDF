@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.controller.api;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -280,7 +279,7 @@ public class InviteLinkController {
                                                 "expiresAt", invite.getExpiresAt().toString());
                                         return inviteMap;
                                     })
-                            .collect(Collectors.toList());
+                            .toList();
 
             return ResponseEntity.ok(Map.of("invites", inviteList));
 
@@ -331,7 +330,7 @@ public class InviteLinkController {
             List<InviteToken> expiredInvites =
                     inviteTokenRepository.findAll().stream()
                             .filter(invite -> !invite.isValid())
-                            .collect(Collectors.toList());
+                            .toList();
 
             int count = expiredInvites.size();
             inviteTokenRepository.deleteAll(expiredInvites);

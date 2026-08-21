@@ -13,7 +13,6 @@ from .common import (
     AiFile,
     ArtifactKind,
     ConversationMessage,
-    ConvertMarkdownResponse,
     ExtractedFileText,
     GenerateFileResponse,
     MathAuditorToolReportArtifact,
@@ -30,11 +29,24 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .config import (
+    ConfigApplyResponse,
+    ConfigLimitsSection,
+    ConfigModelsSection,
+    ConfigPushRequest,
+    ConfigRagSection,
+)
 from .contradiction import (
     Claim,
     Contradiction,
     ContradictionReport,
     ContradictionSeverity,
+)
+from .document_classifier import (
+    ClassifyDocumentRequest,
+    ClassifyDocumentResponse,
+    DocumentClassificationResponse,
+    LabelOption,
 )
 from .documents import (
     DeleteDocumentResponse,
@@ -129,9 +141,16 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "ClassifyDocumentRequest",
+    "ClassifyDocumentResponse",
     "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "ConfigApplyResponse",
+    "ConfigLimitsSection",
+    "ConfigModelsSection",
+    "ConfigPushRequest",
+    "ConfigRagSection",
     "Contradiction",
     "ContradictionReport",
     "ContradictionSeverity",
@@ -139,6 +158,8 @@ __all__ = [
     "DeleteDocumentResponse",
     "PurgeOwnerResponse",
     "Discrepancy",
+    "DocumentClassificationResponse",
+    "LabelOption",
     "DocumentMeta",
     "DocumentSections",
     "DiscrepancyKind",
@@ -163,7 +184,6 @@ __all__ = [
     "NeedContentFileRequest",
     "NeedContentResponse",
     "NeedIngestResponse",
-    "ConvertMarkdownResponse",
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",

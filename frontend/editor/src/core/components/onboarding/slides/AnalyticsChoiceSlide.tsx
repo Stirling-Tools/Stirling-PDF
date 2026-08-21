@@ -1,6 +1,6 @@
 import React from "react";
 import { Trans } from "react-i18next";
-import { Button } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import i18n from "@app/i18n";
 import { SlideConfig } from "@app/types/types";
@@ -36,7 +36,7 @@ export default function AnalyticsChoiceSlide({
         <br />
         <div style={{ textAlign: "right", marginTop: 0 }}>
           <Button
-            variant="default"
+            variant="secondary"
             size="sm"
             onClick={() =>
               window.open(
@@ -50,7 +50,7 @@ export default function AnalyticsChoiceSlide({
           </Button>
         </div>
         {analyticsError && (
-          <div style={{ color: "var(--mantine-color-red-6)", marginTop: 12 }}>
+          <div style={{ color: "var(--color-red-dark)", marginTop: 12 }}>
             {analyticsError}
           </div>
         )}

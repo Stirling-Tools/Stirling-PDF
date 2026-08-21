@@ -10,6 +10,8 @@
 # Inputs:
 #   STIRLING_JAR  - path to a pre-built Stirling-PDF .jar (defaults to the
 #                   :stirling-pdf:bootJar output)
+#   JAVA_BIN      - override the Java executable used to launch the JAR
+#                   (defaults to MIGRATION_TEST_JAVA, JAVA_HOME, then PATH)
 #   FIXTURE_DIR   - override the fixture directory (rarely needed)
 #
 # Exits non-zero on any fixture failure and writes a summary to stderr.
@@ -19,12 +21,59 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURE_DIR="${FIXTURE_DIR:-$REPO_ROOT/app/proprietary/src/test/resources/db-migration-fixtures}"
 STIRLING_JAR="${STIRLING_JAR:-}"
+JAVA_BIN="${JAVA_BIN:-${MIGRATION_TEST_JAVA:-}}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-stirling}"
 STARTUP_TIMEOUT_SEC="${STARTUP_TIMEOUT_SEC:-300}"
 
 log()  { printf '[migration-test] %s\n' "$*" >&2; }
 fail() { printf '[migration-test][FAIL] %s\n' "$*" >&2; exit 1; }
+
+java_major_version() {
+    local java_bin="$1"
+    "$java_bin" -XshowSettings:properties -version 2>&1 \
+        | awk -F'= ' '/java.specification.version =/ { print $2; exit }'
+}
+
+find_java() {
+    local candidate
+    if [[ -n "$JAVA_BIN" ]]; then
+        if [[ -x "$JAVA_BIN" ]]; then
+            candidate="$JAVA_BIN"
+        elif command -v "$JAVA_BIN" >/dev/null 2>&1; then
+            candidate=$(command -v "$JAVA_BIN")
+        else
+            fail "JAVA_BIN/MIGRATION_TEST_JAVA='$JAVA_BIN' is not executable or on PATH"
+        fi
+    elif [[ -n "${JAVA_HOME:-}" && -x "${JAVA_HOME}/bin/java" ]]; then
+        candidate="${JAVA_HOME}/bin/java"
+    else
+        local java_home_var
+        for java_home_var in JAVA_HOME_25_X64 JAVA_HOME_25_ARM64 JAVA_HOME_25_AARCH64; do
+            local java_home="${!java_home_var:-}"
+            if [[ -n "$java_home" && -x "$java_home/bin/java" ]]; then
+                candidate="$java_home/bin/java"
+                break
+            fi
+        done
+        if [[ -z "${candidate:-}" ]]; then
+            candidate=$(command -v java || true)
+        fi
+    fi
+
+    [[ -n "${candidate:-}" ]] || fail "No java executable found; install JDK 25 or set JAVA_BIN"
+    realpath "$candidate"
+}
+
+assert_supported_java() {
+    local java_bin="$1"
+    local major
+    major=$(java_major_version "$java_bin")
+    [[ -n "$major" ]] || fail "Could not determine Java version from '$java_bin'"
+    if (( major < 25 )); then
+        fail "Migration test requires JDK 25+ to run the built JAR, but '$java_bin' is Java $major. Set JAVA_HOME or JAVA_BIN to a JDK 25 installation."
+    fi
+}
 
 find_jar() {
     local candidate
@@ -63,7 +112,9 @@ test_fixture() {
     label=$(basename "$fixture_path" .mv.db)
     log "=== $label ==="
 
-    local jar; jar=$(find_jar)
+    local jar
+    jar=$(find_jar)
+    local java_bin="$MIGRATION_JAVA_BIN"
     local workdir; workdir=$(mktemp -d)
     local configsdir="$workdir/configs"
     mkdir -p "$configsdir"
@@ -74,6 +125,7 @@ test_fixture() {
     local log_file="$workdir/app.log"
 
     log "  jar=$jar"
+    log "  java=$java_bin ($("$java_bin" -version 2>&1 | head -n 1))"
     log "  workdir=$workdir"
     log "  port=$port"
 
@@ -86,7 +138,7 @@ test_fixture() {
     # to cwd, and we want to make sure we hit the fixture's configs/ and not
     # whatever happens to live at the runner's working directory.
     pushd "$workdir" >/dev/null
-    java -Xmx1g -jar "$jar" \
+    "$java_bin" -Xmx1g -jar "$jar" \
         "--server.port=$port" \
         "--spring.datasource.url=jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE;MODE=PostgreSQL" \
         "--spring.jpa.show-sql=false" \
@@ -169,6 +221,9 @@ test_fixture() {
 
 main() {
     [[ -d "$FIXTURE_DIR" ]] || fail "Fixture dir not found: $FIXTURE_DIR"
+    MIGRATION_JAVA_BIN=$(find_java)
+    assert_supported_java "$MIGRATION_JAVA_BIN"
+
     local fixtures
     mapfile -t fixtures < <(find "$FIXTURE_DIR" -maxdepth 1 -name '*.mv.db' | sort)
     [[ ${#fixtures[@]} -gt 0 ]] || fail "No fixtures under $FIXTURE_DIR"
