@@ -3,8 +3,8 @@ import { FileId } from "@app/types/file";
 import { TrackWorkspace, allPages } from "@app/components/pageTracks/types";
 
 export interface PageClickModifiers {
+  /** Extend the selection from the last clicked page in the same track. */
   shift: boolean;
-  toggle: boolean;
 }
 
 export interface TrackSelectionHook {
@@ -57,6 +57,12 @@ export function useTrackSelection(
     }
   }, [livePageIds]);
 
+  /**
+   * A click toggles the page in or out of the selection, so pages accumulate
+   * without a modifier: picking a set to rotate or move is the whole job here,
+   * and replace-on-click would make anything past the first page a fight.
+   * Shift extends from the last clicked page instead.
+   */
   const selectPage = useCallback(
     (fileId: FileId, pageId: string, modifiers: PageClickModifiers) => {
       const trackPages = workspaceRef.current.tracks[fileId]?.pages ?? [];
@@ -75,25 +81,18 @@ export function useTrackSelection(
             range.forEach((id) => next.add(id));
             return next;
           });
+          // Anchor stays put so repeated shift-clicks re-extend from it.
           return;
         }
       }
 
       anchorRef.current = { fileId, pageId };
-
-      if (modifiers.toggle) {
-        setSelectedIds((prev) => {
-          const next = new Set(prev);
-          if (next.has(pageId)) next.delete(pageId);
-          else next.add(pageId);
-          return next;
-        });
-        return;
-      }
-
-      setSelectedIds((prev) =>
-        prev.size === 1 && prev.has(pageId) ? new Set() : new Set([pageId]),
-      );
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(pageId)) next.delete(pageId);
+        else next.add(pageId);
+        return next;
+      });
     },
     [],
   );
