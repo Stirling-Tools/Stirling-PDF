@@ -83,7 +83,6 @@ function TrackRowImpl({
   );
 
   const hintActive = dropHint?.fileId === track.fileId;
-  const marker = <div className={styles.dropMarker} aria-hidden />;
 
   return (
     <section
@@ -176,7 +175,7 @@ function TrackRowImpl({
           .filter(Boolean)
           .join(" ")}
       >
-        {track.pages.length === 0 && !hintActive && (
+        {track.pages.length === 0 && (
           <span>
             {t(
               "pageTracks.emptyTrack",
@@ -185,27 +184,30 @@ function TrackRowImpl({
           </span>
         )}
         {track.pages.map((page, index) => (
-          <React.Fragment key={page.id}>
-            {hintActive && dropHint?.beforePageId === page.id && marker}
-            <TrackPageTile
-              page={page}
-              trackFileId={track.fileId}
-              position={index + 1}
-              selected={selectedIds.has(page.id)}
-              dragging={draggingIds.has(page.id)}
-              foreignColor={
-                page.sourceFileId === track.fileId
-                  ? null
-                  : colorForFile(page.sourceFileId)
-              }
-              thumbnails={thumbnails}
-              onSelect={onSelectPage}
-              onRotate={onRotate}
-              onDelete={onDelete}
-            />
-          </React.Fragment>
+          <TrackPageTile
+            key={page.id}
+            page={page}
+            trackFileId={track.fileId}
+            position={index + 1}
+            selected={selectedIds.has(page.id)}
+            dragging={draggingIds.has(page.id)}
+            dropBefore={hintActive && dropHint?.beforePageId === page.id}
+            dropAfterLast={
+              hintActive &&
+              dropHint?.beforePageId == null &&
+              index === track.pages.length - 1
+            }
+            foreignColor={
+              page.sourceFileId === track.fileId
+                ? null
+                : colorForFile(page.sourceFileId)
+            }
+            thumbnails={thumbnails}
+            onSelect={onSelectPage}
+            onRotate={onRotate}
+            onDelete={onDelete}
+          />
         ))}
-        {hintActive && dropHint?.beforePageId === null && marker}
       </div>
     </section>
   );

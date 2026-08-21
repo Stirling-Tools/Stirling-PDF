@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Center, Loader, LoadingOverlay, Stack, Text } from "@mantine/core";
 import {
   CollisionDetection,
   DndContext,
   DragEndEvent,
-  DragOverEvent,
+  DragMoveEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -44,6 +44,22 @@ const collisionDetection: CollisionDetection = (args) => {
   return rectIntersection(args);
 };
 
+/**
+ * The pointer x dnd-kit is itself working from: the activator's position plus
+ * the drag delta. Using this rather than a live pointermove listener keeps the
+ * side-of-tile decision consistent with the reported collision.
+ */
+function pointerXOf(event: DragMoveEvent | DragEndEvent): number {
+  const activator = event.activatorEvent;
+  const originX =
+    activator instanceof MouseEvent
+      ? activator.clientX
+      : activator instanceof TouchEvent && activator.touches.length > 0
+        ? activator.touches[0].clientX
+        : 0;
+  return originX + event.delta.x;
+}
+
 export default function PageTracks() {
   const { t } = useTranslation();
   const { state: fileState } = useFileState();
@@ -67,7 +83,6 @@ export default function PageTracks() {
     () => new Set<string>(),
   );
   const [dropHint, setDropHint] = useState<DropHint | null>(null);
-  const pointerXRef = useRef(0);
 
   const colorIndexes = useFileColorMap(workspace.order);
   const colorForFile = useCallback(
@@ -108,19 +123,6 @@ export default function PageTracks() {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
-  // dnd-kit reports which droppable is under the cursor but not where in it, so
-  // the pointer's x is tracked separately to pick a side of the hovered tile.
-  // Only while a drag is live: no listener on the idle view.
-  const dragging = draggingIds.size > 0;
-  useEffect(() => {
-    if (!dragging) return;
-    const trackPointer = (event: PointerEvent) => {
-      pointerXRef.current = event.clientX;
-    };
-    window.addEventListener("pointermove", trackPointer, { passive: true });
-    return () => window.removeEventListener("pointermove", trackPointer);
-  }, [dragging]);
-
   // Rebuilt per edit rather than scanned per drag-over event: resolving the
   // hovered page by walking every track is O(pages) on every pointer move.
   const trackByPageId = useMemo(() => {
@@ -138,7 +140,7 @@ export default function PageTracks() {
    * is itself being dragged is fine: the reducer skips past the moved pages.
    */
   const resolveHint = useCallback(
-    (overId: string | null): DropHint | null => {
+    (overId: string | null, pointerX: number): DropHint | null => {
       if (!overId) return null;
 
       if (overId.startsWith(TRACK_PREFIX)) {
@@ -160,9 +162,7 @@ export default function PageTracks() {
         `[data-page-id="${overPageId}"]`,
       );
       const rect = element?.getBoundingClientRect();
-      const dropAfter = rect
-        ? pointerXRef.current > rect.left + rect.width / 2
-        : false;
+      const dropAfter = rect ? pointerX > rect.left + rect.width / 2 : false;
 
       const anchor = pages[dropAfter ? overIndex + 1 : overIndex];
       return { fileId, beforePageId: anchor?.id ?? null };
@@ -172,11 +172,6 @@ export default function PageTracks() {
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      // Seed from where the drag began, so the very first drag-over already has
-      // a sane x even before the listener above sees a move.
-      if (event.activatorEvent instanceof PointerEvent) {
-        pointerXRef.current = event.activatorEvent.clientX;
-      }
       const pageId = String(event.active.id).slice(PAGE_PREFIX.length);
       // Dragging a page that is part of the selection moves the whole
       // selection; dragging an unselected page moves only that page.
@@ -188,16 +183,27 @@ export default function PageTracks() {
     [selection.selectedIds],
   );
 
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      setDropHint(resolveHint(event.over ? String(event.over.id) : null));
+  // onDragMove, not onDragOver: which side of a tile the pointer is on changes
+  // WITHOUT the hovered droppable changing, and onDragOver only fires on the
+  // latter. Recomputing per move is what keeps the marker and the drop in sync.
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      setDropHint(
+        resolveHint(
+          event.over ? String(event.over.id) : null,
+          pointerXOf(event),
+        ),
+      );
     },
     [resolveHint],
   );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const hint = resolveHint(event.over ? String(event.over.id) : null);
+      const hint = resolveHint(
+        event.over ? String(event.over.id) : null,
+        pointerXOf(event),
+      );
       setDraggingIds(new Set());
       setDropHint(null);
       if (!hint || draggingIds.size === 0) return;
@@ -321,7 +327,7 @@ export default function PageTracks() {
         sensors={sensors}
         collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
+        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
