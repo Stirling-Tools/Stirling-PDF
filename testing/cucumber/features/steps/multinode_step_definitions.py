@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import subprocess
 import time
 import uuid
@@ -13,6 +14,8 @@ LB_URL = "http://localhost:8080"
 NODES = ["multinode-stirling-1", "multinode-stirling-2"]
 PG = "multinode-postgres"
 MINIO = "multinode-minio"
+# The primary keeps this name in every Valkey topology (standalone, sentinel, cluster).
+VALKEY = "multinode-valkey"
 BUCKET = "policy-data"
 SOURCE_PREFIX = "incoming/"
 OUTPUT_PREFIX = "processed/"
@@ -397,15 +400,38 @@ def step_run_visible_every(context):
 
 
 # --------------------------------------------------------------------------- rate limiting
+# --cluster call prefixes each node's reply with 'host:port: '; a stirling: key never looks like that.
+_NODE_PREFIX = re.compile(r"^[A-Za-z0-9_.\-]+:\d+:\s?")
+
+
+def _backplane_keys():
+    """Every stirling:* key in the backplane, whatever the Valkey topology."""
+    # A sharded cluster splits keys across masters, so KEYS on one node sees only its own slots.
+    # --cluster call fans out; it errors on a non-cluster server, hence the plain-KEYS fallback.
+    rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "--cluster", "call",
+                        "--cluster-only-masters", "127.0.0.1:6379", "keys", "stirling:*"],
+                       timeout=60)
+    if rc != 0:
+        rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "keys", "stirling:*"], timeout=30)
+        assert rc == 0, f"valkey probe failed: {err.strip() or out.strip()}"
+    return [k for k in (_NODE_PREFIX.sub("", ln.strip()) for ln in out.splitlines())
+            if k.startswith("stirling:")]
+
+
 @then("the rate-limit counter should be shared across nodes")
 def step_ratelimit_shared(context):
     # In cluster mode the ValkeyRateLimitStore holds counters in Valkey; probe that a key exists.
-    net = context._net or _network()
-    rc, out, err = _sh(["docker", "run", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-                        "valkey/valkey:8-alpine", "-c",
-                        "valkey-cli -h valkey keys '*'"], timeout=30)
-    assert rc == 0, f"valkey probe failed: {err.strip()}"
-    assert out.strip(), "no keys in Valkey - rate-limit/backplane state is not shared"
+    keys = _backplane_keys()
+    assert keys, "no stirling:* keys in Valkey - rate-limit/backplane state is not shared"
+
+
+@then("every application node should be registered in the backplane")
+def step_nodes_registered(context):
+    # One stirling:nodes:<id> heartbeat hash per app node proves every node reached Valkey.
+    registered = [k for k in _backplane_keys() if k.startswith("stirling:nodes:")]
+    assert len(registered) >= len(NODES), (
+        f"expected >= {len(NODES)} stirling:nodes:* heartbeats, found {len(registered)}: "
+        f"{sorted(registered)}")
 
 
 # --------------------------------------------------------------------------- failover

@@ -1,0 +1,133 @@
+# Must come LAST on the command line: it overrides valkey.command and compose REPLACES command.
+# Host tooling cannot follow MOVED on Docker Desktop - run valkey-cli from an in-network container.
+
+x-valkey-cluster-node: &valkey-cluster-node
+  image: valkey/valkey:8-alpine
+  restart: unless-stopped
+  command:
+    - valkey-server
+    - --save
+    - ""
+    - --appendonly
+    - "no"
+    # nodes.conf in the container layer, not a volume: a persisted membership file plus reshuffled
+    # container IPs wedges the cluster on recreate.
+    - --dir
+    - /tmp
+    - --cluster-enabled
+    - "yes"
+    - --cluster-config-file
+    - nodes.conf
+    - --cluster-node-timeout
+    - "5000"
+    # No --cluster-announce-ip: a service name is invalid and 127.0.0.1 breaks every in-network
+    # client with unroutable MOVED targets. Nodes must announce their own container IP.
+    - --slowlog-log-slower-than
+    - "500"
+    - --slowlog-max-len
+    - "1024"
+    - --latency-monitor-threshold
+    - "50"
+    - --maxmemory-policy
+    - "noeviction"
+  # Liveness only. A node answers PING long before it owns any slots, so this cannot gate the app -
+  # valkey-cluster-init does that.
+  healthcheck:
+    test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
+    interval: 3s
+    timeout: 5s
+    retries: 30
+  networks:
+    - stirling-multinode
+
+services:
+  # Node 1 keeps the base container_name (multinode-valkey) and the 'valkey' DNS name so existing
+  # docker exec / `valkey-cli -h valkey` steps still resolve. Note they now see ONE SHARD only.
+  valkey:
+    <<: *valkey-cluster-node
+
+  valkey-2:
+    <<: *valkey-cluster-node
+    container_name: multinode-valkey-2
+  valkey-3:
+    <<: *valkey-cluster-node
+    container_name: multinode-valkey-3
+  valkey-4:
+    <<: *valkey-cluster-node
+    container_name: multinode-valkey-4
+  valkey-5:
+    <<: *valkey-cluster-node
+    container_name: multinode-valkey-5
+  valkey-6:
+    <<: *valkey-cluster-node
+    container_name: multinode-valkey-6
+
+  # Creates against resolved IPs: `--cluster create` bakes whatever it is given into the membership
+  # table, and IPs are what the nodes gossip anyway. Idempotent, so repeated `up` is safe.
+  valkey-cluster-init:
+    image: valkey/valkey:8-alpine
+    container_name: multinode-valkey-cluster-init
+    restart: "no"
+    depends_on:
+      valkey: {condition: service_healthy}
+      valkey-2: {condition: service_healthy}
+      valkey-3: {condition: service_healthy}
+      valkey-4: {condition: service_healthy}
+      valkey-5: {condition: service_healthy}
+      valkey-6: {condition: service_healthy}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        NODES="valkey valkey-2 valkey-3 valkey-4 valkey-5 valkey-6"
+        # cluster_state flips to ok before every slot is served, so gate on the slot count too.
+        formed() { valkey-cli -h "$$1" cluster info 2>/dev/null | tr -d '\r' | grep -q '^cluster_state:ok' \
+                   && valkey-cli -h "$$1" cluster info 2>/dev/null | tr -d '\r' | grep -q '^cluster_slots_ok:16384'; }
+        if formed valkey; then
+          echo "cluster already formed"; valkey-cli -h valkey cluster info | head -3; exit 0
+        fi
+        ADDRS=""
+        for n in $$NODES; do
+          IP=$$(getent hosts $$n | awk '{print $$1; exit}')
+          [ -n "$$IP" ] || { echo "FATAL: cannot resolve $$n"; exit 1; }
+          echo "$$n -> $$IP"
+          ADDRS="$$ADDRS $$IP:6379"
+        done
+        echo "creating cluster on:$$ADDRS"
+        valkey-cli --cluster create $$ADDRS --cluster-replicas 1 --cluster-yes
+        # `--cluster create` returns before every node has the full slot map. Gate on all six
+        # agreeing, otherwise the first app command can hit CLUSTERDOWN.
+        for i in $$(seq 1 30); do
+          ok=1
+          for n in $$NODES; do
+            formed $$n || ok=0
+          done
+          [ "$$ok" = "1" ] && { echo "cluster_state:ok + 16384/16384 slots on all 6 nodes"; exit 0; }
+          echo "waiting for slot propagation..."; sleep 2
+        done
+        echo "FATAL: cluster did not reach cluster_state:ok with all 16384 slots served"; exit 1
+    networks:
+      - stirling-multinode
+
+  # service_completed_successfully on the init is the real readiness gate; valkey's own healthcheck
+  # only proves the process is alive.
+  stirling-1:
+    depends_on:
+      valkey-cluster-init:
+        condition: service_completed_successfully
+    environment:
+      CLUSTER_VALKEY_MODE: "cluster"
+      CLUSTER_VALKEY_NODES: "valkey:6379,valkey-2:6379,valkey-3:6379,valkey-4:6379,valkey-5:6379,valkey-6:6379"
+      CLUSTER_VALKEY_MAXREDIRECTS: "3"
+      CLUSTER_VALKEY_TOPOLOGYREFRESHMS: "30000"
+
+  stirling-2:
+    depends_on:
+      valkey-cluster-init:
+        condition: service_completed_successfully
+    environment:
+      CLUSTER_VALKEY_MODE: "cluster"
+      CLUSTER_VALKEY_NODES: "valkey:6379,valkey-2:6379,valkey-3:6379,valkey-4:6379,valkey-5:6379,valkey-6:6379"
+      CLUSTER_VALKEY_MAXREDIRECTS: "3"
+      CLUSTER_VALKEY_TOPOLOGYREFRESHMS: "30000"

@@ -1,24 +1,33 @@
 #!/usr/bin/env bash
-# Runs the multi-node regression suite (behave features/multinode) against the clustered stack: brings it up if needed, runs non-destructive scenarios then @destructive failover ones, and restores any killed node.
-# Usage: ./run-multinode-regression.sh [--no-failover] [--no-seed]
-# @known_gap scenarios are expected to fail - they mark work not yet done, so a non-zero exit is fine while those are open.
+# Usage: ./run-multinode-regression.sh [--valkey standalone|sentinel|cluster] [--no-failover] [--no-seed]
+# @known_gap scenarios are expected to fail, so a non-zero exit is fine while those are open.
 set -uo pipefail
 cd "$(dirname "$0")"
 
-COMPOSE="docker compose -f docker-compose-multinode.yml"
+. ./multinode/valkey-topology.sh
+
 CUKE_DIR="../cucumber"
 RUN_FAILOVER=1
 SEED=1
-for arg in "$@"; do
-  case "$arg" in
-    --no-failover) RUN_FAILOVER=0 ;;
-    --no-seed)     SEED=0 ;;
+VALKEY_TOPOLOGY="${VALKEY_TOPOLOGY:-standalone}"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --no-failover) RUN_FAILOVER=0; shift ;;
+    --no-seed)     SEED=0; shift ;;
+    --valkey)      VALKEY_TOPOLOGY="${2:-}"; shift 2 ;;
+    --valkey=*)    VALKEY_TOPOLOGY="${1#*=}"; shift ;;
+    *) echo "Unknown argument '$1'"; exit 2 ;;
   esac
 done
 
-echo "==> Ensuring the multi-node stack is up..."
+# Same overlay set as start-multinode-test.sh, so `up -d` here restores killed nodes without
+# silently dropping the sentinel/cluster services back to the base standalone Valkey.
+COMPOSE=$(compose_cmd_for_topology "$VALKEY_TOPOLOGY") \
+  || { echo "Unknown --valkey topology '$VALKEY_TOPOLOGY' (expected standalone|sentinel|cluster)"; exit 2; }
+
+echo "==> Ensuring the multi-node stack is up (valkey=$VALKEY_TOPOLOGY)..."
 if ! docker inspect -f '{{.State.Health.Status}}' multinode-stirling-1 2>/dev/null | grep -q healthy; then
-  ./start-multinode-test.sh $([ "$SEED" = 0 ] && echo --no-seed) || exit 1
+  ./start-multinode-test.sh --valkey "$VALKEY_TOPOLOGY" $([ "$SEED" = 0 ] && echo --no-seed) || exit 1
 elif [ "$SEED" = 1 ]; then
   echo "    stack already up; seeding (idempotent)..."
   $COMPOSE --profile seed run --rm seed >/dev/null 2>&1 || echo "    (seed reported issues, continuing)"
@@ -58,6 +67,7 @@ fi
 echo
 echo "============================================================"
 echo " Regression run complete. Reports: $REPORT_DIR"
+echo " Valkey topology: $VALKEY_TOPOLOGY"
 echo " Exit $rc (non-zero = at least one scenario failed;"
 echo " @known_gap scenarios are expected to fail - see the report)."
 echo " Stack left running: http://localhost:8080  (admin / stirling)"

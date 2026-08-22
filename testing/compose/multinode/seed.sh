@@ -1,7 +1,6 @@
 #!/bin/sh
-# Seeds a running multi-node stack: 4 teams, ~40 users, an S3 connection, a scheduled S3 policy, and a webhook source if the build supports it.
-# Auth uses the Bearer JWT from the login response body (not a cookie) since the global API key can't create teams.
-# Idempotent-ish: re-running skips existing teams/users; each step is best-effort and logs failures without aborting.
+# Seeds a running stack (teams, users, S3 connection + policy). Best-effort and idempotent-ish.
+# Auth uses the Bearer JWT from the login body, not a cookie - the global API key can't create teams.
 set -u
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
