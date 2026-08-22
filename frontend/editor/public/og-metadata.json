@@ -217,8 +217,8 @@
     },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
-      "title": "Add Attachments - Stirling PDF",
-      "description": "Add or remove embedded files (attachments) to/from a PDF"
+      "title": "Manage Attachments - Stirling PDF",
+      "description": "View, add, extract, rename, or delete embedded PDF attachments"
     },
     "changeMetadata": {
       "image": "/og_images/change-metadata.png",

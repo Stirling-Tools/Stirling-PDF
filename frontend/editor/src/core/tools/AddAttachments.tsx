@@ -88,6 +88,13 @@ const AddAttachments = ({
           parameters={params.parameters}
           onParameterChange={params.updateParameter}
           disabled={endpointLoading}
+          activeFile={selectedFiles[0] || null}
+          onFileUpdated={(updatedFile) => {
+            if (onComplete) {
+              onComplete([updatedFile]);
+            }
+          }}
+          onError={(msg) => onError?.(msg)}
         />
       ),
     });
@@ -103,7 +110,7 @@ const AddAttachments = ({
     steps: getSteps(),
     executeButton: {
       text: t("AddAttachmentsRequest.submit", "Add Attachments"),
-      isVisible: !hasResults,
+      isVisible: false,
       loadingText: t("loading"),
       onClick: handleExecute,
       endpointEnabled: endpointEnabled,

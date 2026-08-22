@@ -271,6 +271,12 @@ class AutoSplitPdfParams(ApiModel):
     )
 
 
+class BatchProcessAttachmentsParams(ApiModel):
+    attachments: list[bytes] | None = None
+    convert_to_pdf_a3b: bool | None = None
+    ops_json: str | None = None
+
+
 class DuplexPass(StrEnum):
     """
     For manual duplex: which pass to generate
@@ -515,6 +521,10 @@ class Format(StrEnum):
 
 class ExtractImagesParams(ApiModel):
     format: Format = Field(Format.png, description="The output image format e.g., 'png', 'jpeg', or 'gif'")
+
+
+class ExtractSingleAttachmentParams(ApiModel):
+    attachment_name: str | None = None
 
 
 class FileToPdfParams(ApiModel):
@@ -1561,11 +1571,13 @@ class Model(
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
+        | BatchProcessAttachmentsParams
         | CompressPdfParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
+        | ExtractSingleAttachmentParams
         | FlattenParams
         | OcrPdfParams
         | RemoveBlanksParams
@@ -1637,11 +1649,13 @@ class Model(
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
+        | BatchProcessAttachmentsParams
         | CompressPdfParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
+        | ExtractSingleAttachmentParams
         | FlattenParams
         | OcrPdfParams
         | RemoveBlanksParams
@@ -1714,11 +1728,13 @@ type ParamToolModel = (
     | AutoRenameParams
     | AutoRotatePdfParams
     | AutoSplitPdfParams
+    | BatchProcessAttachmentsParams
     | CompressPdfParams
     | DeleteAttachmentParams
     | ExtractAttachmentsParams
     | ExtractImageScansParams
     | ExtractImagesParams
+    | ExtractSingleAttachmentParams
     | FlattenParams
     | OcrPdfParams
     | RemoveBlanksParams
@@ -1792,11 +1808,13 @@ class ToolEndpoint(StrEnum):
     AUTO_RENAME = "/api/v1/misc/auto-rename"
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
+    BATCH_PROCESS_ATTACHMENTS = "/api/v1/misc/batch-process-attachments"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
     EXTRACT_ATTACHMENTS = "/api/v1/misc/extract-attachments"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
+    EXTRACT_SINGLE_ATTACHMENT = "/api/v1/misc/extract-single-attachment"
     FLATTEN = "/api/v1/misc/flatten"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
@@ -1868,11 +1886,13 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
+    ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: BatchProcessAttachmentsParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
     ToolEndpoint.EXTRACT_ATTACHMENTS: ExtractAttachmentsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
+    ToolEndpoint.EXTRACT_SINGLE_ATTACHMENT: ExtractSingleAttachmentParams,
     ToolEndpoint.FLATTEN: FlattenParams,
     ToolEndpoint.OCR_PDF: OcrPdfParams,
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
