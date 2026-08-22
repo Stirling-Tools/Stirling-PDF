@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildCertSignFormData } from "@app/hooks/tools/certSign/useCertSignOperation";
+import {
+  buildCertSignFormData,
+  certSignFromApiParams,
+  certSignToApiParams,
+} from "@app/hooks/tools/certSign/useCertSignOperation";
 import {
   CertSignParameters,
   defaultParameters,
@@ -13,6 +17,92 @@ const params = (
 ): CertSignParameters => ({
   ...defaultParameters,
   ...overrides,
+});
+
+describe("certSignToApiParams - visible signature placement", () => {
+  test("legacy page-only path omits signatureRect* fields", () => {
+    const api = certSignToApiParams(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        pageNumber: 3,
+        certAppearanceRect: null,
+      }),
+    );
+
+    expect(api.showSignature).toBe(true);
+    expect(api.pageNumber).toBe(3);
+    expect(api.signatureRectX).toBeUndefined();
+    expect(api.signatureRectY).toBeUndefined();
+    expect(api.signatureRectWidth).toBeUndefined();
+    expect(api.signatureRectHeight).toBeUndefined();
+  });
+
+  test("placed rect sends all four signatureRect* and derived pageNumber", () => {
+    const api = certSignToApiParams(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        pageNumber: 1,
+        certAppearanceRect: {
+          pageIndex: 2,
+          x: 0.1,
+          y: 0.2,
+          width: 0.3,
+          height: 0.05,
+        },
+      }),
+    );
+
+    expect(api.pageNumber).toBe(3);
+    expect(api.signatureRectX).toBe(0.1);
+    expect(api.signatureRectY).toBe(0.2);
+    expect(api.signatureRectWidth).toBe(0.3);
+    expect(api.signatureRectHeight).toBe(0.05);
+  });
+
+  test("form data includes signatureRect* when placed", () => {
+    const formData = buildCertSignFormData(
+      params({
+        signMode: "AUTO",
+        showSignature: true,
+        certAppearanceRect: {
+          pageIndex: 0,
+          x: 0.25,
+          y: 0.4,
+          width: 0.2,
+          height: 0.08,
+        },
+      }),
+      pdf(),
+    );
+
+    expect(formData.get("signatureRectX")).toBe("0.25");
+    expect(formData.get("signatureRectY")).toBe("0.4");
+    expect(formData.get("signatureRectWidth")).toBe("0.2");
+    expect(formData.get("signatureRectHeight")).toBe("0.08");
+    expect(formData.get("pageNumber")).toBe("1");
+  });
+
+  test("fromApiParams restores certAppearanceRect when all four fields present", () => {
+    const restored = certSignFromApiParams({
+      certType: "SERVER",
+      showSignature: true,
+      pageNumber: 4,
+      signatureRectX: 0.1,
+      signatureRectY: 0.2,
+      signatureRectWidth: 0.3,
+      signatureRectHeight: 0.1,
+    });
+
+    expect(restored.certAppearanceRect).toEqual({
+      pageIndex: 3,
+      x: 0.1,
+      y: 0.2,
+      width: 0.3,
+      height: 0.1,
+    });
+  });
 });
 
 describe("buildCertSignFormData - hardware cert types", () => {

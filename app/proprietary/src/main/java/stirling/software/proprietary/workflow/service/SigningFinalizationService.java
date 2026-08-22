@@ -798,6 +798,8 @@ public class SigningFinalizationService {
         String password = getKeystorePassword(submission, participant);
 
         byte[] signed =
+                // Custom signatureRect* placement is not wired for collab finalization yet;
+                // null keeps the legacy 200×50 pt corner widget when showSignature is true.
                 pdfSigningService.signWithKeystore(
                         pdfBytes,
                         keystore,
@@ -807,7 +809,11 @@ public class SigningFinalizationService {
                         participant.getName() != null ? participant.getName() : "Shared Signing",
                         location != null ? location : "",
                         reason != null ? reason : "Document Signing",
-                        showLogo != null ? showLogo : false);
+                        showLogo != null ? showLogo : false,
+                        null,
+                        null,
+                        null,
+                        null);
 
         log.info(
                 "Digital signature applied for {} using cert type {}",
