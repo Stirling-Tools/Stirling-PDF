@@ -144,12 +144,12 @@ export function AppProviders({
                   enablePersistence={true}
                 >
                   <FolderProvider>
-                    <AppInitializer />
                     <BrandingAssetManager />
                     <ToolRegistryProvider>
                       <NavigationProvider>
                         <FilesModalProvider>
                           <ToolWorkflowProvider>
+                            <AppInitializer />
                             <HotkeyProvider>
                               <SidebarProvider>
                                 <ViewerProvider>

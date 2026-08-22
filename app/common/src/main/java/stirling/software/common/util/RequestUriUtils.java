@@ -212,6 +212,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
+                // Public fonts endpoint - accessible to all users
+                || trimmedUri.startsWith("/api/v1/general/fonts")
                 // Share-link SPA bootstrap; data APIs remain protected
                 || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
                 // Invite-accept SPA bootstrap; data APIs remain protected
