@@ -29,6 +29,8 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.InviteAcceptanceService;
+import stirling.software.proprietary.security.service.InviteAcceptanceService.AcceptanceResult;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -41,6 +43,7 @@ class InviteLinkControllerTest {
     @Mock private UserService userService;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private InviteAcceptanceService inviteAcceptanceService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -62,7 +65,8 @@ class InviteLinkControllerTest {
                         userService,
                         applicationProperties,
                         Optional.of(emailService),
-                        userLicenseSettingsService);
+                        userLicenseSettingsService,
+                        inviteAcceptanceService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -165,14 +169,8 @@ class InviteLinkControllerTest {
 
     @Test
     void acceptInviteCreatesUserWhenEmailProvided() throws Exception {
-        InviteToken invite = new InviteToken();
-        invite.setToken("abc");
-        invite.setExpiresAt(LocalDateTime.now().plusHours(2));
-        invite.setRole(Role.USER.getRoleId());
-        invite.setUsed(false);
-        invite.setEmail(null); // email required from request
-        when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
-        when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
+        when(inviteAcceptanceService.accept("abc", "new@example.com", "password123"))
+                .thenReturn(new AcceptanceResult("new@example.com", Role.USER.getRoleId()));
 
         mockMvc.perform(
                         post("/api/v1/invite/accept/abc")
@@ -182,7 +180,6 @@ class InviteLinkControllerTest {
                 .andExpect(jsonPath("$.message").value("Account created successfully"))
                 .andExpect(jsonPath("$.username").value("new@example.com"));
 
-        verify(userService).saveUserCore(any());
-        verify(inviteTokenRepository).save(invite);
+        verify(inviteAcceptanceService).accept("abc", "new@example.com", "password123");
     }
 }

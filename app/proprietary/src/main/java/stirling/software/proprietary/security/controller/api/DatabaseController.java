@@ -91,7 +91,7 @@ public class DatabaseController {
     @Operation(
             summary = "Import database backup by filename",
             description = "Imports a database backup file from the server using its file name.")
-    @GetMapping("/import-database-file/{fileName}")
+    @PostMapping("/import-database-file/{fileName}")
     public ResponseEntity<?> importDatabaseFromBackupUI(
             @Parameter(description = "Name of the file to import", required = true) @PathVariable
                     String fileName) {
@@ -141,7 +141,7 @@ public class DatabaseController {
     @Operation(
             summary = "Delete a database backup file",
             description = "Deletes a specified database backup file from the server.")
-    @GetMapping("/delete/{fileName}")
+    @DeleteMapping("/delete/{fileName}")
     public ResponseEntity<?> deleteFile(
             @Parameter(description = "Name of the file to delete", required = true) @PathVariable
                     String fileName) {
@@ -228,7 +228,7 @@ public class DatabaseController {
     @Operation(
             summary = "Create a database backup",
             description = "This endpoint triggers the creation of a database backup.")
-    @GetMapping("/createDatabaseBackup")
+    @PostMapping("/createDatabaseBackup")
     public ResponseEntity<?> createDatabaseBackup() {
         log.info("Starting database backup creation...");
         databaseService.exportDatabase();
