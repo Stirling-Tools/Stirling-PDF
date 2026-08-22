@@ -1,20 +1,18 @@
 import { describe, expect, test } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
-import { LOGO_FOLDER_BY_VARIANT } from "@app/constants/logo";
-import type { LogoVariant } from "@app/services/preferencesService";
 
 /**
- * Tests that all required logo assets exist for each logo variant.
+ * Tests that all required logo assets exist.
  * This ensures that when useLogoAssets returns paths, those files actually exist.
  */
 describe("useLogoAssets - Logo Asset Files", () => {
   const publicDir = path.resolve(__dirname, "../../../public");
   // Brand logo assets live in core; the editor's vite config copies
-  // core/assets/brand/<folder>/* into the served root at build time (see
+  // core/assets/brand/modern-logo/* into the served root at build time (see
   // viteStaticCopy in editor/vite.config.ts), so useLogoAssets can keep
   // referencing them by their public-URL path. Validate them at source.
-  const brandDir = path.resolve(__dirname, "../assets/brand");
+  const logoDir = path.resolve(__dirname, "../assets/brand/modern-logo");
 
   // All asset files that useLogoAssets references
   const requiredAssets = [
@@ -28,34 +26,20 @@ describe("useLogoAssets - Logo Asset Files", () => {
     "StirlingPDFLogoGreyText.svg",
   ];
 
-  const logoVariants: LogoVariant[] = ["modern", "classic"];
-
-  describe.each(logoVariants)("%s logo variant", (variant) => {
-    const folder = LOGO_FOLDER_BY_VARIANT[variant];
-    const folderPath = path.join(brandDir, folder);
-
-    test(`folder "${folder}" should exist`, () => {
-      expect(fs.existsSync(folderPath)).toBe(true);
-    });
-
-    test.each(requiredAssets)("should have %s", (assetName) => {
-      const assetPath = path.join(folderPath, assetName);
-      expect(
-        fs.existsSync(assetPath),
-        `Missing asset: ${folder}/${assetName}`,
-      ).toBe(true);
-    });
+  test("logo folder should exist", () => {
+    expect(fs.existsSync(logoDir)).toBe(true);
   });
 
-  describe("manifest files", () => {
-    test("manifest.json should exist for modern variant", () => {
-      const manifestPath = path.join(publicDir, "manifest.json");
-      expect(fs.existsSync(manifestPath)).toBe(true);
-    });
+  test.each(requiredAssets)("should have %s", (assetName) => {
+    const assetPath = path.join(logoDir, assetName);
+    expect(
+      fs.existsSync(assetPath),
+      `Missing asset: modern-logo/${assetName}`,
+    ).toBe(true);
+  });
 
-    test("manifest-classic.json should exist for classic variant", () => {
-      const manifestPath = path.join(publicDir, "manifest-classic.json");
-      expect(fs.existsSync(manifestPath)).toBe(true);
-    });
+  test("manifest.json should exist", () => {
+    const manifestPath = path.join(publicDir, "manifest.json");
+    expect(fs.existsSync(manifestPath)).toBe(true);
   });
 });

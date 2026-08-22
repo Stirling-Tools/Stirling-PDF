@@ -39,7 +39,6 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/locales/")
                 || normalizedUri.startsWith("/Login/")
                 || normalizedUri.startsWith("/samples/")
-                || normalizedUri.startsWith("/classic-logo/")
                 || normalizedUri.startsWith("/modern-logo/")
                 || normalizedUri.startsWith("/og_images/")) {
             return true;
@@ -50,7 +49,6 @@ public class RequestUriUtils {
                 || "/favicon.ico".equals(normalizedUri)
                 || "/manifest.json".equals(normalizedUri)
                 || "/site.webmanifest".equals(normalizedUri)
-                || "/manifest-classic.json".equals(normalizedUri)
                 || "/index.html".equals(normalizedUri)) {
             return true;
         }

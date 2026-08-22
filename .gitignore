@@ -59,11 +59,9 @@ app/core/src/main/resources/static/*.html
 app/core/src/main/resources/static/settings/
 app/core/src/main/resources/static/locales/
 app/core/src/main/resources/static/Login/
-app/core/src/main/resources/static/classic-logo/
 app/core/src/main/resources/static/modern-logo/
 app/core/src/main/resources/static/og_images/
 app/core/src/main/resources/static/samples/
-app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/og-metadata.json
 app/core/src/main/resources/static/og-metadata.saas.json
 app/core/src/main/resources/static/sw-folder-retry.js

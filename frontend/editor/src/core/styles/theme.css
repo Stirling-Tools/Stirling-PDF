@@ -864,38 +864,6 @@
   fill-opacity: 0.7;
 }
 
-/* Classic logo icon — single path structure, colors change per theme */
-.logo-icon-classic__group {
-  opacity: 0.2;
-}
-.logo-icon-classic__body {
-  fill: var(--p-art-red);
-}
-.logo-icon-classic__flap {
-  fill: var(--p-c-545454);
-}
-.logo-icon-classic__triangle {
-  fill: var(--p-c-d0dbdc);
-}
-.logo-icon-classic__s {
-  fill: white;
-}
-[data-mantine-color-scheme="dark"] .logo-icon-classic__group {
-  opacity: 1;
-}
-[data-mantine-color-scheme="dark"] .logo-icon-classic__body {
-  fill: white;
-}
-[data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
-  fill: var(--p-c-d3d3d3);
-}
-[data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
-  fill: var(--p-c-d0dbdc);
-}
-[data-mantine-color-scheme="dark"] .logo-icon-classic__s {
-  fill: var(--mantine-color-body);
-}
-
 /* Wordmark muted variant (empty/placeholder states).
    Stirling text: 30% opacity in light mode, full opacity in dark. */
 .wordmark__text--muted {
