@@ -1,9 +1,6 @@
 /**
- * The overlays sit inside EmbedPDF's <Rotate>, which applies
- * `matrix(a,b,c,d,e,f)` for (pageRotation + docRotation) % 4 quarter turns.
- * getBoundingClientRect reports the axis-aligned SCREEN box, so a pointer has to
- * be mapped back into the element's own un-rotated space. These cases are the
- * inverse of that matrix, derived from @embedpdf/plugin-rotate's getRotationMatrix.
+ * Overlays sit inside EmbedPDF's <Rotate>, but getBoundingClientRect reports the
+ * axis-aligned screen box; these cases invert plugin-rotate's getRotationMatrix.
  */
 import { describe, it, expect } from "vitest";
 import {

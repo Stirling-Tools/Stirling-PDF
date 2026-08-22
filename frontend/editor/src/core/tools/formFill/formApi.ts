@@ -97,10 +97,7 @@ export async function extractFormFieldsXlsx(
   return response.data;
 }
 
-/**
- * Create new form fields and get back the updated PDF blob.
- * Calls POST /api/v1/form/add-fields
- */
+/** POST /api/v1/form/add-fields: create fields, returns the updated PDF blob. */
 export async function addFormFields(
   file: File | Blob,
   fields: NewFieldDefinition[],
@@ -118,11 +115,7 @@ export async function addFormFields(
   return response.data;
 }
 
-/**
- * Modify existing form fields (rename, retype, reposition, resize, flags…)
- * and get back the updated PDF blob.
- * Calls POST /api/v1/form/modify-fields
- */
+/** POST /api/v1/form/modify-fields: rename/retype/move/resize, returns the updated PDF blob. */
 export async function modifyFormFields(
   file: File | Blob,
   updates: ModifyFieldDefinition[],
@@ -142,11 +135,7 @@ export async function modifyFormFields(
   return response.data;
 }
 
-/**
- * Apply a combined batch of field edits (add + modify + delete) in a single
- * request, returning the updated PDF blob.
- * Calls POST /api/v1/form/edit-fields
- */
+/** POST /api/v1/form/edit-fields: add + modify + delete in one request. */
 export async function applyFieldEdits(
   file: File | Blob,
   batch: FieldEditBatch,
@@ -184,10 +173,7 @@ function parseSkippedEdits(raw: unknown): SkippedFieldEdit[] {
   }
 }
 
-/**
- * Delete form fields by name and get back the updated PDF blob.
- * Calls POST /api/v1/form/delete-fields
- */
+/** POST /api/v1/form/delete-fields: delete by name, returns the updated PDF blob. */
 export async function deleteFormFields(
   file: File | Blob,
   names: string[],

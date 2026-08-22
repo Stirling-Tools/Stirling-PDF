@@ -31,13 +31,8 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDVariableText;
 import org.junit.jupiter.api.Test;
 
 /**
- * Round-trip coverage for the structural form-editing additions from PR #5777: {@link
- * FormUtils#addNewFields}, geometry/font/flag changes in {@link FormUtils#modifyFormFields}, and
- * the CropBox-offset coordinate handling.
- *
- * <p>Assertions are made after a save → reload cycle because PDFBox synthesises widgets for fields
- * that have no explicit {@code /Kids}; only the serialised document authoritatively reflects what a
- * viewer (or the next API call) sees.
+ * Assertions run after a save/reload cycle: PDFBox synthesises widgets for fields with no explicit
+ * {@code /Kids}, so only the serialised document reflects what a viewer sees.
  */
 class FormUtilsEditingTest {
 
@@ -102,10 +97,8 @@ class FormUtilsEditingTest {
     }
 
     /**
-     * Regression for the button-appearance gap: PDAcroForm.refreshAppearances() never synthesizes
-     * /AP for the button family, so without an explicit appearance a created checkbox or radio
-     * renders blank everywhere and its default value resolves to Off. This fix was lost once in a
-     * rebase; the assertions below are what catch that.
+     * PDAcroForm.refreshAppearances() never synthesizes /AP for the button family, so without an
+     * explicit appearance a created checkbox or radio renders blank and resolves to Off.
      */
     @Test
     void addNewFields_givesToggleFieldsAppearanceStreamsAndKeepsTheirDefault() throws IOException {
@@ -375,9 +368,8 @@ class FormUtilsEditingTest {
 
     @Test
     void extractFormFields_prefersFieldNameOverFirstOptionForChoiceLabel() throws IOException {
-        // A radio group named "Choice" with options Yes/No must be labelled
-        // "Choice" (its name), not "Yes" (its first option). Otherwise the label
-        // shown in the viewer disagrees with the field name shown in the editor.
+        // A radio group's label is its field name, not its first option, so the viewer label
+        // matches the name shown in the editor.
         byte[] saved;
         try (PDDocument document = new PDDocument()) {
             setupForm(document, PDRectangle.A4);

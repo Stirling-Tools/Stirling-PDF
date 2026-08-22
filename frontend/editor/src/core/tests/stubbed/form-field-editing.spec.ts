@@ -10,15 +10,8 @@ import type { Page, Route } from "@playwright/test";
 import type { FieldEditBatch } from "@app/tools/formFill/types";
 
 /**
- * Stubbed coverage for the form field editor (PR #5777 — create / modify /
- * delete fields, plus radio/button/signature/comb types). The backend
- * `/api/v1/form/*` endpoints are mocked so these specs run without a Spring
- * Boot server; they exercise the panel UI, the staged-change bookkeeping, and
- * that committing fires the combined `/edit-fields` endpoint with the right
- * payload.
- *
- * The real PDFBox round-trip is covered by the live spec and the backend
- * JUnit tests.
+ * Form field editor with `/api/v1/form/*` mocked: panel UI, staged-change bookkeeping and the
+ * committed `/edit-fields` payload. The PDFBox round-trip lives in the live spec and JUnit tests.
  */
 
 const SAMPLE_PDF = path.join(
@@ -82,10 +75,8 @@ const STUB_FIELDS = [
 const EDIT_FIELDS_PATH = "/api/v1/form/edit-fields";
 
 /**
- * Install form-endpoint stubs. `fields` is what the extraction endpoint returns
- * (default: none, so create-mode drags land on an unobstructed overlay).
- * Returns a record of captured multipart envelopes (part headers only - see
- * `readEditBatch` for the JSON payload).
+ * Stubs the form endpoints; `fields` is what extraction returns (default none, so create-mode
+ * drags land on an unobstructed overlay). Returns captured multipart envelopes (part headers only).
  */
 async function stubFormEndpoints(page: Page, fields: unknown[] = []) {
   const captured: Record<string, string> = {};
@@ -112,9 +103,8 @@ async function stubFormEndpoints(page: Page, fields: unknown[] = []) {
 }
 
 /**
- * Assert the multipart envelope the commit actually put on the wire. Part
- * headers are readable on every engine (only Blob part *bodies* are elided on
- * WebKit), and this is the shape the backend's `@RequestPart` binding needs.
+ * Asserts the multipart envelope on the wire: part headers read on every engine (only Blob part
+ * bodies are elided on WebKit), and this is the shape the backend's `@RequestPart` binding needs.
  */
 function expectEditFieldsEnvelope(envelope: string) {
   expect(envelope).toContain('name="file"');
@@ -150,9 +140,8 @@ async function selectMode(page: Page, name: string) {
 }
 
 /**
- * Draw a rectangle on the create overlay for the currently-armed type, retrying
- * until a pending field registers (the commit button enables). Pointer drags
- * over the WASM-rendered page can occasionally drop under parallel load.
+ * Draws on the create overlay, retrying until the commit button enables: pointer drags over the
+ * WASM-rendered page can drop under parallel load.
  */
 async function drawField(page: Page) {
   const overlay = page.getByTestId("form-create-overlay-0");
@@ -172,7 +161,7 @@ async function drawField(page: Page) {
       await expect(commit).toBeEnabled({ timeout: 2000 });
       return;
     } catch {
-      // drag dropped under load — try again
+      // drag dropped under load - try again
     }
   }
 }
@@ -277,9 +266,8 @@ test.describe("Form field editor", () => {
     await page.getByTestId("form-create-type-listbox").click();
     await drawField(page);
 
-    // The just-drawn field's property editor auto-expands and the Options
-    // section is visible immediately, pre-seeded with two options — no manual
-    // expand, no hunting at the bottom of the panel.
+    // The just-drawn field's property editor auto-expands with Options
+    // pre-seeded, so no manual expand is needed.
     await expect(page.getByText("Options", { exact: true })).toBeVisible();
     await expect(page.getByPlaceholder("Option 1")).toHaveValue("Option 1");
     await expect(page.getByPlaceholder("Option 2")).toHaveValue("Option 2");

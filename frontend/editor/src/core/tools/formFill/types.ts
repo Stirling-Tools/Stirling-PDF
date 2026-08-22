@@ -13,11 +13,7 @@ export interface WidgetCoordinates {
   exportValue?: string;
   /** Font size in PDF points */
   fontSize?: number;
-  /**
-   * CropBox height in PDF points for the page this widget sits on. Lets the
-   * editor reverse the backend's Y-flip when sending new/changed coordinates
-   * back for create/modify operations.
-   */
+  /** CropBox height in PDF points; lets the editor reverse the backend's Y-flip when sending coordinates back. */
   cropBoxHeight?: number;
 }
 
@@ -77,9 +73,7 @@ export interface ButtonAction {
   submitFlags?: number;
 }
 
-/**
- * Field types that can be created/edited structurally through the editor.
- */
+/** Field types that can be created/edited structurally through the editor. */
 export type CreatableFieldType =
   | "text"
   | "checkbox"
@@ -101,8 +95,7 @@ export const CREATABLE_FIELD_TYPES: CreatableFieldType[] = [
 
 /**
  * A new field queued for creation. Coordinates are CropBox-relative,
- * lower-left-origin PDF points — the reverse of what the backend emits in
- * WidgetCoordinates, ready to POST to /api/v1/form/add-fields.
+ * lower-left-origin PDF points - the reverse of what WidgetCoordinates carries.
  */
 export interface NewFieldDefinition {
   name: string;

@@ -1,12 +1,4 @@
-/**
- * Lightweight alignment snapping for the form field editor.
- *
- * Everything here works in page pixel space (top-left origin), the same space
- * the creation/edit overlays operate in. A dragged rectangle's edges and centre
- * snap to the edges and centres of the other fields on the page when they come
- * within a small threshold, and the matched lines are returned as guides for
- * visual feedback.
- */
+/** Alignment snapping in page pixel space (top-left origin); matched lines come back as guides. */
 import type { PixelRect } from "@app/tools/formFill/formCoordinateUtils";
 
 export const DEFAULT_SNAP_THRESHOLD = 6;
@@ -54,10 +46,7 @@ function nearest(
   return best;
 }
 
-/**
- * Snap a moving rectangle (size fixed). Returns the adjusted top-left plus the
- * guide lines that were matched.
- */
+/** Snap a moving rectangle (size fixed) and report the matched guides. */
 export function snapMove(
   rect: PixelRect,
   targets: SnapTargets,
@@ -94,10 +83,7 @@ export function snapMove(
   return { left, top, guides };
 }
 
-/**
- * Snap a rectangle being resized. `edges` flags which sides are moving; only
- * those edges snap, the opposite edges stay put.
- */
+/** Snap a resizing rectangle: only the sides flagged in `edges` move, opposites stay put. */
 export function snapResize(
   rect: PixelRect,
   edges: { left?: boolean; right?: boolean; top?: boolean; bottom?: boolean },

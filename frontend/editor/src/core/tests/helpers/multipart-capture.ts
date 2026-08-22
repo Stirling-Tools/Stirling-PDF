@@ -1,20 +1,8 @@
 import type { Page } from "@playwright/test";
 
 /**
- * Read the body of a Blob-backed `multipart/form-data` part in a way that works
- * on every engine.
- *
- * Playwright cannot surface Blob-backed multipart bodies through WebKit's
- * inspector protocol: `route.request().postData()` returns only the part
- * headers with every part body elided (a ~330 byte skeleton), while the browser
- * puts the full body on the wire. Chromium and Firefox report the whole body,
- * so a spec that asserts on a JSON part via `postData()` passes on two engines
- * and fails on the third for reasons that have nothing to do with the product.
- *
- * Observing the part one layer earlier - at the XHR/fetch seam, which is the
- * last thing the app itself controls - is identical on all three engines.
- * Pair it with an assertion on the multipart envelope (readable everywhere) so
- * the part's name and Content-Type are still checked at the network seam.
+ * WebKit elides Blob-backed multipart part bodies from `route.request().postData()`, so read them
+ * at the XHR/fetch seam instead; part headers stay readable on every engine.
  */
 
 const STORE_KEY = "__capturedMultipartParts";

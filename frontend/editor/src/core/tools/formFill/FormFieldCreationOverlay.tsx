@@ -1,15 +1,6 @@
 /**
- * FormFieldCreationOverlay — drag-to-place layer for "create" mode.
- *
- * Mounted per page alongside FormFieldOverlay. When a field type is armed in
- * the create panel, dragging on the page draws a rectangle which becomes a
- * pending field. A plain click (no drag) drops a default-sized field. Pending
- * fields on this page are drawn as dashed outlines; alignment guides appear
- * while dragging.
- *
- * Coordinates use the exact same scale basis as FormFieldOverlay
- * (pageWidthPx / pdfPage.size.width), so a field placed at a pixel position
- * round-trips back to the same position after save/reload.
+ * Per-page drag-to-place layer for "create" mode. Uses FormFieldOverlay's scale
+ * basis (pageWidthPx / pdfPage.size.width) so placements round-trip on reload.
  */
 import React, {
   useCallback,

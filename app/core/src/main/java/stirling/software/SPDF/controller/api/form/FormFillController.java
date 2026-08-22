@@ -107,9 +107,8 @@ public class FormFillController {
     }
 
     /**
-     * Attaches the edits the document could not take to the response. The body is the updated PDF,
-     * so the report travels as a base64 JSON header (ASCII-safe, and unlike percent-encoding it
-     * survives a round trip through atob without mangling spaces).
+     * The body is the updated PDF, so dropped edits travel as a base64 JSON header;
+     * percent-encoding would turn every space into a plus sign.
      */
     private ResponseEntity<Resource> withSkippedEdits(
             ResponseEntity<Resource> response, List<FormUtils.SkippedFieldEdit> skipped) {

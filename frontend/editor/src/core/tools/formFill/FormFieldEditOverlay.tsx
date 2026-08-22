@@ -1,13 +1,6 @@
 /**
- * FormFieldEditOverlay — select / move / resize layer for "modify" mode.
- *
- * Mounted per page. Renders every field's widget(s) on the page as an outline.
- * Clicking selects a field (also reflected in the modify panel). The selected
- * field, when it has a single widget, gets drag-to-move and resize handles;
- * geometry changes are staged via stageModification() in CropBox-relative,
- * lower-left-origin points. Fields marked for deletion render struck-through.
- *
- * Uses the same scale basis as FormFieldOverlay so edits round-trip exactly.
+ * Per-page select/move/resize layer for "modify" mode. Geometry is staged in
+ * CropBox-relative, lower-left-origin points on FormFieldOverlay's scale basis.
  */
 import React, {
   useCallback,
@@ -114,6 +107,7 @@ export function FormFieldEditOverlay({
     stageModification,
     deletedFieldNames,
     forFileId,
+    dragActiveRef,
   } = useFormFill();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -200,6 +194,7 @@ export function FormFieldEditOverlay({
       e.stopPropagation();
       e.preventDefault();
       rootRef.current?.setPointerCapture(e.pointerId);
+      dragActiveRef.current = true;
       const p = localPoint(e);
       interactionRef.current = {
         kind,
@@ -275,6 +270,7 @@ export function FormFieldEditOverlay({
   const cancelInteraction = useCallback(
     (e: React.PointerEvent) => {
       interactionRef.current = null;
+      dragActiveRef.current = false;
       setGuides([]);
       setLiveRect(null);
       try {
@@ -290,6 +286,7 @@ export function FormFieldEditOverlay({
     (e: React.PointerEvent) => {
       const it = interactionRef.current;
       interactionRef.current = null;
+      dragActiveRef.current = false;
       setGuides([]);
       try {
         rootRef.current?.releasePointerCapture(e.pointerId);
@@ -299,8 +296,7 @@ export function FormFieldEditOverlay({
       const rect = liveRect;
       setLiveRect(null);
       if (!it || !rect) return;
-      // A plain click (select) produces no movement — don't stage a no-op change
-      // that would mark the field dirty.
+      // A plain click produces no movement; staging it would mark the field dirty.
       const moved =
         Math.abs(rect.left - it.startRect.left) > 0.5 ||
         Math.abs(rect.top - it.startRect.top) > 0.5 ||
@@ -337,6 +333,7 @@ export function FormFieldEditOverlay({
     if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
       const dragging = interactionRef.current != null;
+      if (!dragging) dragActiveRef.current = false;
       // Never steal keys from a field the user is typing in, but a drag in
       // progress owns Escape wherever focus happens to be.
       if (!dragging && isTextEntryTarget(e.target)) return;
@@ -460,9 +457,8 @@ export function FormFieldEditOverlay({
               if (isDeleted) return;
               e.stopPropagation();
               const singleWidget = (field.widgets?.length ?? 0) === 1;
-              // Select and (for single-widget fields) start moving in one
-              // gesture — no need to click first then drag. A click without
-              // movement just selects (endInteraction ignores zero-delta).
+              // Select and start moving in one gesture; a click without movement
+              // just selects, since endInteraction ignores a zero delta.
               if (field.name !== selectedFieldName)
                 setSelectedField(field.name);
               if (singleWidget) beginInteraction(e, field, "move");
@@ -485,8 +481,12 @@ export function FormFieldEditOverlay({
                   : FORM_COLORS.neutralFill,
               borderRadius: 2,
               boxSizing: "border-box",
-              // The browser would otherwise take the gesture as a pan and no drag starts.
-              touchAction: "none",
+              // Claim the gesture only where a drag can actually start, so touch users can
+              // still pan the page over boxes that are not draggable.
+              touchAction:
+                !isDeleted && (field.widgets?.length ?? 0) === 1
+                  ? "none"
+                  : "auto",
               cursor: isDeleted
                 ? "not-allowed"
                 : (field.widgets?.length ?? 0) === 1

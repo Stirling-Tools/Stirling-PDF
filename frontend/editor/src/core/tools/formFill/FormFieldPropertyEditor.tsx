@@ -1,7 +1,5 @@
 /**
- * FormFieldPropertyEditor — shared property form used by both the create and
- * modify panels. It edits the subset of attributes common to new and existing
- * fields and reports changes as partial patches via onChange.
+ * Property form shared by the create and modify panels; reports edits as partial patches.
  */
 import React from "react";
 import {
@@ -313,11 +311,12 @@ export function FormFieldPropertyEditor({
           <NumberInput
             size="xs"
             label={t("formFill.editor.maxLength", "Max length (comb)")}
-            value={value.maxLength ?? ""}
+            value={value.maxLength ? value.maxLength : ""}
             min={0}
             max={500}
             onChange={(v) =>
-              onChange({ maxLength: typeof v === "number" ? v : undefined })
+              // 0 is the clear signal; undefined would read as "unchanged" server-side.
+              onChange({ maxLength: typeof v === "number" ? v : 0 })
             }
           />
         </>

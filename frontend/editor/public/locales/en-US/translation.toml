@@ -4283,6 +4283,7 @@ save = "Save"
 saveShortcut = "Ctrl+S to save"
 skippedEdits_one = "1 change could not be applied:"
 skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
 [formFill.create]

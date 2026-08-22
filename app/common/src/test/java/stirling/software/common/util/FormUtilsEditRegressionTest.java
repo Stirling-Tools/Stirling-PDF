@@ -25,17 +25,15 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.Test;
 
 /**
- * Regressions for the form-editor review findings on PR #6655.
- *
- * <p>The headline one is silent data loss: the geometry path stripped {@code /AP} for every field
- * type, and {@link PDAcroForm#refreshAppearances()} never rebuilds it for the button family, so
- * dragging a checkbox left it invisible and permanently unfillable. Assertions run after a save →
- * reload cycle because only the serialised document reflects what a viewer sees.
+ * Guards the form editor against silently destroying a field it edits. Assertions run after a
+ * save/reload cycle because only the serialised document reflects what a viewer sees.
  */
 class FormUtilsEditRegressionTest {
 
@@ -348,5 +346,126 @@ class FormUtilsEditRegressionTest {
         assertNotNull(
                 FormUtils.renameProblem("plain", "New.Name"),
                 "an actual rename introducing a period must still be refused");
+    }
+
+    /** A nested field whose name box was left at its qualified name must still be modified. */
+    @Test
+    void modifyingNestedFieldKeepsWorkingWhenNameIsUntouched() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("text", "Name", 50, 700, 200, 20, null)));
+            // Re-parent it so its qualified name legitimately contains a period.
+            PDNonTerminalField parent = new PDNonTerminalField(form);
+            parent.setPartialName("Customer");
+            PDField child = form.getField("Name");
+            parent.setChildren(List.of(child));
+            child.getCOSObject().setItem(COSName.PARENT, parent.getCOSObject());
+            form.setFields(List.of(parent));
+
+            FormUtils.ModifyFormFieldDefinition mod =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "Customer.Name",
+                            "Customer.Name",
+                            null,
+                            null,
+                            0,
+                            90f,
+                            600f,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(mod), skipped);
+            assertTrue(
+                    skipped.isEmpty(), "an untouched qualified name is not a rename: " + skipped);
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            PDField field = acroForm.getField("Customer.Name");
+            assertNotNull(field, "the nested field must survive the edit");
+            assertEquals(90f, field.getWidgets().get(0).getRectangle().getLowerLeftX(), 0.5f);
+        }
+    }
+
+    /** Zero clears /MaxLen; null means unchanged, so it could never be removed otherwise. */
+    @Test
+    void maxLengthZeroClearsTheCombSetting() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document,
+                    List.of(
+                            new FormUtils.NewFormFieldDefinition(
+                                    "code", null, "text", 0, 50f, 700f, 200f, 20f, null, null, null,
+                                    null, null, null, null, null, 8, null)));
+            PDAcroForm form = document.getDocumentCatalog().getAcroForm(null);
+            assertEquals(8, ((PDTextField) form.getField("code")).getMaxLen());
+
+            FormUtils.ModifyFormFieldDefinition clear =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "code", null, null, null, null, null, null, null, null, null, null,
+                            null, null, null, null, null, null, 0, null);
+            FormUtils.modifyFormFields(document, List.of(clear));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            assertEquals(
+                    -1,
+                    ((PDTextField) acroForm.getField("code")).getMaxLen(),
+                    "/MaxLen should be gone, not merely zero");
+        }
+    }
+
+    /** An unrecognised button action must be reported rather than silently ignored. */
+    @Test
+    void unknownButtonActionIsReported() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("button", "go", 50, 700, 100, 24, null)));
+
+            FormUtils.ModifyFormFieldDefinition mod =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "go",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "launchTheMissiles");
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(mod), skipped);
+
+            assertEquals(1, skipped.size(), "an unusable action spec should be reported");
+            assertTrue(skipped.get(0).reason().contains("launchTheMissiles"));
+        }
     }
 }

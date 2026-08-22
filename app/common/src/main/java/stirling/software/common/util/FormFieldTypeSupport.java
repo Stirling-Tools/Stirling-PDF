@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
@@ -342,15 +343,21 @@ public enum FormFieldTypeSupport {
         }
     };
 
-    /** Writes a push button's activation action from the "reset"/"print"/"uri:"/"submit:" spec. */
-    public static void applyButtonAction(PDAnnotationWidget widget, String action) {
+    /**
+     * Writes a push button's activation action from a "reset"/"print"/"uri:"/"submit:" spec,
+     * returning why it could not, or null on success. A blank spec clears the action.
+     */
+    public static String applyButtonAction(PDAnnotationWidget widget, String action) {
         if (action == null) {
-            return;
+            return null;
         }
         if (action.isBlank()) {
             // An explicit blank clears the action rather than leaving the old one behind.
             widget.getCOSObject().removeItem(COSName.A);
-            return;
+            return null;
+        }
+        if (!ACTION_SPEC.matcher(action.trim()).matches()) {
+            return "'" + action + "' is not a button action this editor understands";
         }
         try {
             String spec = action.trim();
@@ -371,10 +378,16 @@ public enum FormFieldTypeSupport {
                 submit.getCOSObject().setString(COSName.F, spec.substring(7));
                 widget.getCOSObject().setItem(COSName.A, submit.getCOSObject());
             }
+            return null;
         } catch (Exception e) {
             log.debug("Unable to apply button action '{}': {}", action, e.getMessage());
+            return e.getMessage();
         }
     }
+
+    /** The spec forms applyButtonAction understands; anything else is reported, not dropped. */
+    private static final Pattern ACTION_SPEC =
+            Pattern.compile("^(?i)(reset|print|uri:.*|submit:.*)$", Pattern.DOTALL);
 
     private static final Map<String, FormFieldTypeSupport> BY_TYPE =
             Arrays.stream(values())

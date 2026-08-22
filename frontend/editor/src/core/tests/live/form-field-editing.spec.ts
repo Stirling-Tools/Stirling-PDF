@@ -6,13 +6,8 @@ import * as path from "path";
 import * as fs from "fs";
 
 /**
- * Full-stack round-trip for the form field editor (PR #5777). Runs against a
- * real Spring Boot backend (the `live` Playwright project): a field drawn in
- * the browser is created by PDFBox, the viewer reloads the produced PDF, and
- * the new field is then visible in modify mode and removable again.
- *
- * The stubbed spec (`stubbed/form-field-editing.spec.ts`) covers the UI/API
- * contract without a backend; this one proves the bytes actually round-trip.
+ * Form field editor against a real backend (the `live` Playwright project);
+ * `stubbed/form-field-editing.spec.ts` covers the same flow with mocked endpoints.
  */
 
 function fixture(filename: string): string {
@@ -48,7 +43,7 @@ function modeTab(page: Page, name: string) {
     .filter({ hasText: name });
 }
 
-test.describe("Form field editor — live round-trip", () => {
+test.describe("Form field editor: live round-trip", () => {
   test.describe.configure({ timeout: 120000 });
 
   test.beforeEach(async ({ page }) => {

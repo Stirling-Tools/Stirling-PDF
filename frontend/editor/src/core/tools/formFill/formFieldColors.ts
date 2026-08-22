@@ -1,10 +1,6 @@
 /**
- * Restrained, professional palette for the form overlays.
- *
- * Deliberately NOT a per-type rainbow: existing fields read as neutral slate,
- * the active/selected field and newly-drawn fields use a single blue accent,
- * deletions are red. The field TYPE is conveyed by the small icon in the side
- * panel, not by a saturated fill colour on the page.
+ * Form overlay palette, deliberately not per-type: slate = existing, blue = selected/new, red =
+ * delete. Field type is conveyed by the side-panel icon, not by a fill colour on the page.
  */
 export const FORM_COLORS = {
   /** Selected / active / newly-drawn fields. */
@@ -12,7 +8,7 @@ export const FORM_COLORS = {
   accentFillSoft: "rgba(37, 99, 235, 0.06)",
   accentFill: "rgba(37, 99, 235, 0.10)",
 
-  /** Existing (unselected) fields — quiet slate so the page stays readable. */
+  /** Existing (unselected) fields - quiet slate so the page stays readable. */
   neutralBorder: "rgba(71, 85, 105, 0.55)",
   neutralFill: "rgba(71, 85, 105, 0.05)",
   neutralChip: "#475569",

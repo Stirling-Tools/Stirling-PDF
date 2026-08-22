@@ -1,11 +1,4 @@
-/**
- * Shared page-scale helpers for the form overlays.
- *
- * Both the creation and edit overlays need the pixel<->PDF-point scale for a
- * rendered page (and a pointer-to-local-pixel conversion). This centralises
- * that so they stay in sync with FormFieldOverlay's basis and don't duplicate
- * the documentState math.
- */
+/** Shared pixel<->PDF-point helpers, on the same basis as FormFieldOverlay so the overlays agree. */
 import { useMemo } from "react";
 import { useDocumentState } from "@embedpdf/core/react";
 
@@ -28,9 +21,8 @@ function normalizeRotation(rotation: number | null | undefined): number {
 }
 
 /**
- * Pixel<->point scale for a page, derived from EmbedPDF's document state.
- * `scaleX = pageWidthPx / pageWidthPts`. `pageWidthPts` is 0 until the page has
- * rendered, so callers should guard on it before drawing.
+ * `scaleX = pageWidthPx / pageWidthPts`, from EmbedPDF's document state.
+ * pageWidthPts is 0 until the page has rendered, so guard on it before drawing.
  */
 export function usePageScale(
   documentId: string,

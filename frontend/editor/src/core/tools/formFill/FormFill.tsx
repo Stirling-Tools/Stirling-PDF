@@ -1,11 +1,5 @@
 /**
- * FormFill: The "Form Editor" tool component that renders in the left ToolPanel
- * when the formFill tool is selected.
- *
- * Modes:
- * - Fill: enter values into existing fields
- * - Create: draw new fields (text/checkbox/dropdown/list/radio/button/signature)
- * - Modify: select, move/resize, edit properties, and delete existing fields
+ * Form Editor tool panel: fill values, create new fields, or modify existing ones.
  */
 import React, {
   useEffect,
@@ -237,10 +231,8 @@ const FormFill = (_props: BaseToolProps) => {
       // Track the flatten value at save so toggling it later re-enables Save
       setLastSavedFlatten(flatten);
 
-      // Hand the filled PDF to the viewer's handleFormApply via custom event.
-      // This ensures the viewer tracks the new file ID and preserves scroll
-      // position and rotation, instead of our own consumeFiles call which
-      // would lose the viewer's file tracking context.
+      // Route through the viewer's handleFormApply: a direct consumeFiles call
+      // loses the viewer's file tracking, and with it scroll position and rotation.
       dispatchFormApply(filledBlob);
     } catch (err) {
       const status = isAxiosError(err) ? err.response?.status : undefined;

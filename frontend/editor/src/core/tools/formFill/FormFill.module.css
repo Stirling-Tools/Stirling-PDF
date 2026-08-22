@@ -27,9 +27,8 @@
   min-height: 2.25rem;
 }
 
-/* Colour is inherited: the shared SegmentedControl already flips the active
-   segment's text, so setting it here would override that and leave the label
-   unreadable on the accent fill. */
+/* Colour inherited: the shared SegmentedControl flips the active segment's text,
+   so setting it here would leave the label unreadable on the accent fill. */
 .segmentedInnerLabel {
   font-size: 0.625rem;
   font-weight: 700;

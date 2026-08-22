@@ -1,9 +1,6 @@
 /**
- * Reports the edits the backend could not apply after a commit.
- *
- * The mutating endpoints return the updated PDF, so partial failures travel back
- * in a response header rather than the body. Without this the UI would report a
- * plain success while quietly dropping a field.
+ * Reports edits the backend could not apply. The mutating endpoints return the
+ * PDF itself, so partial failures arrive in a response header, not the body.
  */
 import { Alert, List, Text } from "@mantine/core";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -12,7 +9,7 @@ import { useFormFill } from "@app/tools/formFill/FormFillContext";
 
 export function SkippedEditsAlert() {
   const { t } = useTranslation();
-  const { skippedEdits, clearSkippedEdits } = useFormFill();
+  const { skippedEdits, skippedTotal, clearSkippedEdits } = useFormFill();
 
   if (skippedEdits.length === 0) return null;
 
@@ -29,7 +26,7 @@ export function SkippedEditsAlert() {
     >
       <Text size="xs" fw={600}>
         {t("formFill.skippedEdits", {
-          count: skippedEdits.length,
+          count: Math.max(skippedTotal, skippedEdits.length),
           defaultValue: "{{count}} changes could not be applied:",
         })}
       </Text>
@@ -43,6 +40,13 @@ export function SkippedEditsAlert() {
           </List.Item>
         ))}
       </List>
+      {skippedTotal > skippedEdits.length && (
+        <Text size="xs" c="dimmed" mt={4}>
+          {t("formFill.skippedEditsTruncated", "{{count}} more not listed.", {
+            count: skippedTotal - skippedEdits.length,
+          })}
+        </Text>
+      )}
     </Alert>
   );
 }

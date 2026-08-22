@@ -1,8 +1,6 @@
 /**
- * Shared commit boilerplate for the create and modify panels: run an async
- * action that produces the edited PDF blob, hand it to the viewer, and track
- * committing/error state. Keeps both panels from repeating the same
- * try/catch/dispatch dance.
+ * Shared commit flow for the create and modify panels: run an action producing
+ * the edited PDF blob, hand it to the viewer, track committing/error state.
  */
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,9 +8,8 @@ import { isAxiosError } from "axios";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
 
 /**
- * These endpoints are requested with responseType "blob", so a 400's ProblemDetail
- * arrives as a Blob and err.message is only "Request failed with status code 400".
- * Read the body so the user sees which field name the backend refused.
+ * responseType "blob" means an error's ProblemDetail arrives as a Blob, so read
+ * the body to surface which field the backend refused.
  */
 async function serverMessage(err: unknown): Promise<string | null> {
   if (!isAxiosError(err)) return null;

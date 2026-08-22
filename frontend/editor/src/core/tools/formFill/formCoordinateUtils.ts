@@ -1,21 +1,6 @@
 /**
- * Coordinate helpers for the form field editor.
- *
- * Three coordinate spaces are in play:
- *
- *  - Pixel space: rendered <div> pixels inside a PDF page container, top-left
- *    origin, Y growing downward. This is what pointer events give us.
- *  - PDF point space (top-left origin): the space the backend already emits in
- *    WidgetCoordinates (CropBox-relative, Y already flipped). FormFieldOverlay
- *    renders these directly as `x * scaleX`, `y * scaleY`.
- *  - PDF point space (lower-left origin): native PDF user space, CropBox-relative.
- *    This is what /add-fields and /modify-fields expect; the backend adds the
- *    CropBox offset to recover absolute coordinates.
- *
- * `scaleX = pageWidthPx / pageWidthPts` and `scaleY = pageHeightPx / pageHeightPts`,
- * computed exactly as FormFieldOverlay does, so a field placed at pixel (px, py)
- * round-trips back to the same pixel after a save/reload cycle. `pageHeightPts`
- * is the CropBox height in PDF points (EmbedPDF's `page.size.height`).
+ * Three spaces: page pixels (top-left), WidgetCoordinates points (top-left, CropBox-relative),
+ * and add/modify-fields points (lower-left, CropBox-relative). pageHeightPts is CropBox height.
  */
 
 export interface PixelRect {
@@ -55,11 +40,7 @@ export function widgetRectToPixels(
   };
 }
 
-/**
- * Convert a pixel rect (top-left origin) to backend PDF coordinates
- * (lower-left origin, CropBox-relative points). Inverse of
- * {@link backendRectToPixels}.
- */
+/** Pixel rect (top-left) to backend PDF points (lower-left, CropBox-relative). */
 export function pixelsToBackendRect(
   rect: PixelRect,
   scaleX: number,
@@ -70,16 +51,12 @@ export function pixelsToBackendRect(
   const widthPts = rect.width / scaleX;
   const heightPts = rect.height / scaleY;
   const topPts = rect.top / scaleY; // distance from page top, in points
-  // Flip to lower-left origin: y is the distance from the page bottom to the
-  // field's bottom edge.
+  // Flip to lower-left origin: y measures page bottom to the field's bottom edge.
   const yPts = pageHeightPts - topPts - heightPts;
   return { x: xPts, y: yPts, width: widthPts, height: heightPts };
 }
 
-/**
- * Convert backend PDF coordinates (lower-left origin, CropBox-relative points)
- * to a pixel rect (top-left origin). Inverse of {@link pixelsToBackendRect}.
- */
+/** Backend PDF points (lower-left, CropBox-relative) to a pixel rect (top-left). */
 export function backendRectToPixels(
   rect: PdfRect,
   scaleX: number,

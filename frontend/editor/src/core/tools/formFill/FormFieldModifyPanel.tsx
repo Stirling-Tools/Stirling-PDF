@@ -1,11 +1,4 @@
-/**
- * FormFieldModifyPanel — left-panel UI for "modify" mode.
- *
- * Lists existing fields grouped by page. Selecting one highlights it on the
- * page (via FormFieldEditOverlay) and reveals a property editor plus precise
- * X/Y/W/H inputs. Fields can be marked for deletion. All staged changes commit
- * in one round-trip.
- */
+/** Left panel for "modify" mode; page highlighting lives in FormFieldEditOverlay. */
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Text,
@@ -88,12 +81,12 @@ export function FormFieldModifyPanel({
     toggleFieldDeleted,
     commitModifications,
     hasUncommittedChanges,
+    dragActiveRef,
   } = useFormFill();
 
   const { committing, error, commit } = useFormCommit(onApplied);
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
-  // Group fields by their first widget's page.
   const { sortedPages, fieldsByPage } = useMemo(() => {
     const byPage = new Map<number, FormField[]>();
     for (const field of state.fields) {
@@ -122,13 +115,13 @@ export function FormFieldModifyPanel({
   useEffect(() => {
     if (!selectedFieldName) return;
     const onKey = (e: KeyboardEvent) => {
-      // Escape inside the property editor belongs to that input (or its dropdown).
-      if (isTextEntryTarget(e.target)) return;
+      // A drag owns Escape (the overlay cancels it), and an input owns its own.
+      if (dragActiveRef.current || isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") setSelectedField(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedFieldName, setSelectedField]);
+  }, [selectedFieldName, setSelectedField, dragActiveRef]);
 
   const changeCount =
     Object.keys(modifiedFields).length + deletedFieldNames.length;
@@ -157,8 +150,8 @@ export function FormFieldModifyPanel({
         multiline: staged?.multiline ?? field.multiline,
         multiSelect: staged?.multiSelect ?? field.multiSelect,
         options: staged?.options ?? field.options ?? [],
-        // Omitting these blanked the inputs on every keystroke. Test for the staged KEY,
-        // not its value, or an explicit clear reads as "unchanged" and snaps back.
+        // Test for the staged KEY, not its value, or an explicit clear reads as
+        // "unchanged" and the input snaps back.
         maxLength:
           staged && "maxLength" in staged
             ? staged.maxLength
@@ -195,18 +188,6 @@ export function FormFieldModifyPanel({
         )}
 
         <SkippedEditsAlert />
-
-        <Button
-          size="sm"
-          onClick={handleCommit}
-          loading={committing}
-          disabled={!currentFile || !hasUncommittedChanges}
-          data-testid="form-modify-commit"
-        >
-          {t("formFill.modify.commit", "Save {{count}} change(s)", {
-            count: changeCount,
-          })}
-        </Button>
 
         {state.fields.length === 0 && !state.loading && (
           <Text size="xs" c="dimmed" ta="center" py="md">
@@ -393,6 +374,20 @@ export function FormFieldModifyPanel({
           ))}
         </div>
       </ScrollArea>
+
+      <div className={styles.footer}>
+        <Button
+          size="sm"
+          onClick={handleCommit}
+          loading={committing}
+          disabled={!currentFile || !hasUncommittedChanges}
+          data-testid="form-modify-commit"
+        >
+          {t("formFill.modify.commit", "Save {{count}} change(s)", {
+            count: changeCount,
+          })}
+        </Button>
+      </div>
     </div>
   );
 }

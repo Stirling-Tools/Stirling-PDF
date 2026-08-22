@@ -219,9 +219,7 @@ export interface FormFillContextValue {
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
 
-  // -------------------------------------------------------------------------
-  // Structural editing (create / modify modes)
-  // -------------------------------------------------------------------------
+  // --- Structural editing (create / modify modes) ---
 
   /** Current tool mode. */
   mode: FormMode;
@@ -271,7 +269,12 @@ export interface FormFillContextValue {
 
   /** Edits the last commit asked for but the document could not take. */
   skippedEdits: SkippedFieldEdit[];
+  /** May exceed skippedEdits.length when the report was truncated. */
+  skippedTotal: number;
   clearSkippedEdits: () => void;
+
+  /** True while a field is being dragged, so Escape handlers elsewhere stand down. */
+  dragActiveRef: React.MutableRefObject<boolean>;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -385,7 +388,15 @@ export function FormFillProvider({
   >({});
   const [deletedFieldNames, setDeletedFieldNames] = useState<string[]>([]);
   const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
-  const clearSkippedEdits = useCallback(() => setSkippedEdits([]), []);
+  const [skippedTotal, setSkippedTotal] = useState(0);
+  const clearSkippedEdits = useCallback(() => {
+    setSkippedEdits([]);
+    setSkippedTotal(0);
+  }, []);
+  /** Which file the staged edits belong to, so they cannot be committed onto another. */
+  const editedFileIdRef = useRef<string | null>(null);
+  /** Set by the edit overlay so other Escape handlers do not steal a drag's cancel. */
+  const dragActiveRef = useRef(false);
   // Monotonic counter for client-side pending-field ids and default names.
   const pendingCounterRef = useRef(0);
 
@@ -395,8 +406,10 @@ export function FormFillProvider({
     setSelectedField(null);
     setModifiedFields({});
     setDeletedFieldNames([]);
+    editedFileIdRef.current = null;
     // The report describes the batch just discarded, so it must not outlive it.
     setSkippedEdits([]);
+    setSkippedTotal(0);
   }, []);
 
   const fetchFields = useCallback(
@@ -414,11 +427,8 @@ export function FormFillProvider({
       setForFileId(null);
       valuesStore.reset({});
       dispatch({ type: "RESET" });
-      // NOTE: deliberately do NOT clear create/modify editing state here.
-      // EmbedPdfViewer re-fetches fields on provider switch and file load, and
-      // those background fetches must not wipe a user's in-progress drawn
-      // fields or staged edits. Editing state is cleared on explicit mode
-      // switch (setMode) and reset() instead.
+      // Deliberately keeps create/modify state: the viewer re-fetches on provider
+      // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
       try {
         let fields = await providerRef.current.fetchFields(file);
@@ -430,10 +440,8 @@ export function FormFillProvider({
           return;
         }
 
-        // The pdfbox backend returns signature fields, but without a rendered
-        // appearance. Fetch the rendered signature appearances via pdfium and
-        // MERGE them by name — enrich an existing backend entry rather than
-        // appending a duplicate (otherwise a signature shows up twice).
+        // pdfbox returns signature fields without a rendered appearance; merge the
+        // pdfium ones by name, since appending would list a signature twice.
         if (providerModeRef.current === "pdfbox") {
           try {
             // Convert File/Blob to ArrayBuffer for pdfiumService
@@ -456,6 +464,14 @@ export function FormFillProvider({
           values[field.name] = field.value ?? "";
         }
         valuesStore.reset(values);
+        // Staged edits reference the previous document's fields; committing them
+        // against a different file would apply them to the wrong PDF.
+        if (
+          editedFileIdRef.current != null &&
+          (fileId ?? null) !== editedFileIdRef.current
+        ) {
+          clearEditingState();
+        }
         forFileIdRef.current = fileId ?? null;
         setForFileId(fileId ?? null);
         dispatch({ type: "FETCH_SUCCESS", fields });
@@ -598,6 +614,7 @@ export function FormFillProvider({
   // --- Create mode ---
   const addPendingField = useCallback(
     (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
+      editedFileIdRef.current = forFileIdRef.current;
       const seq = ++pendingCounterRef.current;
       const id = `pending-${seq}`;
       // Friendly, readable default names that match how the viewer labels
@@ -614,8 +631,7 @@ export function FormFillProvider({
       const defaultName =
         field.name?.trim() ||
         `${TYPE_DEFAULT_NAME[field.type] ?? "Field"} ${seq}`;
-      // Choice/radio fields need options to be useful — seed a sensible default
-      // so the field isn't empty and the options editor has something to show.
+      // Choice/radio fields are useless without options, so seed defaults.
       const needsOptions =
         field.type === "combobox" ||
         field.type === "listbox" ||
@@ -657,6 +673,8 @@ export function FormFillProvider({
       );
       const result = await applyFieldEdits(file, { add: definitions });
       setSkippedEdits(result.skipped);
+      setSkippedTotal(result.skippedTotal);
+      setSkippedTotal(result.skippedTotal);
       setPendingFields([]);
       setCreationType(null);
       return result.blob;
@@ -667,6 +685,7 @@ export function FormFillProvider({
   // --- Modify mode ---
   const stageModification = useCallback(
     (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
+      editedFileIdRef.current = forFileIdRef.current;
       setModifiedFields((prev) => ({
         ...prev,
         [targetName]: { ...prev[targetName], targetName, ...patch },
@@ -684,6 +703,7 @@ export function FormFillProvider({
   }, []);
 
   const toggleFieldDeleted = useCallback((name: string) => {
+    editedFileIdRef.current = forFileIdRef.current;
     setDeletedFieldNames((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
     );
@@ -707,6 +727,7 @@ export function FormFillProvider({
         delete: deletedFieldNames,
       });
       setSkippedEdits(result.skipped);
+      setSkippedTotal(result.skippedTotal);
       setModifiedFields({});
       setDeletedFieldNames([]);
       setSelectedField(null);
@@ -770,7 +791,9 @@ export function FormFillProvider({
       commitModifications,
       hasUncommittedChanges,
       skippedEdits,
+      skippedTotal,
       clearSkippedEdits,
+      dragActiveRef,
     }),
     [
       state,
@@ -806,7 +829,9 @@ export function FormFillProvider({
       commitModifications,
       hasUncommittedChanges,
       skippedEdits,
+      skippedTotal,
       clearSkippedEdits,
+      dragActiveRef,
     ],
   );
 

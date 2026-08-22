@@ -1,19 +1,10 @@
 /**
- * Merge helpers for assembling the form field list shown to the user.
- *
- * In pdfbox mode the backend already returns every field (including signature
- * fields), but it cannot render a signature's visual appearance. The frontend
- * separately rasterises signature appearances via PDFium. These must be merged
- * BY NAME — enriching the existing backend entry with the rendered appearance —
- * rather than concatenated, otherwise a signature appears twice in the list.
+ * The backend returns signature fields but cannot render their appearance; PDFium rasterises it
+ * separately. Merge the two BY NAME, never concatenate, or the signature is listed twice.
  */
 import type { FormField } from "@app/tools/formFill/types";
 
-/**
- * Returns a new array where each pdfium-rendered signature field either enriches
- * the matching backend field (by name) with its `appearanceDataUrl`, or is
- * appended if the backend didn't return it. Never produces duplicates by name.
- */
+/** Copies each pdfium `appearanceDataUrl` onto the same-named backend field, appending unmatched ones. */
 export function mergeSignatureAppearances(
   backendFields: FormField[],
   signatureFields: FormField[],

@@ -1,10 +1,4 @@
-/**
- * FormFieldCreatePanel — left-panel UI for "create" mode.
- *
- * Pick a field type to arm placement, draw fields on the page (handled by
- * FormFieldCreationOverlay), tweak each queued field's properties, then commit
- * them to the PDF in one request.
- */
+/** Left panel for "create" mode; drawing happens in FormFieldCreationOverlay. */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Stack, Text, Group, Alert, Collapse, Paper } from "@mantine/core";
 import { Button } from "@app/ui/Button";

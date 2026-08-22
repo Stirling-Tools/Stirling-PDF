@@ -1,7 +1,4 @@
-/**
- * SnapGuides — renders the pink alignment guide lines shared by the create and
- * edit overlays. Absolutely positioned within the page overlay.
- */
+/** Alignment guide lines shared by the create and edit overlays; positioned within the page overlay. */
 import React from "react";
 import type { SnapGuide } from "@app/tools/formFill/formSnapUtils";
 import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
