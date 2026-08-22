@@ -29,14 +29,24 @@ class FailingRequest extends EventTarget {
   onerror: ((event: Event) => void) | null = null;
   onsuccess: ((event: Event) => void) | null = null;
 
-  constructor(readonly error: DOMException) {
+  constructor(
+    readonly error: DOMException,
+    transaction?: IDBTransaction,
+  ) {
     super();
-    queueMicrotask(() => this.onerror?.(new Event("error")));
+    queueMicrotask(() => {
+      const event = new Event("error", { cancelable: true });
+      this.onerror?.(event);
+      if (!event.defaultPrevented) transaction?.abort();
+    });
   }
 }
 
 /** Record every add, optionally failing the blob-valued ones. */
-function instrumentAdd(options: { rejectBlobs: boolean }) {
+function instrumentAdd(options: {
+  rejectBlobs: boolean;
+  error?: DOMException;
+}) {
   IDBObjectStore.prototype.add = function (
     this: IDBObjectStore,
     value: unknown,
@@ -46,10 +56,11 @@ function instrumentAdd(options: { rejectBlobs: boolean }) {
     attempts.push(isBlob ? "blob" : "copy");
     if (isBlob && options.rejectBlobs) {
       return new FailingRequest(
-        new DOMException(
-          "Error preparing Blob/File data to be stored in object store",
-          "UnknownError",
-        ),
+        options.error ??
+          new DOMException(
+            "Error preparing Blob/File data to be stored in object store",
+            "UnknownError",
+          ),
       ) as unknown as IDBRequest<IDBValidKey>;
     }
     return key === undefined
@@ -131,11 +142,12 @@ async function freshFileStorage() {
       import("@app/services/fileStorage"),
       import("@app/types/fileContext"),
     ]);
-  const store = async (name: string) => {
+  const store = async (name: string, thumbnailUrl?: string) => {
     const file = new File(["%PDF-1.7 stirling"], name, {
       type: "application/pdf",
     });
     const stub = createNewStirlingFileStub(file);
+    stub.thumbnailUrl = thumbnailUrl;
     await fileStorage.storeStirlingFile(
       createStirlingFile(file, stub.id),
       stub,
@@ -240,6 +252,60 @@ describe("storeStirlingFile — blob-value fallback", () => {
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("second.pdf");
   });
 
+  test("falls back for Chromium InvalidBlob DataErrors", async () => {
+    expectConsole.warn(/IndexedDB rejected a Blob value/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({
+      rejectBlobs: true,
+      error: new DOMException(
+        "Failed to write blobs (InvalidBlob)",
+        "DataError",
+      ),
+    });
+
+    const first = await store("invalid-blob.pdf");
+    expect(attempts).toEqual(["blob", "copy"]);
+    expect((await fileStorage.getStirlingFile(first))?.name).toBe(
+      "invalid-blob.pdf",
+    );
+
+    attempts = [];
+    const second = await store("after-invalid-blob.pdf");
+    expect(attempts).toEqual(["copy"]);
+    expect((await fileStorage.getStirlingFile(second))?.name).toBe(
+      "after-invalid-blob.pdf",
+    );
+  });
+
+  test("does not misclassify unrelated DataErrors", async () => {
+    const { store } = await freshFileStorage();
+    instrumentAdd({
+      rejectBlobs: true,
+      error: new DOMException("The provided key is invalid", "DataError"),
+    });
+
+    await expect(store("bad-key.pdf")).rejects.toThrow(
+      /provided key is invalid/,
+    );
+    expect(attempts).toEqual(["blob"]);
+  });
+
+  test("preserves the DataCloneError fallback", async () => {
+    expectConsole.warn(/IndexedDB rejected a Blob value/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({
+      rejectBlobs: true,
+      error: new DOMException("Value could not be cloned", "DataCloneError"),
+    });
+
+    const id = await store("clone-error.pdf");
+
+    expect(attempts).toEqual(["blob", "copy"]);
+    expect((await fileStorage.getStirlingFile(id))?.name).toBe(
+      "clone-error.pdf",
+    );
+  });
+
   /** Committing is not evidence the bytes survived, and by the next reload the
    *  source File is gone: without this the upload looks fine and the file is dead. */
   test("repairs a record whose stored blob loses its backing store", async () => {
@@ -269,6 +335,17 @@ describe("storeStirlingFile — blob-value fallback", () => {
     } as typeof IDBObjectStore.prototype.add;
 
     await expect(store("too-big.pdf")).rejects.toThrow(/no space left/);
+    expect(attempts).toEqual(["blob"]);
+  });
+
+  test("does not retry a failure a copy can't fix (duplicate key)", async () => {
+    const { store } = await freshFileStorage();
+    instrumentAdd({
+      rejectBlobs: true,
+      error: new DOMException("Key already exists", "ConstraintError"),
+    });
+
+    await expect(store("duplicate.pdf")).rejects.toThrow(/already exists/);
     expect(attempts).toEqual(["blob"]);
   });
 });
@@ -513,5 +590,72 @@ describe("maintenanceMayRewrite", () => {
     // On engines that genuinely support blobs (Chrome), nothing changes.
     expect(maintenanceMayRewrite(blobRecord, true)).toBe(true);
     expect(maintenanceMayRewrite(copyRecord, true)).toBe(true);
+  });
+
+  test("settles an InvalidBlob TTL rewrite and does not retry it", async () => {
+    expectConsole.warn(/thumbnail TTL bump skipped/);
+    expectConsole.warn(/IndexedDB rejected a Blob value/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("thumbnail.pdf", "data:image/png;base64,dGVzdA==");
+
+    let ttlPutAttempts = 0;
+    IDBObjectStore.prototype.put = function (this: IDBObjectStore) {
+      ttlPutAttempts++;
+      return new FailingRequest(
+        new DOMException("Failed to write blobs (InvalidBlob)", "DataError"),
+        this.transaction,
+      ) as unknown as IDBRequest<IDBValidKey>;
+    } as typeof IDBObjectStore.prototype.put;
+
+    await expect(fileStorage.getAllStirlingFileStubs()).resolves.toEqual([
+      expect.objectContaining({ id }),
+    ]);
+    await vi.waitFor(() => expect(ttlPutAttempts).toBe(1));
+
+    attempts = [];
+    await store("after-ttl-failure.pdf");
+    expect(attempts).toEqual(["copy"]);
+
+    await expect(fileStorage.getAllStirlingFileStubs()).resolves.toHaveLength(
+      2,
+    );
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(ttlPutAttempts).toBe(1);
+  });
+
+  test("uses a synchronous InvalidBlob TTL failure as the no-blob verdict", async () => {
+    expectConsole.warn(/thumbnail TTL bump could not be issued/);
+    expectConsole.warn(/IndexedDB rejected a Blob value/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store(
+      "synchronous-thumbnail.pdf",
+      "data:image/png;base64,dGVzdA==",
+    );
+
+    let ttlPutAttempts = 0;
+    IDBObjectStore.prototype.put = function () {
+      ttlPutAttempts++;
+      throw new DOMException(
+        "Failed to write blobs (InvalidBlob)",
+        "DataError",
+      );
+    } as typeof IDBObjectStore.prototype.put;
+
+    await expect(fileStorage.getAllStirlingFileStubs()).resolves.toEqual([
+      expect.objectContaining({ id }),
+    ]);
+    await vi.waitFor(() => expect(ttlPutAttempts).toBe(1));
+
+    attempts = [];
+    await store("after-synchronous-ttl-failure.pdf");
+    expect(attempts).toEqual(["copy"]);
+
+    await expect(fileStorage.getAllStirlingFileStubs()).resolves.toHaveLength(
+      2,
+    );
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(ttlPutAttempts).toBe(1);
   });
 });
