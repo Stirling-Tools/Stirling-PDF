@@ -2,14 +2,20 @@ package stirling.software.SPDF.controller.api.form;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.*;
@@ -39,6 +45,7 @@ import stirling.software.common.model.FormFieldWithCoordinates;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -71,6 +78,11 @@ public class FormFillController {
 
     /** Keeps the header well inside Jetty's 8KB response-header budget. */
     private static final int MAX_REPORTED_SKIPS = 20;
+
+    /** Entry names inside the {@code ?includeFields=true} bundle. */
+    private static final String FIELDS_ENTRY = "fields.json";
+
+    private static final String DOCUMENT_ENTRY = "document.pdf";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
@@ -392,7 +404,14 @@ public class FormFillController {
                                             + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}],"
                                             + "\"modify\":[],\"delete\":[]}")
                     @RequestPart(value = "edits", required = false)
-                    byte[] editsPayload)
+                    byte[] editsPayload,
+            @Parameter(
+                            description =
+                                    "Return a ZIP holding the updated PDF plus the field list it"
+                                            + " produced, instead of the bare PDF. Saves re-uploading"
+                                            + " the result just to read its fields back.")
+                    @RequestParam(value = "includeFields", defaultValue = "false")
+                    boolean includeFields)
             throws IOException {
 
         String rawEdits = decodePart(editsPayload);
@@ -408,6 +427,7 @@ public class FormFillController {
                 processSingleFile(
                         file,
                         "updated",
+                        includeFields,
                         document ->
                                 FormUtils.applyFieldEdits(
                                         document,
@@ -531,13 +551,82 @@ public class FormFillController {
 
     private ResponseEntity<Resource> processSingleFile(
             MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
+        return processSingleFile(file, suffix, false, processor);
+    }
+
+    private ResponseEntity<Resource> processSingleFile(
+            MultipartFile file, String suffix, boolean includeFields, DocumentProcessor processor)
+            throws IOException {
         requirePdf(file);
 
         String baseName = buildBaseName(file, suffix);
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             FormUtils.repairMissingWidgetPageReferences(document);
             processor.accept(document);
-            return saveDocument(document, baseName);
+            return includeFields
+                    ? saveDocumentWithFields(document, baseName)
+                    : saveDocument(document, baseName);
+        }
+    }
+
+    /**
+     * Answers "what fields does the saved file have?" from the document still open here, so the
+     * caller does not have to upload the result back to ask.
+     */
+    private ResponseEntity<Resource> saveDocumentWithFields(PDDocument document, String baseName)
+            throws IOException {
+        TempFile zip = null;
+        boolean zipTransferred = false;
+        try (TempFile pdf = tempFileManager.createManagedTempFile(".pdf")) {
+            document.save(pdf.getFile());
+            // Read the fields after the save so they describe the bytes actually being returned.
+            byte[] fields =
+                    objectMapper.writeValueAsBytes(
+                            FormUtils.extractFormFieldsWithCoordinates(document));
+            zip = tempFileManager.createManagedTempFile(".zip");
+            writeFieldBundle(zip.getPath(), pdf.getPath(), fields);
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.fileToWebResponse(
+                            zip, baseName + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+            zipTransferred = true;
+            return response;
+        } finally {
+            if (zip != null && !zipTransferred) {
+                zip.close();
+            }
+        }
+    }
+
+    /**
+     * Deflates the JSON because it is text, but stores the PDF: its streams are already compressed,
+     * so deflating costs ~25ms per MB to save a few percent.
+     */
+    private static void writeFieldBundle(Path zipPath, Path pdfPath, byte[] fields)
+            throws IOException {
+        long pdfSize = Files.size(pdfPath);
+        CRC32 crc = new CRC32();
+        try (InputStream in = Files.newInputStream(pdfPath)) {
+            byte[] buffer = new byte[8192];
+            for (int read; (read = in.read(buffer)) > 0; ) {
+                crc.update(buffer, 0, read);
+            }
+        }
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+            ZipEntry fieldsEntry = new ZipEntry(FIELDS_ENTRY);
+            fieldsEntry.setMethod(ZipEntry.DEFLATED);
+            zip.putNextEntry(fieldsEntry);
+            zip.write(fields);
+            zip.closeEntry();
+
+            ZipEntry documentEntry = new ZipEntry(DOCUMENT_ENTRY);
+            documentEntry.setMethod(ZipEntry.STORED);
+            documentEntry.setSize(pdfSize);
+            documentEntry.setCompressedSize(pdfSize);
+            documentEntry.setCrc(crc.getValue());
+            zip.putNextEntry(documentEntry);
+            Files.copy(pdfPath, zip);
+            zip.closeEntry();
+            zip.finish();
         }
     }
 

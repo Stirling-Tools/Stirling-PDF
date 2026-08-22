@@ -376,7 +376,7 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when edits payload is null")
         void nullPayload() {
-            assertThatThrownBy(() -> controller.editFields(pdfFile(), null))
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), null, false))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -387,7 +387,8 @@ class FormFillControllerTest {
                             () ->
                                     controller.editFields(
                                             pdfFile(),
-                                            "{\"add\":[],\"modify\":[],\"delete\":[]}".getBytes()))
+                                            "{\"add\":[],\"modify\":[],\"delete\":[]}".getBytes(),
+                                            false))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -402,7 +403,7 @@ class FormFillControllerTest {
                     "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
                             + "\"y\":700,\"width\":200,\"height\":20}],\"modify\":[],"
                             + "\"delete\":[]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -415,7 +416,7 @@ class FormFillControllerTest {
                     "{\"add\":[{\"name\":\"Customer.Name\",\"type\":\"text\",\"pageIndex\":0,"
                             + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]}";
 
-            assertThatThrownBy(() -> controller.editFields(pdfFile(), json.getBytes()))
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), json.getBytes(), false))
                     .hasMessageContaining("period");
             // Rejected up front, so the document is never even loaded.
             verify(pdfDocumentFactory, never()).load(any(MockMultipartFile.class));
@@ -430,7 +431,7 @@ class FormFillControllerTest {
             String json =
                     "{\"modify\":[{\"targetName\":\"Customer.Name\",\"name\":\"Customer.Name\","
                             + "\"x\":10,\"y\":10}]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             // It must get past validation into the edit loop: the only complaint should be that
@@ -452,7 +453,7 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(createMinimalPdf());
 
             String json = "{\"delete\":[\"noSuchField\"]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             String encoded =
@@ -476,7 +477,7 @@ class FormFillControllerTest {
             String json =
                     "{\"add\":[{\"name\":\"clean\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
                             + "\"y\":700,\"width\":200,\"height\":20}]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
 
             assertThat(response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER))
                     .isNull();
@@ -535,6 +536,114 @@ class FormFillControllerTest {
                     new MockMultipartFile("file", null, "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("document_filled");
+        }
+    }
+
+    // -- includeFields bundle ------------------------------------------
+
+    @Nested
+    @DisplayName("editFields ?includeFields=true")
+    class FieldBundle {
+
+        private byte[] editsPayload() {
+            return ("{\"add\":[{\"name\":\"bundled\",\"type\":\"text\",\"pageIndex\":0,"
+                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]}")
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+
+        private java.util.Map<String, java.util.zip.ZipEntry> entriesOf(byte[] zipBytes)
+                throws IOException {
+            java.util.Map<String, java.util.zip.ZipEntry> found = new java.util.HashMap<>();
+            try (java.util.zip.ZipInputStream in =
+                    new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(zipBytes))) {
+                for (java.util.zip.ZipEntry e; (e = in.getNextEntry()) != null; ) {
+                    java.io.ByteArrayOutputStream data = new java.io.ByteArrayOutputStream();
+                    in.transferTo(data);
+                    // getMethod/getSize are only final once the entry has been fully read.
+                    found.put(e.getName(), e);
+                    payloads.put(e.getName(), data.toByteArray());
+                }
+            }
+            return found;
+        }
+
+        private final java.util.Map<String, byte[]> payloads = new java.util.HashMap<>();
+
+        private byte[] bundleFor(MockMultipartFile file) throws Exception {
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+            ResponseEntity<Resource> response = controller.editFields(file, editsPayload(), true);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            return drainBody(response);
+        }
+
+        @Test
+        @DisplayName("returns a zip holding the pdf and the field list")
+        void bundlesBoth() throws Exception {
+            byte[] zip = bundleFor(pdfFile());
+            entriesOf(zip);
+
+            assertThat(payloads).containsKeys("document.pdf", "fields.json");
+            assertThat(new String(payloads.get("document.pdf"), 0, 5)).isEqualTo("%PDF-");
+            assertThat(
+                            new String(
+                                    payloads.get("fields.json"),
+                                    java.nio.charset.StandardCharsets.UTF_8))
+                    .contains("bundled");
+        }
+
+        @Test
+        @DisplayName("stores the pdf entry but deflates the json")
+        void perEntryMethods() throws Exception {
+            byte[] zip = bundleFor(pdfFile());
+            java.util.Map<String, java.util.zip.ZipEntry> entries = entriesOf(zip);
+
+            assertThat(entries.get("document.pdf").getMethod())
+                    .as("deflating an already-compressed PDF burns CPU for almost nothing")
+                    .isEqualTo(java.util.zip.ZipEntry.STORED);
+            assertThat(entries.get("fields.json").getMethod())
+                    .as("the JSON is text and no longer gets the container's gzip")
+                    .isEqualTo(java.util.zip.ZipEntry.DEFLATED);
+        }
+
+        @Test
+        @DisplayName("bundled fields match what a follow-up fetch would have returned")
+        void matchesTheSecondCallItReplaces() throws Exception {
+            byte[] zip = bundleFor(pdfFile());
+            entriesOf(zip);
+            byte[] bundledPdf = payloads.get("document.pdf");
+
+            // Re-ask the endpoint this feature exists to delete, using the returned bytes.
+            MockMultipartFile saved =
+                    new MockMultipartFile("file", "test.pdf", "application/pdf", bundledPdf);
+            try (PDDocument reloaded = org.apache.pdfbox.Loader.loadPDF(bundledPdf)) {
+                when(pdfDocumentFactory.load(eq(saved), eq(true))).thenReturn(reloaded);
+                ResponseEntity<
+                                java.util.List<
+                                        stirling.software.common.model.FormFieldWithCoordinates>>
+                        refetched = controller.listFieldsWithCoordinates(saved);
+
+                String viaRefetch = realObjectMapper.writeValueAsString(refetched.getBody());
+                String viaBundle =
+                        new String(
+                                payloads.get("fields.json"),
+                                java.nio.charset.StandardCharsets.UTF_8);
+                assertThat(viaBundle)
+                        .as("the bundle must be interchangeable with the round trip it removes")
+                        .isEqualTo(viaRefetch);
+            }
+        }
+
+        @Test
+        @DisplayName("omitting the flag still returns a bare pdf")
+        void defaultsToPlainPdf() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+
+            byte[] body = drainBody(controller.editFields(file, editsPayload(), false));
+
+            assertThat(new String(body, 0, 5)).isEqualTo("%PDF-");
         }
     }
 }

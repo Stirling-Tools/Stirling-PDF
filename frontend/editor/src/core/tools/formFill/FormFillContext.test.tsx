@@ -171,3 +171,99 @@ describe("FormFillContext staged-edit ownership", () => {
     expect(hook.current.skippedTotal).toBe(0);
   });
 });
+
+describe("FormFillContext bundled field list", () => {
+  beforeEach(() => {
+    applyFieldEdits.mockReset();
+    fetchFields.mockReset();
+    fetchFields.mockResolvedValue([]);
+  });
+
+  const bundled = [
+    { name: "bundled", type: "text", widgets: [{ pageIndex: 0, x: 1, y: 2 }] },
+  ] as unknown as FieldEditResult["fields"];
+
+  async function commitWith(
+    hook: { current: ReturnType<typeof useFormFill> },
+    edited: Blob,
+    fields: FieldEditResult["fields"],
+  ) {
+    // The viewer switches to pdfbox whenever the form tool is open, which is when commits happen.
+    act(() => hook.current.setProviderMode("pdfbox"));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.stageModification("f", { x: 1 }));
+    applyFieldEdits.mockResolvedValue({
+      blob: edited,
+      skipped: [],
+      skippedTotal: 0,
+      fields,
+    });
+    await act(async () => {
+      await hook.current.commitModifications(blob());
+    });
+  }
+
+  it("skips the follow-up request when the commit already returned the fields", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    const edited = blob();
+    await commitWith(hook, edited, bundled);
+    const callsBefore = fetchFields.mock.calls.length;
+
+    await act(async () => {
+      await hook.current.fetchFields(edited, "file-A-edited");
+    });
+
+    // The whole point: no second upload for the post-commit fetch.
+    expect(fetchFields.mock.calls).toHaveLength(callsBefore);
+    await waitFor(() =>
+      expect(hook.current.state.fields.map((f) => f.name)).toEqual(["bundled"]),
+    );
+  });
+
+  it("still asks the backend when the commit returned no fields", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    const edited = blob();
+    await commitWith(hook, edited, undefined);
+    const callsBefore = fetchFields.mock.calls.length;
+
+    await act(async () => {
+      await hook.current.fetchFields(edited, "file-A-edited");
+    });
+
+    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
+  });
+
+  it("ignores a bundle whose size does not match the file being fetched", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await commitWith(hook, blob(), bundled);
+    const callsBefore = fetchFields.mock.calls.length;
+
+    // A different document must never adopt the previous commit's field list.
+    await act(async () => {
+      await hook.current.fetchFields(
+        new Blob(["%PDF-1.4 a longer unrelated document"]),
+        "file-B",
+      );
+    });
+
+    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
+  });
+
+  it("does not reuse the bundle for a second fetch", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    const edited = blob();
+    await commitWith(hook, edited, bundled);
+
+    await act(async () => {
+      await hook.current.fetchFields(edited, "file-A-edited");
+    });
+    const afterFirst = fetchFields.mock.calls.length;
+    await act(async () => {
+      await hook.current.fetchFields(edited, "file-A-edited");
+    });
+
+    expect(fetchFields.mock.calls.length).toBe(afterFirst + 1);
+  });
+});

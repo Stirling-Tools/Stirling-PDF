@@ -432,6 +432,12 @@ export function FormFillProvider({
     setSkippedTotal(0);
   }, []);
 
+  // Fields the last commit's response carried, adopted by the next fetch instead of uploading
+  // the document again to ask. Size-checked so a different document cannot pick them up.
+  const bundledFieldsRef = useRef<{ fields: FormField[]; size: number } | null>(
+    null,
+  );
+
   const fetchFields = useCallback(
     async (file: File | Blob, fileId?: string) => {
       // Increment version so any in-flight fetch for a previous file is discarded.
@@ -474,7 +480,16 @@ export function FormFillProvider({
       // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
       try {
-        let fields = await providerRef.current.fetchFields(file);
+        // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
+        const bundled = bundledFieldsRef.current;
+        bundledFieldsRef.current = null;
+        const usable =
+          bundled &&
+          bundled.size === file.size &&
+          providerModeRef.current === "pdfbox";
+        let fields = usable
+          ? bundled.fields
+          : await providerRef.current.fetchFields(file);
         // If another fetch or reset happened while we were waiting, discard this result
         if (fetchVersionRef.current !== version) {
           console.debug(
@@ -707,6 +722,9 @@ export function FormFillProvider({
         ({ id: _id, ...rest }) => rest,
       );
       const result = await applyFieldEdits(file, { add: definitions });
+      bundledFieldsRef.current = result.fields
+        ? { fields: result.fields, size: result.blob.size }
+        : null;
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
       skipReportFileIdRef.current = PENDING_SKIP_REPORT;
@@ -764,6 +782,9 @@ export function FormFillProvider({
         modify: updates,
         delete: deletedFieldNames,
       });
+      bundledFieldsRef.current = result.fields
+        ? { fields: result.fields, size: result.blob.size }
+        : null;
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
       skipReportFileIdRef.current = PENDING_SKIP_REPORT;

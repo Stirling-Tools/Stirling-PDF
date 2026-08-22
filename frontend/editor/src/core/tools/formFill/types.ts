@@ -167,6 +167,8 @@ export interface FieldEditResult {
   skipped: SkippedFieldEdit[];
   /** How many were skipped in total, which may exceed skipped.length. */
   skippedTotal: number;
+  /** Present when the backend bundled the field list in, saving a second upload. */
+  fields?: FormField[];
 }
 
 /** The form tool's working mode. */

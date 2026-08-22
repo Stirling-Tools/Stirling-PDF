@@ -2,6 +2,10 @@
  * API service for form-related backend calls.
  */
 import apiClient from "@app/services/apiClient";
+import {
+  readFieldBundle,
+  supportsFieldBundle,
+} from "@app/tools/formFill/fieldBundle";
 import type {
   FormField,
   NewFieldDefinition,
@@ -135,7 +139,10 @@ export async function modifyFormFields(
   return response.data;
 }
 
-/** POST /api/v1/form/edit-fields: add + modify + delete in one request. */
+/**
+ * POST /api/v1/form/edit-fields: add + modify + delete in one request. Asks for the field list in
+ * the same response where the browser can unpack it, which saves uploading the result back again.
+ */
 export async function applyFieldEdits(
   file: File | Blob,
   batch: FieldEditBatch,
@@ -147,14 +154,23 @@ export async function applyFieldEdits(
     new Blob([JSON.stringify(batch)], { type: "application/json" }),
   );
 
+  const includeFields = supportsFieldBundle();
   const response = await apiClient.post("/api/v1/form/edit-fields", formData, {
     responseType: "blob",
+    params: includeFields ? { includeFields: true } : undefined,
   });
-  return {
+  const result: FieldEditResult = {
     blob: response.data,
     skipped: parseSkippedEdits(response.headers?.[SKIPPED_EDITS_HEADER]),
     skippedTotal: Number(response.headers?.[SKIPPED_EDITS_TOTAL_HEADER]) || 0,
   };
+  if (!includeFields) return result;
+
+  // A backend that ignored the flag returns a bare PDF; the caller then fetches fields as before.
+  const bundle = await readFieldBundle(response.data);
+  return bundle
+    ? { ...result, blob: bundle.pdf, fields: bundle.fields }
+    : result;
 }
 
 /** Set by the backend when it could not apply every requested edit. */
