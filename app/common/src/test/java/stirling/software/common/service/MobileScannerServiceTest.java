@@ -6,7 +6,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -363,6 +370,208 @@ class MobileScannerServiceTest {
             assertDoesNotThrow(() -> service.deleteFileAfterDownload("d3", "../escape.txt"));
             // Original file untouched.
             assertTrue(Files.exists(tempDir.resolve("d3").resolve("a.txt")));
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteFileAfterDownload race")
+    class DeleteFileAfterDownloadRace {
+
+        @Test
+        @DisplayName("concurrent batch downloads keep the session until every read completes")
+        void concurrentBatchDownloadsDoNotDeleteSessionBeforeEveryReadCompletes()
+                throws Exception {
+            String sessionId = "race-concurrent";
+            List<String> filenames =
+                    IntStream.rangeClosed(1, 5)
+                            .mapToObj(index -> "scan-" + index + ".jpg")
+                            .toList();
+            uploadImageFiles(sessionId, filenames);
+
+            ExecutorService executor = Executors.newFixedThreadPool(filenames.size());
+            CountDownLatch allPathsResolved = new CountDownLatch(filenames.size());
+            CountDownLatch firstFileDeleted = new CountDownLatch(1);
+            List<Future<byte[]>> downloads = new ArrayList<>();
+
+            try {
+                for (int index = 0; index < filenames.size(); index++) {
+                    String filename = filenames.get(index);
+                    boolean firstDownload = index == 0;
+                    downloads.add(
+                            executor.submit(
+                                    () ->
+                                            downloadWithCoordination(
+                                                    sessionId,
+                                                    filename,
+                                                    allPathsResolved,
+                                                    firstFileDeleted,
+                                                    firstDownload)));
+                }
+
+                for (int index = 0; index < downloads.size(); index++) {
+                    assertArrayEquals(
+                            imageBytes(filenames.get(index)),
+                            downloads.get(index).get(5, TimeUnit.SECONDS));
+                }
+            } finally {
+                executor.shutdownNow();
+            }
+
+            assertNull(service.validateSession(sessionId));
+        }
+
+        @Test
+        @DisplayName("sequential batch downloads keep the session until the final file is deleted")
+        void sequentialDownloadsKeepSessionUntilFinalFileIsDeleted() throws Exception {
+            String sessionId = "race-sequential";
+            List<String> filenames = List.of("scan-1.jpg", "scan-2.jpg", "scan-3.jpg");
+            uploadImageFiles(sessionId, filenames);
+
+            Path firstPath = service.getFile(sessionId, filenames.get(0));
+            Path secondPath = service.getFile(sessionId, filenames.get(1));
+            Path thirdPath = service.getFile(sessionId, filenames.get(2));
+
+            assertArrayEquals(imageBytes(filenames.get(0)), Files.readAllBytes(firstPath));
+            service.deleteFileAfterDownload(sessionId, filenames.get(0));
+
+            assertTrue(Files.exists(secondPath));
+            assertTrue(Files.exists(thirdPath));
+            assertNotNull(service.validateSession(sessionId));
+
+            assertArrayEquals(imageBytes(filenames.get(1)), Files.readAllBytes(secondPath));
+            service.deleteFileAfterDownload(sessionId, filenames.get(1));
+
+            assertTrue(Files.exists(thirdPath));
+            assertNotNull(service.validateSession(sessionId));
+
+            assertArrayEquals(imageBytes(filenames.get(2)), Files.readAllBytes(thirdPath));
+            service.deleteFileAfterDownload(sessionId, filenames.get(2));
+
+            assertNull(service.validateSession(sessionId));
+        }
+
+        @Test
+        @DisplayName("concurrent getFile calls do not lose downloaded-file updates")
+        void concurrentGetFileCallsOnSameSessionDoNotLoseDownloadUpdates() throws Exception {
+            String sessionId = "race-tracking";
+            List<String> filenames =
+                    IntStream.rangeClosed(1, 16)
+                            .mapToObj(index -> "scan-" + index + ".jpg")
+                            .toList();
+            uploadImageFiles(sessionId, filenames);
+
+            ExecutorService executor = Executors.newFixedThreadPool(filenames.size());
+            CountDownLatch start = new CountDownLatch(1);
+            List<Future<Path>> resolvedPaths = new ArrayList<>();
+
+            try {
+                for (String filename : filenames) {
+                    resolvedPaths.add(
+                            executor.submit(
+                                    () -> {
+                                        await(start);
+                                        return service.getFile(sessionId, filename);
+                                    }));
+                }
+
+                start.countDown();
+
+                List<Path> paths = new ArrayList<>();
+                for (Future<Path> resolvedPath : resolvedPaths) {
+                    Path path = resolvedPath.get(5, TimeUnit.SECONDS);
+                    assertTrue(Files.exists(path));
+                    paths.add(path);
+                }
+
+                assertArrayEquals(imageBytes(filenames.get(0)), Files.readAllBytes(paths.get(0)));
+                service.deleteFileAfterDownload(sessionId, filenames.get(0));
+
+                for (int index = 1; index < paths.size(); index++) {
+                    assertTrue(Files.exists(paths.get(index)));
+                    assertArrayEquals(
+                            imageBytes(filenames.get(index)), Files.readAllBytes(paths.get(index)));
+                    service.deleteFileAfterDownload(sessionId, filenames.get(index));
+                }
+            } finally {
+                executor.shutdownNow();
+            }
+
+            assertNull(service.validateSession(sessionId));
+        }
+
+        @Test
+        @DisplayName("requesting a file from a deleted session leaves unrelated sessions intact")
+        void requestingFileAfterDeletedSessionDoesNotDeleteUnrelatedSessions() throws Exception {
+            String deletedSessionId = "race-deleted";
+            String unrelatedSessionId = "race-unrelated";
+            String deletedFilename = "scan-deleted.jpg";
+            String unrelatedFilename = "scan-unrelated.jpg";
+            uploadImageFiles(deletedSessionId, List.of(deletedFilename));
+            uploadImageFiles(unrelatedSessionId, List.of(unrelatedFilename));
+
+            Path deletedPath = service.getFile(deletedSessionId, deletedFilename);
+            assertArrayEquals(imageBytes(deletedFilename), Files.readAllBytes(deletedPath));
+            service.deleteFileAfterDownload(deletedSessionId, deletedFilename);
+
+            IOException missingFile =
+                    assertThrows(
+                            IOException.class,
+                            () -> service.getFile(deletedSessionId, deletedFilename));
+            assertTrue(
+                    missingFile.getMessage().contains("Session not found")
+                            || missingFile.getMessage().contains("File not found"));
+
+            assertNotNull(service.validateSession(unrelatedSessionId));
+            Path unrelatedPath = service.getFile(unrelatedSessionId, unrelatedFilename);
+            assertArrayEquals(imageBytes(unrelatedFilename), Files.readAllBytes(unrelatedPath));
+            service.deleteFileAfterDownload(unrelatedSessionId, unrelatedFilename);
+        }
+
+        private byte[] downloadWithCoordination(
+                String sessionId,
+                String filename,
+                CountDownLatch allPathsResolved,
+                CountDownLatch firstFileDeleted,
+                boolean firstDownload)
+                throws Exception {
+            Path path = service.getFile(sessionId, filename);
+            allPathsResolved.countDown();
+            await(allPathsResolved);
+
+            if (firstDownload) {
+                byte[] fileBytes = Files.readAllBytes(path);
+                service.deleteFileAfterDownload(sessionId, filename);
+                firstFileDeleted.countDown();
+                return fileBytes;
+            }
+
+            await(firstFileDeleted);
+            byte[] fileBytes = Files.readAllBytes(path);
+            service.deleteFileAfterDownload(sessionId, filename);
+            return fileBytes;
+        }
+
+        private void uploadImageFiles(String sessionId, List<String> filenames) throws IOException {
+            List<MultipartFile> files = new ArrayList<>();
+
+            for (String filename : filenames) {
+                files.add(
+                        new MockMultipartFile(
+                                "files", filename, "image/jpeg", imageBytes(filename)));
+            }
+
+            service.createSession(sessionId);
+            service.uploadFiles(sessionId, files);
+        }
+
+        private byte[] imageBytes(String filename) {
+            return ("content for " + filename).getBytes(StandardCharsets.UTF_8);
+        }
+
+        private void await(CountDownLatch latch) throws InterruptedException {
+            assertTrue(
+                    latch.await(5, TimeUnit.SECONDS),
+                    "Timed out waiting for coordinated download");
         }
     }
 
