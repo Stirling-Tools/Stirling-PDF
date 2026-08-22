@@ -7997,19 +7997,6 @@ keepFor = "Хранить в течение"
 1 = "Автоархивация"
 2 = "Блокировка удаления"
 
-[portal.policies.config.routing]
-summary = "Направляет документы в нужное место назначения на основе типа и классификации."
-
-[portal.policies.config.routing.fields]
-destination = "Место назначения"
-notify = "Уведомлять при маршрутизации"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Автоклассификация"
-1 = "Маршрут в папку"
-2 = "Уведомление webhook"
-
 [portal.policies.config.security]
 summary = "Обнаруживает и редактирует PII, удаляет активный контент (JavaScript) и добавляет водяные знаки в документы."
 

@@ -38,6 +38,15 @@ function categoryId(wire: WirePolicy): string {
   return (wire.output?.options?.categoryId as string | undefined) ?? "";
 }
 
+/** Mirrors PolicyValidator's product cap: at most one input and one output. */
+function capExceeded(wire: WirePolicy): string | null {
+  if ((wire.inputs?.length ?? 0) > 1)
+    return "a policy supports at most one input";
+  if ((wire.outputIds?.length ?? 0) > 1)
+    return "a policy supports at most one output";
+  return null;
+}
+
 export const policiesHandlers = [
   http.get("/api/v1/policies", async () => {
     await delay(120);
@@ -61,6 +70,10 @@ export const policiesHandlers = [
   http.post("/api/v1/policies", async ({ request }) => {
     await delay(120);
     const incoming = (await request.json()) as WirePolicy;
+    // Same cap PolicyValidator enforces, so an over-cap body fails here too.
+    const overCap = capExceeded(incoming);
+    if (overCap)
+      return HttpResponse.json({ message: overCap }, { status: 400 });
     const catId = categoryId(incoming);
     const existing = incoming.id
       ? store.find((p) => p.id === incoming.id)

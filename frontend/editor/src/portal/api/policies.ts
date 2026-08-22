@@ -11,7 +11,11 @@
 
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
-import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import {
+  fromWirePolicy,
+  policyInputs,
+  toWirePolicy,
+} from "@app/policies/codec";
 import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import { policyStep, type PolicyToolStep } from "@app/policies/operations";
@@ -19,8 +23,10 @@ import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
   PolicyDecodedState,
   PolicyRunView,
+  WirePipelineInput,
   WirePipelineStep,
   WirePolicy,
+  WireTriggerConfig,
 } from "@app/policies/types";
 
 export type {
@@ -76,6 +82,8 @@ export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
   sources: string[];
+  /** The stored input bindings, carried so a lifecycle save can replay them. */
+  inputs?: WirePipelineInput[];
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -87,6 +95,8 @@ export interface PolicyState {
   retryDelayMinutes?: number;
   backendId?: string;
   isDefault?: boolean;
+  trigger?: WireTriggerConfig | null;
+  outputIds?: string[];
 }
 
 export interface PolicySetupResult {
@@ -101,6 +111,8 @@ export interface PolicySetupResult {
   maxRetries: number;
   retryDelayMinutes: number;
   steps: WirePipelineStep[];
+  trigger: WireTriggerConfig | null;
+  outputIds: string[];
 }
 
 export interface DecoratedPolicy {
@@ -208,7 +220,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
-    comingSoon: true,
   },
   {
     id: "retention",
@@ -342,28 +353,10 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("compress")],
-    fields: [
-      {
-        label: "portal.policies.config.routing.fields.destination",
-        key: "destination",
-        type: "select",
-        value: "documents",
-        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
-      },
-      {
-        label: "portal.policies.config.routing.fields.webhookUrl",
-        key: "webhookUrl",
-        type: "text",
-        value: "",
-      },
-      {
-        label: "portal.policies.config.routing.fields.notify",
-        key: "notify",
-        type: "toggle",
-        value: false,
-      },
-    ],
+    // Routing is source->destination; the app-delivery step is an optional
+    // extra (starts off) configured from the operations catalogue.
+    defaultOperations: [policyStep("externalApiCall")],
+    fields: [],
   },
   retention: {
     summary: "portal.policies.config.retention.summary",
@@ -433,6 +426,7 @@ function decoratePolicy(
     configured: true,
     status,
     sources: decoded.sources,
+    inputs: decoded.inputs,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -444,6 +438,8 @@ function decoratePolicy(
     retryDelayMinutes: decoded.retryDelayMinutes,
     backendId: decoded.id,
     isDefault,
+    trigger: decoded.trigger,
+    outputIds: decoded.outputIds,
   };
 
   return {
@@ -595,6 +591,8 @@ export function buildWireFromSetup(
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
+      // A wizard save is the one place a policy (re)binds its inputs.
+      inputs: policyInputs(result.sources, result.trigger),
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,
@@ -605,11 +603,18 @@ export function buildWireFromSetup(
       maxRetries: result.maxRetries,
       retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
+      trigger: result.trigger,
+      outputIds: result.outputIds,
     }),
   };
 }
 
-/** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
+/**
+ * Build a wire policy from an existing decorated policy (e.g. for pause/resume).
+ * Lifecycle saves change only `enabled`, so the stored bindings are replayed
+ * as-is: re-deriving them from `sources` would both rebind a legacy record whose
+ * selection names several sources and blow the backend's one-input cap.
+ */
 export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
@@ -625,6 +630,7 @@ export function buildWireFromState(
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,
+      inputs: s.inputs ?? [],
       scopeTypes: s.scopeTypes,
       reviewerEmail: s.reviewerEmail,
       fieldValues: s.fieldValues,
@@ -635,6 +641,8 @@ export function buildWireFromState(
       maxRetries: s.maxRetries ?? DEFAULT_RETRIES,
       retryDelayMinutes: s.retryDelayMinutes ?? DEFAULT_RETRY_DELAY,
       steps: policy.steps,
+      trigger: s.trigger ?? null,
+      outputIds: s.outputIds ?? [],
     }),
   };
 }

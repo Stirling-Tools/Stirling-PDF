@@ -7997,19 +7997,6 @@ keepFor = "Aufbewahren für"
 1 = "Automatisch archivieren"
 2 = "Löschsperre"
 
-[portal.policies.config.routing]
-summary = "Leitet Dokumente basierend auf Typ und Klassifizierung an das richtige Ziel weiter."
-
-[portal.policies.config.routing.fields]
-destination = "Ziel"
-notify = "Bei Routing benachrichtigen"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automatisch klassifizieren"
-1 = "In Ordner weiterleiten"
-2 = "Webhook benachrichtigen"
-
 [portal.policies.config.security]
 summary = "Erkennt und schwärzt PII, entfernt aktive Inhalte (JavaScript) und versieht Dokumente mit Wasserzeichen."
 

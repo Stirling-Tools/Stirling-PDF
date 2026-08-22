@@ -7997,19 +7997,6 @@ keepFor = "Păstrați timp de"
 1 = "Arhivare automată"
 2 = "Blocare ștergere"
 
-[portal.policies.config.routing]
-summary = "Rutează documentele către destinația potrivită pe baza tipului și clasificării."
-
-[portal.policies.config.routing.fields]
-destination = "Destinație"
-notify = "Notificați la rutare"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Clasificare automată"
-1 = "Rutare către folder"
-2 = "Notificare webhook"
-
 [portal.policies.config.security]
 summary = "Detectează și redactează PII, elimină conținut activ (JavaScript) și aplică filigran documentelor."
 

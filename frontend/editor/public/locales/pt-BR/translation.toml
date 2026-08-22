@@ -7997,19 +7997,6 @@ keepFor = "Manter por"
 1 = "Arquivamento automático"
 2 = "Bloqueio de exclusão"
 
-[portal.policies.config.routing]
-summary = "Roteia documentos para o destino correto com base no tipo e na classificação."
-
-[portal.policies.config.routing.fields]
-destination = "Destino"
-notify = "Notificar ao rotear"
-webhookUrl = "URL do webhook"
-
-[portal.policies.config.routing.rules]
-0 = "Classificar automaticamente"
-1 = "Rotear para pasta"
-2 = "Notificar webhook"
-
 [portal.policies.config.security]
 summary = "Detecta e redige PII, remove conteúdo ativo (JavaScript) e adiciona marca d'água aos documentos."
 

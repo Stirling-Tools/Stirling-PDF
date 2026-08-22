@@ -7997,19 +7997,6 @@ keepFor = "Conservar durante"
 1 = "Archivado automático"
 2 = "Bloqueo de eliminación"
 
-[portal.policies.config.routing]
-summary = "Enruta documentos al destino correcto según el tipo y la clasificación."
-
-[portal.policies.config.routing.fields]
-destination = "Destino"
-notify = "Notificar al enrutar"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Clasificación automática"
-1 = "Enrutar a carpeta"
-2 = "Notificación Webhook"
-
 [portal.policies.config.security]
 summary = "Detecta y censura PII, elimina contenido activo (JavaScript) y añade marcas de agua a documentos."
 

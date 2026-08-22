@@ -7997,19 +7997,6 @@ keepFor = "Зберігати протягом"
 1 = "Автоархівація"
 2 = "Блокування видалення"
 
-[portal.policies.config.routing]
-summary = "Спрямовує документи до правильного місця призначення на основі типу та класифікації."
-
-[portal.policies.config.routing.fields]
-destination = "Місце призначення"
-notify = "Сповіщати під час маршрутизації"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Автокласифікація"
-1 = "Спрямувати до папки"
-2 = "Сповістити через webhook"
-
 [portal.policies.config.security]
 summary = "Виявляє та редагує PII, вилучає активний вміст (JavaScript) і додає водяні знаки до документів."
 

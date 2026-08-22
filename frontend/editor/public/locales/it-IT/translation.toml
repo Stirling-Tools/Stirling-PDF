@@ -7997,19 +7997,6 @@ keepFor = "Conserva per"
 1 = "Archiviazione automatica"
 2 = "Blocco eliminazione"
 
-[portal.policies.config.routing]
-summary = "Instrada i documenti alla destinazione corretta in base a tipo e classificazione."
-
-[portal.policies.config.routing.fields]
-destination = "Destinazione"
-notify = "Notifica al routing"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Classifica automaticamente"
-1 = "Instrada alla cartella"
-2 = "Notifica webhook"
-
 [portal.policies.config.security]
 summary = "Rileva e redige PII, rimuove contenuti attivi (JavaScript) e aggiunge filigrane ai documenti."
 

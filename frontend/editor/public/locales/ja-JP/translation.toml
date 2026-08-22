@@ -7997,19 +7997,6 @@ keepFor = "保持期間"
 1 = "自動アーカイブ"
 2 = "削除ブロック"
 
-[portal.policies.config.routing]
-summary = "種類と分類に基づいて、ドキュメントを適切な宛先にルーティングします。"
-
-[portal.policies.config.routing.fields]
-destination = "宛先"
-notify = "ルーティング時に通知"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "自動分類"
-1 = "フォルダーへルーティング"
-2 = "Webhook 通知"
-
 [portal.policies.config.security]
 summary = "PII を検出して墨消しし、アクティブコンテンツ（JavaScript）を除去し、ドキュメントに透かしを入れます。"
 

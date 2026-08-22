@@ -7997,19 +7997,6 @@ keepFor = "Conserver pendant"
 1 = "Archivage automatique"
 2 = "Blocage de suppression"
 
-[portal.policies.config.routing]
-summary = "Achemine les documents vers la bonne destination selon le type et la classification."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Notifier lors du routage"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Classification automatique"
-1 = "Acheminer vers le dossier"
-2 = "Notification webhook"
-
 [portal.policies.config.security]
 summary = "Détecte et caviarde les PII, supprime le contenu actif (JavaScript) et ajoute un filigrane aux documents."
 

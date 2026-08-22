@@ -7997,19 +7997,6 @@ keepFor = "Uchovat po dobu"
 1 = "Automatická archivace"
 2 = "Blokace smazání"
 
-[portal.policies.config.routing]
-summary = "Směruje dokumenty do správného cíle podle typu a klasifikace."
-
-[portal.policies.config.routing.fields]
-destination = "Cíl"
-notify = "Upozornit při směrování"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Automaticky klasifikovat"
-1 = "Směrovat do složky"
-2 = "Webhook upozornění"
-
 [portal.policies.config.security]
 summary = "Detekuje a rediguje PII, odstraňuje aktivní obsah (JavaScript) a opatřuje dokumenty vodoznakem."
 

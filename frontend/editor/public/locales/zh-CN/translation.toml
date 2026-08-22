@@ -7997,19 +7997,6 @@ keepFor = "保留时长"
 1 = "自动归档"
 2 = "删除阻止"
 
-[portal.policies.config.routing]
-summary = "根据类型和分类将文档路由到正确的目标。"
-
-[portal.policies.config.routing.fields]
-destination = "目标"
-notify = "路由时通知"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "自动分类"
-1 = "路由到文件夹"
-2 = "Webhook 通知"
-
 [portal.policies.config.security]
 summary = "检测并修订 PII，移除活动内容 (JavaScript)，并为文档添加水印。"
 

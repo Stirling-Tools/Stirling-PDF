@@ -7997,19 +7997,6 @@ keepFor = "Hrani za"
 1 = "Samodejno arhiviranje"
 2 = "Blokada izbrisa"
 
-[portal.policies.config.routing]
-summary = "Usmeri dokumente na pravo destinacijo glede na vrsto in razvrstitev."
-
-[portal.policies.config.routing.fields]
-destination = "Destinacija"
-notify = "Obvesti ob usmerjanju"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Samodejno razvrsti"
-1 = "Usmeri v mapo"
-2 = "Webhook obvestilo"
-
 [portal.policies.config.security]
 summary = "Zazna in redigira PII, odstrani aktivno vsebino (JavaScript) ter doda vodne žige dokumentom."
 

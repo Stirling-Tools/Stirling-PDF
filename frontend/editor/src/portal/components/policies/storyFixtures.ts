@@ -30,6 +30,7 @@ export function decorateForStory(categoryId: string): DecoratedPolicy {
     configured: true,
     status: decoded.enabled ? "active" : "paused",
     sources: decoded.sources,
+    inputs: decoded.inputs,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,

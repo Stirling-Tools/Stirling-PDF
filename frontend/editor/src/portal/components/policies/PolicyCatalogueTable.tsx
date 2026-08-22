@@ -88,7 +88,7 @@ export function PolicyCatalogueTable({
         },
       }),
     ],
-    [t, onOpen, isLocked, lockedLabel],
+    [t, isLocked, lockedLabel],
   );
 
   return (

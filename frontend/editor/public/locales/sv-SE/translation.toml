@@ -7997,19 +7997,6 @@ keepFor = "Behåll i"
 1 = "Autoarkivera"
 2 = "Borttagningsblockering"
 
-[portal.policies.config.routing]
-summary = "Dirigerar dokument till rätt destination baserat på typ och klassificering."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Meddela vid routing"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Autoklassificera"
-1 = "Dirigera till mapp"
-2 = "Webhook-meddelande"
-
 [portal.policies.config.security]
 summary = "Upptäcker och maskerar PII, tar bort aktivt innehåll (JavaScript) och vattenmärker dokument."
 

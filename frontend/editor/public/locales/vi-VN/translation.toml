@@ -7997,19 +7997,6 @@ keepFor = "Giữ trong"
 1 = "Tự động lưu trữ"
 2 = "Chặn xóa"
 
-[portal.policies.config.routing]
-summary = "Định tuyến tài liệu đến đúng đích dựa trên loại và phân loại."
-
-[portal.policies.config.routing.fields]
-destination = "Đích"
-notify = "Thông báo khi định tuyến"
-webhookUrl = "Webhook URL"
-
-[portal.policies.config.routing.rules]
-0 = "Tự động phân loại"
-1 = "Định tuyến đến thư mục"
-2 = "Thông báo webhook"
-
 [portal.policies.config.security]
 summary = "Phát hiện và che giấu PII, loại bỏ nội dung hoạt động (JavaScript) và đóng dấu tài liệu."
 
