@@ -25,10 +25,13 @@ final class FormPayloadParser {
     private static final String KEY_VALUE = "value";
     private static final String KEY_DEFAULT_VALUE = "defaultValue";
 
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE =
+            new TypeReference<Map<String, Object>>() {};
     private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>>
-            MODIFY_FIELD_LIST_TYPE = new TypeReference<>() {};
-    private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
+            MODIFY_FIELD_LIST_TYPE =
+                    new TypeReference<List<FormUtils.ModifyFormFieldDefinition>>() {};
+    private static final TypeReference<List<String>> STRING_LIST_TYPE =
+            new TypeReference<List<String>>() {};
 
     private FormPayloadParser() {}
 
