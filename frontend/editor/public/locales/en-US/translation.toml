@@ -9175,6 +9175,8 @@ allTools = "Tools"
 automate = "Automate"
 config = "Config"
 files = "Files"
+login = "Login"
+logout = "Logout"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
