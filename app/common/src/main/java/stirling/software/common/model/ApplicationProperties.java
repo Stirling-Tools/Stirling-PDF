@@ -1317,6 +1317,10 @@ public class ApplicationProperties {
         private String appNameNavbar;
         private List<String> languages;
         private String logoStyle = "modern"; // Options: "modern" (default) or "classic"
+        // Options: "sidebar" (default) or "fullscreen"
+        private String defaultToolPanelMode = "sidebar";
+        // Options: "tools" (default), "read", or "automate"
+        private String defaultStartupView = "tools";
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
@@ -1331,6 +1335,23 @@ public class ApplicationProperties {
                 return "classic";
             }
             return "modern"; // default
+        }
+
+        public String getDefaultToolPanelMode() {
+            if ("fullscreen".equalsIgnoreCase(defaultToolPanelMode)) {
+                return "fullscreen";
+            }
+            return "sidebar";
+        }
+
+        public String getDefaultStartupView() {
+            if ("read".equalsIgnoreCase(defaultStartupView)) {
+                return "read";
+            }
+            if ("automate".equalsIgnoreCase(defaultStartupView)) {
+                return "automate";
+            }
+            return "tools";
         }
 
         @Data
