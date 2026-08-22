@@ -4585,6 +4585,10 @@ desc = "Change document restrictions and permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
 
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
+
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
 tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
@@ -10831,6 +10835,7 @@ searchPlaceholder = "Search tools..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
+ai = "AI"
 automation = "Automation"
 developerTools = "Developer Tools"
 documentReview = "Document Review"
