@@ -468,4 +468,181 @@ class FormUtilsEditRegressionTest {
             assertTrue(skipped.get(0).reason().contains("launchTheMissiles"));
         }
     }
+
+    /** Renaming a nested field must not re-parent it to the top level. */
+    @Test
+    void renamingNestedFieldKeepsItUnderItsParent() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("text", "Name", 50, 700, 200, 20, null)));
+            PDNonTerminalField parent = new PDNonTerminalField(form);
+            parent.setPartialName("Customer");
+            PDField child = form.getField("Name");
+            parent.setChildren(List.of(child));
+            child.getCOSObject().setItem(COSName.PARENT, parent.getCOSObject());
+            form.setFields(List.of(parent));
+
+            FormUtils.ModifyFormFieldDefinition rename =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "Customer.Name",
+                            "Customer.Phone",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(rename), skipped);
+            assertTrue(
+                    skipped.isEmpty(), "a leaf rename under the same parent is legal: " + skipped);
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            assertNotNull(
+                    acroForm.getField("Customer.Phone"),
+                    "the field should still live under Customer, not at the top level");
+            assertNull(acroForm.getField("Customer.Name"), "the old name should be gone");
+        }
+    }
+
+    /** One rejected action on a multi-widget button is one report, not one per widget. */
+    @Test
+    void unknownButtonActionIsReportedOncePerField() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("button", "go", 50, 700, 100, 24, null)));
+            PDAcroForm form = document.getDocumentCatalog().getAcroForm(null);
+            PDField button = form.getField("go");
+            // Give it a second widget, as a button repeated on two pages would have.
+            PDAnnotationWidget extra = new PDAnnotationWidget();
+            extra.setRectangle(new PDRectangle(50, 600, 100, 24));
+            extra.getCOSObject().setItem(COSName.PARENT, button.getCOSObject());
+            List<PDAnnotationWidget> widgets = new ArrayList<>(button.getWidgets());
+            widgets.add(extra);
+            button.getCOSObject()
+                    .setItem(
+                            COSName.KIDS,
+                            new org.apache.pdfbox.cos.COSArray() {
+                                {
+                                    for (PDAnnotationWidget w : widgets) add(w.getCOSObject());
+                                }
+                            });
+
+            FormUtils.ModifyFormFieldDefinition mod =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "go",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "launchTheMissiles");
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(mod), skipped);
+
+            assertEquals(1, skipped.size(), "one field, one report: " + skipped);
+        }
+    }
+
+    /** A clamped page index still creates the field, so it is not a dropped edit. */
+    @Test
+    void clampedPageIsNotReportedAsSkipped() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.addNewFields(
+                    document,
+                    List.of(
+                            new FormUtils.NewFormFieldDefinition(
+                                    "late", null, "text", 9, 50f, 700f, 100f, 20f, null, null, null,
+                                    null, null, null, null, null, null, null)),
+                    skipped);
+
+            assertNotNull(
+                    document.getDocumentCatalog().getAcroForm(null).getField("late"),
+                    "the field is created on the clamped page");
+            assertTrue(skipped.isEmpty(), "an applied edit must not appear as skipped: " + skipped);
+        }
+    }
+
+    /** Recreation builds a top-level field, so it must refuse rather than re-parent. */
+    @Test
+    void typeChangeOnNestedFieldIsRefusedNotSilentlyReparented() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("text", "Name", 50, 700, 200, 20, null)));
+            PDNonTerminalField parent = new PDNonTerminalField(form);
+            parent.setPartialName("Customer");
+            PDField child = form.getField("Name");
+            parent.setChildren(List.of(child));
+            child.getCOSObject().setItem(COSName.PARENT, parent.getCOSObject());
+            form.setFields(List.of(parent));
+
+            FormUtils.ModifyFormFieldDefinition retype =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "Customer.Name",
+                            null,
+                            null,
+                            "checkbox",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(retype), skipped);
+
+            assertEquals(1, skipped.size(), "the refusal must be reported: " + skipped);
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            assertNotNull(
+                    acroForm.getField("Customer.Name"),
+                    "the original nested field must be left intact");
+            assertNull(acroForm.getField("Name"), "nothing should be re-parented to the top level");
+        }
+    }
 }

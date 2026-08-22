@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -361,7 +362,7 @@ public enum FormFieldTypeSupport {
         }
         try {
             String spec = action.trim();
-            String lower = spec.toLowerCase();
+            String lower = spec.toLowerCase(Locale.ROOT);
             if (lower.equals("reset")) {
                 widget.getCOSObject().setItem(COSName.A, new PDActionResetForm().getCOSObject());
             } else if (lower.equals("print")) {
@@ -387,7 +388,8 @@ public enum FormFieldTypeSupport {
 
     /** The spec forms applyButtonAction understands; anything else is reported, not dropped. */
     private static final Pattern ACTION_SPEC =
-            Pattern.compile("^(?i)(reset|print|uri:.*|submit:.*)$", Pattern.DOTALL);
+            Pattern.compile(
+                    "^(reset|print|uri:.+|submit:.+)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private static final Map<String, FormFieldTypeSupport> BY_TYPE =
             Arrays.stream(values())

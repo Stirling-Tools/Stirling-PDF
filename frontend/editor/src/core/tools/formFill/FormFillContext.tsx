@@ -395,6 +395,8 @@ export function FormFillProvider({
   }, []);
   /** Which file the staged edits belong to, so they cannot be committed onto another. */
   const editedFileIdRef = useRef<string | null>(null);
+  /** Survives an in-flight fetch, unlike forFileIdRef, so staged edits can be stamped. */
+  const lastKnownFileIdRef = useRef<string | null>(null);
   /** Set by the edit overlay so other Escape handlers do not steal a drag's cancel. */
   const dragActiveRef = useRef(false);
   // Monotonic counter for client-side pending-field ids and default names.
@@ -421,6 +423,17 @@ export function FormFillProvider({
       // correctly discarded.
       const version = ++fetchVersionRef.current;
 
+      // Staged edits reference the previous document's fields; committing them against a
+      // different file would edit the wrong PDF. Checked here, before any await, because
+      // forFileIdRef is null for the whole fetch and the success path may never run.
+      if (
+        editedFileIdRef.current != null &&
+        (fileId ?? null) !== editedFileIdRef.current
+      ) {
+        clearEditingState();
+      }
+
+      lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
       // prevent rendering fields from a previous document during the fetch.
       forFileIdRef.current = null;
@@ -464,14 +477,6 @@ export function FormFillProvider({
           values[field.name] = field.value ?? "";
         }
         valuesStore.reset(values);
-        // Staged edits reference the previous document's fields; committing them
-        // against a different file would apply them to the wrong PDF.
-        if (
-          editedFileIdRef.current != null &&
-          (fileId ?? null) !== editedFileIdRef.current
-        ) {
-          clearEditingState();
-        }
         forFileIdRef.current = fileId ?? null;
         setForFileId(fileId ?? null);
         dispatch({ type: "FETCH_SUCCESS", fields });
@@ -486,7 +491,7 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
-    [valuesStore],
+    [valuesStore, clearEditingState],
   );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
@@ -614,7 +619,7 @@ export function FormFillProvider({
   // --- Create mode ---
   const addPendingField = useCallback(
     (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
-      editedFileIdRef.current = forFileIdRef.current;
+      editedFileIdRef.current = lastKnownFileIdRef.current;
       const seq = ++pendingCounterRef.current;
       const id = `pending-${seq}`;
       // Friendly, readable default names that match how the viewer labels
@@ -674,9 +679,11 @@ export function FormFillProvider({
       const result = await applyFieldEdits(file, { add: definitions });
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
-      setSkippedTotal(result.skippedTotal);
       setPendingFields([]);
       setCreationType(null);
+      // The batch is gone, so the stamp must not survive to trigger a clear on the
+      // post-commit re-fetch; that would wipe the skip report we just set.
+      editedFileIdRef.current = null;
       return result.blob;
     },
     [pendingFields],
@@ -685,7 +692,7 @@ export function FormFillProvider({
   // --- Modify mode ---
   const stageModification = useCallback(
     (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
-      editedFileIdRef.current = forFileIdRef.current;
+      editedFileIdRef.current = lastKnownFileIdRef.current;
       setModifiedFields((prev) => ({
         ...prev,
         [targetName]: { ...prev[targetName], targetName, ...patch },
@@ -703,7 +710,7 @@ export function FormFillProvider({
   }, []);
 
   const toggleFieldDeleted = useCallback((name: string) => {
-    editedFileIdRef.current = forFileIdRef.current;
+    editedFileIdRef.current = lastKnownFileIdRef.current;
     setDeletedFieldNames((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
     );
@@ -731,6 +738,7 @@ export function FormFillProvider({
       setModifiedFields({});
       setDeletedFieldNames([]);
       setSelectedField(null);
+      editedFileIdRef.current = null;
       return result.blob;
     },
     [modifiedFields, deletedFieldNames],

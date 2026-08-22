@@ -266,6 +266,15 @@ export function FormFieldEditOverlay({
     [localPoint, snapTargets, pageWidth, pageHeight],
   );
 
+  // Scrolling this page out of view mid-gesture would otherwise strand the shared
+  // flag at true and leave Escape dead in the panel for the rest of the session.
+  useEffect(
+    () => () => {
+      dragActiveRef.current = false;
+    },
+    [dragActiveRef],
+  );
+
   // A cancelled gesture (system swipe, focus loss) must not leave a half-applied drag behind.
   const cancelInteraction = useCallback(
     (e: React.PointerEvent) => {
@@ -332,13 +341,13 @@ export function FormFieldEditOverlay({
   useEffect(() => {
     if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
+      // Read only: every page's overlay runs this, so writing the shared flag here
+      // would let an idle page clear the flag of the page actually being dragged.
       const dragging = interactionRef.current != null;
-      if (!dragging) dragActiveRef.current = false;
-      // Never steal keys from a field the user is typing in, but a drag in
-      // progress owns Escape wherever focus happens to be.
       if (!dragging && isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") {
         interactionRef.current = null;
+        dragActiveRef.current = false;
         setLiveRect(null);
         setGuides([]);
         if (!dragging) setSelectedField(null);

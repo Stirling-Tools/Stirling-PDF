@@ -1653,16 +1653,20 @@ public class FormUtils {
                     Optional.ofNullable(modification.name())
                             .map(String::trim)
                             .filter(s -> !s.isEmpty())
-                            // The editor seeds the box with the qualified name, so for an
-                            // untouched nested field only the leaf is its own partial name.
-                            .map(name -> name.equals(lookupName) ? leafName(name) : name)
+                            // The editor seeds the box with the qualified name, so a submission
+                            // equal to it is not a rename; keep the field's own partial name.
+                            .filter(name -> !name.equals(lookupName))
+                            .map(name -> leafName(lookupName, name))
                             .orElseGet(originalField::getPartialName);
 
             if (desiredName != null) {
                 existingNames.remove(originalField.getFullyQualifiedName());
                 existingNames.remove(originalField.getPartialName());
-                desiredName = generateUniqueFieldName(desiredName, existingNames);
-                existingNames.add(desiredName);
+                // desiredName is a PARTIAL name but existingNames holds qualified ones, so
+                // compare under this field's own parent or siblings collide unnoticed.
+                String prefix = parentPrefix(originalField.getFullyQualifiedName());
+                desiredName = generateUniqueFieldName(desiredName, existingNames, prefix);
+                existingNames.add(prefix + desiredName);
             }
 
             // Try to modify field in-place first for simple property changes
@@ -1681,6 +1685,18 @@ public class FormUtils {
                             lookupName,
                             e.getMessage());
                 }
+            }
+
+            // Recreation always builds a top-level field, so running it on a field nested under a
+            // parent would silently move it out of that parent and change its qualified name.
+            if (!parentPrefix(originalField.getFullyQualifiedName()).isEmpty()) {
+                log.warn("Cannot recreate nested field '{}'; leaving it as it was", lookupName);
+                recordSkip(
+                        skipped,
+                        "modify",
+                        lookupName,
+                        "a field nested under a parent cannot have its type changed here");
+                continue;
             }
 
             // For type changes or when in-place modification fails, use remove-and-recreate
@@ -1812,12 +1828,16 @@ public class FormUtils {
 
         // Update the activation action (push buttons only)
         if (modification.buttonAction() != null && field instanceof PDPushButton) {
+            String actionProblem = null;
             for (PDAnnotationWidget widget : field.getWidgets()) {
                 String problem =
                         FormFieldTypeSupport.applyButtonAction(widget, modification.buttonAction());
-                if (problem != null) {
-                    recordSkip(skipped, "modify", field.getFullyQualifiedName(), problem);
+                if (problem != null && actionProblem == null) {
+                    actionProblem = problem;
                 }
+            }
+            if (actionProblem != null) {
+                recordSkip(skipped, "modify", field.getFullyQualifiedName(), actionProblem);
             }
         }
 
@@ -1938,7 +1958,8 @@ public class FormUtils {
                             targetH));
             // A pure translation re-maps the same /AP onto the new /Rect unchanged, but a toggle
             // with no /AP at all has no on-state vocabulary and must be given one regardless.
-            if (resized || (!onStates.isEmpty() && widget.getAppearance() == null)) {
+            boolean toggle = field instanceof PDCheckBox || field instanceof PDRadioButton;
+            if (resized || (toggle && normalAppearanceOnState(widget) == null)) {
                 rebuildWidgetAppearance(document, field, widget, i, onStates, isRadio);
             }
         }
@@ -2216,16 +2237,8 @@ public class FormUtils {
                         "Page index {} out of range (0-{}); clamping to last page",
                         pageIdx,
                         pageCount - 1);
-                int clamped = Math.max(0, pageCount - 1);
-                recordSkip(
-                        skipped,
-                        "add",
-                        definition.name(),
-                        "page "
-                                + (pageIdx + 1)
-                                + " does not exist; placed on page "
-                                + (clamped + 1));
-                pageIdx = clamped;
+                // Clamped, so the field IS created; not a dropped edit and not reported as one.
+                pageIdx = Math.max(0, pageCount - 1);
             }
             PDPage page = document.getPage(pageIdx);
             PDRectangle cropBox = page.getCropBox();
@@ -2359,12 +2372,15 @@ public class FormUtils {
     /** A button's current value when it names a real on-state, else null. */
     private String nonOffValueName(PDButton button) {
         try {
-            // /V is inheritable: a kid under a non-terminal parent carries none of its own.
+            // /V is inheritable, so walk up. A malformed PDF can point /Parent back at an
+            // ancestor, so track what we have seen rather than trusting the chain to end.
             COSBase raw = null;
-            for (COSDictionary d = button.getCOSObject();
-                    d != null && raw == null;
-                    d = (COSDictionary) d.getDictionaryObject(COSName.PARENT)) {
+            Set<COSDictionary> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            COSDictionary d = button.getCOSObject();
+            while (d != null && raw == null && seen.add(d)) {
                 raw = d.getDictionaryObject(COSName.V);
+                COSBase parent = d.getDictionaryObject(COSName.PARENT);
+                d = parent instanceof COSDictionary parentDict ? parentDict : null;
             }
             String name =
                     switch (raw) {
@@ -3126,10 +3142,21 @@ public class FormUtils {
         return null;
     }
 
-    /** The last segment of a qualified name, which is the field's own partial name. */
-    private String leafName(String qualifiedName) {
-        int dot = qualifiedName.lastIndexOf('.');
-        return dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
+    /** The parent prefix of a qualified name, including the trailing dot, or "" if top level. */
+    private String parentPrefix(String qualifiedName) {
+        int dot = qualifiedName == null ? -1 : qualifiedName.lastIndexOf('.');
+        return dot < 0 ? "" : qualifiedName.substring(0, dot + 1);
+    }
+
+    /**
+     * The partial name a rename should set. Only a new name under the target's own parent may be
+     * qualified; anything else is used verbatim so it cannot silently re-parent the field.
+     */
+    private String leafName(String targetName, String newName) {
+        String prefix = parentPrefix(targetName);
+        return !prefix.isEmpty() && newName.startsWith(prefix)
+                ? newName.substring(prefix.length())
+                : newName;
     }
 
     /**
@@ -3140,7 +3167,9 @@ public class FormUtils {
         if (newName == null || newName.equals(targetName)) {
             return null;
         }
-        return invalidFieldNameReason(newName);
+        // A nested field's box shows "Parent.Child", so renaming the leaf under the same
+        // parent is legitimate; only the leaf has to be a storable partial name.
+        return invalidFieldNameReason(leafName(targetName, newName.trim()));
     }
 
     /**
@@ -3196,6 +3225,15 @@ public class FormUtils {
     }
 
     private String generateUniqueFieldName(String baseName, Set<String> existingNames) {
+        return generateUniqueFieldName(baseName, existingNames, "");
+    }
+
+    /**
+     * A partial name no sibling already uses. {@code qualifiedPrefix} is prepended only for the
+     * collision check, because {@code existingNames} holds fully qualified names.
+     */
+    private String generateUniqueFieldName(
+            String baseName, Set<String> existingNames, String qualifiedPrefix) {
         // Trimmed, not sanitized: callers must reject bad names first via invalidFieldNameReason.
         String trimmed =
                 Optional.ofNullable(baseName)
@@ -3203,14 +3241,10 @@ public class FormUtils {
                         .filter(s -> !s.isEmpty())
                         .orElse("field");
 
-        StringBuilder candidateBuilder = new StringBuilder(trimmed);
-        String candidate = candidateBuilder.toString();
+        String candidate = trimmed;
         int counter = 1;
-
-        while (existingNames.contains(candidate)) {
-            candidateBuilder.setLength(0);
-            candidateBuilder.append(trimmed).append("_").append(counter);
-            candidate = candidateBuilder.toString();
+        while (existingNames.contains(qualifiedPrefix + candidate)) {
+            candidate = trimmed + "_" + counter;
             counter++;
         }
 
