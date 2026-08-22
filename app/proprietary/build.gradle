@@ -25,7 +25,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
+    api 'org.hibernate.orm:hibernate-jcache'
     api 'com.github.ben-manes.caffeine:caffeine'
+    api 'com.github.ben-manes.caffeine:jcache'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
