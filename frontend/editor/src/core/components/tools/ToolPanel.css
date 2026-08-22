@@ -193,36 +193,6 @@
   background-color: var(--c-surface-sunken);
 }
 
-::view-transition-old(tool-rail) {
-  animation: vt-rail-fade-out 180ms ease-out forwards;
-}
-
-::view-transition-new(tool-rail) {
-  animation: vt-rail-fade-in 220ms ease-in forwards;
-}
-
-@keyframes vt-rail-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes vt-rail-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(tool-rail),
-  ::view-transition-new(tool-rail) {
-    animation-duration: 1ms !important;
-  }
-}
-
 .tool-panel__mode-toggle {
   transition: transform 0.2s ease;
 }
