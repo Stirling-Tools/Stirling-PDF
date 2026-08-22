@@ -20,7 +20,12 @@ public class ConvertToPdfRequest {
             description = "Option to determine how the image will fit onto the page",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "fillPage",
-            allowableValues = {"fillPage", "fitDocumentToImage", "maintainAspectRatio"})
+            allowableValues = {
+                "fillPage",
+                "fitDocumentToImage",
+                "fitDocumentToPage",
+                "maintainAspectRatio"
+            })
     private String fitOption;
 
     @Schema(
