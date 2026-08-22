@@ -312,6 +312,8 @@ function badge<T>(
 export interface CellLabel {
   label: string;
   accent?: ChipAccent;
+  /** Hover hint explaining the label (plain text, no markup). */
+  title?: string;
 }
 
 function labels<T>(
@@ -331,6 +333,7 @@ function labels<T>(
             accent={l.accent ?? "neutral"}
             size="sm"
             showDot={false}
+            title={l.title}
           >
             {l.label}
           </Chip>

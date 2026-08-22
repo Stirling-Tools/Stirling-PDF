@@ -91,6 +91,51 @@ describe("Pipelines view", () => {
     expect(screen.getByText("portal.pipelines.kpi.total")).toBeInTheDocument();
   });
 
+  it("says so when a pipeline was migrated rather than built here", async () => {
+    fetchPipelines.mockResolvedValue({
+      ...RESPONSE,
+      pipelines: [
+        ...RESPONSE.pipelines,
+        {
+          ...RESPONSE.pipelines[0],
+          id: "plc-invoices",
+          name: "Rotate invoices",
+          origin: "migrated",
+        },
+      ],
+    });
+    renderView();
+
+    expect(
+      await screen.findByText("portal.pipelines.origin.migrated.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves a pipeline the team built unbadged", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    expect(
+      screen.queryByText("portal.pipelines.origin.migrated.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("drops the Origin column entirely when nothing was migrated", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it("hides the stat boxes and shows create + connect-source CTAs when empty", async () => {
     fetchPipelines.mockResolvedValue({
       kpis: [

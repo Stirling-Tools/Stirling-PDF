@@ -24,6 +24,11 @@ public class ConfigInitializer {
 
     private static final int MIN_SETTINGS_FILE_LINES = 31;
 
+    /** The shipped default before folder-watch had to cover converted legacy watched folders. */
+    private static final int OLD_WATCH_RECONCILE_SECONDS = 300;
+
+    private static final int WATCH_RECONCILE_SECONDS = 60;
+
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // 1) If settings file doesn't exist, create from template
         Path destPath = Path.of(InstallationPathConfig.getSettingsPath());
@@ -80,6 +85,7 @@ public class ConfigInitializer {
 
             migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
+            migrateWatchReconcileDefault(settingsFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
@@ -100,6 +106,29 @@ public class ConfigInitializer {
             Files.createFile(customSettingsPath);
             log.info("Created custom_settings file: {}", customSettingsPath);
         }
+    }
+
+    // TODO: Remove post migration
+    // A legacy watched folder polled every 60s, and converting one into a folder-watch policy must
+    // not make it slower. The reconcile is the only retry for a file the readiness check deferred,
+    // so at 300s a file that landed mid-sweep waited five minutes. Existing installs carry the old
+    // default forward on upgrade, so lower it here - but only when it is still exactly the old
+    // default, since any other value is a deliberate choice.
+    void migrateWatchReconcileDefault(YamlHelper yaml) {
+        // getValueByExactKeyPath yields the scalar as written, i.e. a String, not a Number.
+        Object current = yaml.getValueByExactKeyPath("policies", "watchReconcileSeconds");
+        if (current == null
+                || !String.valueOf(current)
+                        .trim()
+                        .equals(String.valueOf(OLD_WATCH_RECONCILE_SECONDS))) {
+            return;
+        }
+        yaml.updateValue(List.of("policies", "watchReconcileSeconds"), WATCH_RECONCILE_SECONDS);
+        log.info(
+                "Lowered policies.watchReconcileSeconds from {} to {} so converted watched folders"
+                        + " keep their legacy poll interval",
+                OLD_WATCH_RECONCILE_SECONDS,
+                WATCH_RECONCILE_SECONDS);
     }
 
     // TODO: Remove post migration

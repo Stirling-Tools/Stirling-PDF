@@ -24,13 +24,31 @@ public record Policy(
         List<PipelineStep> steps,
         OutputSpec output,
         List<String> outputIds,
-        Long teamId) {
+        Long teamId,
+        String origin) {
+
+    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
+    public static final String ORIGIN_MIGRATED = "migrated";
 
     public Policy {
         inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+    }
+
+    /** Without a provenance marker: built here, and what pre-existing rows deserialise to. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(id, name, owner, enabled, inputs, steps, output, outputIds, teamId, null);
     }
 
     /**
@@ -82,12 +100,20 @@ public record Policy(
 
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
-        return new Policy(id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, origin);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
-        return new Policy(id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId, origin);
+    }
+
+    /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
+    public Policy withOrigin(String newOrigin) {
+        return new Policy(
+                id, name, owner, enabled, inputs, steps, output, outputIds, teamId, newOrigin);
     }
 
     /**

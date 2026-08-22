@@ -71,6 +71,8 @@ export interface Policy {
    */
   outputIds: string[];
   teamId?: number | null;
+  /** Stamped server-side and read-only: a value sent here is ignored. */
+  origin?: PipelineOrigin | null;
 }
 
 /** Overview row status: enabled (fires automatically) or paused. */
@@ -96,7 +98,12 @@ export interface PipelineView {
   /** Output sink type (e.g. "inline", "folder"). */
   output: string;
   owner: string;
+  /** Set only when this pipeline wasn't built here. */
+  origin?: PipelineOrigin | null;
 }
+
+/** Provenance for a pipeline nobody here authored. Mirrors `Policy.ORIGIN_*`. */
+export type PipelineOrigin = "migrated";
 
 export interface PipelineKpi {
   value: number;

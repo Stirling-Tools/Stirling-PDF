@@ -136,13 +136,21 @@ export async function runToolAndWaitForReview(
   ).toBeVisible({ timeout: reviewTimeout });
 }
 
+// Pin the settings modal by its own hook rather than `.mantine-Modal-content`
+// `.first()`, which resolves to whichever modal is first in the DOM.
+function settingsDialog(page: Page): Locator {
+  return page.locator(
+    '.mantine-Modal-content:has([data-tour="settings-modal"])',
+  );
+}
+
 /**
  * Open the global Settings dialog. Returns the dialog locator so callers can
  * scope further queries to it.
  */
 export async function openSettings(page: Page): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
-  const dialog = page.locator(".mantine-Modal-content").first();
+  const dialog = settingsDialog(page);
   await expect(dialog).toBeVisible({ timeout: 5_000 });
   return dialog;
 }
@@ -152,11 +160,13 @@ export async function openSettings(page: Page): Promise<Locator> {
  * dialog is fully dismissed before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
-  await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
+  const dialog = settingsDialog(page);
+  // Scope the button to the dialog - `[aria-label="Close"]` also matches the
+  // viewer/tour/banner close controls that live outside it.
+  await dialog.locator('[aria-label="Close"]').first().click();
+  // Mantine unmounts the modal once its exit transition ends, so absence from
+  // the DOM - not visibility - is what "closed" means on every engine.
+  await expect(dialog).toHaveCount(0, { timeout: 5_000 });
 }
 
 /**
