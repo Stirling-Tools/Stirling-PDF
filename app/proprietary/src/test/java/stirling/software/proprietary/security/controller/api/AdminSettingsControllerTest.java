@@ -1,8 +1,11 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
@@ -430,6 +433,25 @@ class AdminSettingsControllerTest {
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody().get("message").toString()).contains("Successfully");
                 mocked.verify(() -> GeneralUtils.saveKeyToSettings("ui.appName", "New"));
+            }
+        }
+
+        @Test
+        @DisplayName("flattens nested blocks to leaf keys so partial saves keep siblings")
+        void flattensNestedBlocks() {
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            section.put("sharing", new java.util.HashMap<>(Map.of("emailEnabled", true)));
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                mocked.verify(
+                        () -> GeneralUtils.saveKeyToSettings("storage.sharing.emailEnabled", true));
+                mocked.verify(
+                        () -> GeneralUtils.saveKeyToSettings(eq("storage.sharing"), any()),
+                        never());
             }
         }
 

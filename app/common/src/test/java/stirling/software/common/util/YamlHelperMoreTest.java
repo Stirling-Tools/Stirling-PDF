@@ -71,6 +71,38 @@ class YamlHelperMoreTest {
         }
 
         @Test
+        @DisplayName("merges a partial Map into an existing block, keeping siblings and comments")
+        void partialMapMergesIntoExistingBlock() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true # keep me\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing"), Map.of("emailEnabled", true))).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+            assertThat(h.convertNodeToYaml(h.getUpdatedRootNode())).contains("# keep me");
+        }
+
+        @Test
+        @DisplayName("a Map merge adds keys the existing block does not have")
+        void partialMapAddsUnknownKeys() {
+            YamlHelper h = helper("sharing:\n  enabled: false\n");
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("enabled", true);
+            values.put("emailEnabled", true);
+            assertThat(h.updateValue(List.of("sharing"), values)).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+        }
+
+        @Test
         @DisplayName("replaces a scalar with a List value (SequenceNode)")
         void listValue() {
             YamlHelper h = helper("cfg:\n  items: x\n");
