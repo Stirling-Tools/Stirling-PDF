@@ -174,7 +174,8 @@
     "pako": "^2.2.0",
     "tsconfck": {
       "typescript": "$typescript"
-    }
+    },
+    "nanoid": "3.3.18"
   },
   "msw": {
     "workerDirectory": [
