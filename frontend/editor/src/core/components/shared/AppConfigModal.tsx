@@ -1,4 +1,5 @@
 import React, {
+  Suspense,
   useMemo,
   useState,
   useEffect,
@@ -321,6 +322,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       withCloseButton={false}
       zIndex={Z_INDEX_CONFIG_MODAL}
       overlayProps={{ opacity: 0.35, blur: 2 }}
+      transitionProps={{ duration: 0 }}
       padding={0}
       fullScreen={isMobile}
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
@@ -475,7 +477,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 </ActionIcon>
               </Group>
             </div>
-            <div className="modal-body">{activeComponent}</div>
+            <div className="modal-body">
+              <Suspense fallback={<div className="modal-section-loading" />}>
+                {activeComponent}
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>

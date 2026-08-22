@@ -1,33 +1,99 @@
-import React from "react";
+import React, { lazy } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useConfigNavSections as useCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
-import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
-import TeamsSection from "@app/components/shared/config/configSections/TeamsSection";
-import AdminGeneralSection from "@app/components/shared/config/configSections/AdminGeneralSection";
-import AdminSecuritySection from "@app/components/shared/config/configSections/AdminSecuritySection";
-import AdminConnectionsSection from "@app/components/shared/config/configSections/AdminConnectionsSection";
-import AdminPrivacySection from "@app/components/shared/config/configSections/AdminPrivacySection";
-import AdminDatabaseSection from "@app/components/shared/config/configSections/AdminDatabaseSection";
-import AdminAdvancedSection from "@app/components/shared/config/configSections/AdminAdvancedSection";
-import AdminLegalSection from "@app/components/shared/config/configSections/AdminLegalSection";
-import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
-import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
-import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
-import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
-import AdminAiGeneralSection from "@app/components/shared/config/configSections/AdminAiGeneralSection";
-import AdminAiModelsSection from "@app/components/shared/config/configSections/AdminAiModelsSection";
-import AdminAiDocumentsSection from "@app/components/shared/config/configSections/AdminAiDocumentsSection";
-import AdminAiLimitsSection from "@app/components/shared/config/configSections/AdminAiLimitsSection";
-import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
-import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
-import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
-import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
-import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
-import AccountSection from "@app/components/shared/config/configSections/AccountSection";
 import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
+
+// These screens are only needed after selecting their navigation item. Keeping
+// them out of the initial settings render avoids evaluating the whole admin UI.
+const PeopleSection = lazy(
+  () => import("@app/components/shared/config/configSections/PeopleSection"),
+);
+const TeamsSection = lazy(
+  () => import("@app/components/shared/config/configSections/TeamsSection"),
+);
+const AdminGeneralSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminGeneralSection"),
+);
+const AdminSecuritySection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminSecuritySection"),
+);
+const AdminConnectionsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminConnectionsSection"),
+);
+const AdminPrivacySection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminPrivacySection"),
+);
+const AdminDatabaseSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminDatabaseSection"),
+);
+const AdminAdvancedSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAdvancedSection"),
+);
+const AdminLegalSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminLegalSection"),
+);
+const AdminPlanSection = lazy(
+  () => import("@app/components/shared/config/configSections/AdminPlanSection"),
+);
+const AdminFeaturesSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminFeaturesSection"),
+);
+const AdminEndpointsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminEndpointsSection"),
+);
+const AdminMcpSection = lazy(
+  () => import("@app/components/shared/config/configSections/AdminMcpSection"),
+);
+const AdminAiGeneralSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAiGeneralSection"),
+);
+const AdminAiModelsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAiModelsSection"),
+);
+const AdminAiDocumentsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAiDocumentsSection"),
+);
+const AdminAiLimitsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAiLimitsSection"),
+);
+const AdminAuditSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminAuditSection"),
+);
+const AdminUsageSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminUsageSection"),
+);
+const AdminStorageSharingSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminStorageSharingSection"),
+);
+const AdminFolderAccessSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/AdminFolderAccessSection"),
+);
+const ApiKeys = lazy(
+  () => import("@app/components/shared/config/configSections/ApiKeys"),
+);
+const AccountSection = lazy(
+  () => import("@app/components/shared/config/configSections/AccountSection"),
+);
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support

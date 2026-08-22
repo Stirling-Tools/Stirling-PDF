@@ -26,7 +26,9 @@ import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
+import AppConfigModal, {
+  preloadAppConfigModal,
+} from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
@@ -91,7 +93,10 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const openConfigModal = useCallback(() => {
+    preloadAppConfigModal();
+    window.dispatchEvent(new Event("appConfig:open"));
+  }, []);
   const location = useLocation();
   // Persisted user preference for the FileSidebar collapsed state. Auto-
   // collapse on /files is layered on top in the transition effect below and
@@ -476,7 +481,7 @@ export default function HomePage() {
                 variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
-                onClick={() => setConfigModalOpen(true)}
+                onClick={openConfigModal}
               >
                 <LocalIcon
                   icon="settings-rounded"
@@ -489,10 +494,7 @@ export default function HomePage() {
               </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
+            <AppConfigModalHost />
           </div>
         ) : (
           <Group
@@ -533,21 +535,49 @@ export default function HomePage() {
                   return next;
                 });
               }}
-              onOpenSettings={() => setConfigModalOpen(true)}
+              onOpenSettings={openConfigModal}
             />
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
+            <AppConfigModalHost />
           </Group>
         )}
       </FilesPageProvider>
     </div>
   );
+}
+
+/**
+ * Keeps settings visibility state out of HomePage. The editor page is a large
+ * tree, so toggling the modal must not cause the whole workbench to render.
+ */
+function AppConfigModalHost() {
+  const [opened, setOpened] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleOpen = () => setOpened(true);
+    window.addEventListener("appConfig:open", handleOpen);
+    return () => window.removeEventListener("appConfig:open", handleOpen);
+  }, []);
+
+  // Open the config modal whenever the URL is /settings/* (e.g. from the
+  // admin tour's openConfigModal action which navigates to /settings/overview).
+  useEffect(() => {
+    if (location.pathname.startsWith("/settings")) setOpened(true);
+  }, [location.pathname]);
+
+  const handleClose = useCallback(() => {
+    setOpened(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  return <AppConfigModal opened={opened} onClose={handleClose} />;
 }
 
 interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
