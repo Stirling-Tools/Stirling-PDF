@@ -29,6 +29,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -123,6 +124,29 @@ public class PdfUtils {
             tempDoc.addPage(page);
             String pageText = textStripper.getText(tempDoc);
             return pageText.contains(phrase);
+        }
+    }
+
+    // Widget annotations (AcroForm fields) are always rendered on top of page
+    // content, so anything written via PDPageContentStream#APPEND ends up hidden
+    // behind existing input fields. Bake the widgets into the page content stream
+    // first so the caller's subsequent overlay draws on top of the fields.
+    public void flattenFormFieldsForOverlay(PDDocument document) {
+        if (document == null) {
+            return;
+        }
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+        if (acroForm == null || acroForm.getFields().isEmpty()) {
+            return;
+        }
+        try {
+            acroForm.setNeedAppearances(false);
+            acroForm.flatten();
+        } catch (IOException | RuntimeException e) {
+            log.warn(
+                    "Failed to flatten form fields before overlay; added content may appear"
+                            + " behind form widgets: {}",
+                    e.getMessage());
         }
     }
 
