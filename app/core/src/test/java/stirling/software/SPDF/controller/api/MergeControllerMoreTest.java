@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayOutputStream;
@@ -344,6 +345,24 @@ class MergeControllerMoreTest {
             } catch (Exception expected) {
                 assertThat(expected).isInstanceOf(Exception.class);
             }
+        }
+
+        @Test
+        @DisplayName("a non-PDF input is rejected with a specific PDF-required error")
+        void nonPdfInputRejected() throws Exception {
+            MockMultipartFile good = pdf("good.pdf", 1);
+            MockMultipartFile image =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "photo.jpg",
+                            MediaType.IMAGE_JPEG_VALUE,
+                            new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0});
+            MergePdfsRequest req =
+                    request(new MockMultipartFile[] {good, image}, "orderProvided", false, false);
+
+            assertThatThrownBy(() -> mergeController.mergePdfs(req, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("photo.jpg");
         }
 
         @Test

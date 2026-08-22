@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -36,13 +36,18 @@ const Merge = (props: BaseToolProps) => {
   const { actions: navActions } = useNavigationActions();
   const isViewerMode = workbench === "viewer";
 
-  const hasAutoSwitchedRef = useRef(false);
+  // Merge can't operate in viewer mode, so bounce back to the file editor
+  // whenever the workbench lands in viewer while the tool is being set up.
+  // This must re-run on every isViewerMode change (not just on mount): the
+  // Files tab can open files straight into the viewer while Merge stays
+  // mounted, and a one-shot guard would leave the tool wedged in its
+  // viewer-mode placeholder. Skip the correction once results exist so
+  // clicking a merged file to preview it (which switches to viewer) works.
   useEffect(() => {
-    if (isViewerMode && !hasAutoSwitchedRef.current) {
-      hasAutoSwitchedRef.current = true;
+    if (isViewerMode && !base.hasResults) {
       navActions.setWorkbench("fileEditor");
     }
-  }, []);
+  }, [isViewerMode, base.hasResults, navActions]);
   const naturalCompare = useCallback((a: string, b: string): number => {
     const isDigit = (char: string) => char >= "0" && char <= "9";
 
