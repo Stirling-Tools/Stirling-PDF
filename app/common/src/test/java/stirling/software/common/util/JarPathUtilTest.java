@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -16,10 +17,12 @@ class JarPathUtilTest {
     }
 
     @Test
-    void restartHelperJar_notFound_returnsNull() {
-        // Since we're not running from JAR and restart-helper.jar likely doesn't exist
+    void restartHelperJar_returnsNullOrExistingFile() {
         Path result = JarPathUtil.restartHelperJar();
-        assertNull(result, "Should return null when restart-helper.jar is not found");
+        if (result != null) {
+            assertTrue(
+                    Files.isRegularFile(result), "Found restart helper should be a regular file");
+        }
     }
 
     @Test

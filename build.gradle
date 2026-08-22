@@ -341,9 +341,9 @@ subprojects {
             }
 
             def thresholds = [
-                    LINE       : 0.13,
-                    INSTRUCTION: 0.14,
-                    BRANCH     : 0.09
+                    LINE       : 0.60,
+                    INSTRUCTION: 0.60,
+                    BRANCH     : 0.60
             ]
 
             def types = ["LINE", "INSTRUCTION", "BRANCH"]
@@ -730,6 +730,14 @@ tasks.register('buildRestartHelper', Jar) {
 
     doLast {
         println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
+    }
+}
+
+// The local development server exposes the admin restart action as well. Ensure its helper is
+// available even after a clean checkout or a clean build before bootRun starts.
+project(':stirling-pdf') {
+    tasks.named('bootRun') {
+        dependsOn rootProject.tasks.named('buildRestartHelper')
     }
 }
 
