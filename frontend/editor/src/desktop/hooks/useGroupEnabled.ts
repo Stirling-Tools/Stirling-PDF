@@ -1,34 +1,34 @@
 import { useSyncExternalStore } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchGroupEnabled } from "@app/api/config";
+import { useQuery } from "@tanstack/react-query";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { qk } from "@app/query/keys";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
+import { editorQk } from "@app/queries/keys";
+import { fetchGroupEnabled } from "@app/queries/endpoints";
 
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";
 
-// A boolean, not the monitor's state object — that is reassigned every poll.
-const subscribeToMonitor = (onChange: () => void) =>
-  selfHostedServerMonitor.subscribe(onChange);
-const getIsOffline = () =>
-  selfHostedServerMonitor.getSnapshot().status === "offline";
-
-/** Desktop override: skips the request when the self-hosted server is offline. */
+/**
+ * Desktop override: skips the network request entirely when the self-hosted
+ * server is confirmed offline, returning a reason string matching the tool panel.
+ */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
-  const isOffline = useSyncExternalStore(subscribeToMonitor, getIsOffline);
+  const serverStatus = useSyncExternalStore(
+    selfHostedServerMonitor.subscribe,
+    selfHostedServerMonitor.getSnapshot,
+  ).status;
+  const isOffline = serverStatus === "offline";
 
-  const { data, isPending } = useQuery({
-    queryKey: qk.groupEnabled(group),
+  const query = useQuery({
+    queryKey: editorQk.groupEnabled(group),
     queryFn: () => fetchGroupEnabled(group),
-    staleTime: CONFIG_STALE_TIME,
-    enabled: !isOffline,
+    enabled: !!group && !isOffline,
   });
 
-  // Before the query: a disabled query stays isPending, which would read as loading forever.
+  if (!group) return { enabled: null, unavailableReason: null };
+
   if (isOffline) {
     return {
       enabled: false,
@@ -39,8 +39,7 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     };
   }
 
-  return {
-    enabled: isPending ? null : (data ?? false),
-    unavailableReason: null,
-  };
+  if (query.isPending) return { enabled: null, unavailableReason: null };
+  if (query.isError) return { enabled: false, unavailableReason: null };
+  return { enabled: query.data ?? false, unavailableReason: null };
 }

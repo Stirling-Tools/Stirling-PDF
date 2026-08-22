@@ -248,7 +248,17 @@ export function useOnboardingOrchestrator(
     if (!configLoading) {
       checkFirstLogin();
     }
-  }, [config?.enableLogin, configLoading]);
+
+    const handleJwtAvailable = () => {
+      if (!configLoading) {
+        checkFirstLogin();
+      }
+    };
+
+    window.addEventListener("jwt-available", handleJwtAvailable);
+    return () =>
+      window.removeEventListener("jwt-available", handleJwtAvailable);
+  }, [config?.enableLogin, configLoading, location.pathname]);
 
   const isOnAuthRoute = AUTH_ROUTES.some((route) =>
     location.pathname.startsWith(route),

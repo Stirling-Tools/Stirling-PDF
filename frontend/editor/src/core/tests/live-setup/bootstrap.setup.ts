@@ -1,7 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import {
   ensureCookieConsent,
-  skipOnboarding,
   DEFAULT_TEST_USERNAME,
   DEFAULT_TEST_PASSWORD,
 } from "@app/tests/helpers/login";
@@ -59,7 +58,6 @@ test.describe("Live-suite bootstrap", () => {
     }
 
     await ensureCookieConsent(page);
-    await skipOnboarding(page);
 
     await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.locator("#email").waitFor({ state: "visible", timeout: 15_000 });
