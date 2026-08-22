@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +62,12 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
                     + " WHERE tm.user.id = :userId"
                     + " ORDER BY tm.createdAt ASC")
     List<TeamMembership> findPrimaryMembership(@Param("userId") Long userId);
+
+    /**
+     * (userId, teamId) pairs for the given users; backs the teammate check on avatar visibility.
+     */
+    @Query("SELECT tm.user.id, tm.team.id FROM TeamMembership tm WHERE tm.user.id IN :userIds")
+    List<Object[]> findUserTeamPairs(@Param("userIds") Collection<Long> userIds);
 
     /**
      * Find all members with a specific role in a team

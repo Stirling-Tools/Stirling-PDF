@@ -164,6 +164,21 @@ title = "Two-factor authentication"
 logOut = "Log out"
 signedInAs = "Signed in as: {{email}}"
 
+[account.profilePicture]
+change = "Change picture"
+current = "Your profile picture"
+description = "Add a picture so teammates recognise you across Stirling PDF."
+help = "PNG, JPG or WebP, up to {{megabytes}}MB. Pictures are cropped and resized automatically."
+remove = "Remove"
+removeConfirm = "Your picture will be deleted and teammates will see your initials again. You can upload a new one at any time."
+removeError = "Could not remove your profile picture. Please try again."
+removeTitle = "Remove profile picture"
+sizeError = "Please choose an image smaller than {{megabytes}}MB."
+title = "Profile picture"
+upload = "Upload picture"
+uploadError = "Could not upload your profile picture. Please try again."
+visibility = "Visible to you, your administrators, and people on your teams."
+
 [add-page-numbers]
 tags = "paginate,label,organize,index"
 

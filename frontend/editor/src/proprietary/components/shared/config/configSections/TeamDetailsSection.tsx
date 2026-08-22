@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,6 +26,7 @@ import {
 } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
+import { useProfilePictureThumbnails } from "@app/hooks/useProfilePictureThumbnails";
 
 interface TeamDetailsSectionProps {
   teamId: number;
@@ -67,6 +68,13 @@ export default function TeamDetailsSection({
 
   const isLockedUser = (user: User) => lockedUsers.includes(user.username);
 
+  const avatarIds = useMemo(
+    () =>
+      teamUsers.filter((user) => user.hasProfilePicture).map((user) => user.id),
+    [teamUsers],
+  );
+  const avatars = useProfilePictureThumbnails(avatarIds);
+
   useEffect(() => {
     fetchTeamDetails();
     fetchAllTeams();
@@ -81,7 +89,21 @@ export default function TeamDetailsSection({
       ]);
       console.log("[TeamDetailsSection] Raw data:", data);
       setTeam(data.team);
-      setTeamUsers(Array.isArray(data.teamUsers) ? data.teamUsers : []);
+      // The team endpoint returns raw user rows, which carry no avatar flag; the admin roster
+      // does, so borrow it from there rather than widening the team payload.
+      const withPicture = new Set(
+        (adminData.users ?? [])
+          .filter((u) => u.hasProfilePicture)
+          .map((u) => u.id),
+      );
+      setTeamUsers(
+        Array.isArray(data.teamUsers)
+          ? data.teamUsers.map((user) => ({
+              ...user,
+              hasProfilePicture: withPicture.has(user.id),
+            }))
+          : [],
+      );
       setAvailableUsers(
         Array.isArray(data.availableUsers) ? data.availableUsers : [],
       );
@@ -459,6 +481,7 @@ export default function TeamDetailsSection({
                         <Avatar
                           size={32}
                           color={user.enabled ? "blue" : "gray"}
+                          src={avatars[String(user.id)]}
                           styles={{
                             root: {
                               border: isActive

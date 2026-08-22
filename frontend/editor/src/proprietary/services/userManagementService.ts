@@ -15,6 +15,8 @@ export interface User {
   };
   createdAt?: string;
   updatedAt?: string;
+  /** Whether the user has an avatar; drives whether the roster asks for a thumbnail. */
+  hasProfilePicture?: boolean;
   // Enriched client-side fields
   isActive?: boolean;
   lastRequest?: number; // timestamp in milliseconds
