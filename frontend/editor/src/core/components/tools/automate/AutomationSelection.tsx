@@ -12,6 +12,7 @@ import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
+  type AutomationImportFormat,
 } from "@app/utils/automationConverter";
 import type { ImportableAutomation } from "@app/hooks/tools/automate/useSavedAutomations";
 
@@ -49,7 +50,11 @@ export default function AutomationSelection({
 
   const handleImportSubmit = async (
     automation: ImportableAutomation,
-    meta: { format: "automate" | "folderScanning"; unresolved: string[] },
+    meta: {
+      format: AutomationImportFormat;
+      unresolved: string[];
+      warnings: string[];
+    },
   ) => {
     try {
       await onImportAutomation(automation);
@@ -63,6 +68,14 @@ export default function AutomationSelection({
               count: meta.unresolved.length,
               ops: meta.unresolved.join(", "),
             },
+          ),
+        );
+      } else if (meta.warnings.length > 0) {
+        onImportSuccess?.(
+          t(
+            "automate.importWithWarnings",
+            "Imported {{name}} - {{count}} step(s) need checking",
+            { name: automation.name, count: meta.warnings.length },
           ),
         );
       } else {
