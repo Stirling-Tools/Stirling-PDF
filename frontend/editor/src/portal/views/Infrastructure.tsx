@@ -5,14 +5,15 @@ import { Button, Tabs, type TabItem } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
+import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
 import "@portal/views/Infrastructure.css";
 
-type InfraTab = "api-keys" | "audit";
+type InfraTab = "api-keys" | "audit" | "storage";
 
 /** Shown but inert: no backend behind these screens yet. */
-type DisabledInfraTab = "deployments" | "security" | "models" | "storage";
+type DisabledInfraTab = "deployments" | "security" | "models";
 
-const ENABLED_TABS: InfraTab[] = ["api-keys", "audit"];
+const ENABLED_TABS: InfraTab[] = ["api-keys", "audit", "storage"];
 
 export function Infrastructure() {
   const { t } = useTranslation();
@@ -51,11 +52,9 @@ export function Infrastructure() {
       label: t("portal.infrastructure.tabs.models"),
       disabled: true,
     },
-    {
-      key: "storage",
-      label: t("portal.infrastructure.tabs.storage"),
-      disabled: true,
-    },
+    // Enabled again: unlike the mock-backed tabs removed in #7497, this one
+    // reads the real /api/v1/admin/storage-encryption surface.
+    { key: "storage", label: t("portal.infrastructure.tabs.storage") },
   ];
 
   return (
@@ -87,6 +86,7 @@ export function Infrastructure() {
       <div className="portal-infra__panel">
         {tab === "api-keys" && <ApiKeysTab />}
         {tab === "audit" && <AuditTab />}
+        {tab === "storage" && <EncryptionPanel />}
       </div>
     </div>
   );
