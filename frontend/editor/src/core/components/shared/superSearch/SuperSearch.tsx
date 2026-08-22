@@ -13,6 +13,7 @@ import { Button } from "@app/ui/Button";
 import { Chip } from "@app/ui/Chip";
 import { TextInput } from "@app/components/shared/TextInput";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { isMacLike } from "@app/utils/hotkeys";
 import {
   useSuperSearch,
   SuperSearchResult,
@@ -372,6 +373,8 @@ export default function SuperSearch({
     }
   };
 
+  const shortcutHint = useMemo(() => (isMacLike() ? "⌘K" : "Ctrl+K"), []);
+
   const toggleScope = useCallback(
     (scopeId: string) => {
       if (scopeId === "__all__") {
@@ -641,6 +644,11 @@ export default function SuperSearch({
           aria-autocomplete="list"
           onFocus={() => setOpen(true)}
         />
+        {!open && !hasQuery && (
+          <kbd className="super-search-kbd" aria-hidden="true">
+            {shortcutHint}
+          </kbd>
+        )}
       </div>
       {dropdown && createPortal(dropdown, document.body)}
     </div>
