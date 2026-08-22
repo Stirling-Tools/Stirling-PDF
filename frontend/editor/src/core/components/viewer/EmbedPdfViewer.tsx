@@ -1237,6 +1237,7 @@ const EmbedPdfViewerContent = ({
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
+              formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}

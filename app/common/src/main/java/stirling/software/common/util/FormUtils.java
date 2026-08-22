@@ -36,6 +36,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
@@ -80,6 +81,9 @@ public class FormUtils {
      * of top-to-bottom.
      */
     private static final float SAME_LINE_THRESHOLD_PT = 10.0f;
+
+    /** Below this, a rect change is a no-op and the existing /AP still maps exactly. */
+    private static final float GEOMETRY_EPSILON_PT = 0.01f;
 
     private static final Pattern HEX_UUID_PATTERN =
             Pattern.compile("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$");
@@ -242,6 +246,8 @@ public class FormUtils {
                             .multiline(multiline)
                             .tooltip(tooltip)
                             .widgets(widgets.isEmpty() ? null : widgets)
+                            .maxLength(extractMaxLength(terminalField))
+                            .buttonActionSpec(extractButtonAction(terminalField))
                             .build());
         }
 
@@ -1560,11 +1566,27 @@ public class FormUtils {
 
     public void modifyFormFields(
             PDDocument document, List<ModifyFormFieldDefinition> modifications) {
+        modifyFormFields(document, modifications, null);
+    }
+
+    public void modifyFormFields(
+            PDDocument document,
+            List<ModifyFormFieldDefinition> modifications,
+            List<SkippedFieldEdit> skipped) {
         if (document == null || modifications == null || modifications.isEmpty()) return;
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
             log.warn("Cannot modify fields because the document has no AcroForm");
+            for (ModifyFormFieldDefinition modification : modifications) {
+                if (modification != null) {
+                    recordSkip(
+                            skipped,
+                            "modify",
+                            modification.targetName(),
+                            "the document has no form to modify");
+                }
+            }
             return;
         }
 
@@ -1580,15 +1602,24 @@ public class FormUtils {
                 continue;
             }
 
+            String nameProblem = invalidFieldNameReason(modification.name());
+            if (nameProblem != null) {
+                log.warn("Rejecting rename of '{}': {}", lookupName, nameProblem);
+                recordSkip(skipped, "modify", lookupName, nameProblem);
+                continue;
+            }
+
             PDField originalField = locateField(acroForm, lookupName);
             if (originalField == null) {
                 log.warn("No matching field '{}' found for modification", lookupName);
+                recordSkip(skipped, "modify", lookupName, "no field with that name exists");
                 continue;
             }
 
             List<PDAnnotationWidget> widgets = originalField.getWidgets();
             if (widgets == null || widgets.isEmpty()) {
                 log.warn("Field '{}' has no widgets; skipping modification", lookupName);
+                recordSkip(skipped, "modify", lookupName, "the field has nothing drawn on a page");
                 continue;
             }
 
@@ -1599,6 +1630,8 @@ public class FormUtils {
                 log.warn(
                         "Unable to resolve widget page or rectangle for '{}'; skipping",
                         lookupName);
+                recordSkip(
+                        skipped, "modify", lookupName, "the field is not placed on a known page");
                 continue;
             }
 
@@ -1611,6 +1644,11 @@ public class FormUtils {
                     .getSupportedNewFieldTypes()
                     .contains(resolvedType)) {
                 log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
+                recordSkip(
+                        skipped,
+                        "modify",
+                        lookupName,
+                        "'" + resolvedType + "' is not a supported field type");
                 continue;
             }
 
@@ -1666,7 +1704,7 @@ public class FormUtils {
                             modification.readOnly(),
                             modification.multiline(),
                             modification.maxLength(),
-                            null);
+                            modification.buttonAction());
 
             List<String> sanitizedOptions = sanitizeOptions(modification.options());
 
@@ -1699,6 +1737,7 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
+                recordSkip(skipped, "modify", lookupName, e.getMessage());
             }
         }
 
@@ -1770,6 +1809,13 @@ public class FormUtils {
             tf.setMultiline(modification.multiline());
         }
 
+        // Update the activation action (push buttons only)
+        if (modification.buttonAction() != null && field instanceof PDPushButton) {
+            for (PDAnnotationWidget widget : field.getWidgets()) {
+                FormFieldTypeSupport.applyButtonAction(widget, modification.buttonAction());
+            }
+        }
+
         // Update comb / max length (text fields only)
         if (modification.maxLength() != null
                 && modification.maxLength() > 0
@@ -1802,43 +1848,117 @@ public class FormUtils {
                 || modification.y() != null
                 || modification.width() != null
                 || modification.height() != null) {
-            List<PDAnnotationWidget> widgets = field.getWidgets();
-            if (widgets != null && !widgets.isEmpty()) {
-                PDAnnotationWidget widget = widgets.get(0);
-                PDRectangle rect = widget.getRectangle();
-                if (rect != null) {
-                    PDPage page = resolveWidgetPage(document, widget, null);
-                    float offX = 0;
-                    float offY = 0;
-                    if (page != null) {
-                        PDRectangle cropBox = page.getCropBox();
-                        offX = cropBox.getLowerLeftX();
-                        offY = cropBox.getLowerLeftY();
-                    }
-                    float newX =
-                            modification.x() != null
-                                    ? modification.x() + offX
-                                    : rect.getLowerLeftX();
-                    float newY =
-                            modification.y() != null
-                                    ? modification.y() + offY
-                                    : rect.getLowerLeftY();
-                    float newW =
-                            modification.width() != null ? modification.width() : rect.getWidth();
-                    float newH =
-                            modification.height() != null
-                                    ? modification.height()
-                                    : rect.getHeight();
-                    widget.setRectangle(new PDRectangle(newX, newY, newW, newH));
+            updateWidgetGeometry(document, field, modification);
+        }
+    }
 
-                    // Remove the stale appearance stream so ensureAppearances()
-                    // generates a fresh one matching the new rectangle. Without
-                    // this, PDF viewers (pdf.js, Evince) stretch the old appearance
-                    // (built for the previous BBox) to fit the new widget rectangle,
-                    // making fields look distorted/stretched.
-                    widget.getCOSObject().removeItem(COSName.AP);
-                }
+    /**
+     * Moves/resizes a field's widgets. The supplied rect describes the first widget; every other
+     * widget on the same page shifts by the same delta, so a radio group travels as one unit.
+     */
+    private void updateWidgetGeometry(
+            PDDocument document, PDField field, ModifyFormFieldDefinition modification) {
+        List<PDAnnotationWidget> widgets = field.getWidgets();
+        if (widgets == null || widgets.isEmpty()) {
+            return;
+        }
+        PDAnnotationWidget anchor = widgets.get(0);
+        PDRectangle anchorRect = anchor.getRectangle();
+        if (anchorRect == null) {
+            return;
+        }
+
+        Map<COSDictionary, Integer> pageMap = buildAnnotationPageMap(document);
+        int anchorPage = determineWidgetPageIndex(document, anchor, pageMap);
+        float offX = 0;
+        float offY = 0;
+        if (anchorPage >= 0) {
+            PDRectangle cropBox = document.getPage(anchorPage).getCropBox();
+            offX = cropBox.getLowerLeftX();
+            offY = cropBox.getLowerLeftY();
+        }
+
+        float newX =
+                modification.x() != null ? modification.x() + offX : anchorRect.getLowerLeftX();
+        float newY =
+                modification.y() != null ? modification.y() + offY : anchorRect.getLowerLeftY();
+        float dx = newX - anchorRect.getLowerLeftX();
+        float dy = newY - anchorRect.getLowerLeftY();
+        Float newW = modification.width();
+        Float newH = modification.height();
+        boolean resized =
+                (newW != null && Math.abs(newW - anchorRect.getWidth()) > GEOMETRY_EPSILON_PT)
+                        || (newH != null
+                                && Math.abs(newH - anchorRect.getHeight()) > GEOMETRY_EPSILON_PT);
+
+        // Read the on-states off /AP /N before the strip: PDFBox derives a button's
+        // value vocabulary from those keys, so a guessed state orphans /V.
+        List<String> onStates =
+                field instanceof PDButton button ? currentWidgetOnStates(button) : List.of();
+        boolean isRadio = field instanceof PDRadioButton;
+
+        for (int i = 0; i < widgets.size(); i++) {
+            PDAnnotationWidget widget = widgets.get(i);
+            PDRectangle rect = widget.getRectangle();
+            if (rect == null) {
+                continue;
             }
+            if (i > 0 && determineWidgetPageIndex(document, widget, pageMap) != anchorPage) {
+                // A delta measured in another page's user space means nothing here.
+                log.warn(
+                        "Field '{}' widget {} sits on a different page; geometry left alone",
+                        field.getFullyQualifiedName(),
+                        i);
+                continue;
+            }
+            widget.setRectangle(
+                    new PDRectangle(
+                            rect.getLowerLeftX() + dx,
+                            rect.getLowerLeftY() + dy,
+                            newW != null ? newW : rect.getWidth(),
+                            newH != null ? newH : rect.getHeight()));
+            // A pure translation re-maps the same /AP onto the new /Rect unchanged.
+            if (resized) {
+                rebuildWidgetAppearance(document, field, widget, i, onStates, isRadio);
+            }
+        }
+    }
+
+    /** After a resize, rebuilds the appearance PDFBox cannot regenerate by itself. */
+    private void rebuildWidgetAppearance(
+            PDDocument document,
+            PDField field,
+            PDAnnotationWidget widget,
+            int index,
+            List<String> onStates,
+            boolean isRadio) {
+        if (field instanceof PDSignatureField) {
+            // PDFBox never rebuilds a signature appearance; dropping it blanks the field.
+            return;
+        }
+        COSName priorState = widget.getCOSObject().getCOSName(COSName.AS);
+        // Drop the stale stream: viewers stretch an /AP built for the old BBox onto
+        // the new /Rect, so a resized field looks distorted.
+        widget.getCOSObject().removeItem(COSName.AP);
+        try {
+            if (field instanceof PDCheckBox || field instanceof PDRadioButton) {
+                String onState =
+                        index < onStates.size() ? onStates.get(index) : DEFAULT_CHECKBOX_ON_STATE;
+                applyToggleAppearance(document, widget, onState, isRadio);
+                // applyToggleAppearance parks the widget on Off; put the selection back.
+                if (priorState != null && !OFF_STATE.equals(priorState.getName())) {
+                    widget.getCOSObject().setName(COSName.AS, onState);
+                }
+            } else if (field instanceof PDPushButton) {
+                applyPushButtonAppearance(document, widget);
+            }
+            // text/choice: refreshAppearances() rebuilds these from /DA in ensureAppearances().
+        } catch (Exception e) {
+            log.warn(
+                    "Could not rebuild the appearance for '{}' widget {}: {}",
+                    field.getFullyQualifiedName(),
+                    index,
+                    e.getMessage());
         }
     }
 
@@ -2013,10 +2133,23 @@ public class FormUtils {
      */
     public void addNewFields(PDDocument document, List<NewFormFieldDefinition> definitions)
             throws IOException {
+        addNewFields(document, definitions, null);
+    }
+
+    public void addNewFields(
+            PDDocument document,
+            List<NewFormFieldDefinition> definitions,
+            List<SkippedFieldEdit> skipped)
+            throws IOException {
         if (document == null || definitions == null || definitions.isEmpty()) return;
         // A page-less document has nowhere to put a widget; the clamp below cannot make it safe.
         if (document.getNumberOfPages() == 0) {
             log.warn("Cannot add form fields: document has no pages");
+            for (NewFormFieldDefinition definition : definitions) {
+                if (definition != null) {
+                    recordSkip(skipped, "add", definition.name(), "the document has no pages");
+                }
+            }
             return;
         }
 
@@ -2034,6 +2167,13 @@ public class FormUtils {
 
         for (NewFormFieldDefinition definition : definitions) {
             if (definition == null) continue;
+
+            String nameProblem = invalidFieldNameReason(definition.name());
+            if (nameProblem != null) {
+                log.warn("Rejecting new field: {}", nameProblem);
+                recordSkip(skipped, "add", definition.name(), nameProblem);
+                continue;
+            }
 
             String resolvedType =
                     Optional.ofNullable(definition.type())
@@ -2092,6 +2232,7 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
+                recordSkip(skipped, "add", uniqueName, e.getMessage());
             }
         }
 
@@ -2100,8 +2241,8 @@ public class FormUtils {
     }
 
     /**
-     * Draws {@code /AP /N} streams for every checkbox and radio widget created in this batch, then
-     * re-applies the default value.
+     * Draws {@code /AP /N} streams for every button widget created in this batch, then re-applies
+     * the default value.
      *
      * <p>Both steps are necessary. {@link PDAcroForm#refreshAppearances()} only flips {@code /AS}
      * on appearances that already exist - it never synthesizes them for the button family - so a
@@ -2116,6 +2257,19 @@ public class FormUtils {
             List<Map.Entry<String, NewFormFieldDefinition>> created) {
         for (Map.Entry<String, NewFormFieldDefinition> entry : created) {
             PDField field = acroForm.getField(entry.getKey());
+            if (field instanceof PDPushButton) {
+                for (PDAnnotationWidget widget : field.getWidgets()) {
+                    try {
+                        applyPushButtonAppearance(document, widget);
+                    } catch (Exception e) {
+                        log.warn(
+                                "Could not build an appearance for button '{}': {}",
+                                entry.getKey(),
+                                e.getMessage());
+                    }
+                }
+                continue;
+            }
             if (!(field instanceof PDCheckBox) && !(field instanceof PDRadioButton)) {
                 continue;
             }
@@ -2145,6 +2299,42 @@ public class FormUtils {
             return exportValues;
         }
         return List.of(DEFAULT_CHECKBOX_ON_STATE);
+    }
+
+    /** Each widget's live on-state, read from /AP /N before that dictionary is dropped. */
+    private List<String> currentWidgetOnStates(PDButton button) {
+        List<String> exportValues = button.getExportValues();
+        List<PDAnnotationWidget> widgets = button.getWidgets();
+        List<String> states = new ArrayList<>(widgets.size());
+        for (int i = 0; i < widgets.size(); i++) {
+            String state = normalAppearanceOnState(widgets.get(i));
+            if ((state == null || state.isEmpty())
+                    && exportValues != null
+                    && i < exportValues.size()) {
+                state = sanitizePdfName(exportValues.get(i));
+            }
+            states.add(state == null || state.isEmpty() ? DEFAULT_CHECKBOX_ON_STATE : state);
+        }
+        return states;
+    }
+
+    /** The first non-Off key of a widget's /AP /N sub-dictionary, or null. */
+    private String normalAppearanceOnState(PDAnnotationWidget widget) {
+        try {
+            PDAppearanceDictionary appearance = widget.getAppearance();
+            PDAppearanceEntry normal = appearance != null ? appearance.getNormalAppearance() : null;
+            if (normal == null || !normal.isSubDictionary()) {
+                return null;
+            }
+            for (COSName name : normal.getSubDictionary().keySet()) {
+                if (!OFF_STATE.equals(name.getName())) {
+                    return name.getName();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not read a widget's on-state: {}", e.getMessage());
+        }
+        return null;
     }
 
     /** Re-applies the definition's default now that the on-state keys exist to resolve it. */
@@ -2248,6 +2438,63 @@ public class FormUtils {
             }
         }
         return stream;
+    }
+
+    /**
+     * Draws a push button's single {@code /AP /N} stream from its {@code /MK} characteristics.
+     * PDFBox never synthesizes one, so without this a push button has no appearance at all.
+     */
+    private void applyPushButtonAppearance(PDDocument document, PDAnnotationWidget widget)
+            throws IOException {
+        PDRectangle rect = widget.getRectangle();
+        if (rect == null || rect.getWidth() <= 0 || rect.getHeight() <= 0) {
+            return;
+        }
+        float w = rect.getWidth();
+        float h = rect.getHeight();
+
+        PDAppearanceStream stream = new PDAppearanceStream(document);
+        stream.setBBox(new PDRectangle(w, h));
+        stream.setResources(new PDResources());
+
+        PDAppearanceCharacteristicsDictionary mk = widget.getAppearanceCharacteristics();
+        String caption = mk != null ? mk.getNormalCaption() : null;
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        float fontSize = Math.min(12f, h * 0.6f);
+
+        try (PDPageContentStream content =
+                new PDPageContentStream(
+                        document, stream, stream.getStream().createOutputStream())) {
+            content.setNonStrokingColor(0.85f, 0.85f, 0.85f);
+            content.addRect(0, 0, w, h);
+            content.fill();
+            content.setStrokingColor(0f, 0f, 0f);
+            content.setLineWidth(1f);
+            content.addRect(0.5f, 0.5f, w - 1f, h - 1f);
+            content.stroke();
+            if (caption != null && !caption.isBlank()) {
+                try {
+                    float textWidth = font.getStringWidth(caption) / 1000f * fontSize;
+                    content.beginText();
+                    content.setFont(font, fontSize);
+                    content.setNonStrokingColor(0f, 0f, 0f);
+                    content.newLineAtOffset(
+                            Math.max(2f, (w - textWidth) / 2f),
+                            (h - fontSize) / 2f + fontSize * 0.2f);
+                    content.showText(caption);
+                    content.endText();
+                } catch (Exception e) {
+                    // Unencodable caption: keep the frame, drop the text.
+                    log.debug("Could not draw button caption '{}': {}", caption, e.getMessage());
+                }
+            }
+        }
+
+        PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+        appearance.setNormalAppearance(stream);
+        widget.setAppearance(appearance);
+        // A push button has no value, so no /AS.
+        widget.getCOSObject().removeItem(COSName.AS);
     }
 
     /** A circle from four Bezier arcs; PDF has no primitive for one. */
@@ -2386,24 +2633,54 @@ public class FormUtils {
             List<ModifyFormFieldDefinition> modifies,
             List<String> deletes)
             throws IOException {
+        applyFieldEdits(document, adds, modifies, deletes, null);
+    }
+
+    /**
+     * As above, but records every operation that could not be applied into {@code skipped} so the
+     * caller can report "3 of 4" instead of a bare success.
+     */
+    public void applyFieldEdits(
+            PDDocument document,
+            List<NewFormFieldDefinition> adds,
+            List<ModifyFormFieldDefinition> modifies,
+            List<String> deletes,
+            List<SkippedFieldEdit> skipped)
+            throws IOException {
         if (document == null) return;
         if (modifies != null && !modifies.isEmpty()) {
-            modifyFormFields(document, modifies);
+            modifyFormFields(document, modifies, skipped);
         }
         if (deletes != null && !deletes.isEmpty()) {
-            deleteFormFields(document, deletes);
+            deleteFormFields(document, deletes, skipped);
         }
         if (adds != null && !adds.isEmpty()) {
-            addNewFields(document, adds);
+            addNewFields(document, adds, skipped);
+        }
+    }
+
+    /** Adds an entry to a skip list that may be absent, so call sites stay one-liners. */
+    private void recordSkip(
+            List<SkippedFieldEdit> skipped, String operation, String target, String reason) {
+        if (skipped != null) {
+            skipped.add(new SkippedFieldEdit(operation, target, reason));
         }
     }
 
     public void deleteFormFields(PDDocument document, List<String> fieldNames) {
+        deleteFormFields(document, fieldNames, null);
+    }
+
+    public void deleteFormFields(
+            PDDocument document, List<String> fieldNames, List<SkippedFieldEdit> skipped) {
         if (document == null || fieldNames == null || fieldNames.isEmpty()) return;
 
         PDAcroForm acroForm = getAcroFormSafely(document);
         if (acroForm == null) {
             log.warn("Cannot delete fields because the document has no AcroForm");
+            for (String name : fieldNames) {
+                recordSkip(skipped, "delete", name, "the document has no form to delete from");
+            }
             return;
         }
 
@@ -2415,6 +2692,7 @@ public class FormUtils {
             PDField field = locateField(acroForm, name.trim());
             if (field == null) {
                 log.warn("No matching field '{}' found for deletion", name);
+                recordSkip(skipped, "delete", name, "no field with that name exists");
                 continue;
             }
 
@@ -2717,6 +2995,59 @@ public class FormUtils {
         return existing;
     }
 
+    /** A text field's /MaxLen, or null when unset so the editor shows an empty box. */
+    private Integer extractMaxLength(PDField field) {
+        if (field instanceof PDTextField textField) {
+            int maxLen = textField.getMaxLen();
+            return maxLen > 0 ? maxLen : null;
+        }
+        return null;
+    }
+
+    /** Reads a push button's action back into the same spec string the editor sends. */
+    private String extractButtonAction(PDField field) {
+        if (!(field instanceof PDPushButton)) {
+            return null;
+        }
+        for (PDAnnotationWidget widget : field.getWidgets()) {
+            COSBase raw = widget.getCOSObject().getDictionaryObject(COSName.A);
+            if (!(raw instanceof COSDictionary action)) {
+                continue;
+            }
+            String subtype = action.getNameAsString(COSName.S);
+            if ("ResetForm".equals(subtype)) {
+                return "reset";
+            }
+            if ("Named".equals(subtype)) {
+                return "Print".equalsIgnoreCase(action.getNameAsString(COSName.N)) ? "print" : null;
+            }
+            if ("URI".equals(subtype)) {
+                return "uri:" + Optional.ofNullable(action.getString(COSName.URI)).orElse("");
+            }
+            if ("SubmitForm".equals(subtype)) {
+                return "submit:" + Optional.ofNullable(action.getString(COSName.F)).orElse("");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Why {@code name} is unusable as a field name, or null when it is fine. AcroForm reserves the
+     * period as the parent/child separator, so PDFBox rejects it outright in a partial name.
+     */
+    public String invalidFieldNameReason(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        if (name.indexOf('.') >= 0) {
+            return "Field name '"
+                    + name
+                    + "' cannot contain a period. PDF forms use '.' to separate a parent field"
+                    + " from its children.";
+        }
+        return null;
+    }
+
     private PDField locateField(PDAcroForm acroForm, String name) {
         if (acroForm == null || name == null) {
             return null;
@@ -2753,19 +3084,20 @@ public class FormUtils {
     }
 
     private String generateUniqueFieldName(String baseName, Set<String> existingNames) {
-        String sanitized =
+        // Trimmed, not sanitized: callers must reject bad names first via invalidFieldNameReason.
+        String trimmed =
                 Optional.ofNullable(baseName)
                         .map(String::trim)
                         .filter(s -> !s.isEmpty())
                         .orElse("field");
 
-        StringBuilder candidateBuilder = new StringBuilder(sanitized);
+        StringBuilder candidateBuilder = new StringBuilder(trimmed);
         String candidate = candidateBuilder.toString();
         int counter = 1;
 
         while (existingNames.contains(candidate)) {
             candidateBuilder.setLength(0);
-            candidateBuilder.append(sanitized).append("_").append(counter);
+            candidateBuilder.append(trimmed).append("_").append(counter);
             candidate = candidateBuilder.toString();
             counter++;
         }
@@ -3029,7 +3361,8 @@ public class FormUtils {
             Float fontSize,
             Boolean readOnly,
             Boolean multiline,
-            Integer maxLength) {}
+            Integer maxLength,
+            String buttonAction) {}
 
     /** A mixed batch of field edits applied in one request via {@link #applyFieldEdits}. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -3037,6 +3370,17 @@ public class FormUtils {
             List<NewFormFieldDefinition> add,
             List<ModifyFormFieldDefinition> modify,
             List<String> delete) {}
+
+    /**
+     * One requested edit the document could not take. Returned alongside the updated file so the
+     * caller can tell the user which operations were dropped instead of reporting a bare success.
+     *
+     * @param operation "add", "modify" or "delete"
+     * @param target the field name the request named
+     * @param reason human-readable explanation
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record SkippedFieldEdit(String operation, String target, String reason) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record FormFieldInfo(

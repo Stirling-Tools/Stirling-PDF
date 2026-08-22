@@ -3,9 +3,13 @@ package stirling.software.SPDF.controller.api.form;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.ss.usermodel.*;
@@ -59,6 +63,9 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class FormFillController {
 
+    /** Carries the edits a request asked for but the document could not take. */
+    public static final String SKIPPED_EDITS_HEADER = "X-Stirling-Skipped-Field-Edits";
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
@@ -66,6 +73,43 @@ public class FormFillController {
     private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
             throws IOException {
         return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
+    }
+
+    /**
+     * Rejects field names PDFBox cannot store before the document is touched, so the caller gets a
+     * 400 naming the offending character instead of a 200 with the field quietly missing.
+     */
+    private static void requireUsableFieldNames(FormUtils.FieldEditBatch batch) {
+        Stream<String> requested =
+                Stream.concat(
+                        batch.add().stream().map(FormUtils.NewFormFieldDefinition::name),
+                        batch.modify().stream().map(FormUtils.ModifyFormFieldDefinition::name));
+        requested
+                .map(FormUtils::invalidFieldNameReason)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .ifPresent(
+                        reason -> {
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidArgument", "{0}", reason);
+                        });
+    }
+
+    /**
+     * Attaches the edits the document could not take to the response. The body is the updated PDF,
+     * so the report travels as a percent-encoded JSON header the UI reads after the download.
+     */
+    private ResponseEntity<Resource> withSkippedEdits(
+            ResponseEntity<Resource> response, List<FormUtils.SkippedFieldEdit> skipped) {
+        if (skipped.isEmpty()) {
+            return response;
+        }
+        String encoded =
+                URLEncoder.encode(objectMapper.writeValueAsString(skipped), StandardCharsets.UTF_8);
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(SKIPPED_EDITS_HEADER, encoded)
+                .body(response.getBody());
     }
 
     private static String buildBaseName(MultipartFile file, String suffix) {
@@ -329,13 +373,21 @@ public class FormFillController {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dataRequired", "{0} must contain at least one edit", "edits payload");
         }
+        requireUsableFieldNames(batch);
 
-        return processSingleFile(
-                file,
-                "updated",
-                document ->
-                        FormUtils.applyFieldEdits(
-                                document, batch.add(), batch.modify(), batch.delete()));
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document ->
+                                FormUtils.applyFieldEdits(
+                                        document,
+                                        batch.add(),
+                                        batch.modify(),
+                                        batch.delete(),
+                                        skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

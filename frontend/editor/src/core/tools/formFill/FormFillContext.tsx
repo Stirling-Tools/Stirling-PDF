@@ -39,6 +39,7 @@ import type {
   CreatableFieldType,
   NewFieldDefinition,
   ModifyFieldDefinition,
+  SkippedFieldEdit,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
@@ -267,6 +268,10 @@ export interface FormFillContextValue {
 
   /** True when create or modify mode has uncommitted work. */
   hasUncommittedChanges: boolean;
+
+  /** Edits the last commit asked for but the document could not take. */
+  skippedEdits: SkippedFieldEdit[];
+  clearSkippedEdits: () => void;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -379,6 +384,8 @@ export function FormFillProvider({
     Record<string, ModifyFieldDefinition>
   >({});
   const [deletedFieldNames, setDeletedFieldNames] = useState<string[]>([]);
+  const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
+  const clearSkippedEdits = useCallback(() => setSkippedEdits([]), []);
   // Monotonic counter for client-side pending-field ids and default names.
   const pendingCounterRef = useRef(0);
 
@@ -646,10 +653,11 @@ export function FormFillProvider({
       const definitions: NewFieldDefinition[] = pendingFields.map(
         ({ id: _id, ...rest }) => rest,
       );
-      const blob = await applyFieldEdits(file, { add: definitions });
+      const result = await applyFieldEdits(file, { add: definitions });
+      setSkippedEdits(result.skipped);
       setPendingFields([]);
       setCreationType(null);
-      return blob;
+      return result.blob;
     },
     [pendingFields],
   );
@@ -692,14 +700,15 @@ export function FormFillProvider({
       const updates = Object.values(modifiedFields).filter(
         (m) => !deletedFieldNames.includes(m.targetName),
       );
-      const blob = await applyFieldEdits(file, {
+      const result = await applyFieldEdits(file, {
         modify: updates,
         delete: deletedFieldNames,
       });
+      setSkippedEdits(result.skipped);
       setModifiedFields({});
       setDeletedFieldNames([]);
       setSelectedField(null);
-      return blob;
+      return result.blob;
     },
     [modifiedFields, deletedFieldNames],
   );
@@ -758,6 +767,8 @@ export function FormFillProvider({
       clearModifications,
       commitModifications,
       hasUncommittedChanges,
+      skippedEdits,
+      clearSkippedEdits,
     }),
     [
       state,
@@ -792,6 +803,8 @@ export function FormFillProvider({
       clearModifications,
       commitModifications,
       hasUncommittedChanges,
+      skippedEdits,
+      clearSkippedEdits,
     ],
   );
 

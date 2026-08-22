@@ -32,7 +32,11 @@ import {
   snapMove,
   type SnapGuide,
 } from "@app/tools/formFill/formSnapUtils";
-import { usePageScale, getLocalPoint } from "@app/tools/formFill/usePageScale";
+import {
+  usePageScale,
+  getLocalPoint,
+  isTextEntryTarget,
+} from "@app/tools/formFill/usePageScale";
 import { SnapGuides } from "@app/tools/formFill/SnapGuides";
 import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
@@ -80,12 +84,8 @@ export function FormFieldCreationOverlay({
   const [guides, setGuides] = useState<SnapGuide[]>([]);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const { scaleX, scaleY, pageHeightPts, pageWidthPts } = usePageScale(
-    documentId,
-    pageIndex,
-    pageWidth,
-    pageHeight,
-  );
+  const { scaleX, scaleY, pageHeightPts, pageWidthPts, rotation } =
+    usePageScale(documentId, pageIndex, pageWidth, pageHeight);
 
   // Pixel rects of the OTHER fields on this page, used as snap targets.
   const snapRects = useMemo<PixelRect[]>(() => {
@@ -118,8 +118,8 @@ export function FormFieldCreationOverlay({
     fileId != null && forFileId != null && fileId !== forFileId;
 
   const localPoint = useCallback(
-    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current),
-    [],
+    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current, rotation),
+    [rotation],
   );
 
   const handlePointerDown = useCallback(
@@ -154,6 +154,18 @@ export function FormFieldCreationOverlay({
     },
     [active, localPoint, snapTargets],
   );
+
+  // A cancelled gesture (system swipe, focus loss) must not leave a half-drawn rect behind.
+  const cancelDrag = useCallback((e: React.PointerEvent) => {
+    dragStartRef.current = null;
+    setDragRect(null);
+    setGuides([]);
+    try {
+      rootRef.current?.releasePointerCapture(e.pointerId);
+    } catch {
+      /* pointer capture may already be released */
+    }
+  }, []);
 
   const finishDrag = useCallback(
     (e: React.PointerEvent) => {
@@ -222,6 +234,8 @@ export function FormFieldCreationOverlay({
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
+      // Never steal keys from a field the user is typing in.
+      if (isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") {
         dragStartRef.current = null;
         setDragRect(null);
@@ -244,10 +258,13 @@ export function FormFieldCreationOverlay({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={finishDrag}
+      onPointerCancel={cancelDrag}
       style={{
         position: "absolute",
         inset: 0,
         pointerEvents: active ? "auto" : "none",
+        // Without this the browser claims the gesture as a pan and drags never start on touch.
+        touchAction: active ? "none" : "auto",
         cursor: active ? "crosshair" : "default",
         userSelect: "none",
         WebkitUserSelect: "none",

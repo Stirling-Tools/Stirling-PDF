@@ -7,6 +7,8 @@ import type {
   NewFieldDefinition,
   ModifyFieldDefinition,
   FieldEditBatch,
+  FieldEditResult,
+  SkippedFieldEdit,
 } from "@app/tools/formFill/types";
 
 /**
@@ -148,7 +150,7 @@ export async function modifyFormFields(
 export async function applyFieldEdits(
   file: File | Blob,
   batch: FieldEditBatch,
-): Promise<Blob> {
+): Promise<FieldEditResult> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append(
@@ -159,7 +161,24 @@ export async function applyFieldEdits(
   const response = await apiClient.post("/api/v1/form/edit-fields", formData, {
     responseType: "blob",
   });
-  return response.data;
+  return {
+    blob: response.data,
+    skipped: parseSkippedEdits(response.headers?.[SKIPPED_EDITS_HEADER]),
+  };
+}
+
+/** Set by the backend when it could not apply every requested edit. */
+const SKIPPED_EDITS_HEADER = "x-stirling-skipped-field-edits";
+
+/** Percent-encoded JSON, so a field name with any character survives the header. */
+function parseSkippedEdits(raw: unknown): SkippedFieldEdit[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(decodeURIComponent(raw));
+    return Array.isArray(parsed) ? (parsed as SkippedFieldEdit[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 /**

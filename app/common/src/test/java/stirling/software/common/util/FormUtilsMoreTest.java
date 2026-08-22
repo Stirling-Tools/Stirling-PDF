@@ -487,6 +487,7 @@ class FormUtilsMoreTest {
                                 null,
                                 null,
                                 null,
+                                null,
                                 null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
@@ -523,6 +524,7 @@ class FormUtilsMoreTest {
                                 List.of("X", "Y", "Z"),
                                 null,
                                 "Choose items",
+                                null,
                                 null,
                                 null,
                                 null,
@@ -564,6 +566,7 @@ class FormUtilsMoreTest {
                                 null,
                                 null,
                                 null,
+                                null,
                                 null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
@@ -590,7 +593,7 @@ class FormUtilsMoreTest {
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
                                 "beta", "alpha", null, null, null, null, null, null, null, null,
-                                null, null, null, null, null, null, null, null);
+                                null, null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -612,7 +615,7 @@ class FormUtilsMoreTest {
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
                                 "x", null, null, null, null, null, null, null, null, null, null,
-                                null, null, null, null, null, null, null);
+                                null, null, null, null, null, null, null, null);
                 FormUtils.modifyFormFields(doc, List.of(mod));
             }
         }

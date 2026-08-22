@@ -36,6 +36,7 @@ import {
   FormFieldPropertyEditor,
   type EditableFieldProps,
 } from "@app/tools/formFill/FormFieldPropertyEditor";
+import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
 import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
@@ -153,6 +154,10 @@ export function FormFieldModifyPanel({
         multiline: staged?.multiline ?? field.multiline,
         multiSelect: staged?.multiSelect ?? field.multiSelect,
         options: staged?.options ?? field.options ?? [],
+        // Omitting these blanked the inputs on every keystroke.
+        maxLength: staged?.maxLength ?? field.maxLength ?? undefined,
+        buttonAction:
+          staged?.buttonAction ?? field.buttonActionSpec ?? undefined,
       };
     },
     [modifiedFields],
@@ -179,6 +184,8 @@ export function FormFieldModifyPanel({
             <Text size="xs">{error}</Text>
           </Alert>
         )}
+
+        <SkippedEditsAlert />
 
         <Button
           size="sm"

@@ -264,7 +264,7 @@ class FormUtilsEditingTest {
             FormUtils.ModifyFormFieldDefinition mod =
                     new FormUtils.ModifyFormFieldDefinition(
                             "movable", null, null, null, 0, 100f, 600f, 150f, 30f, null, null, null,
-                            null, null, null, null, null, null);
+                            null, null, null, null, null, null, null);
             FormUtils.modifyFormFields(document, List.of(mod));
             saved = save(document);
         }
@@ -304,6 +304,7 @@ class FormUtilsEditingTest {
                             null,
                             22f,
                             Boolean.TRUE,
+                            null,
                             null,
                             null);
             FormUtils.modifyFormFields(document, List.of(mod));

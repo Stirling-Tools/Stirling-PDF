@@ -32,7 +32,11 @@ import {
   snapResize,
   type SnapGuide,
 } from "@app/tools/formFill/formSnapUtils";
-import { usePageScale, getLocalPoint } from "@app/tools/formFill/usePageScale";
+import {
+  usePageScale,
+  getLocalPoint,
+  isTextEntryTarget,
+} from "@app/tools/formFill/usePageScale";
 import { SnapGuides } from "@app/tools/formFill/SnapGuides";
 import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
@@ -117,12 +121,8 @@ export function FormFieldEditOverlay({
   const [liveRect, setLiveRect] = useState<PixelRect | null>(null);
   const [guides, setGuides] = useState<SnapGuide[]>([]);
 
-  const { scaleX, scaleY, pageHeightPts, pageWidthPts } = usePageScale(
-    documentId,
-    pageIndex,
-    pageWidth,
-    pageHeight,
-  );
+  const { scaleX, scaleY, pageHeightPts, pageWidthPts, rotation } =
+    usePageScale(documentId, pageIndex, pageWidth, pageHeight);
 
   /** First-widget pixel rect for a field on this page, honouring staged geometry. */
   const fieldRect = useCallback(
@@ -184,8 +184,8 @@ export function FormFieldEditOverlay({
   const snapTargets = useMemo(() => collectSnapTargets(snapRects), [snapRects]);
 
   const localPoint = useCallback(
-    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current),
-    [],
+    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current, rotation),
+    [rotation],
   );
 
   const beginInteraction = useCallback(
@@ -271,6 +271,21 @@ export function FormFieldEditOverlay({
     [localPoint, snapTargets, pageWidth, pageHeight],
   );
 
+  // A cancelled gesture (system swipe, focus loss) must not leave a half-applied drag behind.
+  const cancelInteraction = useCallback(
+    (e: React.PointerEvent) => {
+      interactionRef.current = null;
+      setGuides([]);
+      setLiveRect(null);
+      try {
+        rootRef.current?.releasePointerCapture(e.pointerId);
+      } catch {
+        /* already released */
+      }
+    },
+    [setGuides, setLiveRect],
+  );
+
   const endInteraction = useCallback(
     (e: React.PointerEvent) => {
       const it = interactionRef.current;
@@ -317,11 +332,12 @@ export function FormFieldEditOverlay({
   );
 
   // Arrow keys nudge the selected field; Escape cancels an in-progress drag.
-  // Only the page owning the selection listens, so a key is handled once.
-  // FormFieldModifyPanel keeps Escape-to-deselect working off-screen.
+  // Every mounted overlay listens, but only the selection's page acts (fieldRect is null elsewhere).
   useEffect(() => {
     if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
+      // Never steal keys from a field the user is typing in.
+      if (isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") {
         interactionRef.current = null;
         setLiveRect(null);
@@ -413,10 +429,13 @@ export function FormFieldEditOverlay({
       }}
       onPointerMove={handlePointerMove}
       onPointerUp={endInteraction}
+      onPointerCancel={cancelInteraction}
       style={{
         position: "absolute",
         inset: 0,
         pointerEvents: "auto",
+        // Without this the browser claims the gesture as a pan and drags never start on touch.
+        touchAction: "none",
         userSelect: "none",
         WebkitUserSelect: "none",
         zIndex: 5,

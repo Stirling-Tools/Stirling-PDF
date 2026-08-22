@@ -4281,6 +4281,8 @@ rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
 saveShortcut = "Ctrl+S to save"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
 unsavedChanges = "Unsaved changes"
 
 [formFill.create]

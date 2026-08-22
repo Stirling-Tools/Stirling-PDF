@@ -340,36 +340,41 @@ public enum FormFieldTypeSupport {
 
             applyButtonAction(widget, definition.buttonAction());
         }
-
-        private void applyButtonAction(PDAnnotationWidget widget, String action) {
-            if (action == null || action.isBlank()) {
-                return;
-            }
-            try {
-                String spec = action.trim();
-                String lower = spec.toLowerCase();
-                if (lower.equals("reset")) {
-                    widget.getCOSObject()
-                            .setItem(COSName.A, new PDActionResetForm().getCOSObject());
-                } else if (lower.equals("print")) {
-                    PDActionNamed named = new PDActionNamed();
-                    named.setN("Print");
-                    widget.getCOSObject().setItem(COSName.A, named.getCOSObject());
-                } else if (lower.startsWith("uri:")) {
-                    PDActionURI uri = new PDActionURI();
-                    uri.setURI(spec.substring(4));
-                    widget.getCOSObject().setItem(COSName.A, uri.getCOSObject());
-                } else if (lower.startsWith("submit:")) {
-                    PDActionSubmitForm submit = new PDActionSubmitForm();
-                    // Store the target URL on the action dictionary's /F entry.
-                    submit.getCOSObject().setString(COSName.F, spec.substring(7));
-                    widget.getCOSObject().setItem(COSName.A, submit.getCOSObject());
-                }
-            } catch (Exception e) {
-                log.debug("Unable to apply button action '{}': {}", action, e.getMessage());
-            }
-        }
     };
+
+    /** Writes a push button's activation action from the "reset"/"print"/"uri:"/"submit:" spec. */
+    public static void applyButtonAction(PDAnnotationWidget widget, String action) {
+        if (action == null) {
+            return;
+        }
+        if (action.isBlank()) {
+            // An explicit blank clears the action rather than leaving the old one behind.
+            widget.getCOSObject().removeItem(COSName.A);
+            return;
+        }
+        try {
+            String spec = action.trim();
+            String lower = spec.toLowerCase();
+            if (lower.equals("reset")) {
+                widget.getCOSObject().setItem(COSName.A, new PDActionResetForm().getCOSObject());
+            } else if (lower.equals("print")) {
+                PDActionNamed named = new PDActionNamed();
+                named.setN("Print");
+                widget.getCOSObject().setItem(COSName.A, named.getCOSObject());
+            } else if (lower.startsWith("uri:")) {
+                PDActionURI uri = new PDActionURI();
+                uri.setURI(spec.substring(4));
+                widget.getCOSObject().setItem(COSName.A, uri.getCOSObject());
+            } else if (lower.startsWith("submit:")) {
+                PDActionSubmitForm submit = new PDActionSubmitForm();
+                // Store the target URL on the action dictionary's /F entry.
+                submit.getCOSObject().setString(COSName.F, spec.substring(7));
+                widget.getCOSObject().setItem(COSName.A, submit.getCOSObject());
+            }
+        } catch (Exception e) {
+            log.debug("Unable to apply button action '{}': {}", action, e.getMessage());
+        }
+    }
 
     private static final Map<String, FormFieldTypeSupport> BY_TYPE =
             Arrays.stream(values())

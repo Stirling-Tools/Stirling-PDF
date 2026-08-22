@@ -40,6 +40,10 @@ export interface FormField {
   buttonLabel?: string | null;
   /** Action descriptor for push buttons */
   buttonAction?: ButtonAction | null;
+  /** Same action as the editable spec string the backend round-trips ("reset", "uri:<url>", ...) */
+  buttonActionSpec?: string | null;
+  /** Text field /MaxLen; >0 also makes it a comb field */
+  maxLength?: number | null;
   /** Pre-rendered appearance image for signed signature fields (data URL). */
   appearanceDataUrl?: string;
 }
@@ -145,6 +149,8 @@ export interface ModifyFieldDefinition {
   readOnly?: boolean;
   multiline?: boolean;
   maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
 }
 
 /** A batch of field edits committed in one request via /api/v1/form/edit-fields. */
@@ -152,6 +158,19 @@ export interface FieldEditBatch {
   add?: NewFieldDefinition[];
   modify?: ModifyFieldDefinition[];
   delete?: string[];
+}
+
+/** One requested edit the document could not take. The rest of the batch still applied. */
+export interface SkippedFieldEdit {
+  operation: "add" | "modify" | "delete";
+  target?: string | null;
+  reason?: string | null;
+}
+
+/** The updated PDF plus whatever the backend had to drop. */
+export interface FieldEditResult {
+  blob: Blob;
+  skipped: SkippedFieldEdit[];
 }
 
 /** The form tool's working mode. */

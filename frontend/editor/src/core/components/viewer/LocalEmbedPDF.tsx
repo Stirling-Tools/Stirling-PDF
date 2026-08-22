@@ -116,6 +116,8 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
+  formEditingActive?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -209,6 +211,7 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  formEditingActive = false,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -1156,7 +1159,7 @@ export function LocalEmbedPDF({
                                   )}
 
                                   {/* Create-mode: drag to place new fields */}
-                                  {enableFormFill && (
+                                  {enableFormFill && formEditingActive && (
                                     <FormFieldCreationOverlay
                                       documentId={documentId}
                                       pageIndex={pageIndex}
@@ -1167,7 +1170,7 @@ export function LocalEmbedPDF({
                                   )}
 
                                   {/* Modify-mode: select / move / resize existing fields */}
-                                  {enableFormFill && (
+                                  {enableFormFill && formEditingActive && (
                                     <FormFieldEditOverlay
                                       documentId={documentId}
                                       pageIndex={pageIndex}

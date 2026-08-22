@@ -70,6 +70,17 @@
   gap: 0.5rem;
 }
 
+/* Pinned footer: same padding as .header, but the rule sits above it. */
+.footer {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border-top: 1px solid var(--c-border, var(--mantine-color-default-border));
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
 .primaryActions {
   display: flex;
   gap: 0.5rem;

@@ -718,6 +718,7 @@ class FormUtilsGapTest {
                                 null,
                                 null,
                                 null,
+                                null,
                                 null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
@@ -741,7 +742,7 @@ class FormUtilsGapTest {
                 FormUtils.ModifyFormFieldDefinition mod =
                         new FormUtils.ModifyFormFieldDefinition(
                                 "missing", null, null, null, null, null, null, null, null, null,
-                                null, null, null, null, null, null, null, null);
+                                null, null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -765,7 +766,7 @@ class FormUtilsGapTest {
                 mods.add(
                         new FormUtils.ModifyFormFieldDefinition(
                                 "  ", null, null, null, null, null, null, null, null, null, null,
-                                null, null, null, null, null, null, null));
+                                null, null, null, null, null, null, null, null));
 
                 FormUtils.modifyFormFields(doc, mods);
                 assertEquals(1, FormUtils.extractFormFields(doc).size());

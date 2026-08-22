@@ -62,6 +62,15 @@ public class FormFieldWithCoordinates {
     @Schema(description = "Widget coordinates on each page (fields can have multiple widgets)")
     private List<WidgetCoordinates> widgets;
 
+    @Schema(description = "Maximum character count for a text field (/MaxLen); null when unset")
+    private Integer maxLength;
+
+    @Schema(
+            description =
+                    "Push button activation action as a spec string:"
+                            + " 'reset', 'print', 'uri:<url>' or 'submit:<url>'")
+    private String buttonActionSpec;
+
     /**
      * Coordinates for a single widget annotation (visual representation of the field). A field can
      * have multiple widgets if it appears on multiple pages.

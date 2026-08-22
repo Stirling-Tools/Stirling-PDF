@@ -16,6 +16,15 @@ export interface PageScale {
   pageHeightPts: number;
   /** CropBox width in PDF points; 0 until the page has rendered. */
   pageWidthPts: number;
+  /** Page rotation in clockwise quarter turns (0-3), as EmbedPDF's <Rotate> applies it. */
+  rotation: number;
+}
+
+/** Rotation as clockwise quarter turns, matching LocalEmbedPDF's normalizePageRotation. */
+function normalizeRotation(rotation: number | null | undefined): number {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return ((Math.round(value) % 4) + 4) % 4;
 }
 
 /**
@@ -32,25 +41,56 @@ export function usePageScale(
   const documentState = useDocumentState(documentId);
   return useMemo(() => {
     const pdfPage = documentState?.document?.pages?.[pageIndex];
+    const rotation = normalizeRotation(pdfPage?.rotation);
     if (!pdfPage?.size || !pageWidth || !pageHeight) {
       const s = documentState?.scale ?? 1;
-      return { scaleX: s, scaleY: s, pageHeightPts: 0, pageWidthPts: 0 };
+      return {
+        scaleX: s,
+        scaleY: s,
+        pageHeightPts: 0,
+        pageWidthPts: 0,
+        rotation,
+      };
     }
     return {
       scaleX: pageWidth / pdfPage.size.width,
       scaleY: pageHeight / pdfPage.size.height,
       pageHeightPts: pdfPage.size.height,
       pageWidthPts: pdfPage.size.width,
+      rotation,
     };
   }, [documentState, pageIndex, pageWidth, pageHeight]);
 }
 
-/** Pointer position relative to an element's top-left, in CSS pixels. */
+/**
+ * Pointer position in the element's own un-rotated pixel space. getBoundingClientRect
+ * returns the axis-aligned screen box, so under <Rotate> it must be mapped back.
+ */
 export function getLocalPoint(
   e: { clientX: number; clientY: number },
   el: HTMLElement | null,
+  rotation: number = 0,
 ): { x: number; y: number } {
   const rect = el?.getBoundingClientRect();
   if (!rect) return { x: 0, y: 0 };
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  switch (normalizeRotation(rotation)) {
+    case 1:
+      return { x: sy, y: rect.width - sx };
+    case 2:
+      return { x: rect.width - sx, y: rect.height - sy };
+    case 3:
+      return { x: rect.height - sy, y: sx };
+    default:
+      return { x: sx, y: sy };
+  }
+}
+
+/** True when a key event targets somewhere the user is typing, so shortcuts must stand down. */
+export function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
