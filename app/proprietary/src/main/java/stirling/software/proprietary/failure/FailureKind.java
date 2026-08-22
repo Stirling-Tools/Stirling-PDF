@@ -21,8 +21,8 @@ import lombok.Getter;
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
  * <p>Actions are declared here but implemented in {@link FailureAction} beans resolved by id, so a
- * new kind ships as a registry entry plus copy. Two members today: {@link #UNKNOWN} gives every
- * failed run a record, and kinds get promoted out of it as production shows what occurs.
+ * new kind ships as a registry entry plus copy. {@link #UNKNOWN} gives every failed run a record,
+ * and kinds get promoted out of it as production shows what occurs.
  *
  * <p>A kind offers an acknowledgement only where there is something to acknowledge <em>doing</em>.
  * With nothing to fix, "seen it" and "clear it" are the same decision, so the row offers only the
@@ -37,6 +37,16 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
+            offer(ACKNOWLEDGE),
+            offer(DISMISS, "dismissSkipFile")),
+
+    COMPLIANCE_NOT_MET(
+            FailureStage.BLOCKED,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E074"),
+            fallback("This document did not meet the compliance standard the policy checks for."),
             offer(ACKNOWLEDGE),
             offer(DISMISS, "dismissSkipFile")),
 

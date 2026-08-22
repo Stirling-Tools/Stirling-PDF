@@ -6314,11 +6314,13 @@ enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
 [policyOption]
+auto = "Whatever the document declares"
 autoRedactPhi = "Auto-redact PHI"
 blockExport = "Block export"
 ccpa = "CCPA"
 contracts = "Contracts"
 documents = "Documents"
+fail = "Stop the run"
 fedramp = "FedRAMP"
 financialReports = "Financial reports"
 flagForReview = "Flag for review"
@@ -6341,6 +6343,11 @@ p80 = "80%"
 p90 = "90%"
 p95 = "95%"
 pciDss = "PCI DSS"
+pdfa = "PDF/A (archiving)"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
+pdfua = "PDF/UA (accessibility)"
 quarantineDocument = "Quarantine document"
 routeToBucket = "Route to bucket"
 s3Bucket = "S3 bucket"
@@ -6350,6 +6357,7 @@ soc2 = "SOC 2"
 taxDocuments = "Tax documents"
 thirtyDays = "30 days"
 threeYears = "3 years"
+warn = "Record it and continue"
 webhook = "Webhook"
 
 [portal]
@@ -7434,6 +7442,10 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
@@ -7905,7 +7917,7 @@ desc = "Identify each document's type on upload and tag its metadata for filing 
 label = "Classification"
 
 [portal.policies.categories.compliance]
-desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
+desc = "Strip hidden data, convert to PDF/A for archiving, and validate every document against the standard before it is delivered."
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
@@ -7935,18 +7947,20 @@ summary = "Classifies every uploaded document against your team's labels and tag
 1 = "Tag metadata"
 
 [portal.policies.config.compliance]
-summary = "Validates documents against regulatory frameworks before they leave the system."
-
-[portal.policies.config.compliance.fields]
-accessLog = "Access log"
-auditTrail = "Audit trail"
-frameworks = "Frameworks"
-onViolation = "When non-compliant"
+summary = "Strips hidden data, converts to the PDF/A archival format, and validates the result against the standard."
 
 [portal.policies.config.compliance.rules]
-0 = "Framework scan"
-1 = "Enforce action"
-2 = "Audit trail"
+0 = "Strip hidden data"
+1 = "Convert to PDF/A"
+2 = "Validate compliance"
+
+[portal.policies.config.complianceCheck.fields.onViolation]
+help = "Stopping the run parks the document instead of delivering one that does not meet the standard."
+label = "If it does not meet the standard"
+
+[portal.policies.config.complianceCheck.fields.standard]
+help = "PDF/A is the archiving standard; PDF/UA is the accessibility one. Checking whatever the document declares passes anything that declares nothing."
+label = "Check against"
 
 [portal.policies.config.ingestion]
 summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
@@ -7960,6 +7974,14 @@ minConfidence = "Min confidence"
 1 = "Extract"
 2 = "Name"
 3 = "Normalize"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
+
+[portal.policies.config.pdfa.fields.strict]
+help = "Some documents cannot be made fully compliant. Stop the run rather than deliver a file that only claims to be archival."
+label = "Stop if conversion falls short"
 
 [portal.policies.config.purview]
 label = "Apply a Microsoft Purview sensitivity label"
@@ -8055,7 +8077,9 @@ classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "Remove JavaScript"
+validateCompliance = "Validate compliance"
 
 [portal.policies.offline]
 description = "Your policies are saved and will appear once the connection is restored."
@@ -8300,6 +8324,10 @@ saveChanges = "Save changes"
 desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
 label = "Classify the document"
 
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against the published standard and, unless you choose otherwise, stops the run if it does not hold up."
+label = "Check the document meets the standard"
+
 [portal.policies.wizard.capability.compress]
 desc = "Compresses the document to a smaller file size."
 label = "Reduce file size"
@@ -8311,6 +8339,10 @@ label = "Flatten the document"
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."

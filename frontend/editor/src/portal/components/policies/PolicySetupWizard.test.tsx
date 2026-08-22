@@ -178,4 +178,42 @@ describe("PolicySetupWizard", () => {
     const redact = result.steps[0].parameters as { listOfText?: string };
     expect(redact.listOfText).toBeTruthy();
   });
+
+  it("seeds the compliance chain so the gate judges the delivered document", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: compliance,
+      config: complianceConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // Purview is absent: no tenant is connected in this test, so it is never offered. Flatten is
+    // absent too: it rasterises pages, which would leave the archive without a text layer.
+    expect(result.steps.map((s) => s.operation)).toEqual([
+      "/api/v1/security/sanitize-pdf",
+      "/api/v1/convert/pdf/pdfa",
+      "/api/v1/security/validate-compliance",
+    ]);
+    // Both metadata streams go, but fonts stay - PDF/A needs them embedded.
+    expect(result.steps[0].parameters).toMatchObject({
+      removeMetadata: true,
+      removeXMPMetadata: true,
+      removeFonts: false,
+    });
+    expect(result.steps[1].parameters).toMatchObject({
+      outputFormat: "pdfa-2b",
+    });
+    // The gate stops the run by default; a gate that only logged would be decorative.
+    expect(result.steps[2].parameters).toMatchObject({
+      standard: "pdfa",
+      onViolation: "fail",
+    });
+  });
 });
