@@ -52,6 +52,9 @@ public class OfficeDocumentSanitizer {
                     "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg", "odf", "odc", "odi",
                     "odm");
 
+    // Single-file (non-zip) ODF XML: LibreOffice fetches xlink:href during import.
+    private static final Set<String> FLAT_ODF_EXTENSIONS = Set.of("fodt", "fods", "fodp", "fodg");
+
     private static final Set<String> ODF_XML_PARTS =
             Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
 
@@ -70,7 +73,9 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         String lower = extension.toLowerCase(Locale.ROOT);
-        return OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
+        return OOXML_EXTENSIONS.contains(lower)
+                || ODF_EXTENSIONS.contains(lower)
+                || FLAT_ODF_EXTENSIONS.contains(lower);
     }
 
     public byte[] sanitize(byte[] documentBytes, String extension) throws IOException {
@@ -83,6 +88,11 @@ public class OfficeDocumentSanitizer {
         }
         if (!isSanitizableExtension(extension)) {
             return documentBytes;
+        }
+
+        String lower = extension.toLowerCase(Locale.ROOT);
+        if (FLAT_ODF_EXTENSIONS.contains(lower)) {
+            return sanitizeFlatOdf(documentBytes);
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
@@ -182,6 +192,16 @@ public class OfficeDocumentSanitizer {
         return serializeDocument(doc);
     }
 
+    private byte[] sanitizeFlatOdf(byte[] xmlBytes) throws IOException {
+        try {
+            return sanitizeOdfXml(xmlBytes);
+        } catch (ParserConfigurationException | SAXException | TransformerException e) {
+            log.warn(
+                    "Failed to parse flat ODF for sanitization, leaving as-is: {}", e.getMessage());
+            return xmlBytes;
+        }
+    }
+
     private byte[] sanitizeOdfXml(byte[] xmlBytes)
             throws IOException, ParserConfigurationException, SAXException, TransformerException {
         Document doc = parseSecurely(xmlBytes);
@@ -256,7 +276,16 @@ public class OfficeDocumentSanitizer {
                 || trimmed.startsWith("file:")
                 || trimmed.startsWith("smb:")
                 || trimmed.startsWith("\\\\")
-                || trimmed.startsWith("//");
+                || trimmed.startsWith("//")
+                || trimmed.startsWith("/")
+                || isWindowsAbsolutePath(trimmed);
+    }
+
+    private static boolean isWindowsAbsolutePath(String trimmed) {
+        return trimmed.length() >= 3
+                && Character.isLetter(trimmed.charAt(0))
+                && trimmed.charAt(1) == ':'
+                && (trimmed.charAt(2) == '\\' || trimmed.charAt(2) == '/');
     }
 
     // Preserved only with an explicit allowedDomains entry; MEDIUM default would admit public URLs.

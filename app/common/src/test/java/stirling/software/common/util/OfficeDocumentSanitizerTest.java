@@ -343,6 +343,58 @@ class OfficeDocumentSanitizerTest {
         assertTrue(out.contains("#anchor"));
     }
 
+    @Test
+    void isSanitizableExtension_recognizesFlatOdf() {
+        assertTrue(sanitizer.isSanitizableExtension("fodt"));
+        assertTrue(sanitizer.isSanitizableExtension("FODT"));
+        assertTrue(sanitizer.isSanitizableExtension("fods"));
+        assertTrue(sanitizer.isSanitizableExtension("fodp"));
+        assertTrue(sanitizer.isSanitizableExtension("fodg"));
+    }
+
+    @Test
+    void sanitize_flatOdfStripsHttpAndFilePathXlinkHref() throws IOException {
+        String httpRef = "http://127.0.0.1:9/office-ssrf";
+        String unixPathRef = "/tmp/office-local-file.png";
+        String windowsPathRef = "C:\\Windows\\Temp\\office-local-file.png";
+        byte[] original =
+                flatOdfWithHrefs(httpRef, unixPathRef, windowsPathRef, "Pictures/image1.png")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        for (String ext : new String[] {"fodt", "fods", "fodp", "fodg"}) {
+            byte[] cleaned = sanitizer.sanitize(original, ext);
+            String out = new String(cleaned, StandardCharsets.UTF_8);
+            assertFalse(out.contains(httpRef), "HTTP xlink:href should be stripped from ." + ext);
+            assertFalse(
+                    out.contains(unixPathRef),
+                    "Unix file-path xlink:href should be stripped from ." + ext);
+            assertFalse(
+                    out.contains(windowsPathRef),
+                    "Windows file-path xlink:href should be stripped from ." + ext);
+            assertTrue(
+                    out.contains("Pictures/image1.png"),
+                    "Internal href should be preserved in ." + ext);
+        }
+    }
+
+    private static String flatOdfWithHrefs(String... hrefs) {
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        xml.append(
+                "<office:document xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"");
+        xml.append(" xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\"");
+        xml.append(" xmlns:xlink=\"http://www.w3.org/1999/xlink\"");
+        xml.append(" office:mimetype=\"application/vnd.oasis.opendocument.text\">");
+        xml.append("<office:body><office:text>");
+        for (String href : hrefs) {
+            xml.append("<draw:frame><draw:image xlink:href=\"")
+                    .append(href)
+                    .append("\" xlink:type=\"simple\"/></draw:frame>");
+        }
+        xml.append("</office:text></office:body></office:document>");
+        return xml.toString();
+    }
+
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
