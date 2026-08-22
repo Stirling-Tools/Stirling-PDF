@@ -1,0 +1,80 @@
+name: Setup Task from the CI image
+description: Install the pinned Task binary from the CI image when Docker is available, or from a verified release archive
+inputs:
+  version:
+    description: Task version to install
+    required: false
+    default: 3.53.1
+runs:
+  using: composite
+  steps:
+    - name: Install Task on Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      env:
+        TASK_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        install_dir="${RUNNER_TEMP}/task-bin"
+        mkdir -p "${install_dir}"
+
+        if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+          image="ghcr.io/stirling-tools/stirling-pdf-ci:task-${TASK_VERSION}"
+          docker pull "${image}"
+          container_id="$(docker create "${image}")"
+          cleanup() { docker rm "${container_id}" >/dev/null; }
+          trap cleanup EXIT
+          docker cp "${container_id}:/usr/local/bin/task" "${install_dir}/task"
+          chmod 0755 "${install_dir}/task"
+        else
+          case "${RUNNER_ARCH}" in
+            X64) task_arch=amd64 ;;
+            ARM64) task_arch=arm64 ;;
+            *) echo "Unsupported runner architecture: ${RUNNER_ARCH}" >&2; exit 1 ;;
+          esac
+          task_file="task_linux_${task_arch}.tar.gz"
+          archive="${RUNNER_TEMP}/${task_file}"
+          checksums="${RUNNER_TEMP}/task_checksums.txt"
+          release_url="https://github.com/go-task/task/releases/download/v${TASK_VERSION}"
+          curl --fail --silent --show-error --location --http1.1 \
+            --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+            "${release_url}/${task_file}" --output "${archive}"
+          curl --fail --silent --show-error --location --http1.1 \
+            --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+            "${release_url}/task_checksums.txt" --output "${checksums}"
+          (
+            cd "${RUNNER_TEMP}"
+            grep "  ${task_file}$" "${checksums}" | sha256sum -c -
+          )
+          tar -xzf "${archive}" -C "${install_dir}" task
+        fi
+        echo "${install_dir}" >> "${GITHUB_PATH}"
+
+    - name: Install Task natively
+      if: runner.os != 'Linux'
+      shell: bash
+      env:
+        TASK_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        install_dir="${RUNNER_TEMP}/task-bin"
+        mkdir -p "${install_dir}"
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=7f1a702d54a789cb818a636039a83df071f4179893133afafa4eba351a7e19ef ;;
+          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=85d2d96c2380b33d7855b07b3f7a20dc7ca0eda999a26efa0fb5f6f32b366cd7 ;;
+          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=27c0cd248c12cba03d8958d954a3df981c900be885ec9ce5f6a3cdc4e9a19316 ;;
+          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=4f7c32c0b5a09aabfd860bcf4ff5649f0483339c1f7f90ad5ee55692da7237b6 ;;
+          *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
+        esac
+        archive="${RUNNER_TEMP}/${task_file}"
+        curl --fail --silent --show-error --location --http1.1 \
+          --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+          "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/${task_file}" \
+          --output "${archive}"
+        echo "${task_sha256}  ${archive}" | sha256sum -c -
+        if [[ "${task_platform}" == windows ]]; then
+          unzip -p "${archive}" task.exe > "${install_dir}/task.exe"
+        else
+          tar -xzf "${archive}" -C "${install_dir}" task
+        fi
+        echo "${install_dir}" >> "${GITHUB_PATH}"

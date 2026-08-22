@@ -212,7 +212,7 @@ jobs:
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
       - name: Setup Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: ./.github/actions/setup-task
 
       - name: Build universal macOS JRE
         if: matrix.platform == 'macos-15'
