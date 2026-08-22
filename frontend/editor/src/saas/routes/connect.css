@@ -1,0 +1,93 @@
+/* Connect-approval page. The origin is the thing the approver has to actually
+   read, so it gets the visual weight and everything else stays quiet. */
+
+.saas-connect {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.saas-connect__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.saas-connect__lead {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+/* Which account is about to be bound. Sits above the server facts because it is the
+   other half of the decision: right server, wrong account is still wrong. */
+.saas-connect__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.625rem 0.875rem;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  border-radius: 0.375rem;
+}
+
+.saas-connect__account-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+.saas-connect__account-email {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.saas-connect__facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.375rem 1rem;
+  margin: 0;
+  padding: 0.875rem;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.saas-connect__facts dt {
+  margin: 0;
+  color: var(--c-text-muted);
+}
+
+.saas-connect__facts dd {
+  margin: 0;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+/* Monospaced so a lookalike hostname is harder to skim past. */
+.saas-connect__origin {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+}
+
+/* --c-text-muted rather than --c-text-subtle: this sentence is the warning, and
+   subtle fails AA on the dark surface. */
+.saas-connect__warning {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.saas-connect__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

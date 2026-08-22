@@ -16,21 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A").
- *
- * <p>The portal (served from this same origin, admin authenticated by the existing self-hosted
- * security chain) calls these. {@code POST /link} relays the admin's Supabase JWT to the SaaS
- * backend, which mints + returns a device credential we store locally. {@code GET /status} backs
- * the portal's link card; {@code GET /usage} exposes locally-accrued unsynced usage the portal adds
- * to SaaS-synced spend; {@code POST /sync-now} forces an immediate usage sync (ops "reconcile now"
- * / test aid).
- *
- * <p>Admin-only, {@code @Profile("!saas")}, gated behind {@code
- * stirling.billing.account-link.enabled} — off → bean absent → 404.
- */
+/** Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A"). */
 @Slf4j
 @Hidden
 @RestController
@@ -41,49 +31,119 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountLinkController {
 
     private final AccountLinkService service;
+    private final ConnectService connectService;
     private final LocalUsageService localUsageService;
     // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
             AccountLinkService service,
+            ConnectService connectService,
             LocalUsageService localUsageService,
             ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
+        this.connectService = connectService;
         this.localUsageService = localUsageService;
         this.syncServiceProvider = syncServiceProvider;
     }
 
-    /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */
-    public record LinkRequest(String supabaseJwt, String name) {}
+    /** {@code callbackUrl} is the portal telling us where its own callback route lives. */
+    public record ConnectStartRequest(String name, String callbackUrl) {}
 
-    @PostMapping("/link")
-    public ResponseEntity<?> link(@RequestBody LinkRequest req) {
-        if (req == null || req.supabaseJwt() == null || req.supabaseJwt().isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", "supabaseJwt is required"));
-        }
+    /** {@code nonce} comes from the callback fragment the approval page redirected to. */
+    public record ConnectCompleteRequest(String nonce) {}
+
+    /**
+     * Opens a browser-mediated link handshake and returns the approval URL to send the admin to.
+     */
+    @PostMapping("/connect/start")
+    public ResponseEntity<?> connectStart(
+            @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
         try {
-            return ResponseEntity.ok(service.link(req.supabaseJwt(), req.name()));
+            return ResponseEntity.ok(
+                    connectService.start(req != null ? req.name() : null, callbackHint(req, http)));
         } catch (AccountLinkClient.UpstreamException e) {
-            // Auth failures are the admin's token, not a gateway fault: surface 401/403 as-is so
-            // the portal can prompt a re-sign-in. Anything else upstream → 502. Don't echo the
-            // raw upstream body back to the browser.
-            HttpStatus status =
-                    e.status() == HttpStatus.UNAUTHORIZED.value()
-                                    || e.status() == HttpStatus.FORBIDDEN.value()
-                            ? HttpStatus.valueOf(e.status())
-                            : HttpStatus.BAD_GATEWAY;
-            log.warn("Account-link register rejected upstream: HTTP {}", e.status());
-            return ResponseEntity.status(status).body(java.util.Map.of("error", "LINK_FAILED"));
-        } catch (IOException e) {
-            // Don't echo e.getMessage() to the browser: a DNS/connection/TLS failure can carry the
-            // configured SaaS host/IP. Log it server-side; return the same opaque body the
-            // UpstreamException branch does.
-            log.warn("Account-link failed (transport): {}", e.getMessage());
+            log.warn("Account-link connect rejected upstream: HTTP {}", e.status());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body(java.util.Map.of("error", "LINK_FAILED"));
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        } catch (IOException e) {
+            // Same reasoning as /link: a transport message can carry the configured SaaS host.
+            log.warn("Account-link connect failed (transport): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
         }
+    }
+
+    /** Re-establishes the admin's SaaS session for a server that is already linked. */
+    @PostMapping("/connect/reauth")
+    public ResponseEntity<?> connectReauth(
+            @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
+        try {
+            return ResponseEntity.ok(connectService.startReauth(callbackHint(req, http)));
+        } catch (AccountLinkClient.UpstreamException e) {
+            log.warn("Account-link reauth rejected upstream: HTTP {}", e.status());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        } catch (IOException e) {
+            log.warn("Account-link reauth failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        }
+    }
+
+    /** Called by the callback page with the nonce it found in the fragment. */
+    @PostMapping("/connect/complete")
+    public ResponseEntity<ConnectService.ConnectStatus> connectComplete(
+            @RequestBody(required = false) ConnectCompleteRequest req) {
+        return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
+    }
+
+    @GetMapping("/connect/status")
+    public ResponseEntity<ConnectService.ConnectStatus> connectStatus() {
+        return ResponseEntity.ok(connectService.status());
+    }
+
+    @PostMapping("/connect/cancel")
+    public ResponseEntity<Void> connectCancel() {
+        connectService.cancel();
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Everything we know about where the admin's browser is, for the callback. */
+    private static ConnectService.CallbackHint callbackHint(
+            ConnectStartRequest req, HttpServletRequest http) {
+        return new ConnectService.CallbackHint(
+                req != null ? req.callbackUrl() : null, http.getHeader("Origin"), baseUrlOf(http));
+    }
+
+    /**
+     * This instance's base URL as the browser reached it, including any context path so a subpath
+     * deployment builds a callback that actually resolves.
+     */
+    private static String baseUrlOf(HttpServletRequest request) {
+        String forwardedProto = firstHop(request.getHeader("X-Forwarded-Proto"));
+        String forwardedHost = firstHop(request.getHeader("X-Forwarded-Host"));
+        String scheme = forwardedProto != null ? forwardedProto : request.getScheme();
+        String hostPort;
+        if (forwardedHost != null) {
+            hostPort = forwardedHost;
+        } else {
+            int port = request.getServerPort();
+            boolean defaultPort =
+                    ("http".equals(scheme) && port == 80)
+                            || ("https".equals(scheme) && port == 443);
+            hostPort = defaultPort ? request.getServerName() : request.getServerName() + ":" + port;
+        }
+        String context = request.getContextPath() == null ? "" : request.getContextPath();
+        return scheme + "://" + hostPort + context;
+    }
+
+    private static String firstHop(String headerValue) {
+        if (headerValue == null || headerValue.isBlank()) {
+            return null;
+        }
+        String first = headerValue.split(",")[0].strip();
+        return first.isEmpty() ? null : first;
     }
 
     @GetMapping("/status")
@@ -106,12 +166,7 @@ public class AccountLinkController {
         return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
     }
 
-    /**
-     * Forces an immediate usage sync to SaaS — the same work the daily scheduler does. An admin
-     * "reconcile now" action (and a test aid so you don't wait on the scheduler). Idempotent:
-     * re-reports the current cumulative, so a repeat trigger bills nothing. {@code 204} once run;
-     * {@code 409} when metering is off (the sync bean is absent).
-     */
+    /** Forces an immediate usage sync to SaaS — the same work the daily scheduler does. */
     @PostMapping("/sync-now")
     public ResponseEntity<Void> syncNow() {
         UsageSyncService sync = syncServiceProvider.getIfAvailable();

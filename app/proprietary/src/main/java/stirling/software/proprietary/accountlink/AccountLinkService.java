@@ -1,6 +1,5 @@
 package stirling.software.proprietary.accountlink;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -9,13 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Linking orchestrator (self-hosted side of combined-billing "Mode A").
- *
- * <p>{@link #link} is the same-origin action the portal triggers: it relays the admin's Supabase
- * JWT to the SaaS register endpoint, then persists the returned device credential secure-at-rest.
- * The credential — not the JWT — authenticates all later unattended entitlement calls.
- */
+/** Linking orchestrator (self-hosted side of combined-billing "Mode A"). */
 @Slf4j
 @Service
 @Profile("!saas")
@@ -39,23 +32,8 @@ public class AccountLinkService {
     public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
 
     /**
-     * Registers this instance with the SaaS team behind {@code supabaseJwt} and stores the
-     * credential.
-     *
-     * @throws IOException if the SaaS register call fails (surfaced to the admin as a link error).
-     */
-    public LinkStatus link(String supabaseJwt, String instanceName) throws IOException {
-        AccountLinkClient.RegisterResult result = client.register(supabaseJwt, instanceName);
-        credentialStore.save(result.deviceId(), result.deviceSecret(), result.teamId());
-        entitlementCache.invalidate();
-        log.info("Account-link: instance linked to team {}", result.teamId());
-        return status();
-    }
-
-    /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
-     * revoked_at} set), then clears locally regardless. If SaaS is unreachable the local clear
-     * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
+     * revoked_at} set), then clears locally regardless.
      */
     public void unlink() {
         credentialStore

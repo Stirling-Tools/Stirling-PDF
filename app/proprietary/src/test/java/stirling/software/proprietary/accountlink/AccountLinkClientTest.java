@@ -21,9 +21,9 @@ import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Stubs the {@link HttpClient} so the SaaS endpoint is never actually called. Confirms register
- * relays the JWT and parses the credential, and that entitlement parsing + the fail-open (null on
- * unreachable) behaviour hold.
+ * Stubs the {@link HttpClient} so the SaaS endpoint is never actually called. Confirms the connect
+ * handshake refuses an authorize URL it would not navigate to and carries no user token, and that
+ * entitlement parsing + the fail-open (null on unreachable) behaviour hold.
  */
 class AccountLinkClientTest {
 
@@ -48,39 +48,42 @@ class AccountLinkClientTest {
         return resp;
     }
 
+    // register() is gone with the JWT relay, and with it the two tests that asserted this client
+    // sends an Authorization: Bearer header. Nothing here carries a user token any more.
+
     @Test
     @SuppressWarnings("unchecked")
-    void registerRelaysJwtAndParsesCredential() throws Exception {
-        // Build the stub response first: nesting response() inside when() trips Mockito's
-        // unfinished-stubbing check (inner when() runs mid outer when()).
+    void connectRequestRefusesAnAuthorizeUrlItWouldNotNavigateTo() throws Exception {
+        // The reply drives a browser navigation, so a non-absolute or non-http(s) value must fail
+        // loudly here rather than reach the admin.
         HttpResponse<String> resp =
-                response(201, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":42}");
-        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
-        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(resp);
+                response(201, "{\"requestId\":\"req-1\",\"authorizeUrl\":\"/link?request=req-1\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
 
-        AccountLinkClient.RegisterResult result = client.register("jwt-token", "My Server");
-
-        assertEquals("dev-1", result.deviceId());
-        assertEquals("sec-1", result.deviceSecret());
-        assertEquals(42L, result.teamId());
-
-        HttpRequest sent = captor.getValue();
-        assertEquals("Bearer jwt-token", sent.headers().firstValue("Authorization").orElse(null));
-        assertEquals(
-                "https://saas.example.com/api/v1/account-link/register", sent.uri().toString());
+        assertThrows(
+                java.io.IOException.class,
+                () -> client.connectRequest("n", "https://pdf.example.com/cb", "nonce", "secret"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void registerThrowsUpstreamExceptionWithStatusOnNon2xx() throws Exception {
-        HttpResponse<String> resp = response(401, "{\"error\":\"unauthorized\"}");
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-        AccountLinkClient.UpstreamException ex =
-                assertThrows(
-                        AccountLinkClient.UpstreamException.class,
-                        () -> client.register("jwt", null));
-        assertEquals(401, ex.status());
+    void connectRequestParsesTheAuthorizeUrlItIsGiven() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        201,
+                        "{\"requestId\":\"req-1\",\"expiresIn\":900,"
+                                + "\"authorizeUrl\":\"https://app.example.com/link?request=req-1\"}");
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        AccountLinkClient.ConnectRequestResult result =
+                client.connectRequest("n", "https://pdf.example.com/cb", "nonce", "secret");
+
+        assertEquals("req-1", result.requestId());
+        assertEquals("https://app.example.com/link?request=req-1", result.authorizeUrl());
+        // No user token on this call, by design.
+        assertEquals(null, captor.getValue().headers().firstValue("Authorization").orElse(null));
     }
 
     @Test
