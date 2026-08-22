@@ -110,6 +110,10 @@ class TextRedactionService {
                             .fixToUnicode(false)
                             .repairWidths(false)
                             .glyphAware(true)
+                            .ligatureAware(true)
+                            .bidiAware(true)
+                            .graphemeSafe(true)
+                            .sanitizeStructure(true)
                             .build();
 
             try (PdfDocument checkDoc = PdfDocument.open(tempIn.toPath())) {
