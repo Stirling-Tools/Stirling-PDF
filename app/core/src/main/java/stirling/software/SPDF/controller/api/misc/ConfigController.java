@@ -334,7 +334,8 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
-
+            configData.put(
+                    "enableOnboarding", applicationProperties.getSystem().getEnableOnboarding());
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 

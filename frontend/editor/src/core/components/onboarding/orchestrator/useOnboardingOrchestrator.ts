@@ -198,6 +198,7 @@ export function useOnboardingOrchestrator(
       analyticsEnabled: config?.enableAnalytics === true,
       analyticsNotConfigured: config?.enableAnalytics == null,
       desktopSlideEnabled: config?.enableDesktopInstallSlide ?? true,
+      onboardingEnabled: config?.enableOnboarding ?? true,
       licenseNotice: {
         totalUsers: serverExperience.totalUsers,
         freeTierLimit: serverExperience.freeTierLimit,
@@ -257,6 +258,7 @@ export function useOnboardingOrchestrator(
   const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
   const shouldBlockOnboarding =
     bypassOnboarding ||
+    !runtimeState.onboardingEnabled ||
     isOnAuthRoute ||
     configLoading ||
     isUnauthenticatedWithLoginEnabled;
