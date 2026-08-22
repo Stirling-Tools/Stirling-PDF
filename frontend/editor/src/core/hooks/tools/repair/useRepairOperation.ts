@@ -32,6 +32,7 @@ export const repairOperationConfig = defineSingleFileTool({
   operationType: "repair",
   endpoint: ENDPOINT,
   defaultParameters,
+  async: true,
 });
 
 export const useRepairOperation = () => {

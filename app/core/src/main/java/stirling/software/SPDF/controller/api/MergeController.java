@@ -44,6 +44,7 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
@@ -62,6 +63,7 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final JobProgressService jobProgressService;
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
@@ -275,7 +277,14 @@ public class MergeController {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
             List<Integer> invalidIndexes = new ArrayList<>();
-            for (int index = 0; index < files.length; index++) {
+            int totalInputs = files.length;
+            // Reserve 0-40% for load, 40-95% for merge sampling, 95-100% for finalization.
+            final int loadRangeEnd = 40;
+            final int mergeRangeEnd = 95;
+            for (int index = 0; index < totalInputs; index++) {
+                int loadPct = (int) (loadRangeEnd * (index + 1.0) / totalInputs);
+                jobProgressService.report(
+                        loadPct, 100, "Loading file " + (index + 1) + " of " + totalInputs);
                 MultipartFile multipartFile = files[index];
                 File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
                 filesToDelete.add(tempFile);
@@ -288,6 +297,8 @@ public class MergeController {
                 }
             }
 
+            jobProgressService.report(loadRangeEnd, 100, "Merging documents");
+
             int[] pageCounts;
             try {
                 pageCounts =
@@ -298,6 +309,8 @@ public class MergeController {
                     throw ExceptionUtils.createMultiplePdfCorruptedException(e);
                 }
                 throw e;
+            } finally {
+                jobProgressService.report(mergeRangeEnd, 100, "Finalizing merged document");
             }
 
             boolean sigFlattenNeeded = false;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack } from "@mantine/core";
+import { Progress, Stack, Text } from "@mantine/core";
 import {
   createToolSteps,
   ToolStepProvider,
@@ -171,6 +171,21 @@ export function createToolFlow<TParams = unknown>(
                   data-testid={eb.testId}
                   data-tour="run-button"
                 />
+                {config.review.operation.isLoading &&
+                  typeof config.review.operation.progress?.percent ===
+                    "number" && (
+                    <Stack gap={4} mx="md" mt="xs">
+                      <Progress
+                        value={config.review.operation.progress.percent}
+                        animated
+                        transitionDuration={200}
+                      />
+                      <Text size="sm">
+                        {config.review.operation.progress.message ??
+                          `${config.review.operation.progress.percent}%`}
+                      </Text>
+                    </Stack>
+                  )}
                 {config.belowExecuteButton}
               </>
             );

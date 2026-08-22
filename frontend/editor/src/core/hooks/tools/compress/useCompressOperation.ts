@@ -99,6 +99,7 @@ export const compressOperationConfig = defineSingleFileTool({
   operationType: "compress",
   endpoint: ENDPOINT,
   defaultParameters,
+  async: true,
 });
 
 export const useCompressOperation = () => {

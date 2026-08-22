@@ -159,6 +159,15 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
    * and exact input-output mapping is difficult.
    */
   consumesAllInputs?: boolean;
+
+  /**
+   * Submit the request with `?async=true`, then poll `/api/v1/general/job/{jobId}` for progress
+   * until complete, and finally download the result. Enables per-operation progress reporting
+   * for long-running backend jobs (e.g. OCR).
+   *
+   * Only honored for single-file tools today.
+   */
+  async?: boolean;
 }
 
 interface SingleFileToolBody<

@@ -44,6 +44,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.SplitPagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +54,7 @@ class SplitPDFControllerTest {
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private JobProgressService jobProgressService;
     @InjectMocks private SplitPDFController controller;
 
     @BeforeEach
