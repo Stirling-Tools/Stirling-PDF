@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller.api;
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
@@ -46,6 +48,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
+import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -78,6 +81,7 @@ public class ProprietaryUIDataController {
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
+    private final InviteTokenRepository inviteTokenRepository;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -94,7 +98,8 @@ public class ProprietaryUIDataController {
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
             LoginAttemptService loginAttemptService,
-            ResourceAccessService resourceAccessService) {
+            ResourceAccessService resourceAccessService,
+            InviteTokenRepository inviteTokenRepository) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -110,6 +115,7 @@ public class ProprietaryUIDataController {
         this.mfaService = mfaService;
         this.loginAttemptService = loginAttemptService;
         this.resourceAccessService = resourceAccessService;
+        this.inviteTokenRepository = inviteTokenRepository;
     }
 
     /**
@@ -342,8 +348,10 @@ public class ProprietaryUIDataController {
         int maxAllowedUsers = licenseSettingsService.calculateMaxAllowedUsers();
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
-        int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
+        UserLicenseSettings licenseSettings = licenseSettingsService.getSettings();
+        int licenseMaxUsers = licenseSettings.getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a
         // LEADER membership on any team (mirrors /me), but the portal default policy only
@@ -386,6 +394,9 @@ public class ProprietaryUIDataController {
         data.setAvailableSlots(availableSlots);
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
+        data.setServerQuantity(licenseSettings.getServerQuantity());
+        data.setUserBlockSize(licenseSettings.getUserBlockSize());
+        data.setPendingInvites(pendingInvites);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
         // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
@@ -660,6 +671,23 @@ public class ProprietaryUIDataController {
         private long availableSlots;
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
+
+        /**
+         * Capacity breakdown for the People page: how many servers the licence covers and how many
+         * users each grants. Both 0 on a licence issued before the cap, in which case the UI has
+         * only {@code maxAllowedUsers} to show.
+         */
+        private int serverQuantity;
+
+        private int userBlockSize;
+
+        /**
+         * Invites issued but not yet redeemed. They hold a slot the same way a disabled account
+         * does, so the capacity UI can show what is consuming the limit and offer a way to reclaim
+         * it before asking anyone to pay.
+         */
+        private long pendingInvites;
+
         private boolean premiumEnabled;
         private boolean mailEnabled;
         private boolean emailInvitesEnabled;
