@@ -4,6 +4,7 @@ export interface OgEntry {
   image: string;
   title: string;
   description: string;
+  noindex?: boolean;
   /** Punchier social-card title; falls back to `title` for the <title> tag. */
   ogTitle?: string;
 }
@@ -11,16 +12,43 @@ export interface OgEntry {
 export interface OgInjectOptions {
   ogBase?: string;
   pageUrlPath?: string | null;
+  canonicalPath?: string | null;
+  noindex?: boolean;
+  siteRoot?: string | null;
+  isHome?: boolean;
+  pathPrefix?: string;
+}
+
+export interface OgNavLink {
+  path: string;
+  label: string;
 }
 
 export interface OgManifest {
   default: OgEntry;
   byTool: Record<string, OgEntry>;
   byPath: Record<string, string>;
+  /** Alias path -> primary path it canonicalises to (aliases only). */
+  canonicalByPath?: Record<string, string>;
+  navLinks?: OgNavLink[];
 }
 
 export function escapeHtml(value: string): string;
-export function buildOgTags(entry: OgEntry, opts?: OgInjectOptions): string;
+export function buildOgTags(
+  entry: OgEntry,
+  opts?: { ogBase?: string; pageUrlPath?: string | null; pathPrefix?: string },
+): string;
+export function buildRobotsTag(noindex: boolean): string;
+export function buildCanonicalTag(canonicalUrl: string | null): string | null;
+export function buildJsonLd(
+  entry: OgEntry,
+  opts: { siteRoot: string; pageUrl: string; isHome: boolean },
+): string;
+export function buildBodyContent(
+  entry: OgEntry,
+  opts?: { navLinks?: OgNavLink[]; heading?: string | null },
+): string;
+export function injectBody(html: string, content: string): string;
 export function injectOg(
   html: string,
   entry: OgEntry,
@@ -31,4 +59,10 @@ export function prerenderOg(args: {
   manifest: OgManifest;
   ogBase?: string;
   baseHref?: string;
+  /** Bake the crawlable landing body; only useful on public web deploys. */
+  injectLanding?: boolean;
 }): Promise<number>;
+export function buildSitemap(
+  manifest: OgManifest,
+  opts: { ogBase: string; pathPrefix?: string },
+): string | null;

@@ -98,8 +98,9 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
-      // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
-      const { prerenderOg } = await import("./scripts/og-prerender.mjs");
+      const { prerenderOg, buildSitemap } =
+        // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
+        await import("./scripts/og-prerender.mjs");
       const ogBase = (
         process.env.VITE_OG_BASE_URL ||
         process.env.CF_PAGES_URL ||
@@ -108,6 +109,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       // Absolute deploy base for nested routes' <base href> (matches vite `base`).
       const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
       const baseHref = subpath ? `/${subpath}/` : "/";
+      const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
       let manifest;
       try {
         manifest = JSON.parse(
@@ -121,13 +123,43 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         return;
       }
       const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
+      // The crawlable landing body only pays for itself where a crawler can
+      // reach the page; self-hosted and desktop builds just get the flash.
+      const injectLanding = Boolean(ogBase);
+      const count = await prerenderOg({
+        distDir,
+        manifest,
+        ogBase,
+        baseHref,
+        injectLanding,
+      });
       console.log(
         `[prerender-og] wrote ${count} prerendered route pages` +
           (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
+            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
+            : " (root-relative URLs, no landing body)"),
       );
+
+      // Sitemaps need absolute URLs, so only emit when a canonical origin is
+      // known (custom domain or Cloudflare Pages). Self-hosted builds skip it.
+      const sitemap = buildSitemap(manifest, { ogBase, pathPrefix });
+      if (sitemap) {
+        await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+        // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+        const robotsPath = path.join(distDir, "robots.txt");
+        try {
+          let robots = await fs.readFile(robotsPath, "utf8");
+          if (!/^\s*Sitemap:/im.test(robots)) {
+            robots =
+              robots.replace(/\s*$/, "\n") +
+              `Sitemap: ${ogBase}${pathPrefix}/sitemap.xml\n`;
+            await fs.writeFile(robotsPath, robots);
+          }
+        } catch {
+          // no robots.txt in dist - nothing to link
+        }
+        console.log(`[prerender-og] wrote sitemap.xml (base=${ogBase})`);
+      }
     },
   };
 }
