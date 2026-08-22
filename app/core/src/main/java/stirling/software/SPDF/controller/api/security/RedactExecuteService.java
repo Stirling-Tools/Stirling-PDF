@@ -30,6 +30,8 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
+import stirling.software.SPDF.pdf.redaction.RedactionAssurance;
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -140,14 +142,34 @@ class RedactExecuteService {
                 applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
-            return manualRedactionService.finalizeRedaction(
-                    document,
-                    foundTexts,
-                    style.getColor(),
-                    style.getPadding(),
-                    convertToImage,
-                    !needsOverlayOnly);
+            TempFile out =
+                    manualRedactionService.finalizeRedaction(
+                            document,
+                            foundTexts,
+                            style.getColor(),
+                            style.getPadding(),
+                            convertToImage,
+                            !needsOverlayOnly);
 
+            // Only verify when removal was actually promised: OVERLAY_ONLY is an explicit
+            // request for a cover-up, but the implicit fallback above is a silent one.
+            if (hasTextOps && !overlayOnly) {
+                try {
+                    RedactionAssurance.scrubAndVerify(
+                            out.getFile().toPath(),
+                            RedactionAssurance.targetsFor(textValues, false, false));
+                    RedactionAssurance.scrubAndVerify(
+                            out.getFile().toPath(),
+                            RedactionAssurance.targetsFor(regexPatterns, true, false));
+                } catch (Exception e) {
+                    out.close();
+                    throw e;
+                }
+            }
+            return out;
+
+        } catch (RedactionVerificationFailedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);

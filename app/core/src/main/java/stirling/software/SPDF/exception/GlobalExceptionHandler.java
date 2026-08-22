@@ -1038,6 +1038,54 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle RedactionVerificationFailedException.
+     *
+     * <p>When thrown: Redaction could not prove the target text is gone, so the document was
+     * withheld rather than returned looking redacted while still carrying the text. Messages
+     * identify targets by ordinal only - the target text must never reach a response body.
+     *
+     * <p>Client action: Retry with "convert to image" enabled for a guaranteed (rasterised)
+     * redaction; retrying unchanged will not help.
+     *
+     * @param ex the RedactionVerificationFailedException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY
+     */
+    @ExceptionHandler(
+            stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException.class)
+    public ResponseEntity<ProblemDetail> handleRedactionVerificationFailed(
+            stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException ex,
+            HttpServletRequest request) {
+        log.warn(
+                "Redaction verification failed at {}: {}",
+                request.getRequestURI(),
+                ex.getMessage());
+
+        String title =
+                getLocalizedMessage(
+                        "error.redactionUnverifiable.title",
+                        ErrorTitles.REDACTION_UNVERIFIABLE_DEFAULT);
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request);
+        problemDetail.setType(URI.create(ErrorTypes.REDACTION_UNVERIFIABLE));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title); // Ensure serialization
+        addStandardHints(
+                problemDetail,
+                "error.redactionUnverifiable.hints",
+                List.of(
+                        "Enable the convert-to-image option for a guaranteed rasterised"
+                                + " redaction.",
+                        "The document was withheld because removal of the target could not be"
+                                + " verified."));
+        problemDetail.setProperty(
+                "actionRequired", "Re-run the redaction with convert-to-image enabled.");
+
+        return ResponseEntity.unprocessableEntity().contentType(PROBLEM_JSON).body(problemDetail);
+    }
+
+    /**
      * Handle IllegalArgumentException.
      *
      * <p>When thrown: When method receives an illegal or inappropriate argument.
@@ -1158,6 +1206,11 @@ public class GlobalExceptionHandler {
         } else if (cause instanceof IllegalArgumentException) {
             // Unwrap and handle IllegalArgumentException (business logic validation errors)
             return handleIllegalArgument((IllegalArgumentException) cause, request);
+        } else if (cause
+                instanceof
+                stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException rvfe) {
+            // Unwrap so a job-wrapped verification failure still maps to 422.
+            return handleRedactionVerificationFailed(rvfe, request);
         }
 
         // Not a wrapped exception - treat as unexpected error
@@ -1460,6 +1513,7 @@ public class GlobalExceptionHandler {
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
         static final String UNEXPECTED = "/errors/unexpected";
+        static final String REDACTION_UNVERIFIABLE = "/errors/redaction-unverifiable";
     }
 
     /** Constants for default error titles. */
@@ -1476,6 +1530,7 @@ public class GlobalExceptionHandler {
         static final String EML_FORMAT_DEFAULT = "Invalid EML File Format";
         static final String FORMAT_ERROR_DEFAULT = "Invalid File Format";
         static final String VALIDATION_DEFAULT = "Validation Error";
+        static final String REDACTION_UNVERIFIABLE_DEFAULT = "Redaction Could Not Be Verified";
         static final String REQUEST_VALIDATION_FAILED_DEFAULT = "Request Validation Failed";
         static final String MISSING_PARAMETER_DEFAULT = "Missing Request Parameter";
         static final String MISSING_FILE_DEFAULT = "Missing File Upload";
