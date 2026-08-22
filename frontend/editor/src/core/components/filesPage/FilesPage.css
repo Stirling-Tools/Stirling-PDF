@@ -168,14 +168,6 @@
   overflow-x: hidden;
 }
 
-/* Selecting on a phone swaps this row for a contextual action bar, which parks
-   the filters, sort and view toggle until the selection clears. Tint it so the
-   row reads as a temporary mode rather than as controls having disappeared. */
-.files-page-toolbar[data-selection-mode] {
-  background: var(--c-primary-subtle);
-  border-bottom-color: var(--c-primary);
-}
-
 .files-page-toolbar-info {
   font-size: 0.85rem;
   color: var(--c-text-muted);
