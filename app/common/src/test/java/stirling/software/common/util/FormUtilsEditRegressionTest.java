@@ -833,4 +833,79 @@ class FormUtilsEditRegressionTest {
                 "a name with nothing after the parent prefix is not a rename");
         assertNull(FormUtils.renameProblem("Customer.Name", "Customer.Phone"));
     }
+
+    /** A type change must leave the field on its own page, not relocate it to the last one. */
+    @Test
+    void typeChangeKeepsTheFieldOnItsPage() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = new PDAcroForm(document);
+            for (int i = 0; i < 5; i++) {
+                document.addPage(new PDPage(PDRectangle.A4));
+            }
+            form.setDefaultResources(new PDResources());
+            document.getDocumentCatalog().setAcroForm(form);
+
+            FormUtils.addNewFields(
+                    document,
+                    List.of(
+                            new FormUtils.NewFormFieldDefinition(
+                                    "onPageTwo",
+                                    null,
+                                    "text",
+                                    1,
+                                    50f,
+                                    700f,
+                                    200f,
+                                    20f,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null)));
+
+            FormUtils.ModifyFormFieldDefinition retype =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "onPageTwo",
+                            null,
+                            null,
+                            "checkbox",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+            FormUtils.modifyFormFields(document, List.of(retype));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            PDField field = acroForm.getField("onPageTwo");
+            assertNotNull(field, "the retyped field should exist");
+            int page = -1;
+            for (int i = 0; i < reloaded.getNumberOfPages(); i++) {
+                for (var annot : reloaded.getPage(i).getAnnotations()) {
+                    if (annot.getCOSObject() == field.getWidgets().get(0).getCOSObject()) page = i;
+                }
+            }
+            assertEquals(
+                    1, page, "a retyped field must stay on its own page, not move to the last");
+        }
+    }
 }

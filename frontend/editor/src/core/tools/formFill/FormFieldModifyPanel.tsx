@@ -282,90 +282,94 @@ export function FormFieldModifyPanel({
                       </Tooltip>
                     </Group>
 
+                    {/* Children are built only while open: Collapse keeps them mounted, so
+                        every unopened row would otherwise carry a full property editor. */}
                     <Collapse in={selected && !deleted}>
-                      <div
-                        style={{ marginTop: 8 }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FormFieldPropertyEditor
-                          value={editorValue(field)}
-                          onChange={(patch) =>
-                            stageModification(
-                              field.name,
-                              patch as Partial<ModifyFieldDefinition>,
-                            )
-                          }
-                          showName
-                          allowTypeChange
-                        />
+                      {selected && !deleted && (
+                        <div
+                          style={{ marginTop: 8 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FormFieldPropertyEditor
+                            value={editorValue(field)}
+                            onChange={(patch) =>
+                              stageModification(
+                                field.name,
+                                patch as Partial<ModifyFieldDefinition>,
+                              )
+                            }
+                            showName
+                            allowTypeChange
+                          />
 
-                        {coords && (
-                          <Group gap={6} mt="xs" grow>
-                            <NumberInput
-                              size="xs"
-                              label="X"
-                              value={Math.round(coords.x)}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: v,
-                                  y: coords.y,
-                                  width: coords.width,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="Y"
-                              value={Math.round(coords.y)}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: v,
-                                  width: coords.width,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="W"
-                              value={Math.round(coords.width)}
-                              min={1}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: coords.y,
-                                  width: v,
-                                  height: coords.height,
-                                })
-                              }
-                            />
-                            <NumberInput
-                              size="xs"
-                              label="H"
-                              value={Math.round(coords.height)}
-                              min={1}
-                              onChange={(v) =>
-                                typeof v === "number" &&
-                                stageModification(field.name, {
-                                  pageIndex: pageIdx,
-                                  x: coords.x,
-                                  y: coords.y,
-                                  width: coords.width,
-                                  height: v,
-                                })
-                              }
-                            />
-                          </Group>
-                        )}
-                      </div>
+                          {coords && (
+                            <Group gap={6} mt="xs" grow>
+                              <NumberInput
+                                size="xs"
+                                label="X"
+                                value={Math.round(coords.x)}
+                                onChange={(v) =>
+                                  typeof v === "number" &&
+                                  stageModification(field.name, {
+                                    pageIndex: pageIdx,
+                                    x: v,
+                                    y: coords.y,
+                                    width: coords.width,
+                                    height: coords.height,
+                                  })
+                                }
+                              />
+                              <NumberInput
+                                size="xs"
+                                label="Y"
+                                value={Math.round(coords.y)}
+                                onChange={(v) =>
+                                  typeof v === "number" &&
+                                  stageModification(field.name, {
+                                    pageIndex: pageIdx,
+                                    x: coords.x,
+                                    y: v,
+                                    width: coords.width,
+                                    height: coords.height,
+                                  })
+                                }
+                              />
+                              <NumberInput
+                                size="xs"
+                                label="W"
+                                value={Math.round(coords.width)}
+                                min={1}
+                                onChange={(v) =>
+                                  typeof v === "number" &&
+                                  stageModification(field.name, {
+                                    pageIndex: pageIdx,
+                                    x: coords.x,
+                                    y: coords.y,
+                                    width: v,
+                                    height: coords.height,
+                                  })
+                                }
+                              />
+                              <NumberInput
+                                size="xs"
+                                label="H"
+                                value={Math.round(coords.height)}
+                                min={1}
+                                onChange={(v) =>
+                                  typeof v === "number" &&
+                                  stageModification(field.name, {
+                                    pageIndex: pageIdx,
+                                    x: coords.x,
+                                    y: coords.y,
+                                    width: coords.width,
+                                    height: v,
+                                  })
+                                }
+                              />
+                            </Group>
+                          )}
+                        </div>
+                      )}
                     </Collapse>
                   </Paper>
                 );

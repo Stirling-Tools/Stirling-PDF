@@ -173,8 +173,20 @@ function reducer(state: FormFillState, action: Action): FormFillState {
       return { ...state, isDirty: true };
     case "SET_ACTIVE_FIELD":
       return { ...state, activeFieldName: action.fieldName };
-    case "SET_VALIDATION_ERRORS":
-      return { ...state, validationErrors: action.errors };
+    case "SET_VALIDATION_ERRORS": {
+      // The debounce mints a fresh identical map ~3x/s while typing; without this every
+      // keystroke re-renders every consumer and every mounted page overlay.
+      const prev = state.validationErrors;
+      const next = action.errors;
+      const keys = Object.keys(next);
+      if (
+        keys.length === Object.keys(prev).length &&
+        keys.every((k) => prev[k] === next[k])
+      ) {
+        return state;
+      }
+      return { ...state, validationErrors: next };
+    }
     case "CLEAR_VALIDATION_ERROR": {
       if (!state.validationErrors[action.fieldName]) return state;
       const { [action.fieldName]: _, ...rest } = state.validationErrors;
