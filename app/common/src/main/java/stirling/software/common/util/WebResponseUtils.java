@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -66,7 +67,7 @@ public class WebResponseUtils {
 
         // Open Byte Array and save document to it
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
+        document.save(baos, CompressParameters.NO_COMPRESSION);
 
         return baosToWebResponse(baos, docName);
     }
@@ -86,7 +87,7 @@ public class WebResponseUtils {
             throws IOException {
         TempFile tempFile = tempFileManager.createManagedTempFile(".pdf");
         try {
-            document.save(tempFile.getFile());
+            document.save(tempFile.getFile(), CompressParameters.NO_COMPRESSION);
         } catch (IOException e) {
             tempFile.close();
             throw e;
