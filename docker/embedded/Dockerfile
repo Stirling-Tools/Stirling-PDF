@@ -22,9 +22,11 @@ RUN apt-get update \
 # Optionally bake an Auto Form Detection model into the image, seeded into the writable configs
 # model dir at startup by FormDetectionModelManager (FORMDETECTION_PREINSTALLEDMODELDIR below).
 #
-# Empty by default ON PURPOSE. Baking a model in makes us its distributor, so only weights we
-# hold a redistribution grant for may go here - which the FFDNet checkpoints are not, as their
-# publisher declares no licence at all. Set all three args to pre-bundle a model you may ship:
+# Empty by default ON PURPOSE, and unlike Dockerfile.fat this image is meant to stay that way:
+# it has internet access, so an admin install costs 0MB in the image against ~27MB of pull for
+# every user who never opens the tool. Baking a model in also makes us its distributor, so only
+# weights we hold a redistribution grant for may go here - which the FFDNet checkpoints are not,
+# as their publisher declares no licence at all. Set all three args to pre-bundle a model you may ship:
 #   --build-arg FORM_DETECTION_MODEL_URL=... \
 #   --build-arg FORM_DETECTION_MODEL_SHA256=... \
 #   --build-arg FORM_DETECTION_MODEL_ID=ffdetr

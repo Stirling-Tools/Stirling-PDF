@@ -225,11 +225,18 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m =
                 manager(modelDir, e, Mockito.mock(EndpointConfiguration.class), props);
         m.init();
-        assertTrue(Files.exists(modelDir.resolve("test-model.onnx")), "seeded on first boot");
-        assertEquals("test-model", m.status().getActiveModelId());
+        assertEquals("test-model", m.status().getActiveModelId(), "seeded on first boot");
+        assertEquals("ready", m.status().getStatus());
+        assertTrue(m.status().getInstalled().contains("test-model"));
+        assertFalse(
+                Files.exists(modelDir.resolve("test-model.onnx")),
+                "image-baked model is read in place, never duplicated into the writable dir");
 
         m.deleteModel("test-model");
-        assertFalse(Files.exists(modelDir.resolve("test-model.onnx")));
+        assertEquals("not_installed", m.status().getStatus());
+        assertTrue(
+                Files.exists(preDir.resolve("test-model.onnx")),
+                "uninstall must not touch the read-only image copy");
         assertTrue(
                 Files.exists(modelDir.resolve("test-model.onnx.removed")),
                 "uninstall records a tombstone");
@@ -240,10 +247,10 @@ class FormDetectionModelManagerTest {
         FormDetectionModelManager m2 =
                 manager(modelDir, e, Mockito.mock(EndpointConfiguration.class), props2);
         m2.init();
-        assertFalse(
-                Files.exists(modelDir.resolve("test-model.onnx")),
-                "tombstoned model must not be re-seeded");
         assertEquals("not_installed", m2.status().getStatus());
+        assertFalse(
+                m2.status().getInstalled().contains("test-model"),
+                "tombstoned model must not be re-seeded");
 
         // An explicit reinstall clears the tombstone and seeding works again afterwards.
         m2.startInstall("test-model");

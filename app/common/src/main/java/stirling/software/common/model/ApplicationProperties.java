@@ -464,10 +464,10 @@ public class ApplicationProperties {
         private String modelDir = "";
 
         /**
-         * Read-only dir of models baked into the image (e.g. the Docker server image pre-downloads
-         * FFDNet-S here). On startup any {@code <catalogId>.onnx} found here is copied into the
-         * writable model dir if not already present, and activated if no model is active - so the
-         * feature works out-of-the-box. Blank (default) disables seeding.
+         * Read-only dir of models baked into the image (the air-gapped image bakes one here). On
+         * startup any {@code <catalogId>.onnx} found here is activated if no model is active, so
+         * the feature works out-of-the-box. The file is read in place rather than copied into the
+         * writable model dir, so it is not stored twice. Blank (default) disables seeding.
          */
         private String preinstalledModelDir = "";
     }

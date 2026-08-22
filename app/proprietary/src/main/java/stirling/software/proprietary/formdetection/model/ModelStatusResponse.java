@@ -23,7 +23,7 @@ public class ModelStatusResponse {
     /** Id of the active/usable model, or blank when none. */
     private String activeModelId;
 
-    /** Model ids that currently have an .onnx file on disk. */
+    /** Model ids usable right now: downloaded, plus any the image baked in. */
     private List<String> installed;
 
     /** Last error message, or null. */

@@ -11,7 +11,7 @@ with onnxruntime alone, exactly as it loads any other model in the catalogue.
     python scripts/export-ffdetr-onnx.py --out build/ffdetr
 
 Emits `ffdetr-int8.onnx` (~37MB, the one to host) plus the fp32 graph it came from, and prints
-the sha256 for `model-catalog.json`. int8 measures smaller than FFDNet-S at 38.4MB and, on a
+the sha256 for `model-catalog.json` and docker/embedded/Dockerfile.fat. int8 measures smaller than FFDNet-S at 38.4MB and, on a
 form page, returns detections indistinguishable from fp32.
 """
 
@@ -24,7 +24,10 @@ import sys
 import warnings
 from pathlib import Path
 
-# Pinned so a re-export is byte-reproducible; bump deliberately, not incidentally.
+# Pinned so a re-export uses the same checkpoint; bump deliberately, not incidentally. The OUTPUT
+# is not byte-reproducible - onnxruntime writes its registered opset_import domains into the graph,
+# so a different runtime version shifts the tail and the sha256. Check equivalence by running both
+# graphs on one input, not by comparing hashes; update model-catalog.json when you republish.
 REPO = "jbarrow/FFDetr"
 REVISION = "56f4e4235e28dcb2953513dc020bb191a2f54cfe"
 CHECKPOINT_SHA256 = "f852e1bac18c8f435b82270fc8ff8e2ca4a2cd8869c411fa8f473f16e69585ef"
@@ -141,7 +144,8 @@ def main() -> int:
     print(f"  sha256    {sha256_of(int8)}")
     print()
     print("Host this file, then set onnxUrl/sha256/sizeBytes on the ffdetr entry in")
-    print("app/proprietary/src/main/resources/formdetection/model-catalog.json.")
+    print("app/proprietary/src/main/resources/formdetection/model-catalog.json, and the matching")
+    print("FORM_DETECTION_MODEL_* build args in docker/embedded/Dockerfile.fat.")
     return 0
 
 

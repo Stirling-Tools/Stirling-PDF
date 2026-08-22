@@ -207,7 +207,8 @@ def generatedFrontendPaths = [
     'samples',
     'pdfium',
     'vendor',
-    'pdfjs'
+    'pdfjs',
+    'ort'
 ]
 
 tasks.register('npmInstall', Exec) {

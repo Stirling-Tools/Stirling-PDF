@@ -426,7 +426,9 @@ public class FormDetectionModelManager {
         if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
             return;
         }
-        Optional<Path> file = installedModelFile(id);
+        // Only the downloaded copy is ours to remove; an image-baked file is read-only and is
+        // retired by the tombstone below instead.
+        Optional<Path> file = modelFileIn(modelDir(), id);
         if (file.isPresent()) {
             try {
                 Files.deleteIfExists(file.get());
@@ -461,15 +463,11 @@ public class FormDetectionModelManager {
 
     public ModelStatusResponse status() {
         Path dir = modelDir();
-        List<String> installed = new ArrayList<>();
-        if (Files.isDirectory(dir)) {
-            try (DirectoryStream<Path> s = Files.newDirectoryStream(dir, "*.onnx")) {
-                for (Path p : s) {
-                    String fn = p.getFileName().toString();
-                    installed.add(fn.substring(0, fn.length() - ".onnx".length()));
-                }
-            } catch (IOException e) {
-                log.debug("Could not list installed models in {}", dir, e);
+        List<String> installed = new ArrayList<>(listModelIds(dir));
+        // Image-baked models count as installed even though they were never copied here.
+        for (String id : listModelIds(preinstalledDir())) {
+            if (!installed.contains(id) && !isTombstoned(id)) {
+                installed.add(id);
             }
         }
         return new ModelStatusResponse(
@@ -491,15 +489,24 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Locate an installed model by listing the model dir, so the path handed to the file API comes
-     * from the directory itself and can never escape it via the supplied id.
+     * Locate an installed model by listing a directory, so the path handed to the file API comes
+     * from the directory itself and can never escape it via the supplied id. The writable model dir
+     * wins; an image-baked copy is read in place rather than duplicated into it.
      */
     private Optional<Path> installedModelFile(String id) {
         if (StringUtils.isBlank(id) || !SAFE_ID.matcher(id).matches()) {
             return Optional.empty();
         }
-        Path dir = modelDir();
-        if (!Files.isDirectory(dir)) {
+        Optional<Path> downloaded = modelFileIn(modelDir(), id);
+        if (downloaded.isPresent()) {
+            return downloaded;
+        }
+        // An uninstalled model must stay uninstalled even though the image copy is still there.
+        return isTombstoned(id) ? Optional.empty() : modelFileIn(preinstalledDir(), id);
+    }
+
+    private Optional<Path> modelFileIn(Path dir, String id) {
+        if (dir == null || !Files.isDirectory(dir)) {
             return Optional.empty();
         }
         String wanted = id + ".onnx";
@@ -510,9 +517,36 @@ public class FormDetectionModelManager {
                 }
             }
         } catch (IOException e) {
-            log.debug("Could not list installed models in {}", dir, e);
+            log.debug("Could not list models in {}", dir, e);
         }
         return Optional.empty();
+    }
+
+    /** Ids of the {@code <id>.onnx} files in a directory; empty when it is unset or missing. */
+    private List<String> listModelIds(Path dir) {
+        List<String> ids = new ArrayList<>();
+        if (dir == null || !Files.isDirectory(dir)) {
+            return ids;
+        }
+        try (DirectoryStream<Path> s = Files.newDirectoryStream(dir, "*.onnx")) {
+            for (Path p : s) {
+                String fn = p.getFileName().toString();
+                ids.add(fn.substring(0, fn.length() - ".onnx".length()));
+            }
+        } catch (IOException e) {
+            log.debug("Could not list models in {}", dir, e);
+        }
+        return ids;
+    }
+
+    private boolean isTombstoned(String id) {
+        return SAFE_ID.matcher(id).matches() && Files.exists(tombstoneFor(id));
+    }
+
+    /** Read-only dir of image-baked models, or null when the deployment bakes none. */
+    private Path preinstalledDir() {
+        String dir = applicationProperties.getFormDetection().getPreinstalledModelDir();
+        return StringUtils.isBlank(dir) ? null : Paths.get(dir);
     }
 
     public Optional<ModelCatalogEntry> getActiveEntry() {
@@ -538,58 +572,34 @@ public class FormDetectionModelManager {
     }
 
     /**
-     * Copy any image-baked models (see {@code formDetection.preinstalledModelDir}) into the
-     * writable model dir if not already present, and activate one when nothing is active yet. Lets
-     * the Docker server image ship with FFDNet-S ready without an admin install. No-op when the dir
-     * is unset or missing (desktop/local).
+     * Activate an image-baked model (see {@code formDetection.preinstalledModelDir}) when nothing
+     * is active yet, so the air-gapped image works without an admin install. The file is read where
+     * the image put it - copying it into the writable model dir would store the same ~37MB twice on
+     * every running container. No-op when the dir is unset or missing (desktop/local).
      */
     private void seedPreinstalledModels() {
-        String preDir = applicationProperties.getFormDetection().getPreinstalledModelDir();
-        if (StringUtils.isBlank(preDir)) {
+        Path src = preinstalledDir();
+        if (src == null || !Files.isDirectory(src)) {
             return;
         }
-        Path src = Paths.get(preDir);
-        if (!Files.isDirectory(src)) {
-            return;
-        }
-        Path dir = modelDir();
-        try {
-            Files.createDirectories(dir);
-        } catch (IOException e) {
-            log.warn("Cannot create model dir to seed pre-installed models: {}", e.getMessage());
-            return;
-        }
-        if (!isWritable(dir)) {
-            log.warn("Model dir {} not writable; skipping pre-installed model seeding", dir);
-            return;
-        }
-        try (DirectoryStream<Path> models = Files.newDirectoryStream(src, "*.onnx")) {
-            for (Path p : models) {
-                String fn = p.getFileName().toString();
-                String id = fn.substring(0, fn.length() - ".onnx".length());
-                if (!SAFE_ID.matcher(id).matches() || catalog.getById(id).isEmpty()) {
-                    continue;
-                }
-                if (Files.exists(tombstoneFor(id))) {
-                    log.info("Skipping pre-installed model '{}': an admin uninstalled it", id);
-                    continue;
-                }
-                Path target = dir.resolve(id + ".onnx");
-                if (!Files.exists(target)) {
-                    Files.copy(p, target, StandardCopyOption.COPY_ATTRIBUTES);
-                    log.info("Seeded pre-installed Auto Form Detection model '{}'", id);
-                }
-                if (StringUtils.isBlank(activeModelId())) {
-                    applicationProperties.getFormDetection().setActiveModelId(id);
-                    try {
-                        GeneralUtils.saveKeyToSettings("formDetection.activeModelId", id);
-                    } catch (IOException e) {
-                        log.warn("Could not persist seeded activeModelId: {}", e.getMessage());
-                    }
-                }
+        for (String id : listModelIds(src)) {
+            if (!SAFE_ID.matcher(id).matches() || catalog.getById(id).isEmpty()) {
+                continue;
             }
-        } catch (IOException e) {
-            log.warn("Failed to seed pre-installed models from {}: {}", src, e.getMessage());
+            if (isTombstoned(id)) {
+                log.info("Skipping pre-installed model '{}': an admin uninstalled it", id);
+                continue;
+            }
+            if (StringUtils.isNotBlank(activeModelId())) {
+                continue;
+            }
+            applicationProperties.getFormDetection().setActiveModelId(id);
+            try {
+                GeneralUtils.saveKeyToSettings("formDetection.activeModelId", id);
+            } catch (IOException e) {
+                log.warn("Could not persist seeded activeModelId: {}", e.getMessage());
+            }
+            log.info("Activated pre-installed Auto Form Detection model '{}'", id);
         }
     }
 

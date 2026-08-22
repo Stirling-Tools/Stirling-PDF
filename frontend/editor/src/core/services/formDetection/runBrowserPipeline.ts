@@ -34,11 +34,31 @@ export interface BrowserDetectResult {
   pageCount: number;
 }
 
+/** Thrown when a page blows the caller's time budget, so `auto` can hand off to the server. */
+export class BrowserEngineTooSlowError extends Error {
+  constructor(readonly pageMs: number) {
+    super(
+      `In-browser detection took ${Math.round(pageMs)}ms on the first page`,
+    );
+    this.name = "BrowserEngineTooSlowError";
+  }
+}
+
+export interface BrowserDetectOptions {
+  /**
+   * Abandon the run if the first page takes longer than this and pages remain. Only the caller that
+   * has somewhere to fall back to should set it - `browser` mode passes nothing, because bailing to
+   * the server is exactly what that mode exists to prevent.
+   */
+  pageBudgetMs?: number;
+}
+
 export async function runBrowserDetection(
   pdfBytes: ArrayBuffer,
   activeEntry: FormDetectionCatalogEntry,
   confThreshold?: number,
   onStage?: (stage: DetectionStage) => void,
+  options?: BrowserDetectOptions,
 ): Promise<BrowserDetectResult> {
   const spec = resolveSpec(activeEntry);
   const score =
@@ -78,14 +98,23 @@ export async function runBrowserDetection(
     },
   );
   let fields: DetectedField[] = [];
-  for (const page of pages) {
+  for (const [index, page] of pages.entries()) {
     onStage?.({
       kind: "analyzing",
       page: page.pageIndex + 1,
       pageCount: pages.length,
     });
+    const startedAt = performance.now();
     const pre = preprocess(page.rgba, page.widthPx, page.heightPx, spec);
     const out = await runInference(session, pre.chw, spec.inputSize);
+    // Measure the first page and bail before paying the same cost for every remaining one. The
+    // work already done is discarded rather than merged, so the server sees the whole document and
+    // the result cannot be a mix of two engines.
+    const pageMs = performance.now() - startedAt;
+    const budget = options?.pageBudgetMs;
+    if (index === 0 && budget && pageMs > budget && pages.length > 1) {
+      throw new BrowserEngineTooSlowError(pageMs);
+    }
     for (const d of decodeFor(spec, out, pre, score)) {
       const rect = toPdfPoints(d, page);
       if (rect.w <= 0 || rect.h <= 0) {

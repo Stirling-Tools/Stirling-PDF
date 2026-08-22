@@ -320,9 +320,12 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
-            // onnxruntime-web CPU SIMD runtime + loader for the in-browser Auto Form
-            // Detection engine. Single-thread (the app sets no COOP/COEP); the heavier
-            // WebGPU/JSEP and asyncify variants are intentionally not copied.
+            // onnxruntime-web CPU SIMD runtime + its loader for the in-browser Auto Form Detection
+            // engine. Always shipped: desktop reaches a backend that has the feature in SaaS and
+            // self-hosted modes, and the in-browser engine is the whole point there - the PDF never
+            // leaves the device. Single-thread (the app sets no COOP/COEP); the WebGPU/JSEP and
+            // asyncify variants are intentionally not copied, and the resolve.alias below stops
+            // onnxruntime pulling the 26MB WebGPU one in behind us.
             src: "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.{wasm,mjs}",
             dest: "ort",
           },
@@ -342,6 +345,19 @@ export default defineConfig(async ({ mode, command }) => {
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    resolve: {
+      alias: {
+        // Pin onnxruntime-web to its extern-wasm build. The other entries contain
+        // `new URL("ort-wasm-simd-threaded[.jsep].wasm", import.meta.url)`, which Rollup resolves
+        // into an emitted asset - so a build ends up shipping the 26MB WebGPU runtime, or a second
+        // copy of the CPU one, on top of the /ort/ files above. This variant names only the loader,
+        // so the copy under /ort/ is the only runtime that ships.
+        "onnxruntime-web/wasm": resolve(
+          import.meta.dirname,
+          "../node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",
+        ),
+      },
+    },
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
     worker: {

@@ -1,8 +1,9 @@
 Auto Form Detection - third-party model attribution
 ===================================================
 
-Stirling-PDF bundles no model weights. Models are downloaded on demand from the URLs in
-model-catalog.json and verified against the SHA-256 recorded there.
+Models are downloaded on demand from the URLs in model-catalog.json and verified against the
+SHA-256 recorded there. The air-gapped image (docker/embedded/Dockerfile.fat) additionally bakes
+the ffdetr weights in at build time, since it is the deployment that cannot fetch them later.
 
 This NOTICE covers weights Stirling itself publishes or redistributes. It exists because
 Apache-2.0 section 4 attaches attribution and NOTICE obligations to whoever conveys the work,
@@ -14,6 +15,7 @@ ffdetr
 FFDetr, a form-field detector trained on the CommonForms dataset.
 
   Weights      https://huggingface.co/jbarrow/FFDetr           Apache-2.0
+  Our export   https://huggingface.co/Frooodle/ffdetr-int8      Apache-2.0
   Base model   Roboflow RF-DETR (rf-detr-medium)               Apache-2.0
   Framework    https://github.com/roboflow/rf-detr             Apache-2.0
   Backbone     DINOv2 (Meta AI)                                Apache-2.0
@@ -23,7 +25,7 @@ FFDetr, a form-field detector trained on the CommonForms dataset.
 The .onnx Stirling distributes is not the upstream artifact: the publisher releases a PyTorch
 .pth only. Stirling exports it to ONNX and quantises it to int8 via
 scripts/export-ffdetr-onnx.py, which pins the source revision and its checksum. No weights are
-modified beyond that conversion.
+modified beyond that conversion, and the result is republished under the same licence.
 
 Not vendored: the `commonforms` reference wrapper (github.com/jbarrow/commonforms) carries no
 licence file and depends on Ultralytics, so none of its code is used. The pre/post-processing in

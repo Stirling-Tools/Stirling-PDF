@@ -93,6 +93,7 @@ async function browserDetect(
   parameters: AutoFormDetectionParameters,
   file: File,
   entry: FormDetectionCatalogEntry,
+  pageBudgetMs?: number,
 ): Promise<File> {
   emitStage({ kind: "starting", engine: "browser" });
   const { runBrowserDetection } =
@@ -103,6 +104,7 @@ async function browserDetect(
     entry,
     resolveConfidence(parameters),
     emitStage,
+    { pageBudgetMs },
   );
   emitSummary(summarizeFields(fields, "browser"));
   return new File([new Uint8Array(appliedPdf)], outputName(file), {
@@ -128,13 +130,41 @@ async function processAutoFormDetection(
       return { files: [await serverDetect(parameters, file)] };
     }
     if (mode === "browser") {
+      // Strict: no budget and no fallback. The point of this mode is that the PDF never leaves the
+      // device, so a slow device waits rather than silently uploading.
       return { files: [await browserDetect(parameters, file, activeEntry)] };
     }
+
+    // auto: prefer the device. Keeping detection local spares the backend from running every page
+    // of every user's document, and keeps the file on the machine it came from. Only a device that
+    // looks too weak to finish in reasonable time starts on the server instead.
+    const {
+      isUnderpoweredForBrowserEngine,
+      describeDevice,
+      BROWSER_PAGE_BUDGET_MS,
+    } = await import("@app/services/formDetection/deviceCapability");
+    if (isUnderpoweredForBrowserEngine()) {
+      console.debug(
+        `[AutoFormDetection] ${describeDevice()} - using the server engine`,
+      );
+      return { files: [await serverDetect(parameters, file)] };
+    }
     try {
-      return { files: [await browserDetect(parameters, file, activeEntry)] };
+      return {
+        files: [
+          await browserDetect(
+            parameters,
+            file,
+            activeEntry,
+            BROWSER_PAGE_BUDGET_MS,
+          ),
+        ],
+      };
     } catch (e) {
+      // Covers both a hard failure and the budget check: the capability hints are advisory, so the
+      // first page is the real measurement and the honest place to change our mind.
       console.warn(
-        "[AutoFormDetection] in-browser engine failed; falling back to server",
+        "[AutoFormDetection] in-browser engine did not complete; falling back to server",
         e,
       );
       return { files: [await serverDetect(parameters, file)] };

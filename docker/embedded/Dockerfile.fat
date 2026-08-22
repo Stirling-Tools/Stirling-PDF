@@ -20,17 +20,17 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Optionally bake an Auto Form Detection model into this air-gapped image, seeded into the
-# writable configs model dir at startup.
+# Bake an Auto Form Detection model into this air-gapped image, seeded into the writable configs
+# model dir at startup. This is the one image where baking earns its cost: it is the deployment
+# that cannot download a model later. The internet-connected images leave it to an admin install.
 #
-# Empty by default ON PURPOSE - see the note in docker/embedded/Dockerfile. Baking a model in
-# makes us its distributor, and it is exactly the air-gapped case that makes an unlicensed
-# bundle hardest to undo. Set all three args to pre-bundle weights you may ship:
-#   --build-arg FORM_DETECTION_MODEL_URL=... \
-#   --build-arg FORM_DETECTION_MODEL_SHA256=... \
-#   --build-arg FORM_DETECTION_MODEL_ID=ffdetr
-ARG FORM_DETECTION_MODEL_URL=""
-ARG FORM_DETECTION_MODEL_SHA256=""
+# Only weights we hold a redistribution grant for may go here - which the FFDNet checkpoints are
+# not, as their publisher declares no licence at all. FFDetr is Apache-2.0 end to end, so it is
+# the default: our own int8 export from scripts/export-ffdetr-onnx.py, pinned to a revision SHA.
+# Costs ~27MB of pull and ~37MB on disk. Keep these three in step with the ffdetr entry in
+# model-catalog.json - a mismatch fails the build at the sha256sum check below, by design.
+ARG FORM_DETECTION_MODEL_URL="https://huggingface.co/Frooodle/ffdetr-int8/resolve/ad3223d7c3ae25ce1d1ec8fe972c8ff7630aff45/ffdetr-int8.onnx"
+ARG FORM_DETECTION_MODEL_SHA256="de43bb39adb08459fe62fa1a7be6bfb4f2d397bb034c46055f3b8fa3d04fc8f4"
 ARG FORM_DETECTION_MODEL_ID="ffdetr"
 RUN mkdir -p /preinstalled-models \
     && if [ -n "${FORM_DETECTION_MODEL_URL}" ]; then \
