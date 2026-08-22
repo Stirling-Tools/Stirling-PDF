@@ -41,6 +41,7 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      toml: ${{ steps.changes.outputs.toml }}
       docker-base: ${{ steps.changes.outputs.docker-base }}
       dockerfiles: ${{ steps.changes.outputs.dockerfiles }}
       tauri: ${{ steps.changes.outputs.tauri }}
@@ -73,7 +74,6 @@ jobs:
       actions: read
       contents: read
       security-events: write
-      pull-requests: write
     uses: ./.github/workflows/backend-build.yml
     secrets: inherit
 
@@ -102,8 +102,16 @@ jobs:
     needs: [files-changed]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/frontend-validation.yml
+    secrets: inherit
+
+  toml-check:
+    name: TOML translation check
+    if: needs.files-changed.outputs.toml == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check_toml.yml
     secrets: inherit
 
   # Required (in all-checks-passed). Scans the stories a branch touches in both
@@ -213,7 +221,6 @@ jobs:
     needs: [files-changed]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
 
@@ -227,7 +234,6 @@ jobs:
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
-      pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
     with:
@@ -283,6 +289,7 @@ jobs:
       - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
+      - toml-check
       - frontend-a11y
       - playwright-e2e
       - playwright-e2e-live
@@ -311,6 +318,7 @@ jobs:
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
+            toml-check=${{ needs.toml-check.result }}
             frontend-a11y=${{ needs.frontend-a11y.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}

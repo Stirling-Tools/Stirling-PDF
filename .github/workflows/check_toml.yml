@@ -1,39 +1,30 @@
 name: Check TOML Translation Files on PR
 
-# This workflow validates TOML translation files
+# This reusable workflow validates TOML translation files.
+# It is called by the pull_request workflow and deliberately has no write
+# permissions. PR comments are handled by pr-validation-comments.yml via workflow_run.
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "frontend/editor/public/locales/*/translation.toml"
-      - ".github/scripts/check_language_toml.py"
-      - ".github/workflows/check_toml.yml"
-
-# cancel in-progress jobs if a new job is triggered
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 permissions:
   contents: read # Allow read access to repository content
 
 jobs:
   check-files:
-    if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Checkout, and read translation files via the contents API
-      issues: write # Allow posting comments on issues/PRs
-      pull-requests: write # Allow writing to pull requests
+      contents: read # Read the base repository and PR files via the API
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - name: Checkout main branch first
+      - name: Checkout PR base first
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Get PR data
         id: get-pr-data
@@ -242,49 +233,13 @@ jobs:
             echo "FAIL_JOB=false" >> $GITHUB_ENV
           fi
 
-      - name: Post comment on PR
-        if: env.SCRIPT_OUTPUT != ''
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      - name: Upload TOML check result
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          github-token: ${{ github.token }}
-          script: |
-            const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
-            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
-            const issueNumber = context.issue.number;
-
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: repoOwner,
-              repo: repoName,
-              issue_number: issueNumber
-            });
-
-            const comment = comments.data.find(c => c.body.includes("## 🌐 TOML Translation Verification Summary"));
-
-            // Only update or create comments by the action user
-            const expectedActor = "github-actions[bot]";
-
-            if (comment && comment.user.login === expectedActor) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: repoOwner,
-                repo: repoName,
-                comment_id: comment.id,
-                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
-              });
-              console.log("Updated existing comment.");
-            } else if (!comment) {
-              // Create new comment if no existing comment is found
-              await github.rest.issues.createComment({
-                owner: repoOwner,
-                repo: repoName,
-                issue_number: issueNumber,
-                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
-              });
-              console.log("Created new comment.");
-            } else {
-              console.log("Comment update attempt denied. Actor does not match.");
-            }
+          name: toml-translation-check-result
+          path: result.txt
+          if-no-files-found: ignore
 
       - name: Fail job if errors found
         if: env.FAIL_JOB == 'true'
