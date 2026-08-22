@@ -43,9 +43,9 @@ public class ClusterConfig {
         } else if ("inprocess".equalsIgnoreCase(backplane)) {
             // enabled+inprocess only coordinates the local JVM; cross-node lookups will 410.
             log.warn(
-                    "cluster.enabled=true with backplane=inprocess - only the local"
-                            + " JVM is coordinated. Cross-node lookups and the file proxy will fail."
-                            + " Use backplane=valkey for real multi-node deployments.");
+                    "cluster.enabled=true with backplane=inprocess - only the local JVM is"
+                            + " coordinated. Cross-node lookups and the file proxy will fail. Use"
+                            + " backplane=valkey for real multi-node deployments.");
         } else {
             // Fail fast on typos like "valky" so Spring doesn't later report a cryptic
             // "no ClusterBackplane bean" - the operator-facing error names the bad value.

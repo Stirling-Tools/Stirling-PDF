@@ -230,12 +230,14 @@ public class RuntimePathConfig {
                 // Check if one path is a parent of the other
                 if (path1.startsWith(path2)) {
                     log.warn(
-                            "Watched folder path '{}' is nested inside '{}' - this may cause duplicate processing",
+                            "Watched folder path '{}' is nested inside '{}' - this may cause"
+                                    + " duplicate processing",
                             path1,
                             path2);
                 } else if (path2.startsWith(path1)) {
                     log.warn(
-                            "Watched folder path '{}' is nested inside '{}' - this may cause duplicate processing",
+                            "Watched folder path '{}' is nested inside '{}' - this may cause"
+                                    + " duplicate processing",
                             path2,
                             path1);
                 }
@@ -253,21 +255,24 @@ public class RuntimePathConfig {
                 // Check if watched folder is same as finished folder
                 if (watchedPath.equals(finishedPath)) {
                     log.error(
-                            "CRITICAL: Watched folder '{}' is the same as finished folder '{}' - this will cause processing loops!",
+                            "CRITICAL: Watched folder '{}' is the same as finished folder '{}' -"
+                                    + " this will cause processing loops!",
                             watchedPath,
                             finishedPath);
                 }
                 // Check if watched folder contains finished folder
                 else if (finishedPath.startsWith(watchedPath)) {
                     log.warn(
-                            "Finished folder '{}' is nested inside watched folder '{}' - this may cause issues",
+                            "Finished folder '{}' is nested inside watched folder '{}' - this may"
+                                    + " cause issues",
                             finishedPath,
                             watchedPath);
                 }
                 // Check if finished folder contains watched folder
                 else if (watchedPath.startsWith(finishedPath)) {
                     log.error(
-                            "CRITICAL: Watched folder '{}' is nested inside finished folder '{}' - this will cause processing loops!",
+                            "CRITICAL: Watched folder '{}' is nested inside finished folder '{}' -"
+                                    + " this will cause processing loops!",
                             watchedPath,
                             finishedPath);
                 }
@@ -295,15 +300,17 @@ public class RuntimePathConfig {
                 // Warn if manual endpoint count doesn't match sessionLimit
                 if (configured.size() != sessionLimit) {
                     log.warn(
-                            "Manual UNO endpoint count ({}) differs from libreOfficeSessionLimit ({}). "
-                                    + "Concurrency will be limited by endpoint count, not sessionLimit.",
+                            "Manual UNO endpoint count ({}) differs from libreOfficeSessionLimit"
+                                    + " ({}). Concurrency will be limited by endpoint count, not"
+                                    + " sessionLimit.",
                             configured.size(),
                             sessionLimit);
                 }
                 return configured;
             }
             log.warn(
-                    "autoUnoServer disabled but no unoServerEndpoints configured; defaulting to 127.0.0.1:2003.");
+                    "autoUnoServer disabled but no unoServerEndpoints configured; defaulting to"
+                            + " 127.0.0.1:2003.");
             return Collections.singletonList(
                     new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
         }

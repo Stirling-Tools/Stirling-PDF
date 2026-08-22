@@ -104,9 +104,9 @@ public class OCRController {
             summary = "Process a PDF file with OCR",
             description =
                     "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
-                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType,"
-                            + " ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available,"
-                            + " falls back to Tesseract.")
+                        + " Users can specify languages, sidecar, deskew, clean, cleanFinal,"
+                        + " ocrType, ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if"
+                        + " available, falls back to Tesseract.")
     public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
@@ -435,7 +435,8 @@ public class OCRController {
                         // Verify the OCR'd PDF was created
                         if (!pageOutputPath.exists()) {
                             log.warn(
-                                    "Tesseract did not create expected output file: {}. Page may be blank or unreadable.",
+                                    "Tesseract did not create expected output file: {}. Page may be"
+                                            + " blank or unreadable.",
                                     pageOutputPath.getAbsolutePath());
                             // Save original page without OCR as fallback
                             try (PDDocument pageDoc = new PDDocument()) {

@@ -430,7 +430,8 @@ public class FormUtils {
                 || finalX > cropBox.getWidth() * 2 // Allow some horizontal overflow
                 || finalY > cropHeight + 1.0f) {
             log.warn(
-                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={}, h={}",
+                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={},"
+                            + " h={}",
                     field.getFullyQualifiedName(),
                     pageIndex,
                     finalX,

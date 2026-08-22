@@ -42,7 +42,7 @@
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
-  "java.format.settings.google.version": "1.28.0",
+  "java.format.settings.google.version": "1.35.0",
   "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
   // (DE) Aktiviert Kommentare im Java-Format.
   // (EN) Enables comments in Java formatting.
@@ -199,5 +199,6 @@
     "evenBetterToml.formatter.reorderInlineTables": false,
     "evenBetterToml.formatter.trailingNewline": true,
     "evenBetterToml.formatter.crlf": false
-  }
+  },
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx14G -Xms100m"
 }

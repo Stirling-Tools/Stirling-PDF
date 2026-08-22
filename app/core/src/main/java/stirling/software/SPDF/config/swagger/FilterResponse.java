@@ -51,7 +51,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
             @ApiResponse(
                     responseCode = "422",
                     description =
-                            "Unprocessable entity - PDF is valid but cannot be analyzed for filtering",
+                            "Unprocessable entity - PDF is valid but cannot be analyzed for"
+                                    + " filtering",
                     content =
                             @Content(
                                     mediaType = "application/json",

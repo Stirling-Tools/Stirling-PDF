@@ -71,8 +71,8 @@ public class SourceController {
     @Operation(
             summary = "Sources overview",
             description =
-                    "Returns the KPI strip plus one row per source the caller's team owns, each with"
-                            + " how many policies reference it and which.")
+                    "Returns the KPI strip plus one row per source the caller's team owns, each"
+                            + " with how many policies reference it and which.")
     public SourcesResponse list() {
         return overviewService.overview();
     }

@@ -57,7 +57,8 @@ class ApiDocServiceTest {
     @Test
     void isValidOperationChecksRequiredParameters() throws Exception {
         String json =
-                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\": true}, {\"name\":\"param2\", \"required\": true}]}";
+                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\":"
+                        + " true}, {\"name\":\"param2\", \"required\": true}]}";
         JsonNode postNode = mapper.readTree(json);
         ApiEndpoint endpoint = new ApiEndpoint("/op", postNode);
         setApiDocumentation(Map.of("/op", endpoint));
@@ -70,7 +71,8 @@ class ApiDocServiceTest {
     @Test
     void isValidOperationAllowsOptionalParameters() throws Exception {
         String json =
-                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\": false}, {\"name\":\"param2\", \"required\": false}]}";
+                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\":"
+                        + " false}, {\"name\":\"param2\", \"required\": false}]}";
         JsonNode postNode = mapper.readTree(json);
         ApiEndpoint endpoint = new ApiEndpoint("/op", postNode);
         setApiDocumentation(Map.of("/op", endpoint));
@@ -100,7 +102,8 @@ class ApiDocServiceTest {
     @Test
     void isValidOperationWithMixedRequiredAndOptional() throws Exception {
         String json =
-                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"required1\", \"required\": true}, {\"name\":\"optional1\", \"required\": false}]}";
+                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"required1\","
+                        + " \"required\": true}, {\"name\":\"optional1\", \"required\": false}]}";
         JsonNode postNode = mapper.readTree(json);
         ApiEndpoint endpoint = new ApiEndpoint("/mixed", postNode);
         setApiDocumentation(Map.of("/mixed", endpoint));

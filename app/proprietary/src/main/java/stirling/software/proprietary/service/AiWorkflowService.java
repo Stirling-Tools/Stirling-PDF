@@ -316,7 +316,8 @@ public class AiWorkflowService {
         if (!request.getArtifacts().isEmpty() || request.getResumeWith() != null) {
             return new WorkflowState.Terminal(
                     cannotContinue(
-                            "AI engine requested ingest after the workflow had already been resumed."));
+                            "AI engine requested ingest after the workflow had already been"
+                                    + " resumed."));
         }
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.EXTRACTING_CONTENT));
@@ -598,7 +599,8 @@ public class AiWorkflowService {
         } catch (Exception ignored) {
             // fall through to generic message
         }
-        return "The request could not be completed. Please try again or contact your system administrator.";
+        return "The request could not be completed. Please try again or contact your system"
+                + " administrator.";
     }
 
     /**

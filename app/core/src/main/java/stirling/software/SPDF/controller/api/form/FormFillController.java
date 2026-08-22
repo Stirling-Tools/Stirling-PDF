@@ -199,7 +199,8 @@ public class FormFillController {
     @Operation(
             summary = "Extract form fields as XLSX",
             description =
-                    "Returns an Excel (XLSX) file containing all form field names and their current values")
+                    "Returns an Excel (XLSX) file containing all form field names and their current"
+                            + " values")
     public ResponseEntity<byte[]> extractXlsx(
             @Parameter(
                             description = "The input PDF file",

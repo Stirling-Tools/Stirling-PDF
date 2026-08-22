@@ -249,7 +249,8 @@ class ProcessExecutorGapTest {
 
         @Test
         @DisplayName(
-                "injects --host/--port after the executable, defaults omit host-location and protocol")
+                "injects --host/--port after the executable, defaults omit host-location and"
+                        + " protocol")
         void injectsHostAndPortWithDefaults() throws Exception {
             List<String> command = List.of("unoconvert", "in.docx", "out.pdf");
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =

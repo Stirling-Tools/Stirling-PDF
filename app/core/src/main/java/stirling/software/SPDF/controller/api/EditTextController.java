@@ -90,13 +90,14 @@ public class EditTextController {
             summary = "Edit text in a PDF via find and replace",
             description =
                     "Applies an ordered list of find/replace operations to the text in a PDF and"
-                            + " returns the edited PDF. Useful for find-and-replace, bulk renames (e.g."
-                            + " updating a company name throughout a document), and copy editing where the AI"
-                            + " agent has identified specific replacements. Matching is performed against the"
-                            + " joined text of each page, so find strings can span multiple visual runs"
-                            + " (titles split per word, kerning-broken phrases). Cross-element matches are"
-                            + " written as a single replacement run anchored at the leftmost matched position;"
-                            + " centered or tracked text may shift left when its content changes.")
+                        + " returns the edited PDF. Useful for find-and-replace, bulk renames (e.g."
+                        + " updating a company name throughout a document), and copy editing where"
+                        + " the AI agent has identified specific replacements. Matching is"
+                        + " performed against the joined text of each page, so find strings can"
+                        + " span multiple visual runs (titles split per word, kerning-broken"
+                        + " phrases). Cross-element matches are written as a single replacement run"
+                        + " anchored at the leftmost matched position; centered or tracked text may"
+                        + " shift left when its content changes.")
     public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();

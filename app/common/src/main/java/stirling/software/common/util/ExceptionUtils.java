@@ -290,7 +290,8 @@ public class ExceptionUtils {
         // Additional safety check: warn about very large images (> 1GB estimated)
         if (estimatedBytes > 1024L * 1024 * 1024) {
             log.warn(
-                    "Page {} will create a very large image: {}x{} pixels (~{} MB) at {} DPI. This may cause memory issues.",
+                    "Page {} will create a very large image: {}x{} pixels (~{} MB) at {} DPI. This"
+                            + " may cause memory issues.",
                     pageNumber,
                     widthInPixels,
                     heightInPixels,
@@ -394,7 +395,8 @@ public class ExceptionUtils {
             message = getMessage(contextKey, defaultMsg, context);
         } else {
             message =
-                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.";
+                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF'"
+                        + " feature first to fix the file before proceeding with this operation.";
         }
 
         return new PdfCorruptedException(message, cause, ErrorCode.PDF_CORRUPTED.getCode());
@@ -1119,19 +1121,25 @@ public class ExceptionUtils {
         PDF_CORRUPTED(
                 "E001",
                 "error.pdfCorrupted",
-                "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation."),
+                "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF'"
+                        + " feature first to fix the file before proceeding with this operation."),
         PDF_MULTIPLE_CORRUPTED(
                 "E002",
                 "error.multiplePdfCorrupted",
-                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them."),
+                "One or more PDF files appear to be corrupted or damaged. Please try using the"
+                    + " 'Repair PDF' feature on each file first before attempting to merge them."),
         PDF_ENCRYPTION(
                 "E003",
                 "error.pdfEncryption",
-                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy."),
+                "The PDF appears to have corrupted encryption data. This can happen when the PDF"
+                        + " was created with incompatible encryption methods. Please try using the"
+                        + " 'Repair PDF' feature first, or contact the document creator for a new"
+                        + " copy."),
         PDF_PASSWORD(
                 "E004",
                 "error.pdfPassword",
-                "The PDF Document is passworded and either the password was not provided or was incorrect"),
+                "The PDF Document is passworded and either the password was not provided or was"
+                        + " incorrect"),
         PDF_NO_PAGES("E005", "error.pdfNoPages", "PDF file contains no pages"),
         PDF_NOT_PDF("E006", "error.notPdfFile", "File must be in PDF format"),
 
@@ -1139,20 +1147,25 @@ public class ExceptionUtils {
         CBR_INVALID_FORMAT(
                 "E010",
                 "error.cbrInvalidFormat",
-                "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use an unsupported RAR format (RAR5+), encrypted, or may not be a valid RAR archive."),
+                "Invalid or corrupted CBR/RAR archive. The file may be corrupted, use an"
+                        + " unsupported RAR format (RAR5+), encrypted, or may not be a valid RAR"
+                        + " archive."),
         CBR_NO_IMAGES(
                 "E012",
                 "error.cbrNoImages",
-                "No valid images found in the CBR file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
+                "No valid images found in the CBR file. The archive may be empty, or all images may"
+                        + " be corrupted or in unsupported formats."),
         CBR_NOT_CBR("E014", "error.notCbrFile", "File must be a CBR or RAR archive"),
         CBZ_INVALID_FORMAT(
                 "E015",
                 "error.cbzInvalidFormat",
-                "Invalid or corrupted CBZ/ZIP archive. The file may be empty, corrupted, or may not be a valid ZIP archive."),
+                "Invalid or corrupted CBZ/ZIP archive. The file may be empty, corrupted, or may not"
+                        + " be a valid ZIP archive."),
         CBZ_NO_IMAGES(
                 "E016",
                 "error.cbzNoImages",
-                "No valid images found in the CBZ file. The archive may be empty, or all images may be corrupted or in unsupported formats."),
+                "No valid images found in the CBZ file. The archive may be empty, or all images may"
+                        + " be corrupted or in unsupported formats."),
         CBZ_NOT_CBZ("E018", "error.notCbzFile", "File must be a CBZ or ZIP archive"),
 
         // EML errors
@@ -1205,7 +1218,8 @@ public class ExceptionUtils {
         FFMPEG_REQUIRED(
                 "E063",
                 "error.ffmpegRequired",
-                "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
+                "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is"
+                        + " available on the system PATH."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1221,7 +1235,10 @@ public class ExceptionUtils {
         OUT_OF_MEMORY_DPI(
                 "E081",
                 "error.outOfMemoryDpi",
-                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.");
+                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI."
+                    + " This can occur when the resulting image exceeds Java's array/memory limits"
+                    + " (e.g., NegativeArraySizeException). Please use a lower DPI value"
+                    + " (recommended: 150 or less) or process the document in smaller chunks.");
 
         private final String code;
         private final String messageKey;

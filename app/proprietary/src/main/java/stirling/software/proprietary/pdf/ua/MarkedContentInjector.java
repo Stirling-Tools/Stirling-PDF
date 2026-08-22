@@ -251,7 +251,8 @@ public class MarkedContentInjector {
                                 StructBlock existing = owners.putIfAbsent(i, node);
                                 if (existing != null && existing != node) {
                                     log.debug(
-                                            "Ordinal {} claimed by both {} and {}; keeping the first",
+                                            "Ordinal {} claimed by both {} and {}; keeping the"
+                                                    + " first",
                                             i,
                                             existing,
                                             node);

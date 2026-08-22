@@ -71,9 +71,9 @@ public class CredentialEncryption {
         if (clusterEnabled) {
             throw new IllegalStateException(
                     "cluster.enabled=true requires a shared credential encryption key. Set"
-                            + " STIRLING_CREDENTIAL_ENCRYPTION_KEY (or"
-                            + " stirling.security.credentialEncryptionKey) to the same value on every"
-                            + " node.");
+                        + " STIRLING_CREDENTIAL_ENCRYPTION_KEY (or"
+                        + " stirling.security.credentialEncryptionKey) to the same value on every"
+                        + " node.");
         }
         return loadOrCreateKeyFile();
     }

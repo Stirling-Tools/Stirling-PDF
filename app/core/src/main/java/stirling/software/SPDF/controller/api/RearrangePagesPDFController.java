@@ -241,8 +241,8 @@ public class RearrangePagesPDFController {
             summary = "Rearrange pages in a PDF file",
             description =
                     "This endpoint rearranges pages in a given PDF file based on the specified page"
-                            + " order or custom mode. Users can provide a page order as a comma-separated list"
-                            + " of page numbers or page ranges, or a custom mode.")
+                        + " order or custom mode. Users can provide a page order as a"
+                        + " comma-separated list of page numbers or page ranges, or a custom mode.")
     public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();

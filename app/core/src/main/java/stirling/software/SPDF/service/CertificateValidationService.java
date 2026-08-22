@@ -429,7 +429,8 @@ public class CertificateValidationService {
                     getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
                     log.debug(
-                            "Bundled Mozilla CA certificate file not found in resources — using Java system trust store only");
+                            "Bundled Mozilla CA certificate file not found in resources — using"
+                                    + " Java system trust store only");
                     return;
                 }
 
@@ -454,7 +455,8 @@ public class CertificateValidationService {
                 }
 
                 log.info(
-                        "Loaded {} Mozilla CA certificates as trust anchors (skipped {} non-CA certs)",
+                        "Loaded {} Mozilla CA certificates as trust anchors (skipped {} non-CA"
+                                + " certs)",
                         loadedCount,
                         skippedCount);
             }
@@ -483,7 +485,8 @@ public class CertificateValidationService {
                             ca);
                 } else {
                     log.warn(
-                            "Server certificate is neither self-signed nor a CA; not adding as trust anchor");
+                            "Server certificate is neither self-signed nor a CA; not adding as"
+                                    + " trust anchor");
                 }
             }
         } catch (Exception e) {

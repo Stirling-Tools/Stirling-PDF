@@ -323,7 +323,7 @@ class FormFillControllerTest {
 
             String json =
                     "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
-                            + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
+                        + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
             ResponseEntity<Resource> response = controller.modifyFields(file, json.getBytes());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

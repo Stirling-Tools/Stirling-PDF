@@ -207,11 +207,11 @@ public class PolicyController {
     @Operation(
             summary = "List the caller's stored-policy runs",
             description =
-                    "Returns the caller's in-flight and recently-finished stored-policy runs (within"
-                            + " the run-retention window). The frontend reconciles these on load so a"
-                            + " run started before a refresh/crash is rediscovered and its outputs"
-                            + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
-                            + " policy id) are excluded.")
+                    "Returns the caller's in-flight and recently-finished stored-policy runs"
+                        + " (within the run-retention window). The frontend reconciles these on"
+                        + " load so a run started before a refresh/crash is rediscovered and its"
+                        + " outputs collected, rather than orphaned on the backend. Ad-hoc runs (no"
+                        + " policy id) are excluded.")
     public List<PolicyRunView> listRuns() {
         // Local runs first (they carry live step state); keyed by runId to dedupe shared entries.
         Map<String, PolicyRunView> byRunId = new LinkedHashMap<>();
@@ -301,9 +301,9 @@ public class PolicyController {
             summary = "Set the team's policy run order",
             description =
                     "Persists the team-wide order policies run in, from the given ordered list of"
-                            + " policy ids (position → order). The per-trigger order shown in the UI"
-                            + " is this one sequence filtered by trigger. Team-leader/admin only;"
-                            + " ids outside the caller's team are ignored.")
+                        + " policy ids (position → order). The per-trigger order shown in the UI is"
+                        + " this one sequence filtered by trigger. Team-leader/admin only; ids"
+                        + " outside the caller's team are ignored.")
     public ResponseEntity<Void> reorderPolicies(@RequestBody List<String> orderedPolicyIds) {
         requirePolicyEditingAllowed();
         policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
@@ -495,9 +495,9 @@ public class PolicyController {
     @Operation(
             summary = "Pipelines overview",
             description =
-                    "Returns the KPI strip plus one row per policy the caller's team owns, each with"
-                            + " its referenced sources resolved to names, its pipeline steps, and a"
-                            + " trigger/output summary. Backs the portal's all-pipelines surface.")
+                    "Returns the KPI strip plus one row per policy the caller's team owns, each"
+                        + " with its referenced sources resolved to names, its pipeline steps, and"
+                        + " a trigger/output summary. Backs the portal's all-pipelines surface.")
     public PoliciesOverviewResponse overview() {
         return policyOverviewService.overview();
     }

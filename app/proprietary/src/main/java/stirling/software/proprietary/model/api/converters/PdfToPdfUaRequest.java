@@ -48,8 +48,8 @@ public class PdfToPdfUaRequest extends PDFFile {
 
     @Schema(
             description =
-                    "How to treat images with no description. require-alt leaves them undescribed so"
-                            + " the report asks for input; mark-decorative treats every image as"
+                    "How to treat images with no description. require-alt leaves them undescribed"
+                            + " so the report asks for input; mark-decorative treats every image as"
                             + " decoration.",
             defaultValue = "require-alt",
             allowableValues = {"require-alt", "mark-decorative"})

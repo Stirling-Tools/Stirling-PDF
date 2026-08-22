@@ -29,7 +29,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                 type = "string",
                                                 format = "binary",
                                                 description =
-                                                        "CSV file containing extracted table data")),
+                                                        "CSV file containing extracted table"
+                                                                + " data")),
                         @Content(
                                 mediaType = "application/zip",
                                 schema =
@@ -37,7 +38,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                 type = "string",
                                                 format = "binary",
                                                 description =
-                                                        "ZIP archive containing multiple CSV files when multiple tables are extracted"))
+                                                        "ZIP archive containing multiple CSV files"
+                                                                + " when multiple tables are"
+                                                                + " extracted"))
                     }),
             @ApiResponse(
                     responseCode = "400",

@@ -355,7 +355,8 @@ public class FolderService {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.BAD_REQUEST,
-                                                "Parent folder does not exist or is not owned by you"));
+                                                "Parent folder does not exist or is not owned by"
+                                                        + " you"));
         // Reject before the child is created/moved if attaching it would push the chain past the
         // depth cap. Done in one pass that also returns the cycle answer so we don't walk the
         // lazy-proxy chain twice.

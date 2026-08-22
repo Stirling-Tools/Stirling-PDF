@@ -28,7 +28,8 @@ public class MergeMultiplePagesRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.",
+                    "The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while"
+                            + " BY_COLUMNS fills pages column by column.",
             type = "string",
             defaultValue = "BY_ROWS",
             allowableValues = {"BY_ROWS", "BY_COLUMNS"})
@@ -36,7 +37,8 @@ public class MergeMultiplePagesRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).",
+                    "The direction in which pages are arranged on the sheet: LTR (left-to-right) or"
+                            + " RTL (right-to-left).",
             type = "string",
             defaultValue = "LTR",
             allowableValues = {"LTR", "RTL"})

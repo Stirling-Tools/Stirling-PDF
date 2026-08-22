@@ -76,7 +76,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
             if (user != null && !licenseSettingsService.isOAuthEligible(user)) {
                 // User is not grandfathered and no paid license - block OAuth login
                 log.warn(
-                        "OAuth login blocked for existing user '{}' - not eligible (not grandfathered and no paid license)",
+                        "OAuth login blocked for existing user '{}' - not eligible (not"
+                                + " grandfathered and no paid license)",
                         username);
                 response.sendRedirect(
                         request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
@@ -85,7 +86,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
         } else if (!licenseSettingsService.isOAuthEligible(null)) {
             // No existing user and no paid license -> block auto creation
             log.warn(
-                    "OAuth login blocked for new user '{}' - not eligible (no paid license for auto-creation)",
+                    "OAuth login blocked for new user '{}' - not eligible (no paid license for"
+                            + " auto-creation)",
                     username);
             response.sendRedirect(request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
             return;

@@ -149,7 +149,8 @@ public class AttachmentController {
     @Operation(
             summary = "Extract attachments from PDF",
             description =
-                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
+                    "This endpoint extracts all embedded attachments from a PDF into a ZIP"
+                            + " archive.")
     public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {

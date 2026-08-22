@@ -15,9 +15,9 @@ public class OverlayImageRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The image file to be overlaid onto the PDF. "
-                            + "Supports raster formats (PNG, JPEG, etc.) and vector format (SVG). "
-                            + "SVG files are rendered as vector graphics for crisp output at any resolution.",
+                    "The image file to be overlaid onto the PDF. Supports raster formats (PNG,"
+                        + " JPEG, etc.) and vector format (SVG). SVG files are rendered as vector"
+                        + " graphics for crisp output at any resolution.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             format = "binary")
     private MultipartFile imageFile;
