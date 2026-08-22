@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "将文档翻转，使最后一页变为第一页，依此类推
 SIDE_STITCH_BOOKLET_SORT = "用于侧订小册子打印的页面排列（针对侧边装订优化）。"
 
 [pdfTextEditor]
-conversionFailed = "PDF 转换失败。请重试。"
-converting = "正在将 PDF 转换为可编辑格式..."
-currentFile = "当前文件：{{name}}"
-imageLabel = "已放置的图片"
-noTextOnPage = "此页未检测到可编辑文本。"
-pagePreviewAlt = "页面预览"
-pageSummary = "第 {{number}}/{{total}} 页"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON 编辑器"
-viewLabel = "PDF 编辑器"
-
-[pdfTextEditor.actions]
-applyChanges = "应用更改"
-clearText = "清除文本"
-downloadCopy = "下载副本"
-moreOptions = "更多选项"
-reset = "重置更改"
-
-[pdfTextEditor.badges]
-earlyAccess = "抢先体验"
-modified = "已编辑"
-
-[pdfTextEditor.empty]
-dropzone = "将 PDF 或 JSON 文件拖放到此处，或点击浏览"
-dropzoneWithFiles = "从“文件”选项卡选择文件，或将 PDF 或 JSON 文件拖放到此处，或点击浏览"
-title = "未加载文档"
-
-[pdfTextEditor.errors]
-invalidJson = "无法读取JSON文件。请确保它由PDF转JSON工具生成。"
-pdfConversion = "无法将已编辑的JSON转换回PDF。"
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "所有字体"
-currentPageFonts = "本页字体"
-details = "字体详情"
-embedded = "已嵌入"
-fallback = "后备"
-infoMessage = "提供字体还原信息。"
-missing = "缺失"
-perfect = "完美"
-perfectMessage = "所有字体都可完美复现。"
-subset = "子集"
-suggestions = "说明"
-type = "类型"
-warningMessage = "某些字体可能无法正确渲染。"
-warnings = "警告"
-webFormat = "Web 格式"
-
-[pdfTextEditor.groupingMode]
-auto = "自动"
-paragraph = "段落"
-singleLine = "单行"
-
-[pdfTextEditor.manual]
-expandWidth = "扩展到页面边缘"
-merge = "合并所选"
-mergeTooltip = "合并所选框"
-resetWidth = "重置宽度"
-resizeHandle = "调整文本宽度"
-ungroup = "取消分组所选"
-ungroupTooltip = "将段落拆分为行"
-widthMenu = "宽度选项"
-
-[pdfTextEditor.modeChange]
-cancel = "取消"
-confirm = "重置并更改模式"
-title = "确认更改模式"
-warning = "更改文本分组模式将重置所有未保存的更改。确定要继续吗？"
-
-[pdfTextEditor.options.advanced]
-title = "高级设置"
-
-[pdfTextEditor.options.autoScaleText]
-description = "当字体渲染与 PDF 不同时，自动水平缩放文本以适配其原始边界框。"
-title = "自动缩放文本以适配框体"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "启用后，编辑器会将每个已编辑文本框导出为一个 PDF 文本元素，以避免字形重叠或混合字体。"
-title = "将已编辑文本锁定为单个 PDF 元素"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "自动检测页面类型并进行合适的分组。"
-paragraphDescription = "将对齐的行分组成多行段落文本框。"
-singleLineDescription = "将每一行 PDF 文本保留为独立文本框。"
-title = "文本分组模式"
-
-[pdfTextEditor.pageType]
-paragraph = "段落页"
-sparse = "稀疏文本"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "此 Alpha 查看器仍在演进中——某些字体、颜色、透明效果和布局细节可能会略有变化。分享前请仔细检查生成的 PDF。"
@@ -6021,32 +5930,6 @@ title = "预览差异"
 [pdfTextEditor.tooltip.textFocus]
 text = "此工作区专注于编辑文本与重新定位嵌入图像。复杂页面图形、表单控件和分层图形将在导出时保留，但在此处不可完全编辑。"
 title = "文本与图像聚焦"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "最佳适用："
-bestFor1 = "以文本和图片为主的简单 PDF"
-bestFor2 = "使用标准段落格式的文档"
-bestFor3 = "信件、论文、报告和基础文档"
-dontShowAgain = "不再显示"
-experimental = "这是一个仍在积极开发中的实验性功能，使用过程中可能存在不稳定与问题。"
-feedback = "这是早期体验功能。请反馈遇到的问题以帮助我们改进！"
-gotIt = "知道了"
-howItWorks = "此工具会将您的 PDF 转换为可编辑格式，您可修改文本内容并重新定位图片。更改将另存为新的 PDF。"
-issue1 = "目前不会保留文本颜色（即将支持）"
-issue2 = "段落模式存在更多对齐和间距问题—建议使用单行模式"
-issue3 = "预览与导出的PDF显示不同—导出的PDF更接近原文件"
-issue4 = "旋转文本的对齐可能需要手动调整"
-issue5 = "透明度和分层效果可能与原件不同"
-knownIssues = "已知问题（修复中）："
-limitation1 = "字体渲染可能与原PDF略有差异"
-limitation2 = "复杂图形、表单域和注释会被保留，但不可编辑"
-limitation3 = "大文件的转换和处理可能需要时间"
-limitations = "当前限制："
-notIdealFor = "不适用于："
-notIdealFor1 = "包含项目符号、表格或多栏布局等特殊格式的 PDF"
-notIdealFor2 = "杂志、宣传册或重设计的文档"
-notIdealFor3 = "布局复杂的说明手册"
-title = "欢迎使用 PDF 文本编辑器（抢先体验）"
 
 [PDFToCSV]
 header = "将 PDF 转换为 CSV"

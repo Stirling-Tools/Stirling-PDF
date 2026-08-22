@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "Belgeyi ters çevirin; son sayfa ilk, ilk sayfa son olsun."
 SIDE_STITCH_BOOKLET_SORT = "Yan dikişli broşür yazdırma için sayfaları düzenleyin (yan ciltleme için optimize)."
 
 [pdfTextEditor]
-conversionFailed = "PDF dönüştürülemedi. Lütfen tekrar deneyin."
-converting = "PDF düzenlenebilir formata dönüştürülüyor..."
-currentFile = "Geçerli dosya: {{name}}"
-imageLabel = "Yerleştirilen resim"
-noTextOnPage = "Bu sayfada düzenlenebilir metin tespit edilmedi."
-pagePreviewAlt = "Sayfa önizleme"
-pageSummary = "Sayfa {{number}} / {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON Düzenleyici"
-viewLabel = "PDF Düzenleyici"
-
-[pdfTextEditor.actions]
-applyChanges = "Değişiklikleri Uygula"
-clearText = "Metni temizle"
-downloadCopy = "Kopyayı İndir"
-moreOptions = "Daha fazla seçenek"
-reset = "Değişiklikleri Sıfırla"
-
-[pdfTextEditor.badges]
-earlyAccess = "Erken Erişim"
-modified = "Düzenlendi"
-
-[pdfTextEditor.empty]
-dropzone = "Buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
-dropzoneWithFiles = "Dosyalar sekmesinden bir dosya seçin veya buraya bir PDF veya JSON dosyası sürükleyip bırakın veya göz atmak için tıklayın"
-title = "Belge yüklenmedi"
-
-[pdfTextEditor.errors]
-invalidJson = "JSON dosyası okunamadı. PDF to JSON aracı tarafından oluşturulduğundan emin olun."
-pdfConversion = "Düzenlenen JSON tekrar PDF'ye dönüştürülemedi."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Tüm fontlar"
-currentPageFonts = "Bu sayfadaki fontlar"
-details = "Font Ayrıntıları"
-embedded = "Gömülü"
-fallback = "yedek"
-infoMessage = "Font yeniden üretim bilgisi mevcut."
-missing = "eksik"
-perfect = "mükemmel"
-perfectMessage = "Tüm fontlar mükemmel şekilde yeniden üretilebilir."
-subset = "kısmi"
-suggestions = "Notlar"
-type = "Tür"
-warningMessage = "Bazı fontlar doğru görüntülenmeyebilir."
-warnings = "Uyarılar"
-webFormat = "Web Formatı"
-
-[pdfTextEditor.groupingMode]
-auto = "Otomatik"
-paragraph = "Paragraf"
-singleLine = "Tek Satır"
-
-[pdfTextEditor.manual]
-expandWidth = "Sayfa kenarına genişlet"
-merge = "Seçimi birleştir"
-mergeTooltip = "Seçili kutuları birleştir"
-resetWidth = "Genişliği sıfırla"
-resizeHandle = "Metin genişliğini ayarla"
-ungroup = "Seçimin grubunu çöz"
-ungroupTooltip = "Paragrafı tekrar satırlara böl"
-widthMenu = "Genişlik seçenekleri"
-
-[pdfTextEditor.modeChange]
-cancel = "İptal"
-confirm = "Sıfırla ve Modu Değiştir"
-title = "Mod Değişikliğini Onayla"
-warning = "Metin gruplama modunu değiştirmek kaydedilmemiş tüm değişiklikleri sıfırlayacaktır. Devam etmek istiyor musunuz?"
-
-[pdfTextEditor.options.advanced]
-title = "Gelişmiş Ayarlar"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Yazı tipi işleme PDF'den farklı olduğunda metni, orijinal sınırlayıcı kutusuna yatay olarak otomatik sığdırır."
-title = "Metni kutulara otomatik sığdır"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Etkinleştirildiğinde, düzenlenmiş her metin kutusu, üst üste binen glifler veya karışık yazı tiplerini önlemek için tek bir PDF metin öğesi olarak dışa aktarılır."
-title = "Düzenlenen metni tek bir PDF öğesine kilitle"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Sayfa türünü otomatik algılar ve metni uygun şekilde gruplar."
-paragraphDescription = "Hizalı satırları çok satırlı paragraf metin kutularında gruplar."
-singleLineDescription = "Her PDF metin satırını ayrı bir metin kutusu olarak tutar."
-title = "Metin Gruplama Modu"
-
-[pdfTextEditor.pageType]
-paragraph = "Paragraf sayfası"
-sparse = "Seyrek metin"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Bu alfa görüntüleyici hâlâ gelişmektedir—bazı yazı tipleri, renkler, saydamlık efektleri ve yerleşim ayrıntıları biraz değişebilir. Lütfen paylaşmadan önce oluşturulan PDF'yi tekrar kontrol edin."
@@ -6021,32 +5930,6 @@ title = "Önizleme Farklılıkları"
 [pdfTextEditor.tooltip.textFocus]
 text = "Bu çalışma alanı, metin düzenlemeye ve gömülü görselleri yeniden konumlandırmaya odaklanır. Karmaşık sayfa illüstrasyonları, form bileşenleri ve katmanlı grafikler dışa aktarım için korunur ancak burada tam olarak düzenlenemez."
 title = "Metin ve Görsel Odak"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "En İyi Şunlarla Çalışır:"
-bestFor1 = "Ağırlıklı olarak metin ve görseller içeren basit PDF'ler"
-bestFor2 = "Standart paragraf biçimlendirmesine sahip belgeler"
-bestFor3 = "Mektuplar, denemeler, raporlar ve temel belgeler"
-dontShowAgain = "Bir daha gösterme"
-experimental = "Bu, aktif geliştirme aşamasında deneysel bir özelliktir. Kullanım sırasında bazı kararsızlıklar ve sorunlar beklenebilir."
-feedback = "Bu bir erken erişim özelliğidir. Lütfen geliştirmemize yardımcı olmak için karşılaştığınız sorunları bildirin!"
-gotIt = "Anladım"
-howItWorks = "Bu araç, PDF'inizi metin içeriğini değiştirebileceğiniz ve görselleri yeniden konumlandırabileceğiniz düzenlenebilir bir formata dönüştürür. Değişiklikler yeni bir PDF olarak kaydedilir."
-issue1 = "Metin rengi şu anda korunmuyor (yakında eklenecek)"
-issue2 = "Paragraf modunda hizalama ve boşluk sorunları daha fazladır - Tek Satır modu önerilir"
-issue3 = "Önizleme görünümü dışa aktarılan PDF'den farklıdır - dışa aktarılan PDF'ler orijinale daha yakındır"
-issue4 = "Döndürülmüş metnin hizalaması manuel ayar gerektirebilir"
-issue5 = "Şeffaflık ve katmanlama efektleri orijinalden farklı olabilir"
-knownIssues = "Bilinen Sorunlar (Düzeltiliyor):"
-limitation1 = "Fontların görüntülenmesi orijinal PDF'den biraz farklı olabilir"
-limitation2 = "Karmaşık grafikler, form alanları ve açıklamalar korunur ancak düzenlenemez"
-limitation3 = "Büyük dosyaların dönüştürülmesi ve işlenmesi zaman alabilir"
-limitations = "Mevcut Sınırlamalar:"
-notIdealFor = "Şunlar için İdeal Değil:"
-notIdealFor1 = "Madde işaretleri, tablolar veya çok sütunlu düzenler gibi özel biçimlendirmeye sahip PDF'ler"
-notIdealFor2 = "Dergiler, broşürler veya yoğun tasarımlı belgeler"
-notIdealFor3 = "Karmaşık düzenlere sahip kullanım kılavuzları"
-title = "PDF Metin Düzenleyiciye Hoş Geldiniz (Erken Erişim)"
 
 [PDFToCSV]
 header = "PDF'den CSV'ye"

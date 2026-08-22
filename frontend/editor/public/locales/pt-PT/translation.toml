@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "Inverter o documento para que a última página fique primeiro 
 SIDE_STITCH_BOOKLET_SORT = "Organizar páginas para impressão de livreto com encadernação lateral (otimizada para encadernar na lateral)."
 
 [pdfTextEditor]
-conversionFailed = "Falha ao converter o PDF. Tente novamente."
-converting = "A converter o PDF para formato editável..."
-currentFile = "Ficheiro atual: {{name}}"
-imageLabel = "Imagem colocada"
-noTextOnPage = "Não foi detetado texto editável nesta página."
-pagePreviewAlt = "Pré-visualização da página"
-pageSummary = "Página {{number}} de {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor JSON de PDF"
-viewLabel = "Editor de PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "Aplicar alterações"
-clearText = "Limpar texto"
-downloadCopy = "Transferir cópia"
-moreOptions = "Mais opções"
-reset = "Repor alterações"
-
-[pdfTextEditor.badges]
-earlyAccess = "Acesso antecipado"
-modified = "Editado"
-
-[pdfTextEditor.empty]
-dropzone = "Arraste e largue aqui um ficheiro PDF ou JSON, ou clique para procurar"
-dropzoneWithFiles = "Selecione um ficheiro no separador Ficheiros, ou arraste e largue aqui um ficheiro PDF ou JSON, ou clique para procurar"
-title = "Nenhum documento carregado"
-
-[pdfTextEditor.errors]
-invalidJson = "Não foi possível ler o ficheiro JSON. Certifique-se de que foi gerado pela ferramenta PDF para JSON."
-pdfConversion = "Não foi possível converter o JSON editado de volta para PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Todas as fontes"
-currentPageFonts = "Fontes nesta página"
-details = "Detalhes da fonte"
-embedded = "Incorporada"
-fallback = "fallback"
-infoMessage = "Informação de reprodução de fontes disponível."
-missing = "em falta"
-perfect = "perfeito"
-perfectMessage = "Todas as fontes podem ser reproduzidas na perfeição."
-subset = "subconjunto"
-suggestions = "Notas"
-type = "Tipo"
-warningMessage = "Algumas fontes podem não ser renderizadas corretamente."
-warnings = "Avisos"
-webFormat = "Formato Web"
-
-[pdfTextEditor.groupingMode]
-auto = "Auto"
-paragraph = "Parágrafo"
-singleLine = "Linha única"
-
-[pdfTextEditor.manual]
-expandWidth = "Expandir até à margem da página"
-merge = "Unir seleção"
-mergeTooltip = "Unir caixas selecionadas"
-resetWidth = "Repor largura"
-resizeHandle = "Ajustar largura do texto"
-ungroup = "Desagrupar seleção"
-ungroupTooltip = "Dividir parágrafo novamente em linhas"
-widthMenu = "Opções de largura"
-
-[pdfTextEditor.modeChange]
-cancel = "Cancelar"
-confirm = "Repor e alterar modo"
-title = "Confirmar alteração de modo"
-warning = "Mudar o modo de agrupamento de texto irá repor todas as alterações não guardadas. Tem a certeza de que deseja continuar?"
-
-[pdfTextEditor.options.advanced]
-title = "Definições avançadas"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Dimensiona automaticamente o texto na horizontal para caber no limite original quando a renderização da fonte difere do PDF."
-title = "Dimensionar texto automaticamente para caber nas caixas"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Quando ativado, o editor exporta cada caixa de texto editada como um único elemento de texto PDF para evitar sobreposição de glifos ou mistura de fontes."
-title = "Fixar texto editado a um único elemento PDF"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Deteta automaticamente o tipo de página e agrupa o texto de forma adequada."
-paragraphDescription = "Agrupa linhas alinhadas em caixas de texto de parágrafo com várias linhas."
-singleLineDescription = "Mantém cada linha de texto do PDF como uma caixa de texto separada."
-title = "Modo de agrupamento de texto"
-
-[pdfTextEditor.pageType]
-paragraph = "Página de parágrafos"
-sparse = "Texto disperso"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Este visualizador alfa ainda está a evoluir — certas fontes, cores, efeitos de transparência e detalhes de layout podem variar ligeiramente. Verifique o PDF gerado antes de o partilhar."
@@ -6021,32 +5930,6 @@ title = "Variações na pré-visualização"
 [pdfTextEditor.tooltip.textFocus]
 text = "Este espaço de trabalho foca-se na edição de texto e no reposicionamento de imagens incorporadas. Arte complexa de página, widgets de formulários e gráficos em camadas são preservados para exportação, mas não são totalmente editáveis aqui."
 title = "Foco em texto e imagem"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Funciona melhor com:"
-bestFor1 = "PDFs simples que contêm sobretudo texto e imagens"
-bestFor2 = "Documentos com formatação de parágrafo normal"
-bestFor3 = "Cartas, ensaios, relatórios e documentos básicos"
-dontShowAgain = "Não voltar a mostrar"
-experimental = "Esta é uma funcionalidade experimental em desenvolvimento ativo. Espere alguma instabilidade e problemas durante a utilização."
-feedback = "Esta é uma funcionalidade de acesso antecipado. Por favor, reporte quaisquer problemas que encontrar para nos ajudar a melhorar!"
-gotIt = "Percebi"
-howItWorks = "Esta ferramenta converte o seu PDF para um formato editável onde pode modificar o conteúdo de texto e reposicionar imagens. As alterações são guardadas como um novo PDF."
-issue1 = "A cor do texto não é atualmente preservada (será adicionada em breve)"
-issue2 = "O modo de parágrafo tem mais problemas de alinhamento e espaçamento - recomenda-se o modo de linha única"
-issue3 = "A pré-visualização difere do PDF exportado - os PDFs exportados são mais próximos do original"
-issue4 = "O alinhamento de texto rodado pode necessitar de ajuste manual"
-issue5 = "Os efeitos de transparência e de camadas podem variar em relação ao original"
-knownIssues = "Problemas conhecidos (em correção):"
-limitation1 = "A renderização das fontes pode diferir ligeiramente do PDF original"
-limitation2 = "Gráficos complexos, campos de formulário e anotações são preservados mas não editáveis"
-limitation3 = "Ficheiros grandes podem demorar a converter e processar"
-limitations = "Limitações atuais:"
-notIdealFor = "Não é ideal para:"
-notIdealFor1 = "PDFs com formatação especial como marcadores, tabelas ou layouts multicoluna"
-notIdealFor2 = "Revistas, brochuras ou documentos com design elaborado"
-notIdealFor3 = "Manuais de instruções com layouts complexos"
-title = "Bem-vindo ao PDF Text Editor (Acesso Antecipado)"
 
 [PDFToCSV]
 header = "PDF para CSV"

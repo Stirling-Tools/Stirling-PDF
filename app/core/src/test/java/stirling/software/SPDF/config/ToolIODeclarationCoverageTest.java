@@ -57,6 +57,8 @@ class ToolIODeclarationCoverageTest {
                     // documents.
                     "/api/v1/convert/pdf/text-editor",
                     "/api/v1/convert/text-editor/pdf",
+                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
+                    "/api/v1/general/pdf-text-editor-v2",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",

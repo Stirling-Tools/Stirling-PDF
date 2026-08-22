@@ -96,7 +96,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           />
         ),
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: lazy(() => import("@app/tools/pdfTextEditor/PdfTextEditor")),
+        component: lazy(
+          () => import("@app/tools/pdfTextEditor/v2/PdfTextEditorV2"),
+        ),
         description: t(
           "home.pdfTextEditor.desc",
           "Review and edit text and images in PDFs with grouped text editing and PDF regeneration",
@@ -108,7 +110,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
-        versionStatus: "alpha",
       },
       multiTool: {
         icon: (

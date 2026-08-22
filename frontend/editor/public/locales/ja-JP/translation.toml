@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "最後のページが最初になるように反転。"
 SIDE_STITCH_BOOKLET_SORT = "小冊子（側面綴じ）印刷用にページを配置（側面綴じに最適化）。"
 
 [pdfTextEditor]
-conversionFailed = "PDF の変換に失敗しました。もう一度お試しください。"
-converting = "PDF を編集可能形式に変換中..."
-currentFile = "現在のファイル: {{name}}"
-imageLabel = "配置済み画像"
-noTextOnPage = "このページで編集可能なテキストは検出されませんでした。"
-pagePreviewAlt = "ページプレビュー"
-pageSummary = "{{total}} ページ中 {{number}} ページ目"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON エディター"
-viewLabel = "PDF エディター"
-
-[pdfTextEditor.actions]
-applyChanges = "変更を適用"
-clearText = "テキストをクリア"
-downloadCopy = "コピーをダウンロード"
-moreOptions = "その他のオプション"
-reset = "変更をリセット"
-
-[pdfTextEditor.badges]
-earlyAccess = "早期アクセス"
-modified = "編集済み"
-
-[pdfTextEditor.empty]
-dropzone = "ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
-dropzoneWithFiles = "ファイルタブからファイルを選択するか、ここに PDF または JSON ファイルをドラッグ＆ドロップするか、クリックして参照"
-title = "ドキュメントが読み込まれていません"
-
-[pdfTextEditor.errors]
-invalidJson = "JSONファイルを読み取れません。PDF to JSONツールで生成されたものか確認してください。"
-pdfConversion = "編集したJSONをPDFに変換できませんでした。"
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "すべてのフォント"
-currentPageFonts = "このページのフォント"
-details = "フォント詳細"
-embedded = "埋め込み"
-fallback = "フォールバック"
-infoMessage = "フォント再現情報があります。"
-missing = "欠落"
-perfect = "完全"
-perfectMessage = "すべてのフォントを完全に再現できます。"
-subset = "サブセット"
-suggestions = "注記"
-type = "種類"
-warningMessage = "一部のフォントは正しく表示されない可能性があります。"
-warnings = "警告"
-webFormat = "Web形式"
-
-[pdfTextEditor.groupingMode]
-auto = "自動"
-paragraph = "段落"
-singleLine = "1行"
-
-[pdfTextEditor.manual]
-expandWidth = "ページ端まで拡張"
-merge = "選択を結合"
-mergeTooltip = "選択ボックスを結合"
-resetWidth = "幅をリセット"
-resizeHandle = "テキストの幅を調整"
-ungroup = "選択を分割"
-ungroupTooltip = "段落を行に分割"
-widthMenu = "幅オプション"
-
-[pdfTextEditor.modeChange]
-cancel = "キャンセル"
-confirm = "リセットしてモード変更"
-title = "モード変更の確認"
-warning = "テキストのグループ化モードを変更すると、未保存の変更はすべてリセットされます。続行してよろしいですか？"
-
-[pdfTextEditor.options.advanced]
-title = "詳細設定"
-
-[pdfTextEditor.options.autoScaleText]
-description = "フォントレンダリングがPDFと異なる場合に、元のバウンディングボックス内に収まるよう横方向に自動スケールします。"
-title = "ボックスに収まるようテキストを自動スケール"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "有効にすると、編集した各テキストボックスを1つのPDFテキスト要素としてエクスポートし、グリフの重なりやフォント混在を避けます。"
-title = "編集したテキストを1つのPDF要素に固定"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "ページ種別を自動判定し、適切にテキストをグループ化します。"
-paragraphDescription = "整列した行を複数行の段落テキストボックスにまとめます。"
-singleLineDescription = "各PDFのテキスト行を個別のテキストボックスとして保持します。"
-title = "テキストのグループ化モード"
-
-[pdfTextEditor.pageType]
-paragraph = "段落ページ"
-sparse = "疎なテキスト"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "このアルファ版ビューアーは発展途上のため、一部のフォント、色、透明効果、レイアウトがわずかに変化することがあります。共有前に生成された PDF を再確認してください。"
@@ -6021,32 +5930,6 @@ title = "プレビュー差異"
 [pdfTextEditor.tooltip.textFocus]
 text = "このワークスペースはテキストの編集と埋め込み画像の位置調整に重点を置いています。複雑なページのアートワーク、フォームウィジェット、レイヤー化されたグラフィックは書き出し時に保持されますが、ここでは完全には編集できません。"
 title = "テキストと画像のフォーカス"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "最適："
-bestFor1 = "主にテキストと画像で構成されたシンプルなPDF"
-bestFor2 = "標準的な段落書式のドキュメント"
-bestFor3 = "手紙、エッセイ、レポートなどの基本的なドキュメント"
-dontShowAgain = "今後表示しない"
-experimental = "これは開発中の実験的機能です。使用中の不安定さや不具合が発生する可能性があります。"
-feedback = "これは早期アクセス機能です。問題があればご報告ください。改善に役立ちます。"
-gotIt = "了解"
-howItWorks = "このツールはPDFを編集可能な形式に変換し、テキストの編集や画像の再配置が行えます。変更は新しいPDFとして保存されます。"
-issue1 = "テキストの色は現在保持されません（近日対応予定）"
-issue2 = "段落モードは整列や行間の問題が多いため、単一行モードを推奨します"
-issue3 = "プレビュー表示は書き出し後のPDFと異なる場合があります（書き出しPDFの方が原本に近い）"
-issue4 = "回転テキストの整列は手動調整が必要な場合があります"
-issue5 = "透明度やレイヤー効果は原本と異なる場合があります"
-knownIssues = "既知の問題（修正中）："
-limitation1 = "フォントの描画が元のPDFとわずかに異なる場合があります"
-limitation2 = "複雑なグラフィックス、フォームフィールド、注釈は保持されますが編集できません"
-limitation3 = "大きなファイルは変換と処理に時間がかかる場合があります"
-limitations = "現在の制限："
-notIdealFor = "不向き："
-notIdealFor1 = "箇条書き、表、複数段組などの特別な書式を含むPDF"
-notIdealFor2 = "雑誌、パンフレットなどデザイン性の高いドキュメント"
-notIdealFor3 = "複雑なレイアウトの取扱説明書"
-title = "PDF Text Editor（早期アクセス）へようこそ"
 
 [PDFToCSV]
 header = "PDFをCSVに変換"

@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "พลิกเอกสารให้หน้าสุดท
 SIDE_STITCH_BOOKLET_SORT = "จัดเรียงหน้าสำหรับพิมพ์แบบสมุดเย็บข้าง (ปรับให้เหมาะกับการเข้าเล่มด้านข้าง)"
 
 [pdfTextEditor]
-conversionFailed = "แปลง PDF ไม่สำเร็จ โปรดลองอีกครั้ง"
-converting = "กำลังแปลง PDF เป็นรูปแบบที่แก้ไขได้..."
-currentFile = "ไฟล์ปัจจุบัน: {{name}}"
-imageLabel = "รูปภาพที่วางแล้ว"
-noTextOnPage = "ไม่พบข้อความที่แก้ไขได้ในหน้านี้"
-pagePreviewAlt = "ภาพตัวอย่างหน้า"
-pageSummary = "หน้า {{number}} จาก {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "ตัวแก้ไข PDF JSON"
-viewLabel = "ตัวแก้ไข PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "ใช้การเปลี่ยนแปลง"
-clearText = "ล้างข้อความ"
-downloadCopy = "ดาวน์โหลดสำเนา"
-moreOptions = "ตัวเลือกเพิ่มเติม"
-reset = "รีเซ็ตการเปลี่ยนแปลง"
-
-[pdfTextEditor.badges]
-earlyAccess = "เข้าถึงล่วงหน้า"
-modified = "แก้ไขแล้ว"
-
-[pdfTextEditor.empty]
-dropzone = "ลากและวางไฟล์ PDF หรือ JSON ที่นี่ หรือคลิกเพื่อเรียกดู"
-dropzoneWithFiles = "เลือกไฟล์จากแท็บไฟล์ หรือลากและวางไฟล์ PDF หรือ JSON ที่นี่ หรือคลิกเพื่อเรียกดู"
-title = "ยังไม่ได้โหลดเอกสาร"
-
-[pdfTextEditor.errors]
-invalidJson = "ไม่สามารถอ่านไฟล์ JSON โปรดตรวจสอบว่าไฟล์ถูกสร้างโดยเครื่องมือ PDF to JSON"
-pdfConversion = "ไม่สามารถแปลง JSON ที่แก้ไขกลับเป็น PDF"
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "ฟอนต์ทั้งหมด"
-currentPageFonts = "ฟอนต์บนหน้านี้"
-details = "รายละเอียดฟอนต์"
-embedded = "ฝังไว้"
-fallback = "fallback"
-infoMessage = "มีข้อมูลการทำซ้ำฟอนต์"
-missing = "หายไป"
-perfect = "สมบูรณ์แบบ"
-perfectMessage = "สามารถทำซ้ำฟอนต์ทั้งหมดได้อย่างสมบูรณ์แบบ"
-subset = "subset"
-suggestions = "หมายเหตุ"
-type = "ประเภท"
-warningMessage = "บางฟอนต์อาจแสดงผลไม่ถูกต้อง"
-warnings = "คำเตือน"
-webFormat = "รูปแบบเว็บ"
-
-[pdfTextEditor.groupingMode]
-auto = "อัตโนมัติ"
-paragraph = "ย่อหน้า"
-singleLine = "บรรทัดเดียว"
-
-[pdfTextEditor.manual]
-expandWidth = "ขยายถึงขอบหน้า"
-merge = "รวมที่เลือก"
-mergeTooltip = "รวมกล่องที่เลือก"
-resetWidth = "รีเซ็ตความกว้าง"
-resizeHandle = "ปรับความกว้างข้อความ"
-ungroup = "ยกเลิกการจัดกลุ่มที่เลือก"
-ungroupTooltip = "แยกย่อหน้าเป็นบรรทัด"
-widthMenu = "ตัวเลือกความกว้าง"
-
-[pdfTextEditor.modeChange]
-cancel = "ยกเลิก"
-confirm = "รีเซ็ตและเปลี่ยนโหมด"
-title = "ยืนยันการเปลี่ยนโหมด"
-warning = "การเปลี่ยนโหมดจัดกลุ่มข้อความจะรีเซ็ตการเปลี่ยนแปลงที่ยังไม่บันทึกทั้งหมด คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
-
-[pdfTextEditor.options.advanced]
-title = "การตั้งค่าขั้นสูง"
-
-[pdfTextEditor.options.autoScaleText]
-description = "ปรับข้อความในแนวนอนอัตโนมัติให้พอดีกับกรอบขอบเขตเดิมเมื่อการเรนเดอร์ฟอนต์ต่างจากใน PDF"
-title = "ปรับขนาดข้อความอัตโนมัติให้พอดีกล่อง"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "เมื่อเปิดใช้ เครื่องมือจะส่งออกแต่ละกล่องข้อความที่แก้ไขเป็นองค์ประกอบข้อความ PDF เดียว เพื่อหลีกเลี่ยงอักขระซ้อนทับหรือฟอนต์ปะปน"
-title = "ล็อกข้อความที่แก้ไขเป็นองค์ประกอบ PDF เดียว"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "ตรวจจับประเภทหน้าอัตโนมัติและจัดกลุ่มข้อความให้เหมาะสม"
-paragraphDescription = "จัดกลุ่มบรรทัดที่จัดแนวเป็นกล่องข้อความย่อหน้าหลายบรรทัด"
-singleLineDescription = "คงแต่ละบรรทัดข้อความใน PDF เป็นกล่องข้อความแยกกัน"
-title = "โหมดจัดกลุ่มข้อความ"
-
-[pdfTextEditor.pageType]
-paragraph = "หน้าแบบย่อหน้า"
-sparse = "ข้อความกระจัดกระจาย"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Alpha Viewer นี้ยังอยู่ระหว่างพัฒนา—แบบอักษรบางชนิด สี เอฟเฟกต์ความโปร่งใส และรายละเอียดเลย์เอาต์อาจเปลี่ยนเล็กน้อย โปรดตรวจสอบ PDF ที่สร้างอย่างรอบคอบก่อนแชร์"
@@ -6021,32 +5930,6 @@ title = "ความแตกต่างระหว่างการแส�
 [pdfTextEditor.tooltip.textFocus]
 text = "พื้นที่ทำงานนี้เน้นการแก้ไขข้อความและปรับตำแหน่งรูปภาพที่ฝังไว้ งานกราฟิกของหน้าแบบซับซ้อน วิดเจ็ตฟอร์ม และกราฟิกแบบหลายชั้นจะคงไว้สำหรับการส่งออก แต่ไม่สามารถแก้ไขได้ทั้งหมดที่นี่"
 title = "เน้นข้อความและรูปภาพ"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "เหมาะที่สุดกับ:"
-bestFor1 = "PDF แบบง่ายที่มีข้อความและภาพเป็นหลัก"
-bestFor2 = "เอกสารที่จัดรูปแบบย่อหน้ามาตรฐาน"
-bestFor3 = "จดหมาย เรียงความ รายงาน และเอกสารพื้นฐาน"
-dontShowAgain = "ไม่ต้องแสดงอีก"
-experimental = "นี่คือฟีเจอร์ทดลองที่กำลังพัฒนา อาจมีความไม่เสถียรและปัญหาในการใช้งาน"
-feedback = "นี่คือฟีเจอร์ Early Access โปรดรายงานปัญหาที่พบเพื่อช่วยให้เราพัฒนาขึ้น!"
-gotIt = "รับทราบ"
-howItWorks = "เครื่องมือนี้จะแปลง PDF ของคุณเป็นรูปแบบที่แก้ไขได้ เพื่อให้คุณปรับข้อความและจัดตำแหน่งภาพใหม่ การเปลี่ยนแปลงจะถูกบันทึกกลับเป็น PDF ใหม่"
-issue1 = "ยังไม่คงรักษาสีของข้อความ (จะเพิ่มเร็วๆ นี้)"
-issue2 = "โหมดย่อหน้ามีปัญหาการจัดแนวและระยะห่างมากกว่า - แนะนำให้ใช้โหมดบรรทัดเดียว"
-issue3 = "การแสดงตัวอย่างต่างจาก PDF ที่ส่งออก - PDF ที่ส่งออกใกล้เคียงต้นฉบับมากกว่า"
-issue4 = "การจัดแนวข้อความที่หมุนอาจต้องปรับด้วยตนเอง"
-issue5 = "เอฟเฟ็กต์ความโปร่งใสและการซ้อนเลเยอร์อาจต่างจากต้นฉบับ"
-knownIssues = "ปัญหาที่ทราบ (กำลังแก้ไข):"
-limitation1 = "การเรนเดอร์ฟอนต์อาจต่างจาก PDF ต้นฉบับเล็กน้อย"
-limitation2 = "กราฟิกซับซ้อน ช่องฟอร์ม และคำอธิบายประกอบจะถูกเก็บไว้แต่แก้ไขไม่ได้"
-limitation3 = "ไฟล์ขนาดใหญ่อาจใช้เวลาในการแปลงและประมวลผล"
-limitations = "ข้อจำกัดปัจจุบัน:"
-notIdealFor = "ไม่เหมาะกับ:"
-notIdealFor1 = "PDF ที่มีรูปแบบพิเศษ เช่น รายการหัวข้อย่อย ตาราง หรือเค้าโครงหลายคอลัมน์"
-notIdealFor2 = "นิตยสาร โบรชัวร์ หรือเอกสารที่ออกแบบซับซ้อน"
-notIdealFor3 = "คู่มือที่มีเค้าโครงซับซ้อน"
-title = "ยินดีต้อนรับสู่ PDF Text Editor (Early Access)"
 
 [PDFToCSV]
 header = "PDF เป็น CSV"

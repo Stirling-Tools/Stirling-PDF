@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "將文件反轉，使最後一頁變為第一頁，以此類推
 SIDE_STITCH_BOOKLET_SORT = "為側裝訂小冊子列印排列頁面（針對側邊裝訂最佳化）。"
 
 [pdfTextEditor]
-conversionFailed = "轉換 PDF 失敗。請再試一次。"
-converting = "正在將 PDF 轉換為可編輯格式..."
-currentFile = "目前檔案：{{name}}"
-imageLabel = "已放置的圖片"
-noTextOnPage = "此頁未偵測到可編輯文字。"
-pagePreviewAlt = "頁面預覽"
-pageSummary = "第 {{number}} / {{total}} 頁"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON 編輯器"
-viewLabel = "PDF 編輯器"
-
-[pdfTextEditor.actions]
-applyChanges = "套用變更"
-clearText = "清除文字"
-downloadCopy = "下載副本"
-moreOptions = "更多選項"
-reset = "重設變更"
-
-[pdfTextEditor.badges]
-earlyAccess = "搶先體驗"
-modified = "已編輯"
-
-[pdfTextEditor.empty]
-dropzone = "將 PDF 或 JSON 檔案拖放到此處，或點選以瀏覽"
-dropzoneWithFiles = "從「檔案」分頁選取檔案，或將 PDF 或 JSON 檔案拖放到此處，或點選以瀏覽"
-title = "尚未載入檔案"
-
-[pdfTextEditor.errors]
-invalidJson = "無法讀取 JSON 檔。請確認該檔是由 PDF to JSON 工具產生。"
-pdfConversion = "無法將已編輯的 JSON 轉回 PDF。"
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "所有字型"
-currentPageFonts = "此頁字型"
-details = "字型詳細資訊"
-embedded = "嵌入"
-fallback = "後備"
-infoMessage = "提供字型重現相關資訊。"
-missing = "缺少"
-perfect = "完美"
-perfectMessage = "所有字型皆可完美重現。"
-subset = "子集"
-suggestions = "備註"
-type = "類型"
-warningMessage = "某些字型可能無法正確呈現。"
-warnings = "警告"
-webFormat = "Web 格式"
-
-[pdfTextEditor.groupingMode]
-auto = "自動"
-paragraph = "段落"
-singleLine = "單行"
-
-[pdfTextEditor.manual]
-expandWidth = "展開至頁緣"
-merge = "合併所選"
-mergeTooltip = "合併所選方框"
-resetWidth = "重設寬度"
-resizeHandle = "調整文字寬度"
-ungroup = "取消分組所選"
-ungroupTooltip = "將段落拆回多行"
-widthMenu = "寬度選項"
-
-[pdfTextEditor.modeChange]
-cancel = "取消"
-confirm = "重設並變更模式"
-title = "確認變更模式"
-warning = "變更文字群組模式將重設所有未儲存的變更。確定要繼續嗎？"
-
-[pdfTextEditor.options.advanced]
-title = "進階設定"
-
-[pdfTextEditor.options.autoScaleText]
-description = "當字型呈現與 PDF 不同時，自動在水平方向縮放文字以適配其原始邊界框。"
-title = "自動縮放文字以符合方框"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "啟用時，編輯器會將每個已編輯文字框匯出為一個 PDF 文字元素，以避免字形重疊或字型混用。"
-title = "將已編輯文字鎖定為單一 PDF 元素"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "自動偵測頁面類型並適當分組文字。"
-paragraphDescription = "將對齊的多行合併為段落文字框。"
-singleLineDescription = "每一行 PDF 文字保留為單獨的文字框。"
-title = "文字分組模式"
-
-[pdfTextEditor.pageType]
-paragraph = "段落頁面"
-sparse = "零散文字"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "此 Alpha 檢視器仍在演進中—某些字型、顏色、透明效果與版面細節可能略有變動。分享前請再次確認產生的 PDF。"
@@ -6021,32 +5930,6 @@ title = "預覽差異"
 [pdfTextEditor.tooltip.textFocus]
 text = "此工作區專注於編輯文字與重新定位內嵌影像。複雜的頁面圖稿、表單元件與分層圖形會在匯出時保留，但在此處不支援完整編輯。"
 title = "文字與影像焦點"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "最適合："
-bestFor1 = "以文字與圖片為主的簡單 PDF"
-bestFor2 = "採標準段落格式的文件"
-bestFor3 = "信件、論文、報告與基本文件"
-dontShowAgain = "不再顯示"
-experimental = "這是仍在積極開發中的實驗性功能。使用期間可能遇到些許不穩定與問題。"
-feedback = "此功能為搶先體驗。請回報任何問題以協助我們改進！"
-gotIt = "知道了"
-howItWorks = "此工具會將您的 PDF 轉為可編輯格式，您可修改文字內容並重新定位圖片。變更將另存為新的 PDF。"
-issue1 = "目前無法保留文字顏色（即將加入）"
-issue2 = "段落模式對齊與間距問題較多，建議使用單行模式"
-issue3 = "預覽與匯出後的 PDF 顯示不同；匯出的 PDF 更接近原始檔"
-issue4 = "旋轉文字的對齊可能需要手動調整"
-issue5 = "透明與分層效果可能與原始不同"
-knownIssues = "已知問題（修復中）："
-limitation1 = "字型呈現可能與原始 PDF 略有差異"
-limitation2 = "複雜圖形、表單欄位與註解會保留，但不可編輯"
-limitation3 = "大型檔案可能需要時間轉換與處理"
-limitations = "目前限制："
-notIdealFor = "不適用於："
-notIdealFor1 = "含特殊格式的 PDF，例如項目符號、表格或多欄版面"
-notIdealFor2 = "雜誌、型錄或高度設計的文件"
-notIdealFor3 = "版面複雜的說明手冊"
-title = "歡迎使用 PDF 文字編輯器（搶先體驗）"
 
 [PDFToCSV]
 header = "PDF 轉換為 CSV"

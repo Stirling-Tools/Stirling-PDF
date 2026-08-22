@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "Cas an cháipéis bunoscionn ionas go n‑éireoidh an leathana
 SIDE_STITCH_BOOKLET_SORT = "Socraigh leathanaigh le haghaidh priontála leabhráin le fuáil ar an taobh (optamaithe do cheangal ar an taobh)."
 
 [pdfTextEditor]
-conversionFailed = "Theip ar thiontú PDF. Bain triail eile as."
-converting = "PDF á thiontú go formáid in-eagarthóireachta..."
-currentFile = "Comhad reatha: {{name}}"
-imageLabel = "Íomhá curtha"
-noTextOnPage = "Níor braitheadh aon téacs in-eagarthóireachta ar an leathanach seo."
-pagePreviewAlt = "Réamhamharc leathanaigh"
-pageSummary = "Leathanach {{number}} as {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Eagarthóir PDF JSON"
-viewLabel = "Eagarthóir PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "Cuir Athruithe i bhFeidhm"
-clearText = "Glan téacs"
-downloadCopy = "Íoslódáil Cóip"
-moreOptions = "Tuilleadh roghanna"
-reset = "Athshocraigh Athruithe"
-
-[pdfTextEditor.badges]
-earlyAccess = "Rochtain Luath"
-modified = "Athraithe"
-
-[pdfTextEditor.empty]
-dropzone = "Tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
-dropzoneWithFiles = "Roghnaigh comhad ón gcluaisín Comhaid, nó tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
-title = "Níl aon cháipéis luchtaithe"
-
-[pdfTextEditor.errors]
-invalidJson = "Ní féidir an comhad JSON a léamh. Cinntigh gur gineadh é leis an uirlis PDF go JSON."
-pdfConversion = "Ní féidir an JSON curtha in eagar a thiontú ar ais go PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Gach cló"
-currentPageFonts = "Clónna ar an leathanach seo"
-details = "Sonraí Cló"
-embedded = "Leabaithe"
-fallback = "cúltaca"
-infoMessage = "Eolas faoi atáirgeadh clónna ar fáil."
-missing = "ar iarraidh"
-perfect = "foirfe"
-perfectMessage = "Is féidir gach cló a atáirgeadh go foirfe."
-subset = "fo-thacar"
-suggestions = "Nótaí"
-type = "Cineál"
-warningMessage = "D’fhéadfadh roinnt clónna gan rindreáil i gceart."
-warnings = "Rabhaidh"
-webFormat = "Formáid Gréasáin"
-
-[pdfTextEditor.groupingMode]
-auto = "Uathoibríoch"
-paragraph = "Mír"
-singleLine = "Líne Aonair"
-
-[pdfTextEditor.manual]
-expandWidth = "Leathnaigh go himill an leathanaigh"
-merge = "Cumaisc an roghnú"
-mergeTooltip = "Cumaisc na boscaí roghnaithe"
-resetWidth = "Athshocraigh an leithead"
-resizeHandle = "Coigeartaigh leithead an téacs"
-ungroup = "Díghrúpáil an roghnúchán"
-ungroupTooltip = "Roinn an mhír ar ais ina línte"
-widthMenu = "Roghanna leithead"
-
-[pdfTextEditor.modeChange]
-cancel = "Cealaigh"
-confirm = "Athshocraigh agus Athraigh an Mód"
-title = "Deimhnigh Athrú Móid"
-warning = "Athshocróidh athrú ar mhód grúpála téacs gach athrú gan sábháil. An bhfuil tú cinnte gur mian leat leanúint ar aghaidh?"
-
-[pdfTextEditor.options.advanced]
-title = "Socruithe Ardleibhéil"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Scálaíonn sé téacs go cothrománach go huathoibríoch chun feistiú dá bhosca teorann bunaidh nuair a bhíonn rindreáil cló difriúil ón PDF."
-title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Nuair atá cumasaithe, easpórtálann an t-eagarthóir gach bosca téacs curtha in eagar mar eilimint téacs PDF amháin chun glifaí forluiteacha nó clónna measctha a sheachaint."
-title = "Glasáil téacs curtha in eagar le heilimint PDF aonair"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Aimsíonn sé go huathoibríoch cineál leathanaigh agus grúpálann sé téacs mar is cuí."
-paragraphDescription = "Grúpálann sé línte ailínithe i mboscaí téacs míre il-líne."
-singleLineDescription = "Coinníonn sé gach líne téacs PDF mar bhosca téacs ar leith."
-title = "Mód Grúpála Téacs"
-
-[pdfTextEditor.pageType]
-paragraph = "Leathanach míre"
-sparse = "Téacs scaipthe"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Tá an breathnóir alfa seo fós ag forbairt—d’fhéadfadh clónna, dathanna, éifeachtaí trédhearcachta agus sonraí leagan amach áirithe athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
@@ -6021,32 +5930,6 @@ title = "Réamhamharc ar an Éagsúlacht"
 [pdfTextEditor.tooltip.textFocus]
 text = "Díríonn an spás oibre seo ar théacs a chur in eagar agus íomhánna leabaithe a athshuíomh. Coinnítear saothar ealaíne leathanaigh casta, giuirléidí foirmeacha, agus grafaicí srathacha le haghaidh onnmhairithe ach ní féidir iad a chur in eagar go hiomlán anseo."
 title = "Fócas Téacs agus Íomhá"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Is fearr a oibríonn le:"
-bestFor1 = "PDFanna simplí a bhfuil téacs agus íomhánna iontu den chuid is mó"
-bestFor2 = "Cáipéisí le formáidiú caighdeánach míreanna"
-bestFor3 = "Litreacha, aistí, tuairiscí agus doiciméid bhunúsacha"
-dontShowAgain = "Ná taispeáin arís"
-experimental = "Is gné thurgnamhach í seo atá i mbun forbartha. Bí ag súil le heaspa cobhsaíochta agus le fadhbanna áirithe le linn úsáide."
-feedback = "Is gné rochtana luaithe í seo. Tabhair tuairisc ar aon fhadhb a mbuaileann tú léi chun cabhrú linn feabhsú!"
-gotIt = "Tuigim"
-howItWorks = "Tiontaíonn an uirlis seo do PDF go formáid in-eagarthóireachta ina féidir leat ábhar téacs a mhodhnú agus íomhánna a athshuíomh. Sábháiltear na hathruithe ar ais mar PDF nua."
-issue1 = "Níl dath an téacs caomhnaithe faoi láthair (cuirfear leis go luath é)"
-issue2 = "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre — moltar Mód Líne Aonair"
-issue3 = "Tá an réamhamharc difriúil ón PDF easpórtáilte — tá PDFanna easpórtáilte níos gaire don bhunleagan"
-issue4 = "D’fhéadfadh go mbeadh coigeartú láimhe de dhíth ar ailíniú téacs rothlaithe"
-issue5 = "D’fhéadfadh éifeachtaí trédhearcachta agus sraithe a bheith éagsúil ón mbunleagan"
-knownIssues = "Fadhbanna Aitheanta (Á Réiteach):"
-limitation1 = "Féadfaidh rindreáil cló a bheith beagán difriúil ón PDF bunaidh"
-limitation2 = "Coinnítear grafaicí casta, réimsí foirme agus nótaí ach ní féidir iad a chur in eagar"
-limitation3 = "D’fhéadfadh sé go dtógfadh sé tamall comhaid mhóra a thiontú agus a phróiseáil"
-limitations = "Teorainneacha Reatha:"
-notIdealFor = "Ní oiriúnach do:"
-notIdealFor1 = "PDFanna le formáidiú speisialta ar nós pointí liosta, táblaí, nó leagan amach ilcholúin"
-notIdealFor2 = "Irisí, bróisiúir, nó doiciméid le dearadh trom"
-notIdealFor3 = "Lámhleabhair treoracha le leagan amach casta"
-title = "Fáilte go dtí Eagarthóir Téacs PDF (Rochtain Luath)"
 
 [PDFToCSV]
 header = "Ó CSV go PDF"

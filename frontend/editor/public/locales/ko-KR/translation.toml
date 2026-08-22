@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "문서를 뒤집어 마지막 페이지가 첫 페이지가 되
 SIDE_STITCH_BOOKLET_SORT = "측면 제본 소책자 인쇄를 위한 페이지 배열(측면 제본에 최적화)."
 
 [pdfTextEditor]
-conversionFailed = "PDF 변환에 실패했습니다. 다시 시도하세요."
-converting = "PDF를 편집 가능한 형식으로 변환하는 중..."
-currentFile = "현재 파일: {{name}}"
-imageLabel = "배치된 이미지"
-noTextOnPage = "이 페이지에서 편집 가능한 텍스트를 찾지 못했습니다."
-pagePreviewAlt = "페이지 미리보기"
-pageSummary = "페이지 {{number}} / {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON 편집기"
-viewLabel = "PDF 편집기"
-
-[pdfTextEditor.actions]
-applyChanges = "변경 사항 적용"
-clearText = "텍스트 지우기"
-downloadCopy = "사본 다운로드"
-moreOptions = "더 많은 옵션"
-reset = "변경 사항 초기화"
-
-[pdfTextEditor.badges]
-earlyAccess = "얼리 액세스"
-modified = "편집됨"
-
-[pdfTextEditor.empty]
-dropzone = "여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
-dropzoneWithFiles = "파일 탭에서 파일을 선택하거나, 여기에 PDF 또는 JSON 파일을 끌어다 놓거나 클릭하여 찾아보세요"
-title = "로드된 문서 없음"
-
-[pdfTextEditor.errors]
-invalidJson = "JSON 파일을 읽을 수 없습니다. PDF to JSON 도구로 생성되었는지 확인하세요."
-pdfConversion = "편집된 JSON을 PDF로 다시 변환할 수 없습니다."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "모든 글꼴"
-currentPageFonts = "이 페이지의 글꼴"
-details = "글꼴 정보"
-embedded = "내장"
-fallback = "대체"
-infoMessage = "글꼴 재현 정보 제공."
-missing = "누락"
-perfect = "완벽"
-perfectMessage = "모든 글꼴을 완벽하게 재현할 수 있습니다."
-subset = "서브셋"
-suggestions = "참고"
-type = "유형"
-warningMessage = "일부 글꼴이 올바르게 렌더링되지 않을 수 있습니다."
-warnings = "경고"
-webFormat = "웹 형식"
-
-[pdfTextEditor.groupingMode]
-auto = "자동"
-paragraph = "문단"
-singleLine = "한 줄"
-
-[pdfTextEditor.manual]
-expandWidth = "페이지 가장자리까지 확장"
-merge = "선택 병합"
-mergeTooltip = "선택 항목 병합"
-resetWidth = "너비 재설정"
-resizeHandle = "텍스트 너비 조정"
-ungroup = "선택 항목 그룹 해제"
-ungroupTooltip = "문단을 다시 줄로 분할"
-widthMenu = "너비 옵션"
-
-[pdfTextEditor.modeChange]
-cancel = "취소"
-confirm = "초기화 후 모드 변경"
-title = "모드 변경 확인"
-warning = "텍스트 그룹화 모드를 변경하면 저장되지 않은 변경 사항이 모두 초기화됩니다. 계속하시겠습니까?"
-
-[pdfTextEditor.options.advanced]
-title = "고급 설정"
-
-[pdfTextEditor.options.autoScaleText]
-description = "폰트 렌더링이 PDF와 다를 때 원래 경계 상자 안에 맞도록 텍스트를 가로로 자동 조정합니다."
-title = "텍스트 자동 크기 조정"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "활성화하면 겹치는 글리프나 혼합 폰트를 피하기 위해 편집된 각 텍스트 상자를 하나의 PDF 텍스트 요소로 내보냅니다."
-title = "편집된 텍스트를 단일 PDF 요소로 고정"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "페이지 유형을 자동 감지하여 적절히 텍스트를 그룹화합니다."
-paragraphDescription = "정렬된 라인을 묶어 여러 줄 문단 텍스트 상자로 만듭니다."
-singleLineDescription = "각 PDF 텍스트 라인을 개별 텍스트 상자로 유지합니다."
-title = "텍스트 그룹화 모드"
-
-[pdfTextEditor.pageType]
-paragraph = "문단 페이지"
-sparse = "성긴 텍스트"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "이 알파 뷰어는 아직 발전 중입니다. 일부 글꼴, 색상, 투명 효과, 레이아웃 세부사항이 약간 달라질 수 있습니다. 공유 전 생성된 PDF를 꼭 다시 확인하세요."
@@ -6021,32 +5930,6 @@ title = "미리보기 차이"
 [pdfTextEditor.tooltip.textFocus]
 text = "이 작업 공간은 텍스트 편집과 포함된 이미지 재배치에 중점을 둡니다. 복잡한 페이지 아트워크, 양식 위젯, 레이어드 그래픽은 내보내기를 위해 보존되지만 여기서는 완전히 편집할 수 없습니다."
 title = "텍스트 및 이미지 중심"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "다음에 가장 적합:"
-bestFor1 = "주로 텍스트와 이미지로 구성된 단순한 PDF"
-bestFor2 = "표준 문단 서식을 사용하는 문서"
-bestFor3 = "편지, 에세이, 보고서 등 기본 문서"
-dontShowAgain = "다시 보지 않기"
-experimental = "현재 개발 중인 실험적 기능입니다. 사용 중 불안정과 문제가 발생할 수 있습니다."
-feedback = "이 기능은 얼리 액세스입니다. 개선을 위해 문제를 발견하면 알려주세요!"
-gotIt = "확인"
-howItWorks = "이 도구는 PDF를 편집 가능한 형식으로 변환하여 텍스트를 수정하고 이미지를 재배치할 수 있게 합니다. 변경 내용은 새 PDF로 저장됩니다."
-issue1 = "텍스트 색상이 현재 보존되지 않음(곧 추가 예정)"
-issue2 = "문단 모드는 정렬/간격 문제가 더 많음 - 단일 줄 모드 권장"
-issue3 = "미리보기 표시가 내보낸 PDF와 다를 수 있음 - 내보낸 PDF가 원본에 더 가까움"
-issue4 = "회전된 텍스트 정렬은 수동 조정이 필요할 수 있음"
-issue5 = "투명도 및 레이어 효과가 원본과 다를 수 있음"
-knownIssues = "알려진 문제(수정 중):"
-limitation1 = "글꼴 렌더링이 원본 PDF와 약간 다를 수 있음"
-limitation2 = "복잡한 그래픽, 폼 필드, 주석은 보존되지만 편집할 수 없음"
-limitation3 = "대용량 파일은 변환과 처리에 시간이 걸릴 수 있음"
-limitations = "현재 제한 사항:"
-notIdealFor = "다음에는 권장하지 않음:"
-notIdealFor1 = "글머리표, 표, 다단 레이아웃 등 특수 서식이 있는 PDF"
-notIdealFor2 = "잡지, 브로셔, 디자인이 많은 문서"
-notIdealFor3 = "복잡한 레이아웃의 매뉴얼"
-title = "PDF 텍스트 편집기(얼리 액세스)에 오신 것을 환영합니다"
 
 [PDFToCSV]
 header = "PDF를 CSV로"

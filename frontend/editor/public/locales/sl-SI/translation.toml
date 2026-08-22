@@ -5913,99 +5913,8 @@ REVERSE_ORDER = "Obrni dokument, tako da postane zadnja stran prva itd."
 SIDE_STITCH_BOOKLET_SORT = "Razporedi strani za knjižico s stranskim spenjanjem (optimizirano za vezavo na strani)."
 
 [pdfTextEditor]
-conversionFailed = "Pretvorba PDF ni uspela. Poskusite znova."
-converting = "Pretvarjanje PDF v obliko za urejanje..."
-currentFile = "Trenutna datoteka: {{name}}"
-imageLabel = "Postavljena slika"
-noTextOnPage = "Na tej strani ni bilo zaznanega besedila za urejanje."
-pagePreviewAlt = "Predogled strani"
-pageSummary = "Stran {{number}} od {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Urejevalnik PDF JSON"
-viewLabel = "Urejevalnik PDF"
-
-[pdfTextEditor.actions]
-applyChanges = "Uveljavi spremembe"
-clearText = "Počisti besedilo"
-downloadCopy = "Prenesi kopijo"
-moreOptions = "Več možnosti"
-reset = "Ponastavi spremembe"
-
-[pdfTextEditor.badges]
-earlyAccess = "Zgodnji dostop"
-modified = "Urejeno"
-
-[pdfTextEditor.empty]
-dropzone = "Sem povlecite in spustite datoteko PDF ali JSON ali kliknite za brskanje"
-dropzoneWithFiles = "Izberite datoteko na zavihku Datoteke ali sem povlecite in spustite datoteko PDF ali JSON oziroma kliknite za brskanje"
-title = "Ni naloženega dokumenta"
-
-[pdfTextEditor.errors]
-invalidJson = "Datoteke JSON ni mogoče prebrati. Preverite, ali je bila ustvarjena z orodjem PDF v JSON."
-pdfConversion = "Urejenega JSON-a ni mogoče pretvoriti nazaj v PDF."
-
-[pdfTextEditor.fontAnalysis]
-allFonts = "Vse pisave"
-currentPageFonts = "Pisave na tej strani"
-details = "Podrobnosti pisave"
-embedded = "Vdelana"
-fallback = "nadomestna"
-infoMessage = "Na voljo so informacije o reprodukciji pisav."
-missing = "manjka"
-perfect = "popolno"
-perfectMessage = "Vse pisave je mogoče popolnoma reproducirati."
-subset = "podmnožica"
-suggestions = "Opombe"
-type = "Vrsta"
-warningMessage = "Nekatere pisave se morda ne bodo pravilno prikazale."
-warnings = "Opozorila"
-webFormat = "Spletni format"
-
-[pdfTextEditor.groupingMode]
-auto = "Samodejno"
-paragraph = "Odstavek"
-singleLine = "Enovrstično"
-
-[pdfTextEditor.manual]
-expandWidth = "Razširi do roba strani"
-merge = "Združi izbor"
-mergeTooltip = "Združi izbrane okvirje"
-resetWidth = "Ponastavi širino"
-resizeHandle = "Prilagodi širino besedila"
-ungroup = "Razdruži izbor"
-ungroupTooltip = "Razdruži odstavek nazaj v vrstice"
-widthMenu = "Možnosti širine"
-
-[pdfTextEditor.modeChange]
-cancel = "Prekliči"
-confirm = "Ponastavi in spremeni način"
-title = "Potrdite spremembo načina"
-warning = "Sprememba načina združevanja besedila bo ponastavila vse neshranjene spremembe. Ali ste prepričani, da želite nadaljevati?"
-
-[pdfTextEditor.options.advanced]
-title = "Napredne nastavitve"
-
-[pdfTextEditor.options.autoScaleText]
-description = "Samodejno vodoravno prilagodi besedilo, da se prilega prvotnemu okvirju, ko se izris pisave razlikuje od PDF-ja."
-title = "Samodejno prilagodi besedilo okvirjem"
-
-[pdfTextEditor.options.forceSingleElement]
-description = "Ko je omogočeno, urejevalnik izvozi vsak urejen besedilni okvir kot en element besedila PDF, da se izogne prekrivanju znakov ali mešanim pisavam."
-title = "Zakleni urejeno besedilo na en sam element PDF"
-
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Samodejno zazna vrsto strani in ustrezno združi besedilo."
-paragraphDescription = "Poravnane vrstice združi v večvrstične odstavčne okvirje."
-singleLineDescription = "Vsako vrstico besedila PDF ohrani kot ločen besedilni okvir."
-title = "Način združevanja besedila"
-
-[pdfTextEditor.pageType]
-paragraph = "Stran z odstavki"
-sparse = "Redko besedilo"
-
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Ta alfa pregledovalnik se še razvija — določene pisave, barve, učinki prosojnosti in podrobnosti postavitve se lahko nekoliko spremenijo. Pred deljenjem prosimo, ponovno preverite ustvarjeni PDF."
@@ -6021,32 +5930,6 @@ title = "Razlike v predogledu"
 [pdfTextEditor.tooltip.textFocus]
 text = "To delovno okolje je osredotočeno na urejanje besedila in prestavljanje vdelanih slik. Zapleteni elementi strani, obrazci in slojevita grafika se ohranijo za izvoz, vendar tukaj niso v celoti urejljivi."
 title = "Osredotočeno na besedilo in slike"
-
-[pdfTextEditor.welcomeBanner]
-bestFor = "Najbolje deluje z:"
-bestFor1 = "Preprosti PDF-ji z večinoma besedilom in slikami"
-bestFor2 = "Dokumenti s standardnim oblikovanjem odstavkov"
-bestFor3 = "Pisma, eseji, poročila in osnovni dokumenti"
-dontShowAgain = "Ne prikaži več"
-experimental = "To je eksperimentalna funkcija v aktivnem razvoju. Med uporabo pričakujte nekaj nestabilnosti in težav."
-feedback = "To je funkcija zgodnjega dostopa. Sporočite morebitne težave, da nam pomagate izboljšati!"
-gotIt = "Razumem"
-howItWorks = "Orodje pretvori vaš PDF v ureljiv format, kjer lahko spreminjate besedilo in premikate slike. Spremembe se shranijo kot nov PDF."
-issue1 = "Barva besedila trenutno ni ohranjena (kmalu bo dodana)"
-issue2 = "Način odstavka ima več težav s poravnavo in razmiki – priporočen je način posamezne vrstice"
-issue3 = "Predogled se razlikuje od izvoženega PDF-ja – izvoženi PDF-ji so bližje izvirniku"
-issue4 = "Poravnavo rotiranega besedila bo morda treba ročno prilagoditi"
-issue5 = "Učinki prosojnosti in slojev se lahko razlikujejo od izvirnika"
-knownIssues = "Znane težave (v odpravljanju):"
-limitation1 = "Prikaz pisav se lahko nekoliko razlikuje od izvirnega PDF-ja"
-limitation2 = "Zapletene grafike, polja obrazcev in opombe se ohranijo, vendar niso urejljive"
-limitation3 = "Pretvorba in obdelava velikih datotek lahko traja dlje"
-limitations = "Trenutne omejitve:"
-notIdealFor = "Ni idealno za:"
-notIdealFor1 = "PDF-je s posebnim oblikovanjem, kot so alineje, tabele ali večstolpčne postavitve"
-notIdealFor2 = "Revije, brošure ali močno oblikovani dokumenti"
-notIdealFor3 = "Priročniki z zapleteno postavitvijo"
-title = "Dobrodošli v PDF Text Editor (zgodnji dostop)"
 
 [PDFToCSV]
 header = "PDF v CSV"
