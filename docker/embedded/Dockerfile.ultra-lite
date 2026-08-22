@@ -1,8 +1,10 @@
+# syntax=docker/dockerfile:1
+
 # Stirling-PDF Dockerfile - Ultra-lite version with embedded frontend
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.6.1-jdk25@sha256:e8aeffb8197b17151ce24607811f60e91125f0018f7a3b08dc504ba9168a9c4f AS build
+FROM gradle:9.7.1-jdk25@sha256:a80276ab804c348989df46016e2b5d58cad07c5b29e06f2112434d28ca5b2844 AS build
 
 # Install Node.js and npm for frontend build
 ARG TASK_VERSION=3.52.0
@@ -36,7 +38,8 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-RUN ./gradlew dependencies --no-daemon || true
+RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+    ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
@@ -46,7 +49,9 @@ COPY . .
 ARG BUILD_PORTAL=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
+    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+    JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
