@@ -17,14 +17,37 @@
   padding: 0.25rem;
 }
 
+/* The shared SegmentedControl sizes its label box for one line and hides the overflow,
+   so the stacked icon-over-text tabs need that box opened up (see .modeTabs overrides). */
 .segmentedLabel {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.125rem;
   padding: 0.125rem 0;
-  min-height: 2.25rem;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Equal-width segments that can shrink, so a long translation ellipsises inside its
+   own tab instead of pushing the others off the edge. */
+/* Mantine's size="xs" writes height:26px as an INLINE style, which would clip the
+   taller stacked tabs; only !important can outrank it. */
+.modeTabs :global(.sui-seg.mantine-SegmentedControl-root) {
+  height: auto !important;
+}
+
+.modeTabs :global(.mantine-SegmentedControl-control) {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+
+.modeTabs :global(.mantine-SegmentedControl-label) {
+  min-width: 0;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
 /* Colour inherited: the shared SegmentedControl flips the active segment's text,
@@ -36,11 +59,19 @@
   letter-spacing: 0.02em;
   color: inherit;
   line-height: 1;
+  /* Longer translations must ellipsise inside their segment; the control clips at
+     18px so they cannot wrap, and unconstrained they push the other tabs off. */
+  min-width: 0;
+  align-self: stretch;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .modeTabIcon {
   font-size: 1rem !important;
-  margin-bottom: 0.125rem;
+  flex-shrink: 0;
 }
 
 .header {

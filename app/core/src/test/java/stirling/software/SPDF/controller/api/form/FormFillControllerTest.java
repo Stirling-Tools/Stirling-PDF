@@ -433,6 +433,16 @@ class FormFillControllerTest {
             ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            // It must get past validation into the edit loop: the only complaint should be that
+            // this document has no such field, never that the name contains a period.
+            String encoded =
+                    response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER);
+            assertThat(encoded).isNotNull();
+            String report =
+                    new String(
+                            java.util.Base64.getDecoder().decode(encoded),
+                            java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(report).contains("no field with that name exists").doesNotContain("period");
         }
 
         @Test

@@ -361,7 +361,8 @@ const FormFill = (_props: BaseToolProps) => {
           options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
-              <div className={styles.segmentedLabel}>
+              // title carries the full label for locales where it has to ellipsise.
+              <div className={styles.segmentedLabel} title={tab.label}>
                 {tab.icon}
                 <span className={styles.segmentedInnerLabel}>{tab.label}</span>
               </div>

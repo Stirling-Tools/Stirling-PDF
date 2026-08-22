@@ -357,11 +357,18 @@ public enum FormFieldTypeSupport {
             widget.getCOSObject().removeItem(COSName.A);
             return null;
         }
-        if (!ACTION_SPEC.matcher(action.trim()).matches()) {
+        String spec = action.trim();
+        if (!ACTION_SPEC.matcher(spec).matches()) {
             return "'" + action + "' is not a button action this editor understands";
         }
+        // The editor emits "uri:" the moment that kind is picked, before a URL is typed; an
+        // empty target is not yet an action, so clear rather than write an inert one.
+        int colon = spec.indexOf(':');
+        if (colon >= 0 && spec.substring(colon + 1).isBlank()) {
+            widget.getCOSObject().removeItem(COSName.A);
+            return null;
+        }
         try {
-            String spec = action.trim();
             String lower = spec.toLowerCase(Locale.ROOT);
             if (lower.equals("reset")) {
                 widget.getCOSObject().setItem(COSName.A, new PDActionResetForm().getCOSObject());
@@ -389,7 +396,7 @@ public enum FormFieldTypeSupport {
     /** The spec forms applyButtonAction understands; anything else is reported, not dropped. */
     private static final Pattern ACTION_SPEC =
             Pattern.compile(
-                    "^(reset|print|uri:.+|submit:.+)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+                    "^(reset|print|uri:.*|submit:.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private static final Map<String, FormFieldTypeSupport> BY_TYPE =
             Arrays.stream(values())

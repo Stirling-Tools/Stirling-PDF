@@ -645,4 +645,69 @@ class FormUtilsEditRegressionTest {
             assertNull(acroForm.getField("Name"), "nothing should be re-parented to the top level");
         }
     }
+
+    /** The editor emits "uri:" the moment that kind is picked, which must not fail the edit. */
+    @Test
+    void incompleteUrlActionClearsRatherThanFailing() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("button", "go", 50, 700, 100, 24, null)));
+
+            FormUtils.ModifyFormFieldDefinition pickUri =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "go", null, null, null, null, null, null, null, null, null, null, null,
+                            null, null, null, null, null, null, "uri:");
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(pickUri), skipped);
+
+            assertTrue(
+                    skipped.isEmpty(),
+                    "choosing a URL action before typing the URL is not an error: " + skipped);
+            PDField button = document.getDocumentCatalog().getAcroForm(null).getField("go");
+            assertNull(
+                    button.getWidgets().get(0).getCOSObject().getDictionaryObject(COSName.A),
+                    "an empty target must leave no action behind");
+        }
+    }
+
+    /** A real URL still writes a real action. */
+    @Test
+    void completeUrlActionIsApplied() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("button", "go", 50, 700, 100, 24, null)));
+
+            FormUtils.ModifyFormFieldDefinition setUri =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "go",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "uri:https://example.com");
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(setUri), skipped);
+
+            assertTrue(skipped.isEmpty(), "a complete spec applies cleanly: " + skipped);
+            PDField button = document.getDocumentCatalog().getAcroForm(null).getField("go");
+            assertNotNull(
+                    button.getWidgets().get(0).getCOSObject().getDictionaryObject(COSName.A),
+                    "the action should be written");
+        }
+    }
 }
