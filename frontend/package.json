@@ -174,7 +174,8 @@
     "pako": "^2.2.0",
     "tsconfck": {
       "typescript": "$typescript"
-    }
+    },
+    "react-router": "7.18.2"
   },
   "msw": {
     "workerDirectory": [
