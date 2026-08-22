@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -227,8 +228,7 @@ class ConvertImgPDFControllerMoreTest {
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
+                                                any(Path.class),
                                                 eq("PNG"),
                                                 eq(ImageType.RGB),
                                                 eq(true),

@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -419,18 +421,18 @@ class EncryptingStorageProviderTest {
                     }
 
                     @Override
-                    public java.util.Optional<java.net.URI> signedDownloadUrl(
+                    public Optional<URI> signedDownloadUrl(
                             String storageKey,
                             Duration ttl,
                             boolean inline,
                             String originalFilename) {
-                        return java.util.Optional.of(java.net.URI.create("https://signed.example"));
+                        return Optional.of(URI.create("https://signed.example"));
                     }
                 };
         EncryptingStorageProvider decorated = new EncryptingStorageProvider(withUrls, vanilla);
 
         assertThat(decorated.signedDownloadUrl("k", Duration.ofMinutes(5), false, "a.pdf"))
-                .contains(java.net.URI.create("https://signed.example"));
+                .contains(URI.create("https://signed.example"));
 
         // As soon as key rows exist, the same node must stop handing out direct URLs.
         StoredObject encrypted = provider.store(owner, upload());

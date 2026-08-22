@@ -2,10 +2,12 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static stirling.software.common.util.RenderingUtils.isLibVipsAvailable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -391,6 +393,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("IMAGE_FINALIZE strategy rasterizes output (text no longer extractable)")
         void imageFinalizeStrategy() throws IOException {
+            assumeTrue(isLibVipsAvailable(), "libvips not available");
             byte[] pdf = singlePageTextPdf("rasterize SECRET to image");
             factoryReturns(pdf);
 
@@ -409,6 +412,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("convertToImage flag rasterizes output")
         void convertToImageFlag() throws IOException {
+            assumeTrue(isLibVipsAvailable(), "libvips not available");
             byte[] pdf = singlePageTextPdf("convert SECRET image flag");
             factoryReturns(pdf);
 

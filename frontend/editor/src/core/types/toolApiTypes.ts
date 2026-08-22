@@ -367,7 +367,20 @@ export interface ConvertToImageRequest {
   /**
    * The output image format
    */
-  imageFormat?: "png" | "jpeg" | "jpg" | "gif" | "webp";
+  imageFormat?:
+    | "png"
+    | "jpeg"
+    | "jpg"
+    | "gif"
+    | "bmp"
+    | "tiff"
+    | "tif"
+    | "webp"
+    | "heic"
+    | "heif"
+    | "avif"
+    | "jxl"
+    | "jp2";
   /**
    * Include annotations such as comments in the output image(s)
    */

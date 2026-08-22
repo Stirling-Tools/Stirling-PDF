@@ -97,3 +97,20 @@ Feature: Image Conversion API Validation
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
         And the response file should have extension ".pdf"
+
+    @img-to-pdf @positive
+    Scenario Outline: Convert single <format> image to PDF
+        Given I generate a <format> image file as "fileInput"
+        When I send the API request to the endpoint "/api/v1/convert/img/pdf"
+        Then the response status code should be 200
+        And the response content type should be "application/pdf"
+        And the response file should have size greater than 0
+        And the response file should have extension ".pdf"
+
+        Examples:
+            | format |
+            | HEIC   |
+            | HEIF   |
+            | AVIF   |
+            | JXL    |
+            | JP2    |
