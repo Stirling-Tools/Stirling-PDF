@@ -58,3 +58,28 @@ if (!existsSync(thumbDll)) {
 }
 
 copyFileSync(thumbDll, join(wixDir, "stirling_thumbnail_handler.dll"));
+
+// --- OCR setup custom action ---
+// A DLL rather than an exe, and not by preference: an MSI custom action of type
+// EXE runs out of process and is never handed the installer session handle, so
+// it cannot drive the progress bar. A DLL entry point receives the MSIHANDLE.
+const ocrSetupManifest = join(tauriDir, "ocr-setup", "Cargo.toml");
+
+execFileSync(
+  "cargo",
+  ["build", "--release", "--manifest-path", ocrSetupManifest],
+  { stdio: "inherit" },
+);
+
+const ocrSetupDll = join(
+  tauriDir,
+  "ocr-setup",
+  "target",
+  "release",
+  "stirling_ocr_setup.dll",
+);
+if (!existsSync(ocrSetupDll)) {
+  throw new Error(`OCR setup DLL not found at ${ocrSetupDll}`);
+}
+
+copyFileSync(ocrSetupDll, join(wixDir, "stirling_ocr_setup.dll"));
