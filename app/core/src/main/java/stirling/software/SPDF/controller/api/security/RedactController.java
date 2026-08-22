@@ -224,7 +224,7 @@ public class RedactController {
                                 .ligatureAware(true)
                                 .bidiAware(true)
                                 .graphemeSafe(true)
-                                .sanitizeStructure(true)
+                                .sanitizeStructure(false)
                                 .redactMetadata(true)
                                 .build();
 
