@@ -523,6 +523,7 @@ tasks:
     deps: [prepare]
     vars:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
     cmds:
       - >
         npx vitest run --root editor
@@ -531,7 +532,9 @@ tasks:
         --coverage.reporter=text-summary
         --coverage.reporter=json-summary
         --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage{{end}}
+        --coverage.reportsDirectory=./coverage
+        {{if .TEST_TIMEOUT}}--testTimeout={{.TEST_TIMEOUT}}
+        --hookTimeout={{.TEST_TIMEOUT}}{{end}}{{end}}
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -541,9 +544,15 @@ tasks:
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
+    vars:
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT | default "5000"}}'
+    env:
+      TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
     cmds:
       - task: test:editor
-        vars: { COVERAGE: "true" }
+        vars:
+          COVERAGE: "true"
+          TEST_TIMEOUT: '{{.TEST_TIMEOUT}}'
 
   # ============================================================
   # Code Generation

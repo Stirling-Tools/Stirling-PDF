@@ -1,12 +1,18 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const editorDir = dirname(fileURLToPath(import.meta.url));
+const tsconfig = (name: string) => resolve(editorDir, name);
 
 // Projects do NOT inherit the root test.testTimeout, so every project silently
 // ran at vitest's 5s default. Spread this into each one instead.
 const TIMEOUTS = { testTimeout: 10000, hookTimeout: 10000 };
 
 export default defineConfig({
+  root: editorDir,
   test: {
     globals: true,
     environment: "jsdom",
@@ -22,13 +28,21 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: [
         "node_modules/",
+        "dist/**",
+        "coverage/**",
         "src/core/setupTests.ts",
-        "src/proprietary/setupTests.ts",
+        "src/portal/setupTests.ts",
         "src/saas/setupTests.ts",
         "**/*.d.ts",
         "src/tests/test-fixtures/**",
         "src/**/*.spec.ts",
       ],
+      thresholds: {
+        lines: 13,
+        functions: 40,
+        branches: 63,
+        statements: 13,
+      },
     },
     projects: [
       {
@@ -43,7 +57,8 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ["./tsconfig.core.vite.json"],
+            root: editorDir,
+            projects: [tsconfig("tsconfig.core.vite.json")],
           }),
         ],
         esbuild: {
@@ -62,9 +77,10 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
+            root: editorDir,
             // Broad project so @app/@portal resolve in every editor file the
             // portal tests pull in (core/ui, core, ...).
-            projects: ["./tsconfig.portal.vite.json"],
+            projects: [tsconfig("tsconfig.portal.vite.json")],
           }),
         ],
         esbuild: {
@@ -83,7 +99,8 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ["./tsconfig.proprietary.vite.json"],
+            root: editorDir,
+            projects: [tsconfig("tsconfig.proprietary.vite.json")],
           }),
         ],
         esbuild: {
@@ -102,7 +119,8 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ["./tsconfig.desktop.vite.json"],
+            root: editorDir,
+            projects: [tsconfig("tsconfig.desktop.vite.json")],
           }),
         ],
         esbuild: {
@@ -127,7 +145,8 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ["./tsconfig.saas.vite.json"],
+            root: editorDir,
+            projects: [tsconfig("tsconfig.saas.vite.json")],
           }),
         ],
         esbuild: {
@@ -146,7 +165,8 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ["./tsconfig.prototypes.vite.json"],
+            root: editorDir,
+            projects: [tsconfig("tsconfig.prototypes.vite.json")],
           }),
         ],
         esbuild: {
