@@ -113,7 +113,7 @@ class TextRedactionService {
                             .ligatureAware(true)
                             .bidiAware(true)
                             .graphemeSafe(true)
-                            .sanitizeStructure(true)
+                            .sanitizeStructure(false)
                             .build();
 
             try (PdfDocument checkDoc = PdfDocument.open(tempIn.toPath())) {
