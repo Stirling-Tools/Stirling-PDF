@@ -26,10 +26,12 @@ from dataclasses import dataclass
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents.registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditPlanResponse,
     OrchestratorRequest,
+    SupportedCapability,
     ToolOperationStep,
     format_conversation_history,
 )
@@ -307,7 +309,7 @@ def _safe_filename(title: str) -> str:
 # ── Agent ─────────────────────────────────────────────────────────────────────────────────────────
 
 
-class PdfCreateAgent:
+class PdfCreateAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
 
@@ -330,6 +332,19 @@ class PdfCreateAgent:
             output_type=NativeOutput(WrittenSections),
             system_prompt=_WRITER_SYSTEM_PROMPT,
             model_settings={**runtime.smart_model_settings, "temperature": 0.3},
+        )
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.PDF_CREATE,
+                description=(
+                    "Generate a new document from scratch based on a description. Use this when the"
+                    " user wants to create a new document (e.g. 'create an invoice', 'write a report',"
+                    " 'make a contract', 'draft a letter'). No input file is required."
+                ),
+                orchestrate=self.orchestrate,
+            ),
         )
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:

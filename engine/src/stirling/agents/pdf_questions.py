@@ -7,6 +7,7 @@ from pydantic_ai import Agent
 from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.agents.output_mode import output_retries, structured_output
+from stirling.agents.registry import AgentDescriptor, McpCapability, OrchestratorRoute, RegisterableAgent
 from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,
@@ -85,7 +86,7 @@ _MATH_SYNTH_SYSTEM_PROMPT = (
 )
 
 
-class PdfQuestionAgent:
+class PdfQuestionAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self._math_synth_agent: Agent[None, str] = Agent(
@@ -102,6 +103,25 @@ class PdfQuestionAgent:
         # orchestrator) — reused across the request's capability instances
         # (mirrors the chunked-reasoner pattern).
         self._contradiction_detector = ContradictionDetector(runtime)
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.PDF_QUESTION,
+                description="Answer questions about the contents of the attached PDFs; returns the answer.",
+                orchestrate=self.orchestrate,
+            ),
+            mcp=(
+                McpCapability(
+                    id="pdf-question-answer",
+                    description="Answer a natural-language question about a PDF document.",
+                    input_model=PdfQuestionRequest,
+                    mode="sync",
+                    required_scope="mcp.tools.read",
+                    route="/api/v1/pdf-question",
+                ),
+            ),
+        )
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         logger.info(
