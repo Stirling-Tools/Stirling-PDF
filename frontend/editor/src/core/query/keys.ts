@@ -9,5 +9,7 @@ export const qk = {
   /** Keyed on the asking identity: two users must never share one answer. */
   portalAccess: (userId: string | null) =>
     ["editor", "portalAccess", userId] as const,
+  toolRecommendations: (context: string, limit: number) =>
+    ["editor", "toolRecommendations", context, limit] as const,
   users: () => ["editor", "users"] as const,
 } as const;

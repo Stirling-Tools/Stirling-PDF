@@ -64,6 +64,11 @@ vi.mock("../../services/apiClient", () => ({
 import apiClient from "@app/services/apiClient";
 const mockedApiClient = vi.mocked(apiClient);
 
+// Usage-recommendation tracking would add its own posts to the apiClient spy.
+vi.mock("../../services/toolUsageTracker", () => ({
+  notifyToolCompleted: vi.fn(),
+}));
+
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
   // FileContext subscribes to this to drop files whose bytes are unreadable.
