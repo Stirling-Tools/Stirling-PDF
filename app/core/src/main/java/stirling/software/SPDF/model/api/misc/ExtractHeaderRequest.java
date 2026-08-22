@@ -13,8 +13,23 @@ public class ExtractHeaderRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.",
+                    "Flag indicating whether to use text after the keyword instead of the entire line. Defaults to false.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
-    private Boolean useFirstTextAsFallback;
+    private Boolean useTextAfterKeyword;
+
+    @Schema(
+            description =
+                    "Keyword to search for in the PDF text. The filename will be based on the line containing this keyword.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "")
+    private String keyword;
+
+    @Schema(
+            description =
+                    "Flag indicating whether the keyword should be treated as a regex pattern. Defaults to false.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private Boolean useRegex;
+
 }
