@@ -3526,7 +3526,6 @@ label = "Положение Y"
 
 [crop.error]
 failed = "Не удалось обрезать PDF"
-invalidArea = "Область обрезки выходит за границы PDF"
 
 [crop.preview]
 title = "Выбор области обрезки"

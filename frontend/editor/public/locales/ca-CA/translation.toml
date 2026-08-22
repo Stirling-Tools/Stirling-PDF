@@ -3526,7 +3526,6 @@ label = "Posició Y"
 
 [crop.error]
 failed = "No s'ha pogut retallar el PDF"
-invalidArea = "L'àrea de retall s'estén més enllà dels límits del PDF"
 
 [crop.preview]
 title = "Selecció de l'àrea de retall"
