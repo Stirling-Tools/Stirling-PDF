@@ -4,8 +4,15 @@ import {
   buildHistoryBundle,
   buildSharePackage,
 } from "@app/services/serverStorageBundle";
+import { SharedFileConflictError } from "@app/services/sharedFileSave";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
+
+export interface UploadChainOptions {
+  // Optimistic-concurrency baseline; when set the server 409s if it moved on.
+  baseVersion?: number;
+  force?: boolean;
+}
 
 function resolveUpdatedAt(value: unknown): number {
   if (!value) {
@@ -18,10 +25,56 @@ function resolveUpdatedAt(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+function resolveVersion(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+function buildUpdateHeaders(
+  options: UploadChainOptions | undefined,
+): Record<string, string> {
+  if (options?.force || typeof options?.baseVersion !== "number") {
+    return {};
+  }
+  return { "If-Match": `"${options.baseVersion}"` };
+}
+
+async function putExistingFile(
+  existingRemoteId: number,
+  formData: FormData,
+  options: UploadChainOptions | undefined,
+): Promise<{ updatedAt: number; version?: number }> {
+  try {
+    const response = await apiClient.put(
+      `/api/v1/storage/files/${existingRemoteId}`,
+      formData,
+      { headers: buildUpdateHeaders(options), suppressErrorToast: true } as any,
+    );
+    return {
+      updatedAt: resolveUpdatedAt(response.data?.updatedAt),
+      version: resolveVersion(response.data?.version),
+    };
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    if (status === 409) {
+      throw new SharedFileConflictError();
+    }
+    throw error;
+  }
+}
+
 export async function uploadHistoryChain(
   originalFileId: FileId,
   existingRemoteId?: number,
-): Promise<{ remoteId: number; updatedAt: number; chain: StirlingFileStub[] }> {
+  options?: UploadChainOptions,
+): Promise<{
+  remoteId: number;
+  updatedAt: number;
+  version?: number;
+  chain: StirlingFileStub[];
+}> {
   const chain = await fileStorage.getHistoryChainStubs(originalFileId);
   if (chain.length === 0) {
     throw new Error("No history chain found.");
@@ -52,12 +105,12 @@ export async function uploadHistoryChain(
   formData.append("auditLog", auditLog, auditLog.name);
 
   if (existingRemoteId) {
-    const response = await apiClient.put(
-      `/api/v1/storage/files/${existingRemoteId}`,
+    const { updatedAt, version } = await putExistingFile(
+      existingRemoteId,
       formData,
+      options,
     );
-    const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-    return { remoteId: existingRemoteId, updatedAt, chain };
+    return { remoteId: existingRemoteId, updatedAt, version, chain };
   }
 
   const response = await apiClient.post("/api/v1/storage/files", formData);
@@ -67,13 +120,24 @@ export async function uploadHistoryChain(
   }
 
   const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-  return { remoteId, updatedAt, chain };
+  return {
+    remoteId,
+    updatedAt,
+    version: resolveVersion(response.data?.version),
+    chain,
+  };
 }
 
 export async function uploadHistoryChains(
   originalFileIds: FileId[],
   existingRemoteId?: number,
-): Promise<{ remoteId: number; updatedAt: number; chain: StirlingFileStub[] }> {
+  options?: UploadChainOptions,
+): Promise<{
+  remoteId: number;
+  updatedAt: number;
+  version?: number;
+  chain: StirlingFileStub[];
+}> {
   const uniqueRoots = Array.from(new Set(originalFileIds));
   const chainMap = new Map<FileId, StirlingFileStub[]>();
   const combinedChain: StirlingFileStub[] = [];
@@ -129,12 +193,17 @@ export async function uploadHistoryChains(
   formData.append("auditLog", auditLog, auditLog.name);
 
   if (existingRemoteId) {
-    const response = await apiClient.put(
-      `/api/v1/storage/files/${existingRemoteId}`,
+    const { updatedAt, version } = await putExistingFile(
+      existingRemoteId,
       formData,
+      options,
     );
-    const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-    return { remoteId: existingRemoteId, updatedAt, chain: combinedChain };
+    return {
+      remoteId: existingRemoteId,
+      updatedAt,
+      version,
+      chain: combinedChain,
+    };
   }
 
   const response = await apiClient.post("/api/v1/storage/files", formData);
@@ -144,5 +213,10 @@ export async function uploadHistoryChains(
   }
 
   const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-  return { remoteId, updatedAt, chain: combinedChain };
+  return {
+    remoteId,
+    updatedAt,
+    version: resolveVersion(response.data?.version),
+    chain: combinedChain,
+  };
 }

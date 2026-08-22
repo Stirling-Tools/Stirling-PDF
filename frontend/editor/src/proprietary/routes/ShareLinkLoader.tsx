@@ -30,6 +30,7 @@ interface ShareLinkMetadata {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
   expiresAt?: string;
 }
 
@@ -133,6 +134,10 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
                 remoteOwnerUsername: shareMetadata?.owner ?? undefined,
                 remoteOwnedByCurrentUser: false,
                 remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+                remoteCanEdit:
+                  typeof shareMetadata?.canEdit === "boolean"
+                    ? shareMetadata.canEdit
+                    : undefined,
                 remoteSharedViaLink: true,
                 remoteHasShareLinks: false,
                 remoteShareToken: shareMetadata?.shareToken || normalizedToken,
@@ -200,6 +205,10 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             remoteOwnerUsername: shareMetadata?.owner ?? undefined,
             remoteOwnedByCurrentUser: false,
             remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+            remoteCanEdit:
+              typeof shareMetadata?.canEdit === "boolean"
+                ? shareMetadata.canEdit
+                : undefined,
             remoteSharedViaLink: true,
             remoteHasShareLinks: false,
             remoteShareToken: shareMetadata?.shareToken || normalizedToken,

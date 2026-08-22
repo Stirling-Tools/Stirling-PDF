@@ -6,9 +6,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.converter.FileShareAccessTypeConverter;
 
 @Entity
 @Table(
@@ -54,8 +54,9 @@ public class FileShareAccess implements Serializable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "access_type", nullable = false)
+    // Plain text, not @Enumerated: a native enum column cannot gain values on ddl-auto=update.
+    @Convert(converter = FileShareAccessTypeConverter.class)
+    @Column(name = "access_type", nullable = false, length = 32)
     private FileShareAccessType accessType;
 
     @CreationTimestamp

@@ -121,6 +121,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
       const {
         remoteId: storedId,
         updatedAt,
+        version,
         chain,
       } = await uploadHistoryChains(rootIds, existingRemoteId);
 
@@ -128,20 +129,17 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
       setShareToken(shareResponse.token ?? null);
 
       for (const stub of chain) {
-        actions.updateStirlingFileStub(stub.id, {
+        const updates = {
           remoteStorageId: storedId,
           remoteStorageUpdatedAt: updatedAt,
           remoteOwnedByCurrentUser: true,
           remoteSharedViaLink: false,
           remoteHasShareLinks: true,
-        });
-        await fileStorage.updateFileMetadata(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-          remoteSharedViaLink: false,
-          remoteHasShareLinks: true,
-        });
+          remoteVersionBase: version,
+          remoteVersionLatest: version,
+        };
+        actions.updateStirlingFileStub(stub.id, updates);
+        await fileStorage.updateFileMetadata(stub.id, updates);
       }
 
       alert({
