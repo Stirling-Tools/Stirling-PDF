@@ -1,5 +1,5 @@
 /**
- * Shared language metadata and code helpers for the editor and portal i18n
+ * Shared language metadata and code helpers for the editor and processor i18n
  * setups. Pure data + string utilities — no i18next instance or app state.
  */
 

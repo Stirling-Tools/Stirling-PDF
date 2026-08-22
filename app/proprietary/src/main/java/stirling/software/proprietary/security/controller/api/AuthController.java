@@ -635,7 +635,7 @@ public class AuthController {
         userMap.put("username", user.getUsername());
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
-        userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
+        userMap.put("processorAccess", resourceAccessService.canAccessProcessor(user));
         userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
         // Expose the caller's team so non-admin team owners can scope their own team's resources.
         if (user.getTeam() != null) {

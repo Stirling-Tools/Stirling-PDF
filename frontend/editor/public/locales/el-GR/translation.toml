@@ -6352,10 +6352,13 @@ thirtyDays = "30 ημέρες"
 threeYears = "3 έτη"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "Εκτύπωση αρχείου"
+
+[processor]
 comingSoon = "Προσεχώς"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Η μη επιτηρούμενη επεξεργασία χρεώνεται στο πορτοφόλι του οργανισμού σας."
 eyebrow = "Σύνδεση λογαριασμού"
 linkButton = "Σύνδεση του λογαριασμού σας Stirling"
@@ -6366,37 +6369,37 @@ notLinked = "Μη συνδεδεμένο"
 title = "Συνδέστε αυτόν τον οργανισμό με τον λογαριασμό Stirling του"
 unlink = "Αποσύνδεση"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "Δεν ήταν δυνατή η σύνδεση"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "για να ενεργοποιήσετε τη σύνδεση λογαριασμού με τον φιλοξενούμενο λογαριασμό Stirling. Στο dev μπορείτε να προσομοιώσετε τη σύνδεση από το παράθυρο σύνδεσης."
 before = "Ορίστε"
 title = "Η σύνδεση SaaS δεν έχει διαμορφωθεί"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Σύνδεση λογαριασμού"
 description = "Συνδέστε τον λογαριασμό Stirling αυτού του οργανισμού για να χρησιμοποιήσετε χρεώσιμες λειτουργίες."
 title = "Σύνδεση για ξεκλείδωμα"
 titleFeature = "Σύνδεση για ξεκλείδωμα του {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "Ενεργό"
 revoke = "Ανάκληση"
 revoked = "Ανακλήθηκε"
 unnamed = "Ανώνυμο instance"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Instance"
 lastSeen = "Τελευταία εμφάνιση"
 linked = "Συνδεδεμένο"
 status = "Κατάσταση"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "Συνδέστε τον λογαριασμό αυτού του οργανισμού και, στη συνέχεια, καταχωρίστε τα self-hosted instances σας για να τα δείτε εδώ."
 title = "Δεν υπάρχουν συνδεδεμένα instances"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "πριν από {{count}} ημ."
 daysAgo_other = "πριν από {{count}} ημ."
 hoursAgo_one = "πριν από {{count}} ώ."
@@ -6406,36 +6409,36 @@ minutesAgo_one = "πριν από {{count}} λ."
 minutesAgo_other = "πριν από {{count}} λ."
 never = "ποτέ"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "Συνδεθείτε στον λογαριασμό στον οποίο θα πρέπει να χρεώνεται αυτός ο server."
 linkTitle = "Σύνδεση του λογαριασμού σας Stirling"
 reauthSubtitle = "Η συνεδρία σας έληξε — συνδεθείτε ξανά στον λογαριασμό σας Stirling. Το instance σας παραμένει συνδεδεμένο."
 reauthTitle = "Συνδεθείτε ξανά"
 simulateSignIn = "Προσομοίωση σύνδεσης (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "για να ενεργοποιήσετε τη σύνδεση εντός εφαρμογής με τον φιλοξενούμενο λογαριασμό Stirling."
 and = "και"
 before = "Ορίστε"
 title = "Η σύνδεση SaaS δεν έχει διαμορφωθεί"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "Κάθε self-hosted instance που έχει καταχωριστεί σε αυτόν τον οργανισμό. Ανακαλέστε ένα διαπιστευτήριο για να διακόψετε αμέσως τη μη επιτηρούμενη πρόσβασή του."
 instancesTitle = "Συνδεδεμένα instances"
 revokeError = "Δεν ήταν δυνατή η ανάκληση του instance"
 sub = "Συνδέστε αυτόν τον self-hosted οργανισμό με τον λογαριασμό Stirling του, ώστε η μη επιτηρούμενη επεξεργασία να χρεώνεται στο πορτοφόλι του οργανισμού σας."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "Μόνο ο κάτοχος της ομάδας μπορεί να δει τα συνδεδεμένα instances του οργανισμού."
 generic = "Δεν ήταν δυνατή η φόρτωση των συνδεδεμένων instances της ομάδας. Δοκιμάστε ξανά σε λίγο."
 title = "Δεν ήταν δυνατή η φόρτωση των συνδεδεμένων instances"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Πλάνο Editor"
 subscribed = "Πλάνο Processor"
 unlinked = "Μη συνδεδεμένο"
 
-[portal.assistant]
+[processor.assistant]
 close = "Κλείσιμο βοηθού"
 error = "Δεν ήταν δυνατή η επικοινωνία με τον βοηθό."
 errorWithDetail = "Δεν ήταν δυνατή η επικοινωνία με τον βοηθό: {{detail}}"
@@ -6447,33 +6450,33 @@ title = "Βοηθός"
 tryAsking = "Δοκιμάστε να ρωτήσετε"
 typing = "Πληκτρολογεί"
 
-[portal.auth]
+[processor.auth]
 loading = "Φόρτωση"
 redirectingToEditor = "Ανακατεύθυνση στον editor..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "Ίσως αργότερα"
 title = "Ενεργοποίηση του Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "Ορίστε μηνιαίο όριο. Πληρώνετε για ό,τι εκτελείτε."
 title = "Πληρωμή ανά χρήση"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 μήνες δωρεάν"
 sub = "Ένα τιμολόγιο, κάρτα ή τραπεζικό έμβασμα."
 title = "Προπληρώστε ένα έτος"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Η edge function δεν επέστρεψε client_secret."
 title = "Ενεργοποίηση του πλάνου Processor"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "Η πληρωμή σας πέτυχε, αλλά η ενεργοποίηση διαρκεί λίγο περισσότερο από το συνηθισμένο. Θα ενεργοποιηθεί αυτόματα - κλείστε αυτό και θα εμφανιστεί εδώ σύντομα."
 close = "Κλείσιμο"
 title = "Σχεδόν έτοιμο"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Μηνιαίο όριο δαπανών"
 back = "Πίσω"
 continue = "Συνέχεια στην πληρωμή"
@@ -6484,30 +6487,30 @@ note = "Δεν χρεώνεστε ποτέ πέρα από το όριό σας.
 perMonth = "/ μήνα"
 title = "Ορίστε το όριο δαπανών σας"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Αριθμός κάρτας · MM / YY · CVC · ZIP"
 label = "Στοιχεία κάρτας"
 note = "Τα στοιχεία κάρτας συλλέγονται από το Stripe. Το Stirling δεν αποθηκεύει ποτέ PAN ή CVC."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Δεν ήταν δυνατή η έναρξη του checkout"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "Η πληρωμή σας ολοκληρώθηκε. Ενεργοποιούμε τη μετρημένη επεξεργασία σε όλα τα συνδεδεμένα instances σας - αυτό συνήθως διαρκεί λίγα δευτερόλεπτα."
 hint = "Κρατήστε αυτό το παράθυρο ανοιχτό."
 title = "Ενεργοποίηση του πλάνου Processor..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Μηνιαίο όριο δαπανών {{amount}}/μήνα. Η επεξεργασία παύει στο όριο."
 limitNoCap = "Χωρίς όριο δαπανών. Η επεξεργασία δεν θα παύει. Τα τιμολόγια εκδίδονται μηνιαία."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Δημιουργήστε την προσφορά σας για Enterprise"
 description = "Εκπτώσεις δεσμευμένου όγκου, air-gapped deployment, προσαρμοσμένο MSA και έλεγχοι ασφαλείας, καθώς και συνεργασίες με διανομείς τρίτων."
 eyebrow = "Έκπτωση όγκου · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "Ενεργοί αυτόν τον μήνα"
 cost = "Κόστος"
 editorsDeployed = "Editors που έχουν αναπτυχθεί"
@@ -6516,7 +6519,7 @@ pdfsEdited = "PDFs που επεξεργάστηκαν"
 subtitle = "Αναπτύξτε οπουδήποτε, για ολόκληρη την ομάδα σας."
 title = "Δωρεάν PDF Editors"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Δεν ήταν δυνατή η έναρξη του checkout"
 currentPlan = "Τρέχον πλάνο"
 freeForever = "Δωρεάν για πάντα"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "Ενεργοποίηση Processor →"
 unlimitedUsers = "Απεριόριστοι χρήστες"
 viewQuote = "Προβολή προσφοράς"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "Ποσό"
 columnDate = "Ημερομηνία"
 columnDescription = "Περιγραφή"
@@ -6553,12 +6556,12 @@ title = "Ιστορικό τιμολογίων"
 viewAriaLabel = "Προβολή τιμολογίου {{number}} στο Stripe"
 viewLink = "Προβολή ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Σύνδεση λογαριασμού Stirling"
 description = "Η χειροκίνητη επεξεργασία PDF — προβολή, υπογραφή, συγχώνευση, διαίρεση, υδατογράφημα, συμπίεση, μετατροπή, χειροκίνητο OCR — είναι πάντα δωρεάν, συνδεδεμένη ή όχι. Συνδεθείτε για να διεκδικήσετε 500 δωρεάν PDFs μετρημένης επεξεργασίας (αυτοματισμοί, AI και το API). Όταν χρειαστείτε περισσότερα, ενεργοποιήστε το πλάνο Processor και πληρώστε μόνο για ό,τι χρησιμοποιείτε."
 title = "Σύνδεση του λογαριασμού σας Stirling"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "Χρέωση μηνιαία"
 cardEnding = "{{brand}} που λήγει σε {{last4}}"
 cardFallback = "Κάρτα"
@@ -6568,7 +6571,7 @@ managedSub = "Η κάρτα και τα στοιχεία χρέωσής σας �
 managedTitle = "Διαχείριση στο Stripe"
 update = "Ενημέρωση"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "Δεν υπάρχει ακόμα μετρημένη επεξεργασία σε αυτήν την περίοδο."
 eyebrow = "PDFs που επεξεργάστηκαν αυτήν την περίοδο"
 legendValue_one = "{{formatted}} PDFs"
@@ -6587,14 +6590,14 @@ unit = "μετρημένα PDFs"
 unitsPending_one = "{{units}} μονάδα μέτρησης εκκρεμεί για συγχρονισμό από συνδεδεμένες παρουσίες"
 unitsPending_other = "{{units}} μονάδες μέτρησης εκκρεμούν για συγχρονισμό από συνδεδεμένες παρουσίες"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "από {{total}} προπληρωμένες πιστώσεις"
 expires = "Λήγει στις {{date}}"
 eyebrow = "Προπληρωμένη χωρητικότητα"
 note = "Χρησιμοποιείται πριν από τη χρέωση βάσει χρήσης και εκτός του ορίου δαπανών σας."
 topUp = "Συμπλήρωση"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "Πίσω"
 calcTitle = "Υπολογίστε την ετήσια πληρωμή σας"
 cancel = "Ακύρωση"
@@ -6607,7 +6610,7 @@ loadingTitle = "Φόρτωση της προσφοράς σας"
 payTitle = "Πληρώστε για το έτος σας"
 step = "Βήμα {{current}} από {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "Αλλαγή"
 deployRow = "Ανάπτυξη"
 done = "Τέλος"
@@ -6626,10 +6629,10 @@ sizingRow = "Μέγεθος"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "Σύνολο χρηστών"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "Κατανοώ ότι όταν η προπληρωμένη χωρητικότητά μου εξαντληθεί ή λήξει μετά από 12 μήνες, η επεξεργασία συνεχίζεται αυτόματα με την τυπική μετρημένη τιμή πληρωμής ανά χρήση (έως το όριο δαπανών μου) εκτός αν ακυρώσω, και ότι μπορώ να ακυρώσω οποιαδήποτε στιγμή από την πύλη χρεώσεων."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Διαχειρίζεται από το Stirling. Ζωντανό σε λίγα λεπτά."
 cloudValue = "Stirling Cloud · Διαχειριζόμενο"
@@ -6637,12 +6640,12 @@ selfhost = "Self-hosted"
 selfhostDesc = "Εκτελείται σε ιδιωτική υποδομή. Ίδια τιμή."
 selfhostValue = "Self-hosted · Ιδιωτική υποδομή"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "Έλεγχος προσφοράς"
 subtitle = "Προπληρώστε ένα έτος επεξεργασίας PDF και λάβετε δύο μήνες δωρεάν, που χρησιμοποιούνται πριν από τη χρέωση βάσει χρήσης, εκτός του ορίου δαπανών σας."
 title = "Πάρτε 12 μήνες στην τιμή των 10"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Όνομα κατόχου λογαριασμού"
 accountNamePlaceholder = "π.χ. Jane Smith"
 companyName = "Όνομα εταιρείας (προαιρετικό)"
@@ -6652,7 +6655,7 @@ payOnline = "Πληρωμή online"
 poNumber = "Αριθμός PO (προαιρετικό)"
 poNumberPlaceholder = "π.χ. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Προχωρημένο"
 advancedDesc = "Τα pipelines οδηγούν το μεγαλύτερο μέρος της επεξεργασίας σας."
 none = "Κανένα"
@@ -6660,7 +6663,7 @@ noneDesc = "Δεν εκτελείτε pipelines ακόμη. Ενεργοποιή
 standard = "Τυπικό"
 standardDesc = "Μερικά pipelines επανεπεξεργάζονται τα εισερχόμενα PDFs."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Βασικά"
 essentialsDesc = "Ταξινόμηση, η προεπιλογή, συν Κοινή χρήση"
 governed = "Με διακυβέρνηση"
@@ -6668,12 +6671,12 @@ governedDesc = "Προσθέτει Ασφάλεια και Δρομολόγησ�
 regulated = "Ρυθμιζόμενο"
 regulatedDesc = "Κάθε κατηγορία, συμπ. Συμμόρφωση, Διατήρηση, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "Λήψη προσφοράς (PDF)"
 downloading = "Προετοιμασία…"
 share = "κοινή χρήση για έγκριση"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Συμπαγές"
 compactDesc = "Αρχεία κάτω από 25 MB, χωρίς χρεώσεις δεδομένων"
 heavy = "Βαρύ"
@@ -6681,12 +6684,12 @@ heavyDesc = "Σαρωμένα ή με πολλές εικόνες, συνήθω�
 standard = "Τυπικό"
 standardDesc = "Κυρίως μικρά, μερικές σαρώσεις πάνω από 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "Εξαντλήθηκε"
 healthy = "Απομένουν πολλά"
 low = "Εξαντλείται"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "Προσαρμογή ορίου"
 cancel = "Ακύρωση"
 capControlNote = "Οι αλλαγές εφαρμόζονται αμέσως — αυξήστε ή μειώστε το ανώτατο όριο οποιαδήποτε στιγμή."
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "{{amount}} αυτήν την περίοδο · χωρίς 
 usedThisMonth = "{{amount}} χρησιμοποιήθηκαν αυτόν τον μήνα"
 useSuggested = "Χρήση προτεινόμενου · {{amount}} / μήνα"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "Με {{rate}}/ημέρα θα φτάσετε το όριο σε ~{{count}} ημέρα (~{{monthEnd}} τέλος μήνα). Προτεινόμενο όριο ~{{suggested}}."
 body_other = "Με {{rate}}/ημέρα θα φτάσετε το όριο σε ~{{count}} ημέρες (~{{monthEnd}} τέλος μήνα). Προτεινόμενο όριο ~{{suggested}}."
 label = "Προβλέπεται υπέρβαση."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "Δαπάνη αυτόν τον μήνα"
 freeRemaining_one = "Απομένει {{formatted}} δωρεάν PDF"
 freeRemaining_other = "Απομένουν {{formatted}} δωρεάν PDFs"
@@ -6720,17 +6723,17 @@ processed_other = "{{formattedCount}} PDFs επεξεργάστηκαν."
 processedWithRate_one = "{{formattedCount}} PDF επεξεργάστηκε, με {{rate}} το καθένα."
 processedWithRate_other = "{{formattedCount}} PDFs επεξεργάστηκαν, με {{rate}} το καθένα."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "Αυξήστε το τώρα, ώστε η αυτοματοποιημένη επεξεργασία να μη διακόπτεται ποτέ προσωρινά."
 approachingTitle = "Βρίσκεστε στο {{pct}}% του μηνιαίου ορίου δαπανών σας"
 raiseLimit = "Αύξηση ορίου"
 reachedBody = "Η μετρημένη επεξεργασία έχει διακοπεί προσωρινά μέχρι να αυξήσετε το όριο ή να επαναφερθεί ο κύκλος. Η απεριόριστη επεξεργασία PDF συνεχίζει να λειτουργεί."
 reachedTitle = "Το μηνιαίο όριο δαπανών επιτεύχθηκε"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Δεν ήταν δυνατό το άνοιγμα του portal του Stripe"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκε"
 capSuffix_other = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκαν"
@@ -6743,7 +6746,7 @@ title_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
 titleWithRate_one = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν και μετά {{rate}}/PDF"
 titleWithRate_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν και μετά {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "έγκριση"
 check = "έλεγχος"
 event = "συμβάν"
@@ -6752,11 +6755,11 @@ review = "ανασκόπηση"
 session = "συνεδρία"
 signature = "υπογραφή"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "Νέα σύνδεση"
 createTitleFor = "Σύνδεση {{name}}"
 delete = "Διαγραφή"
@@ -6764,369 +6767,369 @@ edit = "Επεξεργασία"
 editTitle = "Επεξεργασία σύνδεσης"
 unsupportedType = "Αυτός ο τύπος σύνδεσης δεν μπορεί να επεξεργαστεί εδώ."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "Για μια υπηρεσία που δεν υποστηρίζουμε ακόμη."
 label = "Προχωρημένα"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "Καταγράψτε τι συνέβη σε ένα έγγραφο, εκεί όπου ήδη κοιτούν οι ελεγκτές σας."
 label = "Καταγραφή ελέγχου & συμμόρφωσης"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "Ενημερώστε ένα άλλο σύστημα ότι κάτι συνέβη."
 label = "Ειδοποίηση & ροή εργασίας"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "Σαρώστε ή επισημάνετε ένα έγγραφο πριν προχωρήσει."
 label = "Ασφάλεια & ταξινόμηση"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "Στείλτε ένα έγγραφο για υπογραφή ή συμβολαιογραφική επικύρωση."
 label = "Ηλεκτρονική υπογραφή & συμβολαιογραφική επικύρωση"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "Πού καταλήγουν τα επεξεργασμένα έγγραφα - ένα bucket, ένα drive, ένα ticket ή μια σελίδα."
 label = "Αρχείο & επισύναψη"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Το Stirling το αποθηκεύει κρυπτογραφημένο και δεν το εμφανίζει ποτέ ξανά."
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "Τα βήματα που χρησιμοποιούν αυτή τη σύνδεση μπορούν να καλούν μόνο διαδρομές κάτω από αυτό το URL, ποτέ άλλο host."
 label = "Server URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Κωδικός πρόσβασης"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Όνομα χρήστη"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "Επικολλήστε το URL που σας έδωσε η υπηρεσία. Μόνο διαδρομές κάτω από αυτό μπορούν να καλούνται."
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Όνομα σύνδεσης"
 namePlaceholder = "π.χ. Παραγωγή"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Ακύρωση"
 createNew = "Νέα σύνδεση..."
 placeholder = "Επιλέξτε σύνδεση"
 save = "Αποθήκευση σύνδεσης"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "Αλλαγή ενσωμάτωσης"
 heading = "Τι θέλετε να συνδέσετε;"
 noResultsBody = "Δεν το υποστηρίζουμε ακόμη - πείτε μας γι' αυτό και θα εξετάσουμε την προσθήκη του."
 noResultsTitle = "Δεν ταιριάζει τίποτα με \"{{query}}\""
 searchPlaceholder = "Αναζήτηση ενσωματώσεων - δοκιμάστε \"sign\", \"ocr\" ή ένα όνομα προϊόντος"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "Καλέστε οποιοδήποτε HTTP API από μια πολιτική. Επιλέγετε το URL, τον έλεγχο ταυτότητας και το payload."
 label = "Προσαρμοσμένο API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Έλεγχος ταυτότητας"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Όνομα χρήστη και κωδικός πρόσβασης"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token σε προσαρμοσμένο header"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "Κανένα"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "Σύνδεση για token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "Τα βήματα που χρησιμοποιούν αυτή τη σύνδεση μπορούν να καλούν μόνο διαδρομές κάτω από αυτό το URL, ποτέ άλλο host."
 label = "Βασικό URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Όνομα header"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Διαδρομή σύνδεσης"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Κωδικός πρόσβασης"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "Αν το API απαντήσει με σύνδεσμο λήψης, μόνο αυτοί οι hosts μπορούν να ανακτηθούν. Διαχωρίστε με κόμματα. Αφήστε κενό για να επιτρέπεται μόνο ο ίδιος host του βασικού URL."
 label = "Επιτρεπόμενοι hosts αποτελεσμάτων"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "Στείλτε το token ως αυτό το header"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "Το response header στο οποίο η κλήση σύνδεσης επιστρέφει το token, π.χ. X-Auth-Token."
 label = "Token response header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Όνομα χρήστη"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Σάρωση εγγράφων για malware σε server που εκτελείτε - τίποτα δεν φεύγει από το δίκτυό σας."
 label = "ClamAV (self-hosted)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "Σάρωση ιών και περιεχομένου για έγγραφα σε μια πολιτική."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "Αποκλεισμός εγγράφων που περιέχουν macros, εκτελέσιμα, scripts ή ενσωματωμένα αντικείμενα - όχι μόνο γνωστό malware."
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "Επισύναψη επεξεργασμένων εγγράφων σε σελίδα Confluence."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "Στείλτε έγγραφα στο ConsignO Cloud (Notarius) για ηλεκτρονική υπογραφή και συμβολαιογραφική επικύρωση."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "Το περιβάλλον ConsignO Cloud σας, συμπεριλαμβανομένου του /api/v1."
 label = "Server URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Κωδικός πρόσβασης"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "Απαιτείται μόνο αν ο οργανισμός σας χρησιμοποιεί tenants."
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Όνομα χρήστη"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "Δημοσίευση μηνύματος στο Discord όταν μια πολιτική επεξεργάζεται ένα έγγραφο."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Ευρετηρίαση audit event στο Elasticsearch κάθε φορά που μια πολιτική χειρίζεται ένα έγγραφο."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "Έλεγχος ενός FTP ή FTPS server για νέα έγγραφα."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Λειτουργία σύνδεσης"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Ενεργή"
 passive = "Παθητική (συνιστάται)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Το απλό FTP στέλνει διαπιστευτήρια και αρχεία χωρίς κρυπτογράφηση· επιλέξτε FTPS αν το υποστηρίζει ο server."
 label = "Κρυπτογράφηση"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicit / AUTH TLS)"
 implicit = "FTPS (implicit)"
 none = "Κανένα (απλό FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Δημοσίευση μηνύματος σε χώρο Google Chat όταν εκτελείται μια πολιτική."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Επισύναψη επεξεργασμένων εγγράφων σε ζήτημα Jira."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "Αποστολή email με έγγραφο ή ειδοποίηση όταν εκτελείται μια πολιτική."
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Αρχειοθέτηση επεξεργασμένων εγγράφων στο Nextcloud."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "Κωδικός πρόσβασης εφαρμογής"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Ανίχνευση προσωπικών δεδομένων σε κείμενο εγγράφου χρησιμοποιώντας έναν Presidio server που εκτελείτε."
 label = "Presidio (self-hosted)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "Ανάγνωση και εφαρμογή ετικετών ευαισθησίας Microsoft Purview σε PDFs."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "Προαιρετικό. Απαιτείται μόνο για επιλογή ετικετών με βάση το όνομα· η επισήμανση λειτουργεί χωρίς αυτό."
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "Σφραγίζεται σε κάθε ετικέτα ως SiteId, ώστε τα εργαλεία που γνωρίζουν το Purview να ξέρουν ποιος οργανισμός την εφάρμοσε."
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "Ένα S3 bucket από το οποίο οι πηγές μπορούν να διαβάζουν και στο οποίο οι έξοδοι pipeline μπορούν να γράφουν."
 label = "Αποθήκευση S3"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "Αφήστε κενό για AWS. Ορίστε το για MinIO ή άλλο αποθηκευτικό χώρο συμβατό με S3."
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "Αποστολή email με έγγραφο ή ειδοποίηση όταν εκτελείται μια πολιτική."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "Έλεγχος ενός SFTP (SSH) server για νέα έγγραφα."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Προαιρετικό. Το SHA-256 host key fingerprint του server (από `ssh-keyscan host | ssh-keygen -lf -`). Όταν οριστεί, γίνεται αποδεκτός μόνο server που παρουσιάζει αυτό το key· όταν είναι κενό, το key που εμφανίζεται στην πρώτη σύνδεση καρφιτσώνεται και μεταγενέστερες αλλαγές απορρίπτονται."
 label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "Αφήστε κενό αν κάνετε έλεγχο ταυτότητας με private key αντί για κωδικό πρόσβασης."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "Προαιρετικό. Επικολλήστε ένα OpenSSH private key για έλεγχο ταυτότητας με key αντί για κωδικό πρόσβασης."
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "Δημοσίευση μηνύματος στο Slack όταν μια πολιτική επεξεργάζεται ένα έγγραφο."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "Παρακολούθηση ενός SMB / CIFS network share (Windows ή Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Network share"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "Προαιρετικό. Το Windows domain ή workgroup, αν ο server σας χρησιμοποιεί κάποιο."
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "Αποστολή audit event στο Splunk κάθε φορά που μια πολιτική χειρίζεται ένα έγγραφο."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Αποστολή audit event σε Sumo Logic HTTP collector."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Δημοσίευση μηνύματος σε κανάλι Teams όταν εκτελείται μια πολιτική."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Δημοσίευση κάθε εγγράφου, ή μόνο των λεπτομερειών, σε URL που επιλέγετε."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Ενεργοποίηση Zap ή Make scenario από μια πολιτική."
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "Περιήγηση στα docs"
 viewSource = "Προβολή πηγαίου κώδικα στο GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "κάθε αίτημα"
 eyebrow = "ΞΕΚΙΝΩΝΤΑΣ"
 lead = "Όλα τα αιτήματα πιστοποιούνται με bearer token. Τα κλειδιά είναι περιορισμένα ανά περιβάλλον και δεν λήγουν ποτέ, εκτός αν γίνει περιστροφή τους."
@@ -7134,13 +7137,13 @@ liveKey = "Κλειδιά παραγωγής — χρεώσιμα, με όρια
 testKey = "Κλειδιά sandbox — δωρεάν, επιστρέφουν συνθετικά fixtures."
 title = "Πιστοποίηση"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "ενσωμάτωση του viewer"
 eyebrow = "COMPONENTS"
 lead = "Ενσωματώσιμο UI για ουρές ελέγχου και επιθεώρηση εγγράφων. Φέρτε τα δικά σας styles ή χρησιμοποιήστε το παρεχόμενο theme."
 title = "Drop-in viewers"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCE"
 fieldCount_one = "{{count}} πεδίο"
 fieldCount_other = "{{count}} πεδία"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "Φιλτράρισμα endpoints ανά vertical"
 lead = "Κάθε τύπος εγγράφου είναι ένα typed endpoint. Κάντε POST ένα αρχείο, λάβετε JSON επικυρωμένο βάσει σχήματος. Φιλτράρετε ανά vertical παρακάτω."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCE"
 lead = "Τα σφάλματα επιστρέφουν έναν σταθερό, αναγνώσιμο από μηχανή κωδικό και ένα ανθρώπινο μήνυμα. Το σώμα 4xx περιλαμβάνει πάντα ένα request_id για υποστήριξη."
 title = "Σφάλματα"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Τεκμηρίωση"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "Δεν ήταν δυνατή η φόρτωση του ευρετηρίου τεκμηρίωσης."
 title = "Η τεκμηρίωση δεν είναι διαθέσιμη"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "ΞΕΚΙΝΩΝΤΑΣ"
 lead = "Στείλτε το πρώτο σας έγγραφο σε ένα typed endpoint και λάβετε δομημένο JSON πίσω σε τρία βήματα. Χωρίς εκπαίδευση μοντέλου, χωρίς prompt engineering."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "για συνταγές copy-paste."
 bodyBeforeLink = "συνδέστε την ίδια κλήση σε ένα pipeline για να αλυσιδώσετε επικύρωση, απόκρυψη και παράδοση — ή εκθέστε την σε έναν πράκτορα μέσω MCP. Δείτε"
 label = "Επόμενο:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Δημιουργήστε ένα περιορισμένο κλειδί από την καρτέλα Infrastructure. Τα κλειδιά φέρουν όρια ρυθμού και προαιρετική IP allowlist. Εξαγάγετέ το στο shell σας:"
 title = "Έκδοση API key"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "Κάντε POST ένα αρχείο σε οποιοδήποτε typed endpoint. Το endpoint καθορίζει το σχήμα που θα λάβετε πίσω — εδώ, ο extractor τιμολογίων."
 snippetCaption = "εξαγωγή τιμολογίου"
 title = "Αποστολή εγγράφου"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "Κάθε απόκριση επικυρώνεται βάσει του σχήματος endpoint, με βαθμολογία εμπιστοσύνης και προέλευση ανά πεδίο."
 codeCaption = "200 OK"
 title = "Ανάγνωση του δομημένου αποτελέσματος"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Ταυτόχρονη εκτέλεση"
@@ -7196,47 +7199,47 @@ lead = "Τα όρια κλιμακώνονται με το πλάνο σας. Μ
 requestsPerMinute = "Αιτήματα / λεπτό"
 title = "Όρια ρυθμού & ποσοστώσεις"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "Κλωνοποίηση συνταγής"
 eyebrow = "PLAYBOOKS"
 lead = "End-to-end μοτίβα που αλυσιδώνουν πηγές, λειτουργίες και προορισμούς. Κάθε ένα αντιστοιχίζεται σε ένα pipeline που μπορείτε να κλωνοποιήσετε."
 title = "Συνταγές"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "First-party clients με typed αποκρίσεις, αυτόματες επαναλήψεις και streaming uploads. Όλα παρακολουθούν τον ίδιο κατάλογο endpoints."
 title = "Επίσημα SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Καταργημένο"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "Συσκευασμένες, ονομασμένες δυνατότητες που ο πράκτοράς σας καλεί ως ένα ενιαίο εργαλείο. Κάθε skill είναι μια ντετερμινιστική αλυσίδα λειτουργιών με συνδεδεμένα evals."
 title = "Agent skills"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "Σε αυτήν τη σελίδα"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
 lead = "Εγγραφείτε σε συμβάντα document.processed, pipeline.completed και quota.threshold. Τα payloads υπογράφονται με HMAC-SHA256."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper."
 beforeHelper = "header έναντι του signing secret σας πριν εμπιστευτείτε ένα payload. Τα SDKs παρέχουν έναν"
 beforeSignature = "Επαληθεύστε το"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "Εξαγωγή CSV"
 search = "Αναζήτηση κατά όνομα αρχείου, ID..."
 subtitle = "Κάθε έγγραφο που έχει επεξεργαστεί ο οργανισμός σας, με το πλήρες αρχείο επεξεργασίας του. Η πρόσβαση στο περιεχόμενο απαιτεί αίτημα."
 title = "Έγγραφα"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Εγκρίθηκε"
 archived = "Αρχειοθετήθηκε"
 elevation = "Αναβάθμιση πρόσβασης"
@@ -7246,44 +7249,44 @@ flagged = "Χρειάζεται έλεγχο"
 ingested = "Εισήχθη"
 reviewed = "Σε έλεγχο"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "Ενότητες λεπτομερειών εγγράφου"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "Έλεγχος"
 extractions = "Εξαγωγές"
 overview = "Επισκόπηση"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "Αίτημα πρόσβασης"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "Προσωρινή παραχώρηση — η πρόσβαση καταγράφεται και είναι χρονικά περιορισμένη."
 descriptionFourEyes = "Προσωρινή παραχώρηση — ειδοποιήθηκε ένας ομότιμος ελεγκτής (four-eyes)."
 title = "Η πρόσβαση λήγει σε {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "Το περιεχόμενο προστατεύεται από zero-standing-access. Το αίτημα ξεκινά μια χρονικά περιορισμένη παραχώρηση."
 descriptionFourEyes = "Το περιεχόμενο προστατεύεται από zero-standing-access. Το αίτημα ξεκινά μια χρονικά περιορισμένη παραχώρηση και ειδοποιεί έναν ομότιμο ελεγκτή (four-eyes)."
 title = "Ευαίσθητο έγγραφο"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "Δεν εξήχθησαν πεδία από αυτό το έγγραφο."
 masked = "Τα εξαγμένα πεδία είναι κρυφά. Ζητήστε χρονικά περιορισμένη πρόσβαση για να δείτε το περιεχόμενο αυτού του εγγράφου."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "Βεβαιότητα"
 field = "Πεδίο"
 value = "Τιμή"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "Όλα"
 ariaLabel = "Φιλτράρισμα εγγράφων κατά κατάσταση"
 flagged = "Επισημασμένα"
 inReview = "Σε έλεγχο"
 processed = "Επεξεργασμένα"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Ροή εργασίας / Ενέργεια"
 product = "Προϊόν"
 received = "Ώρα"
@@ -7291,26 +7294,26 @@ status = "Κατάσταση"
 type = "Τύπος"
 user = "Χρήστης"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "Σύνδεση πηγής"
 createPipeline = "Δημιουργία pipeline"
 description = "Καθώς οι πηγές τροφοδοτούν έγγραφα στις ροές εργασίας σας, θα εμφανίζονται εδώ για έλεγχο."
 title = "Δεν υπάρχουν έγγραφα στην ουρά"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "Σφάλμα"
 flagged = "Χρειάζεται έλεγχο"
 inReview = "Σε έλεγχο"
 processed = "Επεξεργασμένο"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "Αυτόματο"
 editorAction = "Editor"
 empty = "Κανένα έγγραφο δεν αντιστοιχεί σε αυτό το φίλτρο."
 rowActions = "Ενέργειες γραμμής"
 sensitiveLabel = "Ευαίσθητο"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Ροή εργασίας / Ενέργεια"
 document = "Έγγραφο"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "Κατάσταση"
 time = "Ώρα"
 user = "Χρήστης"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Αναπτύξτε το Stirling PDF Editor, συζεύξτε self-hosted παρουσίες με τον οργανισμό σας και διαχειριστείτε τον ενεργό στόλο — στόχους, υγεία, διαπιστευτήρια και offline ενεργοποίηση σε ένα μέρος."
 title = "Ανάπτυξη Editor"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "Ενεργοί χρήστες"
 host = "Host"
 lastSeen = "Τελευταία εμφάνιση"
@@ -7332,11 +7335,11 @@ status = "Κατάσταση"
 target = "Target"
 version = "Έκδοση"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "Αναπτύξτε έναν στόχο και συζεύξτε τον για να δείτε εδώ την υγεία της παρουσίας σε πραγματικό χρόνο."
 title = "Καμία παρουσία δεν αναφέρει"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Δημιουργία offline bundle"
 lockCopy = "Η offline και on-prem ενεργοποίηση είναι μέρος του Enterprise."
@@ -7344,67 +7347,67 @@ subtitle = "Δημιουργήστε ένα υπογεγραμμένο bundle ε
 talkToSales = "Μιλήστε με τις πωλήσεις"
 title = "Air-gapped ενεργοποίηση"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "Το {{file}} είναι υπογεγραμμένο και έτοιμο για μεταφορά. Ενεργοποιεί μία παρουσία και λήγει σε 14 ημέρες."
 title = "Το bundle είναι έτοιμο"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "Δημιουργήθηκε ✓"
 generateNewCode = "Δημιουργία νέου κωδικού"
 lockCopy = "Η παροχή IaC είναι μέρος του Enterprise."
 rotate = "Περιστροφή"
 talkToSales = "Μιλήστε με τις πωλήσεις"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "Κάθε παρουσία Editor που αναφέρει — έκδοση, περιοχή, κατάσταση, τελευταία εμφάνιση και ενεργοί χρήστες."
 title = "Υγεία παρουσίας"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "Συνδέστε έναν self-hosted editor με αυτόν τον οργανισμό. Δημιουργήστε ένα token, παραδώστε έναν σύντομο κωδικό ή συνδέστε το μέσω IaC."
 title = "Σύζευξη"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Πού εκτελείται ο Editor. Αντιγράψτε ένα snippet για να στήσετε μια self-hosted παρουσία ή χρησιμοποιήστε Managed Cloud χωρίς λειτουργικές εργασίες."
 title = "Στόχοι ανάπτυξης"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Τρέχον token"
 lastRotated = "Τελευταία περιστροφή"
 rotateButton = "Περιστροφή service token"
 subtitle = "Οι παρουσίες αυθεντικοποιούνται στον οργανισμό με αυτό το διαπιστευτήριο. Περιστρέψτε το βάσει προγράμματος ή αμέσως μετά από υποψία διαρροής."
 title = "Service token"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "Εκδόθηκε ένα νέο token. Ενημερώστε το STIRLING_SERVICE_TOKEN κάθε self-hosted παρουσίας εντός του 24ωρου παραθύρου χάριτος, αλλιώς θα βγουν offline."
 title = "Περιστροφή ενεργών παρουσιών"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "Υποβαθμισμένο"
 healthy = "Υγιές"
 offline = "Offline"
 pairing = "Σύζευξη"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} παρουσία"
 instanceCount_other = "{{count}} παρουσίες"
 talkToSales = "Μιλήστε με τις πωλήσεις"
 upgradePlan = "Αναβάθμιση πλάνου"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "Το on-prem και Kubernetes self-hosting είναι μέρος του Enterprise."
 paid = "Το self-hosting με Docker και Kubernetes ξεκλειδώνει σε πληρωμένο πλάνο."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "Διαθέσιμο"
 locked = "Κλειδωμένο"
 running = "Εκτελείται"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "Αυτή η προβολή αντιμετώπισε ένα απρόσμενο σφάλμα. Δοκιμάστε ξανά ή επιλέξτε άλλη ενότητα από την πλευρική γραμμή."
 retry = "Δοκιμάστε ξανά"
 title = "Κάτι πήγε στραβά σε αυτήν τη σελίδα"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "Πίσω"
 body = "Κατεβάστε την εφαρμογή desktop ή φιλοξενήστε μόνοι σας τον server."
 done = "Τέλος"
@@ -7464,7 +7467,7 @@ sectionDesktop = "Εφαρμογή desktop"
 sectionSelfHosted = "Self-hosted"
 title = "Εγκατάσταση του Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "Εκτελέστε την επίσημη image στον server σας."
 note = "Ανοίγει στο :8080. Προεπιλεγμένη σύνδεση: admin / stirling."
 tagline = "Εκτελέστε τον server σε container"
@@ -7473,27 +7476,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "Εγκαταστήστε το επίσημο Helm chart."
 note = "Προσθέστε ένα PVC για το /configs ώστε να διατηρούνται οι ρυθμίσεις."
 tagline = "Αναπτύξτε σε cluster με Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "Native builds για τη διανομή σας."
 guideBtn = "Προβολή επιλογών εγκατάστασης Linux"
 note = "Διατίθενται AppImage, .deb και .rpm builds για κοινές διανομές."
 tagline = "Native εφαρμογή desktop για τη διανομή σας"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "Ή μέσω Homebrew"
 detailBody = "Εκτελέστε το πρόγραμμα εγκατάστασης ή χρησιμοποιήστε Homebrew."
 downloadBtn = "Λήψη για macOS"
 tagline = "Native εφαρμογή για Apple silicon και Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "Εκτελέστε το .jar σε bare metal server."
 downloadBtn = "Λήψη του .jar"
 note = "Απαιτεί Java 21+. Ανοίγει στο :8080· προεπιλεγμένη σύνδεση admin / stirling."
@@ -7501,73 +7504,73 @@ runLabel = "Έπειτα εκτελέστε το"
 tagline = "Εκτελέστε το .jar σε bare metal server"
 title = "Χειροκίνητη ρύθμιση server"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "Ή μέσω winget"
 detailBody = "Εκτελέστε το πρόγραμμα εγκατάστασης ή χρησιμοποιήστε package manager."
 downloadBtn = "Λήψη προγράμματος εγκατάστασης"
 tagline = "Native εφαρμογή για Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} από {{total}} ενεργά αυτόν τον μήνα"
 name = "Stirling PDF Editor"
 open = "Άνοιγμα σε browser"
 updated = "ενημερώθηκε {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "Ολοκλήρωση ανάπτυξης"
 options = "Προβολή επιλογών ανάπτυξης"
 start = "Ανάπτυξη του Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Self-hosted · Docker"
 kubernetes = "Self-hosted · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "Καλό απόγευμα"
 evening = "Καλό βράδυ"
 morning = "Καλημέρα"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Διαχείριση ανάπτυξης Editor"
 sectionsAriaLabel = "Ενότητες υποδομής"
 subtitle = "Αναπτύξεις, διαπιστευτήρια, στάση ασφαλείας, αποθήκευση και ίχνος ελέγχου για τον Stirling χώρο εργασίας σας."
 title = "Υποδομή"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "Δημιουργία key"
 heading = "API keys"
 subheading = "Scoped διαπιστευτήρια με όρια ρυθμού ανά key, δικαιώματα και IP allowlists."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "Δημιουργήθηκε"
 lastUsed = "Τελευταία χρήση"
 revoke = "Ανάκληση κλειδιού"
 usageMonth = "Χρήση αυτόν τον μήνα"
 usageToday = "Χρήση σήμερα"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Δημιουργήστε ένα scoped key για να αρχίσετε να καλείτε το Stirling API."
 title = "Δεν υπάρχουν API keys ακόμα"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "Δεν ήταν δυνατή η φόρτωση των API κλειδιών σας. Δοκιμάστε ξανά."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "Να ανακληθεί το \"{{name}}\"; Οποιαδήποτε ενσωμάτωση εξακολουθεί να χρησιμοποιεί αυτό το κλειδί θα αρχίσει αμέσως να λαμβάνει σφάλματα 401. Αυτό δεν μπορεί να αναιρεθεί."
 cancel = "Ακύρωση"
 confirm = "Ανάκληση κλειδιού"
 title = "Ανάκληση API κλειδιού"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "Φιλτράρισμα συμβάντων ελέγχου κατά κατηγορία"
 heading = "Αρχεία καταγραφής ελέγχου"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "Δεν υπάρχουν συμβάντα σε αυτήν την κατηγορία."
 subheading = "Κάθε συμβάν αυθεντικοποίησης, διαμόρφωσης και επεξεργασίας σε όλο τον χώρο εργασίας σας."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "Δράστης"
 event = "Συμβάν"
 latency = "Καθυστέρηση"
@@ -7575,11 +7578,11 @@ status = "Κατάσταση"
 target = "Πόρος"
 timestamp = "Χρονική σήμανση"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "Η δραστηριότητα του χώρου εργασίας θα εμφανίζεται εδώ καθώς συμβαίνει."
 title = "Δεν υπάρχουν συμβάντα ελέγχου"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "Ακύρωση"
 error = "Η εξαγωγή απέτυχε. Δοκιμάστε ξανά."
 exportButton = "Εξαγωγή"
@@ -7590,7 +7593,7 @@ open = "Εξαγωγή"
 subtitle = "Κατεβάστε συμβάντα ελέγχου ως CSV ή JSON. Επιλέξτε ποιες στήλες θα συμπεριληφθούν."
 title = "Εξαγωγή αρχείου καταγραφής ελέγχου"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "Ημερομηνία"
 documentName = "Όνομα εγγράφου"
 ipAddress = "Διεύθυνση IP"
@@ -7598,7 +7601,7 @@ outcome = "Αποτέλεσμα"
 tool = "Εργαλείο"
 username = "Όνομα χρήστη"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "Όλα"
 auth = "Auth"
 config = "Config"
@@ -7607,17 +7610,17 @@ policy = "Πολιτική"
 processing = "Επεξεργασία"
 security = "Ασφάλεια"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Το αρχείο καταγραφής ελέγχου είναι διαθέσιμο στους επικεφαλής ομάδων και στους διαχειριστές. Ζητήστε πρόσβαση από τον επικεφαλής της ομάδας σας ή έναν διαχειριστή."
 title = "Δεν έχετε πρόσβαση"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Config"
 policy = "Πολιτική"
 processing = "Επεξεργασία"
 totalEvents = "Συνολικά συμβάντα · 24h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "Έλεγχος ταυτότητας"
 config = "Ρύθμιση"
 elevation = "Αναβάθμιση δικαιωμάτων"
@@ -7625,13 +7628,13 @@ policy = "Πολιτική"
 processing = "Επεξεργασία"
 security = "Ασφάλεια"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "Σφάλμα"
 info = "Πληροφορίες"
 success = "Επιτυχία"
 warning = "Προειδοποίηση"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "Ακύρωση"
 createKey = "Δημιουργία key"
 done = "Τέλος"
@@ -7644,11 +7647,11 @@ subtitleCreated = "Αντιγράψτε αυτό το secret τώρα — δεν
 title = "Δημιουργία API key"
 titleCreated = "Το key δημιουργήθηκε"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "Ενεργό"
 revoked = "Ανακλημένο"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API Keys"
 audit = "Αρχεία καταγραφής ελέγχου"
 deployments = "Αναπτύξεις"
@@ -7656,7 +7659,7 @@ models = "Μοντέλα"
 security = "Ασφάλεια"
 storage = "Αποθήκευση"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "Διαθέσιμες"
 comingSoonHeading = "Προσεχώς"
 connect = "Σύνδεση"
@@ -7668,7 +7671,7 @@ subtitle = "Όλα με τα οποία μπορεί να επικοινωνήσ
 title = "Ενσωματώσεις"
 typedName = "Όνομα {{tool}}"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "Όλα"
 audit = "Έλεγχος"
 connected = "Συνδεδεμένες"
@@ -7677,29 +7680,29 @@ security = "Ασφάλεια"
 signing = "Υπογραφή"
 storage = "Αποθήκευση"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "Συνδεδεμένο"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Ενσωμάτωση"
 worksWith = "Λειτουργεί με"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "Pipelines"
 policies = "Πολιτικές"
 sources = "Πηγές"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · πρόχειρο"
 loadError = "Δεν ήταν δυνατή η φόρτωση αυτού του εγγράφου. Δοκιμάστε ξανά."
 loading = "Φόρτωση…"
 title = "Νομικό έγγραφο"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "Components"
 docs = "Developer Docs"
@@ -7715,18 +7718,18 @@ sources = "Πηγές"
 usage = "Χρήση & Χρέωση"
 users = "Χρήστες"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF Platform"
 processor = "PDF Processor"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Κάθε αυτοματοποιημένη ροή εργασίας εγγράφων στο backend: μια διατεταγμένη αλυσίδα λειτουργιών πάνω σε ένα σύνολο πηγών, που εκτελείται με trigger. Κάντε κλικ σε μια γραμμή για τα βήματα και τις πηγές της."
 title = "Ροές εργασίας"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Νέα ροή εργασίας"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "Πίσω στις ροές εργασίας"
 cannotFollow = "Δεν μπορεί να δεχτεί {{produced}}"
@@ -7758,7 +7761,7 @@ unsavedTitle = "Μη αποθηκευμένες αλλαγές"
 usesDefaults = "Εκτελείται με προεπιλεγμένες ρυθμίσεις"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "Συνδυάζει κάθε αρχείο από το προηγούμενο βήμα"
 fan-out = "Εκτελείται μία φορά ανά αρχείο από το προηγούμενο βήμα"
 format-mismatch = "Χρειάζεται {{accepts}}, αλλά το προηγούμενο βήμα παράγει {{produced}}"
@@ -7776,7 +7779,7 @@ output-uncertain = "Ενδέχεται να μην εκτελεστεί: η έξ
 source-mismatch = "Χρειάζεται {{accepts}}, αλλά η είσοδος αυτού του pipeline είναι {{produced}}"
 undeclared-operation = "Δεν μπορεί να ελεγχθεί τι δέχεται αυτό το βήμα"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "Προσθήκη εργαλείου"
 create = "Δημιουργία ροής εργασίας"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "Εκτέλεση κάθε"
 trigger = "Trigger"
 triggerManual = "Μόνο χειροκίνητα"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "ημέρες"
 hours = "ώρες"
 minutes = "λεπτά"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "Διαγραφή του \"{{name}}\"; Αυτό δεν μπορεί να αναιρεθεί."
 cancel = "Ακύρωση"
 confirm = "Διαγραφή"
 title = "Διαγραφή ροής εργασίας;"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "Εκκαθάριση ιστορικού"
 delete = "Διαγραφή ροής εργασίας"
 run = "Εκτέλεση τώρα"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "Δημιουργία ροής εργασίας"
 connectSource = "Σύνδεση πηγής"
 description = "Δημιουργήστε την πρώτη σας ροή εργασίας: επιλέξτε τις πηγές πάνω στις οποίες εκτελείται, συνδέστε τις λειτουργίες σε αλυσίδα και επιλέξτε πού πηγαίνει η έξοδος."
 title = "Δεν υπάρχουν ροές εργασίας ακόμα"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "Ενεργές"
 paused = "Σε παύση"
 total = "Ροές εργασίας"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "Δεν υπάρχει τίποτα για εκτέλεση: το {{count}} έγγραφο της πηγής έχει ήδη υποβληθεί σε επεξεργασία."
 allProcessed_other = "Δεν υπάρχει τίποτα για εκτέλεση: όλα τα {{count}} έγγραφα στις πηγές έχουν ήδη υποβληθεί σε επεξεργασία."
 completed_one = "Η εκτέλεση ολοκληρώθηκε."
@@ -7874,151 +7877,151 @@ parked_other = "Δεν υπάρχει τίποτα για εκτέλεση: {{co
 running = "Η εκτέλεση ξεκίνησε· βρίσκεται ακόμα σε εξέλιξη."
 timeout = "Η εκτέλεση διαρκεί περισσότερο από το αναμενόμενο· μπορεί ακόμα να ολοκληρωθεί στο παρασκήνιο."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "Ενεργή"
 paused = "Σε παύση"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Ροή εργασίας"
 sources = "Πηγές"
 status = "Κατάσταση"
 steps = "Βήματα"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Παρακολούθηση φακέλου"
 manual = "Χειροκίνητο"
 schedule = "Προγραμματισμένο"
 
-[portal.policies]
+[processor.policies]
 defaultName = "Πολιτική {{category}}"
 subtitle = "Μόνιμοι αυτοματισμοί που επιβάλλουν μια ροή εργασίας εργαλείων σε κάθε έγγραφο. Κάθε πολιτική ενεργοποιείται κατά τη μεταφόρτωση ή την εξαγωγή, εκτελεί την αλυσίδα εργαλείων της και αποθηκεύει την επιβεβλημένη έκδοση μαζί με το πρωτότυπο."
 title = "Πολιτικές"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Αναβάθμιση σε Enterprise"
 notSetUp = "Δεν έχει ρυθμιστεί"
 requiresAiEngine = "Απαιτεί AI engine"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "Αναγνωρίστε τον τύπο κάθε εγγράφου κατά τη μεταφόρτωση και προσθέστε ετικέτες στα μεταδεδομένα του για αρχειοθέτηση και αναζήτηση."
 label = "Ταξινόμηση"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "Επιβάλλετε απαιτήσεις HIPAA, GDPR, SOC 2 ή FedRAMP σε κάθε έγγραφο."
 label = "Συμμόρφωση"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "Ταξινομήστε έγγραφα, εξαγάγετε δομημένα δεδομένα, επιβάλετε συμβάσεις ονοματοδοσίας και κανονικοποιήστε σελίδες."
 label = "Εισαγωγή"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "Ορίστε πόσο καιρό διατηρούνται τα έγγραφα, πότε αρχειοθετούνται και πότε διαγράφονται."
 label = "Διατήρηση"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Αυτόματη δρομολόγηση εγγράφων στη σωστή ομάδα, φάκελο ή σύστημα."
 label = "Δρομολόγηση"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "Εντοπίστε PII, απομακρύνετε ευαίσθητα στοιχεία, αφαιρέστε ενεργό περιεχόμενο και υδατογραφήστε έγγραφα."
 label = "Ασφάλεια"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "Όλα τα έγγραφα"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "Ταξινομεί κάθε μεταφορτωμένο έγγραφο με βάση τις ετικέτες της ομάδας σας και προσθέτει ετικέτες στα μεταδεδομένα του."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "Ταξινόμηση"
 1 = "Προσθήκη ετικέτας στα μεταδεδομένα"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "Επικυρώνει έγγραφα έναντι κανονιστικών πλαισίων πριν φύγουν από το σύστημα."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Αρχείο καταγραφής πρόσβασης"
 auditTrail = "Ίχνος ελέγχου"
 frameworks = "Πλαίσια"
 onViolation = "Όταν δεν συμμορφώνεται"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Σάρωση πλαισίου"
 1 = "Επιβολή ενέργειας"
 2 = "Ίχνος ελέγχου"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "Ταξινομεί έγγραφα, εξάγει δομημένα δεδομένα, επιβάλλει ονοματοδοσία και κανονικοποιεί σελίδες."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Κάτω από το όριο"
 minConfidence = "Ελάχιστη βεβαιότητα"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Ταξινόμηση"
 1 = "Εξαγωγή"
 2 = "Ονομασία"
 3 = "Κανονικοποίηση"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Εφαρμογή ετικέτας ευαισθησίας Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview tenant"
 labelId = "Label ID"
 labelIdHelp = "Το GUID της ετικέτας, από το portal Purview. Η εφαρμογή ετικέτας γράφει τα μεταδεδομένα της στο PDF· δεν μπορεί να κρυπτογραφήσει, κάτι που απαιτεί τον Microsoft client."
 labelName = "Όνομα ετικέτας (προαιρετικό)"
 labelNameHelp = "Καταγράφεται μαζί με το ID ώστε οι χρήστες και τα εργαλεία να μπορούν να αναγνωρίζουν την ετικέτα."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Το Purview διακρίνει μια ετικέτα που εφαρμόστηκε από πολιτική από μία που επέλεξε κάποιος χρήστης."
 label = "Πώς καταγράφεται η ετικέτα"
 privileged = "Ως επιλεγμένη από χρήστη"
 standard = "Ως εφαρμοσμένη αυτόματα"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Ανάγνωση ετικέτας Microsoft Purview"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview tenant"
 connectionHelp = "Διαβάζει την ετικέτα που φέρει ήδη το έγγραφο, ώστε τα επόμενα βήματα να μπορούν να ενεργήσουν βάσει αυτής."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "Επιβάλλει πόσο καιρό διατηρούνται τα έγγραφα, πότε αρχειοθετούνται και πότε διαγράφονται."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "Αρχειοθέτηση μετά από"
 immutableHold = "Αμετάβλητη διακράτηση"
 keepFor = "Διατήρηση για"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Διακράτηση διατήρησης"
 1 = "Αυτόματη αρχειοθέτηση"
 2 = "Μπλοκ διαγραφής"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Δρομολογεί έγγραφα στον σωστό προορισμό με βάση τον τύπο και την ταξινόμηση."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Προορισμός"
 notify = "Ειδοποίηση κατά τη δρομολόγηση"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Αυτόματη ταξινόμηση"
 1 = "Δρομολόγηση σε φάκελο"
 2 = "Ειδοποίηση webhook"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "Εντοπίζει και απομακρύνει PII, αφαιρεί ενεργό περιεχόμενο (JavaScript) και υδατογραφεί έγγραφα."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Απομάκρυνση PII"
 1 = "Αφαίρεση JavaScript"
 2 = "Υδατογράφημα"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "Επιβάλλει"
 onEveryExport = "Σε κάθε εξαγωγή"
 onEveryUpload = "Σε κάθε μεταφόρτωση"
@@ -8030,7 +8033,7 @@ showLess = "Εμφάνιση λιγότερων"
 showMore = "Εμφάνιση περισσότερων"
 sources = "Πηγές"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "Εκκαθάριση ιστορικού επεξεργασίας"
 delete = "Διαγραφή"
 editSettings = "Επεξεργασία ρυθμίσεων"
@@ -8038,17 +8041,17 @@ pause = "Παύση"
 resume = "Συνέχιση"
 runNow = "Εκτέλεση τώρα"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "Αυτή η πολιτική θα ξεχάσει κάθε αρχείο που έχει ήδη επεξεργαστεί και θα επανεπεξεργαστεί όλα όσα βρίσκονται αυτήν τη στιγμή στις πηγές της στην επόμενη εκτέλεση. Τα ίδια τα αρχεία δεν αλλάζουν. Αυτό δεν μπορεί να αναιρεθεί."
 cancel = "Ακύρωση"
 confirm = "Εκκαθάριση ιστορικού"
 title = "Εκκαθάριση ιστορικού επεξεργασίας;"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "Τα έγγραφα θα εμφανιστούν εδώ μόλις εκτελεστεί αυτή η πολιτική."
 title = "Δεν υπάρχει ακόμη δραστηριότητα"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Υδατογράφημα"
 autoRedact = "Απόκρυψη PII"
 classifyAndLabel = "Ταξινόμηση"
@@ -8057,375 +8060,375 @@ flatten = "Επιπεδοποίηση"
 ocrPdf = "OCR"
 sanitizePdf = "Αφαίρεση JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "Οι πολιτικές σας αποθηκεύτηκαν και θα εμφανιστούν μόλις αποκατασταθεί η σύνδεση."
 retry = "Επανάληψη"
 title = "Το Backend δεν είναι διαθέσιμο"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "Αλλαγή του τι κάνει αυτό το βήμα"
 noResults = "Κανένα βήμα δεν ταιριάζει με αυτό. Δοκιμάστε ένα όνομα προϊόντος ή \"scan\", \"notify\", \"attach\"."
 searchPlaceholder = "Αναζήτηση βημάτων - δοκιμάστε \"scan\", \"attach\" ή ένα όνομα προϊόντος"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Ακατέργαστα bytes αρχείου"
 json = "Μέσα σε JSON payload"
 multipart = "Ως μεταφόρτωση αρχείου (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "Ο δικός σας ClamAV server ελέγχει το έγγραφο· τίποτα δεν φεύγει από το δίκτυό σας."
 label = "Σάρωση για ιούς (self-hosted)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "Απορρίπτει έγγραφα που περιέχουν macros, εκτελέσιμα, scripts ή ενσωματωμένα αντικείμενα."
 label = "Αποκλεισμός ενεργού περιεχομένου"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Το Cloudmersive ελέγχει το έγγραφο και η εκτέλεση σταματά αν δεν είναι καθαρό."
 label = "Σάρωση για ιούς"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "Αρχειοθετεί το επεξεργασμένο έγγραφο σε μια σελίδα."
 label = "Επισύναψη σε σελίδα Confluence"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "Υποβάλλει το έγγραφο στο ConsignO Cloud για υπογραφή."
 label = "Αποστολή για υπογραφή (ConsignO)"
 note = "Υποβάλλει το έγγραφο. Η ανάκτηση του υπογεγραμμένου αντιγράφου δεν υποστηρίζεται ακόμα, επειδή ένα βήμα δεν μπορεί να περάσει αποτέλεσμα σε επόμενο βήμα."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "Συντάξτε την κλήση μόνοι σας: path, method, body και διαχείριση απόκρισης."
 label = "Κλήση προσαρμοσμένου API"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
 label = "Δημοσίευση μηνύματος στο Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "Καταγράφει αυτό που έκανε η πολιτική ως έγγραφο με δυνατότητα αναζήτησης."
 label = "Ευρετηρίαση συμβάντος ελέγχου στο Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Το multipart ταιριάζει σε upload APIs· το JSON ταιριάζει σε APIs που θέλουν το αρχείο μέσα σε payload· το binary στέλνει τα ακατέργαστα bytes."
 label = "Πώς να σταλεί το έγγραφο"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "Ένα JSON body που αποστέλλεται ως έχει. Το {{document.base64}} μεταφέρει το αρχείο· τα {{document.*}} και {{run.*}} συμπληρώνονται ανά έγγραφο."
 label = "JSON body"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "Λογαριασμός"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun domain"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "Το πεδίο φόρμας κάτω από το οποίο το API αναμένει το έγγραφο."
 label = "Όνομα πεδίου αρχείου"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "Από"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "Ένα JSON object με ζεύγη ονόματος/τιμής header. Το διαπιστευτήριο της σύνδεσης προστίθεται για εσάς."
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Κλειδί ζητήματος"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "Αποστέλλεται ως σώμα μηνύματος. Τα {{document.*}} και {{run.*}} συμπληρώνονται ανά έγγραφο."
 label = "Μήνυμα"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Method"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Page ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "Προστίθεται στο base URL της σύνδεσης. Δεν μπορεί ποτέ να φτάσει σε άλλον host."
 label = "Path"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "Πού στο drive να γραφτεί. Το {{document.filename}} συμπληρώνεται ανά έγγραφο."
 label = "Διαδρομή προορισμού"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Η αναφορά αφήνει το έγγραφο ανέπαφο. Η αντικατάσταση το ανταλλάσσει με ό,τι επιστρέφεται."
 label = "Τι να γίνει με την απάντηση"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "Email υπογράφοντος"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "Θέμα"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Το Presidio αναλύει αυτό το κείμενο. Χρησιμοποιήστε {{document.title}} ή επικολλήστε το κείμενο που θέλετε να ελεγχθεί."
 label = "Κείμενο προς έλεγχο"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "Προς"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Όνομα χρήστη Nextcloud"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "Ενημερώνει έναν χώρο ότι η πολιτική χειρίστηκε ένα έγγραφο."
 label = "Δημοσίευση μηνύματος στο Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "Αρχειοθετεί το επεξεργασμένο έγγραφο σε ένα ζήτημα."
 label = "Επισύναψη σε ζήτημα Jira"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "Στέλνει το επεξεργασμένο έγγραφο ως συνημμένο."
 label = "Αποστολή του εγγράφου με email (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "Γράφει το επεξεργασμένο έγγραφο σε έναν φάκελο."
 label = "Μεταφόρτωση στο Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "Ο δικός σας Presidio server αναφέρει τα προσωπικά δεδομένα που βρίσκει."
 label = "Εντοπισμός προσωπικών δεδομένων"
 note = "Το Presidio διαβάζει κείμενο, όχι αρχεία. Δώστε του το κείμενο που θέλετε να ελεγχθεί — το ίδιο το έγγραφο δεν μεταφορτώνεται."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "Αντικατάσταση του εγγράφου με την απάντηση"
 report = "Διατήρηση του εγγράφου, καταγραφή της απάντησης"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "Στέλνει το επεξεργασμένο έγγραφο ως συνημμένο."
 label = "Αποστολή του εγγράφου με email (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
 label = "Δημοσίευση μηνύματος στο Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "Καταγράφει αυτό που έκανε η πολιτική, εκεί όπου ήδη αναζητούν οι ελεγκτές σας."
 label = "Αποστολή συμβάντος ελέγχου στο Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "Καταγράφει αυτό που έκανε η πολιτική σε έναν HTTP collector."
 label = "Αποστολή συμβάντος ελέγχου στο Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "Ενημερώνει ένα κανάλι ότι η πολιτική χειρίστηκε ένα έγγραφο."
 label = "Δημοσίευση μηνύματος στο Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "Στέλνει το ίδιο το έγγραφο σε ένα URL που επιλέγετε."
 label = "Δημοσίευση του εγγράφου σε webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "Παραδίδει τις λεπτομέρειες της εκτέλεσης στον αυτοματισμό σας."
 label = "Trigger ενός Zap ή Make scenario"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "Ενεργό"
 dataProcessed = "Δεδομένα που επεξεργάστηκαν"
 docsEnforced = "Έγγραφα που επιβλήθηκαν"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "Ενεργό"
 paused = "Σε παύση"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "Επιβολή κατά τη μεταφόρτωση/εξαγωγή"
 label = "Ενεργές πολιτικές"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "Διαθέσιμες για διαμόρφωση"
 label = "Κατηγορίες"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "Σε όλες τις ενεργές πολιτικές"
 label = "Έγγραφα που επιβλήθηκαν"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "Διαμορφωμένες αλλά δεν ενεργοποιούνται"
 label = "Σε παύση"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "Ισχύει για"
 docs = "Έγγραφα επιβληθέντα"
 enforces = "Επιβάλλει"
 policy = "Πολιτική"
 status = "Κατάσταση"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "Πίσω"
 cancel = "Ακύρωση"
 continue = "Συνέχεια"
 enablePolicy = "Ενεργοποίηση πολιτικής"
 saveChanges = "Αποθήκευση αλλαγών"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "Αναγνωρίζει τον τύπο του εγγράφου από τις ετικέτες της ομάδας σας και το επισημαίνει, ώστε να αρχειοθετείται και να αναζητείται ανά κατηγορία."
 label = "Ταξινόμηση του εγγράφου"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "Συμπιέζει το έγγραφο σε μικρότερο μέγεθος αρχείου."
 label = "Μείωση μεγέθους αρχείου"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "Συγχωνεύει τα πεδία φόρμας και τις σημειώσεις στη σελίδα ώστε να μην μπορούν να επεξεργαστούν."
 label = "Επιπεδοποίηση του εγγράφου"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "Εκτελεί OCR ώστε οι σαρωμένες σελίδες να γίνουν επιλέξιμο, αναζητήσιμο κείμενο."
 label = "Μετατροπή κειμένου σε αναζητήσιμο"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "Εντοπίζει και μαυρίζει ευαίσθητες λεπτομέρειες — όπως αριθμούς κοινωνικής ασφάλισης και καρτών — ώστε να μην μπορούν να διαβαστούν."
 label = "Απόκρυψη ευαίσθητων πληροφοριών"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "Αφαιρεί κρυφό JavaScript ώστε τίποτα να μην μπορεί να εκτελεστεί αυτόματα όταν ανοίγει το έγγραφο."
 label = "Αφαίρεση ενεργού περιεχομένου"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "Αποδεικνύει ότι το έγγραφο υπήρχε σε αυτήν ακριβώς τη μορφή σε μια συγκεκριμένη χρονική στιγμή, χρησιμοποιώντας ανεξάρτητη αρχή χρονοσήμανσης. Αποστέλλεται μόνο ένα hash - το έγγραφο δεν φεύγει ποτέ από τον server σας."
 label = "Προσθήκη αξιόπιστης χρονοσήμανσης"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "Τοποθετεί ένα ορατό σημάδι (π.χ. «Εμπιστευτικό») σε κάθε σελίδα."
 label = "Εφαρμογή υδατογραφήματος"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "Κάθε μεταφορτωμένο έγγραφο ταξινομείται με βάση τις ενσωματωμένες ετικέτες και επισημαίνεται με τους τύπους που ταιριάζουν. Το σύνολο ετικετών είναι κοινό για όλη την ομάδα σας."
 labelsHeading = "Ετικέτες ταξινόμησης"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "Ενεργοποιήστε πρώτα τουλάχιστον ένα εργαλείο στη ροή εργασίας."
 saveFailed = "Δεν ήταν δυνατή η αποθήκευση της πολιτικής. Δοκιμάστε ξανά."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "Έξοδος & εκτέλεση"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "Αυτόματη αρίθμηση"
 label = "Κανόνας ονόματος αρχείου"
 placeholder = "Κείμενο για προσθήκη (προαιρετικό)"
 prefix = "Πρόθεμα"
 suffix = "Επίθημα"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "Έξοδος ως"
 newFile = "Νέο αρχείο"
 newVersion = "Νέα έκδοση"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "Εξαγωγή"
 helper = "Πότε ενεργοποιείται η πολιτική: κατά τη μεταφόρτωση ή πριν από την εξαγωγή."
 label = "Εκτέλεση κατά"
 upload = "Μεταφόρτωση"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "Ρυθμίσεις"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "Πηγές"
 loading = "Φόρτωση πηγών…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "Βήματα ρύθμισης"
 settings = "Ρυθμίσεις"
 workflow = "Ενέργειες"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "Επεξεργασία πολιτικής {{category}}"
 setUp = "Ρύθμιση πολιτικής {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "Επιλέξτε τι κάνει αυτή η πολιτική σε κάθε έγγραφο που επεξεργάζεται."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "Ρύθμιση"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "Οι μετρήσεις αφορούν τις τελευταίες 24 ώρες. Η ταχύτητα ροής είναι ενδεικτική."
 liveBadge = "Live"
 stats = "{{connected}} συνδεδεμένα · {{processed}} PDF επεξεργασμένα"
 title = "PDF Processor"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "Λειτουργία προβολής"
 flow = "Ροή"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "Απέτυχαν"
 heading = "Αποτελέσματα"
 success = "Παραδόθηκαν"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} ενεργές"
 count = "{{n}} · 24h"
 heading = "Πολιτικές"
 setUp = "Ρύθμιση"
 soon = "Σύντομα"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "Πολιτικές · {{n}} ενεργές"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "Συνδέστε μια πηγή και ενεργοποιήστε μια πολιτική για να παρακολουθήσετε τα έγγραφα να ρέουν μέσω του processor."
 title = "Δεν υπάρχει ροή ακόμα"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "Σύνδεση"
 editor = "Stirling PDF Editor"
 heading = "Πηγές"
 perDay = "{{n}} / 24h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Λήψη email"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "Αξιολογήστε, συμβασιοποιήστε και εντάξτε την ομάδα σας. Κάθε έγγραφο σε ένα μέρος."
 title = "Προμήθειες"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "Συμφωνία & συνδρομή"
 confidential = "Εμπιστευτικό"
 confirm = "Έχω διαβάσει και συμφωνώ με τη Stirling Enterprise Agreement."
@@ -8447,7 +8450,7 @@ signatoryTitle = "Τίτλος υπογράφοντος"
 signatoryTitlePlaceholder = "π.χ. General Counsel"
 signError = "Δεν ήταν δυνατή η καταγραφή της υπογραφής σας. Δοκιμάστε ξανά."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Πρόσθετα"
 addressLine1 = "Γραμμή διεύθυνσης 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "π.χ. 1.000.000"
 years_one = "{{count}} έτος"
 years_other = "{{count}} έτη"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Enterprise Agreement"
 agreementSub = "MSA, Order Form και DPA σε μία υπογραφή."
 download = "Λήψη"
@@ -8547,10 +8550,10 @@ subtitle = "Τα έγγραφα της συμφωνίας σας, διαθέσι
 title = "Έγγραφα"
 view = "Προβολή"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "Κάτι πήγε στραβά"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Στάδιο {{current}} από {{total}}"
 ctaAgreement = "Έλεγχος & υπογραφή σύμβασης"
 ctaExploring = "Ρύθμιση της δοκιμής σας"
@@ -8573,36 +8576,36 @@ sentencePayment = "purchase order και πληρωμή"
 sentenceQuote = "ελέγξτε και αποδεχτείτε την προσφορά σας"
 sentenceTrial = "ρυθμίστε τον δοκιμαστικό χώρο εργασίας σας"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "Απομένει {{count}} ημέρα"
 daysLeft_other = "Απομένουν {{count}} ημέρες"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "Μία υπογραφή καλύπτει MSA, φόρμα παραγγελίας, EULA και DPA."
 gatingAction = "Ελέγξτε και υπογράψτε τη σύμβασή σας"
 label = "Σύμβαση"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "Παρέχετε τον χώρο εργασίας σας και εκτελέστε το go-live playbook."
 gatingAction = "Παροχή του χώρου εργασίας σας"
 label = "Υλοποίηση"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Πληρώστε με κάρτα, τραπεζική μεταφορά ή βάσει εντολής αγοράς."
 gatingAction = "Επιβεβαίωση πληρωμής"
 label = "Πληρωμή"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Ελέγξτε την τιμολόγηση δεσμευμένου όγκου και τη διάρκεια σύμβασης."
 gatingAction = "Αποδεχτείτε την προσφορά σας"
 label = "Προσφορά"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "Αξιολογήστε το Stirling σε σχέση με τα έγγραφα και τις ροές εργασίας σας."
 gatingAction = "Δημιουργήστε την προσφορά σας"
 label = "Δοκιμή"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "Αντιγράφηκε"
 copy = "Αντιγραφή κλειδιού"
 downloadError = "Δεν ήταν δυνατή η δημιουργία του offline αρχείου άδειας ακόμη — δοκιμάστε ξανά σε λίγο."
@@ -8613,21 +8616,21 @@ subtitle = "Ενεργοποιήστε μια self-hosted εγκατάσταση
 title = "Το κλειδί άδειάς σας"
 trialFileHint = "Αυτό είναι το αρχείο δοκιμαστικής άδειάς σας. Μόλις τεθεί σε ισχύ η συμφωνία σας, επιστρέψτε και κατεβάστε το ξανά — σε αντίθεση με το online κλειδί άδειας, το αρχείο .lic δεν θα ενημερωθεί μόνο του."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Σύνδεση λογαριασμού"
 description = "Οι προμήθειες εκτελούνται στον συνδεδεμένο λογαριασμό Stirling σας: έτσι παρέχουμε τη δοκιμή, τιμολογούμε την προσφορά σας και ξεκινάμε τη χρέωση. Συνδέστε έναν λογαριασμό για να ξεκινήσετε."
 eyebrow = "Enterprise"
 title = "Συνδέστε τον λογαριασμό σας για να ξεκινήσετε"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "Η συνδρομή σας είναι ενεργή και η άδειά σας έχει εκδοθεί. Η ομάδα σας έχει διατεθεί και η χρέωση έχει ξεκινήσει."
 eyebrow = "Live"
 title = "Είστε live στο Stirling Enterprise"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "Δεν ήταν δυνατή η λήψη του PDF προσφοράς ακόμη — δοκιμάστε ξανά σε λίγο."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "Η προσφορά σας έγινε αποδεκτή και η άδειά σας είναι ήδη ενεργή — η ομάδα σας μπορεί να ξεκινήσει αμέσως. Πληρώστε το πρώτο τιμολόγιο όταν είστε έτοιμοι· μπορείτε να το πληρώσετε ή να το κατεβάσετε εδώ, χωρίς να χρειάζεται email."
 downloadAgreement = "Λήψη υπογεγραμμένης συμφωνίας"
 downloadInvoice = "Λήψη τιμολογίου"
@@ -8635,7 +8638,7 @@ eyebrow = "Πληρωμή"
 title = "Η συνδρομή δημιουργήθηκε"
 viewInvoice = "Προβολή & πληρωμή τιμολογίου"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "Αποδοχή προσφοράς"
 annual = "Ετήσια χρέωση (έτος 1)"
 downloadCta = "Λήψη προσφοράς"
@@ -8644,14 +8647,14 @@ renewal = "Ανανεώνεται στα {{amount}}/έτος μετά τη δι�
 tcv = "Διάρκεια {{years}} ετών, πλήρως προπληρωμένη: {{tcv}}"
 validUntil = "Ισχύει έως {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Δεν ήταν δυνατή η φόρτωση του scheduler."
 fallbackLink = "Άνοιγμα προγραμματισμού σε νέα καρτέλα"
 loading = "Φόρτωση scheduler..."
 subtitle = "Ο μηχανικός λύσεών σας θα καθοδηγήσει την ομάδα σας στη διάθεση. Επιλέξτε μια ώρα που σας βολεύει."
 title = "Προγραμματισμός κλήσης"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Σφραγισμένο, χωρίς outbound"
 back = "Πίσω"
@@ -8681,7 +8684,7 @@ viewEula = "Διαβάστε το"
 workEmail = "Επαγγελματικό email"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "Η επέκταση προσθέτει 7 ημέρες και ειδοποιεί τον μηχανικό λύσεών σας."
 bodyMaxed = "Έχετε χρησιμοποιήσει όλες τις επεκτάσεις σας — μιλήστε με τον μηχανικό λύσεών σας αν χρειάζεστε περισσότερο χρόνο."
 cancel = "Ακύρωση δοκιμής"
@@ -8690,32 +8693,32 @@ maxed = "Εξαντλήθηκε"
 subtitle = "Η δωρεάν δοκιμή σας διαρκεί έως {{date}}. Δεν απαιτείται κάρτα."
 title = "Enterprise δοκιμή"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Διαχειριστής"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Σύνδεση λογαριασμού"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Σύνδεση λογαριασμού Stirling"
 primaryNav = "Κύρια πλοήγηση"
 switchApp = "Αλλαγή εφαρμογής"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "Κλείσιμο πλοήγησης"
 openNav = "Άνοιγμα πλοήγησης"
 search = "Αναζήτηση"
 
-[portal.sources]
+[processor.sources]
 subtitle = "Επαναχρησιμοποιήσιμες συνδέσεις εισόδου που τροφοδοτούν έγγραφα στο Stirling. Διαμορφώστε μια σύνδεση μία φορά και μετά αναφέρετέ τη από οποιονδήποτε αριθμό πολιτικών. Κάντε κλικ σε μια γραμμή για τη διαμόρφωσή της και για το ποιες πολιτικές τη χρησιμοποιούν."
 title = "Πηγές"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "Σύνδεση πηγής"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "Πίσω στις πηγές"
 backToTypes = "Όλοι οι τύποι πηγών"
 cancel = "Ακύρωση"
@@ -8729,164 +8732,164 @@ editTitle = "Επεξεργασία πηγής"
 enabled = "Ενεργοποιημένο"
 save = "Αποθήκευση αλλαγών"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Οι αυτοματισμοί φακέλων μπορούν να χρησιμοποιούν μόνο φακέλους που έχει επιτρέψει ένας διαχειριστής. Προσθέστε τον στις ρυθμίσεις Folder Access και δοκιμάστε ξανά."
 openSettings = "Ρυθμίσεις Folder Access"
 title = "Αυτός ο φάκελος δεν επιτρέπεται"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "Διαγραφή του \"{{name}}\"; Αυτό δεν μπορεί να αναιρεθεί. Οι πολιτικές που το αναφέρουν θα πρέπει να ενημερωθούν."
 cancel = "Ακύρωση"
 confirm = "Διαγραφή"
 title = "Διαγραφή πηγής;"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "Σε χρήση"
 total = "Συνδέσεις"
 unused = "Αχρησιμοποίητες"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "Η αποθηκευμένη σύνδεση με τη διεύθυνση server και τα διαπιστευτήρια. Επαναχρησιμοποιείται από κάθε πηγή που την αναφέρει."
 label = "Σύνδεση"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "Φάκελος στον server για polling, σχετικός με το αρχικό home σύνδεσης ή τη ρίζα του share. Αφήστε κενό για τη ρίζα."
 label = "Φάκελος"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Η κατανάλωση αφαιρεί κάθε αρχείο από τον server μόλις κάθε πολιτική το έχει επεξεργαστεί."
 label = "Λειτουργία ανάγνωσης"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Κατανάλωση: επεξεργασία κάθε αρχείου μία φορά"
 snapshot = "Snapshot: επανάγνωση του φακέλου σε κάθε εκτέλεση"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "Βάθος φακέλου"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "Συμπερίληψη υποφακέλων"
 top = "Μόνο ανώτερο επίπεδο"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "Ενεργό"
 disabled = "Απενεργοποιημένο"
 unused = "Αχρησιμοποίητο"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "Έγγραφα"
 source = "Πηγή"
 status = "Κατάσταση"
 type = "Type"
 usedBy = "Πολιτικές"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "Τραβήξτε έγγραφα από φακέλους Box που ήδη μοιράζεται η ομάδα σας."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "Τραβήξτε έγγραφα από κοινόχρηστο φάκελο Dropbox."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "Έγγραφα που έχει επεξεργαστεί η ομάδα σας στον editor, σε εκτελέσεις πολιτικών και AI."
 label = "Editor"
 noPolicies = "Δεν έχουν εκτελεστεί ακόμα πολιτικές από τον editor."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "Μετατρέψτε συνημμένα που αποστέλλονται σε dedicated mailbox σε έγγραφα."
 label = "Email inbox"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "Παρακολουθήστε έναν κατάλογο στον server για νέα έγγραφα."
 label = "Φάκελος"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Απόλυτη διαδρομή που παρακολουθεί το Stirling για αρχεία προς επεξεργασία."
 label = "Διαδρομή καταλόγου"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "Ο έλεγχος περιεχομένου διαβάζει κάθε αλλαγμένο αρχείο, οπότε μετονομασίες και touches που δεν αλλάζουν το περιεχόμενο δεν επανεπεξεργάζονται."
 label = "Ανίχνευση αλλαγών"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Έλεγχος μεγέθους, ημερομηνίας και περιεχομένου"
 stat = "Μέγεθος και ημερομηνία τροποποίησης"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "Λειτουργία ανάγνωσης"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Κατανάλωση: επεξεργασία κάθε αρχείου μία φορά"
 snapshot = "Στιγμιότυπο: επανανάγνωση του φακέλου σε κάθε εκτέλεση"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "Βάθος φακέλου"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Συμπερίληψη υποφακέλων"
 top = "Μόνο ανώτατο επίπεδο"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "Κάντε polling σε φάκελο FTP ή FTPS server για νέα έγγραφα."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "Τραβήξτε έγγραφα από κοινόχρηστους φακέλους Google Drive."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "Παρακολουθήστε ένα SMB network share για νέα έγγραφα."
 label = "Network drive"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "Παρακολουθήστε φακέλους OneDrive για νέα έγγραφα."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Τραβήξτε έγγραφα από Amazon S3 ή S3-compatible bucket."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "Η αποθηκευμένη σύνδεση που περιέχει το bucket και τα διαπιστευτήρια. Επαναχρησιμοποιείται από κάθε πηγή και έξοδο pipeline που την αναφέρει."
 label = "Σύνδεση"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Η κατανάλωση αφαιρεί κάθε object από το bucket μόλις κάθε πολιτική το έχει επεξεργαστεί."
 label = "Λειτουργία ανάγνωσης"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Κατανάλωση: επεξεργασία κάθε object μία φορά"
 snapshot = "Snapshot: επανάγνωση του bucket σε κάθε εκτέλεση"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "Επεξεργάζονται μόνο objects των οποίων τα keys ξεκινούν με αυτό το prefix."
 label = "Key prefix"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "Κάντε polling σε SFTP drop folder για νέα έγγραφα."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "Τραβήξτε έγγραφα από βιβλιοθήκες εγγράφων SharePoint."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "Πηγή"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "Ένα delivery URL και signing secret δημιουργούνται όταν δημιουργείτε αυτό το webhook. Οι αποστολείς κάνουν POST έγγραφα σε αυτό το URL και οι πολιτικές που το αναφέρουν εκτελούνται κατά την άφιξη."
 description = "Λάβετε έγγραφα μέσω υπογεγραμμένου HTTP POST από οποιοδήποτε εξωτερικό σύστημα."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "Delivery URL"
 secretNote = "Το signing secret εμφανίζεται μία φορά, όταν δημιουργείται το webhook. Δημιουργήστε ξανά την πηγή για να το αλλάξετε."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "Αντιγραφή"
 done = "Τέλος"
 secret = "Signing secret"
@@ -8896,78 +8899,75 @@ title = "Το webhook δημιουργήθηκε"
 url = "Delivery URL"
 usage = "Κάντε POST κάθε έγγραφο ως raw request body στο delivery URL με binary content type (application/pdf ή application/octet-stream). Οι πολιτικές που το αναφέρουν εκτελούνται αυτόματα κατά την άφιξη."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "Όνομα"
 namePlaceholder = "π.χ. Εισαγωγή αιτήσεων"
 type = "Τύπος"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "Κλείσιμο"
 
-[portal.usage]
+[processor.usage]
 managePayment = "Διαχείριση πληρωμής"
 subtitle = "Κατανάλωση, τιμολόγια και διαχείριση πλάνου για κάθε PDF που έχει χρεώσει το Stirling, σε μία κονσόλα."
 title = "Χρήση & χρέωση"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Δεν ήταν δυνατή η φόρτωση του πορτοφολιού"
 openStripePortal = "Δεν ήταν δυνατό το άνοιγμα του Stripe portal"
 walletUnavailable = "Το πορτοφόλι δεν είναι διαθέσιμο: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "Συνδεθείτε ξανά"
 body = "Η συνεδρία του λογαριασμού Stirling σας έχει λήξει. Συνδεθείτε ξανά για να δείτε τη χρέωση — η παρουσία σας παραμένει συνδεδεμένη."
 title = "Η συνεδρία έληξε"
 
-[portal.users]
+[processor.users]
 title = "Χρήστες"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Διαχειριστής (Κάτοχος οργανισμού)"
 summary = "Πλήρης διακυβέρνηση του χώρου εργασίας, των ρυθμίσεων και των μελών."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Διαχείριση χρηστών, ομάδων και ρόλων"
 1 = "Διαχείριση όλων των integrations, συμπ. συνδέσεων S3"
 2 = "Παραχώρηση ή ανάκληση πρόσβασης στο portal"
 3 = "Όλα όσα μπορεί να κάνει ο Team Owner"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Επισκέπτης"
 summary = "Περιορισμένη ή μόνο web πρόσβαση· δεν μπορεί να έχει προσωπικές διαμορφώσεις."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "Χρήση μόνο web / demo"
 1 = "Χωρίς API keys ή integrations"
 2 = "Χωρίς πρόσβαση στο portal"
 3 = "Μόνο ανάγνωση όπου κοινοποιείται"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Μέλος"
 summary = "Κανονικός χρήστης — εργάζεται με κοινόχρηστους πόρους και τις δικές του διαμορφώσεις."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Χρήση του editor και κοινόχρηστων integrations"
 1 = "Δημιουργία προσωπικών διαμορφώσεων API & MCP"
 2 = "Προβολή διαμορφώσεων ομάδας που έχουν κοινοποιηθεί σε αυτούς"
 3 = "Χωρίς διαχείριση S3 ή χώρου εργασίας"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Κάτοχος ομάδας"
 summary = "Κατέχει μια ομάδα — διαχειρίζεται τους πόρους των μελών της και τις κοινόχρηστες διαμορφώσεις."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Δημιουργία & διαχείριση των συνδέσεων S3 της ομάδας"
 1 = "Διαχείριση διαμορφώσεων integration που ανήκουν στην ομάδα"
 2 = "Πρόσβαση στο portal μέσω της προεπιλεγμένης πολιτικής"
 3 = "Όλα όσα μπορεί να κάνει το Μέλος"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Απεριόριστα"
-
-[printFile]
-title = "Εκτύπωση αρχείου"
 
 [provider.googledrive]
 name = "Google Drive"

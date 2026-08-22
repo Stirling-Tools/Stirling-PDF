@@ -6352,10 +6352,13 @@ thirtyDays = "30 วัน"
 threeYears = "3 ปี"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "พิมพ์ไฟล์"
+
+[processor]
 comingSoon = "เร็วๆ นี้"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "การประมวลผลแบบไม่ต้องดูแลจะเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 eyebrow = "การเชื่อมโยงบัญชี"
 linkButton = "เชื่อมโยงบัญชี Stirling ของคุณ"
@@ -6366,37 +6369,37 @@ notLinked = "ยังไม่ได้เชื่อมโยง"
 title = "เชื่อมโยงองค์กรนี้กับบัญชี Stirling"
 unlink = "ยกเลิกการเชื่อมโยง"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "ไม่สามารถเชื่อมโยงได้"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "เพื่อเปิดใช้งานการเชื่อมโยงบัญชีกับบัญชี Stirling ที่โฮสต์อยู่ ใน dev คุณสามารถจำลองการลงชื่อเข้าใช้จากกล่องโต้ตอบการเชื่อมโยงได้"
 before = "ตั้งค่า"
 title = "ยังไม่ได้กำหนดค่าการเข้าสู่ระบบ SaaS"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "เชื่อมโยงบัญชี"
 description = "เชื่อมโยงบัญชี Stirling ขององค์กรนี้เพื่อใช้ฟีเจอร์ที่มีการเรียกเก็บเงิน"
 title = "เชื่อมโยงเพื่อปลดล็อก"
 titleFeature = "เชื่อมโยงเพื่อปลดล็อก {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "ใช้งานอยู่"
 revoke = "เพิกถอน"
 revoked = "เพิกถอนแล้ว"
 unnamed = "อินสแตนซ์ไม่มีชื่อ"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "อินสแตนซ์"
 lastSeen = "พบล่าสุด"
 linked = "เชื่อมโยงแล้ว"
 status = "สถานะ"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "เชื่อมโยงบัญชีขององค์กรนี้ จากนั้นลงทะเบียนอินสแตนซ์ที่โฮสต์เองของคุณเพื่อดูที่นี่"
 title = "ไม่มีอินสแตนซ์ที่เชื่อมโยง"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}}d ที่แล้ว"
 daysAgo_other = "{{count}}d ที่แล้ว"
 hoursAgo_one = "{{count}}h ที่แล้ว"
@@ -6406,36 +6409,36 @@ minutesAgo_one = "{{count}}m ที่แล้ว"
 minutesAgo_other = "{{count}}m ที่แล้ว"
 never = "ไม่เคย"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "ลงชื่อเข้าใช้บัญชีที่เซิร์ฟเวอร์นี้ควรเรียกเก็บเงิน"
 linkTitle = "เชื่อมโยงบัญชี Stirling ของคุณ"
 reauthSubtitle = "เซสชันของคุณหมดอายุ — ลงชื่อเข้าใช้บัญชี Stirling ของคุณอีกครั้ง อินสแตนซ์ของคุณยังคงเชื่อมโยงอยู่"
 reauthTitle = "ลงชื่อเข้าใช้อีกครั้ง"
 simulateSignIn = "จำลองการลงชื่อเข้าใช้ (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "เพื่อเปิดใช้งานการเชื่อมโยงในแอปกับบัญชี Stirling ที่โฮสต์อยู่"
 and = "และ"
 before = "ตั้งค่า"
 title = "ยังไม่ได้กำหนดค่าการเข้าสู่ระบบ SaaS"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "ทุกอินสแตนซ์ที่โฮสต์เองซึ่งลงทะเบียนกับองค์กรนี้ เพิกถอนข้อมูลรับรองเพื่อตัดการเข้าถึงแบบไม่ต้องดูแลทันที"
 instancesTitle = "อินสแตนซ์ที่เชื่อมโยง"
 revokeError = "ไม่สามารถเพิกถอนอินสแตนซ์ได้"
 sub = "เชื่อมโยงองค์กรที่โฮสต์เองนี้กับบัญชี Stirling เพื่อให้การประมวลผลแบบไม่ต้องดูแลเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "เฉพาะเจ้าของทีมเท่านั้นที่สามารถดูอินสแตนซ์ที่เชื่อมโยงขององค์กรได้"
 generic = "ไม่สามารถโหลดอินสแตนซ์ที่เชื่อมโยงของทีมได้ ลองอีกครั้งในอีกสักครู่"
 title = "ไม่สามารถโหลดอินสแตนซ์ที่เชื่อมโยงได้"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "แผน Editor"
 subscribed = "แผน Processor"
 unlinked = "ยังไม่ได้เชื่อมโยง"
 
-[portal.assistant]
+[processor.assistant]
 close = "ปิดผู้ช่วย"
 error = "ไม่สามารถเชื่อมต่อผู้ช่วยได้"
 errorWithDetail = "ไม่สามารถเชื่อมต่อผู้ช่วยได้: {{detail}}"
@@ -6447,33 +6450,33 @@ title = "ผู้ช่วย"
 tryAsking = "ลองถาม"
 typing = "กำลังพิมพ์"
 
-[portal.auth]
+[processor.auth]
 loading = "กำลังโหลด"
 redirectingToEditor = "กำลังเปลี่ยนเส้นทางไปยังตัวแก้ไข..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "ไว้ทีหลัง"
 title = "เปิดใช้งาน Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "ตั้งขีดจำกัดรายเดือน จ่ายตามที่ใช้"
 title = "จ่ายตามการใช้งาน"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "ฟรี 2 เดือน"
 sub = "ใบแจ้งหนี้เดียว ชำระด้วยบัตรหรือโอนผ่านธนาคาร"
 title = "ชำระล่วงหน้าหนึ่งปี"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function ไม่ได้ส่งคืน client_secret"
 title = "เปิดใช้แผน Processor"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "การชำระเงินของคุณสำเร็จแล้ว แต่การเปิดใช้งานใช้เวลานานกว่าปกติเล็กน้อย ระบบจะเปิดใช้งานโดยอัตโนมัติ - ปิดสิ่งนี้แล้วจะปรากฏที่นี่ในไม่ช้า"
 close = "ปิด"
 title = "เกือบเสร็จแล้ว"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "ขีดจำกัดค่าใช้จ่ายรายเดือน"
 back = "กลับ"
 continue = "ไปต่อที่การชำระเงิน"
@@ -6484,30 +6487,30 @@ note = "คุณจะไม่ถูกเรียกเก็บเกิน
 perMonth = "/ เดือน"
 title = "ตั้งขีดจำกัดค่าใช้จ่ายของคุณ"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "หมายเลขบัตร · MM / YY · CVC · ZIP"
 label = "รายละเอียดบัตร"
 note = "รายละเอียดบัตรเก็บรวบรวมโดย Stripe Stirling ไม่เคยจัดเก็บ PAN หรือ CVC"
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "ไม่สามารถเริ่มชำระเงินได้"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "การชำระเงินของคุณสำเร็จแล้ว เรากำลังเปิดใช้การประมวลผลตามปริมาณการใช้งานในอินสแตนซ์ที่เชื่อมโยงของคุณ - โดยปกติใช้เวลาไม่กี่วินาที"
 hint = "โปรดเปิดหน้าต่างนี้ค้างไว้"
 title = "กำลังเปิดใช้งานแผน Processor ของคุณ..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "ขีดจำกัดค่าใช้จ่ายรายเดือน {{amount}}/เดือน การประมวลผลจะหยุดชั่วคราวเมื่อถึงขีดจำกัด"
 limitNoCap = "ไม่มีขีดจำกัดค่าใช้จ่าย การประมวลผลจะไม่หยุดชั่วคราว ออกใบแจ้งหนี้รายเดือน"
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "สร้างใบเสนอราคา Enterprise ของคุณ"
 description = "ส่วนลดตามปริมาณที่ตกลงไว้ การติดตั้งแบบ air-gapped, MSA แบบกำหนดเองและการตรวจสอบความปลอดภัย และความร่วมมือกับผู้จัดจำหน่ายบุคคลที่ 3"
 eyebrow = "ส่วนลดตามปริมาณ · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "ใช้งานในเดือนนี้"
 cost = "ค่าใช้จ่าย"
 editorsDeployed = "Editors ที่ติดตั้ง"
@@ -6516,7 +6519,7 @@ pdfsEdited = "PDFs ที่แก้ไข"
 subtitle = "ติดตั้งได้ทุกที่ สำหรับทั้งทีมของคุณ"
 title = "Free PDF Editors"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "ไม่สามารถเริ่มชำระเงินได้"
 currentPlan = "แผนปัจจุบัน"
 freeForever = "ฟรีตลอดไป"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "เปิดใช้ Processor →"
 unlimitedUsers = "ผู้ใช้ไม่จำกัด"
 viewQuote = "ดูใบเสนอราคา"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "จำนวนเงิน"
 columnDate = "วันที่"
 columnDescription = "คำอธิบาย"
@@ -6553,12 +6556,12 @@ title = "ประวัติใบแจ้งหนี้"
 viewAriaLabel = "ดูใบแจ้งหนี้ {{number}} ใน Stripe"
 viewLink = "ดู ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "เชื่อมโยงบัญชี Stirling"
 description = "การแก้ไข PDF ด้วยตนเอง — ดู ลงชื่อ รวม แยก ลายน้ำ บีบอัด แปลง OCR ด้วยตนเอง — ฟรีเสมอ ไม่ว่าจะเชื่อมโยงหรือไม่ เชื่อมโยงเพื่อรับสิทธิ์ประมวลผลตามปริมาณการใช้งานฟรี 500 PDFs (ระบบอัตโนมัติ, AI และ API); เมื่อคุณต้องการมากกว่านั้น ให้เปิดใช้แผน Processor และจ่ายเฉพาะเท่าที่ใช้"
 title = "เชื่อมโยงบัญชี Stirling ของคุณ"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "เรียกเก็บเงินรายเดือน"
 cardEnding = "{{brand}} ลงท้ายด้วย {{last4}}"
 cardFallback = "บัตร"
@@ -6568,7 +6571,7 @@ managedSub = "บัตรและรายละเอียดการเร
 managedTitle = "จัดการใน Stripe"
 update = "อัปเดต"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "ยังไม่มีการประมวลผลตามปริมาณการใช้งานในช่วงเวลานี้"
 eyebrow = "PDFs ที่ประมวลผลในช่วงเวลานี้"
 legendValue_one = "{{formatted}} PDFs"
@@ -6587,14 +6590,14 @@ unit = "PDFs ตามปริมาณการใช้งาน"
 unitsPending_one = "{{units}} หน่วยมิเตอร์รอซิงค์จากอินสแตนซ์ที่เชื่อมโยง"
 unitsPending_other = "{{units}} หน่วยมิเตอร์รอซิงค์จากอินสแตนซ์ที่เชื่อมโยง"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "จาก {{total}} เครดิตแบบชำระล่วงหน้า"
 expires = "หมดอายุ {{date}}"
 eyebrow = "ความจุแบบชำระล่วงหน้า"
 note = "ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์และอยู่นอกขีดจำกัดค่าใช้จ่ายของคุณ"
 topUp = "เติมเงิน"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "กลับ"
 calcTitle = "คำนวณการชำระเงินรายปีของคุณ"
 cancel = "ยกเลิก"
@@ -6607,7 +6610,7 @@ loadingTitle = "กำลังโหลดใบเสนอราคาขอ�
 payTitle = "ชำระเงินสำหรับปีของคุณ"
 step = "ขั้นตอนที่ {{current}} จาก {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "เปลี่ยน"
 deployRow = "การปรับใช้"
 done = "เสร็จสิ้น"
@@ -6626,10 +6629,10 @@ sizingRow = "การกำหนดขนาด"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "ผู้ใช้ทั้งหมด"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "ฉันเข้าใจว่าเมื่อความจุแบบชำระล่วงหน้าของฉันถูกใช้หมดหรือหมดอายุหลังจาก 12 เดือน การประมวลผลจะดำเนินต่อโดยอัตโนมัติในอัตรามาตรฐานแบบคิดตามมิเตอร์จ่ายตามการใช้งาน (ไม่เกินขีดจำกัดค่าใช้จ่ายของฉัน) เว้นแต่ฉันจะยกเลิก และฉันสามารถยกเลิกได้ทุกเมื่อจาก billing portal"
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "จัดการโดย Stirling ใช้งานได้ในไม่กี่นาที"
 cloudValue = "Stirling Cloud · จัดการแล้ว"
@@ -6637,12 +6640,12 @@ selfhost = "Self-hosted"
 selfhostDesc = "ทำงานบนโครงสร้างพื้นฐานส่วนตัว อัตราเดียวกัน"
 selfhostValue = "Self-hosted · โครงสร้างพื้นฐานส่วนตัว"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "ตรวจสอบข้อเสนอ"
 subtitle = "ชำระล่วงหน้าหนึ่งปีสำหรับการประมวลผล PDF และรับฟรีสองเดือน ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์ และอยู่นอกขีดจำกัดค่าใช้จ่ายของคุณ"
 title = "รับ 12 เดือนในราคา 10 เดือน"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "ชื่อเจ้าของบัญชี"
 accountNamePlaceholder = "เช่น Jane Smith"
 companyName = "ชื่อบริษัท (ไม่บังคับ)"
@@ -6652,7 +6655,7 @@ payOnline = "ชำระออนไลน์"
 poNumber = "หมายเลข PO (ไม่บังคับ)"
 poNumberPlaceholder = "เช่น PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "ขั้นสูง"
 advancedDesc = "Pipelines ขับเคลื่อนการประมวลผลส่วนใหญ่ของคุณ"
 none = "ไม่มี"
@@ -6660,7 +6663,7 @@ noneDesc = "ยังไม่ได้เรียกใช้ pipelines เป
 standard = "มาตรฐาน"
 standardDesc = "Pipelines บางรายการประมวลผล PDFs ที่เข้ามาซ้ำ"
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "พื้นฐาน"
 essentialsDesc = "การจัดหมวดหมู่ ค่าเริ่มต้น รวมถึงการแชร์"
 governed = "มีการกำกับดูแล"
@@ -6668,12 +6671,12 @@ governedDesc = "เพิ่มความปลอดภัยและกา�
 regulated = "มีการควบคุม"
 regulatedDesc = "ทุกหมวดหมู่ รวมถึง Compliance, Retention, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "ดาวน์โหลดใบเสนอราคา (PDF)"
 downloading = "กำลังเตรียม…"
 share = "แชร์เพื่อขออนุมัติ"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "กะทัดรัด"
 compactDesc = "ไฟล์ต่ำกว่า 25 MB ไม่มีค่าใช้จ่ายข้อมูล"
 heavy = "หนัก"
@@ -6681,12 +6684,12 @@ heavyDesc = "สแกนหรือมีรูปภาพจำนวนม�
 standard = "มาตรฐาน"
 standardDesc = "ส่วนใหญ่เป็นไฟล์เล็ก มีบางสแกนเกิน 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "ใช้หมดแล้ว"
 healthy = "เหลืออีกมาก"
 low = "ใกล้หมด"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "ปรับขีดจำกัด"
 cancel = "ยกเลิก"
 capControlNote = "การเปลี่ยนแปลงมีผลทันที — เพิ่มหรือลดเพดานได้ทุกเมื่อ"
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "{{amount}} ในช่วงเวลานี้ · ไ�
 usedThisMonth = "ใช้แล้ว {{amount}} ในเดือนนี้"
 useSuggested = "ใช้ค่าที่แนะนำ · {{amount}} / เดือน"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "ที่ {{rate}}/วัน คุณจะถึงขีดจำกัดใน ~{{count}} วัน (~{{monthEnd}} สิ้นเดือน) ขีดจำกัดที่แนะนำ ~{{suggested}}"
 body_other = "ที่ {{rate}}/วัน คุณจะถึงขีดจำกัดใน ~{{count}} วัน (~{{monthEnd}} สิ้นเดือน) ขีดจำกัดที่แนะนำ ~{{suggested}}"
 label = "คาดว่าจะเกิน"
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "ค่าใช้จ่ายเดือนนี้"
 freeRemaining_one = "เหลือ PDF ฟรี {{formatted}} ไฟล์"
 freeRemaining_other = "เหลือ PDFs ฟรี {{formatted}} ไฟล์"
@@ -6720,17 +6723,17 @@ processed_other = "ประมวลผล {{formattedCount}} PDFs แล้ว
 processedWithRate_one = "ประมวลผล {{formattedCount}} PDF แล้ว ที่ {{rate}} ต่อรายการ"
 processedWithRate_other = "ประมวลผล {{formattedCount}} PDFs แล้ว ที่ {{rate}} ต่อรายการ"
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "เพิ่มตอนนี้เพื่อให้การประมวลผลอัตโนมัติไม่หยุดชั่วคราว"
 approachingTitle = "คุณใช้ถึง {{pct}}% ของขีดจำกัดค่าใช้จ่ายรายเดือนแล้ว"
 raiseLimit = "เพิ่มขีดจำกัด"
 reachedBody = "การประมวลผลตามปริมาณการใช้งานหยุดชั่วคราวจนกว่าคุณจะเพิ่มขีดจำกัดหรือรอบจะรีเซ็ต การแก้ไข PDF ไม่จำกัดยังคงใช้งานได้"
 reachedTitle = "ถึงขีดจำกัดค่าใช้จ่ายรายเดือนแล้ว"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "ไม่สามารถเปิดพอร์ทัล Stripe ได้"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
 capSuffix_other = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
@@ -6743,7 +6746,7 @@ title_other = "ประมวลผล {{allowance}} PDFs ฟรี"
 titleWithRate_one = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
 titleWithRate_other = "ประมวลผล {{allowance}} PDFs ฟรี จากนั้น {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "การอนุมัติ"
 check = "การตรวจสอบ"
 event = "event"
@@ -6752,11 +6755,11 @@ review = "การรีวิว"
 session = "session"
 signature = "ลายเซ็น"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "การเชื่อมต่อใหม่"
 createTitleFor = "เชื่อมต่อ {{name}}"
 delete = "ลบ"
@@ -6764,369 +6767,369 @@ edit = "แก้ไข"
 editTitle = "แก้ไขการเชื่อมต่อ"
 unsupportedType = "ไม่สามารถแก้ไขประเภทการเชื่อมต่อนี้ที่นี่ได้"
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "สำหรับบริการที่เรายังไม่รองรับ"
 label = "ขั้นสูง"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "บันทึกสิ่งที่เกิดขึ้นกับเอกสาร ในที่ที่ผู้ตรวจสอบของคุณดูอยู่แล้ว"
 label = "บันทึกการตรวจสอบและการปฏิบัติตามข้อกำหนด"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "แจ้งระบบอื่นว่ามีบางอย่างเกิดขึ้น"
 label = "การแจ้งเตือนและเวิร์กโฟลว์"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "สแกนหรือติดป้ายกำกับเอกสารก่อนที่จะย้ายต่อ"
 label = "ความปลอดภัยและการจัดหมวดหมู่"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "ส่งเอกสารออกไปเพื่อลงนามหรือรับรองเอกสาร"
 label = "ลายเซ็นอิเล็กทรอนิกส์และการรับรองเอกสาร"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "ปลายทางของเอกสารที่ประมวลผลแล้ว - bucket, drive, ticket หรือ page"
 label = "ไฟล์และแนบ"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling จัดเก็บข้อมูลนี้แบบเข้ารหัสและจะไม่แสดงอีก"
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "ขั้นตอนที่ใช้การเชื่อมต่อนี้สามารถเรียกได้เฉพาะ paths ภายใต้ URL นี้เท่านั้น ไม่ใช่ host อื่น"
 label = "Server URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "รหัสผ่าน"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "ชื่อผู้ใช้"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "วาง URL ที่บริการให้คุณ สามารถเรียกได้เฉพาะ paths ภายใต้ URL นั้นเท่านั้น"
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "ชื่อการเชื่อมต่อ"
 namePlaceholder = "เช่น Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "ยกเลิก"
 createNew = "การเชื่อมต่อใหม่..."
 placeholder = "เลือกการเชื่อมต่อ"
 save = "บันทึกการเชื่อมต่อ"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "เปลี่ยน integration"
 heading = "คุณต้องการเชื่อมต่ออะไร?"
 noResultsBody = "เรายังไม่รองรับ - บอกเราเกี่ยวกับสิ่งนี้ แล้วเราจะพิจารณาเพิ่ม"
 noResultsTitle = "ไม่มีรายการที่ตรงกับ \"{{query}}\""
 searchPlaceholder = "ค้นหา integrations - ลอง \"sign\", \"ocr\" หรือชื่อผลิตภัณฑ์"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "เรียก HTTP API ใดก็ได้จาก policy คุณเลือก URL, การยืนยันตัวตน และ payload"
 label = "Custom API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "การยืนยันตัวตน"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "ชื่อผู้ใช้และรหัสผ่าน"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token ใน header แบบกำหนดเอง"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "ไม่มี"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "เข้าสู่ระบบเพื่อรับ token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "ขั้นตอนที่ใช้การเชื่อมต่อนี้สามารถเรียกได้เฉพาะ paths ภายใต้ URL นี้เท่านั้น ไม่ใช่ host อื่น"
 label = "Base URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "ชื่อ Header"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Login path"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "รหัสผ่าน"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "หาก API ตอบกลับด้วยลิงก์ดาวน์โหลด จะดึงข้อมูลได้เฉพาะ hosts เหล่านี้เท่านั้น คั่นด้วยจุลภาค เว้นว่างเพื่ออนุญาตเฉพาะ host ของ Base URL เอง"
 label = "Result hosts ที่อนุญาต"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "ส่ง token เป็น header นี้"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "Response header ที่การเรียกเข้าสู่ระบบส่งคืน token เช่น X-Auth-Token"
 label = "Token response header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "ชื่อผู้ใช้"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "สแกนเอกสารเพื่อหามัลแวร์บนเซิร์ฟเวอร์ที่คุณเรียกใช้ - ไม่มีสิ่งใดออกจากเครือข่ายของคุณ"
 label = "ClamAV (self-hosted)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "การสแกนไวรัสและเนื้อหาสำหรับเอกสารใน policy"
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "บล็อกเอกสารที่มี macros, executables, scripts หรือ embedded objects - ไม่ใช่แค่มัลแวร์ที่รู้จัก"
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "แนบเอกสารที่ประมวลผลแล้วไปยังหน้า Confluence"
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "ส่งเอกสารไปยัง ConsignO Cloud (Notarius) เพื่อลงลายมือชื่ออิเล็กทรอนิกส์และรับรองเอกสาร"
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "สภาพแวดล้อม ConsignO Cloud ของคุณ รวมถึง /api/v1"
 label = "Server URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "รหัสผ่าน"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "จำเป็นเฉพาะเมื่อองค์กรของคุณใช้ tenants"
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "ชื่อผู้ใช้"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "โพสต์ข้อความไปยัง Discord เมื่อ policy ประมวลผลเอกสาร"
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "จัดทำดัชนี audit event ใน Elasticsearch ทุกครั้งที่ policy จัดการเอกสาร"
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "ตรวจสอบ FTP หรือ FTPS server เพื่อหาเอกสารใหม่"
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "โหมดการเชื่อมต่อ"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Active"
 passive = "Passive (แนะนำ)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "FTP แบบธรรมดาส่งข้อมูลรับรองและไฟล์โดยไม่เข้ารหัส; เลือก FTPS หาก server รองรับ"
 label = "การเข้ารหัส"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicit / AUTH TLS)"
 implicit = "FTPS (implicit)"
 none = "ไม่มี (FTP ธรรมดา)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "โพสต์ข้อความไปยังพื้นที่ Google Chat เมื่อ policy ทำงาน"
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "แนบเอกสารที่ประมวลผลแล้วไปยัง issue ของ Jira"
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "ส่งอีเมลเอกสารหรือการแจ้งเตือนเมื่อ policy ทำงาน"
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "จัดเก็บเอกสารที่ประมวลผลแล้วลงใน Nextcloud"
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "App password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "ตรวจจับข้อมูลส่วนบุคคลในข้อความเอกสารโดยใช้ Presidio server ที่คุณเรียกใช้"
 label = "Presidio (self-hosted)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "อ่านและใช้ Microsoft Purview sensitivity labels บน PDFs"
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "ไม่บังคับ จำเป็นเฉพาะเพื่อเลือก labels ตามชื่อ; การติดป้ายกำกับทำงานได้แม้ไม่มี"
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "ประทับลงบนทุก label เป็น SiteId เพื่อให้เครื่องมือที่รองรับ Purview รู้ว่าองค์กรใดเป็นผู้ใช้"
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "S3 bucket ที่ sources สามารถอ่านได้และ pipeline outputs สามารถเขียนได้"
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "เว้นว่างสำหรับ AWS ตั้งค่านี้สำหรับ MinIO หรือที่เก็บอื่นที่เข้ากันได้กับ S3"
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "ส่งอีเมลเอกสารหรือการแจ้งเตือนเมื่อ policy ทำงาน"
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "ตรวจสอบ SFTP (SSH) server เพื่อหาเอกสารใหม่"
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "ไม่บังคับ fingerprint ของ SHA-256 host key ของ server (จาก `ssh-keyscan host | ssh-keygen -lf -`) เมื่อตั้งค่า จะยอมรับเฉพาะ server ที่แสดง key นี้เท่านั้น; เมื่อเว้นว่าง key ที่เห็นในการเชื่อมต่อครั้งแรกจะถูก pin และการเปลี่ยนแปลงภายหลังจะถูกปฏิเสธ"
 label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "เว้นว่างหากคุณยืนยันตัวตนด้วย private key แทน"
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "ไม่บังคับ วาง OpenSSH private key เพื่อยืนยันตัวตนด้วย key แทนรหัสผ่าน"
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "โพสต์ข้อความไปยัง Slack เมื่อ policy ประมวลผลเอกสาร"
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "เฝ้าดู SMB / CIFS network share (Windows หรือ Samba)"
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Network share"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "ไม่บังคับ Windows domain หรือ workgroup หาก server ของคุณใช้อยู่"
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "ส่ง audit event ไปยัง Splunk ทุกครั้งที่ policy จัดการเอกสาร"
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "ส่ง audit event ไปยัง Sumo Logic HTTP collector"
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "โพสต์ข้อความไปยังช่อง Teams เมื่อ policy ทำงาน"
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "โพสต์เอกสารแต่ละฉบับ หรือเพียงรายละเอียด ไปยัง URL ที่คุณเลือก"
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "ทริกเกอร์ Zap หรือ Make scenario จาก policy"
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "เรียกดูเอกสาร"
 viewSource = "ดู source บน GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "ทุกคำขอ"
 eyebrow = "เริ่มต้นใช้งาน"
 lead = "คำขอทั้งหมดยืนยันตัวตนด้วย bearer token คีย์ถูกกำหนดขอบเขตตาม environment และไม่มีวันหมดอายุเว้นแต่จะถูกหมุนเวียน"
@@ -7134,13 +7137,13 @@ liveKey = "คีย์ Production — มีการเรียกเก็�
 testKey = "คีย์ Sandbox — ฟรี ส่งคืน fixtures สังเคราะห์"
 title = "การยืนยันตัวตน"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "ฝัง viewer"
 eyebrow = "คอมโพเนนต์"
 lead = "UI ที่ฝังได้สำหรับคิวรีวิวและการตรวจสอบเอกสาร ใช้สไตล์ของคุณเองหรือใช้ธีมที่มาพร้อมระบบ"
 title = "Viewers แบบวางใช้งานได้ทันที"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCE"
 fieldCount_one = "{{count}} ฟิลด์"
 fieldCount_other = "{{count}} ฟิลด์"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "กรอง endpoints ตาม vertical"
 lead = "เอกสารทุกประเภทเป็น endpoint ที่มีชนิด POST ไฟล์ แล้วรับ JSON ที่ตรวจสอบตามสคีมา กรองตาม vertical ด้านล่าง"
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCE"
 lead = "ข้อผิดพลาดส่งคืนโค้ดที่เครื่องอ่านได้แบบคงที่พร้อมข้อความสำหรับมนุษย์ เนื้อหา 4xx จะมี request_id สำหรับการสนับสนุนเสมอ"
 title = "ข้อผิดพลาด"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "เอกสารประกอบ"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "ไม่สามารถโหลดดัชนีเอกสารประกอบได้"
 title = "เอกสารประกอบไม่พร้อมใช้งาน"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "เริ่มต้นใช้งาน"
 lead = "ส่งเอกสารแรกของคุณไปยัง endpoint ที่มีชนิดและรับ JSON แบบมีโครงสร้างกลับมาในสามขั้นตอน ไม่ต้องฝึกโมเดล ไม่ต้องทำ prompt engineering"
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "สำหรับสูตรที่คัดลอกและวางได้"
 bodyBeforeLink = "ต่อสายการเรียกเดียวกันเข้ากับ pipeline เพื่อเชื่อมการตรวจสอบความถูกต้อง การปกปิด และการส่งมอบ — หรือเปิดให้เอเจนต์ใช้ผ่าน MCP ดู"
 label = "ถัดไป:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "สร้างคีย์ที่กำหนดขอบเขตจากแท็บ Infrastructure คีย์มีขีดจำกัดอัตราและ IP allowlist แบบไม่บังคับ ส่งออกไปยัง shell ของคุณ:"
 title = "ออก API key"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST ไฟล์ไปยัง endpoint ที่มีชนิดใดก็ได้ endpoint จะกำหนดสคีมาที่คุณได้รับกลับมา — ในที่นี้คือเครื่องมือดึงข้อมูลใบแจ้งหนี้"
 snippetCaption = "ดึงข้อมูลใบแจ้งหนี้"
 title = "ส่งเอกสาร"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "ทุกการตอบกลับจะถูกตรวจสอบกับสคีมาของ endpoint พร้อมคะแนนความเชื่อมั่นและแหล่งที่มารายฟิลด์"
 codeCaption = "200 OK"
 title = "อ่านผลลัพธ์แบบมีโครงสร้าง"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Concurrency"
@@ -7196,47 +7199,47 @@ lead = "ขีดจำกัดจะปรับตามแผนของค
 requestsPerMinute = "คำขอ / นาที"
 title = "ขีดจำกัดอัตราและโควต้า"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "โคลน recipe"
 eyebrow = "PLAYBOOKS"
 lead = "รูปแบบครบวงจรที่เชื่อมโยงแหล่งที่มา การดำเนินการ และปลายทาง แต่ละรายการแมปกับ pipeline ที่คุณสามารถโคลนได้"
 title = "Recipes"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "ไคลเอนต์จากผู้ให้บริการโดยตรงพร้อมการตอบกลับแบบมีชนิด การลองใหม่อัตโนมัติ และการอัปโหลดแบบสตรีม ทั้งหมดติดตามแค็ตตาล็อก endpoint เดียวกัน"
 title = "SDKs อย่างเป็นทางการ"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "เลิกใช้แล้ว"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "ความสามารถที่รวมมาและตั้งชื่อไว้ ซึ่งเอเจนต์ของคุณเรียกใช้เป็นเครื่องมือเดียว แต่ละ skill เป็นสายการดำเนินการแบบกำหนดแน่นอนพร้อมการประเมินแนบอยู่"
 title = "ทักษะเอเจนต์"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "บนหน้านี้"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
 lead = "สมัครรับ events document.processed, pipeline.completed และ quota.threshold Payloads จะถูกลงชื่อด้วย HMAC-SHA256"
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper"
 beforeHelper = "header กับ signing secret ของคุณก่อนเชื่อถือ payload SDKs มาพร้อม"
 beforeSignature = "ตรวจสอบ"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "ส่งออก CSV"
 search = "ค้นหาตามชื่อไฟล์, ID..."
 subtitle = "ทุกเอกสารที่องค์กรของคุณประมวลผล พร้อมบันทึกการประมวลผลเต็มรูปแบบ การเข้าถึงเนื้อหาต้องผ่านคำขอ"
 title = "เอกสาร"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "อนุมัติแล้ว"
 archived = "เก็บถาวรแล้ว"
 elevation = "การยกระดับสิทธิ์"
@@ -7246,44 +7249,44 @@ flagged = "ต้องตรวจสอบ"
 ingested = "นำเข้าแล้ว"
 reviewed = "อยู่ระหว่างตรวจสอบ"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "ส่วนรายละเอียดเอกสาร"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "การตรวจสอบ"
 extractions = "การดึงข้อมูล"
 overview = "ภาพรวม"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "ขอสิทธิ์เข้าถึง"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "สิทธิ์ชั่วคราว — การเข้าถึงถูกบันทึกและจำกัดเวลา"
 descriptionFourEyes = "สิทธิ์ชั่วคราว — ผู้ตรวจสอบร่วมได้รับการแจ้งเตือน (four-eyes)"
 title = "สิทธิ์เข้าถึงจะหมดอายุใน {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "เนื้อหาถูกจำกัดด้วย zero-standing-access การขอสิทธิ์จะเริ่มการให้สิทธิ์แบบจำกัดเวลา"
 descriptionFourEyes = "เนื้อหาถูกจำกัดด้วย zero-standing-access การขอสิทธิ์จะเริ่มการให้สิทธิ์แบบจำกัดเวลาและแจ้งเตือนผู้ตรวจสอบร่วม (four-eyes)"
 title = "เอกสารละเอียดอ่อน"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "ไม่มีฟิลด์ที่ถูกดึงข้อมูลจากเอกสารนี้"
 masked = "ฟิลด์ที่ดึงข้อมูลถูกซ่อนไว้ ขอสิทธิ์เข้าถึงแบบจำกัดเวลาเพื่อดูเนื้อหาของเอกสารนี้"
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "ความเชื่อมั่น"
 field = "ฟิลด์"
 value = "ค่า"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "ทั้งหมด"
 ariaLabel = "กรองเอกสารตามสถานะ"
 flagged = "ถูกตั้งค่าสถานะ"
 inReview = "อยู่ระหว่างตรวจสอบ"
 processed = "ประมวลผลแล้ว"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Pipeline / การดำเนินการ"
 product = "ผลิตภัณฑ์"
 received = "เวลา"
@@ -7291,26 +7294,26 @@ status = "สถานะ"
 type = "ประเภท"
 user = "ผู้ใช้"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "เชื่อมต่อ source"
 createPipeline = "สร้าง pipeline"
 description = "เมื่อแหล่งที่มาส่งเอกสารเข้าสู่ pipelines ของคุณ เอกสารจะแสดงที่นี่เพื่อให้ตรวจสอบ"
 title = "ไม่มีเอกสารในคิว"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "ข้อผิดพลาด"
 flagged = "ต้องตรวจสอบ"
 inReview = "อยู่ระหว่างตรวจสอบ"
 processed = "ประมวลผลแล้ว"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "อัตโนมัติ"
 editorAction = "Editor"
 empty = "ไม่มีเอกสารที่ตรงกับตัวกรองนี้"
 rowActions = "การดำเนินการของแถว"
 sensitiveLabel = "ละเอียดอ่อน"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Pipeline / การดำเนินการ"
 document = "เอกสาร"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "สถานะ"
 time = "เวลา"
 user = "ผู้ใช้"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "ปรับใช้ Stirling PDF Editor, จับคู่อินสแตนซ์ที่โฮสต์เองกับองค์กรของคุณ และจัดการฟลีตที่กำลังทำงาน — เป้าหมาย สุขภาพ ข้อมูลประจำตัว และการเปิดใช้งานออฟไลน์ในที่เดียว"
 title = "การปรับใช้ Editor"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "ผู้ใช้ที่ใช้งานอยู่"
 host = "Host"
 lastSeen = "เห็นล่าสุด"
@@ -7332,11 +7335,11 @@ status = "สถานะ"
 target = "Target"
 version = "เวอร์ชัน"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "ปรับใช้เป้าหมายและจับคู่เพื่อดูสถานะสุขภาพของอินสแตนซ์แบบสดที่นี่"
 title = "ไม่มีอินสแตนซ์รายงาน"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "สร้างบันเดิลออฟไลน์"
 lockCopy = "การเปิดใช้งานแบบออฟไลน์และ on-prem เป็นส่วนหนึ่งของ Enterprise"
@@ -7344,67 +7347,67 @@ subtitle = "สร้างบันเดิลการเปิดใช้�
 talkToSales = "คุยกับฝ่ายขาย"
 title = "การเปิดใช้งานแบบ air-gapped"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} ได้รับการลงนามและพร้อมโอนแล้ว ใช้เปิดใช้งานหนึ่งอินสแตนซ์และหมดอายุใน 14 วัน"
 title = "บันเดิลพร้อมแล้ว"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "สร้างแล้ว ✓"
 generateNewCode = "สร้างรหัสใหม่"
 lockCopy = "การจัดสรร IaC เป็นส่วนหนึ่งของ Enterprise"
 rotate = "หมุนเวียน"
 talkToSales = "คุยกับฝ่ายขาย"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "ทุกอินสแตนซ์ของ Editor ที่รายงานเข้ามา — เวอร์ชัน ภูมิภาค สถานะ เห็นล่าสุด และผู้ใช้ที่ใช้งานอยู่"
 title = "สุขภาพอินสแตนซ์"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "เชื่อมต่อ editor ที่โฮสต์เองกับองค์กรนี้ สร้าง token ส่งต่อรหัสสั้น หรือเชื่อมผ่าน IaC"
 title = "การจับคู่"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "ตำแหน่งที่ Editor ทำงาน คัดลอก snippet เพื่อสร้างอินสแตนซ์ที่โฮสต์เอง หรือใช้ Managed Cloud โดยไม่ต้องดูแลระบบ"
 title = "เป้าหมายการปรับใช้"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Token ปัจจุบัน"
 lastRotated = "หมุนเวียนล่าสุด"
 rotateButton = "หมุนเวียน service token"
 subtitle = "อินสแตนซ์ยืนยันตัวตนกับองค์กรด้วยข้อมูลประจำตัวนี้ หมุนเวียนตามกำหนดการหรือทันทีหลังสงสัยว่ารั่วไหล"
 title = "Service token"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "ออก token ใหม่แล้ว อัปเดต STIRLING_SERVICE_TOKEN ของอินสแตนซ์ที่โฮสต์เองแต่ละรายการภายในช่วงผ่อนผัน 24 ชม. ไม่เช่นนั้นอินสแตนซ์จะออฟไลน์"
 title = "หมุนเวียนอินสแตนซ์ที่กำลังทำงาน"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "เสื่อมสภาพ"
 healthy = "สุขภาพดี"
 offline = "ออฟไลน์"
 pairing = "กำลังจับคู่"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} อินสแตนซ์"
 instanceCount_other = "{{count}} อินสแตนซ์"
 talkToSales = "คุยกับฝ่ายขาย"
 upgradePlan = "อัปเกรดแผน"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "การโฮสต์เองแบบ on-prem และ Kubernetes เป็นส่วนหนึ่งของ Enterprise"
 paid = "การโฮสต์เองด้วย Docker และ Kubernetes จะปลดล็อกในแผนแบบชำระเงิน"
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "พร้อมใช้งาน"
 locked = "ถูกล็อก"
 running = "กำลังทำงาน"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "มุมมองนี้พบข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้ง หรือเลือกส่วนอื่นจากแถบด้านข้าง"
 retry = "ลองอีกครั้ง"
 title = "มีบางอย่างผิดพลาดในหน้านี้"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "กลับ"
 body = "ดาวน์โหลดแอป desktop หรือ self-host server"
 done = "เสร็จสิ้น"
@@ -7464,7 +7467,7 @@ sectionDesktop = "แอป Desktop"
 sectionSelfHosted = "Self-hosted"
 title = "ติดตั้ง Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "เรียกใช้ image อย่างเป็นทางการบน server ของคุณ"
 note = "เปิดที่ :8080 ข้อมูลเข้าสู่ระบบเริ่มต้น: admin / stirling"
 tagline = "เรียกใช้ server ใน container"
@@ -7473,27 +7476,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "ติดตั้ง Helm chart อย่างเป็นทางการ"
 note = "เพิ่ม PVC สำหรับ /configs เพื่อคงการตั้งค่าไว้"
 tagline = "Deploy ไปยังคลัสเตอร์ด้วย Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "บิลด์แบบ Native สำหรับดิสทริบิวชันของคุณ"
 guideBtn = "ดูตัวเลือกการติดตั้ง Linux"
 note = "มีบิลด์ AppImage, .deb และ .rpm สำหรับดิสโทรทั่วไป"
 tagline = "แอปเดสก์ท็อปแบบ Native สำหรับดิสโทรของคุณ"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "หรือผ่าน Homebrew"
 detailBody = "รันตัวติดตั้ง หรือใช้ Homebrew"
 downloadBtn = "ดาวน์โหลดสำหรับ macOS"
 tagline = "แอปแบบ Native สำหรับ Apple silicon และ Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "รัน .jar บนเซิร์ฟเวอร์แบบ bare metal"
 downloadBtn = "ดาวน์โหลด .jar"
 note = "ต้องใช้ Java 21+ เปิดที่ :8080; ล็อกอินเริ่มต้น admin / stirling"
@@ -7501,73 +7504,73 @@ runLabel = "จากนั้นรัน"
 tagline = "รัน .jar บนเซิร์ฟเวอร์แบบ bare metal"
 title = "ตั้งค่าเซิร์ฟเวอร์ด้วยตนเอง"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "หรือผ่าน winget"
 detailBody = "รันตัวติดตั้ง หรือใช้ package manager"
 downloadBtn = "ดาวน์โหลดตัวติดตั้ง"
 tagline = "แอปแบบ Native สำหรับ Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} จาก {{total}} ใช้งานอยู่ในเดือนนี้"
 name = "Stirling PDF Editor"
 open = "เปิดในเบราว์เซอร์"
 updated = "อัปเดตเมื่อ {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "เสร็จสิ้นการ deployment"
 options = "ดูตัวเลือก deployment"
 start = "Deploy Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "โฮสต์เอง · Docker"
 kubernetes = "โฮสต์เอง · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "สวัสดีตอนบ่าย"
 evening = "สวัสดีตอนเย็น"
 morning = "สวัสดีตอนเช้า"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "จัดการการปรับใช้ Editor"
 sectionsAriaLabel = "ส่วนโครงสร้างพื้นฐาน"
 subtitle = "การปรับใช้ ข้อมูลประจำตัว สถานะความปลอดภัย พื้นที่จัดเก็บ และ audit trail สำหรับ workspace Stirling ของคุณ"
 title = "โครงสร้างพื้นฐาน"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "สร้างคีย์"
 heading = "API keys"
 subheading = "ข้อมูลประจำตัวแบบกำหนดขอบเขตพร้อม rate limits ต่อคีย์ สิทธิ์ และ IP allowlists"
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "สร้างเมื่อ"
 lastUsed = "ใช้ล่าสุด"
 revoke = "เพิกถอนคีย์"
 usageMonth = "การใช้งานเดือนนี้"
 usageToday = "การใช้งานวันนี้"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "สร้างคีย์แบบกำหนดขอบเขตเพื่อเริ่มเรียกใช้ Stirling API"
 title = "ยังไม่มี API keys"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "ไม่สามารถโหลด API keys ของคุณได้ โปรดลองอีกครั้ง"
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "เพิกถอน \"{{name}}\" หรือไม่? Integration ใดที่ยังใช้คีย์นี้จะเริ่มได้รับข้อผิดพลาด 401 ทันที การดำเนินการนี้ย้อนกลับไม่ได้"
 cancel = "ยกเลิก"
 confirm = "เพิกถอนคีย์"
 title = "เพิกถอน API key"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "กรองเหตุการณ์ตรวจสอบตามหมวดหมู่"
 heading = "Audit logs"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "ไม่มีเหตุการณ์ในหมวดหมู่นี้"
 subheading = "ทุกเหตุการณ์การยืนยันตัวตน การกำหนดค่า และการประมวลผลใน workspace ของคุณ"
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "ผู้ดำเนินการ"
 event = "เหตุการณ์"
 latency = "เวลาแฝง"
@@ -7575,11 +7578,11 @@ status = "สถานะ"
 target = "ทรัพยากร"
 timestamp = "Timestamp"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "กิจกรรมใน workspace จะแสดงที่นี่เมื่อเกิดขึ้น"
 title = "ไม่มีเหตุการณ์ตรวจสอบ"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "ยกเลิก"
 error = "ส่งออกไม่สำเร็จ โปรดลองอีกครั้ง"
 exportButton = "ส่งออก"
@@ -7590,7 +7593,7 @@ open = "ส่งออก"
 subtitle = "ดาวน์โหลดเหตุการณ์ตรวจสอบเป็น CSV หรือ JSON เลือกคอลัมน์ที่จะรวม"
 title = "ส่งออก audit log"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "วันที่"
 documentName = "ชื่อเอกสาร"
 ipAddress = "IP address"
@@ -7598,7 +7601,7 @@ outcome = "ผลลัพธ์"
 tool = "เครื่องมือ"
 username = "ชื่อผู้ใช้"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "ทั้งหมด"
 auth = "Auth"
 config = "การกำหนดค่า"
@@ -7607,17 +7610,17 @@ policy = "นโยบาย"
 processing = "การประมวลผล"
 security = "ความปลอดภัย"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Audit log พร้อมใช้งานสำหรับหัวหน้าทีมและผู้ดูแลระบบ ขอสิทธิ์เข้าถึงจากหัวหน้าทีมหรือผู้ดูแลระบบของคุณ"
 title = "คุณไม่มีสิทธิ์เข้าถึง"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "การกำหนดค่า"
 policy = "นโยบาย"
 processing = "การประมวลผล"
 totalEvents = "เหตุการณ์ทั้งหมด · 24 ชม."
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "การยืนยันตัวตน"
 config = "การกำหนดค่า"
 elevation = "การยกระดับสิทธิ์"
@@ -7625,13 +7628,13 @@ policy = "นโยบาย"
 processing = "การประมวลผล"
 security = "ความปลอดภัย"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "ข้อผิดพลาด"
 info = "ข้อมูล"
 success = "สำเร็จ"
 warning = "คำเตือน"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "ยกเลิก"
 createKey = "สร้างคีย์"
 done = "เสร็จสิ้น"
@@ -7644,11 +7647,11 @@ subtitleCreated = "คัดลอก secret นี้ตอนนี้ — จ
 title = "สร้าง API key"
 titleCreated = "สร้างคีย์แล้ว"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "ใช้งานอยู่"
 revoked = "ถูกเพิกถอน"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API Keys"
 audit = "Audit Logs"
 deployments = "การปรับใช้"
@@ -7656,7 +7659,7 @@ models = "Models"
 security = "ความปลอดภัย"
 storage = "พื้นที่จัดเก็บ"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "พร้อมใช้งาน"
 comingSoonHeading = "เร็ว ๆ นี้"
 connect = "เชื่อมต่อ"
@@ -7668,7 +7671,7 @@ subtitle = "ทุกอย่างที่ Stirling สามารถสื�
 title = "Integrations"
 typedName = "ชื่อ {{tool}}"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "ทั้งหมด"
 audit = "Audit"
 connected = "เชื่อมต่อแล้ว"
@@ -7677,29 +7680,29 @@ security = "ความปลอดภัย"
 signing = "การลงนาม"
 storage = "พื้นที่จัดเก็บ"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "เชื่อมต่อแล้ว"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Integration"
 worksWith = "ใช้งานร่วมกับ"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "ไปป์ไลน์"
 policies = "นโยบาย"
 sources = "แหล่งที่มา"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · ร่าง"
 loadError = "ไม่สามารถโหลดเอกสารนี้ได้ โปรดลองอีกครั้ง"
 loading = "กำลังโหลด…"
 title = "เอกสารทางกฎหมาย"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "Components"
 docs = "Developer Docs"
@@ -7715,18 +7718,18 @@ sources = "แหล่งที่มา"
 usage = "การใช้งานและการเรียกเก็บเงิน"
 users = "ผู้ใช้"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "แพลตฟอร์ม PDF"
 processor = "ตัวประมวลผล PDF"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Pipeline เอกสารอัตโนมัติทุกรายการบน backend: ลำดับการดำเนินการที่เรียงไว้เหนือชุดแหล่งที่มา ทำงานเมื่อมี trigger คลิกแถวเพื่อดูขั้นตอนและแหล่งที่มา"
 title = "Pipelines"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Pipeline ใหม่"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "กลับไปที่ pipelines"
 cannotFollow = "รับ {{produced}} ไม่ได้"
@@ -7758,7 +7761,7 @@ unsavedTitle = "การเปลี่ยนแปลงที่ยังไ�
 usesDefaults = "ทำงานด้วยการตั้งค่าเริ่มต้น"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "รวมทุกไฟล์จากขั้นตอนก่อนหน้า"
 fan-out = "รันหนึ่งครั้งต่อไฟล์จากขั้นตอนก่อนหน้า"
 format-mismatch = "ต้องใช้ {{accepts}} แต่ขั้นตอนก่อนหน้าสร้าง {{produced}}"
@@ -7776,7 +7779,7 @@ output-uncertain = "อาจไม่รัน: ผลลัพธ์ของ�
 source-mismatch = "ต้องใช้ {{accepts}} แต่อินพุตของไปป์ไลน์นี้คือ {{produced}}"
 undeclared-operation = "ตรวจสอบไม่ได้ว่าขั้นตอนนี้รับอะไรได้บ้าง"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "เพิ่มเครื่องมือ"
 create = "สร้าง pipeline"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "รันทุก"
 trigger = "Trigger"
 triggerManual = "Manual เท่านั้น"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "วัน"
 hours = "ชั่วโมง"
 minutes = "นาที"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "ลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ย้อนกลับไม่ได้"
 cancel = "ยกเลิก"
 confirm = "ลบ"
 title = "ลบ pipeline?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "ล้างประวัติ"
 delete = "ลบ pipeline"
 run = "รันตอนนี้"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "สร้าง pipeline"
 connectSource = "เชื่อมต่อแหล่งที่มา"
 description = "สร้าง pipeline แรกของคุณ: เลือกแหล่งที่มาที่จะรัน เชื่อมโยงการดำเนินการ และเลือกตำแหน่งผลลัพธ์"
 title = "ยังไม่มี pipelines"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "ใช้งานอยู่"
 paused = "หยุดชั่วคราว"
 total = "Pipelines"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "ไม่มีอะไรให้รัน: เอกสาร {{count}} รายการของแหล่งที่มาได้รับการประมวลผลแล้ว"
 allProcessed_other = "ไม่มีอะไรให้รัน: เอกสารทั้งหมด {{count}} รายการในแหล่งที่มาได้รับการประมวลผลแล้ว"
 completed_one = "การรันเสร็จสมบูรณ์"
@@ -7874,151 +7877,151 @@ parked_other = "ไม่มีอะไรให้รัน: เอกสา�
 running = "เริ่มการรันแล้ว; ยังดำเนินการอยู่"
 timeout = "การรันใช้เวลานานกว่าที่คาดไว้; อาจยังเสร็จสิ้นในเบื้องหลังได้"
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "ใช้งานอยู่"
 paused = "หยุดชั่วคราว"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Pipeline"
 sources = "แหล่งที่มา"
 status = "สถานะ"
 steps = "ขั้นตอน"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "เฝ้าดูโฟลเดอร์"
 manual = "Manual"
 schedule = "ตามกำหนดเวลา"
 
-[portal.policies]
+[processor.policies]
 defaultName = "นโยบาย {{category}}"
 subtitle = "ระบบอัตโนมัติถาวรที่บังคับใช้ tool pipeline กับทุกเอกสาร แต่ละนโยบายจะทำงานเมื่อ upload หรือ export รัน tool chain และบันทึกเวอร์ชันที่บังคับใช้ควบคู่กับต้นฉบับ"
 title = "นโยบาย"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "อัปเกรดเป็น Enterprise"
 notSetUp = "ยังไม่ได้ตั้งค่า"
 requiresAiEngine = "ต้องใช้ AI engine"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "ระบุประเภทของเอกสารแต่ละฉบับเมื่ออัปโหลด และติดแท็ก metadata เพื่อการจัดเก็บและค้นหา"
 label = "การจัดประเภท"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "บังคับใช้ข้อกำหนด HIPAA, GDPR, SOC 2 หรือ FedRAMP กับทุกเอกสาร"
 label = "การปฏิบัติตามข้อกำหนด"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "จำแนกเอกสาร ดึงข้อมูลแบบมีโครงสร้าง บังคับใช้รูปแบบการตั้งชื่อ และปรับหน้าให้เป็นมาตรฐาน"
 label = "การนำเข้า"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "ตั้งระยะเวลาที่เก็บเอกสาร เวลาเก็บถาวร และเวลาลบ"
 label = "การเก็บรักษา"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Route เอกสารอัตโนมัติไปยังทีม โฟลเดอร์ หรือระบบที่ถูกต้อง"
 label = "Routing"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "ตรวจจับ PII, redact, ลบ active content และใส่ลายน้ำเอกสาร"
 label = "ความปลอดภัย"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "เอกสารทั้งหมด"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "จัดประเภทเอกสารที่อัปโหลดทุกฉบับตามป้ายกำกับของทีมคุณ และติดแท็ก metadata"
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "จัดประเภท"
 1 = "ติดแท็ก metadata"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "ตรวจสอบเอกสารกับ regulatory frameworks ก่อนออกจากระบบ"
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Access log"
 auditTrail = "Audit trail"
 frameworks = "Frameworks"
 onViolation = "เมื่อไม่เป็นไปตามข้อกำหนด"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Framework scan"
 1 = "บังคับใช้การดำเนินการ"
 2 = "Audit trail"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "จำแนกเอกสาร ดึงข้อมูลแบบมีโครงสร้าง บังคับใช้การตั้งชื่อ และปรับหน้าให้เป็นมาตรฐาน"
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "ต่ำกว่าเกณฑ์"
 minConfidence = "ความเชื่อมั่นขั้นต่ำ"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "จำแนก"
 1 = "ดึงข้อมูล"
 2 = "ตั้งชื่อ"
 3 = "ปรับให้เป็นมาตรฐาน"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "ใช้ป้ายกำกับความละเอียดอ่อนของ Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview tenant"
 labelId = "Label ID"
 labelIdHelp = "GUID ของป้ายกำกับจาก Purview portal การใช้ป้ายกำกับจะเขียน metadata ลงใน PDF; ไม่สามารถเข้ารหัสได้ ซึ่งต้องใช้ Microsoft client"
 labelName = "ชื่อป้ายกำกับ (ไม่บังคับ)"
 labelNameHelp = "บันทึกไว้พร้อมกับ ID เพื่อให้ผู้คนและเครื่องมือรู้จักป้ายกำกับ"
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview แยกความแตกต่างระหว่างป้ายกำกับที่นโยบายใช้กับป้ายกำกับที่บุคคลเลือก"
 label = "วิธีบันทึกป้ายกำกับ"
 privileged = "ตามที่บุคคลเลือก"
 standard = "ตามที่ใช้โดยอัตโนมัติ"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "อ่านป้ายกำกับ Microsoft Purview"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview tenant"
 connectionHelp = "อ่านป้ายกำกับที่เอกสารมีอยู่แล้ว เพื่อให้ขั้นตอนถัดไปดำเนินการกับป้ายกำกับนั้นได้"
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "บังคับใช้ระยะเวลาที่เก็บเอกสาร เวลาเก็บถาวร และเวลาลบ"
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "เก็บถาวรหลังจาก"
 immutableHold = "การระงับแบบเปลี่ยนแปลงไม่ได้"
 keepFor = "เก็บไว้เป็นเวลา"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "การระงับการเก็บรักษา"
 1 = "เก็บถาวรอัตโนมัติ"
 2 = "บล็อกการลบ"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Route เอกสารไปยังปลายทางที่ถูกต้องตามประเภทและการจำแนก"
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "ปลายทาง"
 notify = "แจ้งเตือนเมื่อ route"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "จำแนกอัตโนมัติ"
 1 = "Route ไปยังโฟลเดอร์"
 2 = "แจ้งเตือน webhook"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "ตรวจจับและ redact PII, ลบ active content (JavaScript) และใส่ลายน้ำเอกสาร"
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Redact PII"
 1 = "ลบ JavaScript"
 2 = "ลายน้ำ"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "บังคับใช้"
 onEveryExport = "ในทุก export"
 onEveryUpload = "ในทุก upload"
@@ -8030,7 +8033,7 @@ showLess = "แสดงน้อยลง"
 showMore = "แสดงเพิ่มเติม"
 sources = "แหล่งที่มา"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "ล้างประวัติที่ประมวลผลแล้ว"
 delete = "ลบ"
 editSettings = "แก้ไขการตั้งค่า"
@@ -8038,17 +8041,17 @@ pause = "หยุดชั่วคราว"
 resume = "ทำต่อ"
 runNow = "เรียกใช้ตอนนี้"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "นโยบายนี้จะลืมทุกไฟล์ที่เคยประมวลผลแล้ว และประมวลผลทุกอย่างที่อยู่ในแหล่งที่มาปัจจุบันอีกครั้งในการเรียกใช้ครั้งถัดไป ไฟล์เองจะไม่ถูกเปลี่ยนแปลง การดำเนินการนี้ไม่สามารถย้อนกลับได้"
 cancel = "ยกเลิก"
 confirm = "ล้างประวัติ"
 title = "ล้างประวัติที่ประมวลผลแล้วหรือไม่?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "เอกสารจะปรากฏที่นี่เมื่อนโยบายนี้ทำงาน"
 title = "ยังไม่มีกิจกรรม"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "ลายน้ำ"
 autoRedact = "ปกปิด PII"
 classifyAndLabel = "จัดประเภท"
@@ -8057,375 +8060,375 @@ flatten = "Flatten"
 ocrPdf = "OCR"
 sanitizePdf = "ลบ JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "นโยบายของคุณถูกบันทึกแล้วและจะปรากฏเมื่อการเชื่อมต่อกลับมา"
 retry = "ลองอีกครั้ง"
 title = "Backend ไม่พร้อมใช้งาน"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "เปลี่ยนสิ่งที่ขั้นตอนนี้ทำ"
 noResults = "ไม่มีขั้นตอนที่ตรงกัน ลองใช้ชื่อผลิตภัณฑ์ หรือ \"scan\", \"notify\", \"attach\""
 searchPlaceholder = "ค้นหาขั้นตอน - ลอง \"scan\", \"attach\" หรือชื่อผลิตภัณฑ์"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "ไบต์ไฟล์ดิบ"
 json = "ภายใน payload แบบ JSON"
 multipart = "เป็นการอัปโหลดไฟล์ (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "เซิร์ฟเวอร์ ClamAV ของคุณเองจะตรวจสอบเอกสาร ไม่มีอะไรออกจากเครือข่ายของคุณ"
 label = "สแกนไวรัส (self-hosted)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "ปฏิเสธเอกสารที่มี macros, executables, scripts หรือ embedded objects"
 label = "บล็อกเนื้อหาที่ทำงานได้"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive ตรวจสอบเอกสารและหยุดการรันหากเอกสารไม่สะอาด"
 label = "สแกนไวรัส"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "จัดเก็บเอกสารที่ประมวลผลแล้วไว้บนหน้า"
 label = "แนบไปยังหน้า Confluence"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "ส่งเอกสารไปยัง ConsignO Cloud เพื่อลงนาม"
 label = "ส่งเพื่อลงนาม (ConsignO)"
 note = "ส่งเอกสาร ยังไม่รองรับการดึงสำเนาที่ลงนามแล้ว เนื่องจากขั้นตอนไม่สามารถส่งผลลัพธ์ไปยังขั้นตอนถัดไปได้"
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "กำหนดการเรียกด้วยตนเอง: path, method, body และการจัดการ response"
 label = "เรียก API แบบกำหนดเอง"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "แจ้งช่องว่า นโยบายได้จัดการเอกสารแล้ว"
 label = "โพสต์ข้อความไปยัง Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "บันทึกสิ่งที่นโยบายทำเป็นเอกสารที่ค้นหาได้"
 label = "ทำดัชนี audit event ใน Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart เหมาะกับ API สำหรับอัปโหลด; JSON เหมาะกับ API ที่ต้องการไฟล์อยู่ภายใน payload; binary ส่งไบต์ดิบ"
 label = "วิธีส่งเอกสาร"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "JSON body ที่ส่งตามเดิม {{document.base64}} มีไฟล์; {{document.*}} และ {{run.*}} จะถูกเติมต่อเอกสาร"
 label = "JSON body"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "บัญชี"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "โดเมน Mailgun"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "ฟิลด์ในฟอร์มที่ API คาดว่าจะรับเอกสาร"
 label = "ชื่อฟิลด์ไฟล์"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "จาก"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "ออบเจ็กต์ JSON ของคู่ชื่อ/ค่า header ข้อมูลประจำตัวของการเชื่อมต่อจะถูกเพิ่มให้คุณ"
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Issue key"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "ส่งเป็นเนื้อหาข้อความ {{document.*}} และ {{run.*}} จะถูกเติมต่อเอกสาร"
 label = "ข้อความ"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Method"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Page ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "ต่อท้าย base URL ของการเชื่อมต่อ ไม่สามารถไปถึงโฮสต์อื่นได้"
 label = "Path"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "ตำแหน่งในไดรฟ์ที่จะเขียนไฟล์ {{document.filename}} จะถูกเติมต่อเอกสาร"
 label = "Path ปลายทาง"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "รายงานจะปล่อยเอกสารไว้ตามเดิม การแทนที่จะสลับเป็นสิ่งที่ตอบกลับมา"
 label = "สิ่งที่จะทำกับการตอบกลับ"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "อีเมลของผู้ลงนาม"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "หัวเรื่อง"
 placeholder = "ประมวลผลแล้ว: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio วิเคราะห์ข้อความนี้ ใช้ {{document.title}} หรือวางข้อความที่คุณต้องการตรวจสอบ"
 label = "ข้อความที่จะตรวจสอบ"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "ถึง"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "ชื่อผู้ใช้ Nextcloud"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "แจ้ง space ว่า นโยบายได้จัดการเอกสารแล้ว"
 label = "โพสต์ข้อความไปยัง Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "จัดเก็บเอกสารที่ประมวลผลแล้วไว้บน issue"
 label = "แนบไปยัง Jira issue"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "ส่งเอกสารที่ประมวลผลแล้วเป็นไฟล์แนบ"
 label = "ส่งเอกสารทางอีเมล (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "เขียนเอกสารที่ประมวลผลแล้วลงในโฟลเดอร์"
 label = "อัปโหลดไปยัง Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "เซิร์ฟเวอร์ Presidio ของคุณเองรายงานข้อมูลส่วนบุคคลที่พบ"
 label = "ตรวจจับข้อมูลส่วนบุคคล"
 note = "Presidio อ่านข้อความ ไม่ใช่ไฟล์ ให้ข้อความที่คุณต้องการตรวจสอบ — เอกสารเองจะไม่ถูกอัปโหลด"
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "แทนที่เอกสารด้วยการตอบกลับ"
 report = "เก็บเอกสารไว้ บันทึกการตอบกลับ"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "ส่งเอกสารที่ประมวลผลแล้วเป็นไฟล์แนบ"
 label = "ส่งเอกสารทางอีเมล (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "แจ้งช่องว่า นโยบายได้จัดการเอกสารแล้ว"
 label = "โพสต์ข้อความไปยัง Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "บันทึกสิ่งที่นโยบายทำ ในที่ที่ผู้ตรวจสอบของคุณดูอยู่แล้ว"
 label = "ส่ง audit event ไปยัง Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "บันทึกสิ่งที่นโยบายทำไปยัง HTTP collector"
 label = "ส่ง audit event ไปยัง Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "แจ้งช่องว่า นโยบายได้จัดการเอกสารแล้ว"
 label = "โพสต์ข้อความไปยัง Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "ส่งตัวเอกสารไปยัง URL ที่คุณเลือก"
 label = "โพสต์เอกสารไปยัง webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "ส่งรายละเอียดการรันให้ระบบอัตโนมัติของคุณ"
 label = "Trigger Zap หรือ Make scenario"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "ใช้งานอยู่"
 dataProcessed = "ข้อมูลที่ประมวลผลแล้ว"
 docsEnforced = "เอกสารที่บังคับใช้แล้ว"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "ใช้งานอยู่"
 paused = "หยุดชั่วคราว"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "บังคับใช้เมื่ออัปโหลด/ส่งออก"
 label = "นโยบายที่ใช้งานอยู่"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "พร้อมให้กำหนดค่า"
 label = "หมวดหมู่"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "ในนโยบายที่ใช้งานอยู่ทั้งหมด"
 label = "เอกสารที่บังคับใช้แล้ว"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "กำหนดค่าแล้วแต่ยังไม่ทำงาน"
 label = "หยุดชั่วคราว"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "ใช้กับ"
 docs = "เอกสารที่บังคับใช้"
 enforces = "บังคับใช้"
 policy = "นโยบาย"
 status = "สถานะ"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "ย้อนกลับ"
 cancel = "ยกเลิก"
 continue = "ดำเนินการต่อ"
 enablePolicy = "เปิดใช้นโยบาย"
 saveChanges = "บันทึกการเปลี่ยนแปลง"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "ระบุประเภทของเอกสารจากป้ายกำกับของทีมคุณและติดแท็ก เพื่อให้จัดเก็บและค้นหาตามหมวดหมู่ได้"
 label = "จัดประเภทเอกสาร"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "บีบอัดเอกสารให้มีขนาดไฟล์เล็กลง"
 label = "ลดขนาดไฟล์"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "รวมฟิลด์ฟอร์มและคำอธิบายประกอบเข้ากับหน้าเพื่อไม่ให้แก้ไขได้"
 label = "Flatten เอกสาร"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "เรียกใช้ OCR เพื่อให้หน้าที่สแกนกลายเป็นข้อความที่เลือกและค้นหาได้"
 label = "ทำให้ค้นหาข้อความได้"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "ค้นหาและปิดทับรายละเอียดที่ละเอียดอ่อน — เช่น หมายเลขประกันสังคมและหมายเลขบัตร — เพื่อไม่ให้อ่านได้"
 label = "ปกปิดข้อมูลที่ละเอียดอ่อน"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "ลบ JavaScript ที่ซ่อนอยู่เพื่อไม่ให้มีสิ่งใดทำงานอัตโนมัติเมื่อเปิดเอกสาร"
 label = "ลบเนื้อหาที่ทำงานได้"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "พิสูจน์ว่าเอกสารมีอยู่ในรูปแบบนี้อย่างแน่นอน ณ เวลาหนึ่ง โดยใช้หน่วยงาน timestamp อิสระ ส่งเฉพาะ hash - เอกสารไม่ออกจากเซิร์ฟเวอร์ของคุณ"
 label = "เพิ่ม timestamp ที่เชื่อถือได้"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "ประทับเครื่องหมายที่มองเห็นได้ (เช่น “Confidential”) บนทุกหน้า"
 label = "ใส่ลายน้ำ"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "เอกสารที่อัปโหลดทุกฉบับจะถูกจัดประเภทตามป้ายกำกับในตัวและติดแท็กด้วยประเภทที่เหมาะสม ชุดป้ายกำกับนี้ใช้ร่วมกันทั้งทีมของคุณ"
 labelsHeading = "ป้ายกำกับการจัดประเภท"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "เปิดใช้อย่างน้อยหนึ่งเครื่องมือในเวิร์กโฟลว์ก่อน"
 saveFailed = "ไม่สามารถบันทึกนโยบายได้ โปรดลองอีกครั้ง"
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "เอาต์พุตและการเรียกใช้"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "ใส่หมายเลขอัตโนมัติ"
 label = "กฎชื่อไฟล์"
 placeholder = "ข้อความที่จะเพิ่ม (ไม่บังคับ)"
 prefix = "คำนำหน้า"
 suffix = "คำต่อท้าย"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "เอาต์พุตเป็น"
 newFile = "ไฟล์ใหม่"
 newVersion = "เวอร์ชันใหม่"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "ส่งออก"
 helper = "เมื่อนโยบายทำงาน: เมื่ออัปโหลด หรือก่อนส่งออก"
 label = "เรียกใช้เมื่อ"
 upload = "อัปโหลด"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "การตั้งค่า"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "แหล่งที่มา"
 loading = "กำลังโหลดแหล่งที่มา…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "ขั้นตอนการตั้งค่า"
 settings = "การตั้งค่า"
 workflow = "การดำเนินการ"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "แก้ไขนโยบาย {{category}}"
 setUp = "ตั้งค่านโยบาย {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "เลือกว่านโยบายนี้จะทำอะไรกับทุกเอกสารที่ประมวลผล"
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "ตั้งค่า"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "จำนวนเป็นของ 24 ชั่วโมงล่าสุด ความเร็วของ Flow เป็นเพียงภาพประกอบ"
 liveBadge = "Live"
 stats = "เชื่อมต่อ {{connected}} รายการ · ประมวลผล PDF แล้ว {{processed}} รายการ"
 title = "ตัวประมวลผล PDF"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "โหมดการดู"
 flow = "Flow"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24 ชม."
 failed = "ล้มเหลว"
 heading = "ผลลัพธ์"
 success = "ส่งสำเร็จ"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "ใช้งานอยู่ {{n}} รายการ"
 count = "{{n}} · 24 ชม."
 heading = "นโยบาย"
 setUp = "ตั้งค่า"
 soon = "เร็ว ๆ นี้"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "นโยบาย · ใช้งานอยู่ {{n}} รายการ"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "เชื่อมต่อแหล่งที่มาและเปิดนโยบายเพื่อดูเอกสารไหลผ่านตัวประมวลผล"
 title = "ยังไม่มี Flow"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "เชื่อมต่อ"
 editor = "Stirling PDF Editor"
 heading = "แหล่งที่มา"
 perDay = "{{n}} / 24 ชม."
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "รับ Email"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "ให้ทีมของคุณได้รับการประเมิน ทำสัญญา และเริ่มใช้งาน ทุกเอกสารอยู่ในที่เดียว"
 title = "การจัดซื้อ"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "ยอมรับและสมัครใช้งาน"
 confidential = "ลับ"
 confirm = "ฉันได้อ่านและยอมรับ Stirling Enterprise Agreement แล้ว"
@@ -8447,7 +8450,7 @@ signatoryTitle = "ตำแหน่งผู้ลงนาม"
 signatoryTitlePlaceholder = "เช่น General Counsel"
 signError = "ไม่สามารถบันทึกลายเซ็นของคุณได้ โปรดลองอีกครั้ง"
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "ส่วนเสริม"
 addressLine1 = "ที่อยู่บรรทัด 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "เช่น 1,000,000"
 years_one = "{{count}} ปี"
 years_other = "{{count}} ปี"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "ข้อตกลง Enterprise"
 agreementSub = "MSA, Order Form และ DPA ในการลงนามครั้งเดียว"
 download = "ดาวน์โหลด"
@@ -8547,10 +8550,10 @@ subtitle = "เอกสารข้อตกลงของคุณ พร้�
 title = "เอกสาร"
 view = "ดู"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "มีบางอย่างผิดพลาด"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "ขั้นที่ {{current}} จาก {{total}}"
 ctaAgreement = "ตรวจสอบและลงนามข้อตกลง"
 ctaExploring = "ตั้งค่าการทดลองใช้ของคุณ"
@@ -8573,36 +8576,36 @@ sentencePayment = "ใบสั่งซื้อและการชำระ�
 sentenceQuote = "ตรวจทานและยอมรับใบเสนอราคาของคุณ"
 sentenceTrial = "ตั้งค่าพื้นที่ทำงานทดลองใช้ของคุณ"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "เหลือ {{count}} วัน"
 daysLeft_other = "เหลือ {{count}} วัน"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "ลายเซ็นเดียวครอบคลุม MSA, order form, EULA และ DPA"
 gatingAction = "ตรวจสอบและลงนามข้อตกลงของคุณ"
 label = "ข้อตกลง"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "จัดเตรียม workspace ของคุณและเรียกใช้ go-live playbook"
 gatingAction = "กำลังจัดเตรียม workspace ของคุณ"
 label = "การนำไปใช้"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "ชำระด้วยบัตร โอนเงินผ่านธนาคาร หรือชำระตามใบสั่งซื้อ"
 gatingAction = "ยืนยันการชำระเงิน"
 label = "การชำระเงิน"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "ตรวจสอบราคาตามปริมาณที่มีข้อผูกพันและระยะเวลาสัญญา"
 gatingAction = "ยอมรับใบเสนอราคาของคุณ"
 label = "ใบเสนอราคา"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "ประเมิน Stirling กับเอกสารและเวิร์กโฟลว์ของคุณ"
 gatingAction = "สร้างใบเสนอราคาของคุณ"
 label = "Trial"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "คัดลอกแล้ว"
 copy = "คัดลอกคีย์"
 downloadError = "ยังไม่สามารถสร้างไฟล์ licence ออฟไลน์ได้ — โปรดลองอีกครั้งในอีกสักครู่"
@@ -8613,21 +8616,21 @@ subtitle = "เปิดใช้งานอินสแตนซ์แบบ s
 title = "คีย์ใบอนุญาตของคุณ"
 trialFileHint = "นี่คือไฟล์ใบอนุญาตทดลองใช้ของคุณ เมื่อข้อตกลงของคุณพร้อมแล้ว ให้กลับมาดาวน์โหลดอีกครั้ง — ไฟล์ .lic จะไม่อัปเดตเอง ต่างจากคีย์ใบอนุญาตออนไลน์"
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "เชื่อมโยงบัญชี"
 description = "การจัดซื้อทำงานบนบัญชี Stirling ที่เชื่อมโยงของคุณ: นี่คือวิธีที่เราจัดเตรียม trial, ตั้งราคาใบเสนอราคา และเริ่มการเรียกเก็บเงิน เชื่อมโยงบัญชีเพื่อเริ่มต้น"
 eyebrow = "Enterprise"
 title = "เชื่อมโยงบัญชีของคุณเพื่อเริ่มต้น"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "การสมัครใช้งานของคุณใช้งานอยู่และ licence ของคุณออกแล้ว ทีมของคุณได้รับการจัดเตรียมแล้วและการเรียกเก็บเงินได้เริ่มต้นแล้ว"
 eyebrow = "ใช้งานจริง"
 title = "คุณใช้งานจริงบน Stirling Enterprise แล้ว"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "ยังไม่สามารถดาวน์โหลด PDF ใบเสนอราคาได้ — โปรดลองอีกครั้งในอีกสักครู่"
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "ใบเสนอราคาของคุณได้รับการยอมรับแล้วและ licence ของคุณใช้งานอยู่แล้ว — ทีมของคุณเริ่มได้ทันที ชำระใบแจ้งหนี้แรกเมื่อคุณพร้อม; คุณสามารถชำระหรือดาวน์โหลดได้ที่นี่ ไม่ต้องใช้อีเมล"
 downloadAgreement = "ดาวน์โหลดข้อตกลงที่ลงนามแล้ว"
 downloadInvoice = "ดาวน์โหลดใบแจ้งหนี้"
@@ -8635,7 +8638,7 @@ eyebrow = "การชำระเงิน"
 title = "สร้างการสมัครใช้งานแล้ว"
 viewInvoice = "ดูและชำระใบแจ้งหนี้"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "ยอมรับใบเสนอราคา"
 annual = "ค่าธรรมเนียมรายปี (ปีที่ 1)"
 downloadCta = "ดาวน์โหลดใบเสนอราคา"
@@ -8644,14 +8647,14 @@ renewal = "ต่ออายุที่ {{amount}}/ปี หลังหม�
 tcv = "ระยะเวลา {{years}} ปี ชำระเต็มจำนวนล่วงหน้า: {{tcv}}"
 validUntil = "ใช้ได้ถึง {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "ไม่สามารถโหลดตัวจัดตารางเวลาได้"
 fallbackLink = "เปิดการจัดตารางเวลาในแท็บใหม่"
 loading = "กำลังโหลด scheduler..."
 subtitle = "solutions engineer ของคุณจะแนะนำทีมของคุณตลอดการเปิดใช้งาน เลือกเวลาที่เหมาะกับคุณ"
 title = "นัดหมายการโทร"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "ปิดแยก ไม่มีการเชื่อมต่อขาออก"
 back = "ย้อนกลับ"
@@ -8681,7 +8684,7 @@ viewEula = "อ่าน"
 workEmail = "อีเมลที่ทำงาน"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "การขยายเวลาจะเพิ่ม 7 วันและแจ้ง solutions engineer ของคุณ"
 bodyMaxed = "คุณใช้การขยายเวลาทั้งหมดแล้ว — คุยกับ solutions engineer ของคุณหากต้องการเวลามากขึ้น"
 cancel = "ยกเลิก trial"
@@ -8690,32 +8693,32 @@ maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
 title = "Enterprise trial"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Admin"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "การเชื่อมโยงบัญชี"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "เชื่อมโยงบัญชี Stirling"
 primaryNav = "การนำทางหลัก"
 switchApp = "สลับแอป"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "ปิดการนำทาง"
 openNav = "เปิดการนำทาง"
 search = "ค้นหา"
 
-[portal.sources]
+[processor.sources]
 subtitle = "การเชื่อมต่ออินพุตที่ใช้ซ้ำได้ซึ่งส่งเอกสารเข้าสู่ Stirling กำหนดค่าการเชื่อมต่อครั้งเดียว แล้วอ้างอิงจากนโยบายกี่รายการก็ได้ คลิกแถวเพื่อดูการกำหนดค่าและนโยบายที่ใช้งาน"
 title = "แหล่งที่มา"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "เชื่อมต่อแหล่งที่มา"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "กลับไปยังแหล่งที่มา"
 backToTypes = "ประเภทแหล่งที่มาทั้งหมด"
 cancel = "ยกเลิก"
@@ -8729,164 +8732,164 @@ editTitle = "แก้ไขแหล่งที่มา"
 enabled = "เปิดใช้งาน"
 save = "บันทึกการเปลี่ยนแปลง"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "ระบบอัตโนมัติของโฟลเดอร์สามารถใช้ได้เฉพาะโฟลเดอร์ที่ผู้ดูแลระบบอนุญาต เพิ่มในส่วนการตั้งค่าการเข้าถึงโฟลเดอร์ แล้วลองอีกครั้ง"
 openSettings = "การตั้งค่าการเข้าถึงโฟลเดอร์"
 title = "โฟลเดอร์นี้ไม่ได้รับอนุญาต"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "ลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้ นโยบายที่อ้างอิงถึงรายการนี้จะต้องได้รับการอัปเดต"
 cancel = "ยกเลิก"
 confirm = "ลบ"
 title = "ลบแหล่งที่มาหรือไม่?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "กำลังใช้งาน"
 total = "การเชื่อมต่อ"
 unused = "ไม่ได้ใช้งาน"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "การเชื่อมต่อที่จัดเก็บไว้พร้อมที่อยู่เซิร์ฟเวอร์และข้อมูลประจำตัว ใช้ซ้ำโดยทุกแหล่งที่มาที่อ้างอิงถึง"
 label = "การเชื่อมต่อ"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "โฟลเดอร์บนเซิร์ฟเวอร์ที่จะตรวจสอบ สัมพันธ์กับโฮมของการเข้าสู่ระบบหรือรูทของแชร์ เว้นว่างสำหรับรูท"
 label = "โฟลเดอร์"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Consume จะลบแต่ละไฟล์ออกจากเซิร์ฟเวอร์เมื่อทุกนโยบายประมวลผลแล้ว"
 label = "โหมดการอ่าน"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Consume: ประมวลผลแต่ละไฟล์ครั้งเดียว"
 snapshot = "Snapshot: อ่านโฟลเดอร์ซ้ำทุกครั้งที่รัน"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "ความลึกของโฟลเดอร์"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "รวมโฟลเดอร์ย่อย"
 top = "เฉพาะระดับบนสุด"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "ใช้งานอยู่"
 disabled = "ปิดใช้งาน"
 unused = "ไม่ได้ใช้งาน"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "เอกสาร"
 source = "แหล่งที่มา"
 status = "สถานะ"
 type = "Type"
 usedBy = "นโยบาย"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "ดึงเอกสารจากโฟลเดอร์ Box ที่ทีมของคุณแชร์อยู่แล้ว"
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "ดึงเอกสารจากโฟลเดอร์ Dropbox ที่แชร์"
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "เอกสารที่ทีมของคุณประมวลผลใน editor ครอบคลุมการรันนโยบายและ AI"
 label = "Editor"
 noPolicies = "ยังไม่มีนโยบายที่รันจาก editor"
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "เปลี่ยนไฟล์แนบที่ส่งไปยังกล่องจดหมายเฉพาะให้เป็นเอกสาร"
 label = "กล่องจดหมาย Email"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "เฝ้าดูไดเรกทอรีบนเซิร์ฟเวอร์สำหรับเอกสารใหม่"
 label = "โฟลเดอร์"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "พาธแบบ absolute ที่ Stirling เฝ้าดูไฟล์เพื่อประมวลผล"
 label = "พาธไดเรกทอรี"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "การตรวจสอบเนื้อหาจะอ่านแต่ละไฟล์ที่เปลี่ยนแปลง ดังนั้นการเปลี่ยนชื่อและการแตะไฟล์ที่ไม่เปลี่ยนเนื้อหาจะไม่ถูกประมวลผลซ้ำ"
 label = "การตรวจจับการเปลี่ยนแปลง"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "ขนาด วันที่ และการตรวจสอบเนื้อหา"
 stat = "ขนาดและวันที่แก้ไข"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "โหมดการอ่าน"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Consume: ประมวลผลแต่ละไฟล์ครั้งเดียว"
 snapshot = "Snapshot: อ่านโฟลเดอร์ใหม่ทุกครั้งที่เรียกใช้"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "ความลึกของโฟลเดอร์"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "รวมโฟลเดอร์ย่อย"
 top = "เฉพาะระดับบนสุด"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "ตรวจสอบโฟลเดอร์เซิร์ฟเวอร์ FTP หรือ FTPS เพื่อหาเอกสารใหม่"
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "ดึงเอกสารจากโฟลเดอร์ Google Drive ที่แชร์"
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "เฝ้าดู SMB network share เพื่อหาเอกสารใหม่"
 label = "Network drive"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "เฝ้าดูโฟลเดอร์ OneDrive เพื่อหาเอกสารใหม่"
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "ดึงเอกสารจาก Amazon S3 หรือ bucket ที่เข้ากันได้กับ S3"
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "การเชื่อมต่อที่จัดเก็บไว้ซึ่งมี bucket และข้อมูลประจำตัว ใช้ซ้ำโดยทุกแหล่งที่มาและเอาต์พุตไปป์ไลน์ที่อ้างอิงถึง"
 label = "การเชื่อมต่อ"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Consume จะลบแต่ละ object ออกจาก bucket เมื่อทุกนโยบายประมวลผลแล้ว"
 label = "โหมดการอ่าน"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Consume: ประมวลผลแต่ละ object ครั้งเดียว"
 snapshot = "Snapshot: อ่าน bucket ซ้ำทุกครั้งที่รัน"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "ประมวลผลเฉพาะ object ที่ key เริ่มต้นด้วย prefix นี้"
 label = "Key prefix"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "ตรวจสอบโฟลเดอร์รับส่ง SFTP เพื่อหาเอกสารใหม่"
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "ดึงเอกสารจาก SharePoint document libraries"
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "แหล่งที่มา"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "Delivery URL และ signing secret จะถูกสร้างเมื่อคุณสร้าง webhook นี้ ผู้ส่ง POST เอกสารไปยัง URL นั้น และนโยบายที่อ้างอิงจะรันเมื่อมาถึง"
 description = "รับเอกสารด้วย HTTP POST ที่ลงนามแล้วจากระบบภายนอกใดก็ได้"
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "Delivery URL"
 secretNote = "Signing secret จะแสดงหนึ่งครั้งเมื่อสร้าง webhook สร้างแหล่งที่มาใหม่เพื่อหมุนเวียน"
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "คัดลอก"
 done = "เสร็จสิ้น"
 secret = "Signing secret"
@@ -8896,78 +8899,75 @@ title = "สร้าง Webhook แล้ว"
 url = "Delivery URL"
 usage = "POST เอกสารแต่ละฉบับเป็น raw request body ไปยัง Delivery URL ด้วย binary content type (application/pdf หรือ application/octet-stream) นโยบายที่อ้างอิงจะรันโดยอัตโนมัติเมื่อมาถึง"
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "ชื่อ"
 namePlaceholder = "เช่น Claims intake"
 type = "ประเภท"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "ปิด"
 
-[portal.usage]
+[processor.usage]
 managePayment = "จัดการการชำระเงิน"
 subtitle = "การใช้งาน ใบแจ้งหนี้ และการจัดการแผนสำหรับทุก PDF ที่ Stirling เรียกเก็บเงิน ในคอนโซลเดียว"
 title = "การใช้งานและการเรียกเก็บเงิน"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "ไม่สามารถโหลด wallet ได้"
 openStripePortal = "ไม่สามารถเปิด Stripe portal ได้"
 walletUnavailable = "wallet ไม่พร้อมใช้งาน: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "ลงชื่อเข้าใช้อีกครั้ง"
 body = "เซสชันบัญชี Stirling ของคุณหมดอายุ ลงชื่อเข้าใช้อีกครั้งเพื่อดูการเรียกเก็บเงิน — instance ของคุณยังคงเชื่อมโยงอยู่"
 title = "เซสชันหมดอายุ"
 
-[portal.users]
+[processor.users]
 title = "ผู้ใช้"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Admin (เจ้าขององค์กร)"
 summary = "การกำกับดูแลเต็มรูปแบบเหนือ workspace, การตั้งค่า และสมาชิก"
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "จัดการผู้ใช้ ทีม และบทบาท"
 1 = "จัดการ integration ทั้งหมด รวมถึงการเชื่อมต่อ S3"
 2 = "ให้หรือเพิกถอนการเข้าถึง portal"
 3 = "ทุกอย่างที่ Team Owner ทำได้"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Guest"
 summary = "การเข้าถึงแบบจำกัดหรือ web-only; ไม่สามารถมีการกำหนดค่าส่วนตัวได้"
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "การใช้งาน web-only / เดโม"
 1 = "ไม่มี API keys หรือ integration"
 2 = "ไม่มีการเข้าถึง portal"
 3 = "อ่านอย่างเดียวเมื่อแชร์"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Member"
 summary = "ผู้ใช้ทั่วไป — ทำงานกับทรัพยากรที่แชร์และการกำหนดค่าของตนเอง"
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "ใช้ editor และ integration ที่แชร์"
 1 = "สร้างการกำหนดค่า API และ MCP ส่วนตัว"
 2 = "ดูการกำหนดค่าทีมที่แชร์กับตน"
 3 = "ไม่มีการจัดการ S3 หรือ workspace"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Team owner"
 summary = "เป็นเจ้าของทีม — จัดการทรัพยากรของสมาชิกและการกำหนดค่าที่แชร์ของทีม"
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "สร้างและจัดการการเชื่อมต่อ S3 ของทีม"
 1 = "จัดการการกำหนดค่า integration ที่ทีมเป็นเจ้าของ"
 2 = "เข้าถึง portal ผ่านนโยบายเริ่มต้น"
 3 = "ทุกอย่างที่ Member ทำได้"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · ไม่จำกัด"
-
-[printFile]
-title = "พิมพ์ไฟล์"
 
 [provider.googledrive]
 name = "Google Drive"

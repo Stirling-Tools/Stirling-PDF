@@ -345,8 +345,8 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
-        // Resolve portal access for the whole roster. The teamLead display flag counts a
-        // LEADER membership on any team (mirrors /me), but the portal default policy only
+        // Resolve processor access for the whole roster. The teamLead display flag counts a
+        // LEADER membership on any team (mirrors /me), but the processor default policy only
         // admits leaders of their own active team, so the bulk check gets the narrower set.
         List<TeamMembership> leaderMemberships =
                 teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER);
@@ -364,11 +364,15 @@ public class ProprietaryUIDataController {
                                                         .equals(row.getUser().getTeam().getId()))
                         .map(row -> row.getUser().getId())
                         .collect(Collectors.toSet());
-        Set<Long> portalAccessUserIds =
-                resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        Set<Long> processorAccessUserIds =
+                resourceAccessService.usersWithProcessorAccess(
+                        sortedUsers, activeTeamLeaderUserIds);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user ->
+                                        convertUserToSummary(
+                                                user, leaderUserIds, processorAccessUserIds))
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -586,15 +590,16 @@ public class ProprietaryUIDataController {
     }
 
     /**
-     * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
+     * Convert a User to AdminUserSummary (excludes sensitive fields); processor access is passed
+     * in.
      */
     private AdminUserSummary convertUserToSummary(
-            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
+            User user, Set<Long> leaderUserIds, Set<Long> processorAccessUserIds) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
-        // Portal access (same policy /me uses).
-        summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
+        // Processor access (same policy /me uses).
+        summary.setProcessorAccess(processorAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getUsername()); // Use username as email for consistency
         summary.setRoleName(user.getRoleName());

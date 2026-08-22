@@ -29,7 +29,7 @@ const standardAuth: AuthContextValue = {
   displayName: "jane.doe",
   isAnonymous: false,
   isAdmin: false,
-  portalAccess: false,
+  processorAccess: false,
   role: "ROLE_USER",
   loading: false,
   error: null,

@@ -190,7 +190,7 @@ public class InstanceController {
                         BillingCategory.API, c.api(),
                         BillingCategory.AI, c.ai(),
                         BillingCategory.AUTOMATION, c.automation()));
-        // Drop the cache so the buildEntitlement below (and the portal's next read) reflect the
+        // Drop the cache so the buildEntitlement below (and the processor's next read) reflect the
         // just-charged delta + moved free-grant balance now, not after the TTL.
         entitlementService.invalidate(teamId);
         return ResponseEntity.ok(buildEntitlement(teamId));

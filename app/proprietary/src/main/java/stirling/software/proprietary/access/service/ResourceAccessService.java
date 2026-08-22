@@ -33,22 +33,22 @@ public class ResourceAccessService {
     private final TeamLeadLookup teamLeadLookup;
     private final PrincipalResolver principalResolver;
 
-    @Value("${security.portal.defaultAccess:ADMINS_AND_TEAM_LEADS}")
-    private DefaultAccessPolicy portalDefaultPolicy;
+    @Value("${security.processor.defaultAccess:ADMINS_AND_TEAM_LEADS}")
+    private DefaultAccessPolicy processorDefaultPolicy;
 
     // ---- public checks ----
 
-    /** Whether the user may use the portal / processor. */
-    public boolean canAccessPortal(User user) {
-        return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
+    /** Whether the user may use the processor. */
+    public boolean canAccessProcessor(User user) {
+        return canUseResource(ResourceType.PORTAL, "", null, processorDefaultPolicy, user);
     }
 
     /**
-     * Portal access for a roster (admin, grant, or default policy). {@code activeTeamLeaderUserIds}
-     * must hold ids of users who lead their own active team — the set the ADMINS_AND_TEAM_LEADS
-     * default admits, matching {@link #canAccessPortal}.
+     * Processor access for a roster (admin, grant, or default policy). {@code
+     * activeTeamLeaderUserIds} must hold ids of users who lead their own active team — the set the
+     * ADMINS_AND_TEAM_LEADS default admits, matching {@link #canAccessProcessor}.
      */
-    public Set<Long> usersWithPortalAccess(
+    public Set<Long> usersWithProcessorAccess(
             Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
         Set<PrincipalRef> grantedPrincipals = new HashSet<>();
         for (ResourceGrant g :
@@ -62,14 +62,14 @@ public class ResourceAccessService {
         for (User user : users) {
             if (user != null
                     && user.getId() != null
-                    && hasPortalAccess(user, grantedPrincipals, leaderIds)) {
+                    && hasProcessorAccess(user, grantedPrincipals, leaderIds)) {
                 allowed.add(user.getId());
             }
         }
         return allowed;
     }
 
-    private boolean hasPortalAccess(
+    private boolean hasProcessorAccess(
             User user, Set<PrincipalRef> grantedPrincipals, Set<Long> leaderIds) {
         if (isAdmin(user)) {
             return true;
@@ -79,10 +79,10 @@ public class ResourceAccessService {
                 return true;
             }
         }
-        if (portalDefaultPolicy == null) {
+        if (processorDefaultPolicy == null) {
             return false;
         }
-        return switch (portalDefaultPolicy) {
+        return switch (processorDefaultPolicy) {
             case ORG_ALL -> principalResolver.allowsDeploymentWideAccess();
             case ADMINS_AND_TEAM_LEADS -> leaderIds.contains(user.getId());
             case EXPLICIT_ONLY -> false;
@@ -219,7 +219,7 @@ public class ResourceAccessService {
         };
     }
 
-    // Portal (no owner) admits the leader of the user's active team; a team-owned resource
+    // Processor (no owner) admits the leader of the user's active team; a team-owned resource
     // admits only that team's leads; a user-owned resource admits no extra leads.
     private boolean matchesTeamLeadDefault(PrincipalRef owner, User user) {
         if (owner == null) {

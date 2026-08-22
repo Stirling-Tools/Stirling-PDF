@@ -22,7 +22,7 @@ export interface SpringLoginUiData {
 
 export interface UseSpringLoginOptions {
   /**
-   * Gate the config fetch. The portal fetches immediately (default true); the
+   * Gate the config fetch. The processor fetches immediately (default true); the
    * editor waits until its backend probe reports the backend is reachable.
    */
   ready?: boolean;
@@ -57,7 +57,7 @@ export interface SpringLoginState {
 
 /**
  * Owns the Spring login form's state, config fetch, and sign-in handlers so the
- * editor and portal share one implementation. Host-specific behaviour (the
+ * editor and processor share one implementation. Host-specific behaviour (the
  * editor's auto-login, redirects, first-time-setup hint) is layered on via the
  * options callbacks rather than baked in here.
  */

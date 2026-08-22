@@ -36,9 +36,9 @@ export default function OverlayPdfsSettings({
   disabled = false,
 }: OverlayPdfsSettingsProps) {
   const { t } = useTranslation();
-  // Read optionally: the portal pipeline builder mounts no FilesModalProvider.
+  // Read optionally: the processor pipeline builder mounts no FilesModalProvider.
   // Present (editor tool + Automate modal) -> keep the workspace file picker;
-  // absent (portal) -> fall back to the plain file input below.
+  // absent (processor) -> fall back to the plain file input below.
   const filesModal = useContext(FilesModalContext);
   // Clears the FilePicker so the same file can be re-selected (Mantine resetRef).
   const resetOverlayPicker = useRef<() => void>(null);

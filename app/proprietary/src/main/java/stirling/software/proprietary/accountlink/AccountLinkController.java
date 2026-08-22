@@ -21,12 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A").
  *
- * <p>The portal (served from this same origin, admin authenticated by the existing self-hosted
+ * <p>The processor (served from this same origin, admin authenticated by the existing self-hosted
  * security chain) calls these. {@code POST /link} relays the admin's Supabase JWT to the SaaS
  * backend, which mints + returns a device credential we store locally. {@code GET /status} backs
- * the portal's link card; {@code GET /usage} exposes locally-accrued unsynced usage the portal adds
- * to SaaS-synced spend; {@code POST /sync-now} forces an immediate usage sync (ops "reconcile now"
- * / test aid).
+ * the processor's link card; {@code GET /usage} exposes locally-accrued unsynced usage the
+ * processor adds to SaaS-synced spend; {@code POST /sync-now} forces an immediate usage sync (ops
+ * "reconcile now" / test aid).
  *
  * <p>Admin-only, {@code @Profile("!saas")}, gated behind {@code
  * stirling.billing.account-link.enabled} — off → bean absent → 404.
@@ -54,7 +54,7 @@ public class AccountLinkController {
         this.syncServiceProvider = syncServiceProvider;
     }
 
-    /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */
+    /** {@code supabaseJwt} is the admin's short-lived token the processor already holds. */
     public record LinkRequest(String supabaseJwt, String name) {}
 
     @PostMapping("/link")
@@ -67,7 +67,7 @@ public class AccountLinkController {
             return ResponseEntity.ok(service.link(req.supabaseJwt(), req.name()));
         } catch (AccountLinkClient.UpstreamException e) {
             // Auth failures are the admin's token, not a gateway fault: surface 401/403 as-is so
-            // the portal can prompt a re-sign-in. Anything else upstream → 502. Don't echo the
+            // the processor can prompt a re-sign-in. Anything else upstream → 502. Don't echo the
             // raw upstream body back to the browser.
             HttpStatus status =
                     e.status() == HttpStatus.UNAUTHORIZED.value()
@@ -98,8 +98,8 @@ public class AccountLinkController {
     }
 
     /**
-     * Locally accrued usage not yet reported to SaaS — the portal adds it to the SaaS-synced spend
-     * so "current usage" includes work done since the last daily sync.
+     * Locally accrued usage not yet reported to SaaS — the processor adds it to the SaaS-synced
+     * spend so "current usage" includes work done since the last daily sync.
      */
     @GetMapping("/usage")
     public ResponseEntity<LocalUsageService.LocalUsage> usage() {

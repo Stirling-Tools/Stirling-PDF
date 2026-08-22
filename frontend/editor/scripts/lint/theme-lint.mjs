@@ -411,7 +411,7 @@ function reportContrast() {
   // The editor always renders data-app-theme="custom"; the accent (--user-*) is
   // injected at runtime, so seed the DEFAULT blue to resolve the custom tint
   // statically. Themes = the ones that actually render: editor custom light/dark
-  // (data-app-theme="custom") and the portal's neutral dark (data-theme="dark").
+  // (data-app-theme="custom") and the processor's neutral dark (data-theme="dark").
   const SEED = {
     "--user-primary": "#3b82f6",
     "--user-primary-on": "#ffffff",
@@ -431,7 +431,7 @@ function reportContrast() {
   const themes = {
     "editor light": [...lightBase, ...customBase],
     "editor dark": [...lightBase, ...customBase, ...customDark],
-    "portal dark": [...lightBase, ...midnight],
+    "processor dark": [...lightBase, ...midnight],
   };
   const flatten = (list) =>
     Object.assign({ ...SEED }, ...list.map((b) => b.decls));

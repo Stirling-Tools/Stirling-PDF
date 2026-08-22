@@ -6352,10 +6352,13 @@ thirtyDays = "30 दिन"
 threeYears = "3 वर्ष"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "फ़ाइल प्रिंट करें"
+
+[processor]
 comingSoon = "जल्द आ रहा है"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Unattended processing का बिल आपके org wallet से लिया जाता है।"
 eyebrow = "Account link"
 linkButton = "अपना Stirling account लिंक करें"
@@ -6366,37 +6369,37 @@ notLinked = "लिंक नहीं किया गया"
 title = "इस org को इसके Stirling account से लिंक करें"
 unlink = "लिंक हटाएँ"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "लिंक नहीं किया जा सका"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "hosted Stirling account के विरुद्ध account linking सक्षम करने के लिए। dev में आप link dialog से sign-in simulate कर सकते हैं।"
 before = "सेट करें"
 title = "SaaS login कॉन्फ़िगर नहीं है"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Account लिंक करें"
 description = "billable सुविधाओं का उपयोग करने के लिए इस org का Stirling account लिंक करें।"
 title = "अनलॉक करने के लिए लिंक करें"
 titleFeature = "{{feature}} अनलॉक करने के लिए लिंक करें"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "सक्रिय"
 revoke = "रद्द करें"
 revoked = "रद्द किया गया"
 unnamed = "बेनाम instance"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Instance"
 lastSeen = "अंतिम बार देखा गया"
 linked = "लिंक किया गया"
 status = "स्थिति"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "इस org का account लिंक करें, फिर अपने self-hosted instances यहाँ देखने के लिए उन्हें register करें।"
 title = "कोई linked instances नहीं"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}}d पहले"
 daysAgo_other = "{{count}}d पहले"
 hoursAgo_one = "{{count}}h पहले"
@@ -6406,36 +6409,36 @@ minutesAgo_one = "{{count}}m पहले"
 minutesAgo_other = "{{count}}m पहले"
 never = "कभी नहीं"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "उस account में sign in करें जिससे इस server का बिल लिया जाना चाहिए।"
 linkTitle = "अपना Stirling account लिंक करें"
 reauthSubtitle = "आपका session समाप्त हो गया — अपने Stirling account में फिर से sign in करें। आपका instance लिंक रहता है।"
 reauthTitle = "फिर से sign in करें"
 simulateSignIn = "sign-in simulate करें (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "hosted Stirling account के विरुद्ध in-app linking सक्षम करने के लिए।"
 and = "और"
 before = "सेट करें"
 title = "SaaS login कॉन्फ़िगर नहीं है"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "इस org में registered हर self-hosted instance। उसके unattended access को तुरंत रोकने के लिए credential रद्द करें।"
 instancesTitle = "Linked instances"
 revokeError = "instance रद्द नहीं किया जा सका"
 sub = "इस self-hosted org को इसके Stirling account से लिंक करें ताकि unattended processing का बिल आपके org wallet से लिया जाए।"
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "केवल team owner org के linked instances देख सकता है।"
 generic = "टीम के linked instances लोड नहीं किए जा सके। थोड़ी देर में फिर कोशिश करें।"
 title = "Linked instances लोड नहीं किए जा सके"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Editor प्लान"
 subscribed = "Processor प्लान"
 unlinked = "लिंक नहीं किया गया"
 
-[portal.assistant]
+[processor.assistant]
 close = "assistant बंद करें"
 error = "assistant तक नहीं पहुँचा जा सका।"
 errorWithDetail = "assistant तक नहीं पहुँचा जा सका: {{detail}}"
@@ -6447,33 +6450,33 @@ title = "Assistant"
 tryAsking = "पूछकर देखें"
 typing = "टाइप हो रहा है"
 
-[portal.auth]
+[processor.auth]
 loading = "लोड हो रहा है"
 redirectingToEditor = "editor पर redirect किया जा रहा है..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "शायद बाद में"
 title = "Processor चालू करें"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "monthly limit सेट करें। जितना चलाएँ, उतना भुगतान करें।"
 title = "Pay as you go"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 months free"
 sub = "एक invoice, card या bank transfer।"
 title = "एक year prepay करें"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function ने कोई client_secret नहीं लौटाया।"
 title = "Processor प्लान चालू करें"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "आपका payment सफल रहा, लेकिन activation में सामान्य से थोड़ा अधिक समय लग रहा है। यह अपने-आप चालू हो जाएगा - इसे बंद करें और यह थोड़ी देर में यहाँ दिखाई देगा।"
 close = "बंद करें"
 title = "लगभग हो गया"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Monthly spend limit"
 back = "वापस"
 continue = "payment पर जारी रखें"
@@ -6484,30 +6487,30 @@ note = "आपसे आपकी limit से अधिक कभी bill न�
 perMonth = "/ mo"
 title = "अपनी spend limit सेट करें"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Card number · MM / YY · CVC · ZIP"
 label = "Card details"
 note = "Card details Stripe द्वारा collect किए जाते हैं। Stirling कभी PAN या CVC store नहीं करता।"
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "checkout शुरू नहीं किया जा सका"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "आपका payment पूरा हो गया। हम आपके linked instances पर metered processing चालू कर रहे हैं - इसमें आमतौर पर कुछ सेकंड लगते हैं।"
 hint = "कृपया यह विंडो खुली रखें।"
 title = "आपका Processor प्लान सक्रिय किया जा रहा है..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Monthly spend limit {{amount}}/mo। Processing limit पर pause हो जाती है।"
 limitNoCap = "कोई spend limit नहीं। Processing pause नहीं होगी। Invoices monthly post होते हैं।"
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "अपना Enterprise quote बनाएँ"
 description = "Committed volume discounts, air-gapped deployment, custom MSA और security reviews, और 3rd-party distributor partnerships।"
 eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "इस माह सक्रिय"
 cost = "लागत"
 editorsDeployed = "Editors deployed"
@@ -6516,7 +6519,7 @@ pdfsEdited = "PDFs संपादित"
 subtitle = "कहीं भी deploy करें, अपनी पूरी टीम के लिए।"
 title = "मुफ़्त PDF Editors"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "checkout शुरू नहीं किया जा सका"
 currentPlan = "वर्तमान प्लान"
 freeForever = "हमेशा मुफ़्त"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "Processor चालू करें →"
 unlimitedUsers = "असीमित users"
 viewQuote = "quote देखें"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "राशि"
 columnDate = "तारीख"
 columnDescription = "विवरण"
@@ -6553,12 +6556,12 @@ title = "Invoice history"
 viewAriaLabel = "Stripe में invoice {{number}} देखें"
 viewLink = "देखें ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Stirling account लिंक करें"
 description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — हमेशा मुफ़्त है, लिंक हो या न हो। metered processing (automation, AI, और API) के 500 मुफ़्त PDFs का दावा करने के लिए लिंक करें; जब आपको अधिक चाहिए, Processor प्लान चालू करें और केवल अपने उपयोग के लिए भुगतान करें।"
 title = "अपना Stirling account लिंक करें"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "मासिक बिलिंग"
 cardEnding = "{{brand}} समाप्त {{last4}}"
 cardFallback = "Card"
@@ -6568,7 +6571,7 @@ managedSub = "आपका card और billing details Stripe के customer po
 managedTitle = "Stripe में managed"
 update = "Update करें"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "इस अवधि में अभी कोई metered processing नहीं।"
 eyebrow = "इस अवधि में processed PDFs"
 legendValue_one = "{{formatted}} PDFs"
@@ -6587,14 +6590,14 @@ unit = "metered PDFs"
 unitsPending_one = "linked instances से {{units}} meter unit sync pending है"
 unitsPending_other = "linked instances से {{units}} meter units sync pending हैं"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "{{total}} prepaid credits में से"
 expires = "{{date}} को expires"
 eyebrow = "Prepaid capacity"
 note = "metered billing से पहले और आपकी spend limit के बाहर उपयोग किया जाता है।"
 topUp = "Top up"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "वापस"
 calcTitle = "अपना annual payment calculate करें"
 cancel = "Cancel"
@@ -6607,7 +6610,7 @@ loadingTitle = "आपका quote load हो रहा है"
 payTitle = "अपने year के लिए pay करें"
 step = "Step {{current}} of {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "बदलें"
 deployRow = "Deployment"
 done = "Done"
@@ -6626,10 +6629,10 @@ sizingRow = "Sizing"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "कुल users"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "मैं समझता/समझती हूँ कि जब मेरी prepaid capacity उपयोग हो जाती है या 12 months बाद expire हो जाती है, तो processing automatically standard metered pay-as-you-go rate पर (मेरी spend limit तक) जारी रहती है जब तक मैं cancel न करूँ, और मैं billing portal से कभी भी cancel कर सकता/सकती हूँ।"
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Stirling द्वारा managed। minutes में live।"
 cloudValue = "Stirling Cloud · Managed"
@@ -6637,12 +6640,12 @@ selfhost = "Self-hosted"
 selfhostDesc = "private infrastructure पर चलता है। Same rate।"
 selfhostValue = "Self-hosted · Private infrastructure"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "offer review करें"
 subtitle = "PDF processing का एक year prepay करें और two months free पाएँ, metered billing से पहले और आपकी spend limit के बाहर उपयोग किया जाता है।"
 title = "10 की कीमत में 12 months पाएँ"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Account holder name"
 accountNamePlaceholder = "e.g. Jane Smith"
 companyName = "Company name (optional)"
@@ -6652,7 +6655,7 @@ payOnline = "online pay करें"
 poNumber = "PO number (optional)"
 poNumberPlaceholder = "e.g. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Advanced"
 advancedDesc = "Pipelines आपकी अधिकांश processing चलाते हैं।"
 none = "None"
@@ -6660,7 +6663,7 @@ noneDesc = "अभी pipelines नहीं चल रहे। इन्हे
 standard = "Standard"
 standardDesc = "कुछ pipelines आने वाले PDFs को re-process करते हैं।"
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Essentials"
 essentialsDesc = "Classification, default, साथ में Sharing"
 governed = "Governed"
@@ -6668,12 +6671,12 @@ governedDesc = "Security और Routing जोड़ता है"
 regulated = "Regulated"
 regulatedDesc = "हर category, incl. Compliance, Retention, Ingestion"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "quote download करें (PDF)"
 downloading = "तैयार हो रहा है…"
 share = "approval के लिए share करें"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Compact"
 compactDesc = "25 MB से कम files, कोई data charges नहीं"
 heavy = "Heavy"
@@ -6681,12 +6684,12 @@ heavyDesc = "Scanned या image-heavy, नियमित रूप से 50 
 standard = "Standard"
 standardDesc = "ज़्यादातर छोटी, कुछ scans 25 MB से अधिक"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "उपयोग हो गया"
 healthy = "काफी बचा है"
 low = "कम हो रहा है"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "limit समायोजित करें"
 cancel = "रद्द करें"
 capControlNote = "बदलाव तुरंत लागू होते हैं — ceiling को कभी भी बढ़ाएँ या घटाएँ।"
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "इस अवधि में {{amount}} · uncapped"
 usedThisMonth = "इस माह {{amount}} उपयोग हुआ"
 useSuggested = "सुझाया गया उपयोग करें · {{amount}} / माह"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "{{rate}}/day पर आप ~{{count}} दिन में cap तक पहुँचेंगे (~{{monthEnd}} month-end)। सुझाई गई limit ~{{suggested}}।"
 body_other = "{{rate}}/day पर आप ~{{count}} दिनों में cap तक पहुँचेंगे (~{{monthEnd}} month-end)। सुझाई गई limit ~{{suggested}}।"
 label = "exceed होने का अनुमान।"
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "इस माह खर्च"
 freeRemaining_one = "{{formatted}} free PDF शेष"
 freeRemaining_other = "{{formatted}} free PDFs शेष"
@@ -6720,17 +6723,17 @@ processed_other = "{{formattedCount}} PDFs processed।"
 processedWithRate_one = "{{formattedCount}} PDF processed, प्रत्येक {{rate}} पर।"
 processedWithRate_other = "{{formattedCount}} PDFs processed, प्रत्येक {{rate}} पर।"
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "इसे अभी बढ़ाएँ ताकि automated processing कभी न रुके।"
 approachingTitle = "आप अपनी मासिक spend limit के {{pct}}% पर हैं"
 raiseLimit = "limit बढ़ाएँ"
 reachedBody = "जब तक आप limit नहीं बढ़ाते या cycle reset नहीं होता, metered processing रुकी रहती है। असीमित PDF editing काम करती रहती है।"
 reachedTitle = "मासिक spend limit पहुँच गई"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Stripe portal नहीं खोला जा सका"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} मुफ़्त PDFs में से उपयोग हुआ"
 capSuffix_other = "{{allowance}} मुफ़्त PDFs में से उपयोग हुआ"
@@ -6743,7 +6746,7 @@ title_other = "{{allowance}} PDFs मुफ़्त process करें"
 titleWithRate_one = "{{allowance}} PDFs मुफ़्त process करें, फिर {{rate}}/PDF"
 titleWithRate_other = "{{allowance}} PDFs मुफ़्त process करें, फिर {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "approval"
 check = "check"
 event = "event"
@@ -6752,11 +6755,11 @@ review = "review"
 session = "session"
 signature = "signature"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "नया connection"
 createTitleFor = "{{name}} connect करें"
 delete = "Delete"
@@ -6764,369 +6767,369 @@ edit = "Edit"
 editTitle = "connection edit करें"
 unsupportedType = "यह connection type यहाँ edit नहीं किया जा सकता।"
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "ऐसी service के लिए जिसे हम अभी support नहीं करते।"
 label = "Advanced"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "किसी document के साथ क्या हुआ, उसे वहाँ record करें जहाँ आपके auditors पहले से देखते हैं।"
 label = "Audit और compliance logging"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "दूसरे system को बताएँ कि कुछ हुआ है।"
 label = "Notify और workflow"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "document आगे बढ़ने से पहले उसे scan या label करें।"
 label = "Security और classification"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "document को sign या notarize कराने के लिए बाहर भेजें।"
 label = "E-signature और notarization"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "processed documents कहाँ पहुँचते हैं - bucket, drive, ticket या page।"
 label = "File और attach"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling इसे encrypted store करता है और फिर कभी नहीं दिखाता।"
 label = "Access token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "इस connection का उपयोग करने वाले steps केवल इस URL के अंतर्गत paths call कर सकते हैं, किसी अन्य host को कभी नहीं।"
 label = "Server URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Password"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Username"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "service ने जो URL दिया है, उसे paste करें। केवल उसके अंतर्गत paths call किए जा सकते हैं।"
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Connection name"
 namePlaceholder = "e.g. Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Cancel"
 createNew = "नया connection..."
 placeholder = "connection चुनें"
 save = "connection save करें"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "integration बदलें"
 heading = "आप क्या connect करना चाहते हैं?"
 noResultsBody = "हम अभी इसे support नहीं करते - हमें इसके बारे में बताएं और हम इसे जोड़ने पर विचार करेंगे।"
 noResultsTitle = "\"{{query}}\" से कुछ भी match नहीं हुआ"
 searchPlaceholder = "integrations search करें - \"sign\", \"ocr\" या product name आज़माएँ"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "policy से किसी भी HTTP API को call करें। आप URL, authentication और payload चुनते हैं।"
 label = "Custom API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Authentication"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Username और password"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "custom header में token"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "token के लिए log in करें"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "इस connection का उपयोग करने वाले steps केवल इस URL के अंतर्गत paths call कर सकते हैं, किसी अन्य host को कभी नहीं।"
 label = "Base URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Header name"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Login path"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Password"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "यदि API download link के साथ reply करता है, तो केवल इन hosts को fetch किया जा सकता है। commas से अलग करें। केवल base URL के अपने host को allow करने के लिए खाली छोड़ें।"
 label = "Allowed result hosts"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "इस header के रूप में token भेजें"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "response header जिसमें login call token लौटाता है, जैसे X-Auth-Token।"
 label = "Token response header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Username"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "आपके चलाए server पर malware के लिए documents scan करें - आपके network से कुछ बाहर नहीं जाता।"
 label = "ClamAV (self-hosted)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "policy में documents के लिए virus और content scanning।"
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "macros, executables, scripts या embedded objects वाले documents block करें - केवल ज्ञात malware ही नहीं।"
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "processed documents को Confluence page से attach करें।"
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "documents को electronic signature और notarization के लिए ConsignO Cloud (Notarius) भेजें।"
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "आपका ConsignO Cloud environment, /api/v1 सहित।"
 label = "Server URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Password"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "केवल तब आवश्यक जब आपकी organisation tenants उपयोग करती है।"
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Username"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "policy जब document process करे, तो Discord पर message post करें।"
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "हर बार जब policy document handle करे, Elasticsearch में audit event index करें।"
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "नए documents के लिए FTP या FTPS server poll करें।"
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Connection mode"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Active"
 passive = "Passive (recommended)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Plain FTP credentials और files को unencrypted भेजता है; यदि server support करता है तो FTPS चुनें।"
 label = "Encryption"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (explicit / AUTH TLS)"
 implicit = "FTPS (implicit)"
 none = "None (plain FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "policy run होने पर Google Chat space में message post करें।"
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "processed documents को Jira issue से attach करें।"
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "policy run होने पर document या notification email करें।"
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "processed documents को Nextcloud में file करें।"
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "App password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "आपके चलाए Presidio server का उपयोग करके document text में personal data detect करें।"
 label = "Presidio (self-hosted)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "PDFs पर Microsoft Purview sensitivity labels पढ़ें और apply करें।"
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "Optional। केवल labels को name से चुनने के लिए आवश्यक; labelling इसके बिना भी काम करती है।"
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "हर label पर उसके SiteId के रूप में stamp किया जाता है, ताकि Purview-aware tools जानें कि किस organisation ने इसे apply किया।"
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "एक S3 bucket जिसे sources पढ़ सकते हैं और pipeline outputs लिख सकते हैं।"
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "AWS के लिए खाली छोड़ें। MinIO या किसी अन्य S3-compatible store के लिए इसे सेट करें।"
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "policy run होने पर document या notification email करें।"
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "नए documents के लिए SFTP (SSH) server poll करें।"
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Optional। server का SHA-256 host key fingerprint (`ssh-keyscan host | ssh-keygen -lf -` से)। सेट होने पर, केवल यह key प्रस्तुत करने वाला server स्वीकार किया जाता है; खाली होने पर, first connect पर देखी गई key pinned होती है और बाद के changes अस्वीकार किए जाते हैं।"
 label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "यदि आप इसके बजाय private key से authenticate करते हैं तो खाली छोड़ें।"
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "Optional। password के बजाय key से authenticate करने के लिए OpenSSH private key paste करें।"
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "policy जब document process करे, तो Slack पर message post करें।"
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "SMB / CIFS network share (Windows या Samba) watch करें।"
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Network share"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "Optional। Windows domain या workgroup, यदि आपका server एक उपयोग करता है।"
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "हर बार जब policy document handle करे, Splunk को audit event भेजें।"
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Sumo Logic HTTP collector को audit event भेजें।"
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "policy run होने पर Teams channel में message post करें।"
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "प्रत्येक document, या केवल details, आपके चुने URL पर post करें।"
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "policy से Zap या Make scenario trigger करें।"
 label = "Zapier और Make"
 
-[portal.docs]
+[processor.docs]
 browse = "docs browse करें"
 viewSource = "GitHub पर source देखें"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "हर request"
 eyebrow = "शुरुआत करें"
 lead = "सभी requests bearer token से authenticate होते हैं। Keys environment के अनुसार scoped होती हैं और rotate किए बिना कभी expire नहीं होतीं।"
@@ -7134,13 +7137,13 @@ liveKey = "Production keys — billed, आपके प्लान के अ�
 testKey = "Sandbox keys — free, synthetic fixtures लौटाती हैं।"
 title = "Authentication"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "viewer embed करें"
 eyebrow = "COMPONENTS"
 lead = "review queues और document inspection के लिए embeddable UI। अपनी styles लाएँ या shipped theme का उपयोग करें।"
 title = "Drop-in viewers"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCE"
 fieldCount_one = "{{count}} field"
 fieldCount_other = "{{count}} fields"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "vertical के अनुसार endpoints filter करे
 lead = "हर document type एक typed endpoint है। फ़ाइल POST करें, schema-validated JSON प्राप्त करें। नीचे vertical के अनुसार filter करें।"
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCE"
 lead = "Errors एक स्थिर machine-readable code और human message लौटाते हैं। 4xx body में support के लिए हमेशा request_id शामिल होता है।"
 title = "Errors"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Documentation"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "documentation index लोड नहीं किया जा सका।"
 title = "Docs उपलब्ध नहीं"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "शुरुआत करें"
 lead = "अपना पहला document typed endpoint पर भेजें और तीन चरणों में structured JSON वापस पाएँ। कोई model training नहीं, कोई prompt engineering नहीं।"
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "copy-paste recipes के लिए।"
 bodyBeforeLink = "validation, redaction, और delivery को chain करने के लिए उसी call को pipeline में wire करें — या MCP पर agent को expose करें। देखें"
 label = "अगला:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Infrastructure tab से scoped key बनाएँ। Keys में rate limits और optional IP allowlist होती है। इसे अपने shell में export करें:"
 title = "API key जारी करें"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "किसी भी typed endpoint पर फ़ाइल POST करें। endpoint तय करता है कि आपको कौन सा schema वापस मिलेगा — यहाँ, invoice extractor।"
 snippetCaption = "invoice extract करें"
 title = "दस्तावेज़ भेजें"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "हर response endpoint schema के विरुद्ध validate होता है, confidence score और per-field provenance के साथ।"
 codeCaption = "200 OK"
 title = "structured result पढ़ें"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "Concurrency"
@@ -7196,47 +7199,47 @@ lead = "Limits आपके प्लान के साथ scale होती 
 requestsPerMinute = "Requests / minute"
 title = "Rate limits और quotas"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "recipe clone करें"
 eyebrow = "PLAYBOOKS"
 lead = "End-to-end patterns जो sources, operations और destinations को chain करते हैं। हर एक ऐसी pipeline से map होता है जिसे आप clone कर सकते हैं।"
 title = "Recipes"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "typed responses, automatic retries, और streaming uploads वाले first-party clients। सभी same endpoint catalogue track करते हैं।"
 title = "Official SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities जिन्हें आपका agent single tool के रूप में invoke करता है। हर skill deterministic op chain है जिसके साथ evals attached हैं।"
 title = "Agent skills"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "इस page पर"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
 lead = "document.processed, pipeline.completed, और quota.threshold events को subscribe करें। Payloads HMAC-SHA256 से signed हैं।"
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper।"
 beforeHelper = "payload पर भरोसा करने से पहले header को अपने signing secret के विरुद्ध verify करें। SDKs एक"
 beforeSignature = "Verify करें"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "CSV export करें"
 search = "filename, ID से खोजें..."
 subtitle = "आपके org द्वारा process किया गया हर document, उसके पूरे processing record के साथ। Content access request-gated है।"
 title = "दस्तावेज़"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Approved"
 archived = "Archived"
 elevation = "अधिकार उन्नयन"
@@ -7246,44 +7249,44 @@ flagged = "समीक्षा आवश्यक"
 ingested = "इनजेस्ट किया गया"
 reviewed = "समीक्षा में"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "दस्तावेज़ विवरण अनुभाग"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "ऑडिट"
 extractions = "एक्सट्रैक्शन"
 overview = "ओवरव्यू"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "एक्सेस का अनुरोध करें"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "अस्थायी अनुमति — एक्सेस लॉग किया जाता है और समय-सीमित है।"
 descriptionFourEyes = "अस्थायी अनुमति — एक सहकर्मी समीक्षक को सूचित किया गया (four-eyes)।"
 title = "एक्सेस {{time}} में समाप्त होगा"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "सामग्री zero-standing-access द्वारा सीमित है। अनुरोध करने से समय-सीमित अनुमति शुरू होती है।"
 descriptionFourEyes = "सामग्री zero-standing-access द्वारा सीमित है। अनुरोध करने से समय-सीमित अनुमति शुरू होती है और एक सहकर्मी समीक्षक को सूचित किया जाता है (four-eyes)।"
 title = "संवेदनशील दस्तावेज़"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "इस दस्तावेज़ से कोई फ़ील्ड एक्सट्रैक्ट नहीं किए गए।"
 masked = "एक्सट्रैक्ट किए गए फ़ील्ड छिपे हुए हैं। इस दस्तावेज़ की सामग्री देखने के लिए समय-सीमित एक्सेस का अनुरोध करें।"
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "विश्वास स्तर"
 field = "फ़ील्ड"
 value = "मान"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "सभी"
 ariaLabel = "स्थिति के आधार पर दस्तावेज़ फ़िल्टर करें"
 flagged = "फ़्लैग किए गए"
 inReview = "समीक्षा में"
 processed = "प्रोसेस किए गए"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "पाइपलाइन / कार्रवाई"
 product = "उत्पाद"
 received = "समय"
@@ -7291,26 +7294,26 @@ status = "स्थिति"
 type = "प्रकार"
 user = "उपयोगकर्ता"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "source connect करें"
 createPipeline = "pipeline बनाएँ"
 description = "जब स्रोत आपकी पाइपलाइनों में दस्तावेज़ भेजेंगे, तो वे समीक्षा के लिए यहाँ दिखाई देंगे।"
 title = "क्यू में कोई दस्तावेज़ नहीं"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "त्रुटि"
 flagged = "समीक्षा आवश्यक"
 inReview = "समीक्षा में"
 processed = "प्रोसेस किया गया"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "ऑटो"
 editorAction = "संपादक"
 empty = "इस फ़िल्टर से कोई दस्तावेज़ मेल नहीं खाते।"
 rowActions = "पंक्ति कार्रवाइयाँ"
 sensitiveLabel = "संवेदनशील"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "पाइपलाइन / कार्रवाई"
 document = "दस्तावेज़"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "स्थिति"
 time = "समय"
 user = "उपयोगकर्ता"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Stirling PDF Editor को डिप्लॉय करें, self-hosted इंस्टेंस को अपने org से पेयर करें, और चल रहे फ़्लीट — टार्गेट, स्वास्थ्य, क्रेडेंशियल और ऑफ़लाइन सक्रियण — को एक ही जगह संचालित करें।"
 title = "संपादक डिप्लॉयमेंट"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "सक्रिय उपयोगकर्ता"
 host = "Host"
 lastSeen = "अंतिम बार देखा गया"
@@ -7332,11 +7335,11 @@ status = "स्थिति"
 target = "Target"
 version = "Version"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "लाइव इंस्टेंस स्वास्थ्य यहाँ देखने के लिए एक टार्गेट डिप्लॉय करें और उसे पेयर करें।"
 title = "कोई इंस्टेंस रिपोर्ट नहीं कर रहा"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "ऑफ़लाइन बंडल जनरेट करें"
 lockCopy = "ऑफ़लाइन और on-prem सक्रियण Enterprise का हिस्सा है।"
@@ -7344,67 +7347,67 @@ subtitle = "बिना आउटबाउंड नेटवर्क पथ �
 talkToSales = "सेल्स से बात करें"
 title = "एयर-गैप्ड सक्रियण"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} हस्ताक्षरित है और ट्रांसफ़र के लिए तैयार है। यह एक इंस्टेंस को सक्रिय करता है और 14 दिनों में समाप्त हो जाता है।"
 title = "बंडल तैयार है"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "जनरेट किया गया ✓"
 generateNewCode = "नया कोड जनरेट करें"
 lockCopy = "IaC प्रोविज़निंग Enterprise का हिस्सा है।"
 rotate = "रोटेट करें"
 talkToSales = "सेल्स से बात करें"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "हर Editor इंस्टेंस रिपोर्ट कर रहा है — version, क्षेत्र, स्थिति, अंतिम बार देखा गया, और सक्रिय उपयोगकर्ता।"
 title = "इंस्टेंस स्वास्थ्य"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "एक self-hosted editor को इस org से कनेक्ट करें। एक token जनरेट करें, छोटा code सौंपें, या इसे IaC के माध्यम से वायर करें।"
 title = "पेयरिंग"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "जहाँ Editor चलता है। self-hosted इंस्टेंस खड़ा करने के लिए snippet कॉपी करें, या बिना ops के Managed Cloud का उपयोग करें।"
 title = "डिप्लॉयमेंट टार्गेट"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "वर्तमान token"
 lastRotated = "अंतिम बार रोटेट किया गया"
 rotateButton = "service token रोटेट करें"
 subtitle = "इंस्टेंस इस क्रेडेंशियल से org में प्रमाणित होते हैं। इसे शेड्यूल पर या संदिग्ध लीक के तुरंत बाद रोटेट करें।"
 title = "Service token"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "नया token जारी किया गया। 24h grace window के भीतर प्रत्येक self-hosted इंस्टेंस के STIRLING_SERVICE_TOKEN को अपडेट करें, नहीं तो वे ऑफ़लाइन हो जाएँगे।"
 title = "चल रहे इंस्टेंस रोटेट करें"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "घटिया स्थिति"
 healthy = "स्वस्थ"
 offline = "ऑफ़लाइन"
 pairing = "पेयरिंग"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} इंस्टेंस"
 instanceCount_other = "{{count}} इंस्टेंस"
 talkToSales = "सेल्स से बात करें"
 upgradePlan = "प्लान अपग्रेड करें"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "On-prem और Kubernetes self-hosting Enterprise का हिस्सा हैं।"
 paid = "Docker और Kubernetes के साथ self-hosting पेड प्लान पर अनलॉक होती है।"
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "उपलब्ध"
 locked = "लॉक्ड"
 running = "चल रहा है"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "इस व्यू में अनपेक्षित त्रुटि हुई। फिर से कोशिश करें, या sidebar से कोई अन्य अनुभाग चुनें।"
 retry = "फिर से कोशिश करें"
 title = "इस पेज पर कुछ गलत हो गया"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "वापस"
 body = "desktop app download करें या server self-host करें।"
 done = "Done"
@@ -7464,7 +7467,7 @@ sectionDesktop = "Desktop app"
 sectionSelfHosted = "Self-hosted"
 title = "Stirling PDF Editor install करें"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "अपने server पर official image चलाएँ।"
 note = ":8080 पर खुलता है। Default login: admin / stirling।"
 tagline = "server को container में चलाएँ"
@@ -7473,27 +7476,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "आधिकारिक Helm chart इंस्टॉल करें।"
 note = "सेटिंग्स को बनाए रखने के लिए /configs के लिए एक PVC जोड़ें।"
 tagline = "Helm के साथ क्लस्टर पर डिप्लॉय करें"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "आपके वितरण के लिए नेटिव builds।"
 guideBtn = "Linux इंस्टॉल विकल्प देखें"
 note = "सामान्य distros के लिए AppImage, .deb और .rpm builds उपलब्ध हैं।"
 tagline = "आपके distro के लिए नेटिव desktop app"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "या Homebrew के माध्यम से"
 detailBody = "इंस्टॉलर चलाएँ, या Homebrew का उपयोग करें।"
 downloadBtn = "macOS के लिए डाउनलोड करें"
 tagline = "Apple silicon और Intel के लिए नेटिव app"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "bare metal server पर .jar चलाएँ।"
 downloadBtn = ".jar डाउनलोड करें"
 note = "Java 21+ आवश्यक है। :8080 पर खुलता है; डिफ़ॉल्ट लॉगिन admin / stirling।"
@@ -7501,73 +7504,73 @@ runLabel = "फिर इसे चलाएँ"
 tagline = "bare metal server पर .jar चलाएँ"
 title = "मैन्युअल server setup"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "या winget के माध्यम से"
 detailBody = "इंस्टॉलर चलाएँ, या package manager का उपयोग करें।"
 downloadBtn = "इंस्टॉलर डाउनलोड करें"
 tagline = "Microsoft Windows के लिए नेटिव app"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "इस महीने {{total}} में से {{active}} सक्रिय"
 name = "Stirling PDF Editor"
 open = "ब्राउज़र में खोलें"
 updated = "{{time}} अपडेट किया गया"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "डिप्लॉयमेंट समाप्त करें"
 options = "डिप्लॉयमेंट विकल्प देखें"
 start = "Editor डिप्लॉय करें"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Self-hosted · Docker"
 kubernetes = "Self-hosted · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "नमस्कार"
 evening = "शुभ संध्या"
 morning = "सुप्रभात"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Editor डिप्लॉयमेंट प्रबंधित करें"
 sectionsAriaLabel = "इन्फ्रास्ट्रक्चर अनुभाग"
 subtitle = "आपके Stirling workspace के लिए डिप्लॉयमेंट, क्रेडेंशियल, सुरक्षा स्थिति, स्टोरेज, और audit trail."
 title = "इन्फ्रास्ट्रक्चर"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "key बनाएँ"
 heading = "API keys"
 subheading = "प्रति-key rate limits, अनुमतियाँ, और IP allowlists के साथ scoped credentials."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "बनाया गया"
 lastUsed = "अंतिम उपयोग"
 revoke = "key रद्द करें"
 usageMonth = "इस महीने का उपयोग"
 usageToday = "आज का उपयोग"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Stirling API कॉल करना शुरू करने के लिए scoped key बनाएँ।"
 title = "अभी कोई API keys नहीं"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "आपकी API keys लोड नहीं हो सकीं। कृपया फिर से प्रयास करें।"
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "\"{{name}}\" रद्द करें? इस key का अभी भी उपयोग कर रहा कोई भी इंटीग्रेशन तुरंत 401 errors प्राप्त करना शुरू कर देगा। इसे पूर्ववत नहीं किया जा सकता।"
 cancel = "रद्द करें"
 confirm = "key रद्द करें"
 title = "API key रद्द करें"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "श्रेणी के आधार पर audit events फ़िल्टर करें"
 heading = "Audit logs"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "इस श्रेणी में कोई events नहीं।"
 subheading = "आपके workspace में हर authentication, configuration, और processing event."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "कर्ता"
 event = "Event"
 latency = "Latency"
@@ -7575,11 +7578,11 @@ status = "स्थिति"
 target = "Resource"
 timestamp = "Timestamp"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "Workspace गतिविधि होते ही यहाँ दिखाई देगी।"
 title = "कोई audit events नहीं"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "रद्द करें"
 error = "Export विफल रहा। कृपया फिर से कोशिश करें।"
 exportButton = "Export"
@@ -7590,7 +7593,7 @@ open = "Export"
 subtitle = "Audit events को CSV या JSON के रूप में डाउनलोड करें। शामिल करने के लिए कॉलम चुनें।"
 title = "Audit log export करें"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "दिनांक"
 documentName = "दस्तावेज़ का नाम"
 ipAddress = "IP address"
@@ -7598,7 +7601,7 @@ outcome = "परिणाम"
 tool = "टूल"
 username = "Username"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "सभी"
 auth = "Auth"
 config = "Config"
@@ -7607,17 +7610,17 @@ policy = "नीति"
 processing = "Processing"
 security = "Security"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Audit log टीम लीड और admins के लिए उपलब्ध है। एक्सेस के लिए अपने टीम लीड या admin से पूछें।"
 title = "आपके पास एक्सेस नहीं है"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Config"
 policy = "नीति"
 processing = "Processing"
 totalEvents = "कुल events · 24h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "प्रमाणीकरण"
 config = "कॉन्फ़िग"
 elevation = "उन्नयन"
@@ -7625,13 +7628,13 @@ policy = "नीति"
 processing = "प्रोसेसिंग"
 security = "सुरक्षा"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "त्रुटि"
 info = "जानकारी"
 success = "सफलता"
 warning = "चेतावनी"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "रद्द करें"
 createKey = "key बनाएँ"
 done = "पूरा"
@@ -7644,11 +7647,11 @@ subtitleCreated = "इस secret को अभी कॉपी करें — 
 title = "API key बनाएँ"
 titleCreated = "Key बनाई गई"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "सक्रिय"
 revoked = "रद्द"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API Keys"
 audit = "Audit Logs"
 deployments = "Deployments"
@@ -7656,7 +7659,7 @@ models = "Models"
 security = "Security"
 storage = "Storage"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "उपलब्ध"
 comingSoonHeading = "जल्द आ रहा है"
 connect = "कनेक्ट करें"
@@ -7668,7 +7671,7 @@ subtitle = "Stirling जिनसे बात कर सकता है, व�
 title = "इंटीग्रेशन"
 typedName = "{{tool}} नाम"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "सभी"
 audit = "ऑडिट"
 connected = "कनेक्टेड"
@@ -7677,29 +7680,29 @@ security = "सुरक्षा"
 signing = "हस्ताक्षर"
 storage = "स्टोरेज"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "कनेक्टेड"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "इंटीग्रेशन"
 worksWith = "इसके साथ काम करता है"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "पाइपलाइन"
 policies = "नीतियाँ"
 sources = "स्रोत"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · draft"
 loadError = "यह दस्तावेज़ लोड नहीं हो सका। कृपया फिर से प्रयास करें।"
 loading = "लोड हो रहा है…"
 title = "कानूनी दस्तावेज़"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "Components"
 docs = "Developer Docs"
@@ -7715,18 +7718,18 @@ sources = "स्रोत"
 usage = "Usage & Billing"
 users = "उपयोगकर्ता"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF Platform"
 processor = "PDF Processor"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Backend पर हर automated document pipeline: sources के सेट पर operations की ordered chain, trigger पर चलती है। इसके steps और sources के लिए किसी row पर क्लिक करें।"
 title = "पाइपलाइन्स"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "नई पाइपलाइन"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "पाइपलाइन्स पर वापस जाएँ"
 cannotFollow = "{{produced}} नहीं ले सकता"
@@ -7758,7 +7761,7 @@ unsavedTitle = "Unsaved बदलाव"
 usesDefaults = "Default settings के साथ चलता है"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "पिछले चरण की हर फ़ाइल को जोड़ता है"
 fan-out = "पिछले चरण की प्रत्येक फ़ाइल के लिए एक बार चलता है"
 format-mismatch = "{{accepts}} आवश्यक है, लेकिन पिछला चरण {{produced}} उत्पन्न करता है"
@@ -7776,7 +7779,7 @@ output-uncertain = "चल नहीं सकता: पिछले चरण 
 source-mismatch = "{{accepts}} आवश्यक है, लेकिन इस पाइपलाइन का इनपुट {{produced}} है"
 undeclared-operation = "जाँच नहीं कर सकता कि यह चरण क्या स्वीकार करता है"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "टूल जोड़ें"
 create = "पाइपलाइन बनाएँ"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "हर"
 trigger = "Trigger"
 triggerManual = "केवल Manual"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "दिन"
 hours = "घंटे"
 minutes = "मिनट"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "\"{{name}}\" हटाएँ? इसे पूर्ववत नहीं किया जा सकता।"
 cancel = "रद्द करें"
 confirm = "हटाएँ"
 title = "पाइपलाइन हटाएँ?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "इतिहास साफ़ करें"
 delete = "पाइपलाइन हटाएँ"
 run = "अभी चलाएँ"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "पाइपलाइन बनाएँ"
 connectSource = "स्रोत कनेक्ट करें"
 description = "अपनी पहली पाइपलाइन बनाएँ: वे स्रोत चुनें जिन पर यह चलती है, operations को chain करें, और output कहाँ जाए चुनें।"
 title = "अभी कोई पाइपलाइन नहीं"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "सक्रिय"
 paused = "रोकी गई"
 total = "पाइपलाइन्स"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "चलाने के लिए कुछ नहीं: स्रोत का {{count}} दस्तावेज़ पहले ही प्रोसेस हो चुका है।"
 allProcessed_other = "चलाने के लिए कुछ नहीं: स्रोतों में सभी {{count}} दस्तावेज़ पहले ही प्रोसेस हो चुके हैं।"
 completed_one = "Run पूरा हुआ।"
@@ -7874,151 +7877,151 @@ parked_other = "चलाने के लिए कुछ नहीं: {{count
 running = "Run शुरू हुआ; अभी भी जारी है।"
 timeout = "Run अपेक्षा से अधिक समय ले रहा है; यह background में अभी भी पूरा हो सकता है।"
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "सक्रिय"
 paused = "रोकी गई"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "पाइपलाइन"
 sources = "स्रोत"
 status = "स्थिति"
 steps = "Steps"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
 
-[portal.policies]
+[processor.policies]
 defaultName = "{{category}} नीति"
 subtitle = "Standing automations जो हर दस्तावेज़ पर tool pipeline लागू करते हैं। प्रत्येक policy upload या export पर चलती है, अपनी tool chain चलाती है, और enforced version को original के साथ save करती है।"
 title = "पॉलिसियाँ"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Enterprise में अपग्रेड करें"
 notSetUp = "सेट अप नहीं"
 requiresAiEngine = "AI engine आवश्यक है"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "अपलोड पर प्रत्येक दस्तावेज़ का प्रकार पहचानें और फ़ाइलिंग व खोज के लिए उसके metadata को tag करें।"
 label = "वर्गीकरण"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "हर दस्तावेज़ पर HIPAA, GDPR, SOC 2, या FedRAMP आवश्यकताएँ लागू करें।"
 label = "Compliance"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "दस्तावेज़ों को classify करें, structured data extract करें, naming conventions लागू करें, और pages normalize करें।"
 label = "Ingestion"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "सेट करें कि दस्तावेज़ कितने समय तक रखे जाएँ, कब archive हों, और कब delete हों।"
 label = "Retention"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "दस्तावेज़ों को सही team, folder, या system पर auto-route करें।"
 label = "Routing"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "PII detect करें, redact करें, active content हटाएँ, और documents पर watermark लगाएँ।"
 label = "Security"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "सभी दस्तावेज़"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "आपकी टीम के labels के विरुद्ध हर अपलोड किए गए दस्तावेज़ को वर्गीकृत करता है और उसके metadata को tag करता है।"
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "वर्गीकृत करें"
 1 = "metadata tag करें"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "System से बाहर जाने से पहले regulatory frameworks के विरुद्ध documents को validate करता है।"
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Access log"
 auditTrail = "Audit trail"
 frameworks = "Frameworks"
 onViolation = "जब non-compliant हो"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Framework scan"
 1 = "कार्रवाई लागू करें"
 2 = "Audit trail"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "दस्तावेज़ों को classify करता है, structured data extract करता है, naming लागू करता है, और pages normalize करता है।"
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Threshold से नीचे"
 minConfidence = "न्यूनतम confidence"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Classify"
 1 = "Extract"
 2 = "Name"
 3 = "Normalize"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Microsoft Purview sensitivity label लागू करें"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview tenant"
 labelId = "Label ID"
 labelIdHelp = "Purview portal से label का GUID। label लागू करने से उसका metadata PDF पर लिखा जाता है; यह encrypt नहीं कर सकता, जिसके लिए Microsoft client आवश्यक है।"
 labelName = "Label नाम (वैकल्पिक)"
 labelNameHelp = "ID के साथ रिकॉर्ड किया जाता है ताकि लोग और tools label को पहचान सकें।"
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview किसी नीति द्वारा लागू किए गए label और व्यक्ति द्वारा चुने गए label में अंतर करता है।"
 label = "label कैसे रिकॉर्ड किया जाता है"
 privileged = "जैसा किसी व्यक्ति ने चुना"
 standard = "जैसा स्वतः लागू किया गया"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Microsoft Purview label पढ़ें"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview tenant"
 connectionHelp = "दस्तावेज़ पर पहले से मौजूद label को पढ़ता है, ताकि बाद के चरण उस पर कार्रवाई कर सकें।"
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "दस्तावेज़ कितने समय तक रखे जाएँ, कब archive हों, और कब delete हों, इसे लागू करता है।"
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "इसके बाद archive करें"
 immutableHold = "Immutable hold"
 keepFor = "इसके लिए रखें"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Retention hold"
 1 = "Auto-archive"
 2 = "Deletion block"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Type और classification के आधार पर documents को सही destination पर route करता है।"
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Destination"
 notify = "Route पर notify करें"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Auto-classify"
 1 = "Folder में route करें"
 2 = "Webhook notify"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "PII detect और redact करता है, active content (JavaScript) हटाता है, और documents पर watermark लगाता है।"
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "PII redact करें"
 1 = "JavaScript हटाएँ"
 2 = "Watermark"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "लागू करता है"
 onEveryExport = "हर export पर"
 onEveryUpload = "हर upload पर"
@@ -8030,7 +8033,7 @@ showLess = "कम दिखाएँ"
 showMore = "और दिखाएँ"
 sources = "स्रोत"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "प्रोसेस किया गया इतिहास साफ़ करें"
 delete = "हटाएं"
 editSettings = "सेटिंग्स संपादित करें"
@@ -8038,17 +8041,17 @@ pause = "रोकें"
 resume = "फिर शुरू करें"
 runNow = "अभी चलाएं"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "यह नीति हर उस फ़ाइल को भूल जाएगी जिसे यह पहले ही प्रोसेस कर चुकी है और अगले रन में अपने स्रोतों में वर्तमान में मौजूद हर चीज़ को फिर से प्रोसेस करेगी। फ़ाइलें स्वयं बदली नहीं जाएंगी। इसे वापस नहीं किया जा सकता।"
 cancel = "रद्द करें"
 confirm = "इतिहास साफ़ करें"
 title = "प्रोसेस किया गया इतिहास साफ़ करें?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "यह नीति चलने के बाद दस्तावेज़ यहां दिखाई देंगे।"
 title = "अभी तक कोई गतिविधि नहीं"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "PII संपादित करें"
 classifyAndLabel = "वर्गीकृत करें"
@@ -8057,375 +8060,375 @@ flatten = "Flatten"
 ocrPdf = "OCR"
 sanitizePdf = "JavaScript हटाएं"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "आपकी नीतियां सहेजी गई हैं और कनेक्शन बहाल होने पर दिखाई देंगी।"
 retry = "फिर से प्रयास करें"
 title = "Backend उपलब्ध नहीं"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "बदलें कि यह चरण क्या करता है"
 noResults = "कोई चरण इससे मेल नहीं खाता। product नाम, या \"scan\", \"notify\", \"attach\" आज़माएँ।"
 searchPlaceholder = "चरण खोजें - \"scan\", \"attach\" या product नाम आज़माएँ"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Raw file bytes"
 json = "JSON payload के अंदर"
 multipart = "file upload (multipart) के रूप में"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "आपका अपना ClamAV server दस्तावेज़ जाँचता है; आपके network से कुछ बाहर नहीं जाता।"
 label = "वायरस के लिए scan करें (self-hosted)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "macros, executables, scripts या embedded objects वाले दस्तावेज़ों को अस्वीकार करता है।"
 label = "active content ब्लॉक करें"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive दस्तावेज़ जाँचता है और यदि यह clean नहीं है तो run रुक जाता है।"
 label = "वायरस के लिए scan करें"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "प्रोसेस किए गए दस्तावेज़ को page पर फ़ाइल करता है।"
 label = "Confluence page में संलग्न करें"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "दस्तावेज़ को signing के लिए ConsignO Cloud में जमा करता है।"
 label = "हस्ताक्षर के लिए भेजें (ConsignO)"
 note = "दस्तावेज़ जमा करता है। signed copy प्राप्त करना अभी समर्थित नहीं है, क्योंकि कोई चरण परिणाम को बाद के चरण में पास नहीं कर सकता।"
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "call स्वयं बनाएँ: path, method, body और response handling।"
 label = "कस्टम API call करें"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "एक channel को बताता है कि नीति ने दस्तावेज़ संभाला।"
 label = "Discord पर संदेश पोस्ट करें"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "नीति ने क्या किया, इसे searchable दस्तावेज़ के रूप में रिकॉर्ड करता है।"
 label = "Elasticsearch में audit event index करें"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart upload APIs के लिए उपयुक्त है; JSON उन APIs के लिए उपयुक्त है जो payload के अंदर फ़ाइल चाहते हैं; binary raw bytes भेजता है।"
 label = "दस्तावेज़ कैसे भेजें"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "एक JSON body जो as-is भेजी जाती है। {{document.base64}} फ़ाइल रखता है; {{document.*}} और {{run.*}} प्रति दस्तावेज़ भरे जाते हैं।"
 label = "JSON body"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "खाता"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun domain"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "form field जिसके अंतर्गत API दस्तावेज़ की अपेक्षा करता है।"
 label = "File field name"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "से"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "header name/value pairs का JSON object। connection का credential आपके लिए जोड़ा जाता है।"
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Issue key"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "message body के रूप में भेजा गया। {{document.*}} और {{run.*}} प्रति दस्तावेज़ भरे जाते हैं।"
 label = "संदेश"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Method"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "Page ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "connection के base URL में जोड़ा गया। यह कभी दूसरे host तक नहीं पहुँच सकता।"
 label = "Path"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "drive में इसे कहाँ लिखना है। {{document.filename}} प्रति दस्तावेज़ भरा जाता है।"
 label = "गंतव्य path"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Report दस्तावेज़ को अपरिवर्तित छोड़ता है। Replace इसे लौटे हुए उत्तर से बदल देता है।"
 label = "reply के साथ क्या करें"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "हस्ताक्षरकर्ता का email"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "विषय"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio इस text का विश्लेषण करता है। {{document.title}} का उपयोग करें या वह text paste करें जिसे आप जाँचना चाहते हैं।"
 label = "जाँचने के लिए text"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "को"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud username"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "एक space को बताता है कि नीति ने दस्तावेज़ संभाला।"
 label = "Google Chat पर संदेश पोस्ट करें"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "प्रोसेस किए गए दस्तावेज़ को issue पर फ़ाइल करता है।"
 label = "Jira issue में संलग्न करें"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "प्रोसेस किए गए दस्तावेज़ को attachment के रूप में भेजता है।"
 label = "दस्तावेज़ email करें (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "प्रोसेस किए गए दस्तावेज़ को folder में लिखता है।"
 label = "Nextcloud पर अपलोड करें"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "आपका अपना Presidio server उसे मिले personal data की रिपोर्ट करता है।"
 label = "personal data का पता लगाएँ"
 note = "Presidio text पढ़ता है, files नहीं। उसे वह text दें जिसे आप जाँचना चाहते हैं — दस्तावेज़ स्वयं अपलोड नहीं होता।"
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "दस्तावेज़ को reply से बदलें"
 report = "दस्तावेज़ रखें, reply रिकॉर्ड करें"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "प्रोसेस किए गए दस्तावेज़ को attachment के रूप में भेजता है।"
 label = "दस्तावेज़ email करें (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "एक channel को बताता है कि नीति ने दस्तावेज़ संभाला।"
 label = "Slack पर संदेश पोस्ट करें"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "नीति ने क्या किया, इसे वहाँ रिकॉर्ड करता है जहाँ आपके auditors पहले से देखते हैं।"
 label = "Splunk को audit event भेजें"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "नीति ने क्या किया, इसे HTTP collector में रिकॉर्ड करता है।"
 label = "Sumo Logic को audit event भेजें"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "एक channel को बताता है कि नीति ने दस्तावेज़ संभाला।"
 label = "Teams पर संदेश पोस्ट करें"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "दस्तावेज़ स्वयं आपके चुने हुए URL पर भेजता है।"
 label = "दस्तावेज़ को webhook पर पोस्ट करें"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "run के विवरण आपके automation को सौंपता है।"
 label = "Zap या Make scenario trigger करें"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "सक्रिय"
 dataProcessed = "प्रोसेस किया गया डेटा"
 docsEnforced = "लागू किए गए दस्तावेज़"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "सक्रिय"
 paused = "रोका गया"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "अपलोड/निर्यात पर लागू करना"
 label = "सक्रिय नीतियां"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "कॉन्फ़िगर करने के लिए उपलब्ध"
 label = "श्रेणियां"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "सक्रिय नीतियों में"
 label = "लागू किए गए दस्तावेज़"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "कॉन्फ़िगर किया गया लेकिन चालू नहीं हो रहा"
 label = "रोका गया"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "इस पर लागू"
 docs = "लागू दस्तावेज़"
 enforces = "लागू करता है"
 policy = "नीति"
 status = "स्थिति"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "वापस"
 cancel = "रद्द करें"
 continue = "जारी रखें"
 enablePolicy = "नीति सक्षम करें"
 saveChanges = "बदलाव सहेजें"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "आपकी टीम के labels से दस्तावेज़ का प्रकार पहचानता है और उसे tag करता है, ताकि वह category के अनुसार फ़ाइल और खोज हो सके।"
 label = "दस्तावेज़ वर्गीकृत करें"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "दस्तावेज़ को छोटे फ़ाइल आकार में Compress करता है।"
 label = "फ़ाइल आकार घटाएं"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "फ़ॉर्म फ़ील्ड और एनोटेशन को पेज में मिला देता है ताकि उन्हें संपादित न किया जा सके।"
 label = "दस्तावेज़ को Flatten करें"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "OCR चलाता है ताकि स्कैन किए गए पेज चयन योग्य, खोज योग्य टेक्स्ट बन जाएं।"
 label = "टेक्स्ट को खोज योग्य बनाएं"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "संवेदनशील विवरण — जैसे Social Security और कार्ड नंबर — ढूंढता और काला करता है ताकि उन्हें पढ़ा न जा सके।"
 label = "संवेदनशील जानकारी संपादित करें"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "छिपा हुआ JavaScript हटाता है ताकि दस्तावेज़ खोले जाने पर कुछ भी अपने आप न चल सके।"
 label = "सक्रिय सामग्री हटाएं"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "स्वतंत्र timestamp authority का उपयोग करके साबित करता है कि दस्तावेज़ किसी समय पर इसी सटीक रूप में मौजूद था। केवल hash भेजा जाता है - दस्तावेज़ कभी आपके server से बाहर नहीं जाता।"
 label = "trusted timestamp जोड़ें"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "हर पेज पर एक दिखाई देने वाला निशान (जैसे “Confidential”) लगाता है।"
 label = "Watermark लागू करें"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "हर अपलोड किया गया दस्तावेज़ built-in labels के विरुद्ध वर्गीकृत किया जाता है और उपयुक्त प्रकारों से tag किया जाता है। label set आपकी पूरी टीम में साझा होता है।"
 labelsHeading = "वर्गीकरण labels"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "पहले वर्कफ़्लो में कम से कम एक टूल सक्षम करें।"
 saveFailed = "नीति सहेजी नहीं जा सकी। कृपया फिर से प्रयास करें।"
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "आउटपुट और रन"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "ऑटो-नंबर"
 label = "फ़ाइल नाम नियम"
 placeholder = "जोड़ने के लिए टेक्स्ट (वैकल्पिक)"
 prefix = "Prefix"
 suffix = "Suffix"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "आउटपुट के रूप में"
 newFile = "नई फ़ाइल"
 newVersion = "नया संस्करण"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "निर्यात"
 helper = "जब नीति चालू हो: अपलोड पर, या निर्यात से पहले।"
 label = "इस पर चलाएं"
 upload = "अपलोड"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "सेटिंग्स"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "स्रोत"
 loading = "स्रोत लोड हो रहे हैं…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "सेटअप चरण"
 settings = "सेटिंग्स"
 workflow = "कार्रवाइयां"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "{{category}} नीति संपादित करें"
 setUp = "{{category}} नीति सेट अप करें"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "चुनें कि यह नीति प्रोसेस किए जाने वाले हर दस्तावेज़ के साथ क्या करती है।"
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "सेट अप करें"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "गिनती पिछले 24 घंटों की है। Flow speed illustrative है।"
 liveBadge = "Live"
 stats = "{{connected}} कनेक्टेड · {{processed}} PDFs प्रोसेस किए गए"
 title = "PDF Processor"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "View mode"
 flow = "Flow"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "विफल"
 heading = "परिणाम"
 success = "Delivered"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} सक्रिय"
 count = "{{n}} · 24h"
 heading = "नीतियाँ"
 setUp = "सेट अप करें"
 soon = "जल्द"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "नीतियाँ · {{n}} सक्रिय"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "processor से दस्तावेज़ों का flow देखने के लिए एक स्रोत कनेक्ट करें और एक नीति चालू करें।"
 title = "अभी कोई flow नहीं"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "कनेक्ट करें"
 editor = "Stirling PDF Editor"
 heading = "स्रोत"
 perDay = "{{n}} / 24h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Email intake"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "अपनी टीम का मूल्यांकन, अनुबंध और ऑनबोर्डिंग कराएं। हर दस्तावेज़ एक जगह।"
 title = "Procurement"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "सहमत हों और सदस्यता लें"
 confidential = "गोपनीय"
 confirm = "मैंने Stirling Enterprise Agreement पढ़ लिया है और उससे सहमत हूं।"
@@ -8447,7 +8450,7 @@ signatoryTitle = "हस्ताक्षरकर्ता का title"
 signatoryTitlePlaceholder = "जैसे General Counsel"
 signError = "आपका signature रिकॉर्ड नहीं हो सका। कृपया फिर से प्रयास करें।"
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Add-ons"
 addressLine1 = "पता पंक्ति 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "जैसे 1,000,000"
 years_one = "{{count}} वर्ष"
 years_other = "{{count}} वर्ष"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Enterprise Agreement"
 agreementSub = "MSA, Order Form और DPA एक signature में।"
 download = "डाउनलोड"
@@ -8547,10 +8550,10 @@ subtitle = "आपके deal paperwork, किसी भी समय उपल
 title = "दस्तावेज़"
 view = "देखें"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "कुछ गलत हो गया"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Stage {{current}} of {{total}}"
 ctaAgreement = "Agreement की समीक्षा करें और हस्ताक्षर करें"
 ctaExploring = "अपना trial सेट अप करें"
@@ -8573,36 +8576,36 @@ sentencePayment = "purchase order और payment"
 sentenceQuote = "अपने quote की समीक्षा करें और स्वीकार करें"
 sentenceTrial = "अपना trial workspace सेट अप करें"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "{{count}} दिन बाकी"
 daysLeft_other = "{{count}} दिन बाकी"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "एक हस्ताक्षर MSA, order form, EULA और DPA को कवर करता है।"
 gatingAction = "अपने agreement की समीक्षा करें और हस्ताक्षर करें"
 label = "Agreement"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "अपने workspace को provision करें और go-live playbook चलाएं।"
 gatingAction = "आपका workspace provision किया जा रहा है"
 label = "Implementation"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Card, bank transfer, या purchase order के विरुद्ध भुगतान करें।"
 gatingAction = "भुगतान की पुष्टि करें"
 label = "Payment"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Committed-volume pricing और contract term की समीक्षा करें।"
 gatingAction = "अपना quote स्वीकार करें"
 label = "Quote"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "अपने दस्तावेज़ों और workflows के विरुद्ध Stirling का मूल्यांकन करें।"
 gatingAction = "अपना quote बनाएं"
 label = "Trial"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "कॉपी किया गया"
 copy = "Key कॉपी करें"
 downloadError = "Offline licence फ़ाइल अभी जनरेट नहीं की जा सकी — कृपया कुछ देर बाद फिर से प्रयास करें।"
@@ -8613,21 +8616,21 @@ subtitle = "इस key से self-hosted instance सक्रिय करे�
 title = "आपकी लाइसेंस key"
 trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Account लिंक करें"
 description = "Procurement आपके linked Stirling account पर चलता है: इसी से हम trial provision करते हैं, आपके quote की कीमत तय करते हैं, और billing शुरू करते हैं। शुरू करने के लिए account लिंक करें।"
 eyebrow = "Enterprise"
 title = "शुरू करने के लिए अपना account लिंक करें"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
 eyebrow = "Live"
 title = "आप Stirling Enterprise पर live हैं"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "Quote PDF अभी डाउनलोड नहीं किया जा सका — कृपया कुछ देर बाद फिर से प्रयास करें।"
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "आपका quote स्वीकार कर लिया गया है और आपका licence पहले से सक्रिय है — आपकी टीम तुरंत शुरू कर सकती है। तैयार होने पर पहला invoice भुगतान करें; आप इसे यहां भुगतान या डाउनलोड कर सकते हैं, email की आवश्यकता नहीं।"
 downloadAgreement = "signed agreement डाउनलोड करें"
 downloadInvoice = "Invoice डाउनलोड करें"
@@ -8635,7 +8638,7 @@ eyebrow = "Payment"
 title = "Subscription बनाई गई"
 viewInvoice = "Invoice देखें और भुगतान करें"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "quote स्वीकार करें"
 annual = "वार्षिक शुल्क (वर्ष 1)"
 downloadCta = "quote डाउनलोड करें"
@@ -8644,14 +8647,14 @@ renewal = "term के बाद {{amount}}/year पर renew होता ह�
 tcv = "{{years}}-year term, पूरा upfront paid: {{tcv}}"
 validUntil = "{{date}} तक मान्य"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Scheduler लोड नहीं हो सका।"
 fallbackLink = "Scheduling को नए tab में खोलें"
 loading = "scheduler लोड हो रहा है..."
 subtitle = "आपका solutions engineer rollout में आपकी टीम का मार्गदर्शन करेगा। अपने लिए उपयुक्त समय चुनें।"
 title = "कॉल शेड्यूल करें"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Sealed, no outbound"
 back = "वापस"
@@ -8681,7 +8684,7 @@ viewEula = "इसे पढ़ें"
 workEmail = "Work email"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "विस्तार करने से 7 दिन जुड़ते हैं और आपके solutions engineer को सूचना मिलती है।"
 bodyMaxed = "आपने अपने सभी extensions उपयोग कर लिए हैं — यदि आपको अधिक समय चाहिए तो अपने solutions engineer से बात करें।"
 cancel = "Trial रद्द करें"
@@ -8690,32 +8693,32 @@ maxed = "अधिकतम हो गया"
 subtitle = "आपका free trial {{date}} तक चलता है। Card आवश्यक नहीं।"
 title = "Enterprise trial"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Admin"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Account link"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 linkAccount = "Stirling account लिंक करें"
 primaryNav = "Primary navigation"
 switchApp = "App बदलें"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "navigation बंद करें"
 openNav = "navigation खोलें"
 search = "खोजें"
 
-[portal.sources]
+[processor.sources]
 subtitle = "पुनः उपयोग योग्य input connections जो दस्तावेज़ों को Stirling में भेजते हैं। एक connection को एक बार कॉन्फ़िगर करें, फिर उसे किसी भी संख्या में policies से reference करें। इसके config और इसे उपयोग करने वाली policies के लिए किसी row पर click करें।"
 title = "स्रोत"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "स्रोत कनेक्ट करें"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "स्रोतों पर वापस"
 backToTypes = "सभी स्रोत प्रकार"
 cancel = "रद्द करें"
@@ -8729,164 +8732,164 @@ editTitle = "स्रोत संपादित करें"
 enabled = "सक्षम"
 save = "बदलाव सेव करें"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Folder automations केवल उन folders का उपयोग कर सकते हैं जिन्हें administrator ने अनुमति दी है। इसे Folder Access settings में जोड़ें, फिर फिर से प्रयास करें।"
 openSettings = "Folder Access settings"
 title = "इस folder की अनुमति नहीं है"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "\"{{name}}\" हटाएं? इसे वापस नहीं किया जा सकता। इसे reference करने वाली policies को update करना होगा।"
 cancel = "रद्द करें"
 confirm = "हटाएं"
 title = "स्रोत हटाएं?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "उपयोग में"
 total = "Connections"
 unused = "Unused"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "server address और credentials के साथ stored connection। इसे संदर्भित करने वाले हर स्रोत द्वारा पुनः उपयोग किया जाता है।"
 label = "Connection"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "poll करने के लिए server पर folder, login home या share root के सापेक्ष। root के लिए खाली छोड़ें।"
 label = "Folder"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Consume हर policy द्वारा process होने के बाद server से प्रत्येक file हटा देता है।"
 label = "Read mode"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Consume: प्रत्येक file को एक बार process करें"
 snapshot = "Snapshot: हर run में folder फिर से पढ़ें"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "Folder depth"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "subfolders शामिल करें"
 top = "केवल top level"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "सक्रिय"
 disabled = "Disabled"
 unused = "Unused"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "दस्तावेज़"
 source = "स्रोत"
 status = "स्थिति"
 type = "Type"
 usedBy = "Policies"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "आपकी team द्वारा पहले से shared Box folders से दस्तावेज़ pull करें।"
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "shared Dropbox folder से दस्तावेज़ pull करें।"
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "policy और AI runs में, editor में आपकी team द्वारा process किए गए दस्तावेज़।"
 label = "Editor"
 noPolicies = "editor से अभी तक कोई policies run नहीं हुईं।"
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "dedicated mailbox पर भेजे गए attachments को दस्तावेज़ों में बदलें।"
 label = "Email inbox"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "नए दस्तावेज़ों के लिए server पर directory देखें।"
 label = "Folder"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "फ़ाइलों को प्रोसेस करने के लिए Stirling जिस absolute path को देखता है।"
 label = "Directory path"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "Content check हर बदली हुई फ़ाइल को पढ़ता है, इसलिए rename और ऐसे touches जो content नहीं बदलते, फिर से प्रोसेस नहीं किए जाते।"
 label = "Change detection"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Size, date और content check"
 stat = "Size और date modified"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "Read mode"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Consume: प्रत्येक फ़ाइल को एक बार प्रोसेस करें"
 snapshot = "Snapshot: हर run में folder को फिर से पढ़ें"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "Folder depth"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Subfolders शामिल करें"
 top = "केवल top level"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "नए दस्तावेज़ों के लिए FTP या FTPS server folder poll करें।"
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "shared Google Drive folders से दस्तावेज़ pull करें।"
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "नए दस्तावेज़ों के लिए SMB network share देखें।"
 label = "Network drive"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "नए दस्तावेज़ों के लिए OneDrive folders देखें।"
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Amazon S3 या S3-compatible bucket से दस्तावेज़ pull करें।"
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "bucket और credentials रखने वाला stored connection। इसे संदर्भित करने वाले हर source और pipeline output द्वारा पुनः उपयोग किया जाता है।"
 label = "Connection"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Consume हर policy द्वारा process होने के बाद bucket से प्रत्येक object हटा देता है।"
 label = "Read mode"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Consume: प्रत्येक object को एक बार process करें"
 snapshot = "Snapshot: हर run में bucket फिर से पढ़ें"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "केवल वे objects process किए जाते हैं जिनकी keys इस prefix से शुरू होती हैं।"
 label = "Key prefix"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "नए दस्तावेज़ों के लिए SFTP drop folder poll करें।"
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "SharePoint document libraries से दस्तावेज़ pull करें।"
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "स्रोत"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "जब आप यह webhook बनाते हैं, तो delivery URL और signing secret generate किए जाते हैं। Senders उस URL पर दस्तावेज़ POST करते हैं और referencing policies arrival पर run होती हैं।"
 description = "किसी भी external system से signed HTTP POST द्वारा दस्तावेज़ प्राप्त करें।"
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "Delivery URL"
 secretNote = "signing secret webhook बनाते समय एक बार दिखाया जाता है। इसे roll करने के लिए source फिर से बनाएँ।"
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "कॉपी करें"
 done = "हो गया"
 secret = "Signing secret"
@@ -8896,78 +8899,75 @@ title = "Webhook बनाया गया"
 url = "Delivery URL"
 usage = "binary content type (application/pdf या application/octet-stream) के साथ प्रत्येक दस्तावेज़ को raw request body के रूप में delivery URL पर POST करें। Referencing policies arrival पर अपने आप run होती हैं।"
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "नाम"
 namePlaceholder = "जैसे Claims intake"
 type = "प्रकार"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "बंद करें"
 
-[portal.usage]
+[processor.usage]
 managePayment = "भुगतान प्रबंधित करें"
 subtitle = "हर PDF के लिए consumption, invoices, और plan management जिसके लिए Stirling ने bill किया है, एक console में।"
 title = "Usage और billing"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Wallet लोड नहीं हो सका"
 openStripePortal = "Stripe portal नहीं खुल सका"
 walletUnavailable = "Wallet उपलब्ध नहीं: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "फिर से sign in करें"
 body = "आपका Stirling account session समाप्त हो गया है। Billing देखने के लिए फिर से sign in करें — आपका instance linked रहता है।"
 title = "Session समाप्त"
 
-[portal.users]
+[processor.users]
 title = "उपयोगकर्ता"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Admin (Org owner)"
 summary = "Workspace, settings और members पर पूर्ण governance।"
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Users, teams और roles प्रबंधित करें"
 1 = "S3 connections सहित सभी integrations प्रबंधित करें"
 2 = "Portal access दें या रद्द करें"
 3 = "Team Owner जो कुछ कर सकता है, वह सब"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Guest"
 summary = "सीमित या केवल web access; personal configs नहीं रख सकता।"
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "केवल web / demo usage"
 1 = "कोई API keys या integrations नहीं"
 2 = "कोई portal access नहीं"
 3 = "जहां साझा किया गया हो वहां read-only"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Member"
 summary = "नियमित user — shared resources और अपने configs के साथ काम करता है।"
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Editor और shared integrations का उपयोग करें"
 1 = "Personal API और MCP configs बनाएं"
 2 = "अपने साथ साझा team configs देखें"
 3 = "कोई S3 या workspace management नहीं"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Team owner"
 summary = "Team का मालिक — उसके members के resources और shared configs प्रबंधित करता है।"
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Team के S3 connections बनाएं और प्रबंधित करें"
 1 = "Team-owned integration configs प्रबंधित करें"
 2 = "Default policy के माध्यम से portal access"
 3 = "Member जो कुछ कर सकता है, वह सब"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
-
-[printFile]
-title = "फ़ाइल प्रिंट करें"
 
 [provider.googledrive]
 name = "Google Drive"

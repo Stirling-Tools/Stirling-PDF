@@ -7,7 +7,7 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 // Wraps GeneralSection, which reads theme/tool-panel preferences via
 // usePreferences()/useTheme() and server config via useAppConfig() — none of
 // which the Storybook preview's own provider tree supplies (those are the
-// portal contexts), so wrap here. AppConfigProvider uses autoFetch off so
+// processor contexts), so wrap here. AppConfigProvider uses autoFetch off so
 // stories render a fixed config instead of hitting the API. The login-landing
 // control itself stays hidden (loginLandingMode() defaults to non-"dynamic"
 // in this build), so only the General section is visible.

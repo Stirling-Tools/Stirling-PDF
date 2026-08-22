@@ -112,7 +112,7 @@ class FileRunEventHttpIntegrationTest {
             assertThat(row.get("origin").asString()).isEqualTo("POLICY");
             assertThat(row.get("remedy").asString()).isEqualTo("NEEDS_USER_INPUT");
             assertThat(row.get("titleKey").asString())
-                    .isEqualTo("portal.failures.kind.inputPasswordProtected.title");
+                    .isEqualTo("processor.failures.kind.inputPasswordProtected.title");
             assertThat(row.get("defaultTitle").asString()).isNotBlank();
             assertThat(row.get("detail").asString()).isEqualTo("locked tight");
             assertThat(row.get("status").asString()).isEqualTo("NEW");
@@ -124,7 +124,7 @@ class FileRunEventHttpIntegrationTest {
             assertThat(actions).hasSize(2);
             assertThat(actions.get(0).get("id").asString()).isEqualTo("ACKNOWLEDGE");
             assertThat(actions.get(0).get("labelKey").asString())
-                    .isEqualTo("portal.failures.action.acknowledge");
+                    .isEqualTo("processor.failures.action.acknowledge");
             assertThat(actions.get(0).get("enabled").asBoolean()).isTrue();
             assertThat(actions.get(0).get("disabledReasonKey").isNull()).isTrue();
         }
@@ -357,7 +357,7 @@ class FileRunEventHttpIntegrationTest {
             for (JsonNode action : row.get("actions")) {
                 assertThat(action.get("enabled").asBoolean()).isFalse();
                 assertThat(action.get("disabledReasonKey").asString())
-                        .isEqualTo("portal.failures.disabled.closed");
+                        .isEqualTo("processor.failures.disabled.closed");
             }
         }
     }

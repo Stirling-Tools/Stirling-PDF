@@ -61,7 +61,7 @@ public class ResourceGrant implements Serializable {
     @Column(name = "resource_type", nullable = false, length = 64)
     private ResourceType resourceType;
 
-    // Empty string (never null) for a whole-type grant such as the portal.
+    // Empty string (never null) for a whole-type grant such as the processor.
     @Column(name = "resource_id", nullable = false, length = 255)
     private String resourceId = "";
 

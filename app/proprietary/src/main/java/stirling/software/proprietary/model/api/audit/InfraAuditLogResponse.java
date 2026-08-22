@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Response for the portal Infrastructure → Audit tab: summary strip + recent event rows. */
+/** Response for the processor Infrastructure → Audit tab: summary strip + recent event rows. */
 @Data
 @Builder
 @NoArgsConstructor

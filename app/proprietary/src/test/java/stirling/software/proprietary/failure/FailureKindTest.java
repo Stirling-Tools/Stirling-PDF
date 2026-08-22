@@ -84,7 +84,7 @@ class FailureKindTest {
             // Offers are one ordered list, so a label with no matching action is unrepresentable;
             // all that is left to assert is that each action gets a key.
             for (FailureActionId action : kind.getActions()) {
-                assertThat(kind.labelKeyFor(action)).startsWith("portal.failures.action.");
+                assertThat(kind.labelKeyFor(action)).startsWith("processor.failures.action.");
             }
         }
 
@@ -113,7 +113,7 @@ class FailureKindTest {
         /**
          * The enum builds its i18n keys from the constant name, so renaming a kind or shipping a
          * new one sends keys the client has no copy for, and the UI renders the raw key. Nothing
-         * else checks that: the portal reads these keys at runtime, and the unused-translation
+         * else checks that: the processor reads these keys at runtime, and the unused-translation
          * audit only looks the other way, for copy no source file mentions.
          */
         private static final Set<String> KEYS = englishKeys();
@@ -247,7 +247,7 @@ class FailureKindTest {
         void overriddenLabelWinsOverTheGenericOne() {
             String label =
                     FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DISMISS);
-            assertThat(label).isEqualTo("portal.failures.action.dismissSkipFile");
+            assertThat(label).isEqualTo("processor.failures.action.dismissSkipFile");
             assertThat(label).isNotEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS));
         }
 
@@ -255,15 +255,15 @@ class FailureKindTest {
         void genericLabelIsUsedWhenAKindDeclaresNoOverride() {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
-                    .isEqualTo("portal.failures.action.dismiss");
+                    .isEqualTo("processor.failures.action.dismiss");
         }
 
         @Test
         void copyKeysAreDerivedFromTheIdInLowerCamel() {
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getTitleKey())
-                    .isEqualTo("portal.failures.kind.inputPasswordProtected.title");
+                    .isEqualTo("processor.failures.kind.inputPasswordProtected.title");
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getDescriptionKey())
-                    .isEqualTo("portal.failures.kind.inputPasswordProtected.description");
+                    .isEqualTo("processor.failures.kind.inputPasswordProtected.description");
         }
     }
 }

@@ -38,7 +38,7 @@ interface AppConfigModalProps {
   /**
    * Mirror the active section to /settings/<key> URLs (deep links, history
    * unwind on close). Hosts mounted away from the editor's /settings route —
-   * the admin portal — turn this off and the modal keeps its section purely in
+   * the admin processor — turn this off and the modal keeps its section purely in
    * state.
    */
   urlSync?: boolean;

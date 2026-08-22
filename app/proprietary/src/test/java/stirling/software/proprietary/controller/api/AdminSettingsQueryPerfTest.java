@@ -174,7 +174,7 @@ class AdminSettingsQueryPerfTest {
                         .filter(u -> "admin".equals(u.getUsername()))
                         .findFirst()
                         .orElseThrow();
-        assertTrue(adminSummary.isPortalAccess(), "admin should have portal access");
+        assertTrue(adminSummary.isProcessorAccess(), "admin should have processor access");
     }
 
     @SpringBootConfiguration

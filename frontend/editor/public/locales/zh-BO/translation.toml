@@ -6352,10 +6352,13 @@ thirtyDays = "30 天"
 threeYears = "3 年"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "ཡིག་ཆ་པར་འདེབས།"
+
+[processor]
 comingSoon = "即将推出"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "无人值守处理费用将从您的组织钱包中扣除。"
 eyebrow = "账户链接"
 linkButton = "链接您的 Stirling 账户"
@@ -6366,37 +6369,37 @@ notLinked = "未链接"
 title = "将此组织链接到其 Stirling 账户"
 unlink = "取消链接"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "无法链接"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "以启用与托管 Stirling 账户的账户链接。在开发环境中，您可以从链接对话框模拟登录。"
 before = "设置"
 title = "未配置 SaaS 登录"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "链接账户"
 description = "链接此组织的 Stirling 账户以使用可计费功能。"
 title = "链接以解锁"
 titleFeature = "链接以解锁 {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "活跃"
 revoke = "撤销"
 revoked = "已撤销"
 unnamed = "未命名实例"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "实例"
 lastSeen = "上次出现"
 linked = "已链接"
 status = "状态"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "链接此组织的账户，然后注册您的自托管实例，即可在此处查看它们。"
 title = "没有已链接的实例"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}} 天前"
 daysAgo_other = "{{count}} 天前"
 hoursAgo_one = "{{count}} 小时前"
@@ -6406,36 +6409,36 @@ minutesAgo_one = "{{count}} 分钟前"
 minutesAgo_other = "{{count}} 分钟前"
 never = "从不"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "登录此服务器应计费的账户。"
 linkTitle = "链接您的 Stirling 账户"
 reauthSubtitle = "您的会话已过期——请重新登录您的 Stirling 账户。您的实例保持已链接。"
 reauthTitle = "重新登录"
 simulateSignIn = "模拟登录（开发）"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "以启用应用内链接到托管 Stirling 账户。"
 and = "和"
 before = "设置"
 title = "未配置 SaaS 登录"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "注册到此组织的每个自托管实例。撤销凭据可立即切断其无人值守访问。"
 instancesTitle = "已链接实例"
 revokeError = "无法撤销实例"
 sub = "将此自托管组织链接到其 Stirling 账户，以便无人值守处理费用从您的组织钱包中扣除。"
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "只有团队所有者可以查看组织的已链接实例。"
 generic = "无法加载团队的已链接实例。请稍后重试。"
 title = "无法加载已链接实例"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Editor 方案"
 subscribed = "Processor 方案"
 unlinked = "未链接"
 
-[portal.assistant]
+[processor.assistant]
 close = "关闭助手"
 error = "无法连接到助手。"
 errorWithDetail = "无法连接到助手：{{detail}}"
@@ -6447,33 +6450,33 @@ title = "助手"
 tryAsking = "尝试提问"
 typing = "正在输入"
 
-[portal.auth]
+[processor.auth]
 loading = "正在加载"
 redirectingToEditor = "正在重定向到编辑器..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "稍后再说"
 title = "启用处理器"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "设置月度限额。按实际运行量付费。"
 title = "按量付费"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "免费 2 个月"
 sub = "一张发票，可用银行卡或银行转账。"
 title = "预付一年"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function 未返回 client_secret。"
 title = "启用 Processor 方案"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "您的付款已成功，但激活时间比平时稍长。它会自动启用——关闭此窗口后，稍后会显示在这里。"
 close = "关闭"
 title = "即将完成"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "月度支出限额"
 back = "返回"
 continue = "继续付款"
@@ -6484,30 +6487,30 @@ note = "你的账单永远不会超过限额。处理会暂停。"
 perMonth = "/月"
 title = "设置你的支出限额"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "卡号 · MM / YY · CVC · ZIP"
 label = "银行卡详情"
 note = "银行卡详情由 Stripe 收集。Stirling 从不存储 PAN 或 CVC。"
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "无法开始结账"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "您的付款已完成。我们正在您的已链接实例上启用按量处理——通常只需几秒钟。"
 hint = "请保持此窗口打开。"
 title = "正在激活您的 Processor 方案..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "月度支出限额 {{amount}}/月。达到限额时处理会暂停。"
 limitNoCap = "无支出限额。处理不会暂停。发票按月开具。"
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "创建您的 Enterprise 报价"
 description = "承诺用量折扣、隔离部署、自定义 MSA 和安全审查，以及第三方分销商合作。"
 eyebrow = "用量折扣 · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "本月活跃"
 cost = "费用"
 editorsDeployed = "已部署编辑器"
@@ -6516,7 +6519,7 @@ pdfsEdited = "已编辑 PDFs"
 subtitle = "可在任何地方为整个团队部署。"
 title = "免费 PDF 编辑器"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "无法开始结账"
 currentPlan = "当前方案"
 freeForever = "永久免费"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "启用 Processor →"
 unlimitedUsers = "无限用户"
 viewQuote = "查看报价"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "金额"
 columnDate = "日期"
 columnDescription = "描述"
@@ -6553,12 +6556,12 @@ title = "发票历史"
 viewAriaLabel = "在 Stripe 中查看发票 {{number}}"
 viewLink = "查看 ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "链接 Stirling 账户"
 description = "手动 PDF 编辑——查看、签名、合并、拆分、水印、压缩、转换、手动 OCR——无论是否链接都始终免费。链接后可领取 500 个按量处理 PDFs 的免费额度（自动化、AI 和 API）；需要更多时，启用 Processor 方案，仅按实际使用付费。"
 title = "链接您的 Stirling 账户"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "按月计费"
 cardEnding = "{{brand}} 尾号 {{last4}}"
 cardFallback = "银行卡"
@@ -6568,7 +6571,7 @@ managedSub = "您的银行卡和账单详情会安全保存在 Stripe 的客户�
 managedTitle = "在 Stripe 中管理"
 update = "更新"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "本周期还没有按量处理。"
 eyebrow = "本周期已处理 PDFs"
 legendValue_one = "{{formatted}} PDFs"
@@ -6587,14 +6590,14 @@ unit = "按量 PDFs"
 unitsPending_one = "{{units}} 个计量单位正在等待从关联实例同步"
 unitsPending_other = "{{units}} 个计量单位正在等待从关联实例同步"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "共 {{total}} 预付 credits"
 expires = "{{date}} 过期"
 eyebrow = "预付容量"
 note = "在按量计费之前使用，且不计入你的支出限额。"
 topUp = "充值"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "返回"
 calcTitle = "计算你的年度付款"
 cancel = "取消"
@@ -6607,7 +6610,7 @@ loadingTitle = "正在加载你的报价"
 payTitle = "支付你的年度费用"
 step = "第 {{current}} 步，共 {{total}} 步"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "更改"
 deployRow = "部署"
 done = "完成"
@@ -6626,10 +6629,10 @@ sizingRow = "规模"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "总用户数"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "我了解，当我的预付容量用完或 12 个月后过期时，除非我取消，否则处理会自动按标准按量付费费率继续（不超过我的支出限额），并且我可以随时从计费门户取消。"
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "由 Stirling 托管。几分钟内上线。"
 cloudValue = "Stirling Cloud · 托管"
@@ -6637,12 +6640,12 @@ selfhost = "自托管"
 selfhostDesc = "在私有基础设施上运行。费率相同。"
 selfhostValue = "自托管 · 私有基础设施"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "查看优惠"
 subtitle = "预付一年 PDF 处理费用并获得两个月免费，在按量计费之前使用，且不计入你的支出限额。"
 title = "以 10 个月价格获得 12 个月"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "账户持有人姓名"
 accountNamePlaceholder = "例如 Jane Smith"
 companyName = "公司名称（可选）"
@@ -6652,7 +6655,7 @@ payOnline = "在线支付"
 poNumber = "PO 编号（可选）"
 poNumberPlaceholder = "例如 PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "高级"
 advancedDesc = "流水线驱动你的大部分处理。"
 none = "无"
@@ -6660,7 +6663,7 @@ noneDesc = "尚未运行流水线。可随时开启。"
 standard = "标准"
 standardDesc = "少量流水线会重新处理到达的 PDFs。"
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "基础"
 essentialsDesc = "分类，默认项，加上共享"
 governed = "受治理"
@@ -6668,12 +6671,12 @@ governedDesc = "增加安全和路由"
 regulated = "受监管"
 regulatedDesc = "每个类别，包括合规、保留、摄取"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "下载报价（PDF）"
 downloading = "正在准备…"
 share = "分享以供审批"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "紧凑"
 compactDesc = "文件小于 25 MB，无数据费用"
 heavy = "重型"
@@ -6681,12 +6684,12 @@ heavyDesc = "扫描件或图像较多，通常 50 MB+"
 standard = "标准"
 standardDesc = "大多较小，部分扫描件超过 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "已用完"
 healthy = "剩余充足"
 low = "即将用完"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "调整限额"
 cancel = "取消"
 capControlNote = "更改会立即生效——可随时提高或降低上限。"
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "本周期 {{amount}} · 无上限"
 usedThisMonth = "本月已使用 {{amount}}"
 useSuggested = "使用建议值 · {{amount}} / 月"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "按 {{rate}}/天，您将在约 {{count}} 天后达到上限（约 {{monthEnd}} 月末）。建议限额约 {{suggested}}。"
 body_other = "按 {{rate}}/天，您将在约 {{count}} 天后达到上限（约 {{monthEnd}} 月末）。建议限额约 {{suggested}}。"
 label = "预计会超出。"
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "本月支出"
 freeRemaining_one = "剩余 {{formatted}} 个免费 PDF"
 freeRemaining_other = "剩余 {{formatted}} 个免费 PDFs"
@@ -6720,17 +6723,17 @@ processed_other = "已处理 {{formattedCount}} 个 PDFs。"
 processedWithRate_one = "已处理 {{formattedCount}} 个 PDF，每个 {{rate}}。"
 processedWithRate_other = "已处理 {{formattedCount}} 个 PDFs，每个 {{rate}}。"
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "现在提高限额，以免自动处理暂停。"
 approachingTitle = "您已达到月度支出限额的 {{pct}}%"
 raiseLimit = "提高限额"
 reachedBody = "按量处理已暂停，直到您提高限额或周期重置。无限 PDF 编辑仍可继续使用。"
 reachedTitle = "已达到月度支出限额"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "无法打开 Stripe 门户"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 个免费 PDFs 中的额度"
 capSuffix_other = "已使用 {{allowance}} 个免费 PDFs 中的额度"
@@ -6743,7 +6746,7 @@ title_other = "免费处理 {{allowance}} 个 PDFs"
 titleWithRate_one = "免费处理 {{allowance}} 个 PDFs，之后 {{rate}}/PDF"
 titleWithRate_other = "免费处理 {{allowance}} 个 PDFs，之后 {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "批准"
 check = "检查"
 event = "事件"
@@ -6752,11 +6755,11 @@ review = "审核"
 session = "会话"
 signature = "签名"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "新建连接"
 createTitleFor = "连接 {{name}}"
 delete = "删除"
@@ -6764,369 +6767,369 @@ edit = "编辑"
 editTitle = "编辑连接"
 unsupportedType = "此连接类型无法在此处编辑。"
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "用于我们尚未支持的服务。"
 label = "高级"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "记录文档发生了什么，并记录到审计人员已查看的位置。"
 label = "审计与合规日志"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "通知另一个系统发生了某件事。"
 label = "通知与工作流"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "在文档继续流转前扫描或标记它。"
 label = "安全与分类"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "发送文档以进行签名或公证。"
 label = "电子签名与公证"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "处理后的文档最终到达的位置 - 存储桶、驱动器、工单或页面。"
 label = "文件与附加"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling 会加密存储此项，并且不会再次显示。"
 label = "访问 token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "使用此连接的步骤只能调用此 URL 下的路径，不能调用其他主机。"
 label = "服务器 URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "电子邮件"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "主机"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "密码"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "端口"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "用户名"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "粘贴服务提供给你的 URL。只能调用其下的路径。"
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "连接名称"
 namePlaceholder = "例如 Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "取消"
 createNew = "新建连接..."
 placeholder = "选择连接"
 save = "保存连接"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "更改集成"
 heading = "你想连接什么？"
 noResultsBody = "我们尚未支持它 - 告诉我们相关信息，我们会考虑添加。"
 noResultsTitle = "没有匹配 \"{{query}}\" 的结果"
 searchPlaceholder = "搜索集成 - 试试 \"sign\"、\"ocr\" 或产品名称"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "从策略调用任何 HTTP API。你可以选择 URL、身份验证和 payload。"
 label = "自定义 API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "身份验证"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "用户名和密码"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "自定义 header 中的 token"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "无"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "登录以获取 token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "使用此连接的步骤只能调用此 URL 下的路径，不能调用其他主机。"
 label = "基础 URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Header 名称"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "登录路径"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "密码"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "如果 API 回复下载链接，只能获取这些主机。用逗号分隔。留空则只允许基础 URL 自身的主机。"
 label = "允许的结果主机"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "将 token 作为此 header 发送"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "登录调用在其中返回 token 的响应 header，例如 X-Auth-Token。"
 label = "Token 响应 header"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "用户名"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "在你运行的服务器上扫描文档中的恶意软件 - 不会离开你的网络。"
 label = "ClamAV（自托管）"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "用于策略中文档的病毒和内容扫描。"
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "阻止包含宏、可执行文件、脚本或嵌入对象的文档 - 不只是已知恶意软件。"
 label = "Cloudmersive 高级扫描"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "将处理后的文档附加到 Confluence 页面。"
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "将文档发送到 ConsignO Cloud (Notarius) 以进行电子签名和公证。"
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "你的 ConsignO Cloud 环境，包括 /api/v1。"
 label = "服务器 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "密码"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "仅当你的组织使用 tenants 时需要。"
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "用户名"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "当策略处理文档时向 Discord 发布消息。"
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "每当策略处理文档时，在 Elasticsearch 中索引一条审计事件。"
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "轮询 FTP 或 FTPS 服务器以获取新文档。"
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "连接模式"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "主动"
 passive = "被动（推荐）"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "普通 FTP 会以未加密方式发送凭据和文件；如果服务器支持，请选择 FTPS。"
 label = "加密"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS（显式 / AUTH TLS）"
 implicit = "FTPS（隐式）"
 none = "无（普通 FTP）"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "当策略运行时向 Google Chat space 发布消息。"
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "将处理后的文档附加到 Jira issue。"
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "当策略运行时发送文档或通知电子邮件。"
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "将处理后的文档归档到 Nextcloud。"
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "App password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "使用你运行的 Presidio 服务器检测文档文本中的个人数据。"
 label = "Presidio（自托管）"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "读取并应用 Microsoft Purview PDFs 敏感度标签。"
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "可选。仅在按名称选择标签时需要；没有它也可以标记。"
 label = "Application (client) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Client secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "作为 SiteId 印到每个标签上，以便支持 Purview 的工具知道由哪个组织应用。"
 label = "Directory (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "S3 bucket，源可从中读取，流水线输出可写入其中。"
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "AWS 留空。为 MinIO 或其他 S3 兼容存储设置此项。"
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "当策略运行时发送文档或通知电子邮件。"
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "轮询 SFTP (SSH) 服务器以获取新文档。"
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "可选。服务器的 SHA-256 主机 key fingerprint（来自 `ssh-keyscan host | ssh-keygen -lf -`）。设置后，仅接受提供此 key 的服务器；留空时，首次连接时看到的 key 会被固定，之后的更改将被拒绝。"
 label = "主机 key fingerprint"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "如果你改用 private key 进行身份验证，请留空。"
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "可选。粘贴 OpenSSH private key，以使用 key 而不是密码进行身份验证。"
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "当策略处理文档时向 Slack 发布消息。"
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "监视 SMB / CIFS 网络共享（Windows 或 Samba）。"
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / 网络共享"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "可选。如果你的服务器使用 Windows domain 或 workgroup，请填写。"
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Share"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "每当策略处理文档时向 Splunk 发送审计事件。"
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "向 Sumo Logic HTTP collector 发送审计事件。"
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "当策略运行时向 Teams channel 发布消息。"
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "将每个文档或仅其详情发布到你选择的 URL。"
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "从策略触发 Zap 或 Make scenario。"
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "浏览文档"
 viewSource = "在 GitHub 上查看源代码"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "每个请求"
 eyebrow = "入门"
 lead = "所有请求都使用 bearer token 进行身份验证。密钥按环境划分范围，除非轮换，否则永不过期。"
@@ -7134,13 +7137,13 @@ liveKey = "生产密钥——计费，并按您的方案进行速率限制。"
 testKey = "Sandbox 密钥——免费，返回合成 fixtures。"
 title = "身份验证"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "嵌入查看器"
 eyebrow = "组件"
 lead = "用于审核队列和文档检查的可嵌入 UI。可使用您自己的样式，也可使用随附主题。"
 title = "即插即用查看器"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API 参考"
 fieldCount_one = "{{count}} 个字段"
 fieldCount_other = "{{count}} 个字段"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "按垂直领域筛选端点"
 lead = "每种文档类型都是一个类型化端点。POST 一个文件，接收经过 schema 验证的 JSON。可在下方按垂直领域筛选。"
 title = "端点"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API 参考"
 lead = "错误会返回稳定的机器可读代码以及人类可读消息。4xx 正文始终包含用于支持的 request_id。"
 title = "错误"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "文档"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "无法加载文档索引。"
 title = "文档不可用"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "入门"
 lead = "通过三个步骤将您的第一个文档发送到类型化端点，并取回结构化 JSON。无需模型训练，也无需 prompt engineering。"
 title = "快速开始"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "获取可复制粘贴的配方。"
 bodyBeforeLink = "将同一调用接入流水线，以串联验证、遮盖和交付——或通过 MCP 将其暴露给智能体。查看"
 label = "下一步："
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "从基础设施选项卡创建一个限定范围的密钥。密钥带有速率限制和可选的 IP allowlist。将其导出到您的 shell："
 title = "签发 API 密钥"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "将文件 POST 到任意类型化端点。端点决定您返回的 schema——这里是发票提取器。"
 snippetCaption = "提取发票"
 title = "发送文档"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "每个响应都会根据端点 schema 进行验证，并附带置信度评分和逐字段来源。"
 codeCaption = "200 OK"
 title = "读取结构化结果"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "突发"
 codeCaption = "429 Too Many Requests"
 concurrency = "并发"
@@ -7196,47 +7199,47 @@ lead = "限制会随您的方案扩展。429 响应包含 Retry-After header；S
 requestsPerMinute = "请求数 / 分钟"
 title = "速率限制和配额"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "克隆配方"
 eyebrow = "PLAYBOOKS"
 lead = "串联来源、操作和目标位置的端到端模式。每个都映射到一个可克隆的流水线。"
 title = "配方"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "第一方客户端，提供类型化响应、自动重试和流式上传。全部跟踪同一端点目录。"
 title = "官方 SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "已弃用"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "技能"
 lead = "捆绑的命名能力，您的智能体可将其作为单个工具调用。每项技能都是附带评估的确定性操作链。"
 title = "智能体技能"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "本页内容"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API 参考"
 lead = "订阅 document.processed、pipeline.completed 和 quota.threshold 事件。Payloads 使用 HMAC-SHA256 签名。"
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper。"
 beforeHelper = "header 与您的签名密钥进行比对，然后再信任 payload。SDKs 随附一个"
 beforeSignature = "验证"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "导出 CSV"
 search = "按文件名、ID 搜索..."
 subtitle = "您的组织处理过的每个文档及其完整处理记录。内容访问需要请求授权。"
 title = "文档"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "已批准"
 archived = "已归档"
 elevation = "权限提升"
@@ -7246,44 +7249,44 @@ flagged = "需要审核"
 ingested = "已摄取"
 reviewed = "审核中"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "文档详情部分"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "审计"
 extractions = "提取"
 overview = "概览"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "请求访问权限"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "临时授权 — 访问已记录并有时间限制。"
 descriptionFourEyes = "临时授权 — 已通知同行审核人（四眼原则）。"
 title = "访问将在 {{time}} 后过期"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "内容受零常驻访问权限保护。请求将启动有时间限制的授权。"
 descriptionFourEyes = "内容受零常驻访问权限保护。请求将启动有时间限制的授权，并通知同行审核人（四眼原则）。"
 title = "敏感文档"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "未从此文档中提取任何字段。"
 masked = "提取的字段已隐藏。请求限时访问以查看此文档内容。"
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "置信度"
 field = "字段"
 value = "值"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "全部"
 ariaLabel = "按状态筛选文档"
 flagged = "已标记"
 inReview = "审核中"
 processed = "已处理"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "管道 / 操作"
 product = "产品"
 received = "时间"
@@ -7291,26 +7294,26 @@ status = "状态"
 type = "类型"
 user = "用户"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "连接源"
 createPipeline = "创建流水线"
 description = "当来源将文档送入您的管道时，它们会出现在这里以供审核。"
 title = "队列中没有文档"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "错误"
 flagged = "需要审核"
 inReview = "审核中"
 processed = "已处理"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "自动"
 editorAction = "编辑器"
 empty = "没有符合此筛选条件的文档。"
 rowActions = "行操作"
 sensitiveLabel = "敏感"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "管道 / 操作"
 document = "文档"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "状态"
 time = "时间"
 user = "用户"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "部署 Stirling PDF Editor，将自托管实例配对到您的组织，并在一处管理运行中的集群 — 目标、健康状况、凭据和离线激活。"
 title = "编辑器部署"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "活跃用户"
 host = "主机"
 lastSeen = "上次在线"
@@ -7332,11 +7335,11 @@ status = "状态"
 target = "Target"
 version = "版本"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "部署目标并配对后，可在此查看实时实例健康状况。"
 title = "没有实例报告"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "企业版"
 generateButton = "生成离线包"
 lockCopy = "离线和本地激活是企业版功能。"
@@ -7344,67 +7347,67 @@ subtitle = "为无外网路径的离线或本地安装生成已签名的激活�
 talkToSales = "联系销售"
 title = "隔离网络激活"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} 已签名并可传输。它会激活一个实例，并在 14 天后过期。"
 title = "包已就绪"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "已生成 ✓"
 generateNewCode = "生成新代码"
 lockCopy = "IaC 配置是企业版功能。"
 rotate = "轮换"
 talkToSales = "联系销售"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "每个 Editor 实例的报告 — 版本、区域、状态、上次在线和活跃用户。"
 title = "实例健康状况"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "将自托管编辑器连接到此组织。生成令牌，交付短代码，或通过 IaC 连接。"
 title = "配对"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Editor 运行的位置。复制片段以启动自托管实例，或使用无需运维的 Managed Cloud。"
 title = "部署目标"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "当前令牌"
 lastRotated = "上次轮换"
 rotateButton = "轮换服务令牌"
 subtitle = "实例使用此凭据向组织进行身份验证。按计划轮换，或在怀疑泄露后立即轮换。"
 title = "服务令牌"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "已签发新令牌。请在 24 小时宽限期内更新每个自托管实例的 STIRLING_SERVICE_TOKEN，否则它们将离线。"
 title = "轮换运行中的实例"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "降级"
 healthy = "健康"
 offline = "离线"
 pairing = "配对中"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} 个实例"
 instanceCount_other = "{{count}} 个实例"
 talkToSales = "联系销售"
 upgradePlan = "升级计划"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "本地部署和 Kubernetes 自托管是企业版功能。"
 paid = "付费计划可解锁使用 Docker 和 Kubernetes 的自托管。"
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "可用"
 locked = "已锁定"
 running = "运行中"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "此视图遇到意外错误。请重试，或从侧边栏选择其他部分。"
 retry = "重试"
 title = "此页面出现问题"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "返回"
 body = "下载桌面应用或自托管服务器。"
 done = "完成"
@@ -7464,7 +7467,7 @@ sectionDesktop = "桌面应用"
 sectionSelfHosted = "自托管"
 title = "安装 Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "在你的服务器上运行官方镜像。"
 note = "在 :8080 打开。默认登录：admin / stirling。"
 tagline = "在容器中运行服务器"
@@ -7473,27 +7476,27 @@ variantFat = "完整版"
 variantLite = "超轻量版"
 variantStandard = "标准版"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "安装官方 Helm chart。"
 note = "为 /configs 添加 PVC 以持久保存设置。"
 tagline = "使用 Helm 部署到集群"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "适用于您的发行版的原生构建。"
 guideBtn = "查看 Linux 安装选项"
 note = "常见发行版可使用 AppImage、.deb 和 .rpm 构建。"
 tagline = "适用于您发行版的原生桌面应用"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "或通过 Homebrew"
 detailBody = "运行安装程序，或使用 Homebrew。"
 downloadBtn = "下载 macOS 版本"
 tagline = "适用于 Apple silicon 和 Intel 的原生应用"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "在裸机服务器上运行 .jar。"
 downloadBtn = "下载 .jar"
 note = "需要 Java 21+。在 :8080 打开；默认登录 admin / stirling。"
@@ -7501,73 +7504,73 @@ runLabel = "然后运行它"
 tagline = "在裸机服务器上运行 .jar"
 title = "手动服务器设置"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "或通过 winget"
 detailBody = "运行安装程序，或使用包管理器。"
 downloadBtn = "下载安装程序"
 tagline = "适用于 Microsoft Windows 的原生应用"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "本月 {{total}} 个中有 {{active}} 个处于活跃状态"
 name = "Stirling PDF Editor"
 open = "在浏览器中打开"
 updated = "已更新 {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "完成部署"
 options = "查看部署选项"
 start = "部署 Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "自托管 · Docker"
 kubernetes = "自托管 · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "下午好"
 evening = "晚上好"
 morning = "早上好"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "管理 Editor 部署"
 sectionsAriaLabel = "基础设施部分"
 subtitle = "您的 Stirling 工作区的部署、凭据、安全态势、存储和审计轨迹。"
 title = "基础设施"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "创建密钥"
 heading = "API 密钥"
 subheading = "带每密钥速率限制、权限和 IP 允许列表的范围化凭据。"
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "已创建"
 lastUsed = "上次使用"
 revoke = "撤销密钥"
 usageMonth = "本月用量"
 usageToday = "今日用量"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "创建范围化密钥以开始调用 Stirling API。"
 title = "尚无 API 密钥"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "无法加载您的 API 密钥。请重试。"
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "撤销“{{name}}”？任何仍在使用此密钥的集成都将立即开始收到 401 错误。此操作无法撤销。"
 cancel = "取消"
 confirm = "撤销密钥"
 title = "撤销 API 密钥"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "按类别筛选审计事件"
 heading = "审计日志"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "此类别中没有事件。"
 subheading = "您工作区中的每个身份验证、配置和处理事件。"
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "操作者"
 event = "事件"
 latency = "延迟"
@@ -7575,11 +7578,11 @@ status = "状态"
 target = "资源"
 timestamp = "时间戳"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "工作区活动发生时会显示在这里。"
 title = "没有审计事件"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "取消"
 error = "导出失败。请重试。"
 exportButton = "导出"
@@ -7590,7 +7593,7 @@ open = "导出"
 subtitle = "将审计事件下载为 CSV 或 JSON。选择要包含的列。"
 title = "导出审计日志"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "日期"
 documentName = "文档名称"
 ipAddress = "IP 地址"
@@ -7598,7 +7601,7 @@ outcome = "结果"
 tool = "工具"
 username = "用户名"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "全部"
 auth = "身份验证"
 config = "配置"
@@ -7607,17 +7610,17 @@ policy = "策略"
 processing = "处理"
 security = "安全"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "审计日志可供团队负责人和管理员使用。请向您的团队负责人或管理员请求访问权限。"
 title = "您没有访问权限"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "配置"
 policy = "策略"
 processing = "处理"
 totalEvents = "总事件 · 24h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "身份验证"
 config = "配置"
 elevation = "权限提升"
@@ -7625,13 +7628,13 @@ policy = "策略"
 processing = "处理"
 security = "安全"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "错误"
 info = "信息"
 success = "成功"
 warning = "警告"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "取消"
 createKey = "创建密钥"
 done = "完成"
@@ -7644,11 +7647,11 @@ subtitleCreated = "立即复制此密钥 — 它不会再次显示。"
 title = "创建 API 密钥"
 titleCreated = "密钥已创建"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "活跃"
 revoked = "已撤销"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API 密钥"
 audit = "审计日志"
 deployments = "部署"
@@ -7656,7 +7659,7 @@ models = "模型"
 security = "安全"
 storage = "存储"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "可用"
 comingSoonHeading = "即将推出"
 connect = "连接"
@@ -7668,7 +7671,7 @@ subtitle = "Stirling 可以与之通信的一切。凭据在此处创建一次�
 title = "集成"
 typedName = "{{tool}} 名称"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "全部"
 audit = "审计"
 connected = "已连接"
@@ -7677,29 +7680,29 @@ security = "安全"
 signing = "签名"
 storage = "存储"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "已连接"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "集成"
 worksWith = "适用于"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "流水线"
 policies = "策略"
 sources = "来源"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · 草稿"
 loadError = "无法加载此文档。请重试。"
 loading = "正在加载…"
 title = "法律文件"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "组件"
 docs = "开发者文档"
@@ -7715,18 +7718,18 @@ sources = "来源"
 usage = "用量与账单"
 users = "用户"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF 平台"
 processor = "PDF 处理器"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "后端上的每个自动化文档管道：一组来源上的有序操作链，由触发器运行。点击一行查看其步骤和来源。"
 title = "管道"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "新建管道"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "返回管道"
 cannotFollow = "无法接收 {{produced}}"
@@ -7758,7 +7761,7 @@ unsavedTitle = "未保存的更改"
 usesDefaults = "使用默认设置运行"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "合并上一步中的每个文件"
 fan-out = "对上一步中的每个文件运行一次"
 format-mismatch = "需要 {{accepts}}，但上一步生成 {{produced}}"
@@ -7776,7 +7779,7 @@ output-uncertain = "可能不会运行：上一步的输出取决于其设置方
 source-mismatch = "需要 {{accepts}}，但此流水线的输入是 {{produced}}"
 undeclared-operation = "无法检查此步骤接受的内容"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "添加工具"
 create = "创建管道"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "每隔"
 trigger = "触发器"
 triggerManual = "仅手动"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "天"
 hours = "小时"
 minutes = "分钟"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "删除 \"{{name}}\"？此操作无法撤销。"
 cancel = "取消"
 confirm = "删除"
 title = "删除管道？"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "清除历史记录"
 delete = "删除管道"
 run = "立即运行"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "创建管道"
 connectSource = "连接来源"
 description = "创建您的第一个管道：选择运行的来源，串联操作，并选择输出位置。"
 title = "尚无管道"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "活跃"
 paused = "已暂停"
 total = "管道"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "无需运行：来源中的 {{count}} 个文档已处理。"
 allProcessed_other = "无需运行：来源中的所有 {{count}} 个文档均已处理。"
 completed_one = "运行已完成。"
@@ -7874,151 +7877,151 @@ parked_other = "无需运行：{{count}} 个文档此前失败并已暂存。修
 running = "运行已开始；仍在进行中。"
 timeout = "运行耗时超过预期；它可能仍会在后台完成。"
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "活跃"
 paused = "已暂停"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "管道"
 sources = "来源"
 status = "状态"
 steps = "步骤"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "文件夹监视"
 manual = "手动"
 schedule = "已计划"
 
-[portal.policies]
+[processor.policies]
 defaultName = "{{category}} 策略"
 subtitle = "常驻自动化会在每个文档上强制执行工具管道。每项策略在上传或导出时触发，运行其工具链，并将强制处理后的版本与原始文件一同保存。"
 title = "策略"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "升级到企业版"
 notSetUp = "未设置"
 requiresAiEngine = "需要 AI 引擎"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "在上传时识别每个文档的类型，并标记其元数据以便归档和搜索。"
 label = "分类"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "在每个文档上强制执行 HIPAA、GDPR、SOC 2 或 FedRAMP 要求。"
 label = "合规"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "对文档进行分类、提取结构化数据、强制命名约定，并规范化页面。"
 label = "摄取"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "设置文档保留多久、何时归档以及何时删除。"
 label = "保留"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "自动将文档路由到正确的团队、文件夹或系统。"
 label = "路由"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "检测 PII、修订、移除活动内容，并为文档添加水印。"
 label = "安全"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "所有文档"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "根据您团队的标签对每个上传文档进行分类，并标记其元数据。"
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "分类"
 1 = "标记元数据"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "在文档离开系统前，根据监管框架验证文档。"
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "访问日志"
 auditTrail = "审计轨迹"
 frameworks = "框架"
 onViolation = "不合规时"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "框架扫描"
 1 = "强制操作"
 2 = "审计轨迹"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "对文档进行分类、提取结构化数据、强制命名，并规范化页面。"
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "低于阈值"
 minConfidence = "最低置信度"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "分类"
 1 = "提取"
 2 = "命名"
 3 = "规范化"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "应用 Microsoft Purview 敏感度标签"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview 租户"
 labelId = "标签 ID"
 labelIdHelp = "来自 Purview 门户的标签 GUID。应用标签会将其元数据写入 PDF；它无法加密，加密需要 Microsoft 客户端。"
 labelName = "标签名称（可选）"
 labelNameHelp = "与 ID 一起记录，以便人员和工具识别该标签。"
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview 会区分由策略应用的标签和由人员选择的标签。"
 label = "标签的记录方式"
 privileged = "作为人员选择的标签"
 standard = "作为自动应用的标签"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "读取 Microsoft Purview 标签"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview 租户"
 connectionHelp = "读取文档已携带的标签，以便后续步骤可以对其执行操作。"
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "强制执行文档保留多久、何时归档以及何时删除。"
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "之后归档"
 immutableHold = "不可变保留"
 keepFor = "保留时长"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "保留保持"
 1 = "自动归档"
 2 = "删除阻止"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "根据类型和分类将文档路由到正确目的地。"
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "目的地"
 notify = "路由时通知"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "自动分类"
 1 = "路由到文件夹"
 2 = "Webhook 通知"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "检测并修订 PII，移除活动内容 (JavaScript)，并为文档添加水印。"
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "修订 PII"
 1 = "移除 JavaScript"
 2 = "水印"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "强制执行"
 onEveryExport = "每次导出时"
 onEveryUpload = "每次上传时"
@@ -8030,7 +8033,7 @@ showLess = "显示更少"
 showMore = "显示更多"
 sources = "来源"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "清除处理历史"
 delete = "删除"
 editSettings = "编辑设置"
@@ -8038,17 +8041,17 @@ pause = "暂停"
 resume = "恢复"
 runNow = "立即运行"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "此政策将忘记它已经处理过的每个文件，并在下次运行时重新处理其来源中当前的所有内容。文件本身不会被更改。此操作无法撤销。"
 cancel = "取消"
 confirm = "清除历史"
 title = "清除处理历史？"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "此政策运行后，文档将显示在这里。"
 title = "尚无活动"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "水印"
 autoRedact = "遮盖 PII"
 classifyAndLabel = "分类"
@@ -8057,375 +8060,375 @@ flatten = "扁平化"
 ocrPdf = "OCR"
 sanitizePdf = "移除 JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "您的政策已保存，连接恢复后将显示。"
 retry = "重试"
 title = "后端不可用"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "更改此步骤执行的操作"
 noResults = "没有匹配的步骤。尝试产品名称，或“scan”、“notify”、“attach”。"
 searchPlaceholder = "搜索步骤 - 试试“scan”、“attach”或产品名称"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "原始文件字节"
 json = "在 JSON payload 内"
 multipart = "作为文件上传（multipart）"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "您自己的 ClamAV 服务器会检查文档；没有任何内容离开您的网络。"
 label = "扫描病毒（自托管）"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "拒绝包含宏、可执行文件、脚本或嵌入对象的文档。"
 label = "阻止活动内容"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive 会检查文档；如果文档不干净，运行将停止。"
 label = "扫描病毒"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "将处理后的文档归档到页面。"
 label = "附加到 Confluence 页面"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "将文档提交到 ConsignO Cloud 进行签名。"
 label = "发送签名（ConsignO）"
 note = "提交文档。尚不支持取回已签名副本，因为步骤无法将结果传递给后续步骤。"
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "自行编写调用：路径、方法、正文和响应处理。"
 label = "调用自定义 API"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "通知频道该策略已处理一个文档。"
 label = "向 Discord 发布消息"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "将策略执行的操作记录为可搜索的文档。"
 label = "在 Elasticsearch 中索引审计事件"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart 适合上传 API；JSON 适合希望文件位于 payload 内的 API；binary 发送原始字节。"
 label = "如何发送文档"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "按原样发送的 JSON 正文。{{document.base64}} 携带文件；{{document.*}} 和 {{run.*}} 会按文档填充。"
 label = "JSON 正文"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "账户"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun 域名"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "API 期望用于接收文档的表单字段。"
 label = "文件字段名称"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "发件人"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "由 header 名称/值对组成的 JSON 对象。连接的凭据会为您添加。"
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "索引"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "问题键"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "作为消息正文发送。{{document.*}} 和 {{run.*}} 会按文档填充。"
 label = "消息"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "方法"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "页面 ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "附加到连接的基础 URL。它永远无法访问其他主机。"
 label = "路径"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "写入驱动器中的位置。{{document.filename}} 会按文档填充。"
 label = "目标路径"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "报告会保持文档不变。替换会将其换成返回的内容。"
 label = "如何处理回复"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "签名者的电子邮件"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "主题"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio 会分析此文本。使用 {{document.title}} 或粘贴您想检查的文本。"
 label = "要检查的文本"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "收件人"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud 用户名"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "通知空间该策略已处理一个文档。"
 label = "向 Google Chat 发布消息"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "将处理后的文档归档到问题。"
 label = "附加到 Jira 问题"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "将处理后的文档作为附件发送。"
 label = "通过电子邮件发送文档（Mailgun）"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "将处理后的文档写入文件夹。"
 label = "上传到 Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "您自己的 Presidio 服务器会报告其发现的个人数据。"
 label = "检测个人数据"
 note = "Presidio 读取文本，而不是文件。请提供您想检查的文本 — 文档本身不会上传。"
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "用回复替换文档"
 report = "保留文档，记录回复"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "将处理后的文档作为附件发送。"
 label = "通过电子邮件发送文档（SendGrid）"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "通知频道该策略已处理一个文档。"
 label = "向 Slack 发布消息"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "在审计人员已查看的位置记录策略执行的操作。"
 label = "向 Splunk 发送审计事件"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "将策略执行的操作记录到 HTTP 收集器。"
 label = "向 Sumo Logic 发送审计事件"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "通知频道该策略已处理一个文档。"
 label = "向 Teams 发布消息"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "将文档本身发送到您选择的 URL。"
 label = "将文档发布到 webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "将运行详情交给您的自动化。"
 label = "触发 Zap 或 Make 场景"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "活动"
 dataProcessed = "已处理数据"
 docsEnforced = "已执行文档"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "活动"
 paused = "已暂停"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "在上传/导出时执行"
 label = "活动政策"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "可配置"
 label = "类别"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "跨活动政策"
 label = "已执行文档"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "已配置但未触发"
 label = "已暂停"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "应用于"
 docs = "已执行文档"
 enforces = "执行"
 policy = "策略"
 status = "状态"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "返回"
 cancel = "取消"
 continue = "继续"
 enablePolicy = "启用政策"
 saveChanges = "保存更改"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "根据您团队的标签识别文档类型并为其打标签，使其可按类别归档和搜索。"
 label = "分类文档"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "将文档压缩为更小的文件大小。"
 label = "减小文件大小"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "将表单字段和注释合并到页面中，使其无法编辑。"
 label = "扁平化文档"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "运行 OCR，使扫描页面变为可选择、可搜索的文本。"
 label = "使文本可搜索"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "查找并涂黑敏感详细信息——例如社会保障号和卡号——使其无法被读取。"
 label = "遮盖敏感信息"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "移除隐藏的 JavaScript，确保文档打开时不会自动运行任何内容。"
 label = "移除活动内容"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "使用独立时间戳机构证明该文档在某一时间点以此确切形式存在。只会发送 hash - 文档绝不会离开您的服务器。"
 label = "添加可信时间戳"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "在每一页上加盖可见标记（例如“机密”）。"
 label = "应用水印"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "每个上传文档都会根据内置标签进行分类，并标记符合的类型。标签集在整个团队中共享。"
 labelsHeading = "分类标签"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "请先在工作流中启用至少一个工具。"
 saveFailed = "无法保存政策。请重试。"
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "输出与运行"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "自动编号"
 label = "文件名规则"
 placeholder = "要添加的文本（可选）"
 prefix = "前缀"
 suffix = "后缀"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "输出为"
 newFile = "新文件"
 newVersion = "新版本"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "导出"
 helper = "政策触发时：上传时，或导出前。"
 label = "运行于"
 upload = "上传"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "设置"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "来源"
 loading = "正在加载来源…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "设置步骤"
 settings = "设置"
 workflow = "操作"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "编辑 {{category}} 政策"
 setUp = "设置 {{category}} 政策"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "选择此政策对其处理的每个文档执行的操作。"
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "设置"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "计数基于过去 24 小时。流程速度仅作示意。"
 liveBadge = "实时"
 stats = "{{connected}} 已连接 · {{processed}} 个 PDF 已处理"
 title = "PDF 处理器"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "查看模式"
 flow = "流程"
 sankey = "桑基图"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "失败"
 heading = "结果"
 success = "已交付"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} 个活跃"
 count = "{{n}} · 24h"
 heading = "策略"
 setUp = "设置"
 soon = "即将推出"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "策略 · {{n}} 个活跃"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "连接一个来源并启用一个策略，即可查看文档流经处理器。"
 title = "暂无流程"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "连接"
 editor = "Stirling PDF Editor"
 heading = "来源"
 perDay = "{{n}} / 24h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "电子邮件接收"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "让您的团队完成评估、签约和入门。所有文档集中一处。"
 title = "采购"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "同意并订阅"
 confidential = "机密"
 confirm = "我已阅读并同意 Stirling Enterprise Agreement。"
@@ -8447,7 +8450,7 @@ signatoryTitle = "签名人职务"
 signatoryTitlePlaceholder = "例如：总法律顾问"
 signError = "无法记录您的签名。请重试。"
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "附加项"
 addressLine1 = "地址行 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "例如 1,000,000"
 years_one = "{{count}} 年"
 years_other = "{{count}} 年"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "企业协议"
 agreementSub = "MSA、订单表和 DPA，一次签名完成。"
 download = "下载"
@@ -8547,10 +8550,10 @@ subtitle = "您的交易文件，随时可用。"
 title = "文档"
 view = "查看"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "出现问题"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "阶段 {{current}} / {{total}}"
 ctaAgreement = "审核并签署协议"
 ctaExploring = "设置您的试用"
@@ -8573,36 +8576,36 @@ sentencePayment = "采购订单和付款"
 sentenceQuote = "审阅并接受您的报价"
 sentenceTrial = "设置您的试用工作区"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "剩余 {{count}} 天"
 daysLeft_other = "剩余 {{count}} 天"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "一次签署涵盖 MSA、订单表、EULA 和 DPA。"
 gatingAction = "审核并签署您的协议"
 label = "协议"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "预配您的工作区并运行上线手册。"
 gatingAction = "正在预配您的工作区"
 label = "实施"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "可通过银行卡、银行转账或采购订单付款。"
 gatingAction = "确认付款"
 label = "付款"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "审核承诺用量定价和合同期限。"
 gatingAction = "接受您的报价"
 label = "报价"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "使用您的文档和工作流评估 Stirling。"
 gatingAction = "构建您的报价"
 label = "试用"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "已复制"
 copy = "复制密钥"
 downloadError = "暂时无法生成离线许可证文件——请稍后重试。"
@@ -8613,21 +8616,21 @@ subtitle = "使用此密钥激活自托管实例，或保留以作记录。"
 title = "您的许可证密钥"
 trialFileHint = "这是您的试用许可证文件。协议就位后，请回来再次下载 — 与在线许可证密钥不同，.lic 文件不会自行更新。"
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "关联账户"
 description = "采购在您关联的 Stirling 账户上运行：我们通过它预配试用、为报价定价并开始计费。关联账户即可开始。"
 eyebrow = "企业版"
 title = "关联您的账户以开始"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "您的订阅已激活，许可证已签发。您的团队已预配，计费已开始。"
 eyebrow = "上线"
 title = "您已在 Stirling Enterprise 上线"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "暂时无法下载报价 PDF——请稍后重试。"
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "您的报价已接受，许可证已激活——您的团队可以立即开始使用。准备好后支付第一张发票；您可以在这里付款或下载，无需电子邮件。"
 downloadAgreement = "下载已签署协议"
 downloadInvoice = "下载发票"
@@ -8635,7 +8638,7 @@ eyebrow = "付款"
 title = "订阅已创建"
 viewInvoice = "查看并支付发票"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "接受报价"
 annual = "年费（第 1 年）"
 downloadCta = "下载报价"
@@ -8644,14 +8647,14 @@ renewal = "期限结束后以 {{amount}}/年续订（+{{pct}}% CPI）"
 tcv = "{{years}} 年期限，预先全额支付：{{tcv}}"
 validUntil = "有效期至 {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "无法加载调度程序。"
 fallbackLink = "在新标签页中打开调度"
 loading = "正在加载调度器..."
 subtitle = "您的解决方案工程师将带领团队完成推出流程。请选择适合您的时间。"
 title = "安排通话"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "隔离网络"
 airgapSub = "封闭，无外发连接"
 back = "返回"
@@ -8681,7 +8684,7 @@ viewEula = "阅读"
 workEmail = "工作电子邮件"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "延长会增加 7 天并通知您的解决方案工程师。"
 bodyMaxed = "您已用完所有延长期限——如果需要更多时间，请联系您的解决方案工程师。"
 cancel = "取消试用"
@@ -8690,32 +8693,32 @@ maxed = "已达上限"
 subtitle = "您的免费试用持续到 {{date}}。无需银行卡。"
 title = "企业试用"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "管理员"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "账户关联"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "编辑器"
 appProcessor = "处理器"
 linkAccount = "关联 Stirling 账户"
 primaryNav = "主导航"
 switchApp = "切换应用"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "关闭导航"
 openNav = "打开导航"
 search = "搜索"
 
-[portal.sources]
+[processor.sources]
 subtitle = "可重复使用的输入连接，将文档送入 Stirling。配置一次连接，然后可在任意数量的政策中引用它。点击一行可查看其配置以及使用它的政策。"
 title = "来源"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "连接来源"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "返回来源"
 backToTypes = "所有来源类型"
 cancel = "取消"
@@ -8729,164 +8732,164 @@ editTitle = "编辑来源"
 enabled = "已启用"
 save = "保存更改"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "文件夹自动化只能使用管理员已允许的文件夹。请在文件夹访问设置中添加它，然后重试。"
 openSettings = "文件夹访问设置"
 title = "不允许使用此文件夹"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "删除 \"{{name}}\"？此操作无法撤销。引用它的政策需要更新。"
 cancel = "取消"
 confirm = "删除"
 title = "删除来源？"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "使用中"
 total = "连接"
 unused = "未使用"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "包含服务器地址和凭据的已保存连接。由引用它的每个来源重复使用。"
 label = "连接"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "服务器上要轮询的文件夹，相对于登录主目录或共享根目录。留空表示根目录。"
 label = "文件夹"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Consume 会在每个策略处理完文件后，从服务器移除该文件。"
 label = "读取模式"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Consume：每个文件只处理一次"
 snapshot = "Snapshot：每次运行重新读取文件夹"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "文件夹深度"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "包含子文件夹"
 top = "仅顶层"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "活动"
 disabled = "已禁用"
 unused = "未使用"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "文档"
 source = "来源"
 status = "状态"
 type = "Type"
 usedBy = "政策"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "从您团队已共享的 Box 文件夹中拉取文档。"
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "从共享 Dropbox 文件夹中拉取文档。"
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "您的团队在编辑器中处理过的文档，涵盖策略和 AI 运行。"
 label = "编辑器"
 noPolicies = "编辑器尚未运行任何策略。"
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "将发送到专用邮箱的附件转换为文档。"
 label = "电子邮件收件箱"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "监视服务器上的目录以发现新文档。"
 label = "文件夹"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Stirling 监视以处理文件的绝对路径。"
 label = "目录路径"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "内容检查会读取每个已更改文件，因此不会重新处理仅重命名或触碰但未改变内容的文件。"
 label = "更改检测"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "大小、日期和内容检查"
 stat = "大小和修改日期"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "读取模式"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "消耗：每个文件只处理一次"
 snapshot = "快照：每次运行都重新读取文件夹"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "文件夹深度"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "包含子文件夹"
 top = "仅顶层"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "轮询 FTP 或 FTPS 服务器文件夹以获取新文档。"
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "从共享 Google Drive 文件夹中拉取文档。"
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "监视 SMB 网络共享以获取新文档。"
 label = "网络驱动器"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "监视 OneDrive 文件夹以获取新文档。"
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "从 Amazon S3 或 S3-compatible 存储桶中拉取文档。"
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "保存的连接，包含存储桶和凭据。由引用它的每个来源和流水线输出重复使用。"
 label = "连接"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Consume 会在每个策略处理完对象后，从存储桶移除该对象。"
 label = "读取模式"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Consume：每个对象只处理一次"
 snapshot = "Snapshot：每次运行重新读取存储桶"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "仅处理键以此前缀开头的对象。"
 label = "键前缀"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "轮询 SFTP 投递文件夹以获取新文档。"
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "从 SharePoint 文档库中拉取文档。"
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "来源"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "创建此 webhook 时会生成投递 URL 和签名密钥。发送方将文档 POST 到该 URL，引用的策略会在到达时运行。"
 description = "通过来自任何外部系统的已签名 HTTP POST 接收文档。"
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "投递 URL"
 secretNote = "签名密钥仅在创建 webhook 时显示一次。重新创建来源以轮换它。"
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "复制"
 done = "完成"
 secret = "签名密钥"
@@ -8896,78 +8899,75 @@ title = "Webhook 已创建"
 url = "投递 URL"
 usage = "将每个文档作为原始请求正文 POST 到投递 URL，并使用 binary 内容类型（application/pdf 或 application/octet-stream）。引用的策略会在到达时自动运行。"
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "名称"
 namePlaceholder = "例如 理赔接收"
 type = "类型"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "关闭"
 
-[portal.usage]
+[processor.usage]
 managePayment = "管理付款"
 subtitle = "在一个控制台中管理 Stirling 已计费的每个 PDF 的消耗、发票和方案。"
 title = "用量与计费"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "无法加载钱包"
 openStripePortal = "无法打开 Stripe 门户"
 walletUnavailable = "钱包不可用：{{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "重新登录"
 body = "您的 Stirling 账户会话已过期。请重新登录以查看计费——您的实例仍保持关联。"
 title = "会话已过期"
 
-[portal.users]
+[processor.users]
 title = "用户"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "管理员（组织所有者）"
 summary = "对工作区、设置和成员拥有完整治理权限。"
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "管理用户、团队和角色"
 1 = "管理所有集成，包括 S3 连接"
 2 = "授予或撤销门户访问权限"
 3 = "团队所有者能做的一切"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "访客"
 summary = "有限或仅 Web 访问；不能拥有个人配置。"
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "仅 Web / 演示使用"
 1 = "无 API 密钥或集成"
 2 = "无门户访问权限"
 3 = "在共享位置只读"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "成员"
 summary = "普通用户——使用共享资源和自己的配置。"
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "使用编辑器和共享集成"
 1 = "创建个人 API 和 MCP 配置"
 2 = "查看与他们共享的团队配置"
 3 = "无 S3 或工作区管理权限"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "团队所有者"
 summary = "拥有团队——管理其成员的资源和共享配置。"
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "创建并管理团队的 S3 连接"
 1 = "管理团队拥有的集成配置"
 2 = "通过默认政策访问门户"
 3 = "成员能做的一切"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 无限"
-
-[printFile]
-title = "ཡིག་ཆ་པར་འདེབས།"
 
 [provider.googledrive]
 name = "Google Drive"

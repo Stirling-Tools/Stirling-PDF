@@ -3,13 +3,13 @@
  *
  * The editor injects its own richer axios instance (with platform routing,
  * error toasts, credit headers, ...) via {@link configureSpringAuth}. Apps that
- * don't have one - notably the portal - fall back to this minimal client, which
- * attaches the `stirling_jwt` bearer token so the portal and editor share a
+ * don't have one - notably the processor - fall back to this minimal client, which
+ * attaches the `stirling_jwt` bearer token so the processor and editor share a
  * single same-origin session.
  */
 import axios, { type AxiosInstance } from "axios";
 
-/** localStorage key holding the Spring JWT. Shared so portal + editor agree. */
+/** localStorage key holding the Spring JWT. Shared so processor + editor agree. */
 export const JWT_STORAGE_KEY = "stirling_jwt";
 
 export function getStoredToken(): string | null {
@@ -43,7 +43,7 @@ export function clearStoredToken(): void {
 
 /**
  * Create the fallback transport. `baseURL` defaults to "/" so it targets the
- * same origin that served the SPA - the backend serves both portal and editor,
+ * same origin that served the SPA - the backend serves both processor and editor,
  * so the cookie/token domain is shared.
  */
 export function createDefaultHttpClient(baseURL = "/"): AxiosInstance {

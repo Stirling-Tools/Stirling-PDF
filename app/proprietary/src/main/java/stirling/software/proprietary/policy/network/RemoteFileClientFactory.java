@@ -8,8 +8,9 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Opens a fresh {@link RemoteFileClient} for one {@link NetworkConfig}, dispatched by protocol. The
- * host is guarded against private addresses before every connect, since it comes from a portal user
- * and each operation opens its own short-lived session (there is no long-lived pool to guard once).
+ * host is guarded against private addresses before every connect, since it comes from a processor
+ * user and each operation opens its own short-lived session (there is no long-lived pool to guard
+ * once).
  */
 @Component
 @RequiredArgsConstructor

@@ -1,0 +1,155 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Banner, Button } from "@app/ui";
+import { meterState } from "@app/billing";
+import type { Wallet } from "@processor/api/billing";
+import type { LocalUsage } from "@processor/api/link";
+import { useStripePortal } from "@processor/hooks/useStripePortal";
+import { FreePdfEditorsCard } from "@processor/components/billing/FreePdfEditorsCard";
+import { PdfsProcessedCard } from "@processor/components/billing/PdfsProcessedCard";
+import { PrepaidCapacityCard } from "@processor/components/billing/PrepaidCapacityCard";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
+import { SpendThisMonthCard } from "@processor/components/billing/SpendThisMonthCard";
+import { SpendLimitCard } from "@processor/components/billing/SpendLimitCard";
+import { PaymentMethodCard } from "@processor/components/billing/PaymentMethodCard";
+import { InvoicesList } from "@processor/components/billing/InvoicesList";
+
+interface Props {
+  wallet: Wallet;
+  /** Instance-local usage not yet synced to SaaS; folded into the PDFs-processed card. */
+  unsynced?: LocalUsage | null;
+  onWalletChange?: () => void;
+}
+
+/**
+ * Linked + subscribed — the full Processor-plan dashboard, matching the
+ * marketing layout and reusing the free view's building blocks:
+ *   - team editor fleet ({@link FreePdfEditorsCard}, shared with the free view)
+ *   - PDFs processed + category split ({@link PdfsProcessedCard})
+ *   - spend-vs-cap meter, projection, and the leader-only cap editor
+ *     ({@link SpendLimitCard} → shared {@code SpendCapControl})
+ *   - Enterprise upsell ({@link EnterpriseUpsell}, shared with the free view)
+ *   - per-member usage, Stripe invoices, and the default payment method
+ *
+ * Card / subscription management lives in Stripe's hosted portal — both the
+ * page-header "Manage Payment" action and the payment card's "Update" button
+ * deep-link there via {@link useStripePortal}.
+ */
+export function SubscribedPlanView({
+  wallet,
+  unsynced,
+  onWalletChange,
+}: Props) {
+  const { t } = useTranslation();
+  const [adjusting, setAdjusting] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
+  const processor = useStripePortal(wallet);
+
+  const isLeader = wallet.role === "leader";
+  // Buying/topping up prepaid capacity is a commercial action — leader-only, and
+  // needs a resolved team to scope checkout.
+  const canBuyBundle = isLeader && wallet.teamId != null;
+  const spent =
+    wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
+  const capActive = !wallet.noCap && wallet.capUsd != null;
+  const { state, pct } = meterState(spent, wallet.capUsd ?? 0);
+  const showCapWarn = capActive && state !== "FULL";
+
+  function raiseLimit() {
+    setAdjusting(true);
+    document
+      .getElementById("processor-spend-limit")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  return (
+    <div className="processor-billing__stack">
+      {showCapWarn && (
+        <Banner
+          tone={state === "DEGRADED" ? "danger" : "warning"}
+          title={
+            state === "DEGRADED"
+              ? t(
+                  "processor.billing.subscribedPlan.capWarn.reachedTitle",
+                  "Monthly spend limit reached",
+                )
+              : t(
+                  "processor.billing.subscribedPlan.capWarn.approachingTitle",
+                  "You're at {{pct}}% of your monthly spend limit",
+                  {
+                    pct: Math.round(pct),
+                  },
+                )
+          }
+          action={
+            isLeader ? (
+              <Button size="sm" onClick={raiseLimit}>
+                {t(
+                  "processor.billing.subscribedPlan.capWarn.raiseLimit",
+                  "Raise limit",
+                )}
+              </Button>
+            ) : undefined
+          }
+        >
+          {state === "DEGRADED"
+            ? t(
+                "processor.billing.subscribedPlan.capWarn.reachedBody",
+                "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working.",
+              )
+            : t(
+                "processor.billing.subscribedPlan.capWarn.approachingBody",
+                "Raise it now so automated processing never pauses.",
+              )}
+        </Banner>
+      )}
+
+      <FreePdfEditorsCard />
+
+      <PrepaidCapacityCard
+        wallet={wallet}
+        onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
+      />
+
+      <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
+
+      <div className="processor-billing__spend-row">
+        <SpendThisMonthCard wallet={wallet} />
+        <SpendLimitCard
+          wallet={wallet}
+          onWalletChange={onWalletChange}
+          adjusting={adjusting}
+          onAdjustingChange={setAdjusting}
+        />
+      </div>
+
+      <InvoicesList />
+
+      <PaymentMethodCard
+        onManage={processor.open}
+        managing={processor.opening}
+      />
+
+      {processor.error && (
+        <Banner
+          tone="danger"
+          title={t(
+            "processor.billing.subscribedPlan.portalError.title",
+            "Couldn't open Stripe portal",
+          )}
+        >
+          {processor.error}
+        </Banner>
+      )}
+
+      {canBuyBundle && (
+        <BundleCheckoutModal
+          open={bundleOpen}
+          onClose={() => setBundleOpen(false)}
+          wallet={wallet}
+          onComplete={onWalletChange}
+        />
+      )}
+    </div>
+  );
+}

@@ -5,15 +5,15 @@ import type { SuperSearchGroup } from "@app/types/superSearch";
 import type {
   PortalEntityItems,
   PortalEntityScopeId,
-} from "@portal/search/entitySearch";
+} from "@processor/search/entitySearch";
 
-type EntitySearchModule = typeof import("@portal/search/entitySearch");
+type EntitySearchModule = typeof import("@processor/search/entitySearch");
 
 // Mirrors the admin-route seam's gate: the portal route-set is only mounted in
-// dev and in builds made with VITE_INCLUDE_PORTAL=true, so the search must not
+// dev and in builds made with VITE_INCLUDE_PROCESSOR=true, so the search must not
 // fetch or offer entities that have nowhere to open.
 const includePortal =
-  import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
+  import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV;
 
 const NO_GROUPS: SuperSearchGroup[] = [];
 const NO_SCOPES: readonly PortalEntityScopeId[] = [];
@@ -47,7 +47,7 @@ export function useProcessorEntityGroups(
   useEffect(() => {
     if (!active || modRef.current) return;
     let cancelled = false;
-    void import("@portal/search/entitySearch").then((loaded) => {
+    void import("@processor/search/entitySearch").then((loaded) => {
       if (cancelled) return;
       modRef.current = loaded;
       setMod(loaded);
@@ -69,7 +69,7 @@ export function useProcessorEntityGroups(
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
       const loaded =
-        modRef.current ?? (await import("@portal/search/entitySearch"));
+        modRef.current ?? (await import("@processor/search/entitySearch"));
       return loaded.fetchPortalEntityScope(scopeId, "free");
     },
     [],

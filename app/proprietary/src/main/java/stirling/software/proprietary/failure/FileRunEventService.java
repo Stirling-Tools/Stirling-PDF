@@ -187,7 +187,7 @@ public class FileRunEventService {
                                         action,
                                         event.kind().labelKeyFor(action),
                                         !closed,
-                                        closed ? "portal.failures.disabled.closed" : null))
+                                        closed ? "processor.failures.disabled.closed" : null))
                 .toList();
     }
 

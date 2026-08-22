@@ -6352,10 +6352,13 @@ thirtyDays = "30 dni"
 threeYears = "3 leta"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "Natisni datoteko"
+
+[processor]
 comingSoon = "Kmalu na voljo"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "Nenadzorovana obdelava se zaračuna denarnici vaše organizacije."
 eyebrow = "Povezava računa"
 linkButton = "Povežite svoj račun Stirling"
@@ -6366,37 +6369,37 @@ notLinked = "Ni povezano"
 title = "Poveži to organizacijo z njenim računom Stirling"
 unlink = "Prekini povezavo"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "Povezave ni bilo mogoče vzpostaviti"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "za omogočanje povezovanja računa z gostovanim računom Stirling. V razvojnem okolju lahko simulirate prijavo iz pogovornega okna za povezavo."
 before = "Nastavite"
 title = "SaaS prijava ni konfigurirana"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "Poveži račun"
 description = "Povežite račun Stirling te organizacije za uporabo plačljivih funkcij."
 title = "Povežite za odklepanje"
 titleFeature = "Povežite za odklepanje {{feature}}"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "Aktivno"
 revoke = "Prekliči"
 revoked = "Preklicano"
 unnamed = "Neimenovana instanca"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "Instanca"
 lastSeen = "Nazadnje videno"
 linked = "Povezano"
 status = "Stanje"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "Povežite račun te organizacije, nato registrirajte svoje samogostovane instance, da jih boste videli tukaj."
 title = "Ni povezanih instanc"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "pred {{count}} d"
 daysAgo_other = "pred {{count}} d"
 hoursAgo_one = "pred {{count}} h"
@@ -6406,36 +6409,36 @@ minutesAgo_one = "pred {{count}} min"
 minutesAgo_other = "pred {{count}} min"
 never = "nikoli"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "Prijavite se v račun, ki naj mu ta strežnik zaračunava."
 linkTitle = "Povežite svoj račun Stirling"
 reauthSubtitle = "Vaša seja je potekla — znova se prijavite v svoj račun Stirling. Vaša instanca ostane povezana."
 reauthTitle = "Znova se prijavite"
 simulateSignIn = "Simuliraj prijavo (dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "za omogočanje povezovanja v aplikaciji z gostovanim računom Stirling."
 and = "in"
 before = "Nastavite"
 title = "SaaS prijava ni konfigurirana"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "Vsaka samogostovana instanca, registrirana za to organizacijo. Prekličite poverilnico, da takoj prekinete njen nenadzorovani dostop."
 instancesTitle = "Povezane instance"
 revokeError = "Instance ni bilo mogoče preklicati"
 sub = "Povežite to samogostovano organizacijo z njenim računom Stirling, da se nenadzorovana obdelava zaračunava denarnici vaše organizacije."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "Samo lastnik ekipe si lahko ogleda povezane instance organizacije."
 generic = "Povezanih instanc ekipe ni bilo mogoče naložiti. Poskusite znova čez trenutek."
 title = "Povezanih instanc ni bilo mogoče naložiti"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Paket Editor"
 subscribed = "Paket Processor"
 unlinked = "Ni povezano"
 
-[portal.assistant]
+[processor.assistant]
 close = "Zapri pomočnika"
 error = "Pomočnika ni bilo mogoče doseči."
 errorWithDetail = "Pomočnika ni bilo mogoče doseči: {{detail}}"
@@ -6447,33 +6450,33 @@ title = "Pomočnik"
 tryAsking = "Poskusite vprašati"
 typing = "Tipkanje"
 
-[portal.auth]
+[processor.auth]
 loading = "Nalaganje"
 redirectingToEditor = "Preusmerjanje v urejevalnik..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "Morda pozneje"
 title = "Vklopite Processor"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "Nastavite mesečno omejitev. Plačajte za izvedeno."
 title = "Plačilo po porabi"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2 meseca brezplačno"
 sub = "En račun, kartica ali bančno nakazilo."
 title = "Predplačajte leto"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function ni vrnila client_secret."
 title = "Vklopite paket Processor"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "Vaše plačilo je uspelo, vendar aktivacija traja nekoliko dlje kot običajno. Vklopila se bo samodejno — zaprite to in kmalu se bo prikazala tukaj."
 close = "Zapri"
 title = "Skoraj smo tam"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "Mesečna omejitev porabe"
 back = "Nazaj"
 continue = "Nadaljuj na plačilo"
@@ -6484,30 +6487,30 @@ note = "Nikoli vam ne zaračunamo prek vaše omejitve. Obdelava se samo začasno
 perMonth = "/ mes."
 title = "Nastavite omejitev porabe"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "Številka kartice · MM / LL · CVC · ZIP"
 label = "Podatki kartice"
 note = "Podatke kartice zbira Stripe. Stirling nikoli ne shranjuje PAN ali CVC."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Checkouta ni bilo mogoče začeti"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "Vaše plačilo je bilo izvedeno. Vklapljamo merjeno obdelavo v vseh vaših povezanih instancah — to običajno traja nekaj sekund."
 hint = "Pustite to okno odprto."
 title = "Aktiviranje vašega paketa Processor..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "Mesečna omejitev porabe {{amount}}/mes. Obdelava se ustavi pri omejitvi."
 limitNoCap = "Brez omejitve porabe. Obdelava se ne bo ustavila. Računi se izdajajo mesečno."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Ustvarite svojo ponudbo Enterprise"
 description = "Popusti za dogovorjene količine, namestitev z izoliranim omrežjem, MSA po meri in varnostni pregledi ter partnerstva z distributerji tretjih oseb."
 eyebrow = "Količinski popust · 1M+ PDF-jev"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "Aktivno ta mesec"
 cost = "Strošek"
 editorsDeployed = "Urejevalniki uvedeni"
@@ -6516,7 +6519,7 @@ pdfsEdited = "PDF-ji urejeni"
 subtitle = "Namestite kjer koli, za vso svojo ekipo."
 title = "Brezplačni PDF urejevalniki"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Checkouta ni bilo mogoče začeti"
 currentPlan = "Trenutni paket"
 freeForever = "Brezplačno za vedno"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "Vklopi Processor →"
 unlimitedUsers = "Neomejeno uporabnikov"
 viewQuote = "Ogled ponudbe"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "Znesek"
 columnDate = "Datum"
 columnDescription = "Opis"
@@ -6553,12 +6556,12 @@ title = "Zgodovina računov"
 viewAriaLabel = "Prikaži račun {{number}} v Stripe"
 viewLink = "Prikaži ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Poveži račun Stirling"
 description = "Ročno urejanje PDF — ogled, podpisovanje, združevanje, razdeljevanje, vodni žig, stiskanje, pretvorba, ročni OCR — je vedno brezplačno, ne glede na povezavo. Povežite račun, da pridobite 500 brezplačnih PDF-jev merjene obdelave (avtomatizacija, AI in API); ko potrebujete več, vklopite paket Processor in plačajte samo za uporabo."
 title = "Povežite svoj račun Stirling"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "Obračunano mesečno"
 cardEnding = "{{brand}} s končnico {{last4}}"
 cardFallback = "Kartica"
@@ -6568,7 +6571,7 @@ managedSub = "Vaša kartica in podatki za obračun so varno shranjeni v portalu 
 managedTitle = "Upravljano v Stripe"
 update = "Posodobi"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "V tem obdobju še ni merjene obdelave."
 eyebrow = "PDF-ji obdelani v tem obdobju"
 legendValue_one = "{{formatted}} PDF-jev"
@@ -6587,14 +6590,14 @@ unit = "merjeni PDF-ji"
 unitsPending_one = "{{units}} merska enota čaka na sinhronizacijo iz povezanih instanc"
 unitsPending_other = "{{units}} merskih enot čaka na sinhronizacijo iz povezanih instanc"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "od {{total}} predplačniških kreditov"
 expires = "Poteče {{date}}"
 eyebrow = "Predplačniška zmogljivost"
 note = "Uporablja se pred obračunom po porabi in zunaj vaše omejitve porabe."
 topUp = "Napolni"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "Nazaj"
 calcTitle = "Izračunajte svoje letno plačilo"
 cancel = "Prekliči"
@@ -6607,7 +6610,7 @@ loadingTitle = "Nalaganje vaše ponudbe"
 payTitle = "Plačajte za svoje leto"
 step = "Korak {{current}} od {{total}}"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "Spremeni"
 deployRow = "Uvedba"
 done = "Končano"
@@ -6626,10 +6629,10 @@ sizingRow = "Velikost"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "Skupaj uporabnikov"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "Razumem, da se ob porabi moje predplačniške zmogljivosti ali njenem poteku po 12 mesecih obdelava samodejno nadaljuje po standardni merjeni tarifi plačila po porabi (do moje omejitve porabe), razen če prekličem, in da lahko kadar koli prekličem v obračunskem portalu."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Upravlja Stirling. Deluje v nekaj minutah."
 cloudValue = "Stirling Cloud · Upravljano"
@@ -6637,12 +6640,12 @@ selfhost = "Samogostovano"
 selfhostDesc = "Deluje na zasebni infrastrukturi. Enaka tarifa."
 selfhostValue = "Samogostovano · Zasebna infrastruktura"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "Preglej ponudbo"
 subtitle = "Predplačajte leto obdelave PDF in prejmite dva meseca brezplačno, uporabljeno pred obračunom po porabi, zunaj vaše omejitve porabe."
 title = "Pridobite 12 mesecev za ceno 10"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "Ime imetnika računa"
 accountNamePlaceholder = "npr. Jane Smith"
 companyName = "Ime podjetja (neobvezno)"
@@ -6652,7 +6655,7 @@ payOnline = "Plačaj prek spleta"
 poNumber = "Številka naročilnice (neobvezno)"
 poNumberPlaceholder = "npr. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "Napredno"
 advancedDesc = "Cevovodi poganjajo večino vaše obdelave."
 none = "Brez"
@@ -6660,7 +6663,7 @@ noneDesc = "Cevovodov še ne izvajate. Vklopite jih lahko kadar koli."
 standard = "Standardno"
 standardDesc = "Nekaj cevovodov ponovno obdela prispele datoteke PDF."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "Osnove"
 essentialsDesc = "Razvrščanje, privzeto, plus skupna raba"
 governed = "Upravljano"
@@ -6668,12 +6671,12 @@ governedDesc = "Doda varnost in usmerjanje"
 regulated = "Regulirano"
 regulatedDesc = "Vsaka kategorija, vklj. skladnost, hrambo, zajem"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "Prenesi ponudbo (PDF)"
 downloading = "Pripravljanje…"
 share = "deli za odobritev"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "Kompaktno"
 compactDesc = "Datoteke pod 25 MB, brez stroškov podatkov"
 heavy = "Težko"
@@ -6681,12 +6684,12 @@ heavyDesc = "Skenirano ali z veliko slikami, običajno 50 MB+"
 standard = "Standardno"
 standardDesc = "Večinoma majhno, nekaj skenov nad 25 MB"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "Porabljeno"
 healthy = "Veliko preostalo"
 low = "Zmanjkuje"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "Prilagodi omejitev"
 cancel = "Prekliči"
 capControlNote = "Spremembe začnejo veljati takoj — zgornjo mejo lahko kadar koli zvišate ali znižate."
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "{{amount}} v tem obdobju · brez omejitve"
 usedThisMonth = "{{amount}} porabljeno ta mesec"
 useSuggested = "Uporabi predlagano · {{amount}} / mesec"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "Pri {{rate}}/dan boste omejitev dosegli v ~{{count}} dnevu (~{{monthEnd}} konec meseca). Predlagana omejitev ~{{suggested}}."
 body_other = "Pri {{rate}}/dan boste omejitev dosegli v ~{{count}} dneh (~{{monthEnd}} konec meseca). Predlagana omejitev ~{{suggested}}."
 label = "Predvidena prekoračitev."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "Poraba ta mesec"
 freeRemaining_one = "Preostala je {{formatted}} brezplačna datoteka PDF"
 freeRemaining_other = "Preostalo je {{formatted}} brezplačnih datotek PDF"
@@ -6720,17 +6723,17 @@ processed_other = "Obdelanih {{formattedCount}} PDF-jev."
 processedWithRate_one = "Obdelan {{formattedCount}} PDF, po {{rate}} vsak."
 processedWithRate_other = "Obdelanih {{formattedCount}} PDF-jev, po {{rate}} vsak."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "Zvišajte jo zdaj, da se samodejna obdelava nikoli ne ustavi."
 approachingTitle = "Dosegli ste {{pct}}% svoje mesečne omejitve porabe"
 raiseLimit = "Zvišaj omejitev"
 reachedBody = "Merjena obdelava je začasno ustavljena, dokler ne zvišate omejitve ali se cikel ponastavi. Neomejeno urejanje PDF še naprej deluje."
 reachedTitle = "Mesečna omejitev porabe dosežena"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Portala Stripe ni bilo mogoče odpreti"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "od {{allowance}} brezplačnih PDF-jev porabljenih"
 capSuffix_other = "od {{allowance}} brezplačnih PDF-jev porabljenih"
@@ -6743,7 +6746,7 @@ title_other = "Obdelajte {{allowance}} PDF-jev brezplačno"
 titleWithRate_one = "Obdelajte {{allowance}} PDF-jev brezplačno, nato {{rate}}/PDF"
 titleWithRate_other = "Obdelajte {{allowance}} PDF-jev brezplačno, nato {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "odobritev"
 check = "preverjanje"
 event = "dogodek"
@@ -6752,11 +6755,11 @@ review = "pregled"
 session = "seja"
 signature = "podpis"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "Nova povezava"
 createTitleFor = "Poveži {{name}}"
 delete = "Izbriši"
@@ -6764,369 +6767,369 @@ edit = "Uredi"
 editTitle = "Uredi povezavo"
 unsupportedType = "Te vrste povezave tukaj ni mogoče urejati."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "Za storitev, ki je še ne podpiramo."
 label = "Napredno"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "Zabeležite, kaj se je zgodilo z dokumentom, tam, kjer vaši revizorji že preverjajo."
 label = "Revizijsko in skladnostno beleženje"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "Obvestite drug sistem, da se je nekaj zgodilo."
 label = "Obvestila in potek dela"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "Preglejte ali označite dokument, preden se premakne naprej."
 label = "Varnost in razvrščanje"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "Pošljite dokument v podpis ali notarsko overitev."
 label = "E-podpis in notarska overitev"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "Kam končajo obdelani dokumenti – v bucket, pogon, zahtevek ali stran."
 label = "Datoteke in priloge"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling to shrani šifrirano in nikoli več ne prikaže."
 label = "Dostopni token"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API ključ"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "Koraki, ki uporabljajo to povezavo, lahko kličejo samo poti pod tem URL, nikoli drugega gostitelja."
 label = "URL strežnika"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Gostitelj"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Geslo"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Vrata"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Uporabniško ime"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "Prilepite URL, ki vam ga je dala storitev. Klicati je mogoče samo poti pod njim."
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "Ime povezave"
 namePlaceholder = "npr. Produkcija"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "Prekliči"
 createNew = "Nova povezava..."
 placeholder = "Izberite povezavo"
 save = "Shrani povezavo"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "Spremeni integracijo"
 heading = "Kaj želite povezati?"
 noResultsBody = "Tega še ne podpiramo – povejte nam o tem in razmislili bomo o dodajanju."
 noResultsTitle = "Nič se ne ujema z \"{{query}}\""
 searchPlaceholder = "Išči integracije – poskusite \"sign\", \"ocr\" ali ime izdelka"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "Kličite kateri koli HTTP API iz pravila. Izberete URL, avtentikacijo in payload."
 label = "API po meri"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "Avtentikacija"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Uporabniško ime in geslo"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "Token v glavi po meri"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "Brez"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "Prijava za token"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "Koraki, ki uporabljajo to povezavo, lahko kličejo samo poti pod tem URL, nikoli drugega gostitelja."
 label = "Osnovni URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "Ime glave"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "Pot za prijavo"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Geslo"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "Če API odgovori s povezavo za prenos, je mogoče pridobiti samo te gostitelje. Ločite z vejicami. Pustite prazno, da dovolite samo lastnega gostitelja osnovnega URL."
 label = "Dovoljeni gostitelji rezultatov"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "Token"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "Pošlji token kot to glavo"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "Glava odgovora, v kateri klic za prijavo vrne token, npr. X-Auth-Token."
 label = "Glava odgovora tokena"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Uporabniško ime"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Preglejte dokumente za zlonamerno programsko opremo na strežniku, ki ga upravljate – nič ne zapusti vašega omrežja."
 label = "ClamAV (samogostovano)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "Pregled virusov in vsebine za dokumente v pravilu."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "Blokirajte dokumente, ki vsebujejo makre, izvršljive datoteke, skripte ali vdelane predmete – ne samo znane zlonamerne programske opreme."
 label = "Cloudmersive Advanced Scan"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "Priložite obdelane dokumente strani Confluence."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "Pošljite dokumente v ConsignO Cloud (Notarius) za elektronski podpis in notarsko overitev."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "Vaše okolje ConsignO Cloud, vključno z /api/v1."
 label = "URL strežnika"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API ključ"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API skrivnost"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Geslo"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "Potrebno samo, če vaša organizacija uporablja tenant-e."
 label = "Tenant"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Uporabniško ime"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "Objavite sporočilo v Discord, ko pravilo obdela dokument."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "Indeksirajte revizijski dogodek v Elasticsearch vsakič, ko pravilo obdela dokument."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "Preverjajte FTP ali FTPS strežnik za nove dokumente."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "Način povezave"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Aktivno"
 passive = "Pasivno (priporočeno)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "Navadni FTP pošilja poverilnice in datoteke nešifrirano; izberite FTPS, če ga strežnik podpira."
 label = "Šifriranje"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (eksplicitno / AUTH TLS)"
 implicit = "FTPS (implicitno)"
 none = "Brez (navadni FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Objavite sporočilo v prostor Google Chat, ko se pravilo izvede."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Priložite obdelane dokumente zadevi Jira."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "Pošljite dokument ali obvestilo po Email, ko se pravilo izvede."
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Shranjujte obdelane dokumente v Nextcloud."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "Geslo aplikacije"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Zaznajte osebne podatke v besedilu dokumenta z uporabo strežnika Presidio, ki ga upravljate."
 label = "Presidio (samogostovano)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "Preberite in uporabite oznake občutljivosti Microsoft Purview na datotekah PDF."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "Neobvezno. Potrebno samo za izbiro oznak po imenu; označevanje deluje tudi brez tega."
 label = "ID aplikacije (odjemalca)"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "Skrivnost odjemalca"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "Vtisnjeno na vsako oznako kot njen SiteId, da orodja, ki podpirajo Purview, vedo, katera organizacija jo je uporabila."
 label = "ID imenika (tenant)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "S3 bucket, iz katerega lahko viri berejo in v katerega lahko izhodi cevovodov pišejo."
 label = "Shramba S3"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "ID dostopnega ključa"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "Pustite prazno za AWS. Nastavite to za MinIO ali drugo shrambo, združljivo s S3."
 label = "Končna točka"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Regija"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Skrivni dostopni ključ"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "Pošljite dokument ali obvestilo po Email, ko se pravilo izvede."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "Preverjajte SFTP (SSH) strežnik za nove dokumente."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Neobvezno. SHA-256 prstni odtis gostiteljskega ključa strežnika (iz `ssh-keyscan host | ssh-keygen -lf -`). Ko je nastavljen, je sprejet samo strežnik, ki predstavi ta ključ; ko je prazno, se ključ, viden ob prvi povezavi, pripne in poznejše spremembe so zavrnjene."
 label = "Prstni odtis gostiteljskega ključa"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Geselska fraza ključa"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "Pustite prazno, če se namesto tega avtenticirate z zasebnim ključem."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "Neobvezno. Prilepite zasebni ključ OpenSSH za avtentikacijo s ključem namesto z geslom."
 label = "Zasebni ključ"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "Objavite sporočilo v Slack, ko pravilo obdela dokument."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "Spremljajte omrežno skupno rabo SMB / CIFS (Windows ali Samba)."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / Omrežna skupna raba"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "Neobvezno. Domena Windows ali delovna skupina, če jo vaš strežnik uporablja."
 label = "Domena"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "Skupna raba"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "Pošljite revizijski dogodek v Splunk vsakič, ko pravilo obdela dokument."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Pošljite revizijski dogodek v Sumo Logic HTTP zbiralnik."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Objavite sporočilo v kanal Teams, ko se pravilo izvede."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Objavite vsak dokument ali samo podrobnosti na URL, ki ga izberete."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Sprožite scenarij Zap ali Make iz pravila."
 label = "Zapier in Make"
 
-[portal.docs]
+[processor.docs]
 browse = "Prebrskaj dokumentacijo"
 viewSource = "Ogled izvorne kode na GitHub"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "vsaka zahteva"
 eyebrow = "ZAČETEK"
 lead = "Vse zahteve se overijo z bearer token. Ključi so omejeni po okolju in nikoli ne potečejo, razen če se rotirajo."
@@ -7134,13 +7137,13 @@ liveKey = "Produkcijski ključi — zaračunani, z omejitvijo hitrosti glede na 
 testKey = "Sandbox ključi — brezplačni, vračajo sintetične fiksne podatke."
 title = "Avtentikacija"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "vdelaj pregledovalnik"
 eyebrow = "KOMPONENTE"
 lead = "Vdeljiv UI za čakalne vrste pregledov in pregled dokumentov. Uporabite svoje sloge ali priloženo temo."
 title = "Vstavljivi pregledovalniki"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCA"
 fieldCount_one = "{{count}} polje"
 fieldCount_other = "{{count}} polj"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "Filtriraj endpoints po vertikali"
 lead = "Vsaka vrsta dokumenta je tipiziran endpoint. POST datoteko, prejmite s shemo potrjen JSON. Filtrirajte po vertikali spodaj."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCA"
 lead = "Napake vrnejo stabilno strojno berljivo kodo in človeško sporočilo. Telo 4xx vedno vključuje request_id za podporo."
 title = "Napake"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "Dokumentacija"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "Kazala dokumentacije ni bilo mogoče naložiti."
 title = "Dokumentacija ni na voljo"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "ZAČETEK"
 lead = "Pošljite svoj prvi dokument na tipiziran endpoint in v treh korakih prejmite strukturiran JSON. Brez učenja modela, brez prompt engineering."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "za recepte za kopiranje in lepljenje."
 bodyBeforeLink = "povežite isti klic v cevovod za verigo preverjanja, prekrivanja in dostave — ali ga izpostavite agentu prek MCP. Glejte"
 label = "Naprej:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Ustvarite obsežno omejen ključ na zavihku Infrastructure. Ključi imajo omejitve hitrosti in neobvezen seznam dovoljenih IP. Izvozite ga v svojo lupino:"
 title = "Izdajte API ključ"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "POST datoteko na kateri koli tipiziran endpoint. Endpoint določi shemo, ki jo dobite nazaj — tukaj izločevalnik računov."
 snippetCaption = "izloči račun"
 title = "Pošljite dokument"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "Vsak odgovor je preverjen glede na shemo endpointa, z oceno zaupanja in izvorom za vsako polje."
 codeCaption = "200 OK"
 title = "Preberite strukturiran rezultat"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Izbruh"
 codeCaption = "429 Too Many Requests"
 concurrency = "Sočasnost"
@@ -7196,47 +7199,47 @@ lead = "Omejitve se prilagajajo vašemu paketu. Odgovor 429 vključuje glavo Ret
 requestsPerMinute = "Zahteve / minuta"
 title = "Omejitve hitrosti in kvote"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "Kloniraj recept"
 eyebrow = "PLAYBOOKS"
 lead = "Vzorci od začetka do konca, ki povezujejo vire, operacije in cilje. Vsak se preslika v cevovod, ki ga lahko klonirate."
 title = "Recepti"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "Lastni odjemalci s tipiziranimi odgovori, samodejnimi ponovnimi poskusi in pretočnimi nalaganji. Vsi sledijo istemu katalogu endpointov."
 title = "Uradni SDK-ji"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Zastarelo"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "VEŠČINE"
 lead = "Vključene, poimenovane zmožnosti, ki jih vaš agent prikliče kot eno orodje. Vsaka veščina je deterministična veriga operacij s priloženimi evalvacijami."
 title = "Veščine agenta"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "Na tej strani"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCA"
 lead = "Naročite se na dogodke document.processed, pipeline.completed in quota.threshold. Payloadi so podpisani s HMAC-SHA256."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "pomočnika."
 beforeHelper = "glavo glede na svojo skrivnost za podpisovanje, preden zaupate payloadu. SDK-ji vključujejo"
 beforeSignature = "Preverite"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "Izvozi CSV"
 search = "Išči po imenu datoteke, ID..."
 subtitle = "Vsak dokument, ki ga je vaša organizacija obdelala, s celotnim zapisom obdelave. Dostop do vsebine je omejen z zahtevo."
 title = "Dokumenti"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "Odobreno"
 archived = "Arhivirano"
 elevation = "Povišanje dostopa"
@@ -7246,44 +7249,44 @@ flagged = "Potreben je pregled"
 ingested = "Zajeto"
 reviewed = "V pregledu"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "Razdelki s podrobnostmi dokumenta"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "Revizija"
 extractions = "Izvlečki"
 overview = "Pregled"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "Zahtevaj dostop"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "Začasna odobritev — dostop je zabeležen in časovno omejen."
 descriptionFourEyes = "Začasna odobritev — obveščen je bil medsebojni pregledovalec (štiri oči)."
 title = "Dostop poteče čez {{time}}"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "Vsebina je zaščitena z zero-standing-access. Zahteva začne časovno omejeno odobritev."
 descriptionFourEyes = "Vsebina je zaščitena z zero-standing-access. Zahteva začne časovno omejeno odobritev in obvesti medsebojnega pregledovalca (štiri oči)."
 title = "Občutljiv dokument"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "Iz tega dokumenta ni bilo izvlečenih nobenih polj."
 masked = "Izvlečena polja so skrita. Zahtevajte časovno omejen dostop za ogled vsebine tega dokumenta."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "Zanesljivost"
 field = "Polje"
 value = "Vrednost"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "Vse"
 ariaLabel = "Filtriraj dokumente po stanju"
 flagged = "Označeno"
 inReview = "V pregledu"
 processed = "Obdelano"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "Pipeline / Dejanje"
 product = "Izdelek"
 received = "Čas"
@@ -7291,26 +7294,26 @@ status = "Stanje"
 type = "Vrsta"
 user = "Uporabnik"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "Poveži vir"
 createPipeline = "Ustvari cevovod"
 description = "Ko viri dovajajo dokumente v vaše pipeline, se bodo tukaj prikazali za pregled."
 title = "V čakalni vrsti ni dokumentov"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "Napaka"
 flagged = "Potreben je pregled"
 inReview = "V pregledu"
 processed = "Obdelano"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "Samodejno"
 editorAction = "Urejevalnik"
 empty = "Noben dokument se ne ujema s tem filtrom."
 rowActions = "Dejanja vrstice"
 sensitiveLabel = "Občutljivo"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "Pipeline / Dejanje"
 document = "Dokument"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "Stanje"
 time = "Čas"
 user = "Uporabnik"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Namestite Stirling PDF Editor, povežite samogostovane primerke s svojo organizacijo in upravljajte delujočo floto — cilje, stanje, poverilnice in offline aktivacijo na enem mestu."
 title = "Namestitev urejevalnika"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "Aktivni uporabniki"
 host = "Host"
 lastSeen = "Nazadnje videno"
@@ -7332,11 +7335,11 @@ status = "Stanje"
 target = "Target"
 version = "Različica"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "Namestite cilj in ga povežite, da tukaj vidite stanje primerka v živo."
 title = "Noben primerek ne poroča"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Ustvari offline paket"
 lockCopy = "Offline in on-prem aktivacija sta del Enterprise."
@@ -7344,67 +7347,67 @@ subtitle = "Ustvarite podpisan aktivacijski paket za offline ali on-prem namesti
 talkToSales = "Pogovorite se s prodajo"
 title = "Air-gapped aktivacija"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}} je podpisan in pripravljen za prenos. Aktivira en primerek in poteče čez 14 dni."
 title = "Paket je pripravljen"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "Ustvarjeno ✓"
 generateNewCode = "Ustvari novo kodo"
 lockCopy = "Zagotavljanje IaC je del Enterprise."
 rotate = "Zavrti"
 talkToSales = "Pogovorite se s prodajo"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "Vsak primerek urejevalnika, ki poroča — različica, regija, stanje, nazadnje videno in aktivni uporabniki."
 title = "Stanje primerkov"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "Povežite samogostovan urejevalnik s to organizacijo. Ustvarite žeton, predajte kratko kodo ali ga povežite prek IaC."
 title = "Povezovanje"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Kje se izvaja urejevalnik. Kopirajte izrezek za zagon samogostovanega primerka ali uporabite Managed Cloud brez operativnega dela."
 title = "Cilji namestitve"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "Trenutni žeton"
 lastRotated = "Nazadnje zavrteno"
 rotateButton = "Zavrti servisni žeton"
 subtitle = "Primerki se s to poverilnico overjajo pri organizaciji. Zavrti ga po urniku ali takoj po sumu uhajanja."
 title = "Servisni žeton"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "Izdan je bil nov žeton. Posodobite STIRLING_SERVICE_TOKEN vsakega samogostovanega primerka v 24-urnem prehodnem obdobju, sicer bodo prešli offline."
 title = "Zavrti delujoče primerke"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "Poslabšano"
 healthy = "Zdravo"
 offline = "Offline"
 pairing = "Povezovanje"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}} primerek"
 instanceCount_other = "{{count}} primerkov"
 talkToSales = "Pogovorite se s prodajo"
 upgradePlan = "Nadgradite paket"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "On-prem in Kubernetes samogostovanje sta del Enterprise."
 paid = "Samogostovanje z Docker in Kubernetes se odklene v plačljivem paketu."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "Na voljo"
 locked = "Zaklenjeno"
 running = "Deluje"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "V tem pogledu je prišlo do nepričakovane napake. Poskusite znova ali izberite drug razdelek v stranski vrstici."
 retry = "Poskusite znova"
 title = "Na tej strani je šlo nekaj narobe"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "Nazaj"
 body = "Prenesite namizno aplikacijo ali samogostujte strežnik."
 done = "Končano"
@@ -7464,7 +7467,7 @@ sectionDesktop = "Namizna aplikacija"
 sectionSelfHosted = "Samogostovano"
 title = "Namestite Stirling PDF Editor"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "Zaženite uradno sliko na svojem strežniku."
 note = "Odpre se na :8080. Privzeta prijava: admin / stirling."
 tagline = "Zaženite strežnik v vsebniku"
@@ -7473,27 +7476,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "Namestite uradni Helm chart."
 note = "Dodajte PVC za /configs, da ohranite nastavitve."
 tagline = "Uvedite v gručo s Helm"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "Izvorne gradnje za vašo distribucijo."
 guideBtn = "Ogled možnosti namestitve za Linux"
 note = "Gradnje AppImage, .deb in .rpm so na voljo za pogoste distribucije."
 tagline = "Izvorna namizna aplikacija za vašo distribucijo"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "Ali prek Homebrew"
 detailBody = "Zaženite namestitveni program ali uporabite Homebrew."
 downloadBtn = "Prenesi za macOS"
 tagline = "Izvorna aplikacija za Apple silicon in Intel"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "Zaženite .jar na fizičnem strežniku."
 downloadBtn = "Prenesi .jar"
 note = "Zahteva Java 21+. Odpre se na :8080; privzeta prijava admin / stirling."
@@ -7501,73 +7504,73 @@ runLabel = "Nato ga zaženite"
 tagline = "Zaženite .jar na fizičnem strežniku"
 title = "Ročna nastavitev strežnika"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "Ali prek winget"
 detailBody = "Zaženite namestitveni program ali uporabite upravitelja paketov."
 downloadBtn = "Prenesi namestitveni program"
 tagline = "Izvorna aplikacija za Microsoft Windows"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "{{active}} od {{total}} aktivnih ta mesec"
 name = "Stirling PDF Editor"
 open = "Odpri v brskalniku"
 updated = "posodobljeno {{time}}"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "Dokončaj uvedbo"
 options = "Ogled možnosti uvedbe"
 start = "Uvedi Editor"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "Samogostovano · Docker"
 kubernetes = "Samogostovano · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "Dober dan"
 evening = "Dober večer"
 morning = "Dobro jutro"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Upravljaj namestitev urejevalnika"
 sectionsAriaLabel = "Razdelki infrastrukture"
 subtitle = "Namestitve, poverilnice, varnostna drža, shramba in revizijska sled za vaš delovni prostor Stirling."
 title = "Infrastruktura"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "Ustvari ključ"
 heading = "API ključi"
 subheading = "Omejene poverilnice z omejitvami hitrosti po ključu, dovoljenji in seznami dovoljenih IP."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "Ustvarjeno"
 lastUsed = "Nazadnje uporabljeno"
 revoke = "Prekliči ključ"
 usageMonth = "Uporaba ta mesec"
 usageToday = "Uporaba danes"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Ustvarite omejen ključ, da začnete klicati Stirling API."
 title = "API ključev še ni"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "Vaših API ključev ni bilo mogoče naložiti. Poskusite znova."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "Preklicati \"{{name}}\"? Vsaka integracija, ki še uporablja ta ključ, bo takoj začela prejemati napake 401. Tega ni mogoče razveljaviti."
 cancel = "Prekliči"
 confirm = "Prekliči ključ"
 title = "Prekliči API ključ"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "Filtriraj revizijske dogodke po kategoriji"
 heading = "Revizijski dnevniki"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "V tej kategoriji ni dogodkov."
 subheading = "Vsak dogodek overjanja, konfiguracije in obdelave v vašem delovnem prostoru."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "Akter"
 event = "Dogodek"
 latency = "Zakasnitev"
@@ -7575,11 +7578,11 @@ status = "Stanje"
 target = "Vir"
 timestamp = "Časovni žig"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "Dejavnost delovnega prostora se bo prikazala tukaj, ko se zgodi."
 title = "Ni revizijskih dogodkov"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "Prekliči"
 error = "Izvoz ni uspel. Poskusite znova."
 exportButton = "Izvozi"
@@ -7590,7 +7593,7 @@ open = "Izvozi"
 subtitle = "Prenesite revizijske dogodke kot CSV ali JSON. Izberite, katere stolpce želite vključiti."
 title = "Izvozi revizijski dnevnik"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "Datum"
 documentName = "Ime dokumenta"
 ipAddress = "IP naslov"
@@ -7598,7 +7601,7 @@ outcome = "Izid"
 tool = "Orodje"
 username = "Uporabniško ime"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "Vse"
 auth = "Overjanje"
 config = "Konfiguracija"
@@ -7607,17 +7610,17 @@ policy = "Pravilnik"
 processing = "Obdelava"
 security = "Varnost"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "Revizijski dnevnik je na voljo vodjem ekip in skrbnikom. Za dostop prosite vodjo ekipe ali skrbnika."
 title = "Nimate dostopa"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "Konfiguracija"
 policy = "Pravilnik"
 processing = "Obdelava"
 totalEvents = "Skupaj dogodkov · 24 h"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "Auth"
 config = "Konfiguracija"
 elevation = "Povišanje"
@@ -7625,13 +7628,13 @@ policy = "Pravilnik"
 processing = "Obdelava"
 security = "Varnost"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "Napaka"
 info = "Info"
 success = "Uspeh"
 warning = "Opozorilo"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "Prekliči"
 createKey = "Ustvari ključ"
 done = "Končano"
@@ -7644,11 +7647,11 @@ subtitleCreated = "Kopirajte to skrivnost zdaj — ne bo več prikazana."
 title = "Ustvari API ključ"
 titleCreated = "Ključ ustvarjen"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "Aktivno"
 revoked = "Preklicano"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API ključi"
 audit = "Revizijski dnevniki"
 deployments = "Namestitve"
@@ -7656,7 +7659,7 @@ models = "Modeli"
 security = "Varnost"
 storage = "Shramba"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "Na voljo"
 comingSoonHeading = "Kmalu na voljo"
 connect = "Poveži"
@@ -7668,7 +7671,7 @@ subtitle = "Vse, s čimer lahko Stirling komunicira. Poverilnice se tukaj ustvar
 title = "Integracije"
 typedName = "Ime za {{tool}}"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "Vse"
 audit = "Revizija"
 connected = "Povezano"
@@ -7677,29 +7680,29 @@ security = "Varnost"
 signing = "Podpisovanje"
 storage = "Shramba"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "Povezano"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "Integracija"
 worksWith = "Deluje z"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "Cevovodi"
 policies = "Pravilniki"
 sources = "Viri"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · osnutek"
 loadError = "Tega dokumenta ni bilo mogoče naložiti. Poskusite znova."
 loading = "Nalaganje…"
 title = "Pravni dokument"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Graditelj agentov"
 components = "Komponente"
 docs = "Dokumentacija za razvijalce"
@@ -7715,18 +7718,18 @@ sources = "Viri"
 usage = "Uporaba in obračunavanje"
 users = "Uporabniki"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF Platform"
 processor = "PDF Processor"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "Vsak samodejni pipeline dokumentov na backendu: urejena veriga operacij nad naborom virov, zagnana s sprožilcem. Kliknite vrstico za njegove korake in vire."
 title = "Pipelines"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "Nov pipeline"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "Nazaj na pipelines"
 cannotFollow = "Ne more sprejeti {{produced}}"
@@ -7758,7 +7761,7 @@ unsavedTitle = "Neshranjene spremembe"
 usesDefaults = "Zažene se s privzetimi nastavitvami"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "Združi vsako datoteko iz prejšnjega koraka"
 fan-out = "Zažene se enkrat na datoteko iz prejšnjega koraka"
 format-mismatch = "Potrebuje {{accepts}}, vendar prejšnji korak proizvede {{produced}}"
@@ -7776,7 +7779,7 @@ output-uncertain = "Morda se ne bo zagnalo: izhod prejšnjega koraka je odvisen 
 source-mismatch = "Potrebuje {{accepts}}, vendar je vhod tega cevovoda {{produced}}"
 undeclared-operation = "Ni mogoče preveriti, kaj ta korak sprejme"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "Dodaj orodje"
 create = "Ustvari pipeline"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "Zaženi vsakih"
 trigger = "Sprožilec"
 triggerManual = "Samo ročno"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "dni"
 hours = "ur"
 minutes = "minut"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "Izbrisati \"{{name}}\"? Tega ni mogoče razveljaviti."
 cancel = "Prekliči"
 confirm = "Izbriši"
 title = "Izbrisati pipeline?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "Počisti zgodovino"
 delete = "Izbriši pipeline"
 run = "Zaženi zdaj"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "Ustvari pipeline"
 connectSource = "Poveži vir"
 description = "Ustvarite svoj prvi pipeline: izberite vire, na katerih se izvaja, povežite operacije in izberite, kam gre izhod."
 title = "Pipelines še ni"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "Aktivni"
 paused = "Zaustavljeni"
 total = "Pipelines"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "Ni ničesar za zagon: {{count}} dokument vira je že bil obdelan."
 allProcessed_other = "Ni ničesar za zagon: vseh {{count}} dokumentov v virih je že bilo obdelanih."
 completed_one = "Zagon končan."
@@ -7874,151 +7877,151 @@ parked_other = "Ni ničesar za zagon: {{count}} dokumentov je prej spodletelo in
 running = "Zagon se je začel; še vedno poteka."
 timeout = "Zagon traja dlje od pričakovanega; morda se bo še vedno dokončal v ozadju."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "Aktivno"
 paused = "Zaustavljeno"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "Pipeline"
 sources = "Viri"
 status = "Stanje"
 steps = "Koraki"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "Nadzor mape"
 manual = "Ročno"
 schedule = "Načrtovano"
 
-[portal.policies]
+[processor.policies]
 defaultName = "Pravilnik {{category}}"
 subtitle = "Stalne avtomatizacije, ki uveljavljajo pipeline orodij na vsakem dokumentu. Vsak pravilnik se sproži ob nalaganju ali izvozu, zažene svojo verigo orodij in shrani uveljavljeno različico poleg izvirnika."
 title = "Pravilniki"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Nadgradite na Enterprise"
 notSetUp = "Ni nastavljeno"
 requiresAiEngine = "Zahteva AI pogon"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "Ob nalaganju prepozna vrsto vsakega dokumenta in označi njegove metapodatke za arhiviranje in iskanje."
 label = "Klasifikacija"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "Uveljavite zahteve HIPAA, GDPR, SOC 2 ali FedRAMP za vsak dokument."
 label = "Skladnost"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "Razvrstite dokumente, izvlecite strukturirane podatke, uveljavite konvencije poimenovanja in normalizirajte strani."
 label = "Zajem"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "Nastavite, kako dolgo se dokumenti hranijo, kdaj se arhivirajo in kdaj izbrišejo."
 label = "Hramba"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "Samodejno usmerite dokumente k pravi ekipi, mapi ali sistemu."
 label = "Usmerjanje"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "Zaznajte PII, redigirajte, odstranite aktivno vsebino in dodajte vodni žig dokumentom."
 label = "Varnost"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "Vsi dokumenti"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "Klasificira vsak naložen dokument glede na oznake vaše ekipe in označi njegove metapodatke."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "Klasificiraj"
 1 = "Označi metapodatke"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "Preveri dokumente glede na regulativne okvire, preden zapustijo sistem."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "Dnevnik dostopa"
 auditTrail = "Revizijska sled"
 frameworks = "Okviri"
 onViolation = "Ko ni skladno"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "Pregled okvira"
 1 = "Uveljavi dejanje"
 2 = "Revizijska sled"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "Razvršča dokumente, izvleče strukturirane podatke, uveljavlja poimenovanje in normalizira strani."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "Pod pragom"
 minConfidence = "Najm. zanesljivost"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "Razvrsti"
 1 = "Izvleci"
 2 = "Poimenuj"
 3 = "Normaliziraj"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Uporabi oznako občutljivosti Microsoft Purview"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Najemnik Purview"
 labelId = "ID oznake"
 labelIdHelp = "GUID oznake iz portala Purview. Uporaba oznake zapiše njene metapodatke v PDF; ne more šifrirati, za kar je potreben Microsoft odjemalec."
 labelName = "Ime oznake (neobvezno)"
 labelNameHelp = "Zabeleženo skupaj z ID-jem, da lahko ljudje in orodja prepoznajo oznako."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview razlikuje med oznako, ki jo je uporabil pravilnik, in oznako, ki jo je izbrala oseba."
 label = "Kako je oznaka zabeležena"
 privileged = "Kot jo je izbrala oseba"
 standard = "Kot uporabljeno samodejno"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Preberi oznako Microsoft Purview"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Najemnik Purview"
 connectionHelp = "Prebere oznako, ki jo dokument že nosi, da lahko poznejši koraki ukrepajo na podlagi nje."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "Uveljavlja, kako dolgo se dokumenti hranijo, kdaj se arhivirajo in kdaj izbrišejo."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "Arhiviraj po"
 immutableHold = "Nespremenljiva zadržitev"
 keepFor = "Hrani za"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "Zadržitev hrambe"
 1 = "Samodejno arhiviranje"
 2 = "Blokada izbrisa"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "Usmeri dokumente na pravo destinacijo glede na vrsto in razvrstitev."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "Destinacija"
 notify = "Obvesti ob usmerjanju"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "Samodejno razvrsti"
 1 = "Usmeri v mapo"
 2 = "Webhook obvestilo"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "Zazna in redigira PII, odstrani aktivno vsebino (JavaScript) ter doda vodne žige dokumentom."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "Redigiraj PII"
 1 = "Odstrani JavaScript"
 2 = "Vodni žig"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "Uveljavlja"
 onEveryExport = "Ob vsakem izvozu"
 onEveryUpload = "Ob vsakem nalaganju"
@@ -8030,7 +8033,7 @@ showLess = "Prikaži manj"
 showMore = "Prikaži več"
 sources = "Viri"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "Počisti zgodovino obdelave"
 delete = "Izbriši"
 editSettings = "Uredi nastavitve"
@@ -8038,17 +8041,17 @@ pause = "Začasno ustavi"
 resume = "Nadaljuj"
 runNow = "Zaženi zdaj"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "Ta pravilnik bo pozabil vsako datoteko, ki jo je že obdelal, in ob naslednjem zagonu znova obdelal vse, kar je trenutno v njegovih virih. Same datoteke se ne spremenijo. Tega ni mogoče razveljaviti."
 cancel = "Prekliči"
 confirm = "Počisti zgodovino"
 title = "Počisti zgodovino obdelave?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "Dokumenti se bodo tukaj prikazali, ko se ta pravilnik zažene."
 title = "Ni še dejavnosti"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "Vodni žig"
 autoRedact = "Prekrij PII"
 classifyAndLabel = "Klasificiraj"
@@ -8057,375 +8060,375 @@ flatten = "Splošči"
 ocrPdf = "OCR"
 sanitizePdf = "Odstrani JavaScript"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "Vaši pravilniki so shranjeni in se bodo prikazali, ko bo povezava obnovljena."
 retry = "Poskusi znova"
 title = "Backend ni na voljo"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "Spremeni, kaj naredi ta korak"
 noResults = "Noben korak se ne ujema s tem. Poskusite ime izdelka ali \"scan\", \"notify\", \"attach\"."
 searchPlaceholder = "Išči korake – poskusite \"scan\", \"attach\" ali ime izdelka"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "Surovi bajti datoteke"
 json = "Znotraj JSON tovora"
 multipart = "Kot nalaganje datoteke (multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "Vaš lastni strežnik ClamAV preveri dokument; nič ne zapusti vašega omrežja."
 label = "Preglej za viruse (samostojno gostovano)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "Zavrne dokumente, ki vsebujejo makre, izvedljive datoteke, skripte ali vdelane objekte."
 label = "Blokiraj aktivno vsebino"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive preveri dokument in zagon se ustavi, če ni čist."
 label = "Preglej za viruse"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "Shrani obdelani dokument na stran."
 label = "Priloži strani Confluence"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "Pošlje dokument v ConsignO Cloud za podpisovanje."
 label = "Pošlji v podpis (ConsignO)"
 note = "Pošlje dokument. Pridobivanje podpisane kopije še ni podprto, ker korak ne more posredovati rezultata poznejšemu koraku."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "Klic sestavite sami: pot, metoda, telo in obravnava odgovora."
 label = "Pokliči API po meri"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "Obvesti kanal, da je pravilnik obdelal dokument."
 label = "Objavi sporočilo v Discord"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "Zabeleži, kaj je pravilnik naredil, kot iskalni dokument."
 label = "Indeksiraj revizijski dogodek v Elasticsearch"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart ustreza API-jem za nalaganje; JSON ustreza API-jem, ki želijo datoteko znotraj tovora; binary pošlje surove bajte."
 label = "Kako poslati dokument"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "JSON telo, poslano takšno, kot je. {{document.base64}} nosi datoteko; {{document.*}} in {{run.*}} se izpolnita za vsak dokument."
 label = "JSON telo"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "Račun"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Domena Mailgun"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "Polje obrazca, pod katerim API pričakuje dokument."
 label = "Ime polja datoteke"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "Od"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "JSON objekt parov ime/vrednost glave. Poverilnica povezave je dodana namesto vas."
 label = "Glave"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Indeks"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "Ključ zadeve"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "Poslano kot telo sporočila. {{document.*}} in {{run.*}} se izpolnita za vsak dokument."
 label = "Sporočilo"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Metoda"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "ID strani"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "Dodano osnovnemu URL povezave. Nikoli ne more doseči drugega gostitelja."
 label = "Pot"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "Kam na disku naj se zapiše. {{document.filename}} se izpolni za vsak dokument."
 label = "Ciljna pot"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "Poročilo pusti dokument nespremenjen. Zamenjava ga zamenja s tem, kar se vrne."
 label = "Kaj storiti z odgovorom"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "E-pošta podpisnika"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "Zadeva"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio analizira to besedilo. Uporabite {{document.title}} ali prilepite besedilo, ki ga želite preveriti."
 label = "Besedilo za preverjanje"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "Za"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Uporabniško ime Nextcloud"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "Obvesti prostor, da je pravilnik obdelal dokument."
 label = "Objavi sporočilo v Google Chat"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "Shrani obdelani dokument v zadevo."
 label = "Priloži zadevi Jira"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "Pošlje obdelani dokument kot prilogo."
 label = "Pošlji dokument po e-pošti (Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "Zapiše obdelani dokument v mapo."
 label = "Naloži v Nextcloud"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "Vaš lastni strežnik Presidio poroča o osebnih podatkih, ki jih najde."
 label = "Zaznaj osebne podatke"
 note = "Presidio bere besedilo, ne datotek. Podajte besedilo, ki ga želite preveriti — sam dokument se ne naloži."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "Zamenjaj dokument z odgovorom"
 report = "Obdrži dokument, zabeleži odgovor"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "Pošlje obdelani dokument kot prilogo."
 label = "Pošlji dokument po e-pošti (SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "Obvesti kanal, da je pravilnik obdelal dokument."
 label = "Objavi sporočilo v Slack"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "Zabeleži, kaj je pravilnik naredil, tam, kjer vaši revizorji že iščejo."
 label = "Pošlji revizijski dogodek v Splunk"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "Zabeleži, kaj je pravilnik naredil, v HTTP zbiralnik."
 label = "Pošlji revizijski dogodek v Sumo Logic"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "Obvesti kanal, da je pravilnik obdelal dokument."
 label = "Objavi sporočilo v Teams"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "Pošlje sam dokument na URL, ki ga izberete."
 label = "Objavi dokument v webhook"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "Podrobnosti zagona preda vaši avtomatizaciji."
 label = "Sproži scenarij Zap ali Make"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "Aktivno"
 dataProcessed = "Obdelani podatki"
 docsEnforced = "Uveljavljeni dokumenti"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "Aktivno"
 paused = "Začasno ustavljeno"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "Uveljavljanje ob nalaganju/izvozu"
 label = "Aktivni pravilniki"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "Na voljo za konfiguracijo"
 label = "Kategorije"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "Med aktivnimi pravilniki"
 label = "Uveljavljeni dokumenti"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "Konfigurirano, vendar se ne sproži"
 label = "Začasno ustavljeno"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "Velja za"
 docs = "Uveljavljeni dokumenti"
 enforces = "Uveljavlja"
 policy = "Pravilnik"
 status = "Stanje"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "Nazaj"
 cancel = "Prekliči"
 continue = "Nadaljuj"
 enablePolicy = "Omogoči pravilnik"
 saveChanges = "Shrani spremembe"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "Prepozna vrsto dokumenta iz oznak vaše ekipe in ga označi, da se arhivira in išče po kategoriji."
 label = "Klasificiraj dokument"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "Stisne dokument na manjšo velikost datoteke."
 label = "Zmanjšaj velikost datoteke"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "Združi polja obrazca in opombe v stran, da jih ni mogoče urejati."
 label = "Splošči dokument"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "Zažene OCR, da skenirane strani postanejo besedilo, ki ga je mogoče izbrati in iskati."
 label = "Omogoči iskanje po besedilu"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "Poišče in počrni občutljive podrobnosti — kot so številke socialnega zavarovanja in kartic — da jih ni mogoče prebrati."
 label = "Prekrij občutljive podatke"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "Odstrani skriti JavaScript, da se ob odprtju dokumenta nič ne more samodejno zagnati."
 label = "Odstrani aktivno vsebino"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "Dokazuje, da je dokument obstajal v tej točni obliki v določenem trenutku z uporabo neodvisnega organa za časovni žig. Pošlje se samo zgoščena vrednost – dokument nikoli ne zapusti vašega strežnika."
 label = "Dodaj zaupanja vreden časovni žig"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "Odtisne viden znak (npr. »Zaupno«) čez vsako stran."
 label = "Uporabi vodni žig"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "Vsak naložen dokument je klasificiran glede na vgrajene oznake in označen z vrstami, ki ustrezajo. Nabor oznak je v skupni rabi celotne ekipe."
 labelsHeading = "Klasifikacijske oznake"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "Najprej omogočite vsaj eno orodje v poteku dela."
 saveFailed = "Pravilnika ni bilo mogoče shraniti. Poskusite znova."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "Izhod in zagon"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "Samodejno oštevilčenje"
 label = "Pravilo imena datoteke"
 placeholder = "Besedilo za dodajanje (izbirno)"
 prefix = "Predpona"
 suffix = "Pripona"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "Izhod kot"
 newFile = "Nova datoteka"
 newVersion = "Nova različica"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "Izvoz"
 helper = "Kdaj se pravilnik sproži: ob nalaganju ali pred izvozom."
 label = "Zaženi ob"
 upload = "Nalaganje"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "Nastavitve"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "Viri"
 loading = "Nalaganje virov…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "Koraki nastavitve"
 settings = "Nastavitve"
 workflow = "Dejanja"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "Uredi pravilnik {{category}}"
 setUp = "Nastavi pravilnik {{category}}"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "Izberite, kaj ta pravilnik naredi z vsakim dokumentom, ki ga obdela."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "Nastavi"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "Števci veljajo za zadnjih 24 ur. Hitrost toka je ponazoritvena."
 liveBadge = "V živo"
 stats = "{{connected}} povezanih · {{processed}} PDF obdelanih"
 title = "PDF Processor"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "Način pogleda"
 flow = "Tok"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24 h"
 failed = "Neuspešno"
 heading = "Rezultati"
 success = "Dostavljeno"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}} aktivnih"
 count = "{{n}} · 24 h"
 heading = "Pravilniki"
 setUp = "Nastavi"
 soon = "Kmalu"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "Pravilniki · {{n}} aktivnih"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "Povežite vir in vklopite pravilnik, da opazujete tok dokumentov skozi procesor."
 title = "Toka še ni"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "Poveži"
 editor = "Stirling PDF Editor"
 heading = "Viri"
 perDay = "{{n}} / 24 h"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Vnos e-pošte"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "Poskrbite za evalvacijo, pogodbo in uvajanje svoje ekipe. Vsak dokument na enem mestu."
 title = "Nabava"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "Strinjam se in se naročam"
 confidential = "Zaupno"
 confirm = "Prebral/-a sem in se strinjam s pogodbo Stirling Enterprise Agreement."
@@ -8447,7 +8450,7 @@ signatoryTitle = "Naziv podpisnika"
 signatoryTitlePlaceholder = "npr. General Counsel"
 signError = "Vašega podpisa ni bilo mogoče zabeležiti. Poskusite znova."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "Dodatki"
 addressLine1 = "Naslovna vrstica 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "npr. 1.000.000"
 years_one = "{{count}} leto"
 years_other = "{{count}} let"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Podjetniška pogodba"
 agreementSub = "MSA, naročilnica in DPA v enem podpisu."
 download = "Prenesi"
@@ -8547,10 +8550,10 @@ subtitle = "Vaša dokumentacija posla, na voljo kadar koli."
 title = "Dokumenti"
 view = "Ogled"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "Nekaj je šlo narobe"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "Faza {{current}} od {{total}}"
 ctaAgreement = "Preglej in podpiši pogodbo"
 ctaExploring = "Nastavite preskus"
@@ -8573,36 +8576,36 @@ sentencePayment = "naročilnica in plačilo"
 sentenceQuote = "pregled in sprejem vaše ponudbe"
 sentenceTrial = "nastavitev preskusnega delovnega prostora"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "Preostane {{count}} dan"
 daysLeft_other = "Preostane {{count}} dni"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "En podpis pokriva MSA, naročilnico, EULA in DPA."
 gatingAction = "Preglejte in podpišite svojo pogodbo"
 label = "Pogodba"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "Pripravite delovni prostor in zaženite go-live načrt."
 gatingAction = "Priprava vašega delovnega prostora"
 label = "Implementacija"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "Plačajte s kartico, bančnim nakazilom ali na podlagi naročilnice."
 gatingAction = "Potrdite plačilo"
 label = "Plačilo"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "Preglejte cene za zavezani obseg in pogodbeno obdobje."
 gatingAction = "Sprejmite svojo ponudbo"
 label = "Ponudba"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "Ocenite Stirling s svojimi dokumenti in poteki dela."
 gatingAction = "Sestavite svojo ponudbo"
 label = "Preizkus"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "Kopirano"
 copy = "Kopiraj ključ"
 downloadError = "Datoteke offline licence trenutno še ni bilo mogoče ustvariti — poskusite znova čez trenutek."
@@ -8613,21 +8616,21 @@ subtitle = "S tem ključem aktivirajte samostojno gostovano instanco ali ga shra
 title = "Vaš licenčni ključ"
 trialFileHint = "To je vaša preskusna licenčna datoteka. Ko je vaša pogodba sklenjena, se vrnite in jo znova prenesite — za razliko od spletnega licenčnega ključa se datoteka .lic ne posodobi sama."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "Poveži račun"
 description = "Nabava teče na vašem povezanem računu Stirling: tako pripravimo preizkus, določimo ceno ponudbe in začnemo zaračunavanje. Za začetek povežite račun."
 eyebrow = "Enterprise"
 title = "Za začetek povežite svoj račun"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "Vaša naročnina je aktivna in vaša licenca je izdana. Vaša ekipa je pripravljena in zaračunavanje se je začelo."
 eyebrow = "V živo"
 title = "V Stirling Enterprise ste v živo"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "Ponudbenega PDF-ja trenutno še ni bilo mogoče prenesti — poskusite znova čez trenutek."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "Vaša ponudba je sprejeta in vaša licenca je že aktivna — vaša ekipa lahko začne takoj. Prvi račun plačajte, ko boste pripravljeni; tukaj ga lahko plačate ali prenesete, brez e-pošte."
 downloadAgreement = "Prenesi podpisano pogodbo"
 downloadInvoice = "Prenesi račun"
@@ -8635,7 +8638,7 @@ eyebrow = "Plačilo"
 title = "Naročnina ustvarjena"
 viewInvoice = "Ogled in plačilo računa"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "Sprejmi ponudbo"
 annual = "Letna pristojbina (1. leto)"
 downloadCta = "Prenesi ponudbo"
@@ -8644,14 +8647,14 @@ renewal = "Obnovi se po {{amount}}/leto po izteku obdobja (+{{pct}}% CPI)"
 tcv = "{{years}}-letno obdobje, plačano v celoti vnaprej: {{tcv}}"
 validUntil = "Veljavno do {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "Razporejevalnika ni bilo mogoče naložiti."
 fallbackLink = "Odpri načrtovanje v novem zavihku"
 loading = "Nalaganje razporejevalnika..."
 subtitle = "Vaš inženir rešitev bo vašo ekipo vodil skozi uvedbo. Izberite čas, ki vam ustreza."
 title = "Načrtuj klic"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "Zaprto, brez odhodnih povezav"
 back = "Nazaj"
@@ -8681,7 +8684,7 @@ viewEula = "Preberi"
 workEmail = "Službena e-pošta"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "Podaljšanje doda 7 dni in obvesti vašega inženirja rešitev."
 bodyMaxed = "Uporabili ste vsa svoja podaljšanja — če potrebujete več časa, se pogovorite s svojim inženirjem rešitev."
 cancel = "Prekliči preizkus"
@@ -8690,32 +8693,32 @@ maxed = "Dosežena omejitev"
 subtitle = "Vaš brezplačni preizkus traja do {{date}}. Kartica ni potrebna."
 title = "Enterprise preizkus"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "Admin"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "Povezava računa"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "Urejevalnik"
 appProcessor = "Procesor"
 linkAccount = "Poveži račun Stirling"
 primaryNav = "Primarna navigacija"
 switchApp = "Preklopi aplikacijo"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "Zapri navigacijo"
 openNav = "Odpri navigacijo"
 search = "Išči"
 
-[portal.sources]
+[processor.sources]
 subtitle = "Ponovno uporabne vhodne povezave, ki dovajajo dokumente v Stirling. Povezavo konfigurirajte enkrat, nato se nanjo sklicujte iz poljubnega števila pravilnikov. Kliknite vrstico za njeno konfiguracijo in pravilnike, ki jo uporabljajo."
 title = "Viri"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "Poveži vir"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "Nazaj na vire"
 backToTypes = "Vse vrste virov"
 cancel = "Prekliči"
@@ -8729,164 +8732,164 @@ editTitle = "Uredi vir"
 enabled = "Omogočeno"
 save = "Shrani spremembe"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "Avtomatizacije map lahko uporabljajo samo mape, ki jih je dovolil skrbnik. Dodajte jo v nastavitvah dostopa do map, nato poskusite znova."
 openSettings = "Nastavitve dostopa do map"
 title = "Ta mapa ni dovoljena"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "Izbrisati \"{{name}}\"? Tega ni mogoče razveljaviti. Pravilnike, ki se nanj sklicujejo, bo treba posodobiti."
 cancel = "Prekliči"
 confirm = "Izbriši"
 title = "Izbriši vir?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "V uporabi"
 total = "Povezave"
 unused = "Neuporabljeno"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "Shranjena povezava z naslovom strežnika in poverilnicami. Ponovno jo uporabi vsak vir, ki se nanjo sklicuje."
 label = "Povezava"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "Mapa na strežniku za preverjanje, relativno glede na domačo mapo prijave ali koren skupne rabe. Pustite prazno za koren."
 label = "Mapa"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "Poraba odstrani vsako datoteko s strežnika, ko jo obdela vsak pravilnik."
 label = "Način branja"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "Poraba: vsako datoteko obdelaj enkrat"
 snapshot = "Posnetek: ob vsakem zagonu ponovno preberi mapo"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "Globina mape"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "Vključi podmape"
 top = "Samo najvišja raven"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "Aktivno"
 disabled = "Onemogočeno"
 unused = "Neuporabljeno"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "Dokumenti"
 source = "Vir"
 status = "Stanje"
 type = "Type"
 usedBy = "Pravilniki"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "Povlecite dokumente iz map Box, ki jih vaša ekipa že deli."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "Povlecite dokumente iz deljene mape Dropbox."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "Dokumenti, ki jih je vaša ekipa obdelala v urejevalniku, prek pravilnikov in AI zagonov."
 label = "Urejevalnik"
 noPolicies = "Iz urejevalnika še ni bil zagnan noben pravilnik."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "Spremenite priloge, poslane v namenski nabiralnik, v dokumente."
 label = "E-poštni nabiralnik"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "Spremljajte imenik na strežniku za nove dokumente."
 label = "Mapa"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Absolutna pot, ki jo Stirling spremlja za datoteke za obdelavo."
 label = "Pot imenika"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "Preverjanje vsebine prebere vsako spremenjeno datoteko, zato se preimenovanja in dotiki, ki ne spremenijo vsebine, ne obdelajo znova."
 label = "Zaznavanje sprememb"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "Velikost, datum in preverjanje vsebine"
 stat = "Velikost in datum spremembe"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "Način branja"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "Porabi: vsako datoteko obdelaj enkrat"
 snapshot = "Posnetek: ponovno preberi mapo ob vsakem zagonu"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "Globina mape"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "Vključi podmape"
 top = "Samo zgornja raven"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "Preverjajte mapo strežnika FTP ali FTPS za nove dokumente."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "Povlecite dokumente iz deljenih map Google Drive."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "Spremljajte omrežno skupno rabo SMB za nove dokumente."
 label = "Omrežni pogon"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "Spremljajte mape OneDrive za nove dokumente."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Povlecite dokumente iz vedra Amazon S3 ali S3-združljivega vedra."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "Shranjena povezava, ki vsebuje vedro in poverilnice. Ponovno jo uporabi vsak vir in izhod cevovoda, ki se nanjo sklicuje."
 label = "Povezava"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "Poraba odstrani vsak objekt iz vedra, ko ga obdela vsak pravilnik."
 label = "Način branja"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "Poraba: vsak objekt obdelaj enkrat"
 snapshot = "Posnetek: ob vsakem zagonu ponovno preberi vedro"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "Obdelajo se samo objekti, katerih ključi se začnejo s to predpono."
 label = "Predpona ključa"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "Preverjajte odložno mapo SFTP za nove dokumente."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "Povlecite dokumente iz knjižnic dokumentov SharePoint."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "Vir"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "URL za dostavo in podpisna skrivnost se ustvarita, ko ustvarite ta webhook. Pošiljatelji pošljejo dokumente s POST na ta URL, sklicujoči se pravilniki pa se zaženejo ob prispetju."
 description = "Prejmite dokumente s podpisanim HTTP POST iz katerega koli zunanjega sistema."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "URL za dostavo"
 secretNote = "Podpisna skrivnost je prikazana enkrat, ko je webhook ustvarjen. Če jo želite zamenjati, ponovno ustvarite vir."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "Kopiraj"
 done = "Končano"
 secret = "Podpisna skrivnost"
@@ -8896,78 +8899,75 @@ title = "Webhook ustvarjen"
 url = "URL za dostavo"
 usage = "Pošljite vsak dokument s POST kot surovo telo zahteve na URL za dostavo z binarno vrsto vsebine (application/pdf ali application/octet-stream). Sklicujoči se pravilniki se samodejno zaženejo ob prispetju."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "Ime"
 namePlaceholder = "npr. Sprejem zahtevkov"
 type = "Vrsta"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "Zapri"
 
-[portal.usage]
+[processor.usage]
 managePayment = "Upravljaj plačilo"
 subtitle = "Poraba, računi in upravljanje paketa za vsak PDF, ki ga je Stirling zaračunal, v eni konzoli."
 title = "Uporaba in obračunavanje"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "Denarnice ni bilo mogoče naložiti"
 openStripePortal = "Portala Stripe ni bilo mogoče odpreti"
 walletUnavailable = "Denarnica ni na voljo: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "Znova se prijavite"
 body = "Vaša seja računa Stirling je potekla. Znova se prijavite za ogled obračunavanja — vaša instanca ostane povezana."
 title = "Seja je potekla"
 
-[portal.users]
+[processor.users]
 title = "Uporabniki"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "Admin (lastnik organizacije)"
 summary = "Popolno upravljanje delovnega prostora, nastavitev in članov."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "Upravljanje uporabnikov, ekip in vlog"
 1 = "Upravljanje vseh integracij, vklj. s povezavami S3"
 2 = "Dodelitev ali preklic dostopa do portala"
 3 = "Vse, kar lahko naredi lastnik ekipe"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "Gost"
 summary = "Omejen ali samo spletni dostop; ne more imeti osebnih konfiguracij."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "Samo spletna / demo uporaba"
 1 = "Brez API ključev ali integracij"
 2 = "Brez dostopa do portala"
 3 = "Samo za branje, kjer je deljeno"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "Član"
 summary = "Običajen uporabnik — dela z deljenimi viri in svojimi konfiguracijami."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "Uporaba urejevalnika in deljenih integracij"
 1 = "Ustvarjanje osebnih API in MCP konfiguracij"
 2 = "Ogled konfiguracij ekipe, deljenih z njimi"
 3 = "Brez upravljanja S3 ali delovnega prostora"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "Lastnik ekipe"
 summary = "Ima ekipo — upravlja vire njenih članov in deljene konfiguracije."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "Ustvarjanje in upravljanje povezav S3 ekipe"
 1 = "Upravljanje integracijskih konfiguracij v lasti ekipe"
 2 = "Dostop do portala prek privzetega pravilnika"
 3 = "Vse, kar lahko naredi član"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neomejeno"
-
-[printFile]
-title = "Natisni datoteko"
 
 [provider.googledrive]
 name = "Google Drive"

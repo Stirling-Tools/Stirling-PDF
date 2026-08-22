@@ -338,7 +338,7 @@ tasks:
     desc: "Lint stylesheets for duplicate selectors"
     deps: [install]
     cmds:
-      # Covers the whole editor tree, including the portal/processor layer and
+      # Covers the whole editor tree, including the processor/processor layer and
       # public/css. Vendored CSS and build output are excluded via ignoreFiles
       # in stylelint.config.mjs.
       - npx stylelint "editor/**/*.css"
@@ -452,12 +452,12 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/prototypes/tsconfig.json }
 
-  typecheck:portal:
-    desc: "Typecheck developer portal build variant"
+  typecheck:processor:
+    desc: "Typecheck developer processor build variant"
     deps: [install]
     cmds:
       - task: typecheck:_run
-        vars: { PROJECT: editor/src/portal/tsconfig.json }
+        vars: { PROJECT: editor/src/processor/tsconfig.json }
 
   typecheck:storybook:
     desc: "Typecheck Storybook config and stories"
@@ -476,7 +476,7 @@ tasks:
       - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
-      - task: typecheck:portal
+      - task: typecheck:processor
       - task: typecheck:storybook
 
   # ============================================================

@@ -6,8 +6,8 @@ export interface AppSwitcherProps {
 }
 
 /**
- * Sidebar brand header. Core has no admin portal to switch to, so it just
- * shows the Stirling logo. Builds that bundle the portal (proprietary/saas)
+ * Sidebar brand header. Core has no admin processor to switch to, so it just
+ * shows the Stirling logo. Builds that bundle the processor (proprietary/saas)
  * shadow this with a version whose logo doubles as the editor⇄processor
  * switcher.
  */

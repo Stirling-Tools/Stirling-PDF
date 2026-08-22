@@ -822,7 +822,7 @@
   flex-shrink: 0;
 }
 
-/* ── Fullwidth OAuth (SaaS-screen canonical look — shared so the portal link
+/* ── Fullwidth OAuth (SaaS-screen canonical look — shared so the processor link
    modal matches the SaaS editor login exactly) ──────────────────────────── */
 .oauth-container-fullwidth {
   display: flex;

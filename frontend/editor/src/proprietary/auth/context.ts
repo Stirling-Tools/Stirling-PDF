@@ -12,7 +12,7 @@ export const AuthContext = createContext<AuthContextValue>({
   displayName: null,
   isAnonymous: false,
   isAdmin: false,
-  portalAccess: false,
+  processorAccess: false,
   role: null,
   loading: true,
   error: null,

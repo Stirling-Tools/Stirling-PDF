@@ -2,20 +2,20 @@ import { isAdminRole } from "@app/auth/roles";
 import apiClient from "@app/services/apiClient";
 import { preferencesService } from "@app/services/preferencesService";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
 
 /**
  * Role-based landing, shared by every flavor (self-hosted + SaaS).
  *
  * Backs the router at "/" (RootGate) and the destination a fresh login lands on:
- * users who can use the processor (portal) are sent there, everyone else to the
- * editor. The decision is driven by the shared `/api/v1/auth/me` endpoint so
- * there is a single code path for all flavors:
+ * users who can use the processor are sent there, everyone else to the editor.
+ * The decision is driven by the shared `/api/v1/auth/me` endpoint so there is a
+ * single code path for all flavors:
  *
- * - Self-hosted: `portalAccess` from `/me` (admin, ACL grant, or team owner) is
+ * - Self-hosted: `processorAccess` from `/me` (admin, ACL grant, or team owner) is
  *   the clean signal - there are no personal teams, and `/api/v1/team/my` does
  *   not exist (404).
- * - SaaS: every user leads their own personal team, so `portalAccess`/`teamLead`
+ * - SaaS: every user leads their own personal team, so `processorAccess`/`teamLead`
  *   are true for everyone and useless. SaaS additionally exposes
  *   `/api/v1/team/my`, so there we require admin, or leadership of a NON-personal
  *   team, which excludes members and solo/personal users.
@@ -34,10 +34,12 @@ export function leadsRealTeam(teams: LandingTeam[]): boolean {
   return teams.some((team) => team.isLeader && !team.isPersonal);
 }
 
-// The processor/portal route-set is only bundled in some builds (mirrors
+// The processor route-set is only bundled in some builds (mirrors
 // adminRouteExtensions); redirecting to it otherwise would 404 to the editor.
-export function isPortalAvailable(): boolean {
-  return import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
+export function isProcessorAvailable(): boolean {
+  return (
+    import.meta.env.VITE_INCLUDE_PROCESSOR === "true" || import.meta.env.DEV
+  );
 }
 
 /**
@@ -56,7 +58,7 @@ export function loginLandingMode(): LoginLandingMode {
 
 interface MeUser {
   role?: string;
-  portalAccess?: boolean;
+  processorAccess?: boolean;
 }
 
 /**
@@ -78,7 +80,7 @@ function shortCircuitToEditor(): string | null {
   const pinnedEditor =
     preferencesService.getPreference("loginLandingView") === "editor";
   return loginLandingMode() !== "dynamic" ||
-    !isPortalAvailable() ||
+    !isProcessorAvailable() ||
     pinnedEditor
     ? EDITOR_BASENAME
     : null;
@@ -93,7 +95,7 @@ export async function resolveRootTarget(): Promise<string | null> {
   if (shortCircuit) return shortCircuit;
   const destination = await fetchRootDestination();
   if (destination === "signedOut") return null;
-  return destination === "processor" ? PORTAL_BASENAME : EDITOR_BASENAME;
+  return destination === "processor" ? PROCESSOR_BASENAME : EDITOR_BASENAME;
 }
 
 /**
@@ -137,9 +139,9 @@ export async function fetchRootDestination(): Promise<RootDestination> {
   } catch (e) {
     const status = (e as { response?: { status?: number } })?.response?.status;
     if (status === 404) {
-      // Self-hosted: no /team/my. portalAccess (admin / grant / team owner) is
+      // Self-hosted: no /team/my. processorAccess (admin / grant / team owner) is
       // the clean signal there.
-      return user.portalAccess === true ? "processor" : "editor";
+      return user.processorAccess === true ? "processor" : "editor";
     }
     return "editor"; // ambiguous lookup failure → stay on the editor
   }

@@ -6352,10 +6352,13 @@ thirtyDays = "30일"
 threeYears = "3년"
 webhook = "Webhook"
 
-[portal]
+[printFile]
+title = "파일 인쇄"
+
+[processor]
 comingSoon = "곧 제공 예정"
 
-[portal.accountLink.card]
+[processor.accountLink.card]
 billingNote = "무인 처리는 조직 지갑에 청구됩니다."
 eyebrow = "계정 연결"
 linkButton = "Stirling 계정 연결"
@@ -6366,37 +6369,37 @@ notLinked = "연결되지 않음"
 title = "이 조직을 Stirling 계정에 연결"
 unlink = "연결 해제"
 
-[portal.accountLink.card.error]
+[processor.accountLink.card.error]
 title = "연결할 수 없음"
 
-[portal.accountLink.card.loginNotConfigured]
+[processor.accountLink.card.loginNotConfigured]
 after = "호스팅된 Stirling 계정에 대한 계정 연결을 활성화하세요. 개발 환경에서는 연결 대화 상자에서 로그인을 시뮬레이션할 수 있습니다."
 before = "설정"
 title = "SaaS 로그인이 구성되지 않음"
 
-[portal.accountLink.gate]
+[processor.accountLink.gate]
 action = "계정 연결"
 description = "청구 가능 기능을 사용하려면 이 조직의 Stirling 계정을 연결하세요."
 title = "연결하여 잠금 해제"
 titleFeature = "연결하여 {{feature}} 잠금 해제"
 
-[portal.accountLink.instances]
+[processor.accountLink.instances]
 active = "활성"
 revoke = "취소"
 revoked = "취소됨"
 unnamed = "이름 없는 인스턴스"
 
-[portal.accountLink.instances.columns]
+[processor.accountLink.instances.columns]
 instance = "인스턴스"
 lastSeen = "마지막 확인"
 linked = "연결됨"
 status = "상태"
 
-[portal.accountLink.instances.empty]
+[processor.accountLink.instances.empty]
 description = "이 조직의 계정을 연결한 다음 자체 호스팅 인스턴스를 등록하면 여기에서 볼 수 있습니다."
 title = "연결된 인스턴스 없음"
 
-[portal.accountLink.instances.time]
+[processor.accountLink.instances.time]
 daysAgo_one = "{{count}}일 전"
 daysAgo_other = "{{count}}일 전"
 hoursAgo_one = "{{count}}시간 전"
@@ -6406,36 +6409,36 @@ minutesAgo_one = "{{count}}분 전"
 minutesAgo_other = "{{count}}분 전"
 never = "없음"
 
-[portal.accountLink.modal]
+[processor.accountLink.modal]
 linkSubtitle = "이 서버에서 청구할 계정으로 로그인하세요."
 linkTitle = "Stirling 계정 연결"
 reauthSubtitle = "세션이 만료되었습니다 — Stirling 계정에 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
 reauthTitle = "다시 로그인"
 simulateSignIn = "로그인 시뮬레이션(dev)"
 
-[portal.accountLink.modal.loginNotConfigured]
+[processor.accountLink.modal.loginNotConfigured]
 after = "호스팅된 Stirling 계정에 대한 앱 내 연결을 활성화하세요."
 and = "및"
 before = "설정"
 title = "SaaS 로그인이 구성되지 않음"
 
-[portal.accountLink.panel]
+[processor.accountLink.panel]
 instancesSub = "이 조직에 등록된 모든 자체 호스팅 인스턴스입니다. 자격 증명을 취소하면 무인 액세스가 즉시 차단됩니다."
 instancesTitle = "연결된 인스턴스"
 revokeError = "인스턴스를 취소할 수 없음"
 sub = "무인 처리 비용이 조직 지갑에 청구되도록 이 자체 호스팅 조직을 Stirling 계정에 연결하세요."
 
-[portal.accountLink.panel.loadError]
+[processor.accountLink.panel.loadError]
 forbidden = "팀 소유자만 조직의 연결된 인스턴스를 볼 수 있습니다."
 generic = "팀의 연결된 인스턴스를 불러올 수 없습니다. 잠시 후 다시 시도하세요."
 title = "연결된 인스턴스를 불러올 수 없음"
 
-[portal.accountLink.state]
+[processor.accountLink.state]
 free = "Editor 플랜"
 subscribed = "Processor 플랜"
 unlinked = "연결되지 않음"
 
-[portal.assistant]
+[processor.assistant]
 close = "Assistant 닫기"
 error = "Assistant에 연결할 수 없습니다."
 errorWithDetail = "Assistant에 연결할 수 없습니다: {{detail}}"
@@ -6447,33 +6450,33 @@ title = "Assistant"
 tryAsking = "질문해 보세요"
 typing = "입력 중"
 
-[portal.auth]
+[processor.auth]
 loading = "로딩 중"
 redirectingToEditor = "Editor로 리디렉션 중..."
 
-[portal.billing.activation]
+[processor.billing.activation]
 maybeLater = "나중에"
 title = "Processor 켜기"
 
-[portal.billing.activation.payg]
+[processor.billing.activation.payg]
 sub = "월간 한도를 설정하세요. 실행한 만큼 결제합니다."
 title = "사용한 만큼 결제"
 
-[portal.billing.activation.prepay]
+[processor.billing.activation.prepay]
 badge = "2개월 무료"
 sub = "청구서 하나, 카드 또는 은행 송금."
 title = "1년 선불"
 
-[portal.billing.checkout]
+[processor.billing.checkout]
 noClientSecret = "Edge function이 client_secret을 반환하지 않았습니다."
 title = "Processor 플랜 켜기"
 
-[portal.billing.checkout.activationSlow]
+[processor.billing.checkout.activationSlow]
 body = "결제는 성공했지만 활성화가 평소보다 조금 더 오래 걸리고 있습니다. 자동으로 켜집니다 - 이를 닫으면 곧 여기에 표시됩니다."
 close = "닫기"
 title = "거의 완료되었습니다"
 
-[portal.billing.checkout.cap]
+[processor.billing.checkout.cap]
 amountAria = "월간 지출 한도"
 back = "뒤로"
 continue = "결제로 계속"
@@ -6484,30 +6487,30 @@ note = "한도를 초과해 청구되지 않습니다. 처리는 일시 중지�
 perMonth = "/월"
 title = "지출 한도 설정"
 
-[portal.billing.checkout.card]
+[processor.billing.checkout.card]
 fields = "카드 번호 · MM / YY · CVC · ZIP"
 label = "카드 정보"
 note = "카드 정보는 Stripe에서 수집합니다. Stirling은 PAN 또는 CVC를 저장하지 않습니다."
 
-[portal.billing.checkout.error]
+[processor.billing.checkout.error]
 title = "Checkout을 시작할 수 없음"
 
-[portal.billing.checkout.finalizing]
+[processor.billing.checkout.finalizing]
 body = "결제가 완료되었습니다. 연결된 인스턴스 전반에서 종량제 처리를 켜는 중입니다 - 보통 몇 초 정도 걸립니다."
 hint = "이 창을 열어 두세요."
 title = "Processor 플랜 활성화 중..."
 
-[portal.billing.checkout.pay]
+[processor.billing.checkout.pay]
 limit = "월간 지출 한도 {{amount}}/월. 한도에 도달하면 처리가 일시 중지됩니다."
 limitNoCap = "지출 한도 없음. 처리가 일시 중지되지 않습니다. 청구서는 매월 발행됩니다."
 
-[portal.billing.enterpriseUpsell]
+[processor.billing.enterpriseUpsell]
 cta = "Enterprise 견적 만들기"
 description = "약정 사용량 할인, air-gapped 배포, 맞춤 MSA 및 보안 검토, 3rd-party 배포 파트너십."
 eyebrow = "사용량 할인 · 1M+ PDFs"
 title = "Stirling Enterprise"
 
-[portal.billing.freeEditors]
+[processor.billing.freeEditors]
 activeThisMonth = "이번 달 활성"
 cost = "비용"
 editorsDeployed = "배포된 Editor"
@@ -6516,7 +6519,7 @@ pdfsEdited = "편집된 PDFs"
 subtitle = "어디에나, 전체 팀을 위해 배포하세요."
 title = "무료 PDF Editors"
 
-[portal.billing.freePlan]
+[processor.billing.freePlan]
 checkoutErrorTitle = "Checkout을 시작할 수 없음"
 currentPlan = "현재 플랜"
 freeForever = "영구 무료"
@@ -6529,7 +6532,7 @@ switchOnProcessor = "Processor 켜기 →"
 unlimitedUsers = "무제한 사용자"
 viewQuote = "견적 보기"
 
-[portal.billing.invoices]
+[processor.billing.invoices]
 columnAmount = "금액"
 columnDate = "날짜"
 columnDescription = "설명"
@@ -6553,12 +6556,12 @@ title = "송장 기록"
 viewAriaLabel = "Stripe에서 송장 {{number}} 보기"
 viewLink = "보기 ↗"
 
-[portal.billing.linkPrompt]
+[processor.billing.linkPrompt]
 cta = "Stirling 계정 연결"
 description = "수동 PDF 편집 — 보기, 서명, 병합, 분할, 워터마크, 압축, 변환, 수동 OCR — 은 연결 여부와 관계없이 항상 무료입니다. 연결하면 종량제 처리(자동화, AI, API)용 무료 PDF 500개를 받을 수 있습니다. 더 필요할 때 Processor 플랜을 켜고 사용한 만큼만 결제하세요."
 title = "Stirling 계정 연결"
 
-[portal.billing.paymentMethod]
+[processor.billing.paymentMethod]
 billedMonthly = "월별 청구"
 cardEnding = "{{last4}}로 끝나는 {{brand}}"
 cardFallback = "카드"
@@ -6568,7 +6571,7 @@ managedSub = "카드와 청구 정보는 Stripe 고객 portal에 안전하게 �
 managedTitle = "Stripe에서 관리됨"
 update = "업데이트"
 
-[portal.billing.pdfsProcessed]
+[processor.billing.pdfsProcessed]
 emptyPeriod = "이번 기간에는 아직 종량제 처리가 없습니다."
 eyebrow = "이번 기간 처리된 PDFs"
 legendValue_one = "{{formatted}} PDFs"
@@ -6587,14 +6590,14 @@ unit = "종량제 PDFs"
 unitsPending_one = "연결된 인스턴스에서 {{units}} 미터 단위 동기화 대기 중"
 unitsPending_other = "연결된 인스턴스에서 {{units}} 미터 단위 동기화 대기 중"
 
-[portal.billing.prepaid]
+[processor.billing.prepaid]
 capSuffix = "총 {{total}} 선불 크레딧 중"
 expires = "{{date}} 만료"
 eyebrow = "선불 용량"
 note = "종량제 청구 전에 사용되며 지출 한도 외부에서 사용됩니다."
 topUp = "충전"
 
-[portal.billing.prepaid.buy]
+[processor.billing.prepaid.buy]
 back = "뒤로"
 calcTitle = "연간 결제 금액 계산"
 cancel = "취소"
@@ -6607,7 +6610,7 @@ loadingTitle = "견적 불러오는 중"
 payTitle = "연간 요금 결제"
 step = "{{total}}단계 중 {{current}}단계"
 
-[portal.billing.prepaid.calc]
+[processor.billing.prepaid.calc]
 change = "변경"
 deployRow = "배포"
 done = "완료"
@@ -6626,10 +6629,10 @@ sizingRow = "규모 산정"
 sizingValue = "{{label}} · {{desc}}"
 usersLabel = "총 사용자"
 
-[portal.billing.prepaid.consent]
+[processor.billing.prepaid.consent]
 label = "선불 용량을 모두 사용하거나 12개월 후 만료되면, 취소하지 않는 한 처리가 표준 종량제 요금(내 지출 한도까지)으로 자동 계속되며, 청구 포털에서 언제든지 취소할 수 있음을 이해합니다."
 
-[portal.billing.prepaid.deploy]
+[processor.billing.prepaid.deploy]
 cloud = "Stirling Cloud"
 cloudDesc = "Stirling에서 관리합니다. 몇 분 안에 시작됩니다."
 cloudValue = "Stirling Cloud · 관리형"
@@ -6637,12 +6640,12 @@ selfhost = "자체 호스팅"
 selfhostDesc = "개인 인프라에서 실행됩니다. 동일 요금."
 selfhostValue = "자체 호스팅 · 개인 인프라"
 
-[portal.billing.prepaid.offer]
+[processor.billing.prepaid.offer]
 cta = "제안 검토"
 subtitle = "PDF 처리 1년치를 선불로 결제하고 2개월을 무료로 받으세요. 종량제 청구 전에, 지출 한도 외부에서 사용됩니다."
 title = "10개월 가격으로 12개월 이용"
 
-[portal.billing.prepaid.pay]
+[processor.billing.prepaid.pay]
 accountName = "계정 소유자 이름"
 accountNamePlaceholder = "예: Jane Smith"
 companyName = "회사명(선택 사항)"
@@ -6652,7 +6655,7 @@ payOnline = "온라인 결제"
 poNumber = "PO 번호(선택 사항)"
 poNumberPlaceholder = "예: PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
+[processor.billing.prepaid.pipelines]
 advanced = "고급"
 advancedDesc = "파이프라인이 대부분의 처리를 담당합니다."
 none = "없음"
@@ -6660,7 +6663,7 @@ noneDesc = "아직 파이프라인을 실행하지 않습니다. 언제든지 �
 standard = "표준"
 standardDesc = "몇 개의 파이프라인이 도착하는 PDFs를 다시 처리합니다."
 
-[portal.billing.prepaid.posture]
+[processor.billing.prepaid.posture]
 essentials = "필수"
 essentialsDesc = "분류, 기본값, 공유 포함"
 governed = "관리됨"
@@ -6668,12 +6671,12 @@ governedDesc = "보안 및 라우팅 추가"
 regulated = "규제됨"
 regulatedDesc = "Compliance, Retention, Ingestion 포함 모든 카테고리"
 
-[portal.billing.prepaid.review]
+[processor.billing.prepaid.review]
 download = "견적 다운로드(PDF)"
 downloading = "준비 중…"
 share = "승인을 위해 공유"
 
-[portal.billing.prepaid.size]
+[processor.billing.prepaid.size]
 compact = "컴팩트"
 compactDesc = "25 MB 미만 파일, 데이터 요금 없음"
 heavy = "무거움"
@@ -6681,12 +6684,12 @@ heavyDesc = "스캔 또는 이미지가 많음, 보통 50 MB+"
 standard = "표준"
 standardDesc = "대부분 작고, 일부 스캔은 25 MB 초과"
 
-[portal.billing.prepaid.state]
+[processor.billing.prepaid.state]
 exhausted = "모두 사용됨"
 healthy = "충분히 남음"
 low = "부족해지는 중"
 
-[portal.billing.spendLimit]
+[processor.billing.spendLimit]
 adjustLimit = "한도 조정"
 cancel = "취소"
 capControlNote = "변경 사항은 즉시 적용됩니다 — 언제든지 상한을 올리거나 낮출 수 있습니다."
@@ -6706,12 +6709,12 @@ thisPeriodUncapped = "이번 기간 {{amount}} · 상한 없음"
 usedThisMonth = "이번 달 {{amount}} 사용됨"
 useSuggested = "제안 사용 · {{amount}} / 월"
 
-[portal.billing.spendLimit.projection]
+[processor.billing.spendLimit.projection]
 body_one = "{{rate}}/일 기준으로 약 {{count}}일 후 상한에 도달합니다(월말 예상 ~{{monthEnd}}). 제안 한도는 약 {{suggested}}입니다."
 body_other = "{{rate}}/일 기준으로 약 {{count}}일 후 상한에 도달합니다(월말 예상 ~{{monthEnd}}). 제안 한도는 약 {{suggested}}입니다."
 label = "초과 예상."
 
-[portal.billing.spendThisMonth]
+[processor.billing.spendThisMonth]
 eyebrow = "이번 달 지출"
 freeRemaining_one = "무료 PDF {{formatted}}개 남음"
 freeRemaining_other = "무료 PDFs {{formatted}}개 남음"
@@ -6720,17 +6723,17 @@ processed_other = "{{formattedCount}} PDFs 처리됨."
 processedWithRate_one = "{{formattedCount}} PDF 처리됨, 각 {{rate}}."
 processedWithRate_other = "{{formattedCount}} PDFs 처리됨, 각 {{rate}}."
 
-[portal.billing.subscribedPlan.capWarn]
+[processor.billing.subscribedPlan.capWarn]
 approachingBody = "자동 처리가 멈추지 않도록 지금 올리세요."
 approachingTitle = "월별 지출 한도의 {{pct}}%에 도달했습니다"
 raiseLimit = "한도 올리기"
 reachedBody = "한도를 올리거나 주기가 재설정될 때까지 종량제 처리가 일시 중지됩니다. 무제한 PDF 편집은 계속 작동합니다."
 reachedTitle = "월별 지출 한도에 도달했습니다"
 
-[portal.billing.subscribedPlan.portalError]
+[processor.billing.subscribedPlan.portalError]
 title = "Stripe portal을 열 수 없음"
 
-[portal.billing.walletMeter]
+[processor.billing.walletMeter]
 barAria = "Free PDFs remaining"
 capSuffix_one = "무료 PDFs {{allowance}}개 중 사용됨"
 capSuffix_other = "무료 PDFs {{allowance}}개 중 사용됨"
@@ -6743,7 +6746,7 @@ title_other = "PDF {{allowance}}개 무료 처리"
 titleWithRate_one = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
 titleWithRate_other = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
 
-[portal.components.billingUnit]
+[processor.components.billingUnit]
 approval = "승인"
 check = "확인"
 event = "이벤트"
@@ -6752,11 +6755,11 @@ review = "검토"
 session = "세션"
 signature = "서명"
 
-[portal.components.maturity]
+[processor.components.maturity]
 beta = "Beta"
 ga = "GA"
 
-[portal.connections]
+[processor.connections]
 createTitle = "새 연결"
 createTitleFor = "{{name}} 연결"
 delete = "삭제"
@@ -6764,369 +6767,369 @@ edit = "편집"
 editTitle = "연결 편집"
 unsupportedType = "이 연결 유형은 여기서 편집할 수 없습니다."
 
-[portal.connections.categories.advanced]
+[processor.connections.categories.advanced]
 description = "아직 지원하지 않는 서비스용입니다."
 label = "고급"
 
-[portal.connections.categories.audit]
+[processor.connections.categories.audit]
 description = "감사자가 이미 확인하는 곳에 문서에 발생한 일을 기록합니다."
 label = "감사 및 규정 준수 로깅"
 
-[portal.connections.categories.notify]
+[processor.connections.categories.notify]
 description = "다른 시스템에 어떤 일이 발생했음을 알립니다."
 label = "알림 및 워크플로"
 
-[portal.connections.categories.security]
+[processor.connections.categories.security]
 description = "문서가 이동하기 전에 스캔하거나 레이블을 지정합니다."
 label = "보안 및 분류"
 
-[portal.connections.categories.signing]
+[processor.connections.categories.signing]
 description = "서명 또는 공증을 위해 문서를 보냅니다."
 label = "전자 서명 및 공증"
 
-[portal.connections.categories.storage]
+[processor.connections.categories.storage]
 description = "처리된 문서가 도착하는 위치 - 버킷, 드라이브, 티켓 또는 페이지입니다."
 label = "파일 및 첨부"
 
-[portal.connections.commonFields.accessToken]
+[processor.connections.commonFields.accessToken]
 helperText = "Stirling은 이를 암호화하여 저장하며 다시 표시하지 않습니다."
 label = "액세스 토큰"
 
-[portal.connections.commonFields.apiKey]
+[processor.connections.commonFields.apiKey]
 label = "API key"
 
-[portal.connections.commonFields.apiToken]
+[processor.connections.commonFields.apiToken]
 label = "API token"
 
-[portal.connections.commonFields.baseUrl]
+[processor.connections.commonFields.baseUrl]
 helperText = "이 연결을 사용하는 단계는 이 URL 아래의 경로만 호출할 수 있으며, 다른 호스트는 호출할 수 없습니다."
 label = "서버 URL"
 
-[portal.connections.commonFields.email]
+[processor.connections.commonFields.email]
 label = "Email"
 
-[portal.connections.commonFields.host]
+[processor.connections.commonFields.host]
 label = "Host"
 
-[portal.connections.commonFields.password]
+[processor.connections.commonFields.password]
 label = "Password"
 
-[portal.connections.commonFields.port]
+[processor.connections.commonFields.port]
 label = "Port"
 
-[portal.connections.commonFields.username]
+[processor.connections.commonFields.username]
 label = "Username"
 
-[portal.connections.commonFields.webhookUrl]
+[processor.connections.commonFields.webhookUrl]
 helperText = "서비스가 제공한 URL을 붙여넣으세요. 그 아래의 경로만 호출할 수 있습니다."
 label = "Webhook URL"
 
-[portal.connections.fields]
+[processor.connections.fields]
 name = "연결 이름"
 namePlaceholder = "예: Production"
 
-[portal.connections.picker]
+[processor.connections.picker]
 cancel = "취소"
 createNew = "새 연결..."
 placeholder = "연결 선택"
 save = "연결 저장"
 
-[portal.connections.picker2]
+[processor.connections.picker2]
 back = "통합 변경"
 heading = "무엇을 연결하시겠습니까?"
 noResultsBody = "아직 지원하지 않습니다 - 알려주시면 추가를 검토하겠습니다."
 noResultsTitle = "\"{{query}}\"와 일치하는 항목 없음"
 searchPlaceholder = "통합 검색 - \"sign\", \"ocr\" 또는 제품 이름을 시도해 보세요"
 
-[portal.connections.types.api]
+[processor.connections.types.api]
 description = "정책에서 임의의 HTTP API를 호출합니다. URL, 인증 및 페이로드를 선택합니다."
 label = "사용자 지정 API"
 
-[portal.connections.types.api.fields.authType]
+[processor.connections.types.api.fields.authType]
 label = "인증"
 
-[portal.connections.types.api.fields.authType.options.basic]
+[processor.connections.types.api.fields.authType.options.basic]
 label = "Username 및 password"
 
-[portal.connections.types.api.fields.authType.options.bearer]
+[processor.connections.types.api.fields.authType.options.bearer]
 label = "Bearer token"
 
-[portal.connections.types.api.fields.authType.options.header]
+[processor.connections.types.api.fields.authType.options.header]
 label = "사용자 지정 헤더의 토큰"
 
-[portal.connections.types.api.fields.authType.options.none]
+[processor.connections.types.api.fields.authType.options.none]
 label = "없음"
 
-[portal.connections.types.api.fields.authType.options.tokenLogin]
+[processor.connections.types.api.fields.authType.options.tokenLogin]
 label = "토큰을 받기 위해 로그인"
 
-[portal.connections.types.api.fields.baseUrl]
+[processor.connections.types.api.fields.baseUrl]
 helperText = "이 연결을 사용하는 단계는 이 URL 아래의 경로만 호출할 수 있으며, 다른 호스트는 호출할 수 없습니다."
 label = "Base URL"
 placeholder = "https://api.example.com/v1"
 
-[portal.connections.types.api.fields.headerName]
+[processor.connections.types.api.fields.headerName]
 label = "헤더 이름"
 placeholder = "X-API-Key"
 
-[portal.connections.types.api.fields.loginPath]
+[processor.connections.types.api.fields.loginPath]
 label = "로그인 경로"
 placeholder = "/auth/login"
 
-[portal.connections.types.api.fields.password]
+[processor.connections.types.api.fields.password]
 label = "Password"
 
-[portal.connections.types.api.fields.resultUrlHosts]
+[processor.connections.types.api.fields.resultUrlHosts]
 helperText = "API가 다운로드 링크로 응답하면, 이 호스트만 가져올 수 있습니다. 쉼표로 구분하세요. 비워 두면 기본 URL 자체 호스트만 허용됩니다."
 label = "허용된 결과 호스트"
 
-[portal.connections.types.api.fields.token]
+[processor.connections.types.api.fields.token]
 label = "토큰"
 
-[portal.connections.types.api.fields.tokenHeaderName]
+[processor.connections.types.api.fields.tokenHeaderName]
 label = "이 헤더로 토큰 보내기"
 
-[portal.connections.types.api.fields.tokenResponseHeader]
+[processor.connections.types.api.fields.tokenResponseHeader]
 helperText = "로그인 호출이 토큰을 반환하는 응답 헤더입니다. 예: X-Auth-Token."
 label = "토큰 응답 헤더"
 
-[portal.connections.types.api.fields.username]
+[processor.connections.types.api.fields.username]
 label = "Username"
 
-[portal.connections.types.clamav]
+[processor.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "운영 중인 서버에서 문서의 malware를 스캔합니다 - 네트워크를 벗어나지 않습니다."
 label = "ClamAV (자체 호스팅)"
 
-[portal.connections.types.cloudmersive]
+[processor.connections.types.cloudmersive]
 description = "정책에서 문서의 바이러스 및 콘텐츠를 스캔합니다."
 label = "Cloudmersive"
 
-[portal.connections.types.cloudmersiveadvanced]
+[processor.connections.types.cloudmersiveadvanced]
 description = "알려진 malware뿐 아니라 매크로, 실행 파일, 스크립트 또는 임베디드 객체가 포함된 문서를 차단합니다."
 label = "Cloudmersive 고급 스캔"
 
-[portal.connections.types.confluence]
+[processor.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
 description = "처리된 문서를 Confluence 페이지에 첨부합니다."
 label = "Confluence"
 
-[portal.connections.types.consigno]
+[processor.connections.types.consigno]
 description = "전자 서명 및 공증을 위해 문서를 ConsignO Cloud (Notarius)로 보냅니다."
 label = "ConsignO Cloud"
 
-[portal.connections.types.consigno.fields.baseUrl]
+[processor.connections.types.consigno.fields.baseUrl]
 helperText = "/api/v1을 포함한 ConsignO Cloud 환경입니다."
 label = "서버 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
-[portal.connections.types.consigno.fields.clientId]
+[processor.connections.types.consigno.fields.clientId]
 label = "API key"
 
-[portal.connections.types.consigno.fields.clientSecret]
+[processor.connections.types.consigno.fields.clientSecret]
 label = "API secret"
 
-[portal.connections.types.consigno.fields.password]
+[processor.connections.types.consigno.fields.password]
 label = "Password"
 
-[portal.connections.types.consigno.fields.tenantId]
+[processor.connections.types.consigno.fields.tenantId]
 helperText = "조직에서 테넌트를 사용하는 경우에만 필요합니다."
 label = "테넌트"
 
-[portal.connections.types.consigno.fields.username]
+[processor.connections.types.consigno.fields.username]
 label = "Username"
 
-[portal.connections.types.discord]
+[processor.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
 description = "정책이 문서를 처리할 때 Discord에 메시지를 게시합니다."
 label = "Discord"
 
-[portal.connections.types.elastic]
+[processor.connections.types.elastic]
 baseUrlPlaceholder = "https://your-cluster:9200"
 description = "정책이 문서를 처리할 때마다 Elasticsearch에 감사 이벤트를 인덱싱합니다."
 label = "Elasticsearch"
 
-[portal.connections.types.ftp]
+[processor.connections.types.ftp]
 description = "새 문서를 위해 FTP 또는 FTPS 서버를 폴링합니다."
 hostPlaceholder = "ftp.example.com"
 label = "FTP / FTPS"
 
-[portal.connections.types.ftp.fields.passive]
+[processor.connections.types.ftp.fields.passive]
 label = "연결 모드"
 
-[portal.connections.types.ftp.fields.passive.options]
+[processor.connections.types.ftp.fields.passive.options]
 active = "Active"
 passive = "Passive (권장)"
 
-[portal.connections.types.ftp.fields.security]
+[processor.connections.types.ftp.fields.security]
 helperText = "일반 FTP는 자격 증명과 파일을 암호화하지 않고 전송합니다. 서버가 지원하면 FTPS를 선택하세요."
 label = "암호화"
 
-[portal.connections.types.ftp.fields.security.options]
+[processor.connections.types.ftp.fields.security.options]
 explicit = "FTPS (명시적 / AUTH TLS)"
 implicit = "FTPS (암시적)"
 none = "없음(일반 FTP)"
 
-[portal.connections.types.googlechat]
+[processor.connections.types.googlechat]
 baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "정책이 실행될 때 Google Chat 공간에 메시지를 게시합니다."
 label = "Google Chat"
 
-[portal.connections.types.jira]
+[processor.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "처리된 문서를 Jira 이슈에 첨부합니다."
 label = "Jira"
 
-[portal.connections.types.mailgun]
+[processor.connections.types.mailgun]
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
 label = "Mailgun"
 
-[portal.connections.types.n8n]
+[processor.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
 description = "Hand documents to an n8n workflow, and take back whatever it produces."
 label = "n8n"
 
-[portal.connections.types.n8n.fields.authType]
+[processor.connections.types.n8n.fields.authType]
 helperText = "Match the Authentication set on the n8n Webhook node."
 label = "Webhook authentication"
 
-[portal.connections.types.n8n.fields.authType.options.basic]
+[processor.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
 
-[portal.connections.types.n8n.fields.authType.options.header]
+[processor.connections.types.n8n.fields.authType.options.header]
 label = "Header auth"
 
-[portal.connections.types.n8n.fields.authType.options.none]
+[processor.connections.types.n8n.fields.authType.options.none]
 label = "None"
 
-[portal.connections.types.n8n.fields.headerName]
+[processor.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
-[portal.connections.types.n8n.fields.token]
+[processor.connections.types.n8n.fields.token]
 label = "Header value"
 
-[portal.connections.types.nextcloud]
+[processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "처리된 문서를 Nextcloud에 파일로 저장합니다."
 label = "Nextcloud"
 
-[portal.connections.types.nextcloud.fields.appPassword]
+[processor.connections.types.nextcloud.fields.appPassword]
 label = "앱 password"
 
-[portal.connections.types.presidio]
+[processor.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "운영 중인 Presidio 서버를 사용하여 문서 텍스트의 개인 데이터를 감지합니다."
 label = "Presidio (자체 호스팅)"
 
-[portal.connections.types.purview]
+[processor.connections.types.purview]
 description = "PDF에서 Microsoft Purview 민감도 레이블을 읽고 적용합니다."
 label = "Microsoft Purview"
 
-[portal.connections.types.purview.fields.clientId]
+[processor.connections.types.purview.fields.clientId]
 helperText = "선택 사항입니다. 이름으로 레이블을 선택할 때만 필요하며, 없어도 레이블 지정은 작동합니다."
 label = "애플리케이션(클라이언트) ID"
 
-[portal.connections.types.purview.fields.clientSecret]
+[processor.connections.types.purview.fields.clientSecret]
 label = "클라이언트 secret"
 
-[portal.connections.types.purview.fields.tenantId]
+[processor.connections.types.purview.fields.tenantId]
 helperText = "모든 레이블에 SiteId로 찍혀 Purview 인식 도구가 어느 조직이 적용했는지 알 수 있습니다."
 label = "디렉터리(테넌트) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
-[portal.connections.types.s3]
+[processor.connections.types.s3]
 description = "소스가 읽고 파이프라인 출력이 쓸 수 있는 S3 버킷입니다."
 label = "S3 storage"
 
-[portal.connections.types.s3.fields.accessKeyId]
+[processor.connections.types.s3.fields.accessKeyId]
 label = "액세스 key ID"
 
-[portal.connections.types.s3.fields.bucket]
+[processor.connections.types.s3.fields.bucket]
 label = "Bucket"
 
-[portal.connections.types.s3.fields.endpoint]
+[processor.connections.types.s3.fields.endpoint]
 helperText = "AWS의 경우 비워 두세요. MinIO 또는 다른 S3 호환 저장소의 경우 이를 설정하세요."
 label = "Endpoint"
 
-[portal.connections.types.s3.fields.region]
+[processor.connections.types.s3.fields.region]
 label = "Region"
 
-[portal.connections.types.s3.fields.secretAccessKey]
+[processor.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
 
-[portal.connections.types.sendgrid]
+[processor.connections.types.sendgrid]
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
 label = "SendGrid"
 
-[portal.connections.types.sftp]
+[processor.connections.types.sftp]
 description = "새 문서를 위해 SFTP (SSH) 서버를 폴링합니다."
 hostPlaceholder = "sftp.example.com"
 label = "SFTP"
 
-[portal.connections.types.sftp.fields.hostKeyFingerprint]
+[processor.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "선택 사항입니다. 서버의 SHA-256 호스트 key 지문입니다(`ssh-keyscan host | ssh-keygen -lf -`에서). 설정하면 이 key를 제시하는 서버만 허용됩니다. 비워 두면 첫 연결 시 보인 key가 고정되고 이후 변경은 거부됩니다."
 label = "호스트 key 지문"
 placeholder = "SHA256:..."
 
-[portal.connections.types.sftp.fields.passphrase]
+[processor.connections.types.sftp.fields.passphrase]
 label = "Key passphrase"
 
-[portal.connections.types.sftp.fields.password]
+[processor.connections.types.sftp.fields.password]
 helperText = "대신 private key로 인증하는 경우 비워 두세요."
 
-[portal.connections.types.sftp.fields.privateKey]
+[processor.connections.types.sftp.fields.privateKey]
 helperText = "선택 사항입니다. password 대신 key로 인증하려면 OpenSSH private key를 붙여넣으세요."
 label = "Private key"
 
-[portal.connections.types.slack]
+[processor.connections.types.slack]
 description = "정책이 문서를 처리할 때 Slack에 메시지를 게시합니다."
 label = "Slack"
 
-[portal.connections.types.smb]
+[processor.connections.types.smb]
 description = "SMB / CIFS 네트워크 공유(Windows 또는 Samba)를 감시합니다."
 hostPlaceholder = "fileserver.example.com"
 label = "SMB / 네트워크 공유"
 
-[portal.connections.types.smb.fields.domain]
+[processor.connections.types.smb.fields.domain]
 helperText = "선택 사항입니다. 서버에서 사용하는 경우 Windows 도메인 또는 작업 그룹입니다."
 label = "Domain"
 
-[portal.connections.types.smb.fields.share]
+[processor.connections.types.smb.fields.share]
 label = "공유"
 placeholder = "documents"
 
-[portal.connections.types.splunk]
+[processor.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
 description = "정책이 문서를 처리할 때마다 Splunk에 감사 이벤트를 보냅니다."
 label = "Splunk"
 
-[portal.connections.types.sumologic]
+[processor.connections.types.sumologic]
 baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
 description = "Sumo Logic HTTP 수집기로 감사 이벤트를 보냅니다."
 label = "Sumo Logic"
 
-[portal.connections.types.teams]
+[processor.connections.types.teams]
 baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "정책이 실행될 때 Teams 채널에 메시지를 게시합니다."
 label = "Microsoft Teams"
 
-[portal.connections.types.webhook]
+[processor.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "각 문서 또는 세부 정보만 선택한 URL로 게시합니다."
 label = "Webhook"
 
-[portal.connections.types.zapier]
+[processor.connections.types.zapier]
 baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "정책에서 Zap 또는 Make 시나리오를 트리거합니다."
 label = "Zapier & Make"
 
-[portal.docs]
+[processor.docs]
 browse = "문서 탐색"
 viewSource = "GitHub에서 소스 보기"
 
-[portal.docs.authentication]
+[processor.docs.authentication]
 codeCaption = "모든 요청"
 eyebrow = "시작하기"
 lead = "모든 요청은 bearer token으로 인증됩니다. 키는 환경별로 범위가 지정되며 교체하지 않는 한 만료되지 않습니다."
@@ -7134,13 +7137,13 @@ liveKey = "Production keys — 청구되며, 플랜에 따라 rate limit이 적�
 testKey = "Sandbox keys — 무료이며, synthetic fixtures를 반환합니다."
 title = "인증"
 
-[portal.docs.components]
+[processor.docs.components]
 codeCaption = "viewer 임베드"
 eyebrow = "구성 요소"
 lead = "검토 대기열 및 문서 검사를 위한 임베드 가능한 UI입니다. 자체 스타일을 가져오거나 제공된 테마를 사용하세요."
 title = "Drop-in viewers"
 
-[portal.docs.endpoints]
+[processor.docs.endpoints]
 eyebrow = "API REFERENCE"
 fieldCount_one = "{{count}}개 필드"
 fieldCount_other = "{{count}}개 필드"
@@ -7149,45 +7152,45 @@ filterAriaLabel = "vertical별 endpoint 필터링"
 lead = "모든 문서 유형은 typed endpoint입니다. 파일을 POST하면 스키마로 검증된 JSON을 받습니다. 아래에서 vertical별로 필터링하세요."
 title = "Endpoints"
 
-[portal.docs.errors]
+[processor.docs.errors]
 codeCaption = "422 Unprocessable Entity"
 eyebrow = "API REFERENCE"
 lead = "오류는 안정적인 machine-readable code와 사람이 읽을 수 있는 메시지를 반환합니다. 4xx 본문에는 항상 지원을 위한 request_id가 포함됩니다."
 title = "오류"
 
-[portal.docs.nav]
+[processor.docs.nav]
 ariaLabel = "문서"
 
-[portal.docs.nav.empty]
+[processor.docs.nav.empty]
 description = "문서 색인을 불러올 수 없습니다."
 title = "Docs를 사용할 수 없음"
 
-[portal.docs.quickstart]
+[processor.docs.quickstart]
 eyebrow = "시작하기"
 lead = "typed endpoint로 첫 문서를 보내고 세 단계로 구조화된 JSON을 받으세요. 모델 학습이나 프롬프트 엔지니어링이 필요 없습니다."
 title = "Quickstart"
 
-[portal.docs.quickstart.callout]
+[processor.docs.quickstart.callout]
 bodyAfterLink = "에서 복사-붙여넣기용 레시피를 확인하세요."
 bodyBeforeLink = "동일한 호출을 파이프라인에 연결하여 검증, 수정, 전달을 체인으로 이어가거나 — MCP를 통해 agent에 노출하세요."
 label = "다음:"
 link = "Playbooks"
 
-[portal.docs.quickstart.step1]
+[processor.docs.quickstart.step1]
 body = "Infrastructure 탭에서 범위가 지정된 키를 만드세요. 키에는 rate limit과 선택적 IP allowlist가 포함됩니다. 이를 shell로 내보내세요:"
 title = "API key 발급"
 
-[portal.docs.quickstart.step2]
+[processor.docs.quickstart.step2]
 body = "typed endpoint에 파일을 POST하세요. endpoint가 반환받을 스키마를 결정합니다 — 여기서는 송장 추출기입니다."
 snippetCaption = "송장 추출"
 title = "문서 보내기"
 
-[portal.docs.quickstart.step3]
+[processor.docs.quickstart.step3]
 body = "모든 응답은 endpoint 스키마에 대해 검증되며, 신뢰도 점수와 필드별 출처가 포함됩니다."
 codeCaption = "200 OK"
 title = "구조화된 결과 읽기"
 
-[portal.docs.rateLimits]
+[processor.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
 concurrency = "동시성"
@@ -7196,47 +7199,47 @@ lead = "한도는 플랜에 따라 확장됩니다. 429 응답에는 Retry-After
 requestsPerMinute = "요청 / 분"
 title = "Rate limits 및 할당량"
 
-[portal.docs.recipes]
+[processor.docs.recipes]
 cloneButton = "레시피 복제"
 eyebrow = "PLAYBOOKS"
 lead = "소스, 작업, 대상을 체인으로 연결하는 end-to-end 패턴입니다. 각 항목은 복제할 수 있는 파이프라인에 매핑됩니다."
 title = "레시피"
 
-[portal.docs.sdks]
+[processor.docs.sdks]
 eyebrow = "SDKS"
 lead = "typed responses, 자동 재시도, 스트리밍 업로드를 갖춘 first-party clients입니다. 모두 동일한 endpoint 카탈로그를 추적합니다."
 title = "공식 SDKs"
 
-[portal.docs.sdks.status]
+[processor.docs.sdks.status]
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.skills]
+[processor.docs.skills]
 eyebrow = "SKILLS"
 lead = "agent가 단일 도구로 호출하는 번들형 명명된 기능입니다. 각 skill은 eval이 연결된 결정적 작업 체인입니다."
 title = "Agent skills"
 
-[portal.docs.toc]
+[processor.docs.toc]
 title = "이 페이지에서"
 
-[portal.docs.webhooks]
+[processor.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"
 lead = "document.processed, pipeline.completed, quota.threshold 이벤트를 구독하세요. Payload는 HMAC-SHA256으로 서명됩니다."
 title = "Webhooks"
 
-[portal.docs.webhooks.callout]
+[processor.docs.webhooks.callout]
 afterHelper = "helper를 제공합니다."
 beforeHelper = "헤더를 서명 secret과 대조한 후 payload를 신뢰하세요. SDK에는"
 beforeSignature = "다음을 확인하세요:"
 
-[portal.documents]
+[processor.documents]
 exportCsv = "CSV 내보내기"
 search = "파일 이름, ID로 검색..."
 subtitle = "조직에서 처리한 모든 문서와 전체 처리 기록입니다. 콘텐츠 액세스는 요청 게이트로 보호됩니다."
 title = "문서"
 
-[portal.documents.audit]
+[processor.documents.audit]
 approved = "승인됨"
 archived = "보관됨"
 elevation = "권한 상승"
@@ -7246,44 +7249,44 @@ flagged = "검토 필요"
 ingested = "수집됨"
 reviewed = "검토 중"
 
-[portal.documents.drawer]
+[processor.documents.drawer]
 sectionsAriaLabel = "문서 세부 섹션"
 
-[portal.documents.drawer.tabs]
+[processor.documents.drawer.tabs]
 audit = "감사"
 extractions = "추출"
 overview = "개요"
 
-[portal.documents.elevation]
+[processor.documents.elevation]
 requestAccess = "접근 요청"
 
-[portal.documents.elevation.active]
+[processor.documents.elevation.active]
 description = "임시 권한 부여 — 접근이 기록되며 시간 제한이 있습니다."
 descriptionFourEyes = "임시 권한 부여 — 동료 검토자에게 알림이 전송되었습니다(four-eyes)."
 title = "접근이 {{time}} 후 만료됩니다"
 
-[portal.documents.elevation.gated]
+[processor.documents.elevation.gated]
 description = "콘텐츠가 zero-standing-access로 제한됩니다. 요청하면 시간 제한 권한 부여가 시작됩니다."
 descriptionFourEyes = "콘텐츠가 zero-standing-access로 제한됩니다. 요청하면 시간 제한 권한 부여가 시작되고 동료 검토자에게 알림이 전송됩니다(four-eyes)."
 title = "민감한 문서"
 
-[portal.documents.extractions]
+[processor.documents.extractions]
 empty = "이 문서에서 추출된 필드가 없습니다."
 masked = "추출된 필드가 숨겨져 있습니다. 이 문서의 콘텐츠를 보려면 시간 제한 접근을 요청하세요."
 
-[portal.documents.extractions.columns]
+[processor.documents.extractions.columns]
 confidence = "신뢰도"
 field = "필드"
 value = "값"
 
-[portal.documents.filters]
+[processor.documents.filters]
 all = "전체"
 ariaLabel = "상태별 문서 필터링"
 flagged = "플래그 지정됨"
 inReview = "검토 중"
 processed = "처리됨"
 
-[portal.documents.overview]
+[processor.documents.overview]
 action = "파이프라인 / 작업"
 product = "제품"
 received = "시간"
@@ -7291,26 +7294,26 @@ status = "상태"
 type = "유형"
 user = "사용자"
 
-[portal.documents.queue.empty]
+[processor.documents.queue.empty]
 connectSource = "소스 연결"
 createPipeline = "파이프라인 만들기"
 description = "소스가 문서를 파이프라인에 공급하면 검토를 위해 여기에 표시됩니다."
 title = "대기열에 문서가 없습니다"
 
-[portal.documents.status]
+[processor.documents.status]
 error = "오류"
 flagged = "검토 필요"
 inReview = "검토 중"
 processed = "처리됨"
 
-[portal.documents.table]
+[processor.documents.table]
 auto = "자동"
 editorAction = "편집자"
 empty = "이 필터와 일치하는 문서가 없습니다."
 rowActions = "행 작업"
 sensitiveLabel = "민감"
 
-[portal.documents.table.columns]
+[processor.documents.table.columns]
 action = "파이프라인 / 작업"
 document = "문서"
 labels = "Labels"
@@ -7319,11 +7322,11 @@ status = "상태"
 time = "시간"
 user = "사용자"
 
-[portal.editorAdmin]
+[processor.editorAdmin]
 subtitle = "Stirling PDF Editor를 배포하고, 셀프 호스팅 인스턴스를 조직에 페어링하며, 실행 중인 플릿(대상, 상태, 자격 증명, 오프라인 활성화)을 한곳에서 운영하세요."
 title = "Editor 배포"
 
-[portal.editorAdmin.health.columns]
+[processor.editorAdmin.health.columns]
 activeUsers = "활성 사용자"
 host = "호스트"
 lastSeen = "마지막 확인"
@@ -7332,11 +7335,11 @@ status = "상태"
 target = "Target"
 version = "버전"
 
-[portal.editorAdmin.health.empty]
+[processor.editorAdmin.health.empty]
 description = "대상을 배포하고 페어링하면 실시간 인스턴스 상태가 여기에 표시됩니다."
 title = "보고 중인 인스턴스가 없습니다"
 
-[portal.editorAdmin.offlineActivation]
+[processor.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "오프라인 번들 생성"
 lockCopy = "오프라인 및 온프레미스 활성화는 Enterprise에 포함됩니다."
@@ -7344,67 +7347,67 @@ subtitle = "외부 네트워크 경로가 없는 오프라인 또는 온프레�
 talkToSales = "영업팀에 문의"
 title = "네트워크 격리 활성화"
 
-[portal.editorAdmin.offlineActivation.readyBanner]
+[processor.editorAdmin.offlineActivation.readyBanner]
 description = "{{file}}이(가) 서명되어 전송할 준비가 되었습니다. 이 번들은 인스턴스 하나를 활성화하며 14일 후 만료됩니다."
 title = "번들 준비됨"
 
-[portal.editorAdmin.pairing]
+[processor.editorAdmin.pairing]
 generated = "생성됨 ✓"
 generateNewCode = "새 코드 생성"
 lockCopy = "IaC 프로비저닝은 Enterprise에 포함됩니다."
 rotate = "교체"
 talkToSales = "영업팀에 문의"
 
-[portal.editorAdmin.sections.health]
+[processor.editorAdmin.sections.health]
 sub = "보고 중인 모든 Editor 인스턴스 — 버전, 지역, 상태, 마지막 확인, 활성 사용자."
 title = "인스턴스 상태"
 
-[portal.editorAdmin.sections.pairing]
+[processor.editorAdmin.sections.pairing]
 sub = "셀프 호스팅 Editor를 이 조직에 연결하세요. 토큰을 생성하고 짧은 코드를 전달하거나 IaC를 통해 연결하세요."
 title = "페어링"
 
-[portal.editorAdmin.sections.targets]
+[processor.editorAdmin.sections.targets]
 sub = "Editor가 실행되는 위치입니다. 스니펫을 복사해 셀프 호스팅 인스턴스를 세우거나, 운영 부담 없는 Managed Cloud를 사용하세요."
 title = "배포 대상"
 
-[portal.editorAdmin.serviceToken]
+[processor.editorAdmin.serviceToken]
 currentToken = "현재 토큰"
 lastRotated = "마지막 교체"
 rotateButton = "서비스 토큰 교체"
 subtitle = "인스턴스는 이 자격 증명으로 조직에 인증합니다. 일정에 따라 또는 유출이 의심되는 즉시 교체하세요."
 title = "서비스 토큰"
 
-[portal.editorAdmin.serviceToken.rotatedBanner]
+[processor.editorAdmin.serviceToken.rotatedBanner]
 description = "새 토큰이 발급되었습니다. 24시간 유예 기간 내에 각 셀프 호스팅 인스턴스의 STIRLING_SERVICE_TOKEN을 업데이트하지 않으면 오프라인 상태가 됩니다."
 title = "실행 중인 인스턴스 교체"
 
-[portal.editorAdmin.status]
+[processor.editorAdmin.status]
 degraded = "성능 저하"
 healthy = "정상"
 offline = "오프라인"
 pairing = "페어링 중"
 
-[portal.editorAdmin.targets]
+[processor.editorAdmin.targets]
 instanceCount_one = "{{count}}개 인스턴스"
 instanceCount_other = "{{count}}개 인스턴스"
 talkToSales = "영업팀에 문의"
 upgradePlan = "플랜 업그레이드"
 
-[portal.editorAdmin.targets.lock]
+[processor.editorAdmin.targets.lock]
 enterprise = "온프레미스 및 Kubernetes 셀프 호스팅은 Enterprise에 포함됩니다."
 paid = "Docker 및 Kubernetes를 사용한 셀프 호스팅은 유료 플랜에서 사용할 수 있습니다."
 
-[portal.editorAdmin.targets.state]
+[processor.editorAdmin.targets.state]
 available = "사용 가능"
 locked = "잠김"
 running = "실행 중"
 
-[portal.errorBoundary]
+[processor.errorBoundary]
 description = "이 보기에서 예기치 않은 오류가 발생했습니다. 다시 시도하거나 사이드바에서 다른 섹션을 선택하세요."
 retry = "다시 시도"
 title = "이 페이지에서 문제가 발생했습니다"
 
-[portal.failures]
+[processor.failures]
 fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
 reportedBy = "Hit by {{actor}}"
@@ -7412,13 +7415,13 @@ runReference = "Run {{runId}}"
 subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
-[portal.failures.action]
+[processor.failures.action]
 acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
 
-[portal.failures.debug]
+[processor.failures.debug]
 copyJson = "Copy JSON"
 dismissAll = "Dismiss all ({{total}})"
 dismissing = "Dismissing..."
@@ -7426,35 +7429,35 @@ hideJson = "Hide raw JSON ({{total}})"
 refresh = "Refresh failures"
 showJson = "Show raw JSON ({{total}})"
 
-[portal.failures.disabled]
+[processor.failures.disabled]
 closed = "This failure is already closed."
 unavailable = "Not available for this failure."
 
-[portal.failures.empty]
+[processor.failures.empty]
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
-[portal.failures.kind.inputPasswordProtected]
+[processor.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
 
-[portal.failures.kind.unknown]
+[processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
-[portal.failures.origin]
+[processor.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
+[processor.failures.stage]
 blocked = "Blocked"
 input = "Input"
 internal = "Internal"
 never_ran = "Never ran"
 output = "Output"
 
-[portal.home.download]
+[processor.home.download]
 back = "뒤로"
 body = "데스크톱 앱을 다운로드하거나 서버를 자체 호스팅하세요."
 done = "완료"
@@ -7464,7 +7467,7 @@ sectionDesktop = "데스크톱 앱"
 sectionSelfHosted = "자체 호스팅"
 title = "Stirling PDF Editor 설치"
 
-[portal.home.download.docker]
+[processor.home.download.docker]
 detailBody = "서버에서 공식 이미지를 실행하세요."
 note = ":8080에서 열립니다. 기본 로그인: admin / stirling."
 tagline = "컨테이너에서 서버 실행"
@@ -7473,27 +7476,27 @@ variantFat = "Fat"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
-[portal.home.download.kubernetes]
+[processor.home.download.kubernetes]
 detailBody = "공식 Helm chart를 설치합니다."
 note = "설정을 유지하려면 /configs용 PVC를 추가하세요."
 tagline = "Helm으로 클러스터에 배포"
 title = "Kubernetes"
 
-[portal.home.download.linux]
+[processor.home.download.linux]
 detailBody = "사용 중인 배포판용 네이티브 빌드입니다."
 guideBtn = "Linux 설치 옵션 보기"
 note = "일반적인 배포판용 AppImage, .deb 및 .rpm 빌드를 사용할 수 있습니다."
 tagline = "사용 중인 배포판용 네이티브 데스크톱 앱"
 title = "Linux"
 
-[portal.home.download.mac]
+[processor.home.download.mac]
 altLabel = "또는 Homebrew 사용"
 detailBody = "설치 프로그램을 실행하거나 Homebrew를 사용하세요."
 downloadBtn = "macOS용 다운로드"
 tagline = "Apple silicon 및 Intel용 네이티브 앱"
 title = "macOS"
 
-[portal.home.download.manual]
+[processor.home.download.manual]
 detailBody = "베어 메탈 서버에서 .jar를 실행하세요."
 downloadBtn = ".jar 다운로드"
 note = "Java 21+가 필요합니다. :8080에서 열리며, 기본 로그인은 admin / stirling입니다."
@@ -7501,73 +7504,73 @@ runLabel = "그런 다음 실행하세요"
 tagline = "베어 메탈 서버에서 .jar 실행"
 title = "수동 서버 설정"
 
-[portal.home.download.windows]
+[processor.home.download.windows]
 altLabel = "또는 winget 사용"
 detailBody = "설치 프로그램을 실행하거나 패키지 관리자를 사용하세요."
 downloadBtn = "설치 프로그램 다운로드"
 tagline = "Microsoft Windows용 네이티브 앱"
 title = "Windows"
 
-[portal.home.editor]
+[processor.home.editor]
 activeOfDeployed = "이번 달 활성 {{active}} / {{total}}"
 name = "Stirling PDF Editor"
 open = "브라우저에서 열기"
 updated = "{{time}} 업데이트됨"
 
-[portal.home.editor.deploy]
+[processor.home.editor.deploy]
 finish = "배포 완료"
 options = "배포 옵션 보기"
 start = "Editor 배포"
 
-[portal.home.editor.target]
+[processor.home.editor.target]
 cloud = "Managed Cloud"
 docker = "셀프 호스팅 · Docker"
 kubernetes = "셀프 호스팅 · Kubernetes"
 
-[portal.home.greeting]
+[processor.home.greeting]
 afternoon = "좋은 오후입니다"
 evening = "좋은 저녁입니다"
 morning = "좋은 아침입니다"
 
-[portal.infrastructure]
+[processor.infrastructure]
 manageEditorDeployment = "Editor 배포 관리"
 sectionsAriaLabel = "인프라 섹션"
 subtitle = "Stirling 워크스페이스의 배포, 자격 증명, 보안 상태, 스토리지, 감사 추적."
 title = "인프라"
 
-[portal.infrastructure.apiKeys]
+[processor.infrastructure.apiKeys]
 createKey = "키 생성"
 heading = "API 키"
 subheading = "키별 속도 제한, 권한, IP 허용 목록이 있는 범위 지정 자격 증명입니다."
 
-[portal.infrastructure.apiKeys.card]
+[processor.infrastructure.apiKeys.card]
 created = "생성됨"
 lastUsed = "마지막 사용"
 revoke = "키 폐기"
 usageMonth = "이번 달 사용량"
 usageToday = "오늘 사용량"
 
-[portal.infrastructure.apiKeys.empty]
+[processor.infrastructure.apiKeys.empty]
 description = "Stirling API 호출을 시작하려면 범위 지정 키를 생성하세요."
 title = "아직 API 키가 없습니다"
 
-[portal.infrastructure.apiKeys.error]
+[processor.infrastructure.apiKeys.error]
 load = "API 키를 불러올 수 없습니다. 다시 시도하세요."
 
-[portal.infrastructure.apiKeys.revoke]
+[processor.infrastructure.apiKeys.revoke]
 body = "\"{{name}}\"을(를) 폐기하시겠습니까? 이 키를 계속 사용하는 모든 통합은 즉시 401 오류를 받기 시작합니다. 이 작업은 되돌릴 수 없습니다."
 cancel = "취소"
 confirm = "키 폐기"
 title = "API 키 폐기"
 
-[portal.infrastructure.audit]
+[processor.infrastructure.audit]
 filterAriaLabel = "카테고리별 감사 이벤트 필터링"
 heading = "감사 로그"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "이 카테고리에 이벤트가 없습니다."
 subheading = "워크스페이스 전반의 모든 인증, 구성, 처리 이벤트입니다."
 
-[portal.infrastructure.audit.columns]
+[processor.infrastructure.audit.columns]
 actor = "행위자"
 event = "이벤트"
 latency = "지연 시간"
@@ -7575,11 +7578,11 @@ status = "상태"
 target = "리소스"
 timestamp = "타임스탬프"
 
-[portal.infrastructure.audit.empty]
+[processor.infrastructure.audit.empty]
 description = "워크스페이스 활동이 발생하면 여기에 표시됩니다."
 title = "감사 이벤트 없음"
 
-[portal.infrastructure.audit.export]
+[processor.infrastructure.audit.export]
 cancel = "취소"
 error = "내보내기에 실패했습니다. 다시 시도하세요."
 exportButton = "내보내기"
@@ -7590,7 +7593,7 @@ open = "내보내기"
 subtitle = "감사 이벤트를 CSV 또는 JSON으로 다운로드하세요. 포함할 열을 선택하세요."
 title = "감사 로그 내보내기"
 
-[portal.infrastructure.audit.export.fields]
+[processor.infrastructure.audit.export.fields]
 date = "날짜"
 documentName = "문서 이름"
 ipAddress = "IP 주소"
@@ -7598,7 +7601,7 @@ outcome = "결과"
 tool = "도구"
 username = "사용자 이름"
 
-[portal.infrastructure.audit.filters]
+[processor.infrastructure.audit.filters]
 all = "전체"
 auth = "인증"
 config = "구성"
@@ -7607,17 +7610,17 @@ policy = "정책"
 processing = "처리"
 security = "보안"
 
-[portal.infrastructure.audit.forbidden]
+[processor.infrastructure.audit.forbidden]
 description = "감사 로그는 팀 리드와 관리자에게 제공됩니다. 접근 권한은 팀 리드나 관리자에게 요청하세요."
 title = "접근 권한이 없습니다"
 
-[portal.infrastructure.audit.metrics]
+[processor.infrastructure.audit.metrics]
 config = "구성"
 policy = "정책"
 processing = "처리"
 totalEvents = "총 이벤트 · 24시간"
 
-[portal.infrastructure.auditCatLabel]
+[processor.infrastructure.auditCatLabel]
 auth = "인증"
 config = "구성"
 elevation = "권한 상승"
@@ -7625,13 +7628,13 @@ policy = "정책"
 processing = "처리"
 security = "보안"
 
-[portal.infrastructure.auditStatusLabel]
+[processor.infrastructure.auditStatusLabel]
 danger = "오류"
 info = "정보"
 success = "성공"
 warning = "경고"
 
-[portal.infrastructure.createKey]
+[processor.infrastructure.createKey]
 cancel = "취소"
 createKey = "키 생성"
 done = "완료"
@@ -7644,11 +7647,11 @@ subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 
 title = "API 키 생성"
 titleCreated = "키 생성됨"
 
-[portal.infrastructure.keyLabel]
+[processor.infrastructure.keyLabel]
 active = "활성"
 revoked = "폐기됨"
 
-[portal.infrastructure.tabs]
+[processor.infrastructure.tabs]
 apiKeys = "API 키"
 audit = "감사 로그"
 deployments = "배포"
@@ -7656,7 +7659,7 @@ models = "모델"
 security = "보안"
 storage = "스토리지"
 
-[portal.integrations]
+[processor.integrations]
 availableHeading = "사용 가능"
 comingSoonHeading = "곧 제공 예정"
 connect = "연결"
@@ -7668,7 +7671,7 @@ subtitle = "Stirling이 통신할 수 있는 모든 항목입니다. 자격 증�
 title = "통합"
 typedName = "{{tool}} 이름"
 
-[portal.integrations.filters]
+[processor.integrations.filters]
 all = "모두"
 audit = "감사"
 connected = "연결됨"
@@ -7677,29 +7680,29 @@ security = "보안"
 signing = "서명"
 storage = "스토리지"
 
-[portal.integrations.noResults]
+[processor.integrations.noResults]
 description = "No integrations match your filters. Try a different category or search."
 title = "No matches"
 
-[portal.integrations.status]
+[processor.integrations.status]
 connected = "연결됨"
 
-[portal.integrations.table]
+[processor.integrations.table]
 integration = "통합"
 worksWith = "함께 작동"
 
-[portal.integrations.worksWith]
+[processor.integrations.worksWith]
 pipelines = "파이프라인"
 policies = "정책"
 sources = "소스"
 
-[portal.legal]
+[processor.legal]
 draft = "{{label}} · 초안"
 loadError = "이 문서를 불러올 수 없습니다. 다시 시도하세요."
 loading = "불러오는 중…"
 title = "법적 문서"
 
-[portal.nav]
+[processor.nav]
 agent-builder = "Agent Builder"
 components = "구성 요소"
 docs = "개발자 문서"
@@ -7715,18 +7718,18 @@ sources = "소스"
 usage = "사용량 및 청구"
 users = "사용자"
 
-[portal.nav.section]
+[processor.nav.section]
 platform = "PDF 플랫폼"
 processor = "PDF 프로세서"
 
-[portal.pipelines]
+[processor.pipelines]
 subtitle = "백엔드의 모든 자동 문서 파이프라인: 소스 집합에 대한 순서 지정된 작업 체인이 트리거에 의해 실행됩니다. 행을 클릭하면 단계와 소스를 볼 수 있습니다."
 title = "파이프라인"
 
-[portal.pipelines.actions]
+[processor.pipelines.actions]
 newPipeline = "새 파이프라인"
 
-[portal.pipelines.builder]
+[processor.pipelines.builder]
 activate = "Activate"
 back = "파이프라인으로 돌아가기"
 cannotFollow = "{{produced}}을(를) 사용할 수 없습니다"
@@ -7758,7 +7761,7 @@ unsavedTitle = "저장되지 않은 변경 사항"
 usesDefaults = "기본 설정으로 실행"
 viewDefinition = "View definition"
 
-[portal.pipelines.builder.blocker]
+[processor.pipelines.builder.blocker]
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -7768,7 +7771,7 @@ schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
 source = "Choose an input source"
 
-[portal.pipelines.builder.diagnostic]
+[processor.pipelines.builder.diagnostic]
 fan-in = "이전 단계의 모든 파일을 결합합니다"
 fan-out = "이전 단계의 파일마다 한 번씩 실행됩니다"
 format-mismatch = "{{accepts}}이(가) 필요하지만, 이전 단계는 {{produced}}을(를) 생성합니다"
@@ -7776,7 +7779,7 @@ output-uncertain = "실행되지 않을 수 있음: 이전 단계의 출력은 �
 source-mismatch = "{{accepts}}이(가) 필요하지만, 이 파이프라인의 입력은 {{produced}}입니다"
 undeclared-operation = "이 단계가 무엇을 허용하는지 확인할 수 없습니다"
 
-[portal.pipelines.composer]
+[processor.pipelines.composer]
 addTool = "도구 추가"
 create = "파이프라인 생성"
 createPaused = "Create paused"
@@ -7791,7 +7794,7 @@ scheduleEvery = "실행 주기"
 trigger = "트리거"
 triggerManual = "수동만"
 
-[portal.pipelines.composer.runsEvery]
+[processor.pipelines.composer.runsEvery]
 days_one = "Runs every day"
 days_other = "Runs every {{count}} days"
 hours_one = "Runs every hour"
@@ -7799,56 +7802,56 @@ hours_other = "Runs every {{count}} hours"
 minutes_one = "Runs every minute"
 minutes_other = "Runs every {{count}} minutes"
 
-[portal.pipelines.composer.unit]
+[processor.pipelines.composer.unit]
 days = "일"
 hours = "시간"
 minutes = "분"
 
-[portal.pipelines.definition]
+[processor.pipelines.definition]
 subtitle = "The pipeline as it would be saved."
 title = "Definition"
 
-[portal.pipelines.delete]
+[processor.pipelines.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
 cancel = "취소"
 confirm = "삭제"
 title = "파이프라인을 삭제하시겠습니까?"
 
-[portal.pipelines.detail]
+[processor.pipelines.detail]
 clearHistory = "기록 지우기"
 delete = "파이프라인 삭제"
 run = "지금 실행"
 
-[portal.pipelines.empty]
+[processor.pipelines.empty]
 action = "파이프라인 생성"
 connectSource = "소스 연결"
 description = "첫 번째 파이프라인을 생성하세요. 실행할 소스를 선택하고, 작업을 연결하며, 출력 위치를 선택하세요."
 title = "아직 파이프라인이 없습니다"
 
-[portal.pipelines.graph]
+[processor.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
 insertHere = "Add a tool here"
 removeNode = "Remove {{name}}"
 showError = "Show why {{name}} failed"
 
-[portal.pipelines.graph.add]
+[processor.pipelines.graph.add]
 input = "Add a source"
 output = "Add a destination"
 
-[portal.pipelines.graph.run]
+[processor.pipelines.graph.run]
 done = "Done"
 failed = "Failed"
 running = "Running"
 
-[portal.pipelines.inspector]
+[processor.pipelines.inspector]
 multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
 multipleSelected_one = "{{count}} step selected"
 multipleSelected_other = "{{count}} steps selected"
 noSelectionBody = "Pick a node in the graph to change what it does."
 noSelectionTitle = "Nothing selected"
 
-[portal.pipelines.inspector.status]
+[processor.pipelines.inspector.status]
 completed_one = "Finished the only step"
 completed_other = "Finished all {{count}} steps"
 failed_one = "Failed on the only step"
@@ -7856,12 +7859,12 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
+[processor.pipelines.kpi]
 active = "활성"
 paused = "일시 중지됨"
 total = "파이프라인"
 
-[portal.pipelines.run]
+[processor.pipelines.run]
 allProcessed_one = "실행할 항목이 없습니다: 소스의 문서 {{count}}개는 이미 처리되었습니다."
 allProcessed_other = "실행할 항목이 없습니다: 소스의 문서 {{count}}개는 모두 이미 처리되었습니다."
 completed_one = "실행이 완료되었습니다."
@@ -7874,151 +7877,151 @@ parked_other = "실행할 항목이 없습니다: 문서 {{count}}개가 이전�
 running = "실행이 시작되었으며 아직 진행 중입니다."
 timeout = "실행이 예상보다 오래 걸리고 있습니다. 백그라운드에서 계속 완료될 수 있습니다."
 
-[portal.pipelines.status]
+[processor.pipelines.status]
 active = "활성"
 paused = "일시 중지됨"
 
-[portal.pipelines.table]
+[processor.pipelines.table]
 name = "파이프라인"
 sources = "소스"
 status = "상태"
 steps = "단계"
 trigger = "Trigger"
 
-[portal.pipelines.trigger]
+[processor.pipelines.trigger]
 folder-watch = "폴더 감시"
 manual = "수동"
 schedule = "예약됨"
 
-[portal.policies]
+[processor.policies]
 defaultName = "{{category}} 정책"
 subtitle = "모든 문서에 도구 파이프라인을 적용하는 상시 자동화입니다. 각 정책은 업로드 또는 내보내기 시 실행되고, 도구 체인을 실행한 뒤 적용된 버전을 원본과 함께 저장합니다."
 title = "정책"
 
-[portal.policies.card]
+[processor.policies.card]
 comingSoon = "Enterprise로 업그레이드"
 notSetUp = "설정되지 않음"
 requiresAiEngine = "AI 엔진 필요"
 
-[portal.policies.categories.classification]
+[processor.policies.categories.classification]
 desc = "업로드 시 각 문서의 유형을 식별하고 정리 및 검색을 위해 메타데이터에 태그를 지정합니다."
 label = "분류"
 
-[portal.policies.categories.compliance]
+[processor.policies.categories.compliance]
 desc = "모든 문서에 HIPAA, GDPR, SOC 2 또는 FedRAMP 요구 사항을 적용합니다."
 label = "컴플라이언스"
 
-[portal.policies.categories.ingestion]
+[processor.policies.categories.ingestion]
 desc = "문서를 분류하고, 구조화된 데이터를 추출하며, 명명 규칙을 적용하고 페이지를 정규화합니다."
 label = "수집"
 
-[portal.policies.categories.retention]
+[processor.policies.categories.retention]
 desc = "문서를 보관할 기간, 보관 처리 시점, 삭제 시점을 설정합니다."
 label = "보존"
 
-[portal.policies.categories.routing]
+[processor.policies.categories.routing]
 desc = "문서를 적절한 팀, 폴더 또는 시스템으로 자동 라우팅합니다."
 label = "라우팅"
 
-[portal.policies.categories.security]
+[processor.policies.categories.security]
 desc = "PII를 감지하고, 마스킹하며, 활성 콘텐츠를 제거하고, 문서에 워터마크를 적용합니다."
 label = "보안"
 
-[portal.policies.config]
+[processor.policies.config]
 scopeAll = "모든 문서"
 
-[portal.policies.config.classification]
+[processor.policies.config.classification]
 summary = "업로드된 모든 문서를 팀의 레이블에 따라 분류하고 메타데이터에 태그를 지정합니다."
 
-[portal.policies.config.classification.rules]
+[processor.policies.config.classification.rules]
 0 = "분류"
 1 = "메타데이터 태그 지정"
 
-[portal.policies.config.compliance]
+[processor.policies.config.compliance]
 summary = "문서가 시스템을 떠나기 전에 규제 프레임워크에 맞는지 검증합니다."
 
-[portal.policies.config.compliance.fields]
+[processor.policies.config.compliance.fields]
 accessLog = "접근 로그"
 auditTrail = "감사 추적"
 frameworks = "프레임워크"
 onViolation = "미준수 시"
 
-[portal.policies.config.compliance.rules]
+[processor.policies.config.compliance.rules]
 0 = "프레임워크 스캔"
 1 = "작업 적용"
 2 = "감사 추적"
 
-[portal.policies.config.ingestion]
+[processor.policies.config.ingestion]
 summary = "문서를 분류하고, 구조화된 데이터를 추출하며, 명명을 적용하고, 페이지를 정규화합니다."
 
-[portal.policies.config.ingestion.fields]
+[processor.policies.config.ingestion.fields]
 belowThreshold = "임계값 미만"
 minConfidence = "최소 신뢰도"
 
-[portal.policies.config.ingestion.rules]
+[processor.policies.config.ingestion.rules]
 0 = "분류"
 1 = "추출"
 2 = "이름 지정"
 3 = "정규화"
 
-[portal.policies.config.purview]
+[processor.policies.config.purview]
 label = "Microsoft Purview 민감도 레이블 적용"
 
-[portal.policies.config.purview.fields]
+[processor.policies.config.purview.fields]
 connection = "Purview 테넌트"
 labelId = "레이블 ID"
 labelIdHelp = "Purview 포털의 레이블 GUID입니다. 레이블을 적용하면 해당 메타데이터가 PDF에 기록됩니다. 암호화는 할 수 없으며, 암호화에는 Microsoft 클라이언트가 필요합니다."
 labelName = "레이블 이름(선택 사항)"
 labelNameHelp = "사람과 도구가 레이블을 인식할 수 있도록 ID와 함께 기록됩니다."
 
-[portal.policies.config.purview.fields.method]
+[processor.policies.config.purview.fields.method]
 help = "Purview는 정책이 적용한 레이블과 사람이 선택한 레이블을 구분합니다."
 label = "레이블 기록 방식"
 privileged = "사람이 선택한 것으로"
 standard = "자동으로 적용된 것으로"
 
-[portal.policies.config.purviewRead]
+[processor.policies.config.purviewRead]
 label = "Microsoft Purview 레이블 읽기"
 
-[portal.policies.config.purviewRead.fields]
+[processor.policies.config.purviewRead.fields]
 connection = "Purview 테넌트"
 connectionHelp = "문서가 이미 가지고 있는 레이블을 읽어 이후 단계에서 이를 기반으로 작업할 수 있게 합니다."
 
-[portal.policies.config.retention]
+[processor.policies.config.retention]
 summary = "문서를 보관할 기간, 보관 처리 시점, 삭제 시점을 적용합니다."
 
-[portal.policies.config.retention.fields]
+[processor.policies.config.retention.fields]
 archiveAfter = "다음 이후 보관"
 immutableHold = "변경 불가 보류"
 keepFor = "보관 기간"
 
-[portal.policies.config.retention.rules]
+[processor.policies.config.retention.rules]
 0 = "보존 보류"
 1 = "자동 보관"
 2 = "삭제 차단"
 
-[portal.policies.config.routing]
+[processor.policies.config.routing]
 summary = "유형과 분류에 따라 문서를 적절한 대상으로 라우팅합니다."
 
-[portal.policies.config.routing.fields]
+[processor.policies.config.routing.fields]
 destination = "대상"
 notify = "라우팅 시 알림"
 webhookUrl = "Webhook URL"
 
-[portal.policies.config.routing.rules]
+[processor.policies.config.routing.rules]
 0 = "자동 분류"
 1 = "폴더로 라우팅"
 2 = "Webhook 알림"
 
-[portal.policies.config.security]
+[processor.policies.config.security]
 summary = "PII를 감지 및 마스킹하고, 활성 콘텐츠(JavaScript)를 제거하며, 문서에 워터마크를 적용합니다."
 
-[portal.policies.config.security.rules]
+[processor.policies.config.security.rules]
 0 = "PII 마스킹"
 1 = "JavaScript 제거"
 2 = "워터마크"
 
-[portal.policies.detail]
+[processor.policies.detail]
 enforces = "적용 항목"
 onEveryExport = "모든 내보내기 시"
 onEveryUpload = "모든 업로드 시"
@@ -8030,7 +8033,7 @@ showLess = "간단히 보기"
 showMore = "더 보기"
 sources = "소스"
 
-[portal.policies.detail.actions]
+[processor.policies.detail.actions]
 clearHistory = "처리 기록 지우기"
 delete = "삭제"
 editSettings = "설정 편집"
@@ -8038,17 +8041,17 @@ pause = "일시 중지"
 resume = "재개"
 runNow = "지금 실행"
 
-[portal.policies.detail.clearHistory]
+[processor.policies.detail.clearHistory]
 body = "이 정책은 이미 처리한 모든 파일을 잊고, 다음 실행 시 현재 소스에 있는 모든 항목을 다시 처리합니다. 파일 자체는 변경되지 않습니다. 이 작업은 되돌릴 수 없습니다."
 cancel = "취소"
 confirm = "기록 지우기"
 title = "처리 기록을 지우시겠습니까?"
 
-[portal.policies.detail.emptyActivity]
+[processor.policies.detail.emptyActivity]
 description = "이 정책이 실행되면 문서가 여기에 표시됩니다."
 title = "아직 활동 없음"
 
-[portal.policies.endpoints]
+[processor.policies.endpoints]
 addWatermark = "워터마크"
 autoRedact = "PII 마스킹"
 classifyAndLabel = "분류"
@@ -8057,375 +8060,375 @@ flatten = "병합"
 ocrPdf = "OCR"
 sanitizePdf = "JavaScript 제거"
 
-[portal.policies.offline]
+[processor.policies.offline]
 description = "정책이 저장되었으며 연결이 복원되면 표시됩니다."
 retry = "다시 시도"
 title = "Backend를 사용할 수 없음"
 
-[portal.policies.operations]
+[processor.policies.operations]
 change = "이 단계에서 수행할 작업 변경"
 noResults = "일치하는 단계가 없습니다. 제품 이름 또는 \"scan\", \"notify\", \"attach\"를 시도해 보세요."
 searchPlaceholder = "단계 검색 - \"scan\", \"attach\" 또는 제품 이름을 시도해 보세요"
 
-[portal.policies.operations.bodyMode]
+[processor.policies.operations.bodyMode]
 binary = "원시 파일 바이트"
 json = "JSON 페이로드 내부"
 multipart = "파일 업로드로(multipart)"
 
-[portal.policies.operations.clamavScan]
+[processor.policies.operations.clamavScan]
 description = "사용자 자체 ClamAV 서버가 문서를 검사하며, 네트워크 밖으로 아무것도 나가지 않습니다."
 label = "바이러스 검사(셀프 호스팅)"
 
-[portal.policies.operations.cloudmersiveAdvancedScan]
+[processor.policies.operations.cloudmersiveAdvancedScan]
 description = "매크로, 실행 파일, 스크립트 또는 임베디드 객체가 포함된 문서를 거부합니다."
 label = "활성 콘텐츠 차단"
 
-[portal.policies.operations.cloudmersiveScan]
+[processor.policies.operations.cloudmersiveScan]
 description = "Cloudmersive가 문서를 검사하고 깨끗하지 않으면 실행이 중지됩니다."
 label = "바이러스 검사"
 
-[portal.policies.operations.confluenceAttach]
+[processor.policies.operations.confluenceAttach]
 description = "처리된 문서를 페이지에 파일로 첨부합니다."
 label = "Confluence 페이지에 첨부"
 
-[portal.policies.operations.consignoSubmit]
+[processor.policies.operations.consignoSubmit]
 description = "서명을 위해 문서를 ConsignO Cloud에 제출합니다."
 label = "서명 요청 보내기(ConsignO)"
 note = "문서를 제출합니다. 단계가 결과를 이후 단계에 전달할 수 없기 때문에 서명된 사본 검색은 아직 지원되지 않습니다."
 
-[portal.policies.operations.customApiCall]
+[processor.policies.operations.customApiCall]
 description = "경로, 메서드, 본문 및 응답 처리를 직접 작성합니다."
 label = "사용자 지정 API 호출"
 
-[portal.policies.operations.discordNotify]
+[processor.policies.operations.discordNotify]
 description = "정책이 문서를 처리했음을 채널에 알립니다."
 label = "Discord에 메시지 게시"
 
-[portal.policies.operations.elasticIndex]
+[processor.policies.operations.elasticIndex]
 description = "정책이 수행한 작업을 검색 가능한 문서로 기록합니다."
 label = "Elasticsearch에 감사 이벤트 인덱싱"
 
-[portal.policies.operations.fields.bodyMode]
+[processor.policies.operations.fields.bodyMode]
 helperText = "Multipart는 업로드 API에 적합하고, JSON은 페이로드 안에 파일을 원하는 API에 적합하며, binary는 원시 바이트를 보냅니다."
 label = "문서 전송 방식"
 
-[portal.policies.operations.fields.bodyTemplate]
+[processor.policies.operations.fields.bodyTemplate]
 helperText = "그대로 전송되는 JSON 본문입니다. {{document.base64}}에는 파일이 들어가며, {{document.*}} 및 {{run.*}}은 문서별로 채워집니다."
 label = "JSON 본문"
 
-[portal.policies.operations.fields.connection]
+[processor.policies.operations.fields.connection]
 label = "계정"
 
-[portal.policies.operations.fields.domain]
+[processor.policies.operations.fields.domain]
 label = "Mailgun 도메인"
 placeholder = "mg.acme.com"
 
-[portal.policies.operations.fields.fileFieldName]
+[processor.policies.operations.fields.fileFieldName]
 helperText = "API가 문서를 받을 것으로 예상하는 양식 필드입니다."
 label = "파일 필드 이름"
 placeholder = "file"
 
-[portal.policies.operations.fields.from]
+[processor.policies.operations.fields.from]
 label = "보낸 사람"
 placeholder = "processor@acme.com"
 
-[portal.policies.operations.fields.headers]
+[processor.policies.operations.fields.headers]
 helperText = "헤더 이름/값 쌍의 JSON 객체입니다. 연결의 자격 증명은 자동으로 추가됩니다."
 label = "Headers"
 
-[portal.policies.operations.fields.index]
+[processor.policies.operations.fields.index]
 label = "Index"
 placeholder = "stirling-audit"
 
-[portal.policies.operations.fields.issueKey]
+[processor.policies.operations.fields.issueKey]
 label = "이슈 키"
 placeholder = "OPS-42"
 
-[portal.policies.operations.fields.message]
+[processor.policies.operations.fields.message]
 helperText = "메시지 본문으로 전송됩니다. {{document.*}} 및 {{run.*}}은 문서별로 채워집니다."
 label = "메시지"
 
-[portal.policies.operations.fields.method]
+[processor.policies.operations.fields.method]
 label = "Method"
 
-[portal.policies.operations.fields.pageId]
+[processor.policies.operations.fields.pageId]
 label = "페이지 ID"
 placeholder = "66186"
 
-[portal.policies.operations.fields.path]
+[processor.policies.operations.fields.path]
 helperText = "연결의 기본 URL에 추가됩니다. 다른 호스트에는 절대 도달할 수 없습니다."
 label = "Path"
 placeholder = "/v1/scan"
 
-[portal.policies.operations.fields.remotePath]
+[processor.policies.operations.fields.remotePath]
 helperText = "드라이브에서 기록할 위치입니다. {{document.filename}}은 문서별로 채워집니다."
 label = "대상 경로"
 placeholder = "Processed/{{document.filename}}"
 
-[portal.policies.operations.fields.responseMode]
+[processor.policies.operations.fields.responseMode]
 helperText = "보고서는 문서를 그대로 둡니다. 교체는 반환된 내용으로 문서를 바꿉니다."
 label = "응답 처리 방법"
 
-[portal.policies.operations.fields.signerEmail]
+[processor.policies.operations.fields.signerEmail]
 label = "서명자 이메일"
 placeholder = "signer@acme.com"
 
-[portal.policies.operations.fields.subject]
+[processor.policies.operations.fields.subject]
 label = "제목"
 placeholder = "Processed: {{document.filename}}"
 
-[portal.policies.operations.fields.text]
+[processor.policies.operations.fields.text]
 helperText = "Presidio가 이 텍스트를 분석합니다. {{document.title}}을 사용하거나 확인할 텍스트를 붙여넣으세요."
 label = "확인할 텍스트"
 
-[portal.policies.operations.fields.to]
+[processor.policies.operations.fields.to]
 label = "받는 사람"
 placeholder = "records@acme.com"
 
-[portal.policies.operations.fields.username]
+[processor.policies.operations.fields.username]
 label = "Nextcloud 사용자 이름"
 placeholder = "svc-stirling"
 
-[portal.policies.operations.googlechatNotify]
+[processor.policies.operations.googlechatNotify]
 description = "정책이 문서를 처리했음을 스페이스에 알립니다."
 label = "Google Chat에 메시지 게시"
 
-[portal.policies.operations.jiraAttach]
+[processor.policies.operations.jiraAttach]
 description = "처리된 문서를 이슈에 파일로 첨부합니다."
 label = "Jira 이슈에 첨부"
 
-[portal.policies.operations.mailgunEmail]
+[processor.policies.operations.mailgunEmail]
 description = "처리된 문서를 첨부 파일로 보냅니다."
 label = "문서 이메일 보내기(Mailgun)"
 
-[portal.policies.operations.n8nGate]
+[processor.policies.operations.n8nGate]
 description = "Your workflow decides whether the run carries on."
 label = "Ask an n8n workflow to approve"
 note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
 
-[portal.policies.operations.n8nNotify]
+[processor.policies.operations.n8nNotify]
 description = "Sends the run's details, not the document."
 label = "Tell an n8n workflow"
 
-[portal.policies.operations.n8nSend]
+[processor.policies.operations.n8nSend]
 description = "Sends the document and the run's details to your workflow."
 label = "Send the document to n8n"
 
-[portal.policies.operations.n8nTransform]
+[processor.policies.operations.n8nTransform]
 description = "Your workflow processes the document and the file it returns replaces it."
 label = "Process the document in n8n"
 note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
-[portal.policies.operations.nextcloudUpload]
+[processor.policies.operations.nextcloudUpload]
 description = "처리된 문서를 폴더에 기록합니다."
 label = "Nextcloud에 업로드"
 
-[portal.policies.operations.presidioAnalyze]
+[processor.policies.operations.presidioAnalyze]
 description = "사용자 자체 Presidio 서버가 발견한 개인 데이터를 보고합니다."
 label = "개인 데이터 감지"
 note = "Presidio는 파일이 아니라 텍스트를 읽습니다. 확인할 텍스트를 제공하세요 — 문서 자체는 업로드되지 않습니다."
 
-[portal.policies.operations.responseMode]
+[processor.policies.operations.responseMode]
 replace = "응답으로 문서 교체"
 report = "문서는 유지하고 응답 기록"
 
-[portal.policies.operations.sendgridEmail]
+[processor.policies.operations.sendgridEmail]
 description = "처리된 문서를 첨부 파일로 보냅니다."
 label = "문서 이메일 보내기(SendGrid)"
 
-[portal.policies.operations.slackNotify]
+[processor.policies.operations.slackNotify]
 description = "정책이 문서를 처리했음을 채널에 알립니다."
 label = "Slack에 메시지 게시"
 
-[portal.policies.operations.splunkEvent]
+[processor.policies.operations.splunkEvent]
 description = "감사자가 이미 확인하는 위치에 정책이 수행한 작업을 기록합니다."
 label = "Splunk에 감사 이벤트 보내기"
 
-[portal.policies.operations.sumologicEvent]
+[processor.policies.operations.sumologicEvent]
 description = "정책이 수행한 작업을 HTTP 수집기에 기록합니다."
 label = "Sumo Logic에 감사 이벤트 보내기"
 
-[portal.policies.operations.teamsNotify]
+[processor.policies.operations.teamsNotify]
 description = "정책이 문서를 처리했음을 채널에 알립니다."
 label = "Teams에 메시지 게시"
 
-[portal.policies.operations.webhookPost]
+[processor.policies.operations.webhookPost]
 description = "선택한 URL로 문서 자체를 보냅니다."
 label = "webhook에 문서 게시"
 
-[portal.policies.operations.zapierNotify]
+[processor.policies.operations.zapierNotify]
 description = "실행 세부 정보를 자동화로 전달합니다."
 label = "Zap 또는 Make 시나리오 트리거"
 
-[portal.policies.stats]
+[processor.policies.stats]
 activeFor = "활성"
 dataProcessed = "처리된 데이터"
 docsEnforced = "적용된 문서"
 
-[portal.policies.status]
+[processor.policies.status]
 active = "활성"
 paused = "일시 중지됨"
 
-[portal.policies.summary.active]
+[processor.policies.summary.active]
 description = "업로드/내보내기 시 적용"
 label = "활성 정책"
 
-[portal.policies.summary.categories]
+[processor.policies.summary.categories]
 description = "구성 가능"
 label = "카테고리"
 
-[portal.policies.summary.docsEnforced]
+[processor.policies.summary.docsEnforced]
 description = "활성 정책 전체"
 label = "적용된 문서"
 
-[portal.policies.summary.paused]
+[processor.policies.summary.paused]
 description = "구성되었지만 실행되지 않음"
 label = "일시 중지됨"
 
-[portal.policies.table]
+[processor.policies.table]
 appliesTo = "적용 대상"
 docs = "적용된 문서"
 enforces = "시행"
 policy = "정책"
 status = "상태"
 
-[portal.policies.wizard.actions]
+[processor.policies.wizard.actions]
 back = "뒤로"
 cancel = "취소"
 continue = "계속"
 enablePolicy = "정책 활성화"
 saveChanges = "변경 사항 저장"
 
-[portal.policies.wizard.capability.classify]
+[processor.policies.wizard.capability.classify]
 desc = "팀의 레이블에서 문서 유형을 식별하고 태그를 지정하여 범주별로 정리하고 검색할 수 있게 합니다."
 label = "문서 분류"
 
-[portal.policies.wizard.capability.compress]
+[processor.policies.wizard.capability.compress]
 desc = "문서를 더 작은 파일 크기로 압축합니다."
 label = "파일 크기 줄이기"
 
-[portal.policies.wizard.capability.flatten]
+[processor.policies.wizard.capability.flatten]
 desc = "양식 필드와 주석을 페이지에 병합하여 편집할 수 없게 합니다."
 label = "문서 병합"
 
-[portal.policies.wizard.capability.ocr]
+[processor.policies.wizard.capability.ocr]
 desc = "OCR을 실행하여 스캔된 페이지를 선택 및 검색 가능한 텍스트로 만듭니다."
 label = "텍스트 검색 가능하게 만들기"
 
-[portal.policies.wizard.capability.redact]
+[processor.policies.wizard.capability.redact]
 desc = "주민등록번호 및 카드 번호와 같은 민감한 세부 정보를 찾아 검게 처리하여 읽을 수 없게 합니다."
 label = "민감한 정보 마스킹"
 
-[portal.policies.wizard.capability.sanitize]
+[processor.policies.wizard.capability.sanitize]
 desc = "숨겨진 JavaScript를 제거하여 문서를 열 때 아무것도 자동으로 실행되지 않게 합니다."
 label = "활성 콘텐츠 제거"
 
-[portal.policies.wizard.capability.timestampPdf]
+[processor.policies.wizard.capability.timestampPdf]
 desc = "독립적인 타임스탬프 기관을 사용해 특정 시점에 문서가 이 정확한 형태로 존재했음을 증명합니다. 해시만 전송되며, 문서는 서버를 떠나지 않습니다."
 label = "신뢰할 수 있는 타임스탬프 추가"
 
-[portal.policies.wizard.capability.watermark]
+[processor.policies.wizard.capability.watermark]
 desc = "모든 페이지에 표시되는 표시(예: “기밀”)를 찍습니다."
 label = "워터마크 적용"
 
-[portal.policies.wizard.classification]
+[processor.policies.wizard.classification]
 description = "업로드된 모든 문서는 기본 제공 레이블에 따라 분류되고 맞는 유형으로 태그가 지정됩니다. 레이블 세트는 전체 팀에서 공유됩니다."
 labelsHeading = "분류 레이블"
 
-[portal.policies.wizard.errors]
+[processor.policies.wizard.errors]
 noTools = "먼저 워크플로에서 하나 이상의 도구를 활성화하세요."
 saveFailed = "정책을 저장할 수 없습니다. 다시 시도하세요."
 
-[portal.policies.wizard.output]
+[processor.policies.wizard.output]
 heading = "출력 및 실행"
 
-[portal.policies.wizard.output.filenameRule]
+[processor.policies.wizard.output.filenameRule]
 autoNumber = "자동 번호 지정"
 label = "파일 이름 규칙"
 placeholder = "추가할 텍스트(선택 사항)"
 prefix = "접두사"
 suffix = "접미사"
 
-[portal.policies.wizard.output.outputAs]
+[processor.policies.wizard.output.outputAs]
 label = "출력 형식"
 newFile = "새 파일"
 newVersion = "새 버전"
 
-[portal.policies.wizard.output.runOn]
+[processor.policies.wizard.output.runOn]
 export = "내보내기"
 helper = "정책이 실행되는 시점: 업로드 시 또는 내보내기 전."
 label = "실행 시점"
 upload = "업로드"
 
-[portal.policies.wizard.settings]
+[processor.policies.wizard.settings]
 heading = "설정"
 
-[portal.policies.wizard.sources]
+[processor.policies.wizard.sources]
 heading = "소스"
 loading = "소스 로드 중…"
 
-[portal.policies.wizard.tabs]
+[processor.policies.wizard.tabs]
 ariaLabel = "설정 단계"
 settings = "설정"
 workflow = "작업"
 
-[portal.policies.wizard.title]
+[processor.policies.wizard.title]
 edit = "{{category}} 정책 편집"
 setUp = "{{category}} 정책 설정"
 
-[portal.policies.wizard.workflow]
+[processor.policies.wizard.workflow]
 description = "이 정책이 처리하는 모든 문서에 수행할 작업을 선택하세요."
 
-[portal.policySummary.action]
+[processor.policySummary.action]
 setUp = "설정"
 
-[portal.processorFlow]
+[processor.processorFlow]
 footnote = "집계는 지난 24시간 기준입니다. 흐름 속도는 예시용입니다."
 liveBadge = "라이브"
 stats = "{{connected}}개 연결됨 · PDF {{processed}}개 처리됨"
 title = "PDF 프로세서"
 
-[portal.processorFlow.lens]
+[processor.processorFlow.lens]
 ariaLabel = "보기 모드"
 flow = "흐름"
 sankey = "Sankey"
 
-[portal.processorFlow.outcomes]
+[processor.processorFlow.outcomes]
 count = "{{n}} · 24시간"
 failed = "실패"
 heading = "결과"
 success = "전달됨"
 
-[portal.processorFlow.policies]
+[processor.processorFlow.policies]
 activeCount = "{{n}}개 활성"
 count = "{{n}} · 24시간"
 heading = "정책"
 setUp = "설정"
 soon = "곧 제공"
 
-[portal.processorFlow.sankey]
+[processor.processorFlow.sankey]
 waist = "정책 · {{n}}개 활성"
 
-[portal.processorFlow.sankey.empty]
+[processor.processorFlow.sankey.empty]
 description = "문서가 프로세서를 통해 흐르는 모습을 보려면 소스를 연결하고 정책을 켜세요."
 title = "아직 흐름 없음"
 
-[portal.processorFlow.sources]
+[processor.processorFlow.sources]
 comingSoonTag = "연결"
 editor = "Stirling PDF Editor"
 heading = "소스"
 perDay = "{{n}} / 24시간"
 
-[portal.processorFlow.sources.comingSoon]
+[processor.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
 email = "Email 수신"
 
-[portal.procurement]
+[processor.procurement]
 subtitle = "팀 평가, 계약, 온보딩을 완료하세요. 모든 문서를 한곳에서 관리합니다."
 title = "조달"
 
-[portal.procurement.agreement]
+[processor.procurement.agreement]
 agreeCta = "동의하고 구독"
 confidential = "기밀"
 confirm = "Stirling Enterprise Agreement를 읽었으며 이에 동의합니다."
@@ -8447,7 +8450,7 @@ signatoryTitle = "서명자 직함"
 signatoryTitlePlaceholder = "예: General Counsel"
 signError = "서명을 기록할 수 없습니다. 다시 시도하세요."
 
-[portal.procurement.builder]
+[processor.procurement.builder]
 addons = "추가 기능"
 addressLine1 = "주소 줄 1"
 addressLine1Placeholder = "500 Howard St"
@@ -8527,7 +8530,7 @@ volumePlaceholder = "예: 1,000,000"
 years_one = "{{count}}년"
 years_other = "{{count}}년"
 
-[portal.procurement.documents]
+[processor.procurement.documents]
 agreement = "Enterprise 계약서"
 agreementSub = "MSA, 주문서 및 DPA가 하나의 서명으로 제공됩니다."
 download = "다운로드"
@@ -8547,10 +8550,10 @@ subtitle = "거래 서류를 언제든지 사용할 수 있습니다."
 title = "문서"
 view = "보기"
 
-[portal.procurement.error]
+[processor.procurement.error]
 title = "문제가 발생했습니다"
 
-[portal.procurement.hero]
+[processor.procurement.hero]
 barAria = "{{total}}단계 중 {{current}}단계"
 ctaAgreement = "계약 검토 및 서명"
 ctaExploring = "평가판 설정"
@@ -8573,36 +8576,36 @@ sentencePayment = "구매 주문 및 결제"
 sentenceQuote = "견적 검토 및 수락"
 sentenceTrial = "평가판 워크스페이스 설정"
 
-[portal.procurement.journey]
+[processor.procurement.journey]
 daysLeft_one = "{{count}}일 남음"
 daysLeft_other = "{{count}}일 남음"
 
-[portal.procurement.journeySteps.agreement]
+[processor.procurement.journeySteps.agreement]
 blurb = "하나의 서명으로 MSA, 주문서, EULA, DPA를 포괄합니다."
 gatingAction = "계약 검토 및 서명"
 label = "계약"
 
-[portal.procurement.journeySteps.implementation]
+[processor.procurement.journeySteps.implementation]
 blurb = "워크스페이스를 프로비저닝하고 go-live 플레이북을 실행합니다."
 gatingAction = "워크스페이스 프로비저닝"
 label = "구현"
 
-[portal.procurement.journeySteps.payment]
+[processor.procurement.journeySteps.payment]
 blurb = "카드, 은행 송금 또는 구매 주문서 기준으로 결제하세요."
 gatingAction = "결제 확인"
 label = "결제"
 
-[portal.procurement.journeySteps.quote]
+[processor.procurement.journeySteps.quote]
 blurb = "약정 볼륨 가격과 계약 기간을 검토하세요."
 gatingAction = "견적 수락"
 label = "견적"
 
-[portal.procurement.journeySteps.trial]
+[processor.procurement.journeySteps.trial]
 blurb = "문서와 워크플로에 대해 Stirling을 평가하세요."
 gatingAction = "견적 만들기"
 label = "평가판"
 
-[portal.procurement.license]
+[processor.procurement.license]
 copied = "복사됨"
 copy = "키 복사"
 downloadError = "아직 오프라인 라이선스 파일을 생성할 수 없습니다. 잠시 후 다시 시도하세요."
@@ -8613,21 +8616,21 @@ subtitle = "이 키로 셀프 호스팅 인스턴스를 활성화하거나 기�
 title = "라이선스 키"
 trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완료되면 돌아와 다시 다운로드하세요 — 온라인 라이선스 키와 달리 .lic 파일은 자동으로 업데이트되지 않습니다."
 
-[portal.procurement.link]
+[processor.procurement.link]
 cta = "계정 연결"
 description = "조달은 연결된 Stirling 계정에서 실행됩니다. 이 계정으로 평가판을 프로비저닝하고, 견적 가격을 책정하며, 청구를 시작합니다. 시작하려면 계정을 연결하세요."
 eyebrow = "Enterprise"
 title = "시작하려면 계정을 연결하세요"
 
-[portal.procurement.live]
+[processor.procurement.live]
 description = "구독이 활성화되었으며 라이선스가 발급되었습니다. 팀이 프로비저닝되었고 청구가 시작되었습니다."
 eyebrow = "라이브"
 title = "Stirling Enterprise에서 라이브 상태입니다"
 
-[portal.procurement.milestone]
+[processor.procurement.milestone]
 downloadError = "아직 견적 PDF를 다운로드할 수 없습니다. 잠시 후 다시 시도하세요."
 
-[portal.procurement.payment]
+[processor.procurement.payment]
 description = "견적이 수락되었고 라이선스가 이미 활성화되어 팀이 바로 시작할 수 있습니다. 준비되면 첫 번째 송장을 결제하세요. 이메일 없이 여기에서 결제하거나 다운로드할 수 있습니다."
 downloadAgreement = "서명된 계약서 다운로드"
 downloadInvoice = "송장 다운로드"
@@ -8635,7 +8638,7 @@ eyebrow = "결제"
 title = "구독 생성됨"
 viewInvoice = "송장 보기 및 결제"
 
-[portal.procurement.review]
+[processor.procurement.review]
 acceptCta = "견적 수락"
 annual = "연간 요금(1년 차)"
 downloadCta = "견적 다운로드"
@@ -8644,14 +8647,14 @@ renewal = "기간 이후 {{amount}}/년으로 갱신(+{{pct}}% CPI)"
 tcv = "{{years}}년 기간, 선불 일시납: {{tcv}}"
 validUntil = "유효 기간: {{date}}"
 
-[portal.procurement.schedule]
+[processor.procurement.schedule]
 fallback = "스케줄러를 로드할 수 없습니다."
 fallbackLink = "새 탭에서 일정 예약 열기"
 loading = "스케줄러를 불러오는 중..."
 subtitle = "담당 솔루션 엔지니어가 팀의 롤아웃을 안내합니다. 편한 시간을 선택하세요."
 title = "통화 예약"
 
-[portal.procurement.setup]
+[processor.procurement.setup]
 airgap = "Air-gapped"
 airgapSub = "밀폐형, 아웃바운드 없음"
 back = "뒤로"
@@ -8681,7 +8684,7 @@ viewEula = "읽기"
 workEmail = "업무용 이메일"
 workEmailPlaceholder = "you@company.com"
 
-[portal.procurement.trial]
+[processor.procurement.trial]
 body = "연장하면 7일이 추가되고 담당 솔루션 엔지니어에게 알림이 전송됩니다."
 bodyMaxed = "모든 연장 횟수를 사용했습니다. 시간이 더 필요하면 담당 솔루션 엔지니어에게 문의하세요."
 cancel = "평가판 취소"
@@ -8690,32 +8693,32 @@ maxed = "한도 도달"
 subtitle = "무료 평가판은 {{date}}까지 진행됩니다. 카드가 필요하지 않습니다."
 title = "Enterprise 평가판"
 
-[portal.settings.groups]
+[processor.settings.groups]
 admin = "관리자"
 
-[portal.settings.sections]
+[processor.settings.sections]
 account-link = "계정 연결"
 
-[portal.shell.sidebar]
+[processor.shell.sidebar]
 appEditor = "편집기"
 appProcessor = "프로세서"
 linkAccount = "Stirling 계정 연결"
 primaryNav = "기본 탐색"
 switchApp = "앱 전환"
 
-[portal.shell.topbar]
+[processor.shell.topbar]
 closeNav = "탐색 닫기"
 openNav = "탐색 열기"
 search = "검색"
 
-[portal.sources]
+[processor.sources]
 subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연결입니다. 연결을 한 번 구성한 다음 여러 정책에서 참조하세요. 행을 클릭하면 해당 구성과 사용하는 정책을 볼 수 있습니다."
 title = "소스"
 
-[portal.sources.actions]
+[processor.sources.actions]
 connectSource = "소스 연결"
 
-[portal.sources.builder]
+[processor.sources.builder]
 back = "소스로 돌아가기"
 backToTypes = "모든 소스 유형"
 cancel = "취소"
@@ -8729,164 +8732,164 @@ editTitle = "소스 편집"
 enabled = "활성화됨"
 save = "변경 사항 저장"
 
-[portal.sources.builder.folderAccess]
+[processor.sources.builder.folderAccess]
 description = "폴더 자동화는 관리자가 허용한 폴더만 사용할 수 있습니다. 폴더 액세스 설정에서 추가한 다음 다시 시도하세요."
 openSettings = "폴더 액세스 설정"
 title = "이 폴더는 허용되지 않습니다"
 
-[portal.sources.delete]
+[processor.sources.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 이를 참조하는 정책은 업데이트해야 합니다."
 cancel = "취소"
 confirm = "삭제"
 title = "소스를 삭제하시겠습니까?"
 
-[portal.sources.kpi]
+[processor.sources.kpi]
 inUse = "사용 중"
 total = "연결"
 unused = "미사용"
 
-[portal.sources.networkFields.connection]
+[processor.sources.networkFields.connection]
 helperText = "서버 주소와 자격 증명이 저장된 연결입니다. 이를 참조하는 모든 소스에서 재사용됩니다."
 label = "연결"
 
-[portal.sources.networkFields.directory]
+[processor.sources.networkFields.directory]
 helperText = "로그인 홈 또는 공유 루트를 기준으로 폴링할 서버의 폴더입니다. 루트의 경우 비워 두세요."
 label = "폴더"
 placeholder = "incoming/"
 
-[portal.sources.networkFields.mode]
+[processor.sources.networkFields.mode]
 helperText = "소비는 모든 정책이 처리한 후 서버에서 각 파일을 제거합니다."
 label = "읽기 모드"
 
-[portal.sources.networkFields.mode.options]
+[processor.sources.networkFields.mode.options]
 consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
-[portal.sources.networkFields.recursive]
+[processor.sources.networkFields.recursive]
 label = "폴더 깊이"
 
-[portal.sources.networkFields.recursive.options]
+[processor.sources.networkFields.recursive.options]
 all = "하위 폴더 포함"
 top = "최상위 수준만"
 
-[portal.sources.status]
+[processor.sources.status]
 active = "활성"
 disabled = "비활성화됨"
 unused = "미사용"
 
-[portal.sources.table]
+[processor.sources.table]
 documents = "문서"
 source = "소스"
 status = "상태"
 type = "Type"
 usedBy = "정책"
 
-[portal.sources.types.box]
+[processor.sources.types.box]
 description = "팀이 이미 공유하는 Box 폴더에서 문서를 가져옵니다."
 label = "Box"
 
-[portal.sources.types.dropbox]
+[processor.sources.types.dropbox]
 description = "공유 Dropbox 폴더에서 문서를 가져옵니다."
 label = "Dropbox"
 
-[portal.sources.types.editor]
+[processor.sources.types.editor]
 description = "정책 및 AI 실행 전반에서 팀이 Editor에서 처리한 문서입니다."
 label = "편집기"
 noPolicies = "아직 Editor에서 실행된 정책이 없습니다."
 
-[portal.sources.types.email]
+[processor.sources.types.email]
 description = "전용 메일함으로 전송된 첨부 파일을 문서로 변환합니다."
 label = "Email 받은편지함"
 
-[portal.sources.types.folder]
+[processor.sources.types.folder]
 description = "서버의 디렉터리에서 새 문서를 감시합니다."
 label = "폴더"
 
-[portal.sources.types.folder.fields.directory]
+[processor.sources.types.folder.fields.directory]
 helperText = "Stirling이 처리할 파일을 감시하는 절대 경로입니다."
 label = "디렉터리 경로"
 placeholder = "/data/incoming"
 
-[portal.sources.types.folder.fields.identity]
+[processor.sources.types.folder.fields.identity]
 helperText = "콘텐츠 검사는 변경된 각 파일을 읽으므로, 콘텐츠를 변경하지 않는 이름 변경 및 터치는 다시 처리되지 않습니다."
 label = "변경 감지"
 
-[portal.sources.types.folder.fields.identity.options]
+[processor.sources.types.folder.fields.identity.options]
 hash = "크기, 날짜 및 콘텐츠 검사"
 stat = "크기 및 수정 날짜"
 
-[portal.sources.types.folder.fields.mode]
+[processor.sources.types.folder.fields.mode]
 label = "읽기 모드"
 
-[portal.sources.types.folder.fields.mode.options]
+[processor.sources.types.folder.fields.mode.options]
 consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
-[portal.sources.types.folder.fields.recursive]
+[processor.sources.types.folder.fields.recursive]
 label = "폴더 깊이"
 
-[portal.sources.types.folder.fields.recursive.options]
+[processor.sources.types.folder.fields.recursive.options]
 all = "하위 폴더 포함"
 top = "최상위 수준만"
 
-[portal.sources.types.ftp]
+[processor.sources.types.ftp]
 description = "새 문서를 위해 FTP 또는 FTPS 서버 폴더를 폴링합니다."
 label = "FTP"
 
-[portal.sources.types.googledrive]
+[processor.sources.types.googledrive]
 description = "공유 Google Drive 폴더에서 문서를 가져옵니다."
 label = "Google Drive"
 
-[portal.sources.types.network]
+[processor.sources.types.network]
 description = "새 문서를 위해 SMB 네트워크 공유를 감시합니다."
 label = "네트워크 드라이브"
 
-[portal.sources.types.onedrive]
+[processor.sources.types.onedrive]
 description = "새 문서를 위해 OneDrive 폴더를 감시합니다."
 label = "OneDrive"
 
-[portal.sources.types.s3]
+[processor.sources.types.s3]
 description = "Amazon S3 또는 S3 호환 버킷에서 문서를 가져옵니다."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.connection]
+[processor.sources.types.s3.fields.connection]
 helperText = "버킷과 자격 증명을 보유한 저장된 연결입니다. 이를 참조하는 모든 소스 및 파이프라인 출력에서 재사용됩니다."
 label = "연결"
 
-[portal.sources.types.s3.fields.mode]
+[processor.sources.types.s3.fields.mode]
 helperText = "소비는 모든 정책이 처리한 후 버킷에서 각 객체를 제거합니다."
 label = "읽기 모드"
 
-[portal.sources.types.s3.fields.mode.options]
+[processor.sources.types.s3.fields.mode.options]
 consume = "소비: 각 객체를 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 버킷 다시 읽기"
 
-[portal.sources.types.s3.fields.prefix]
+[processor.sources.types.s3.fields.prefix]
 helperText = "키가 이 접두사로 시작하는 객체만 처리됩니다."
 label = "키 접두사"
 placeholder = "incoming/"
 
-[portal.sources.types.sftp]
+[processor.sources.types.sftp]
 description = "새 문서를 위해 SFTP 드롭 폴더를 폴링합니다."
 label = "SFTP"
 
-[portal.sources.types.sharepoint]
+[processor.sources.types.sharepoint]
 description = "SharePoint 문서 라이브러리에서 문서를 가져옵니다."
 label = "SharePoint"
 
-[portal.sources.types.unknown]
+[processor.sources.types.unknown]
 label = "소스"
 
-[portal.sources.types.webhook]
+[processor.sources.types.webhook]
 createNote = "이 webhook을 생성하면 전달 URL과 서명 시크릿이 생성됩니다. 발신자는 해당 URL로 문서를 POST하고, 참조하는 정책은 도착 시 실행됩니다."
 description = "외부 시스템에서 서명된 HTTP POST로 문서를 수신합니다."
 label = "Webhook"
 
-[portal.sources.types.webhook.detail]
+[processor.sources.types.webhook.detail]
 deliveryUrl = "전달 URL"
 secretNote = "서명 시크릿은 webhook이 생성될 때 한 번만 표시됩니다. 재발급하려면 소스를 다시 생성하세요."
 
-[portal.sources.types.webhook.reveal]
+[processor.sources.types.webhook.reveal]
 copy = "복사"
 done = "완료"
 secret = "서명 시크릿"
@@ -8896,78 +8899,75 @@ title = "Webhook 생성됨"
 url = "전달 URL"
 usage = "각 문서를 binary 콘텐츠 유형(application/pdf 또는 application/octet-stream)의 원시 요청 본문으로 전달 URL에 POST하세요. 참조하는 정책은 도착 시 자동으로 실행됩니다."
 
-[portal.sources.wizard]
+[processor.sources.wizard]
 name = "이름"
 namePlaceholder = "예: 클레임 접수"
 type = "유형"
 
-[portal.stepModal]
+[processor.stepModal]
 close = "닫기"
 
-[portal.usage]
+[processor.usage]
 managePayment = "결제 관리"
 subtitle = "Stirling이 청구한 모든 PDF에 대한 사용량, 송장 및 플랜 관리를 하나의 콘솔에서 제공합니다."
 title = "사용량 및 청구"
 
-[portal.usage.error]
+[processor.usage.error]
 loadWallet = "지갑을 로드할 수 없음"
 openStripePortal = "Stripe 포털을 열 수 없음"
 walletUnavailable = "지갑을 사용할 수 없음: {{status}} {{statusText}}"
 
-[portal.usage.sessionExpired]
+[processor.usage.sessionExpired]
 action = "다시 로그인"
 body = "Stirling 계정 세션이 만료되었습니다. 청구를 보려면 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
 title = "세션 만료됨"
 
-[portal.users]
+[processor.users]
 title = "사용자"
 
-[portal.users.roles.admin]
+[processor.users.roles.admin]
 label = "관리자(조직 소유자)"
 summary = "워크스페이스, 설정 및 구성원에 대한 전체 거버넌스."
 
-[portal.users.roles.admin.permissions]
+[processor.users.roles.admin.permissions]
 0 = "사용자, 팀 및 역할 관리"
 1 = "S3 연결을 포함한 모든 통합 관리"
 2 = "포털 액세스 권한 부여 또는 취소"
 3 = "팀 소유자가 할 수 있는 모든 작업"
 
-[portal.users.roles.guest]
+[processor.users.roles.guest]
 label = "게스트"
 summary = "제한적 또는 웹 전용 액세스이며, 개인 구성을 보유할 수 없습니다."
 
-[portal.users.roles.guest.permissions]
+[processor.users.roles.guest.permissions]
 0 = "웹 전용 / 데모 사용"
 1 = "API 키 또는 통합 없음"
 2 = "포털 액세스 없음"
 3 = "공유된 경우 읽기 전용"
 
-[portal.users.roles.member]
+[processor.users.roles.member]
 label = "구성원"
 summary = "일반 사용자 — 공유 리소스와 자신의 구성을 사용합니다."
 
-[portal.users.roles.member.permissions]
+[processor.users.roles.member.permissions]
 0 = "편집기 및 공유 통합 사용"
 1 = "개인 API 및 MCP 구성 생성"
 2 = "공유된 팀 구성 보기"
 3 = "S3 또는 워크스페이스 관리 불가"
 
-[portal.users.roles.team_owner]
+[processor.users.roles.team_owner]
 label = "팀 소유자"
 summary = "팀을 소유하며, 팀 구성원의 리소스와 공유 구성을 관리합니다."
 
-[portal.users.roles.team_owner.permissions]
+[processor.users.roles.team_owner.permissions]
 0 = "팀의 S3 연결 생성 및 관리"
 1 = "팀 소유 통합 구성 관리"
 2 = "기본 정책을 통한 포털 액세스"
 3 = "구성원이 할 수 있는 모든 작업"
 
-[portal.users.seats]
+[processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 무제한"
-
-[printFile]
-title = "파일 인쇄"
 
 [provider.googledrive]
 name = "Google Drive"

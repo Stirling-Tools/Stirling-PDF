@@ -29,7 +29,7 @@ interface AppConfigModalProps {
   /** Accepted for interface parity with the core shell; this shell never
    *  URL-syncs, so it has no effect. */
   urlSync?: boolean;
-  /** Section to land on when opening (used by non-URL hosts like the portal). */
+  /** Section to land on when opening (used by non-URL hosts like the processor). */
   initialSection?: NavKey | null;
   /** Accepted for interface parity with the core shell; this shell ignores it. */
   initialFocus?: string | null;
@@ -84,7 +84,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   // usage-limit modal CTAs, which need to land on the Plan section), select that section. The
   // opener (QuickAccessBar) opens the modal whenever the path is /settings/*, but doesn't carry
   // the section, and `active` defaults to "overview" — so without this a deep link would open on
-  // Overview rather than the linked section. Non-URL hosts (the portal) pass the
+  // Overview rather than the linked section. Non-URL hosts (the processor) pass the
   // section directly instead.
   useEffect(() => {
     if (!opened) return;
@@ -116,7 +116,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   }, []);
 
   // Full-screen overlays that live inside our React tree (e.g. the PAYG
-  // UpgradeModal, portal'd to document.body) announce themselves here so we
+  // UpgradeModal, processor'd to document.body) announce themselves here so we
   // can hide — not unmount — while they're up. Unmounting would kill the
   // overlay itself since it's our descendant; hiding keeps all section state
   // (active tab, scroll, wallet data) intact for when the overlay closes.
