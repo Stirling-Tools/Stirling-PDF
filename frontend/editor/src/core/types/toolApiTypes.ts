@@ -1394,9 +1394,52 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
   /**
+   * Where the logo sits inside the signature box. BEHIND draws it under the text as a watermark; the others give it a strip of its own.
+   */
+  logoPosition?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "BEHIND";
+  /**
    * Whether to visually show the signature in the PDF file
    */
   showSignature?: boolean;
+  /**
+   * Distance in PDF points from the left edge of the page to the left edge of the signature box. Omit to keep the legacy bottom-left placement.
+   */
+  signatureX?: number;
+  /**
+   * Distance in PDF points from the bottom edge of the page to the bottom edge of the signature box. PDF user space, same convention as the crop endpoint: the origin is the bottom-left corner and y grows upwards.
+   */
+  signatureY?: number;
+  /**
+   * Width of the signature box in PDF points.
+   */
+  signatureWidth?: number;
+  /**
+   * Height of the signature box in PDF points.
+   */
+  signatureHeight?: number;
+  /**
+   * Certificate fields to draw inside the signature box, in the order given. Omit to keep the legacy content. Fields the certificate does not carry are skipped rather than drawn blank.
+   */
+  /**
+   * Repeat the signature's appearance on every page. Only the page given by pageNumber carries the actual signature; the other pages get a visual mark that is NOT a signature.
+   */
+  markAllPages?: boolean;
+  visibleAttributes?: (
+    | "SUBJECT_COMMON_NAME"
+    | "SUBJECT_ORGANISATION"
+    | "SUBJECT_ORGANISATIONAL_UNIT"
+    | "SUBJECT_COUNTRY"
+    | "SUBJECT_EMAIL"
+    | "ISSUER_COMMON_NAME"
+    | "ISSUER_ORGANISATION"
+    | "SERIAL_NUMBER"
+    | "VALID_FROM"
+    | "VALID_UNTIL"
+    | "SIGNATURE_ALGORITHM"
+    | "SIGNING_TIME"
+    | "REASON"
+    | "LOCATION"
+  )[];
 }
 export interface SignatureValidationRequest {
   certFile?: File;

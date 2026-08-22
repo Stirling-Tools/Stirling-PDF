@@ -247,6 +247,7 @@ export const useToolOperation = <TParams>(
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
+              requestConfig: config.requestConfig,
             };
             console.debug("[useToolOperation] Multi-file start", {
               count: filesForAPI.length,

@@ -21,7 +21,12 @@
 
 .tool-panel--floating {
   margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
-  height: calc(100vh - (var(--nav-gutter) * 2));
+  /* Of the container, not of the viewport. AppLayout puts banners above the app and
+     rewrites .h-screen to 100% so everything below shrinks to what is left; a panel
+     measured in vh ignores that and hangs off the bottom of the window by the height
+     of the banner, taking the run button with it - and overflow: hidden means no
+     amount of scrolling brings it back. The file sidebar has always used 100%. */
+  height: calc(100% - (var(--nav-gutter) * 2));
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-nav);

@@ -10,6 +10,7 @@ import {
   type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import { DEVICE_LOCAL_REQUEST } from "@app/constants/deviceLocalEndpoints";
 import {
   validateCertSignParameters,
   CertSignParameters,
@@ -68,6 +69,29 @@ const withSignatureAppearance = (
     apiParams.name = parameters.name;
     apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
+
+    // Sent only when the logo is on: a position with the logo hidden means nothing,
+    // and omitting it keeps the request as it was before the option existed.
+    if (parameters.showLogo) {
+      apiParams.logoPosition = parameters.logoPosition;
+    }
+
+    // Only sent when the user actually placed a box. Omitting these keeps the
+    // backend's original placement, so the tool still works without drawing one.
+    const area = parameters.signatureArea;
+    if (area) {
+      apiParams.signatureX = area.x;
+      apiParams.signatureY = area.y;
+      apiParams.signatureWidth = area.width;
+      apiParams.signatureHeight = area.height;
+    }
+    if (parameters.visibleAttributes.length > 0) {
+      apiParams.visibleAttributes = parameters.visibleAttributes;
+    }
+    // Only meaningful alongside a box: without one there is no shape to repeat.
+    if (parameters.markAllPages && area) {
+      apiParams.markAllPages = true;
+    }
   }
   return apiParams;
 };
@@ -75,21 +99,29 @@ const withSignatureAppearance = (
 // Select the keystore File uploads for the chosen certificate type. AUTO mode
 // (server certificate) uploads no keystore.
 const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
-  if (parameters.signMode === "AUTO") return {};
+  // The logo has nothing to do with where the certificate comes from, so it rides
+  // along in every mode, server certificate included.
+  const logo: FormDataFiles =
+    parameters.showSignature && parameters.showLogo && parameters.logoImage
+      ? { logoImage: parameters.logoImage }
+      : {};
+
+  if (parameters.signMode === "AUTO") return logo;
 
   switch (parameters.certType) {
     case "PEM":
       return {
+        ...logo,
         privateKeyFile: parameters.privateKeyFile,
         certFile: parameters.certFile,
       };
     case "PKCS12":
     case "PFX":
-      return { p12File: parameters.p12File };
+      return { ...logo, p12File: parameters.p12File };
     case "JKS":
-      return { jksFile: parameters.jksFile };
+      return { ...logo, jksFile: parameters.jksFile };
     default:
-      return {};
+      return logo;
   }
 };
 
@@ -122,6 +154,31 @@ export const certSignFromApiParams = (
     result.pageNumber = apiParams.pageNumber;
   }
   if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+  if (apiParams.logoPosition !== undefined) {
+    result.logoPosition = apiParams.logoPosition;
+  }
+
+  // A stored step only carries a box if all four values are present; a partial one
+  // would silently reposition the signature somewhere the author never chose.
+  if (
+    apiParams.signatureX !== undefined &&
+    apiParams.signatureY !== undefined &&
+    apiParams.signatureWidth !== undefined &&
+    apiParams.signatureHeight !== undefined
+  ) {
+    result.signatureArea = {
+      x: apiParams.signatureX,
+      y: apiParams.signatureY,
+      width: apiParams.signatureWidth,
+      height: apiParams.signatureHeight,
+    };
+  }
+  if (apiParams.visibleAttributes !== undefined) {
+    result.visibleAttributes = apiParams.visibleAttributes;
+  }
+  if (apiParams.markAllPages !== undefined) {
+    result.markAllPages = apiParams.markAllPages;
+  }
 
   return result;
 };
@@ -136,6 +193,20 @@ export const buildCertSignFormData = (
     ...certSignFiles(parameters),
   });
 
+/**
+ * Signing with a key held by this machine has to happen on this machine.
+ *
+ * The endpoint is the same either way, so the path cannot carry the distinction:
+ * only the chosen certificate type says whether the key is an uploaded file
+ * (which any backend can use) or lives in the Windows store or a plugged-in
+ * token (which only the local one can reach). Builds that can route elsewhere
+ * honour the mark; the rest ignore it, having nowhere else to send it.
+ */
+const certSignRequestConfig = (parameters: CertSignParameters) =>
+  parameters.certType === "WINDOWS_STORE" || parameters.certType === "PKCS11"
+    ? DEVICE_LOCAL_REQUEST
+    : {};
+
 // Static configuration object
 export const certSignOperationConfig = defineSingleFileTool({
   validateParams: validateCertSignParameters,
@@ -144,6 +215,7 @@ export const certSignOperationConfig = defineSingleFileTool({
   fromApiParams: certSignFromApiParams,
   operationType: "certSign",
   endpoint: ENDPOINT,
+  requestConfig: certSignRequestConfig,
   defaultParameters,
 });
 

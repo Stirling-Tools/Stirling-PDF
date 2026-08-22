@@ -110,6 +110,16 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
 
+  /**
+   * Extra axios config for this tool's requests, derived from its parameters.
+   *
+   * For decisions the endpoint path cannot express. Certificate signing posts to
+   * the same path whether the key came from an uploaded keystore or from the
+   * user's own machine, yet only the latter has to run there - see
+   * `DEVICE_LOCAL_REQUEST` in @app/constants/deviceLocalEndpoints.
+   */
+  requestConfig?: (params: TParams) => Record<string, unknown>;
+
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: unknown) => string;
 
