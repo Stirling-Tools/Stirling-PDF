@@ -6,7 +6,31 @@
  */
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
+
+/**
+ * These endpoints are requested with responseType "blob", so a 400's ProblemDetail
+ * arrives as a Blob and err.message is only "Request failed with status code 400".
+ * Read the body so the user sees which field name the backend refused.
+ */
+async function serverMessage(err: unknown): Promise<string | null> {
+  if (!isAxiosError(err)) return null;
+  const data: unknown = err.response?.data;
+  try {
+    const text = data instanceof Blob ? await data.text() : null;
+    const parsed: unknown = text ? JSON.parse(text) : data;
+    if (parsed && typeof parsed === "object") {
+      const body = parsed as Record<string, unknown>;
+      for (const key of ["detail", "message", "error", "title"]) {
+        if (typeof body[key] === "string" && body[key]) return body[key];
+      }
+    }
+    return typeof text === "string" && text.trim() ? text.trim() : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useFormCommit(onApplied?: (blob: Blob) => void) {
   const { t } = useTranslation();
@@ -27,7 +51,8 @@ export function useFormCommit(onApplied?: (blob: Blob) => void) {
         onApplied?.(blob);
       } catch (err) {
         setError(
-          (err instanceof Error ? err.message : undefined) ||
+          (await serverMessage(err)) ||
+            (err instanceof Error ? err.message : undefined) ||
             t(errorKey, errorFallback),
         );
         console.error("[FormFill] commit failed:", err);

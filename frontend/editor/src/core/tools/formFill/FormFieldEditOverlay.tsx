@@ -336,15 +336,18 @@ export function FormFieldEditOverlay({
   useEffect(() => {
     if (mode !== "modify" || !selectedField) return;
     const onKey = (e: KeyboardEvent) => {
-      // Never steal keys from a field the user is typing in.
-      if (isTextEntryTarget(e.target)) return;
+      const dragging = interactionRef.current != null;
+      // Never steal keys from a field the user is typing in, but a drag in
+      // progress owns Escape wherever focus happens to be.
+      if (!dragging && isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") {
         interactionRef.current = null;
         setLiveRect(null);
         setGuides([]);
-        setSelectedField(null);
+        if (!dragging) setSelectedField(null);
         return;
       }
+      if (dragging) return;
 
       if (
         !selectedField ||
@@ -434,8 +437,8 @@ export function FormFieldEditOverlay({
         position: "absolute",
         inset: 0,
         pointerEvents: "auto",
-        // Without this the browser claims the gesture as a pan and drags never start on touch.
-        touchAction: "none",
+        // touch-action stays on the draggable boxes below, not here: claiming every
+        // gesture over the page would stop touch users panning the document at all.
         userSelect: "none",
         WebkitUserSelect: "none",
         zIndex: 5,
@@ -482,6 +485,8 @@ export function FormFieldEditOverlay({
                   : FORM_COLORS.neutralFill,
               borderRadius: 2,
               boxSizing: "border-box",
+              // The browser would otherwise take the gesture as a pan and no drag starts.
+              touchAction: "none",
               cursor: isDeleted
                 ? "not-allowed"
                 : (field.widgets?.length ?? 0) === 1
@@ -538,6 +543,7 @@ export function FormFieldEditOverlay({
                 background: "#fff",
                 border: `1.5px solid ${FORM_COLORS.accent}`,
                 borderRadius: 2,
+                touchAction: "none",
                 cursor: h.cursor,
                 boxSizing: "border-box",
               }}

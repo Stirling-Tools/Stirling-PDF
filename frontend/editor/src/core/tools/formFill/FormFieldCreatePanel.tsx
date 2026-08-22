@@ -6,15 +6,7 @@
  * them to the PDF in one request.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  Alert,
-  Collapse,
-  Paper,
-  ScrollArea,
-} from "@mantine/core";
+import { Stack, Text, Group, Alert, Collapse, Paper } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
@@ -143,85 +135,83 @@ export function FormFieldCreatePanel({
         <SkippedEditsAlert />
       </div>
 
-      {/* Queued fields: scrolls on its own so the commit button stays reachable. */}
-      <ScrollArea className={styles.fieldList}>
-        <div className={styles.fieldListInner}>
-          {pendingFields.length === 0 ? (
-            <Text size="xs" c="dimmed" ta="center" py="md">
-              {t("formFill.create.empty", "No fields drawn yet.")}
-            </Text>
-          ) : (
-            <Stack gap={6}>
-              {pendingFields.map((pf) => {
-                const expanded = expandedId === pf.id;
-                return (
-                  <Paper key={pf.id} withBorder p={6} radius="sm">
-                    <Group gap={6} wrap="nowrap" justify="space-between">
-                      <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-                        <span
-                          style={{
-                            color: `var(--mantine-color-${FIELD_TYPE_COLOR[pf.type]}-6)`,
-                            display: "flex",
-                          }}
-                        >
-                          {FIELD_TYPE_ICON[pf.type]}
-                        </span>
-                        <Text size="xs" truncate>
-                          {pf.name}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          p{pf.pageIndex + 1}
-                        </Text>
-                      </Group>
-                      <Group gap={2} wrap="nowrap">
-                        <ActionIcon
-                          size="sm"
-                          variant="tertiary"
-                          aria-label={t(
-                            "formFill.create.editField",
-                            "Edit field",
-                          )}
-                          onClick={() => setExpandedId(expanded ? null : pf.id)}
-                          data-testid={`form-pending-edit-${pf.id}`}
-                        >
-                          <EditIcon sx={{ fontSize: 16 }} />
-                        </ActionIcon>
-                        <ActionIcon
-                          size="sm"
-                          variant="tertiary"
-                          accent="danger"
-                          aria-label={t(
-                            "formFill.create.removeField",
-                            "Remove field",
-                          )}
-                          onClick={() => removePendingField(pf.id)}
-                          data-testid={`form-pending-remove-${pf.id}`}
-                        >
-                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                        </ActionIcon>
-                      </Group>
+      {/* Content stacks naturally; ToolPanel's own ScrollArea does the scrolling. */}
+      <div className={styles.fieldListInner}>
+        {pendingFields.length === 0 ? (
+          <Text size="xs" c="dimmed" ta="center" py="md">
+            {t("formFill.create.empty", "No fields drawn yet.")}
+          </Text>
+        ) : (
+          <Stack gap={6}>
+            {pendingFields.map((pf) => {
+              const expanded = expandedId === pf.id;
+              return (
+                <Paper key={pf.id} withBorder p={6} radius="sm">
+                  <Group gap={6} wrap="nowrap" justify="space-between">
+                    <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+                      <span
+                        style={{
+                          color: `var(--mantine-color-${FIELD_TYPE_COLOR[pf.type]}-6)`,
+                          display: "flex",
+                        }}
+                      >
+                        {FIELD_TYPE_ICON[pf.type]}
+                      </span>
+                      <Text size="xs" truncate>
+                        {pf.name}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        p{pf.pageIndex + 1}
+                      </Text>
                     </Group>
-                    <Collapse in={expanded}>
-                      <div style={{ marginTop: 8 }}>
-                        <FormFieldPropertyEditor
-                          value={pf}
-                          onChange={(patch) =>
-                            updatePendingField(
-                              pf.id,
-                              patch as Partial<NewFieldDefinition>,
-                            )
-                          }
-                          showName
-                        />
-                      </div>
-                    </Collapse>
-                  </Paper>
-                );
-              })}
-            </Stack>
-          )}
-        </div>
-      </ScrollArea>
+                    <Group gap={2} wrap="nowrap">
+                      <ActionIcon
+                        size="sm"
+                        variant="tertiary"
+                        aria-label={t(
+                          "formFill.create.editField",
+                          "Edit field",
+                        )}
+                        onClick={() => setExpandedId(expanded ? null : pf.id)}
+                        data-testid={`form-pending-edit-${pf.id}`}
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </ActionIcon>
+                      <ActionIcon
+                        size="sm"
+                        variant="tertiary"
+                        accent="danger"
+                        aria-label={t(
+                          "formFill.create.removeField",
+                          "Remove field",
+                        )}
+                        onClick={() => removePendingField(pf.id)}
+                        data-testid={`form-pending-remove-${pf.id}`}
+                      >
+                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                      </ActionIcon>
+                    </Group>
+                  </Group>
+                  <Collapse in={expanded}>
+                    <div style={{ marginTop: 8 }}>
+                      <FormFieldPropertyEditor
+                        value={pf}
+                        onChange={(patch) =>
+                          updatePendingField(
+                            pf.id,
+                            patch as Partial<NewFieldDefinition>,
+                          )
+                        }
+                        showName
+                      />
+                    </div>
+                  </Collapse>
+                </Paper>
+              );
+            })}
+          </Stack>
+        )}
+      </div>
 
       <div className={styles.footer}>
         <Button

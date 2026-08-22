@@ -276,4 +276,77 @@ class FormUtilsEditRegressionTest {
             assertTrue(skipped.isEmpty(), "a fully applied batch reports no skips");
         }
     }
+
+    /** A drag must not normalise other options to the dragged widget's size. */
+    @Test
+    void movingRadioGroupKeepsEachOptionsOwnSize() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document,
+                    List.of(newField("radio", "choice", 50, 700, 20, 20, List.of("A", "B"))));
+            PDAcroForm form = document.getDocumentCatalog().getAcroForm(null);
+            List<PDAnnotationWidget> widgets = form.getField("choice").getWidgets();
+            // Hand-authored groups legitimately have option boxes of differing size.
+            PDRectangle second = widgets.get(1).getRectangle();
+            widgets.get(1)
+                    .setRectangle(
+                            new PDRectangle(
+                                    second.getLowerLeftX(), second.getLowerLeftY(), 40f, 40f));
+            FormUtils.modifyFormFields(document, List.of(moveTo("choice", 90f, 700f, 20f, 20f)));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            List<PDAnnotationWidget> widgets = acroForm.getField("choice").getWidgets();
+            assertEquals(
+                    40f,
+                    widgets.get(1).getRectangle().getWidth(),
+                    0.5f,
+                    "a pure drag must not shrink the other options");
+            assertEquals(90f, widgets.get(0).getRectangle().getLowerLeftX(), 0.5f);
+        }
+    }
+
+    /** With no /AP and no /Opt the on-state must come from /V, not the invented "Yes". */
+    @Test
+    void resizingCheckboxWithoutAppearanceKeepsItsExportValue() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document);
+            FormUtils.addNewFields(
+                    document, List.of(newField("checkbox", "agree", 50, 700, 14, 14, null)));
+            PDAcroForm form = document.getDocumentCatalog().getAcroForm(null);
+            PDCheckBox box = (PDCheckBox) form.getField("agree");
+            // A NeedAppearances form exported by Word/LibreOffice looks exactly like this.
+            box.getWidgets().get(0).getCOSObject().removeItem(COSName.AP);
+            box.getCOSObject().setItem(COSName.V, COSName.getPDFName("On"));
+            FormUtils.modifyFormFields(document, List.of(moveTo("agree", 50f, 700f, 30f, 30f)));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            PDCheckBox box = (PDCheckBox) acroForm.getField("agree");
+            assertEquals(
+                    "On",
+                    box.getOnValue(),
+                    "the export value must survive; inventing 'Yes' would orphan /V");
+            assertTrue(box.isChecked(), "the box was ticked and must stay ticked");
+        }
+    }
+
+    /** Renaming to the same qualified name is not a rename, so a nested field is not rejected. */
+    @Test
+    void renameProblem_ignoresAnUnchangedQualifiedName() {
+        assertNull(
+                FormUtils.renameProblem("Customer.Name", "Customer.Name"),
+                "a field standing still must not be rejected for its parent's period");
+        assertNull(FormUtils.renameProblem("plain", null));
+        assertNotNull(
+                FormUtils.renameProblem("plain", "New.Name"),
+                "an actual rename introducing a period must still be refused");
+    }
 }

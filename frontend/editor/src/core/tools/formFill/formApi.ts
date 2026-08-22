@@ -164,17 +164,20 @@ export async function applyFieldEdits(
   return {
     blob: response.data,
     skipped: parseSkippedEdits(response.headers?.[SKIPPED_EDITS_HEADER]),
+    skippedTotal: Number(response.headers?.[SKIPPED_EDITS_TOTAL_HEADER]) || 0,
   };
 }
 
 /** Set by the backend when it could not apply every requested edit. */
 const SKIPPED_EDITS_HEADER = "x-stirling-skipped-field-edits";
+const SKIPPED_EDITS_TOTAL_HEADER = "x-stirling-skipped-field-edits-total";
 
-/** Percent-encoded JSON, so a field name with any character survives the header. */
+/** Base64 JSON, so a reason containing spaces or non-ASCII survives the header intact. */
 function parseSkippedEdits(raw: unknown): SkippedFieldEdit[] {
   if (typeof raw !== "string" || !raw) return [];
   try {
-    const parsed: unknown = JSON.parse(decodeURIComponent(raw));
+    const bytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
     return Array.isArray(parsed) ? (parsed as SkippedFieldEdit[]) : [];
   } catch {
     return [];

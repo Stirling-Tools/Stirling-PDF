@@ -395,6 +395,8 @@ export function FormFillProvider({
     setSelectedField(null);
     setModifiedFields({});
     setDeletedFieldNames([]);
+    // The report describes the batch just discarded, so it must not outlive it.
+    setSkippedEdits([]);
   }, []);
 
   const fetchFields = useCallback(

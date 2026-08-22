@@ -3,9 +3,9 @@ package stirling.software.SPDF.controller.api.form;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,8 +63,14 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class FormFillController {
 
-    /** Carries the edits a request asked for but the document could not take. */
+    /** Carries the edits a request asked for but the document could not take, as base64 JSON. */
     public static final String SKIPPED_EDITS_HEADER = "X-Stirling-Skipped-Field-Edits";
+
+    /** How many were skipped in total, which may exceed the number listed in the header above. */
+    public static final String SKIPPED_EDITS_TOTAL_HEADER = "X-Stirling-Skipped-Field-Edits-Total";
+
+    /** Keeps the header well inside Jetty's 8KB response-header budget. */
+    private static final int MAX_REPORTED_SKIPS = 20;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
@@ -79,14 +85,19 @@ public class FormFillController {
      * Rejects field names PDFBox cannot store before the document is touched, so the caller gets a
      * 400 naming the offending character instead of a 200 with the field quietly missing.
      */
-    private static void requireUsableFieldNames(FormUtils.FieldEditBatch batch) {
-        Stream<String> requested =
+    private static void requireUsableFieldNames(
+            List<FormUtils.NewFormFieldDefinition> adds,
+            List<FormUtils.ModifyFormFieldDefinition> modifies) {
+        Stream<String> problems =
                 Stream.concat(
-                        batch.add().stream().map(FormUtils.NewFormFieldDefinition::name),
-                        batch.modify().stream().map(FormUtils.ModifyFormFieldDefinition::name));
-        requested
-                .map(FormUtils::invalidFieldNameReason)
-                .filter(Objects::nonNull)
+                        adds.stream()
+                                .map(FormUtils.NewFormFieldDefinition::name)
+                                .map(FormUtils::invalidFieldNameReason),
+                        // A rename to the same name is not a rename, so a nested field whose
+                        // qualified name already contains a period is left alone.
+                        modifies.stream()
+                                .map(m -> FormUtils.renameProblem(m.targetName(), m.name())));
+        problems.filter(Objects::nonNull)
                 .findFirst()
                 .ifPresent(
                         reason -> {
@@ -97,17 +108,28 @@ public class FormFillController {
 
     /**
      * Attaches the edits the document could not take to the response. The body is the updated PDF,
-     * so the report travels as a percent-encoded JSON header the UI reads after the download.
+     * so the report travels as a base64 JSON header (ASCII-safe, and unlike percent-encoding it
+     * survives a round trip through atob without mangling spaces).
      */
     private ResponseEntity<Resource> withSkippedEdits(
             ResponseEntity<Resource> response, List<FormUtils.SkippedFieldEdit> skipped) {
         if (skipped.isEmpty()) {
             return response;
         }
+        // Jetty's response header limit is 8KB; truncate rather than lose the edited PDF.
+        List<FormUtils.SkippedFieldEdit> reported =
+                skipped.size() > MAX_REPORTED_SKIPS
+                        ? skipped.subList(0, MAX_REPORTED_SKIPS)
+                        : skipped;
         String encoded =
-                URLEncoder.encode(objectMapper.writeValueAsString(skipped), StandardCharsets.UTF_8);
+                Base64.getEncoder()
+                        .encodeToString(
+                                objectMapper
+                                        .writeValueAsString(reported)
+                                        .getBytes(StandardCharsets.UTF_8));
         return ResponseEntity.status(response.getStatusCode())
                 .headers(response.getHeaders())
+                .header(SKIPPED_EDITS_TOTAL_HEADER, String.valueOf(skipped.size()))
                 .header(SKIPPED_EDITS_HEADER, encoded)
                 .body(response.getBody());
     }
@@ -335,8 +357,15 @@ public class FormFillController {
                     "fields payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.addNewFields(document, definitions));
+        requireUsableFieldNames(definitions, List.of());
+
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.addNewFields(document, definitions, skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/edit-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -373,7 +402,7 @@ public class FormFillController {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dataRequired", "{0} must contain at least one edit", "edits payload");
         }
-        requireUsableFieldNames(batch);
+        requireUsableFieldNames(batch.add(), batch.modify());
 
         List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
         return withSkippedEdits(
@@ -418,8 +447,15 @@ public class FormFillController {
                     "updates payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.modifyFormFields(document, modifications));
+        requireUsableFieldNames(List.of(), modifications);
+
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.modifyFormFields(document, modifications, skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/delete-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -452,8 +488,13 @@ public class FormFillController {
                     "error.dataRequired", "{0} must contain at least one value", "names payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.deleteFormFields(document, names));
+        List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+        return withSkippedEdits(
+                processSingleFile(
+                        file,
+                        "updated",
+                        document -> FormUtils.deleteFormFields(document, names, skipped)),
+                skipped);
     }
 
     @PostMapping(value = "/fill", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

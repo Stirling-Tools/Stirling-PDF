@@ -1,15 +1,19 @@
+/* No height:100% / overflow here: the tool lives inside ToolPanel's ScrollArea, and
+   either one would make the sticky chrome below pin to a box that never scrolls. */
 .root {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   background: transparent;
 }
 
+/* Sticky, not flex-pinned: the tool renders inside ToolPanel's ScrollArea, whose
+   display:table viewport makes height:100% resolve to content height. */
 .modeTabs {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   border-bottom: 1px solid var(--c-border, var(--mantine-color-default-border));
-  background: transparent;
+  background: var(--c-bg-raised, var(--mantine-color-body));
   padding: 0.25rem;
 }
 
@@ -70,11 +74,14 @@
   gap: 0.5rem;
 }
 
-/* Pinned footer: same padding as .header, but the rule sits above it. */
+/* Pinned footer. Sticky for the same reason as .modeTabs, and opaque so the list
+   scrolls underneath it rather than showing through. */
 .footer {
-  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   padding: 0.75rem 1rem;
-  background: transparent;
+  background: var(--c-bg-raised, var(--mantine-color-body));
   border-top: 1px solid var(--c-border, var(--mantine-color-default-border));
   display: flex;
   flex-direction: column;
@@ -105,7 +112,6 @@
 
 .fieldList {
   flex: 1;
-  overflow: hidden;
   background: transparent;
 }
 

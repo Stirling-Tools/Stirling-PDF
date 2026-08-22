@@ -41,7 +41,11 @@ export function usePageScale(
   const documentState = useDocumentState(documentId);
   return useMemo(() => {
     const pdfPage = documentState?.document?.pages?.[pageIndex];
-    const rotation = normalizeRotation(pdfPage?.rotation);
+    // Must match EmbedPDF's <Rotate>, which composes the page's own rotation
+    // with the viewer-level one; using only the page's is wrong once rotated.
+    const rotation = normalizeRotation(
+      (pdfPage?.rotation ?? 0) + (documentState?.rotation ?? 0),
+    );
     if (!pdfPage?.size || !pageWidth || !pageHeight) {
       const s = documentState?.scale ?? 1;
       return {

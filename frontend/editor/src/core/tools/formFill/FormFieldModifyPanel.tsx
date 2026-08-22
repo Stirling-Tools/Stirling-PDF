@@ -36,6 +36,7 @@ import {
   FormFieldPropertyEditor,
   type EditableFieldProps,
 } from "@app/tools/formFill/FormFieldPropertyEditor";
+import { isTextEntryTarget } from "@app/tools/formFill/usePageScale";
 import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
 import { useFormCommit } from "@app/tools/formFill/useFormCommit";
 import styles from "@app/tools/formFill/FormFill.module.css";
@@ -121,6 +122,8 @@ export function FormFieldModifyPanel({
   useEffect(() => {
     if (!selectedFieldName) return;
     const onKey = (e: KeyboardEvent) => {
+      // Escape inside the property editor belongs to that input (or its dropdown).
+      if (isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") setSelectedField(null);
     };
     window.addEventListener("keydown", onKey);
@@ -154,10 +157,16 @@ export function FormFieldModifyPanel({
         multiline: staged?.multiline ?? field.multiline,
         multiSelect: staged?.multiSelect ?? field.multiSelect,
         options: staged?.options ?? field.options ?? [],
-        // Omitting these blanked the inputs on every keystroke.
-        maxLength: staged?.maxLength ?? field.maxLength ?? undefined,
+        // Omitting these blanked the inputs on every keystroke. Test for the staged KEY,
+        // not its value, or an explicit clear reads as "unchanged" and snaps back.
+        maxLength:
+          staged && "maxLength" in staged
+            ? staged.maxLength
+            : (field.maxLength ?? undefined),
         buttonAction:
-          staged?.buttonAction ?? field.buttonActionSpec ?? undefined,
+          staged && "buttonAction" in staged
+            ? staged.buttonAction
+            : (field.buttonActionSpec ?? undefined),
       };
     },
     [modifiedFields],

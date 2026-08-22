@@ -170,7 +170,10 @@ export interface SkippedFieldEdit {
 /** The updated PDF plus whatever the backend had to drop. */
 export interface FieldEditResult {
   blob: Blob;
+  /** Capped at 20 entries so the response header stays inside Jetty's budget. */
   skipped: SkippedFieldEdit[];
+  /** How many were skipped in total, which may exceed skipped.length. */
+  skippedTotal: number;
 }
 
 /** The form tool's working mode. */

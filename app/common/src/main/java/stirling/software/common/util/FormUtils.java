@@ -32,6 +32,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -1602,7 +1603,7 @@ public class FormUtils {
                 continue;
             }
 
-            String nameProblem = invalidFieldNameReason(modification.name());
+            String nameProblem = renameProblem(lookupName, modification.name());
             if (nameProblem != null) {
                 log.warn("Rejecting rename of '{}': {}", lookupName, nameProblem);
                 recordSkip(skipped, "modify", lookupName, nameProblem);
@@ -1672,7 +1673,7 @@ public class FormUtils {
             if (!typeChanging) {
                 try {
                     modifyFieldPropertiesInPlace(
-                            document, originalField, modification, desiredName);
+                            document, originalField, modification, desiredName, skipped);
                     log.debug("Successfully modified field '{}' in-place", lookupName);
                     continue; // Skip the remove-and-recreate process
                 } catch (Exception e) {
@@ -1748,7 +1749,8 @@ public class FormUtils {
             PDDocument document,
             PDField field,
             ModifyFormFieldDefinition modification,
-            String newName)
+            String newName,
+            List<SkippedFieldEdit> skipped)
             throws IOException {
         if (newName != null && !newName.equals(field.getPartialName())) {
             field.setPartialName(newName);
@@ -1848,16 +1850,20 @@ public class FormUtils {
                 || modification.y() != null
                 || modification.width() != null
                 || modification.height() != null) {
-            updateWidgetGeometry(document, field, modification);
+            updateWidgetGeometry(document, field, modification, skipped);
         }
     }
 
     /**
      * Moves/resizes a field's widgets. The supplied rect describes the first widget; every other
-     * widget on the same page shifts by the same delta, so a radio group travels as one unit.
+     * widget on the same page shifts by the same delta but keeps its own size, so a radio group
+     * travels as one unit without options being normalised to the dragged one's dimensions.
      */
     private void updateWidgetGeometry(
-            PDDocument document, PDField field, ModifyFormFieldDefinition modification) {
+            PDDocument document,
+            PDField field,
+            ModifyFormFieldDefinition modification,
+            List<SkippedFieldEdit> skipped) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null || widgets.isEmpty()) {
             return;
@@ -1886,10 +1892,6 @@ public class FormUtils {
         float dy = newY - anchorRect.getLowerLeftY();
         Float newW = modification.width();
         Float newH = modification.height();
-        boolean resized =
-                (newW != null && Math.abs(newW - anchorRect.getWidth()) > GEOMETRY_EPSILON_PT)
-                        || (newH != null
-                                && Math.abs(newH - anchorRect.getHeight()) > GEOMETRY_EPSILON_PT);
 
         // Read the on-states off /AP /N before the strip: PDFBox derives a button's
         // value vocabulary from those keys, so a guessed state orphans /V.
@@ -1909,14 +1911,25 @@ public class FormUtils {
                         "Field '{}' widget {} sits on a different page; geometry left alone",
                         field.getFullyQualifiedName(),
                         i);
+                recordSkip(
+                        skipped,
+                        "modify",
+                        field.getFullyQualifiedName(),
+                        "widget " + i + " is on another page and was left where it was");
                 continue;
             }
+            // Only the widget the request describes takes the new size; the rest keep theirs.
+            float targetW = i == 0 && newW != null ? newW : rect.getWidth();
+            float targetH = i == 0 && newH != null ? newH : rect.getHeight();
+            boolean resized =
+                    Math.abs(targetW - rect.getWidth()) > GEOMETRY_EPSILON_PT
+                            || Math.abs(targetH - rect.getHeight()) > GEOMETRY_EPSILON_PT;
             widget.setRectangle(
                     new PDRectangle(
                             rect.getLowerLeftX() + dx,
                             rect.getLowerLeftY() + dy,
-                            newW != null ? newW : rect.getWidth(),
-                            newH != null ? newH : rect.getHeight()));
+                            targetW,
+                            targetH));
             // A pure translation re-maps the same /AP onto the new /Rect unchanged.
             if (resized) {
                 rebuildWidgetAppearance(document, field, widget, i, onStates, isRadio);
@@ -1937,11 +1950,11 @@ public class FormUtils {
             return;
         }
         COSName priorState = widget.getCOSObject().getCOSName(COSName.AS);
-        // Drop the stale stream: viewers stretch an /AP built for the old BBox onto
-        // the new /Rect, so a resized field looks distorted.
-        widget.getCOSObject().removeItem(COSName.AP);
         try {
             if (field instanceof PDCheckBox || field instanceof PDRadioButton) {
+                // Drop the stale streams: viewers stretch an /AP built for the old BBox
+                // onto the new /Rect, so a resized toggle looks distorted.
+                widget.getCOSObject().removeItem(COSName.AP);
                 String onState =
                         index < onStates.size() ? onStates.get(index) : DEFAULT_CHECKBOX_ON_STATE;
                 applyToggleAppearance(document, widget, onState, isRadio);
@@ -1950,9 +1963,12 @@ public class FormUtils {
                     widget.getCOSObject().setName(COSName.AS, onState);
                 }
             } else if (field instanceof PDPushButton) {
+                // Replace only /N so an authored down (/D) or rollover (/R) survives.
                 applyPushButtonAppearance(document, widget);
+            } else {
+                // text/choice: refreshAppearances() rebuilds these from /DA in ensureAppearances().
+                widget.getCOSObject().removeItem(COSName.AP);
             }
-            // text/choice: refreshAppearances() rebuilds these from /DA in ensureAppearances().
         } catch (Exception e) {
             log.warn(
                     "Could not rebuild the appearance for '{}' widget {}: {}",
@@ -2305,6 +2321,9 @@ public class FormUtils {
     private List<String> currentWidgetOnStates(PDButton button) {
         List<String> exportValues = button.getExportValues();
         List<PDAnnotationWidget> widgets = button.getWidgets();
+        // A single-widget toggle with no /AP still knows its vocabulary from /V; inventing
+        // "Yes" there would orphan the value and leave the box permanently unticked.
+        String fromValue = widgets.size() == 1 ? nonOffValueName(button) : null;
         List<String> states = new ArrayList<>(widgets.size());
         for (int i = 0; i < widgets.size(); i++) {
             String state = normalAppearanceOnState(widgets.get(i));
@@ -2313,9 +2332,24 @@ public class FormUtils {
                     && i < exportValues.size()) {
                 state = sanitizePdfName(exportValues.get(i));
             }
+            if (state == null || state.isEmpty()) {
+                state = fromValue;
+            }
             states.add(state == null || state.isEmpty() ? DEFAULT_CHECKBOX_ON_STATE : state);
         }
         return states;
+    }
+
+    /** A button's current value when it names a real on-state, else null. */
+    private String nonOffValueName(PDButton button) {
+        try {
+            COSBase raw = button.getCOSObject().getDictionaryObject(COSName.V);
+            String name = raw instanceof COSName cosName ? cosName.getName() : null;
+            return name == null || name.isEmpty() || OFF_STATE.equals(name) ? null : name;
+        } catch (Exception e) {
+            log.debug("Could not read a button's value: {}", e.getMessage());
+            return null;
+        }
     }
 
     /** The first non-Off key of a widget's /AP /N sub-dictionary, or null. */
@@ -2459,16 +2493,19 @@ public class FormUtils {
 
         PDAppearanceCharacteristicsDictionary mk = widget.getAppearanceCharacteristics();
         String caption = mk != null ? mk.getNormalCaption() : null;
+        // Honour the authored /MK colours; a hardcoded grey would restyle an existing button.
+        float[] background = mkColour(mk == null ? null : mk.getBackground(), 0.85f);
+        float[] border = mkColour(mk == null ? null : mk.getBorderColour(), 0f);
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         float fontSize = Math.min(12f, h * 0.6f);
 
         try (PDPageContentStream content =
                 new PDPageContentStream(
                         document, stream, stream.getStream().createOutputStream())) {
-            content.setNonStrokingColor(0.85f, 0.85f, 0.85f);
+            content.setNonStrokingColor(background[0], background[1], background[2]);
             content.addRect(0, 0, w, h);
             content.fill();
-            content.setStrokingColor(0f, 0f, 0f);
+            content.setStrokingColor(border[0], border[1], border[2]);
             content.setLineWidth(1f);
             content.addRect(0.5f, 0.5f, w - 1f, h - 1f);
             content.stroke();
@@ -2490,11 +2527,40 @@ public class FormUtils {
             }
         }
 
-        PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+        // Reuse the existing dictionary so an authored /D or /R is not collateral damage.
+        PDAppearanceDictionary appearance = widget.getAppearance();
+        if (appearance == null) {
+            appearance = new PDAppearanceDictionary();
+            widget.setAppearance(appearance);
+        }
         appearance.setNormalAppearance(stream);
-        widget.setAppearance(appearance);
         // A push button has no value, so no /AS.
         widget.getCOSObject().removeItem(COSName.AS);
+    }
+
+    /** A /MK colour array as RGB, falling back to a grey level when absent or unsupported. */
+    private float[] mkColour(PDColor colour, float fallback) {
+        float[] rgb = {fallback, fallback, fallback};
+        if (colour == null) {
+            return rgb;
+        }
+        float[] components = colour.getComponents();
+        if (components.length == 3) {
+            return components;
+        }
+        if (components.length == 1) {
+            return new float[] {components[0], components[0], components[0]};
+        }
+        if (components.length == 4) {
+            // CMYK to RGB, good enough for a button chrome.
+            float k = components[3];
+            return new float[] {
+                (1 - components[0]) * (1 - k),
+                (1 - components[1]) * (1 - k),
+                (1 - components[2]) * (1 - k)
+            };
+        }
+        return rgb;
     }
 
     /** A circle from four Bezier arcs; PDF has no primitive for one. */
@@ -3029,6 +3095,19 @@ public class FormUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Why renaming {@code targetName} to {@code newName} is impossible, or null when it is fine. A
+     * name left exactly as it was is never a rename, so a field already nested under a parent
+     * (whose fully qualified name legitimately contains a period) is not rejected for standing
+     * still.
+     */
+    public String renameProblem(String targetName, String newName) {
+        if (newName == null || newName.equals(targetName)) {
+            return null;
+        }
+        return invalidFieldNameReason(newName);
     }
 
     /**
