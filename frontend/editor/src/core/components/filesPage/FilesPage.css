@@ -168,6 +168,14 @@
   overflow-x: hidden;
 }
 
+/* Selecting on a phone swaps this row for a contextual action bar, which parks
+   the filters, sort and view toggle until the selection clears. Tint it so the
+   row reads as a temporary mode rather than as controls having disappeared. */
+.files-page-toolbar[data-selection-mode] {
+  background: var(--c-primary-subtle);
+  border-bottom-color: var(--c-primary);
+}
+
 .files-page-toolbar-info {
   font-size: 0.85rem;
   color: var(--c-text-muted);
@@ -485,6 +493,23 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* Narrow cards: let the values wrap as whole units onto their own lines rather
+   than breaking mid-value ("239.26 / KB") around a stranded separator. */
+@media (max-width: 64rem) {
+  .files-page-card-meta {
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.4rem;
+    row-gap: 0.05rem;
+  }
+  .files-page-card-meta > span {
+    white-space: nowrap;
+  }
+  .files-page-card-meta-sep {
+    display: none;
+  }
 }
 
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Center, Paper, Stack, Text } from "@mantine/core";
+import { Box, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@app/ui/Button";
@@ -42,11 +42,25 @@ export function HtmlViewer({ file }: HtmlViewerProps) {
           paddingRight: "max(0.5rem, var(--nonpdf-action-inset, 0rem))",
         }}
       >
-        <Text size="xs" c="dimmed">
-          {t("viewer.nonPdf.htmlPreviewWarning", {
-            size: formatFileSize(file.size),
-          })}
-        </Text>
+        <Group gap="xs" wrap="nowrap" align="center">
+          <Text size="xs" c="dimmed" style={{ minWidth: 0, flex: 1 }}>
+            {t("viewer.nonPdf.htmlPreviewWarning", {
+              size: formatFileSize(file.size),
+            })}
+          </Text>
+          {/* Opting in used to be one-way: the only way back was closing and
+              reopening the file. */}
+          {isMobile && optedIn && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={() => setOptedIn(false)}
+              style={{ flexShrink: 0 }}
+            >
+              {t("viewer.nonPdf.htmlHidePreview", "Hide preview")}
+            </Button>
+          )}
+        </Group>
       </Paper>
       {showPreview ? (
         objectUrl && (

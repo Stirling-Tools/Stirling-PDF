@@ -347,12 +347,18 @@
 
   .workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll {
     scrollbar-width: none;
+    /* Wider than one 40px icon plus its gap: a 2rem fade always landed
+       mid-glyph, which read as a clipping bug rather than "scroll me". */
     -webkit-mask-image: linear-gradient(
       to right,
-      #000 calc(100% - 2rem),
+      #000 calc(100% - 3.5rem),
       transparent
     );
-    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 3.5rem),
+      transparent
+    );
   }
 
   .workbench-bar[data-wrapped="true"]

@@ -1216,7 +1216,10 @@ export default function FileManagerView() {
             );
           })()}
 
-          <div className="files-page-toolbar">
+          <div
+            className="files-page-toolbar"
+            data-selection-mode={mobileSelection || undefined}
+          >
             <FilesToolbarCount
               loading={loading}
               totalCount={totalCount}
