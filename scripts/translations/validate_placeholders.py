@@ -40,11 +40,11 @@ def validate_language(en_us_flat: dict[str, str], lang_flat: dict[str, str], lan
     """Validate placeholders for a language against en-US."""
     issues = []
 
-    for key in en_us_flat:
+    for key, en_text in en_us_flat.items():
         if key not in lang_flat:
             continue
 
-        en_placeholders = find_placeholders(en_us_flat[key])
+        en_placeholders = find_placeholders(en_text)
         lang_placeholders = find_placeholders(lang_flat[key])
 
         if en_placeholders != lang_placeholders:
@@ -56,7 +56,7 @@ def validate_language(en_us_flat: dict[str, str], lang_flat: dict[str, str], lan
                 "key": key,
                 "missing": missing,
                 "extra": extra,
-                "en_text": en_us_flat[key],
+                "en_text": en_text,
                 "lang_text": lang_flat[key],
             }
             issues.append(issue)
@@ -127,9 +127,8 @@ def main():
         # Validate all languages except en-US
         languages = []
         for d in locales_dir.iterdir():
-            if d.is_dir() and d.name != "en-US":
-                if (d / "translation.toml").exists():
-                    languages.append(d.name)
+            if d.is_dir() and d.name != "en-US" and (d / "translation.toml").exists():
+                languages.append(d.name)
 
     all_issues = []
 

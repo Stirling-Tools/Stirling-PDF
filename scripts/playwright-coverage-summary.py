@@ -48,11 +48,9 @@ SKIP_URL_FRAGMENTS = (
 def _is_app_url(url: str) -> bool:
     if not url:
         return False
-    if not (url.startswith("http://") or url.startswith("https://")):
+    if not (url.startswith(("http://", "https://"))):
         return False
-    if any(frag in url for frag in SKIP_URL_FRAGMENTS):
-        return False
-    return True
+    return not any(frag in url for frag in SKIP_URL_FRAGMENTS)
 
 
 def aggregate(dump_dir: Path) -> dict:
