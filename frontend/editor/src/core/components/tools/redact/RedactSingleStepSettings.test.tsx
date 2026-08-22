@@ -35,7 +35,7 @@ describe("RedactSingleStepSettings", () => {
 
     expect(screen.getByText("Mode")).toBeInTheDocument();
     // Mode selector renders as a radio-group (shared SegmentedControl)
-    expect(screen.getByText("Automatic")).toBeInTheDocument();
+    expect(screen.getByText("Search & Redact")).toBeInTheDocument();
     expect(screen.getByText("Manual")).toBeInTheDocument();
   });
 
