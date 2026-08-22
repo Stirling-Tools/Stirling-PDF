@@ -16,6 +16,7 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { shouldAutoExitPlacement } from "@app/components/viewer/signaturePlacement";
 
 /**
  * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
@@ -185,7 +186,21 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    placeMultiple,
+    autoExitAfterStampPlacement,
+    setPlacementMode,
   } = useSignature();
+  // Track the latest toggles in refs so the long-lived onAnnotationEvent
+  // subscription always reads current values without re-subscribing on every
+  // change (which would race with mid-flight create events).
+  const placeMultipleRef = useRef(placeMultiple);
+  useEffect(() => {
+    placeMultipleRef.current = placeMultiple;
+  }, [placeMultiple]);
+  const autoExitRef = useRef(autoExitAfterStampPlacement);
+  useEffect(() => {
+    autoExitRef.current = autoExitAfterStampPlacement;
+  }, [autoExitAfterStampPlacement]);
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(
@@ -555,6 +570,22 @@ export const SignatureAPIBridge = forwardRef<
       // Mark signatures as not applied when a new signature is placed
       if (event.type === "create") {
         setSignaturesApplied(false);
+
+        // Only pointer placements carry a create context; paste and undo/redo
+        // restores go through createAnnotation without one.
+        const userPlaced = Boolean(event.ctx);
+
+        if (
+          shouldAutoExitPlacement({
+            annotation,
+            placeMultiple: placeMultipleRef.current,
+            autoExitEnabled: autoExitRef.current,
+            userPlaced,
+          })
+        ) {
+          annotationApi.setActiveTool(null);
+          setPlacementMode(false);
+        }
       }
 
       const directData =
@@ -576,7 +607,13 @@ export const SignatureAPIBridge = forwardRef<
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementMode,
+    documentReady,
+  ]);
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {
