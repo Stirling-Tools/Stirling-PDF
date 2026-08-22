@@ -1,5 +1,7 @@
 .portal-sidebar {
-  width: 15rem;
+  /* Matches the editor's rail (FileSidebar EXPANDED_WIDTH) so the chrome does
+     not resize when switching apps. */
+  width: 16.25rem;
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
   background: var(--c-bg);
@@ -126,7 +128,9 @@
 }
 
 .portal-sidebar__logo {
-  height: 3.1875rem; /* 51px */
+  /* 56px: puts the brand lockup on the same baseline as the editor's, so the
+     app switch can hold it still. Keep in sync with AppShell.css's topbar. */
+  height: 3.5rem;
   padding: 0 0.875rem;
   display: flex;
   align-items: center;

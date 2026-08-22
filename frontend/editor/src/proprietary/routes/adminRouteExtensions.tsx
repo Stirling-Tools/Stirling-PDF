@@ -36,3 +36,18 @@ export function getAdminRouteExtensions(): ReactElement[] {
     />,
   ];
 }
+
+/**
+ * Warms the portal chunk so switching into it is not gated on a network
+ * round-trip. Called as the outgoing app starts animating out, which is enough
+ * lead time for the fetch on a warm connection. Failures are ignored: the lazy
+ * route retries the same import and Suspense covers the wait.
+ */
+export async function preloadAdminRoutes(): Promise<void> {
+  if (!includePortal) return;
+  try {
+    await import("@portal/PortalApp");
+  } catch {
+    /* the route's own import reports it */
+  }
+}

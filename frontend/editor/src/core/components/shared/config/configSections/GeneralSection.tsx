@@ -21,6 +21,11 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
 import { type ThemeMode } from "@app/constants/theme";
+import {
+  APP_SWITCH_STYLES,
+  type AppSwitchStyle,
+} from "@app/constants/appSwitchStyle";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import {
   type StartupView,
@@ -55,6 +60,15 @@ export interface DesktopUpdateModeControl {
   /** Called when the user picks a new mode. Async: surface errors via toast. */
   onChange: (mode: "prompt" | "auto" | "disabled") => Promise<void> | void;
 }
+
+/** English fallbacks for the transition names; short enough for the picker. */
+const APP_SWITCH_LABELS: Record<AppSwitchStyle, string> = {
+  axis: "Slide",
+  panels: "Panels",
+  depth: "Depth",
+  dissolve: "Dissolve",
+  wipe: "Wipe",
+};
 
 interface GeneralSectionProps {
   hideTitle?: boolean;
@@ -93,6 +107,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   const autoUnzipLabelId = `${labelIds}-auto-unzip`;
   const autoUnzipLimitLabelId = `${labelIds}-auto-unzip-limit`;
   const { preferences, updatePreference } = usePreferences();
+  // Only builds that ship the processor have anything to switch between.
+  const hasProcessor = getAdminRouteExtensions().length > 0;
   const { config } = useAppConfig();
   const { setTheme, themeMode } = useTheme();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(
@@ -515,6 +531,46 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               ]}
             />
           </div>
+
+          {hasProcessor && (
+            <div
+              id="setting-app-switch-style"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text fw={500} size="sm">
+                  {t(
+                    "settings.general.appSwitchStyle",
+                    "Editor / Processor transition",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    "settings.general.appSwitchStyleDescription",
+                    "How the screen animates when you switch between the editor and the processor.",
+                  )}
+                </Text>
+              </div>
+              <SegmentedControl
+                value={preferences.appSwitchStyle}
+                onChange={(val: string) =>
+                  updatePreference("appSwitchStyle", val as AppSwitchStyle)
+                }
+                options={APP_SWITCH_STYLES.map((id) => ({
+                  value: id,
+                  label: t(
+                    `settings.general.appSwitch.${id}`,
+                    APP_SWITCH_LABELS[id],
+                  ),
+                }))}
+              />
+            </div>
+          )}
         </Stack>
       </Paper>
 
