@@ -32,6 +32,9 @@ function shouldIgnore(text: string): boolean {
   return IGNORED.some((re) => re.test(text));
 }
 
+/** Placeholder for an error the browser gave us nothing usable about. */
+const NO_DETAIL = "(no message or stack - see in-page detail below)";
+
 function attachListeners(page: Page): ConsoleEntry[] {
   const entries: ConsoleEntry[] = [];
   page.on("console", (msg: ConsoleMessage) => {
@@ -50,9 +53,77 @@ function attachListeners(page: Page): ConsoleEntry[] {
   });
   page.on("pageerror", (err) => {
     if (shouldIgnore(err.message)) return;
-    entries.push({ type: "pageerror", text: err.stack ?? err.message });
+    // WebKit hands back an empty message AND an empty stack for cross-origin
+    // script failures and for rejections whose reason is not an Error, so keep
+    // a marker rather than an empty string - attachInPageErrorCapture below
+    // supplies the detail those cases drop.
+    entries.push({
+      type: "pageerror",
+      text: err.stack || err.message || NO_DETAIL,
+    });
   });
   return entries;
+}
+
+/**
+ * Record raw `error` / `unhandledrejection` events inside the page.
+ *
+ * Playwright's `pageerror` drops everything WebKit sanitises, which is how
+ * this suite ended up reporting a bare `[pageerror]` with no text and no way
+ * to act on it. The in-page events still carry the script URL, line and the
+ * raw rejection value, so a CI failure names its own cause.
+ */
+async function attachInPageErrorCapture(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const sink: string[] = [];
+    (window as unknown as { __e2eErrorDetail: string[] }).__e2eErrorDetail =
+      sink;
+    const describe = (value: unknown): string => {
+      if (value instanceof Error) {
+        return value.stack || `${value.name}: ${value.message}`;
+      }
+      if (value && typeof value === "object") {
+        try {
+          return JSON.stringify(value);
+        } catch {
+          return Object.prototype.toString.call(value);
+        }
+      }
+      return String(value);
+    };
+    window.addEventListener("error", (event) => {
+      // Resource-load failures bubble here with no `error` object and never
+      // reach `pageerror`, so record where they came from rather than
+      // pretending they were throws.
+      const origin = event.filename
+        ? `${event.filename}:${event.lineno}:${event.colno}`
+        : describe(event.target);
+      sink.push(
+        `[window.onerror] ${event.message || "(sanitised)"} @ ${origin} :: ${describe(event.error)}`,
+      );
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      sink.push(`[unhandledrejection] ${describe(event.reason)}`);
+    });
+  });
+}
+
+/** Drain the in-page sink. Never throws - it only ever adds context. */
+async function readInPageErrorDetail(page: Page): Promise<string[]> {
+  return page
+    .evaluate(
+      () =>
+        (window as unknown as { __e2eErrorDetail?: string[] })
+          .__e2eErrorDetail ?? [],
+    )
+    .catch(() => []);
+}
+
+/** Appended to the failure message so a bare `[pageerror]` names its cause. */
+function formatInPageDetail(inPageDetail: string[]): string {
+  if (!inPageDetail.length) return "";
+  const lines = inPageDetail.map((d) => `    ${d}`).join("\n");
+  return `\n  in-page detail:\n${lines}`;
 }
 
 function formatEntries(entries: ConsoleEntry[]): string {
@@ -64,10 +135,13 @@ function formatEntries(entries: ConsoleEntry[]): string {
     .join("\n");
 }
 
-async function expectCleanConsole(entries: ConsoleEntry[]) {
+async function expectCleanConsole(
+  entries: ConsoleEntry[],
+  inPageDetail: string[],
+) {
   expect(
     entries,
-    `Page produced unexpected console output:\n${formatEntries(entries)}`,
+    `Page produced unexpected console output:\n${formatEntries(entries)}${formatInPageDetail(inPageDetail)}`,
   ).toEqual([]);
 }
 
@@ -96,6 +170,7 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
   for (const route of ROUTES) {
     test(`${route.name} (${route.path})`, async ({ page }) => {
       const entries = attachListeners(page);
+      await attachInPageErrorCapture(page);
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       // Give async effects (i18n load, lazy chunks, posthog init) a beat to
       // surface anything they were going to log.
@@ -108,7 +183,7 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
           // etc.) is a real problem and should fail the test.
           if (!(err instanceof errors.TimeoutError)) throw err;
         });
-      await expectCleanConsole(entries);
+      await expectCleanConsole(entries, await readInPageErrorDetail(page));
     });
   }
 });

@@ -233,6 +233,54 @@ test.describe("Settings dialog", () => {
       .toBe(originPath);
   });
 
+  test("browser Back closes the dialog and returns to the origin URL", async ({
+    page,
+  }) => {
+    await page.goto("/compress", { waitUntil: "domcontentloaded" });
+    const originPath = new URL(page.url()).pathname;
+    const dialog = await openSettings(page);
+    await dialog.locator('[data-tour="admin-general-nav"]').first().click();
+    await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+
+    // Back has to close the modal off the URL alone. react-router's location
+    // may never have committed the push that opened it, so an effect keyed
+    // only on `location.pathname` sees no change here and leaves it open.
+    await page.goBack();
+    await expect(
+      page.locator(".mantine-Modal-content").first(),
+    ).not.toBeVisible({ timeout: 5_000 });
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 5_000 })
+      .toBe(originPath);
+  });
+
+  test("close returns to origin URL when settings was opened from super search", async ({
+    page,
+  }) => {
+    // Super search pushes /settings/<section> itself, without going through
+    // the modal's own tab nav. Close still has to pop that entry rather than
+    // fall back to the editor home, or the user loses the page they were on.
+    await page.goto("/compress", { waitUntil: "domcontentloaded" });
+    const originPath = new URL(page.url()).pathname;
+    const input = page.locator("#super-search-input");
+    await expect(input).toBeVisible({ timeout: 5_000 });
+    await input.click();
+    await input.fill("general");
+    await page
+      .getByRole("option", { name: /General/ })
+      .first()
+      .click();
+    await expect(page.locator(".modal-container")).toBeVisible({
+      timeout: 5_000,
+    });
+    await page.waitForURL(/\/settings\/general/, { timeout: 5_000 });
+
+    await closeSettings(page);
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 5_000 })
+      .toBe(originPath);
+  });
+
   test("config sub-sections (System / Features / Endpoints / API Keys) are reachable when present", async ({
     page,
   }) => {
