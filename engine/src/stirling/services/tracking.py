@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections import OrderedDict
 from collections.abc import Mapping
 from contextvars import ContextVar
@@ -28,6 +29,8 @@ from posthog.client import Client as PostHogClient
 
 from stirling.config import AppSettings
 from stirling.models import UserId
+
+logger = logging.getLogger(__name__)
 
 # Per-request user ID, set by middleware from the X-User-Id header.
 # When not set, PostHog generates a random ID and marks the event as personless.
@@ -127,17 +130,27 @@ class PostHogSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
-        attrs = dict(span.attributes or {})
-        if attrs.get(GEN_AI_OPERATION_NAME) != GenAiOperationNameValues.CHAT.value:
-            return
+        # OpenTelemetry calls this synchronously from ``Span.end()`` with no
+        # exception handling of its own (see SynchronousMultiSpanProcessor),
+        # and pydantic-ai ends the model span inside a ``with`` block. So any
+        # exception raised here propagates straight into the model request and
+        # breaks the agent run. A telemetry defect must never take down the
+        # assistant or silently halt emission for every subsequent span, so we
+        # translate and capture defensively and swallow (but log) any failure.
+        try:
+            attrs = dict(span.attributes or {})
+            if attrs.get(GEN_AI_OPERATION_NAME) != GenAiOperationNameValues.CHAT.value:
+                return
 
-        properties = self._build_generation_properties(span, attrs)
-        self._maybe_emit_trace_event(span, attrs, properties)
-        self._client.capture(
-            distinct_id=current_user_id.get(),
-            event="$ai_generation",
-            properties=properties,
-        )
+            properties = self._build_generation_properties(span, attrs)
+            self._maybe_emit_trace_event(span, attrs, properties)
+            self._client.capture(
+                distinct_id=current_user_id.get(),
+                event="$ai_generation",
+                properties=properties,
+            )
+        except Exception:
+            logger.exception("Failed to emit $ai_generation for span; dropping this event")
 
     def _build_generation_properties(self, span: ReadableSpan, attrs: Mapping[str, Any]) -> dict[str, object]:
         """Build the $ai_generation event properties from span data."""
@@ -231,6 +244,19 @@ class PostHogSpanProcessor(SpanProcessor):
         return True
 
 
+def _log_delivery_error(error: Exception, _batch: Any) -> None:
+    """PostHog client ``on_error`` callback.
+
+    The PostHog SDK delivers events from a background consumer thread and its
+    ``capture`` method is decorated ``@no_throw``, so without this hook a
+    failing (or dead) delivery pipeline is completely invisible: events simply
+    stop arriving with nothing in our logs. Surfacing the error lets a halt be
+    noticed in minutes instead of sitting silently at zero. Kept lightweight so
+    a transient upload error can't spam at capture volume.
+    """
+    logger.warning("PostHog event delivery failed: %s", error)
+
+
 def setup_posthog_tracking(settings: AppSettings) -> TracerProvider | None:
     """Configure OpenTelemetry with a PostHog span processor for LLM analytics.
 
@@ -238,11 +264,17 @@ def setup_posthog_tracking(settings: AppSettings) -> TracerProvider | None:
     or None when tracking is disabled.
     """
     if not settings.posthog_enabled or not settings.posthog_api_key:
+        logger.info("PostHog LLM tracking is disabled (posthog_enabled=%s)", settings.posthog_enabled)
         return None
 
-    client = PostHogClient(project_api_key=settings.posthog_api_key, host=settings.posthog_host)
+    client = PostHogClient(
+        project_api_key=settings.posthog_api_key,
+        host=settings.posthog_host,
+        on_error=_log_delivery_error,
+    )
     processor = PostHogSpanProcessor(client)
 
     provider = TracerProvider()
     provider.add_span_processor(processor)
+    logger.info("PostHog LLM tracking enabled (host=%s)", settings.posthog_host)
     return provider
