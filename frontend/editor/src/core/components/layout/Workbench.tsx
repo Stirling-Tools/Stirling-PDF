@@ -13,6 +13,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useWorkspaceTabShortcuts } from "@app/hooks/useWorkspaceTabShortcuts";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
@@ -39,6 +40,7 @@ const FileManagerView = lazy(
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { config } = useAppConfig();
+  const { announcement } = useWorkspaceTabShortcuts();
 
   // The consent banner used to be initialised by the footer; the legal links
   // now live in Settings → Legal, so the workbench owns the banner lifecycle.
@@ -248,6 +250,11 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
+      {/* Accessibility announcer for tab switching */}
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
+
       {showWorkbenchBar && (
         <div className={styles.workbenchBarShell}>
           <div className={styles.workbenchBarWrapper}>

@@ -335,6 +335,7 @@ export const FileItem = React.memo(function FileItem({
   return (
     <>
       <div
+        id={`file-tab-${fileId}`}
         ref={itemRef}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
@@ -342,8 +343,9 @@ export const FileItem = React.memo(function FileItem({
         onDragStart={
           draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
         }
-        role="button"
-        tabIndex={0}
+        role="tab"
+        aria-selected={isActive}
+        tabIndex={isActive ? 0 : -1}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
