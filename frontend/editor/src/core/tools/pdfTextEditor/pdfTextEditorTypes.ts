@@ -225,6 +225,10 @@ export interface PdfTextEditorViewData {
   onGeneratePdfForNavigation: () => Promise<void>;
   onSaveToWorkbench: () => Promise<void>;
   isSavingToWorkbench: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => boolean;
+  onRedo: () => boolean;
   onForceSingleTextElementChange: (value: boolean) => void;
   onGroupingModeChange: (value: "auto" | "paragraph" | "singleLine") => void;
   onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;

@@ -243,6 +243,35 @@ const splitParagraphGroup = (group: TextGroup): TextGroup[] => {
   });
 };
 
+const HISTORY_LIMIT = 50;
+
+interface EditorHistorySnapshot {
+  groupsByPage: TextGroup[][];
+  imagesByPage: PdfJsonImageElement[][];
+}
+
+type PdfTextEditorViewDataWithHistory = PdfTextEditorViewData & {
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => boolean;
+  onRedo: () => boolean;
+};
+
+const cloneEditorState = <T,>(value: T): T => {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+};
+
+const createHistorySnapshot = (
+  groupsByPage: TextGroup[][],
+  imagesByPage: PdfJsonImageElement[][],
+): EditorHistorySnapshot => ({
+  groupsByPage: cloneEditorState(groupsByPage),
+  imagesByPage: cloneEditorState(imagesByPage),
+});
+
 const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const {
@@ -262,6 +291,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   );
   const [groupsByPage, setGroupsByPage] = useState<TextGroup[][]>([]);
   const [imagesByPage, setImagesByPage] = useState<PdfJsonImageElement[][]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [selectedPage, setSelectedPage] = useState(0);
   const [fileName, setFileName] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -293,7 +324,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
   const originalImagesRef = useRef<PdfJsonImageElement[][]>([]);
   const originalGroupsRef = useRef<TextGroup[][]>([]);
+  const groupsByPageRef = useRef<TextGroup[][]>([]);
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
+  const historyStackRef = useRef<EditorHistorySnapshot[]>([]);
+  const redoStackRef = useRef<EditorHistorySnapshot[]>([]);
   const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
   const sourceFileIdRef = useRef<FileId | null>(null);
@@ -319,6 +353,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     loadedDocumentRef.current = loadedDocument;
   }, [loadedDocument]);
+
+  useEffect(() => {
+    groupsByPageRef.current = groupsByPage;
+  }, [groupsByPage]);
 
   useEffect(() => {
     loadedImagePagesRef.current = new Set(loadedImagePages);
@@ -360,6 +398,109 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   );
   const hasChanges = useMemo(() => dirtyPages.some(Boolean), [dirtyPages]);
   const hasDocument = loadedDocument !== null;
+
+  const syncHistoryAvailability = useCallback(() => {
+    setCanUndo(historyStackRef.current.length > 0);
+    setCanRedo(redoStackRef.current.length > 0);
+  }, []);
+
+  const clearHistoryStack = useCallback(() => {
+    historyStackRef.current = [];
+    redoStackRef.current = [];
+    syncHistoryAvailability();
+  }, [syncHistoryAvailability]);
+
+  const pushHistorySnapshot = useCallback(
+    (
+      groupsSnapshot: TextGroup[][],
+      imagesSnapshot: PdfJsonImageElement[][],
+    ) => {
+      historyStackRef.current.push(
+        createHistorySnapshot(groupsSnapshot, imagesSnapshot),
+      );
+      if (historyStackRef.current.length > HISTORY_LIMIT) {
+        historyStackRef.current.shift();
+      }
+      redoStackRef.current = [];
+      syncHistoryAvailability();
+    },
+    [syncHistoryAvailability],
+  );
+
+  const restoreHistorySnapshot = useCallback(
+    (snapshot: EditorHistorySnapshot) => {
+      const nextGroups = cloneEditorState(snapshot.groupsByPage);
+      const nextImages = cloneEditorState(snapshot.imagesByPage);
+      groupsByPageRef.current = nextGroups;
+      imagesByPageRef.current = nextImages;
+      setGroupsByPage(nextGroups);
+      setImagesByPage(nextImages);
+      syncHistoryAvailability();
+    },
+    [syncHistoryAvailability],
+  );
+
+  const handleUndo = useCallback((): boolean => {
+    const snapshot = historyStackRef.current.pop();
+    if (!snapshot) {
+      syncHistoryAvailability();
+      return false;
+    }
+    redoStackRef.current.push(
+      createHistorySnapshot(groupsByPageRef.current, imagesByPageRef.current),
+    );
+    if (redoStackRef.current.length > HISTORY_LIMIT) {
+      redoStackRef.current.shift();
+    }
+    restoreHistorySnapshot(snapshot);
+    return true;
+  }, [restoreHistorySnapshot, syncHistoryAvailability]);
+
+  const handleRedo = useCallback((): boolean => {
+    const snapshot = redoStackRef.current.pop();
+    if (!snapshot) {
+      syncHistoryAvailability();
+      return false;
+    }
+    historyStackRef.current.push(
+      createHistorySnapshot(groupsByPageRef.current, imagesByPageRef.current),
+    );
+    if (historyStackRef.current.length > HISTORY_LIMIT) {
+      historyStackRef.current.shift();
+    }
+    restoreHistorySnapshot(snapshot);
+    return true;
+  }, [restoreHistorySnapshot, syncHistoryAvailability]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const modifierPressed = event.ctrlKey || event.metaKey;
+      if (!modifierPressed || event.altKey) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      const isUndo = key === "z" && !event.shiftKey;
+      const isRedo = key === "y" || (key === "z" && event.shiftKey);
+      if (!isUndo && !isRedo) {
+        return;
+      }
+
+      const handled = isUndo ? handleUndo() : handleRedo();
+      if (!handled) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setErrorMessage(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [handleRedo, handleUndo]);
 
   // Sync hasChanges to navigation context so navigation guards can block
   useEffect(() => {
@@ -412,8 +553,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       mode: "auto" | "paragraph" | "singleLine",
     ) => {
       if (!document) {
+        clearHistoryStack();
         setGroupsByPage([]);
         setImagesByPage([]);
+        groupsByPageRef.current = [];
         originalImagesRef.current = [];
         imagesByPageRef.current = [];
         setLoadedImagePages(new Set());
@@ -430,10 +573,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       const groups = groupDocumentText(cloned, mode);
       const images = extractDocumentImages(cloned);
       const originalImages = images.map((page) => page.map(cloneImageElement));
+      clearHistoryStack();
       originalImagesRef.current = originalImages;
       originalGroupsRef.current = groups.map((page) =>
         page.map((group) => ({ ...group })),
       );
+      groupsByPageRef.current = groups;
       imagesByPageRef.current = images.map((page) =>
         page.map(cloneImageElement),
       );
@@ -451,7 +596,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       loadingImagePagesRef.current = new Set();
       setSelectedPage(0);
     },
-    [],
+    [clearHistoryStack],
   );
 
   const clearPdfPreview = useCallback(() => {
@@ -980,16 +1125,30 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const handleGroupTextChange = useCallback(
     (pageIndex: number, groupId: string, value: string) => {
       setGroupsByPage((previous) =>
-        previous.map((groups, idx) =>
-          idx !== pageIndex
-            ? groups
-            : groups.map((group) =>
-                group.id === groupId ? { ...group, text: value } : group,
-              ),
-        ),
+        previous.map((groups, idx) => {
+          if (idx !== pageIndex) {
+            return groups;
+          }
+          let changed = false;
+          const nextGroups = groups.map((group) => {
+            if (group.id !== groupId) {
+              return group;
+            }
+            if (group.text === value) {
+              return group;
+            }
+            changed = true;
+            return { ...group, text: value };
+          });
+          if (!changed) {
+            return groups;
+          }
+          pushHistorySnapshot(previous, imagesByPageRef.current);
+          return nextGroups;
+        }),
       );
     },
-    [],
+    [pushHistorySnapshot],
   );
 
   const handleGroupDelete = useCallback(
@@ -1004,10 +1163,14 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           );
           return filtered;
         });
+        if (updated[pageIndex] === previous[pageIndex]) {
+          return previous;
+        }
+        pushHistorySnapshot(previous, imagesByPageRef.current);
         return updated;
       });
     },
-    [],
+    [pushHistorySnapshot],
   );
 
   const handleMergeGroups = useCallback(
@@ -1038,6 +1201,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           if (!merged) {
             return groups;
           }
+          pushHistorySnapshot(previous, imagesByPageRef.current);
           const next = [
             ...groups.slice(0, sorted[0]),
             merged,
@@ -1049,7 +1213,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       );
       return updated;
     },
-    [],
+    [pushHistorySnapshot],
   );
 
   const handleUngroupGroup = useCallback(
@@ -1069,6 +1233,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           if (splits.length <= 1) {
             return groups;
           }
+          pushHistorySnapshot(previous, imagesByPageRef.current);
           const next = [
             ...groups.slice(0, targetIndex),
             ...splits,
@@ -1080,7 +1245,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       );
       return updated;
     },
-    [],
+    [pushHistorySnapshot],
   );
 
   const handleImageTransform = useCallback(
@@ -1156,6 +1321,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           return previous;
         }
 
+        pushHistorySnapshot(groupsByPageRef.current, previous);
+
         const nextImages = previous.map((images, idx) =>
           idx === pageIndex ? updatedPage : images,
         );
@@ -1166,41 +1333,46 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return nextImages;
       });
     },
-    [],
+    [pushHistorySnapshot],
   );
 
-  const handleImageReset = useCallback((pageIndex: number, imageId: string) => {
-    const baseline = originalImagesRef.current[pageIndex]?.find(
-      (image) => (image.id ?? "") === imageId,
-    );
-    if (!baseline) {
-      return;
-    }
-    setImagesByPage((previous) => {
-      const current = previous[pageIndex] ?? [];
-      let changed = false;
-      const updatedPage = current.map((image) => {
-        if ((image.id ?? "") !== imageId) {
-          return image;
-        }
-        changed = true;
-        return cloneImageElement(baseline);
-      });
-
-      if (!changed) {
-        return previous;
-      }
-
-      const nextImages = previous.map((images, idx) =>
-        idx === pageIndex ? updatedPage : images,
+  const handleImageReset = useCallback(
+    (pageIndex: number, imageId: string) => {
+      const baseline = originalImagesRef.current[pageIndex]?.find(
+        (image) => (image.id ?? "") === imageId,
       );
-      if (imagesByPageRef.current.length <= pageIndex) {
-        imagesByPageRef.current.length = pageIndex + 1;
+      if (!baseline) {
+        return;
       }
-      imagesByPageRef.current[pageIndex] = updatedPage.map(cloneImageElement);
-      return nextImages;
-    });
-  }, []);
+      setImagesByPage((previous) => {
+        const current = previous[pageIndex] ?? [];
+        let changed = false;
+        const updatedPage = current.map((image) => {
+          if ((image.id ?? "") !== imageId) {
+            return image;
+          }
+          changed = true;
+          return cloneImageElement(baseline);
+        });
+
+        if (!changed) {
+          return previous;
+        }
+
+        pushHistorySnapshot(groupsByPageRef.current, previous);
+
+        const nextImages = previous.map((images, idx) =>
+          idx === pageIndex ? updatedPage : images,
+        );
+        if (imagesByPageRef.current.length <= pageIndex) {
+          imagesByPageRef.current.length = pageIndex + 1;
+        }
+        imagesByPageRef.current[pageIndex] = updatedPage.map(cloneImageElement);
+        return nextImages;
+      });
+    },
+    [pushHistorySnapshot],
+  );
 
   const handleResetEdits = useCallback(() => {
     if (!loadedDocument) {
@@ -1853,7 +2025,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     }
   }, [groupingMode, resetToDocument]);
 
-  const viewData = useMemo<PdfTextEditorViewData>(
+  const viewData = useMemo<PdfTextEditorViewDataWithHistory>(
     () => ({
       document: loadedDocument,
       groupsByPage,
@@ -1888,6 +2060,10 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         await handleGeneratePdf(true);
       },
       onSaveToWorkbench: handleSaveToWorkbench,
+      canUndo,
+      canRedo,
+      onUndo: handleUndo,
+      onRedo: handleRedo,
       onForceSingleTextElementChange: setForceSingleTextElement,
       onGroupingModeChange: setGroupingMode,
       onMergeGroups: handleMergeGroups,
@@ -1925,12 +2101,16 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       groupingMode,
       autoScaleText,
       requestPagePreview,
+      canUndo,
+      canRedo,
+      handleUndo,
+      handleRedo,
       setForceSingleTextElement,
       handleLoadFileFromDropzone,
     ],
   );
 
-  const latestViewDataRef = useRef<PdfTextEditorViewData>(viewData);
+  const latestViewDataRef = useRef<PdfTextEditorViewDataWithHistory>(viewData);
   latestViewDataRef.current = viewData;
 
   // Trigger initial image loading in lazy mode
@@ -2027,7 +2207,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   // The workbench should be set when the tool is selected via proper channels
   // (tool registry, tool picker, etc.) - not forced here
 
-  const lastSentViewDataRef = useRef<PdfTextEditorViewData | null>(null);
+  const lastSentViewDataRef = useRef<PdfTextEditorViewDataWithHistory | null>(
+    null,
+  );
 
   useEffect(() => {
     if (lastSentViewDataRef.current === viewData) {

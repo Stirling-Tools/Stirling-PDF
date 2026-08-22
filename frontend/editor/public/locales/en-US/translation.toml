@@ -5929,7 +5929,9 @@ applyChanges = "Apply Changes"
 clearText = "Clear text"
 downloadCopy = "Download Copy"
 moreOptions = "More options"
+redo = "Redo"
 reset = "Reset Changes"
+undo = "Undo"
 
 [pdfTextEditor.badges]
 earlyAccess = "Early Access"
