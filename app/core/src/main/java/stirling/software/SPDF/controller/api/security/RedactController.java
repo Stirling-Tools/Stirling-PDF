@@ -221,6 +221,10 @@ public class RedactController {
                                 .normalizeFonts(false)
                                 .fixToUnicode(false)
                                 .glyphAware(true)
+                                .ligatureAware(true)
+                                .bidiAware(true)
+                                .graphemeSafe(true)
+                                .sanitizeStructure(true)
                                 .redactMetadata(true)
                                 .build();
 
