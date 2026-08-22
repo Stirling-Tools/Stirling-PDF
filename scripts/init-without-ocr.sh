@@ -177,7 +177,7 @@ UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
 UNOSERVER_UNO_PORTS=()
 
-CURRENT_USER="$(id -un)"
+CURRENT_USER="$(id -un 2>/dev/null || id -u)"
 CURRENT_UID="$(id -u)"
 SWITCH_USER_WARNING_EMITTED=false
 
@@ -844,9 +844,9 @@ if id -u "$RUNTIME_USER" >/dev/null 2>&1; then
 else
   RUID="$(id -u)"
   RGRP="$(id -gn)"
-  RUNTIME_USER="$(id -un)"
+  RUNTIME_USER="$(id -un 2>/dev/null || id -u)"
 fi
-CURRENT_USER="$(id -un)"
+CURRENT_USER="$(id -un 2>/dev/null || id -u)"
 CURRENT_UID="$(id -u)"
 
 export XDG_RUNTIME_DIR="/tmp/xdg-${RUID}"
