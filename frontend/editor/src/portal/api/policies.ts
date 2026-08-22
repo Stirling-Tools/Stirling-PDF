@@ -14,7 +14,11 @@ import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import {
+  policyStep,
+  type PolicyToolId,
+  type PolicyToolStep,
+} from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
   PolicyDecodedState,
@@ -44,7 +48,7 @@ export type PolicyStatus = "active" | "paused";
 
 export type PolicyRowStatus = "active" | "paused" | "setup";
 
-export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
+export type PolicyFieldType = "toggle" | "select" | "chips" | "text" | "tags";
 
 export interface PolicyField {
   label: string;
@@ -52,6 +56,10 @@ export interface PolicyField {
   type: PolicyFieldType;
   value: boolean | string | string[];
   options?: string[];
+  /** Shown under the control. An i18n key, like `label`. */
+  helper?: string;
+  /** Placeholder for the free-text entry of a `tags` field. An i18n key. */
+  placeholder?: string;
 }
 
 export interface PolicyCategory {
@@ -62,6 +70,9 @@ export interface PolicyCategory {
   providesClassification?: boolean;
   comingSoon?: boolean;
   requiresAiEngine?: boolean;
+  /** Fires when a document leaves (a share), not on upload/export: enforced server-side, share
+   *  channels instead of sources, and valid with no tool chain at all. */
+  runsAtEgress?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -70,6 +81,9 @@ export interface PolicyConfigDef {
   scopeLabel: string;
   fields: PolicyField[];
   defaultOperations: PolicyToolStep[];
+  /** Which of `defaultOperations` start switched on. Absent falls back to the wizard's global
+   *  "off until configured" set, which suits presets that can't supply parameters. */
+  defaultOn?: PolicyToolId[];
 }
 
 export interface PolicyState {
@@ -197,6 +211,13 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     providesClassification: true,
   },
   {
+    id: "sharing",
+    label: "portal.policies.categories.sharing.label",
+    tone: "green",
+    desc: "portal.policies.categories.sharing.desc",
+    runsAtEgress: true,
+  },
+  {
     id: "compliance",
     label: "portal.policies.categories.compliance.label",
     tone: "amber",
@@ -283,6 +304,75 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [policyStep("classify")],
     fields: [],
+  },
+  sharing: {
+    summary: "portal.policies.config.sharing.summary",
+    rules: [
+      "portal.policies.config.sharing.rules.0",
+      "portal.policies.config.sharing.rules.1",
+      "portal.policies.config.sharing.rules.2",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
+    // Watermark is on by default with real text so it works unconfigured, baked in via image so
+    // it can't be lifted off. Redact/sanitise stay opt-in: a bigger change than a mark.
+    defaultOperations: [
+      policyStep("watermark", {
+        watermarkType: "text",
+        watermarkText: "Confidential",
+        convertPDFToImage: true,
+      }),
+      policyStep("redact", {
+        useRegex: true,
+        convertPDFToImage: true,
+        wordsToRedact: DEFAULT_PII_PATTERNS,
+      }),
+      policyStep("sanitize", { removeEmbeddedFiles: false }),
+    ],
+    defaultOn: ["watermark"],
+    fields: [
+      {
+        label: "portal.policies.config.sharing.fields.defaultAccess",
+        key: "defaultAccess",
+        type: "select",
+        value: "restricted",
+        options: ["restricted", "commenter", "editor", "inherit"],
+        helper: "portal.policies.config.sharing.fields.defaultAccessHelper",
+      },
+      {
+        label: "portal.policies.config.sharing.fields.externalRecipients",
+        key: "externalRecipients",
+        type: "select",
+        value: "restrict",
+        options: ["allow", "restrict", "block"],
+        helper:
+          "portal.policies.config.sharing.fields.externalRecipientsHelper",
+      },
+      {
+        label: "portal.policies.config.sharing.fields.internalDomains",
+        key: "internalDomains",
+        type: "tags",
+        value: [],
+        helper: "portal.policies.config.sharing.fields.internalDomainsHelper",
+        placeholder:
+          "portal.policies.config.sharing.fields.internalDomainsPlaceholder",
+      },
+      {
+        label: "portal.policies.config.sharing.fields.linkExpiry",
+        key: "linkExpiry",
+        type: "select",
+        value: "sevenDays",
+        options: ["oneDay", "threeDays", "sevenDays", "thirtyDays", "inherit"],
+        helper: "portal.policies.config.sharing.fields.linkExpiryHelper",
+      },
+      {
+        label: "portal.policies.config.sharing.fields.downloads",
+        key: "downloads",
+        type: "select",
+        value: "allow",
+        options: ["allow", "viewOnly"],
+        helper: "portal.policies.config.sharing.fields.downloadsHelper",
+      },
+    ],
   },
   compliance: {
     summary: "portal.policies.config.compliance.summary",
@@ -414,6 +504,14 @@ export const POLICY_DOC_TYPES: string[] = [
   "medicalPhi",
   "legalFilings",
   "financialReports",
+];
+
+/** The ways a document leaves today. Persisted in the policy's `sources` and matched server-side
+ *  by `ShareChannel`, so these ids must stay in step with that enum. */
+export const SHARE_CHANNELS: { id: string; label: string }[] = [
+  { id: "userShare", label: "portal.policies.channels.userShare" },
+  { id: "shareLink", label: "portal.policies.channels.shareLink" },
+  { id: "emailShare", label: "portal.policies.channels.emailShare" },
 ];
 
 // ── Client-side catalogue assembly ───────────────────────────────────────────

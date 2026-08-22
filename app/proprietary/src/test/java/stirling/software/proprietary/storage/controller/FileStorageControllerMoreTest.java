@@ -32,6 +32,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
+import stirling.software.proprietary.storage.egress.ShareEgressDecision;
+import stirling.software.proprietary.storage.egress.ShareEgressProcessor;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -49,13 +51,16 @@ class FileStorageControllerMoreTest {
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
+    @Mock private ShareEgressProcessor shareEgressProcessor;
     @Mock private AuditService auditService;
 
     private FileStorageController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new FileStorageController(fileStorageService, storageProvider, auditService);
+        controller =
+                new FileStorageController(
+                        fileStorageService, storageProvider, shareEgressProcessor, auditService);
     }
 
     private User user() {
@@ -335,6 +340,9 @@ class FileStorageControllerMoreTest {
             Resource resource = new ByteArrayResource(new byte[] {9});
             when(fileStorageService.getShareByToken("tok")).thenReturn(share);
             when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
+            // No sharing policy governs this file, so delivery is untouched.
+            when(fileStorageService.decideDelivery(eq(share), any()))
+                    .thenReturn(ShareEgressDecision.unrestricted(ShareAccessRole.VIEWER));
             when(storageProvider.signedDownloadUrl(
                             eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
                     .thenReturn(Optional.empty());

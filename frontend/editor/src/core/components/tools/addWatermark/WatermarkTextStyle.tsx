@@ -35,6 +35,10 @@ const WatermarkTextStyle = ({
           onChange={(value) => onParameterChange("customColor", value)}
           disabled={disabled}
           format="hex"
+          // Mantine's eyedropper is an icon-only button with no accessible name.
+          eyeDropperButtonProps={{
+            "aria-label": t("watermark.settings.pickColor", "Pick a colour"),
+          }}
           popoverProps={{
             withinPortal: true,
             zIndex: Z_INDEX_AUTOMATE_DROPDOWN,

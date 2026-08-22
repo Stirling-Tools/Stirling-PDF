@@ -1,8 +1,8 @@
 /**
  * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
- * `output.options`; `trigger` is always null (the editor fires runs on
- * upload/export via `/run`). Mirrors the editor's `buildBackendPolicy` /
+ * `output.options`, including the `categoryId` the server reads back to find
+ * egress policies. Mirrors the editor's `buildBackendPolicy` /
  * `fromBackendPolicy` from `policyPipeline.ts`, minus the editor-only
  * `automation` blob and toolRegistry coupling.
  */

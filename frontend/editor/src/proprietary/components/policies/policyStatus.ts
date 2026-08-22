@@ -4,6 +4,7 @@ import type { IconBadgeAccent } from "@app/ui/IconBadge";
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "neutral",
   security: "neutral",
+  sharing: "neutral",
   compliance: "neutral",
   routing: "neutral",
   retention: "neutral",
@@ -16,6 +17,7 @@ const BADGE_ACCENT: Record<string, string> = {
   ingestion: "blue",
   classification: "orange",
   security: "purple",
+  sharing: "green",
   compliance: "green",
   routing: "amber",
   retention: "red",

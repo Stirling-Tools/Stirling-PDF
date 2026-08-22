@@ -3,6 +3,7 @@ package stirling.software.proprietary.storage.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -10,11 +11,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -24,10 +27,17 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.InProcessPolicyStore;
+import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionException;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
+import stirling.software.proprietary.storage.egress.ShareChannel;
+import stirling.software.proprietary.storage.egress.ShareEgressDecision;
+import stirling.software.proprietary.storage.egress.ShareEgressPolicyService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -38,6 +48,8 @@ import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -50,12 +62,14 @@ class FileStorageServiceTest {
     @Mock private ApplicationProperties applicationProperties;
     @Mock private StorageProvider storageProvider;
     @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock private ShareEgressPolicyService shareEgressPolicyService;
 
     @Mock private ApplicationProperties.Security securityProperties;
     @Mock private ApplicationProperties.System systemProperties;
     @Mock private ApplicationProperties.Storage storageProperties;
     @Mock private ApplicationProperties.Storage.Sharing sharingProperties;
     @Mock private ApplicationProperties.Storage.Quotas quotasProperties;
+    @Mock private ApplicationProperties.Mail mailProperties;
 
     private FileStorageService service;
 
@@ -70,7 +84,13 @@ class FileStorageServiceTest {
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),
-                        storageCleanupEntryRepository);
+                        storageCleanupEntryRepository,
+                        shareEgressPolicyService);
+
+        // No sharing policy configured: every share proceeds exactly as asked.
+        when(shareEgressPolicyService.evaluateGrant(any(), any(), any(), any(), any()))
+                .thenAnswer(
+                        invocation -> ShareEgressDecision.unrestricted(invocation.getArgument(4)));
 
         // Default: storage and sharing fully enabled, share links enabled, no expiry
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);
@@ -296,6 +316,109 @@ class FileStorageServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
                 .isEqualTo(403);
+    }
+
+    @Test
+    void shareWithUser_registeredUserTypedAsAnEmailAddress_rowIsStillAUserShare() {
+        User owner = emailUser(1L, "alice@corp.com");
+        User target = emailUser(2L, "bob@example.com");
+        StoredFile f = ownedFile(owner);
+        enableEmailSharing();
+        when(userRepository.findByUsernameIgnoreCase("bob@example.com"))
+                .thenReturn(Optional.of(target));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
+                .thenReturn(Optional.empty());
+        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FileShare share =
+                service.shareWithUser(owner, f, "bob@example.com", ShareAccessRole.VIEWER);
+
+        // Usernames are commonly email addresses, so this is the ordinary user-share path: a policy
+        // narrowed to userShare has to keep biting on it.
+        assertThat(share.getEgressChannel()).isEqualTo(ShareChannel.USER_SHARE);
+        verify(shareEgressPolicyService)
+                .evaluateGrant(
+                        ShareChannel.USER_SHARE,
+                        f,
+                        owner,
+                        "bob@example.com",
+                        ShareAccessRole.VIEWER);
+        // The link it mails is an email share in its own right.
+        assertThat(savedShares())
+                .anyMatch(
+                        saved ->
+                                saved.getShareToken() != null
+                                        && saved.getEgressChannel() == ShareChannel.EMAIL_SHARE);
+        verify(shareEgressPolicyService)
+                .evaluateGrant(
+                        ShareChannel.EMAIL_SHARE,
+                        f,
+                        owner,
+                        "bob@example.com",
+                        ShareAccessRole.VIEWER);
+    }
+
+    @Test
+    void shareWithUser_registeredUserTypedAsAnEmailAddress_deliveryStillEvaluatesAsUserShare() {
+        User owner = emailUser(1L, "alice@corp.com");
+        User target = emailUser(2L, "bob@example.com");
+        StoredFile f = ownedFile(owner);
+        enableEmailSharing();
+        when(userRepository.findByUsernameIgnoreCase("bob@example.com"))
+                .thenReturn(Optional.of(target));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
+                .thenReturn(Optional.empty());
+        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FileShare share =
+                service.shareWithUser(owner, f, "bob@example.com", ShareAccessRole.VIEWER);
+
+        // The real evaluator, on the row this grant wrote: a userShare-only policy must refuse the
+        // delivery. Stamped EMAIL_SHARE it read as an email share and the policy never bit.
+        PolicyStore policyStore = new InProcessPolicyStore();
+        policyStore.save(userShareBlockingPolicy(owner));
+        ShareEgressPolicyService evaluator =
+                new ShareEgressPolicyService(policyStore, JsonMapper.builder().build());
+
+        assertThat(evaluator.evaluateDelivery(share, target).allowed()).isFalse();
+    }
+
+    /** Every FileShare handed to the repository, in save order. */
+    private List<FileShare> savedShares() {
+        ArgumentCaptor<FileShare> captor = ArgumentCaptor.forClass(FileShare.class);
+        verify(fileShareRepository, atLeastOnce()).save(captor.capture());
+        return captor.getAllValues();
+    }
+
+    private void enableEmailSharing() {
+        when(sharingProperties.isEmailEnabled()).thenReturn(true);
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.isEnabled()).thenReturn(true);
+    }
+
+    private User emailUser(long id, String username) {
+        User u = new User();
+        u.setId(id);
+        u.setUsername(username);
+        return u;
+    }
+
+    /** A Sharing policy that refuses external recipients, narrowed to the userShare channel. */
+    private Policy userShareBlockingPolicy(User owner) {
+        return new Policy(
+                null,
+                "Sharing Policy",
+                owner.getUsername(),
+                true,
+                List.of(),
+                List.of(),
+                new OutputSpec(
+                        "inline",
+                        Map.of(
+                                "categoryId", "sharing",
+                                "sources", List.of("userShare"),
+                                "fieldValues", Map.of("externalRecipients", "block"))),
+                null);
     }
 
     // -------------------------------------------------------------------------

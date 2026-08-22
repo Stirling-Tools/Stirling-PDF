@@ -34,6 +34,10 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
+import stirling.software.proprietary.storage.egress.ShareChannel;
+import stirling.software.proprietary.storage.egress.ShareEgressDecision;
+import stirling.software.proprietary.storage.egress.ShareEgressException;
+import stirling.software.proprietary.storage.egress.ShareEgressPolicyService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.FileShareAccessType;
@@ -70,6 +74,7 @@ public class FileStorageService {
     private final StorageProvider storageProvider;
     private final Optional<EmailService> emailService;
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
+    private final ShareEgressPolicyService shareEgressPolicyService;
 
     public void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
@@ -542,6 +547,26 @@ public class FileStorageService {
         boolean isEmail = isEmailAddress(normalizedUsername);
 
         Optional<User> targetUserOpt = userRepository.findByUsernameIgnoreCase(normalizedUsername);
+
+        // Egress gate, before anything is written: a Sharing policy may refuse this recipient
+        // outright, or cap the access they are granted.
+        // Usernames are commonly email addresses, so a registered recipient is a user share however
+        // it was typed; only a link mailed to someone with no account is an email share.
+        ShareChannel channel =
+                isEmail && targetUserOpt.isEmpty()
+                        ? ShareChannel.EMAIL_SHARE
+                        : ShareChannel.USER_SHARE;
+        ShareEgressDecision decision =
+                requireEgressAllowed(channel, file, owner, normalizedUsername, role);
+        ShareAccessRole effectiveRole = decision.role();
+        // Sharing with a registered user by email also mails a link, and that link is an email
+        // share in its own right, so it is judged as one before anything is written.
+        ShareEgressDecision linkDecision =
+                isEmail && channel != ShareChannel.EMAIL_SHARE
+                        ? requireEgressAllowed(
+                                ShareChannel.EMAIL_SHARE, file, owner, normalizedUsername, role)
+                        : decision;
+
         if (targetUserOpt.isPresent()) {
             User targetUser = targetUserOpt.get();
             if (targetUser.getId().equals(owner.getId())) {
@@ -554,7 +579,8 @@ public class FileStorageService {
                             .findByFileAndSharedWithUser(file, targetUser)
                             .map(
                                     existingShare -> {
-                                        existingShare.setAccessRole(role);
+                                        existingShare.setAccessRole(effectiveRole);
+                                        existingShare.setEgressChannel(channel);
                                         return fileShareRepository.save(existingShare);
                                     })
                             .orElseGet(
@@ -562,7 +588,8 @@ public class FileStorageService {
                                         FileShare newShare = new FileShare();
                                         newShare.setFile(file);
                                         newShare.setSharedWithUser(targetUser);
-                                        newShare.setAccessRole(role);
+                                        newShare.setAccessRole(effectiveRole);
+                                        newShare.setEgressChannel(channel);
                                         return fileShareRepository.save(newShare);
                                     });
 
@@ -576,10 +603,16 @@ public class FileStorageService {
                             HttpStatus.BAD_REQUEST,
                             "Share links must be enabled for email sharing");
                 }
-                String shareLinkUrl = null;
-                FileShare linkShare = createShareLink(owner, file, role);
-                shareLinkUrl = buildShareLinkUrl(linkShare);
-                sendShareNotification(owner, file, normalizedUsername, role, shareLinkUrl);
+                // Already judged as an email share above; don't re-evaluate it as a link share.
+                FileShare linkShare =
+                        mintShareLink(
+                                file, linkDecision.role(), linkDecision, ShareChannel.EMAIL_SHARE);
+                sendShareNotification(
+                        owner,
+                        file,
+                        normalizedUsername,
+                        linkDecision.role(),
+                        buildShareLinkUrl(linkShare));
             }
 
             return share;
@@ -596,8 +629,10 @@ public class FileStorageService {
                     HttpStatus.BAD_REQUEST, "Share links must be enabled for email sharing");
         }
 
-        FileShare linkShare = createShareLink(owner, file, role);
-        sendShareNotification(owner, file, normalizedUsername, role, buildShareLinkUrl(linkShare));
+        FileShare linkShare =
+                mintShareLink(file, linkDecision.role(), linkDecision, ShareChannel.EMAIL_SHARE);
+        sendShareNotification(
+                owner, file, normalizedUsername, linkDecision.role(), buildShareLinkUrl(linkShare));
         return linkShare;
     }
 
@@ -640,13 +675,64 @@ public class FileStorageService {
         if (!isOwner(file, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can share");
         }
+        // A bare link has no named recipient, so a policy can only judge it as a channel — the
+        // per-recipient rules bite when someone opens it (see decideDelivery).
+        ShareEgressDecision decision =
+                requireEgressAllowed(ShareChannel.SHARE_LINK, file, owner, null, role);
+        return mintShareLink(file, decision.role(), decision, ShareChannel.SHARE_LINK);
+    }
 
+    /** Writes the link row for an egress decision that has already been made. */
+    private FileShare mintShareLink(
+            StoredFile file,
+            ShareAccessRole role,
+            ShareEgressDecision decision,
+            ShareChannel channel) {
         FileShare share = new FileShare();
         share.setFile(file);
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
-        share.setExpiresAt(resolveShareLinkExpiration());
+        // Stamped so the link an email share mints is still judged as an email share when it is
+        // opened; otherwise a policy narrowed to that channel would never bite at delivery.
+        share.setEgressChannel(channel);
+        share.setExpiresAt(resolveShareLinkExpiration(decision));
         return fileShareRepository.save(share);
+    }
+
+    /** Evaluates the owner team's Sharing policies for a grant; throws if any policy blocks. */
+    private ShareEgressDecision requireEgressAllowed(
+            ShareChannel channel,
+            StoredFile file,
+            User owner,
+            String recipient,
+            ShareAccessRole role) {
+        ShareEgressDecision decision =
+                shareEgressPolicyService.evaluateGrant(channel, file, owner, recipient, role);
+        if (!decision.allowed()) {
+            throw new ShareEgressException(decision);
+        }
+        return decision;
+    }
+
+    /** The egress decision for a delivery; an owner fetching their own file never reaches here. */
+    public ShareEgressDecision decideDelivery(FileShare share, User accessor) {
+        return shareEgressPolicyService.evaluateDelivery(attachedForEgress(share), accessor);
+    }
+
+    /** The same row re-read inside this transaction with file, owner and team already fetched. */
+    private FileShare attachedForEgress(FileShare share) {
+        if (share == null || share.getId() == null) {
+            return share;
+        }
+        return fileShareRepository.findByIdForEgress(share.getId()).orElse(share);
+    }
+
+    /** The share row backing a non-owner's access to a file, if there is one. */
+    public Optional<FileShare> findUserShare(User user, StoredFile file) {
+        if (user == null || file == null || isOwner(file, user)) {
+            return Optional.empty();
+        }
+        return fileShareRepository.findByFileAndSharedWithUser(file, user);
     }
 
     public void revokeShareLink(User owner, StoredFile file, String token) {
@@ -1096,6 +1182,17 @@ public class FileStorageService {
             return null;
         }
         return LocalDateTime.now().plus(days, ChronoUnit.DAYS);
+    }
+
+    /** The configured expiry, tightened to the policy ceiling; a policy can only shorten it. */
+    private LocalDateTime resolveShareLinkExpiration(ShareEgressDecision decision) {
+        LocalDateTime configured = resolveShareLinkExpiration();
+        Integer maxDays = decision.maxLinkDays();
+        if (maxDays == null) {
+            return configured;
+        }
+        LocalDateTime capped = LocalDateTime.now().plus(maxDays, ChronoUnit.DAYS);
+        return configured == null || configured.isAfter(capped) ? capped : configured;
     }
 
     private boolean isShareLinkExpired(FileShare share) {
