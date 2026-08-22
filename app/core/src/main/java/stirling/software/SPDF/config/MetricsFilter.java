@@ -2,6 +2,7 @@ package stirling.software.SPDF.config;
 
 import java.io.IOException;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -12,13 +13,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.util.RequestUriUtils;
 
 @Component
+@ConditionalOnBooleanProperty(name = "metrics.enabled")
 @RequiredArgsConstructor
 public class MetricsFilter extends OncePerRequestFilter {
 
@@ -31,11 +32,8 @@ public class MetricsFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
 
         if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
-            HttpSession session = request.getSession(false);
-            String sessionId = (session != null) ? session.getId() : "no-session";
             Counter counter =
                     Counter.builder("http.requests")
-                            .tag("session", sessionId)
                             .tag("method", request.getMethod())
                             .tag("uri", uri)
                             .register(meterRegistry);
