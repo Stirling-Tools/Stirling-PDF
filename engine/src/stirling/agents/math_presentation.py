@@ -51,8 +51,7 @@ _MATH_INTENT_SYSTEM_PROMPT = (
 class _MathIntentDecision(ApiModel):
     is_math: bool = Field(
         description=(
-            "True if the prompt is about verifying numerical content "
-            "(math, audit, calculations, totals, percentages, etc.)."
+            "True if the prompt is about verifying numerical content (math, audit, calculations, totals, percentages, etc.)."  # noqa: E501
         ),
     )
 

@@ -4,6 +4,7 @@ Support module, not a step module: behave execs everything under features/steps 
 step definitions, so anything environment.py needs to import has to live apart from
 the @when/@then decorators or they would register twice.
 """
+
 import requests
 
 BASE_URL = "http://localhost:8080"

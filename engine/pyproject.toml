@@ -26,11 +26,11 @@ engine = [
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
     "anyio>=4.14.2",
-    "datamodel-code-generator[ruff]==0.64.0",
+    "datamodel-code-generator[ruff]>=0.64.0",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
+    "pytest-cov>=7.0.0",
     "referencing>=0.37.0",
-    "ruff==0.15.5",
 ]
 # Dependencies for the Cucumber/Python integration test suite.
 cucumber = [
@@ -64,9 +64,9 @@ updater-signatures = [
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
-    "codespell==2.4.3",
-    "ruff==0.15.5",
-    "tomli-w==1.2.0",
+    "codespell>=2.4.3",
+    "ruff>=0.16.2",
+    "tomli-w>=1.2.0",
 ]
 
 [build-system]
@@ -97,6 +97,10 @@ select = [
     "FA",  # flake8-future-annotations: flags missing future annotations imports
     "BLE", # flake8-blind-except: flags bare `except Exception`
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"testing/**/*.py" = ["N803", "BLE001", "E501"]
+"*split_photos.py" = ["E501", "N806"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["stirling", "tests"]

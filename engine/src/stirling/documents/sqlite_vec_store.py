@@ -344,8 +344,7 @@ class SqliteVecStore(DocumentStore):
         )
         if pages:
             self._conn.executemany(
-                "INSERT INTO document_pages(collection, owner_id, page_number, text, char_count) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO document_pages(collection, owner_id, page_number, text, char_count) VALUES (?, ?, ?, ?, ?)",  # noqa: E501
                 [(collection, owner_id, p.page_number, p.text, p.char_count) for p in pages],
             )
         self._conn.commit()

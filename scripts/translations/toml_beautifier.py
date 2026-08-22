@@ -28,7 +28,7 @@ class TOMLBeautifier:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
@@ -172,7 +172,7 @@ class TOMLBeautifier:
 
         def get_key_order(obj: dict, path: str = "") -> list[str]:
             keys = []
-            for key in obj.keys():
+            for key in obj:
                 new_path = f"{path}.{key}" if path else key
                 keys.append(new_path)
                 if isinstance(obj[key], dict):

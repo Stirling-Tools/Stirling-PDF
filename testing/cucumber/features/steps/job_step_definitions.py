@@ -1,4 +1,5 @@
 """Steps for the async job API. DELETE is a cancel, so it 400s once the job finishes."""
+
 import time
 
 import requests
@@ -21,27 +22,25 @@ def step_wait_for_job(context):
     while time.time() < deadline:
         response = requests.get(
             f"{BASE_URL}/api/v1/general/job/{context.job_id}",
-            headers=API_HEADERS, timeout=30,
+            headers=API_HEADERS,
+            timeout=30,
         )
-        assert response.status_code == 200, (
-            f"Job status returned {response.status_code}: {response.text}"
-        )
+        assert response.status_code == 200, f"Job status returned {response.status_code}: {response.text}"
         context.response = response
         payload = response.json()
         if payload.get("complete"):
             context.job_status = payload
             return
         time.sleep(0.2)
-    raise AssertionError(
-        f"Job {context.job_id} did not complete within {POLL_TIMEOUT_SECONDS}s"
-    )
+    raise AssertionError(f"Job {context.job_id} did not complete within {POLL_TIMEOUT_SECONDS}s")
 
 
 @when("I request the job result")
 def step_request_job_result(context):
     context.response = requests.get(
         f"{BASE_URL}/api/v1/general/job/{context.job_id}/result",
-        headers=API_HEADERS, timeout=60,
+        headers=API_HEADERS,
+        timeout=60,
     )
 
 
@@ -49,7 +48,8 @@ def step_request_job_result(context):
 def step_request_job_result_files(context):
     context.response = requests.get(
         f"{BASE_URL}/api/v1/general/job/{context.job_id}/result/files",
-        headers=API_HEADERS, timeout=60,
+        headers=API_HEADERS,
+        timeout=60,
     )
     files = context.response.json().get("files") or []
     context.job_files = files
@@ -62,7 +62,8 @@ def step_download_job_file(context):
     assert getattr(context, "job_file_id", None), "No fileId captured from the result file list"
     context.response = requests.get(
         f"{BASE_URL}/api/v1/general/files/{context.job_file_id}",
-        headers=API_HEADERS, timeout=60,
+        headers=API_HEADERS,
+        timeout=60,
     )
 
 
@@ -71,7 +72,8 @@ def step_job_file_metadata(context):
     assert getattr(context, "job_file_id", None), "No fileId captured from the result file list"
     context.response = requests.get(
         f"{BASE_URL}/api/v1/general/files/{context.job_file_id}/metadata",
-        headers=API_HEADERS, timeout=60,
+        headers=API_HEADERS,
+        timeout=60,
     )
 
 
@@ -79,7 +81,8 @@ def step_job_file_metadata(context):
 def step_cancel_job(context):
     context.response = requests.delete(
         f"{BASE_URL}/api/v1/general/job/{context.job_id}",
-        headers=API_HEADERS, timeout=30,
+        headers=API_HEADERS,
+        timeout=30,
     )
 
 
@@ -127,8 +130,7 @@ def step_check_cleanup_idempotent(context):
     removed = context.cleanup_summary.get("jobsRemoved")
     deleted = context.cleanup_summary.get("filesDeleted")
     assert removed == 0 and deleted == 0, (
-        "A repeat cleanup still found work to do, so the first pass did not fully clean up: "
-        f"{context.cleanup_summary}"
+        f"A repeat cleanup still found work to do, so the first pass did not fully clean up: {context.cleanup_summary}"
     )
 
 
@@ -136,11 +138,11 @@ def step_check_cleanup_idempotent(context):
 def step_check_job_gone(context):
     response = requests.get(
         f"{BASE_URL}/api/v1/general/job/{context.job_id}",
-        headers=API_HEADERS, timeout=30,
+        headers=API_HEADERS,
+        timeout=30,
     )
     assert response.status_code == 404, (
-        f"Job {context.job_id} still exists after cleanup: "
-        f"{response.status_code} {response.text[:200]}"
+        f"Job {context.job_id} still exists after cleanup: {response.status_code} {response.text[:200]}"
     )
 
 
@@ -149,11 +151,11 @@ def step_check_job_file_gone(context):
     assert getattr(context, "job_file_id", None), "No fileId captured from the result file list"
     response = requests.get(
         f"{BASE_URL}/api/v1/general/files/{context.job_file_id}",
-        headers=API_HEADERS, timeout=30,
+        headers=API_HEADERS,
+        timeout=30,
     )
     assert response.status_code == 404, (
-        f"File {context.job_file_id} still downloadable after cleanup: "
-        f"{response.status_code} {response.text[:200]}"
+        f"File {context.job_file_id} still downloadable after cleanup: {response.status_code} {response.text[:200]}"
     )
 
 
@@ -162,10 +164,10 @@ def step_check_job_file_still_there(context):
     assert getattr(context, "job_file_id", None), "No fileId captured from the result file list"
     response = requests.get(
         f"{BASE_URL}/api/v1/general/files/{context.job_file_id}",
-        headers=API_HEADERS, timeout=60,
+        headers=API_HEADERS,
+        timeout=60,
     )
     assert response.status_code == 200, (
-        f"File {context.job_file_id} was not retrievable a second time: "
-        f"{response.status_code} {response.text[:200]}"
+        f"File {context.job_file_id} was not retrievable a second time: {response.status_code} {response.text[:200]}"
     )
     assert len(response.content) > 0, "Second download returned an empty body"

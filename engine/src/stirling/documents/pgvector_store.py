@@ -91,8 +91,7 @@ class PgVectorStore(DocumentStore):
                 # Partial index over rows that can actually expire keeps the reaper
                 # scan tight even when most rows are persistent (org docs).
                 await cur.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_meta_expires_at "
-                    "ON documents_meta(expires_at) WHERE expires_at IS NOT NULL"
+                    "CREATE INDEX IF NOT EXISTS idx_meta_expires_at ON documents_meta(expires_at) WHERE expires_at IS NOT NULL"  # noqa: E501
                 )
                 await cur.execute(
                     """

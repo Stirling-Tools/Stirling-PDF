@@ -10,10 +10,10 @@ adjusting the format.
 
 Usage:
     python check_language_toml.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
-"""
 
-# Sample for Windows:
-# python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-US/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
+Sample for Windows:
+    python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-US/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
+"""  # noqa: E501
 
 import argparse
 import glob
@@ -201,7 +201,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         if (branch_path / file_normpath).stat().st_size > MAX_FILE_SIZE:
             has_differences = True
             report.append(
-                f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"
+                f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"  # noqa: E501
             )
             continue
 
@@ -223,11 +223,11 @@ def check_for_differences(reference_file, file_list, branch, actor):
             has_differences = True
             if reference_key_count > current_key_count:
                 report.append(
-                    f"    - **_Mismatched key count_**: {reference_key_count} (reference) vs {current_key_count} (current). Translation keys are missing."
+                    f"    - **_Mismatched key count_**: {reference_key_count} (reference) vs {current_key_count} (current). Translation keys are missing."  # noqa: E501
                 )
             elif reference_key_count < current_key_count:
                 report.append(
-                    f"    - **_Too many keys_**: {reference_key_count} (reference) vs {current_key_count} (current). Please verify if there are additional keys that need to be removed."
+                    f"    - **_Too many keys_**: {reference_key_count} (reference) vs {current_key_count} (current). Please verify if there are additional keys that need to be removed."  # noqa: E501
                 )
         else:
             report.append("1. **Test Status:** ✅ **_Passed_**")
@@ -248,7 +248,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
             report.append("  - **Issue:**")
             if missing_keys_list:
                 report.append(
-                    f"    - **_Extra keys in `{locale_dir}/{basename_current_file}`_**: `{missing_keys_str}` that are not present in **_`{basename_reference_file}`_**."
+                    f"    - **_Extra keys in `{locale_dir}/{basename_current_file}`_**: `{missing_keys_str}` that are not present in **_`{basename_reference_file}`_**."  # noqa: E501
                 )
                 report.append("")
                 report.append("    Use the following command to remove them:")
@@ -256,7 +256,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 report.append("")
             if extra_keys_list:
                 report.append(
-                    f"    - **_Missing keys in `{locale_dir}/{basename_current_file}`_**: `{extra_keys_str}` that are not present in **_`{basename_reference_file}`_**."
+                    f"    - **_Missing keys in `{locale_dir}/{basename_current_file}`_**: `{extra_keys_str}` that are not present in **_`{basename_reference_file}`_**."  # noqa: E501
                 )
                 report.append("")
                 report.append("    Use the following command to add them:")
