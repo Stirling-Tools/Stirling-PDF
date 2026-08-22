@@ -263,6 +263,29 @@ export default defineConfig({
       },
     },
     {
+      // Desktop E2E harness: a standalone npm package (its own package.json and
+      // lockfile), deliberately outside editor/ so its package.json cannot
+      // hijack Tauri's app-dir resolution. Nothing resolves @app/* there - no
+      // bundler, no tsconfig paths - so relative imports are the only option.
+      // `browser`, `$` and `expect` are injected as globals by WebdriverIO.
+      files: ["desktop-e2e/**/*.{js,mjs}"],
+      globals: {
+        ...modernGlobals,
+        browser: "readonly",
+        $: "readonly",
+        $$: "readonly",
+        expect: "readonly",
+        describe: "readonly",
+        it: "readonly",
+      },
+      env: {
+        node: true,
+      },
+      rules: {
+        "no-restricted-imports": "off",
+      },
+    },
+    {
       // Editor app source (excluding desktop): ban relative/src imports, ban
       // Tauri (desktop-only), and the shared-DS Mantine import ban.
       files: [APP_SOURCE],

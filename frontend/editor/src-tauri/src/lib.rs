@@ -177,7 +177,7 @@ pub fn run() {
         });
       }
 
-      if let Err(err) = apply_provisioning_if_present(&app.handle()) {
+      if let Err(err) = apply_provisioning_if_present(app.handle()) {
         add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
       }
 
