@@ -59,7 +59,8 @@ def sort_file(path: str, fix: bool) -> bool:
         raise SortError(f"{path}: refusing to sort, sorting would change the file's contents")
 
     if fix:
-        Path(path).write_text(expected, encoding="utf-8")
+        # newline="" stops Windows from translating to CRLF, which corrupts the locale files.
+        Path(path).write_text(expected, encoding="utf-8", newline="")
     return True
 
 

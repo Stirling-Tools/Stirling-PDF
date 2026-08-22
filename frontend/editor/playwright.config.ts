@@ -119,7 +119,7 @@ export default defineConfig({
     command: process.env.CI
       ? "npx vite preview --port 5173 --strictPort"
       : "npx vite",
-    url: "http://localhost:5173",
+    url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

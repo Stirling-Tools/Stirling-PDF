@@ -4,12 +4,7 @@
  * without needing to make API calls
  */
 
-// PDF.js types (simplified)
-declare global {
-  interface Window {
-    pdfjsLib?: any;
-  }
-}
+// window.pdfjsLib is declared (narrowly) in formDetection/pdfRender.ts.
 
 export interface SignatureDetectionResult {
   hasSignatures: boolean;
@@ -29,8 +24,8 @@ const detectSignaturesInFile = async (
   file: File,
 ): Promise<SignatureDetectionResult> => {
   try {
-    // Ensure PDF.js is available
-    if (!window.pdfjsLib) {
+    const pdfjsLib = (window as { pdfjsLib?: any }).pdfjsLib;
+    if (!pdfjsLib) {
       return {
         hasSignatures: false,
         error: "PDF.js not available",
@@ -41,8 +36,7 @@ const detectSignaturesInFile = async (
     const arrayBuffer = await file.arrayBuffer();
 
     // Load the PDF document
-    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer })
-      .promise;
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
     let totalSignatures = 0;
 

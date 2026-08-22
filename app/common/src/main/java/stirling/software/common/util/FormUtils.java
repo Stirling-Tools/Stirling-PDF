@@ -875,6 +875,16 @@ public class FormUtils {
     }
 
     private void ensureAppearances(PDAcroForm acroForm) {
+        ensureAppearances(acroForm, null, false);
+    }
+
+    /**
+     * With {@code onlyFields} non-null, regenerates appearances for just those fields; {@code
+     * preserveNeedAppearances} then keeps the viewer-side generation flag set for the untouched
+     * pre-existing fields that still rely on it.
+     */
+    private void ensureAppearances(
+            PDAcroForm acroForm, List<PDField> onlyFields, boolean preserveNeedAppearances) {
         if (acroForm == null) return;
 
         acroForm.setNeedAppearances(true);
@@ -901,10 +911,21 @@ public class FormUtils {
                         "Unable to ensure default font resources before refresh: {}",
                         fontPrep.getMessage());
             }
-            acroForm.refreshAppearances();
+            if (onlyFields != null) {
+                if (!onlyFields.isEmpty()) {
+                    acroForm.refreshAppearances(onlyFields);
+                }
+            } else {
+                acroForm.refreshAppearances();
+            }
         } catch (IOException e) {
             log.warn("Failed to refresh form appearances: {}", e.getMessage(), e);
             return; // Don't set NeedAppearances to false if refresh failed
+        }
+
+        // Pre-existing fields that were not refreshed may still rely on viewer-side generation.
+        if (onlyFields != null && preserveNeedAppearances) {
+            return;
         }
 
         // After successful appearance generation, set NeedAppearances to false
@@ -925,6 +946,95 @@ public class FormUtils {
             log.warn("Unable to access AcroForm: {}", e.getMessage(), e);
             return null;
         }
+    }
+
+    /**
+     * Create new AcroForm fields from a list of definitions (used by Auto Form Detection). Reuses
+     * the same field-creation and appearance logic as the rest of this class, and creates the
+     * AcroForm (with a Helvetica default resource) when the document has none. Field names are made
+     * unique against any existing fields.
+     */
+    public void addFields(PDDocument document, List<NewFormFieldDefinition> definitions)
+            throws IOException {
+        if (document == null || definitions == null || definitions.isEmpty()) {
+            return;
+        }
+        PDDocumentCatalog documentCatalog = document.getDocumentCatalog();
+        PDAcroForm acroForm = documentCatalog.getAcroForm();
+        boolean priorNeedAppearances =
+                acroForm != null && Boolean.TRUE.equals(acroForm.getNeedAppearances());
+        if (acroForm == null) {
+            acroForm = new PDAcroForm(document);
+            PDResources dr = new PDResources();
+            dr.put(COSName.getPDFName("Helv"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            acroForm.setDefaultResources(dr);
+            acroForm.setNeedAppearances(true);
+            documentCatalog.setAcroForm(acroForm);
+        }
+
+        Set<String> existingNames = new java.util.HashSet<>();
+        for (PDField field : acroForm.getFieldTree()) {
+            if (field.getPartialName() != null) {
+                existingNames.add(field.getPartialName());
+            }
+        }
+
+        int pageCount = document.getNumberOfPages();
+        List<PDField> createdFields = new ArrayList<>();
+        for (NewFormFieldDefinition definition : definitions) {
+            Integer pageIndex = definition.pageIndex();
+            if (pageIndex == null
+                    || pageIndex < 0
+                    || pageIndex >= pageCount
+                    || definition.x() == null
+                    || definition.y() == null
+                    || definition.width() == null
+                    || definition.height() == null) {
+                continue;
+            }
+            // A degenerate rect would otherwise get a synthetic default rectangle downstream.
+            if (definition.width() <= 0 || definition.height() <= 0) {
+                continue;
+            }
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle rectangle =
+                    new PDRectangle(
+                            definition.x(),
+                            definition.y(),
+                            definition.width(),
+                            definition.height());
+            FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(definition.type());
+            if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
+                // Deliberate for detected "signature" areas too: pdf-lib cannot create signature
+                // widgets, so both engines emit a fillable text field there for parity.
+                handler = FormFieldTypeSupport.TEXT;
+            }
+            String baseName =
+                    (definition.name() != null && !definition.name().isBlank())
+                            ? definition.name()
+                            : handler.typeName() + "_" + (pageIndex + 1);
+            String uniqueName = generateUniqueFieldName(baseName, existingNames);
+            existingNames.add(uniqueName);
+            try {
+                createNewField(
+                        handler,
+                        acroForm,
+                        page,
+                        rectangle,
+                        uniqueName,
+                        definition,
+                        definition.options());
+                PDField created = acroForm.getField(uniqueName);
+                if (created != null) {
+                    createdFields.add(created);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to create detected field '{}': {}", uniqueName, e.getMessage());
+            }
+        }
+
+        // Refresh only what we added; regenerating pre-existing fields could alter their look.
+        ensureAppearances(acroForm, createdFields, priorNeedAppearances);
     }
 
     public String filterSingleChoiceSelection(
@@ -2265,7 +2375,11 @@ public class FormUtils {
             }
         }
 
-        field.getWidgets().add(widget);
+        if (existingWidget == null) {
+            // getWidgets() returns a detached copy; setWidgets is what persists the /Kids link.
+            // Without it the field has no widget in PDFBox's eyes and never gets an appearance.
+            field.setWidgets(List.of(widget));
+        }
         widget.setParent(field);
 
         List<PDAnnotation> annotations = page.getAnnotations();
