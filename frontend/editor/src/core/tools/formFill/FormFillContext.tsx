@@ -48,6 +48,9 @@ import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
 
+/** Marks a skip report as belonging to whichever document the commit just produced. */
+const PENDING_SKIP_REPORT = "__pending__";
+
 /** A field queued for creation, with a client-side id for list keys. */
 export interface PendingField extends NewFieldDefinition {
   id: string;
@@ -392,11 +395,14 @@ export function FormFillProvider({
   const clearSkippedEdits = useCallback(() => {
     setSkippedEdits([]);
     setSkippedTotal(0);
+    skipReportFileIdRef.current = null;
   }, []);
   /** Which file the staged edits belong to, so they cannot be committed onto another. */
   const editedFileIdRef = useRef<string | null>(null);
   /** Survives an in-flight fetch, unlike forFileIdRef, so staged edits can be stamped. */
   const lastKnownFileIdRef = useRef<string | null>(null);
+  /** The file the current skip report describes, so it cannot outlive that document. */
+  const skipReportFileIdRef = useRef<string | null>(null);
   /** Set by the edit overlay so other Escape handlers do not steal a drag's cancel. */
   const dragActiveRef = useRef(false);
   // Monotonic counter for client-side pending-field ids and default names.
@@ -431,6 +437,18 @@ export function FormFillProvider({
         (fileId ?? null) !== editedFileIdRef.current
       ) {
         clearEditingState();
+      }
+      // A commit produces a new file id, so the first fetch after one adopts the report;
+      // any later switch to a different document clears it.
+      if (skipReportFileIdRef.current === PENDING_SKIP_REPORT) {
+        skipReportFileIdRef.current = fileId ?? null;
+      } else if (
+        skipReportFileIdRef.current != null &&
+        (fileId ?? null) !== skipReportFileIdRef.current
+      ) {
+        skipReportFileIdRef.current = null;
+        setSkippedEdits([]);
+        setSkippedTotal(0);
       }
 
       lastKnownFileIdRef.current = fileId ?? null;
@@ -679,6 +697,7 @@ export function FormFillProvider({
       const result = await applyFieldEdits(file, { add: definitions });
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
+      skipReportFileIdRef.current = PENDING_SKIP_REPORT;
       setPendingFields([]);
       setCreationType(null);
       // The batch is gone, so the stamp must not survive to trigger a clear on the
@@ -735,6 +754,7 @@ export function FormFillProvider({
       });
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
+      skipReportFileIdRef.current = PENDING_SKIP_REPORT;
       setModifiedFields({});
       setDeletedFieldNames([]);
       setSelectedField(null);

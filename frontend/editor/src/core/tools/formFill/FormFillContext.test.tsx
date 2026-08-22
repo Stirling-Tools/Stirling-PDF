@@ -135,4 +135,39 @@ describe("FormFillContext staged-edit ownership", () => {
 
     expect(hook.current.hasUncommittedChanges).toBe(true);
   });
+
+  it("drops the skip report once an unrelated document is opened", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.stageModification("f", { x: 1 }));
+
+    applyFieldEdits.mockResolvedValue(
+      result([
+        {
+          operation: "delete",
+          target: "ghost",
+          reason: "no field with that name exists",
+        },
+      ]),
+    );
+    await act(async () => {
+      await hook.current.commitModifications(blob());
+    });
+
+    // The commit's own re-fetch keeps the report...
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A-edited");
+    });
+    expect(hook.current.skippedEdits).toHaveLength(1);
+
+    // ...but opening a different document must not carry it over.
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-B-unrelated");
+    });
+    await waitFor(() => expect(hook.current.skippedEdits).toHaveLength(0));
+    expect(hook.current.skippedTotal).toBe(0);
+  });
 });

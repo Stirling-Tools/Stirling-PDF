@@ -266,11 +266,12 @@ export function FormFieldEditOverlay({
     [localPoint, snapTargets, pageWidth, pageHeight],
   );
 
-  // Scrolling this page out of view mid-gesture would otherwise strand the shared
-  // flag at true and leave Escape dead in the panel for the rest of the session.
+  // Scrolling this page out of view mid-gesture would otherwise strand the shared flag
+  // at true. Only the overlay that owns the drag may clear it, or an unrelated page
+  // scrolling away would release a live one.
   useEffect(
     () => () => {
-      dragActiveRef.current = false;
+      if (interactionRef.current) dragActiveRef.current = false;
     },
     [dragActiveRef],
   );
@@ -346,8 +347,9 @@ export function FormFieldEditOverlay({
       const dragging = interactionRef.current != null;
       if (!dragging && isTextEntryTarget(e.target)) return;
       if (e.key === "Escape") {
+        // Only release the shared flag if THIS overlay was the one dragging.
+        if (dragging) dragActiveRef.current = false;
         interactionRef.current = null;
-        dragActiveRef.current = false;
         setLiveRect(null);
         setGuides([]);
         if (!dragging) setSelectedField(null);

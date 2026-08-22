@@ -1659,14 +1659,16 @@ public class FormUtils {
                             .map(name -> leafName(lookupName, name))
                             .orElseGet(originalField::getPartialName);
 
+            String qualified = originalField.getFullyQualifiedName();
+            // desiredName is a PARTIAL name but existingNames holds qualified ones, so compare
+            // under this field's own parent or siblings collide unnoticed.
+            String prefix = parentPrefix(qualified);
+            String reservedName = null;
             if (desiredName != null) {
-                existingNames.remove(originalField.getFullyQualifiedName());
-                existingNames.remove(originalField.getPartialName());
-                // desiredName is a PARTIAL name but existingNames holds qualified ones, so
-                // compare under this field's own parent or siblings collide unnoticed.
-                String prefix = parentPrefix(originalField.getFullyQualifiedName());
+                existingNames.remove(qualified);
                 desiredName = generateUniqueFieldName(desiredName, existingNames, prefix);
-                existingNames.add(prefix + desiredName);
+                reservedName = prefix + desiredName;
+                existingNames.add(reservedName);
             }
 
             // Try to modify field in-place first for simple property changes
@@ -1689,13 +1691,10 @@ public class FormUtils {
 
             // Recreation always builds a top-level field, so running it on a field nested under a
             // parent would silently move it out of that parent and change its qualified name.
-            if (!parentPrefix(originalField.getFullyQualifiedName()).isEmpty()) {
+            if (!prefix.isEmpty()) {
                 log.warn("Cannot recreate nested field '{}'; leaving it as it was", lookupName);
-                recordSkip(
-                        skipped,
-                        "modify",
-                        lookupName,
-                        "a field nested under a parent cannot have its type changed here");
+                recordSkip(skipped, "modify", lookupName, refusalReason(typeChanging));
+                releaseReservedName(existingNames, reservedName, qualified);
                 continue;
             }
 
@@ -1754,10 +1753,29 @@ public class FormUtils {
                         e.getMessage(),
                         e);
                 recordSkip(skipped, "modify", lookupName, e.getMessage());
+                releaseReservedName(existingNames, reservedName, qualified);
             }
         }
 
         ensureAppearances(acroForm);
+    }
+
+    /** Nothing was applied, so give the field back its real name and drop the one we reserved. */
+    private void releaseReservedName(
+            Set<String> existingNames, String reservedName, String originalQualifiedName) {
+        if (reservedName != null) {
+            existingNames.remove(reservedName);
+        }
+        if (originalQualifiedName != null) {
+            existingNames.add(originalQualifiedName);
+        }
+    }
+
+    /** Why the edit was refused, which is not always the type change that triggered the path. */
+    private String refusalReason(boolean typeChanging) {
+        return typeChanging
+                ? "a field nested under a parent cannot have its type changed here"
+                : "this change needs the field rebuilt, which a nested field does not support";
     }
 
     private void modifyFieldPropertiesInPlace(
@@ -3095,12 +3113,12 @@ public class FormUtils {
             return Collections.emptySet();
         }
         Set<String> existing = new HashSet<>();
+        // Group (non-terminal) names occupy the namespace too, so a new field must not be
+        // allowed to take one; omitting them hides a whole class of collision.
         for (PDField field : acroForm.getFieldTree()) {
-            if (field instanceof PDTerminalField) {
-                String fqn = field.getFullyQualifiedName();
-                if (fqn != null && !fqn.isEmpty()) {
-                    existing.add(fqn);
-                }
+            String fqn = field.getFullyQualifiedName();
+            if (fqn != null && !fqn.isEmpty()) {
+                existing.add(fqn);
             }
         }
         return existing;
@@ -3169,7 +3187,12 @@ public class FormUtils {
         }
         // A nested field's box shows "Parent.Child", so renaming the leaf under the same
         // parent is legitimate; only the leaf has to be a storable partial name.
-        return invalidFieldNameReason(leafName(targetName, newName.trim()));
+        String trimmed = newName.trim();
+        String leaf = leafName(targetName, trimmed);
+        if (!trimmed.isEmpty() && leaf.isBlank()) {
+            return "Field name '" + newName + "' has no name after the parent prefix.";
+        }
+        return invalidFieldNameReason(leaf);
     }
 
     /**

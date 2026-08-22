@@ -28,6 +28,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.Test;
 
@@ -709,5 +710,127 @@ class FormUtilsEditRegressionTest {
                     button.getWidgets().get(0).getCOSObject().getDictionaryObject(COSName.A),
                     "the action should be written");
         }
+    }
+
+    /** Builds a parent with the given terminal children already attached. */
+    private static PDNonTerminalField nest(
+            PDDocument document, PDAcroForm form, String parentName, String... childNames)
+            throws IOException {
+        List<FormUtils.NewFormFieldDefinition> defs = new ArrayList<>();
+        for (int i = 0; i < childNames.length; i++) {
+            defs.add(newField("text", childNames[i], 50, 700 - i * 40, 200, 20, null));
+        }
+        FormUtils.addNewFields(document, defs);
+
+        PDNonTerminalField parent = new PDNonTerminalField(form);
+        parent.setPartialName(parentName);
+        List<PDField> kids = new ArrayList<>();
+        for (String child : childNames) {
+            PDField field = form.getField(child);
+            field.getCOSObject().setItem(COSName.PARENT, parent.getCOSObject());
+            kids.add(field);
+        }
+        parent.setChildren(kids);
+        form.setFields(List.of(parent));
+        return parent;
+    }
+
+    /** A refused edit must not release the name the field still really has. */
+    @Test
+    void refusedNestedEditDoesNotFreeItsNameForALaterEdit() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = setupForm(document);
+            nest(document, form, "Customer", "Name", "Email");
+
+            // Edit 1 is refused (type change on a nested field). Edit 2 then asks for the
+            // name edit 1 still occupies, which must not be handed out.
+            FormUtils.ModifyFormFieldDefinition refused =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "Customer.Name",
+                            "Customer.Foo",
+                            null,
+                            "checkbox",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+            FormUtils.ModifyFormFieldDefinition rename =
+                    new FormUtils.ModifyFormFieldDefinition(
+                            "Customer.Email",
+                            "Customer.Name",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
+
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+            FormUtils.modifyFormFields(document, List.of(refused, rename), skipped);
+
+            List<String> names = new ArrayList<>();
+            for (PDField f : document.getDocumentCatalog().getAcroForm(null).getFieldTree()) {
+                if (f instanceof PDTerminalField) names.add(f.getFullyQualifiedName());
+            }
+            assertEquals(
+                    names.size(),
+                    new java.util.HashSet<>(names).size(),
+                    "two fields must never share a qualified name: " + names);
+            assertTrue(
+                    names.contains("Customer.Name"), "the refused field keeps its name: " + names);
+        }
+    }
+
+    /** A group name occupies the namespace, so a new field must not be able to take it. */
+    @Test
+    void groupNamesParticipateInCollisionChecks() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            PDAcroForm form = setupForm(document);
+            nest(document, form, "Customer", "Name");
+
+            FormUtils.addNewFields(
+                    document, List.of(newField("text", "Customer", 50, 500, 100, 20, null)));
+
+            List<String> names = new ArrayList<>();
+            for (PDField f : document.getDocumentCatalog().getAcroForm(null).getFieldTree()) {
+                String fqn = f.getFullyQualifiedName();
+                if (fqn != null) names.add(fqn);
+            }
+            assertEquals(
+                    names.size(),
+                    new java.util.HashSet<>(names).size(),
+                    "the new field must not take the group's name: " + names);
+        }
+    }
+
+    /** "Customer." has no leaf, so it must be refused rather than become "Customer.field". */
+    @Test
+    void renameToBareParentPrefixIsRefused() {
+        assertNotNull(
+                FormUtils.renameProblem("Customer.Name", "Customer."),
+                "a name with nothing after the parent prefix is not a rename");
+        assertNull(FormUtils.renameProblem("Customer.Name", "Customer.Phone"));
     }
 }
