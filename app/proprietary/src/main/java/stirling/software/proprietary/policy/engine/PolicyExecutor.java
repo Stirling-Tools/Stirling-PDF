@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.service.AiToolResponseHeaders;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Runs an ordered chain of tool steps, feeding each step's output files into the next.
@@ -48,6 +50,10 @@ import tools.jackson.databind.ObjectMapper;
 public class PolicyExecutor {
 
     private static final String FILTER_OPERATION_PREFIX = "/api/v1/filter/filter-";
+
+    // Nested list parameters are walked recursively; cap the depth so a pathological
+    // pipeline cannot overflow the stack.
+    private static final int MAX_PARAMETER_DEPTH = 32;
 
     private final InternalApiClient internalApiClient;
     private final ToolMetadataService toolMetadataService;
@@ -89,6 +95,10 @@ public class PolicyExecutor {
         // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
         String lastReportTool = null;
+        // Every step's report, keyed by 1-based position, so a later step can reference an earlier
+        // one's response via {{steps.N...}} - e.g. post the share link an upload step returned.
+        ObjectNode runContext = objectMapper.createObjectNode();
+        ObjectNode stepReports = runContext.putObject("steps");
 
         for (int i = 0; i < steps.size(); i++) {
             PipelineStep step = steps.get(i);
@@ -98,13 +108,17 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
+            // Fill in references to earlier steps' outputs before dispatch; document- and run-scope
+            // placeholders are left for the tool to resolve per document.
+            PipelineStep resolved = resolveStepReferences(step, runContext);
             StepOutput stepResult =
-                    executeStep(step, currentFiles, currentOrigins, supportingFiles);
+                    executeStep(resolved, currentFiles, currentOrigins, supportingFiles);
             currentFiles = stepResult.files();
             currentOrigins = stepResult.origins();
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
+                stepReports.set(String.valueOf(i + 1), stepResult.report());
             }
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
@@ -161,6 +175,92 @@ public class PolicyExecutor {
             }
         }
         return new StepOutput(files, origins, report);
+    }
+
+    /**
+     * Resolve {@code {{steps.N...}}} references in a step's string parameters against the reports
+     * earlier steps produced. Returns the step unchanged when it references nothing, so a pipeline
+     * that uses no cross-step values pays nothing and behaves exactly as before.
+     */
+    private PipelineStep resolveStepReferences(PipelineStep step, JsonNode runContext) {
+        boolean any = step.parameters().values().stream().anyMatch(this::referencesStep);
+        if (!any) {
+            return step;
+        }
+        Map<String, Object> resolved = new LinkedHashMap<>();
+        step.parameters()
+                .forEach((key, value) -> resolved.put(key, resolveValue(value, runContext)));
+        return new PipelineStep(step.operation(), resolved, step.fileParameters());
+    }
+
+    private boolean referencesStep(Object value) {
+        return referencesStep(value, 0);
+    }
+
+    private boolean referencesStep(Object value, int depth) {
+        if (depth > MAX_PARAMETER_DEPTH) {
+            return false;
+        }
+        if (value instanceof String s) {
+            return StepOutputPlaceholders.references(s);
+        }
+        if (value instanceof List<?> list) {
+            return list.stream().anyMatch(item -> referencesStep(item, depth + 1));
+        }
+        return false;
+    }
+
+    private Object resolveValue(Object value, JsonNode runContext) {
+        return resolveValue(value, runContext, 0);
+    }
+
+    private Object resolveValue(Object value, JsonNode runContext, int depth) {
+        if (depth > MAX_PARAMETER_DEPTH) {
+            return value;
+        }
+        if (value instanceof String s) {
+            return resolveString(s, runContext);
+        }
+        if (value instanceof List<?> list) {
+            List<Object> out = new ArrayList<>(list.size());
+            for (Object item : list) {
+                out.add(resolveValue(item, runContext, depth + 1));
+            }
+            return out;
+        }
+        return value;
+    }
+
+    /**
+     * A JSON-shaped parameter (bodyTemplate, fields, headers) is resolved inside its parsed tree,
+     * so an earlier step's response can only ever become a value in it. String-level substitution
+     * would let a response like {@code x", "admin": true, "y": "} inject fields into the JSON the
+     * operator wrote; a plain-text parameter keeps the plain substitution.
+     */
+    private String resolveString(String value, JsonNode runContext) {
+        if (!StepOutputPlaceholders.references(value)) {
+            return value;
+        }
+        JsonNode tree = parseJsonContainer(value);
+        if (tree == null) {
+            return StepOutputPlaceholders.resolve(value, runContext);
+        }
+        return objectMapper.writeValueAsString(
+                StepOutputPlaceholders.resolveTree(tree, runContext));
+    }
+
+    /** The value parsed as a JSON object or array, or null when it is anything else. */
+    private JsonNode parseJsonContainer(String value) {
+        String trimmed = value.trim();
+        if (trimmed.isEmpty() || (trimmed.charAt(0) != '{' && trimmed.charAt(0) != '[')) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(value);
+            return (node.isObject() || node.isArray()) ? node : null;
+        } catch (JacksonException e) {
+            return null;
+        }
     }
 
     /**

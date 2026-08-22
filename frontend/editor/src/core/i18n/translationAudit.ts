@@ -109,6 +109,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "portal.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^portal\.policies\.operations\./,
+      // The variables catalogue (variables.ts) mirrors it: every def/group key is assembled
+      // from the const "portal.policies.variables" prefix and the variable's own path.
+      /^portal\.policies\.variables\./,
       // Policy field labels + option display copy are looked up with keys
       // derived from catalogue data (t(`policies.field.${key}`),
       // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —

@@ -67,6 +67,47 @@ describe("integration steps in a pipeline", () => {
     expect(integrationStepConfigured(step)).toBe(true);
   });
 
+  it("is not configured while an answer references something the run cannot fill in", () => {
+    const op = operationById("discordNotify")!;
+    const step = newIntegrationStep(op);
+    step.params = buildStepParameters(op, "4", {
+      message: "did {{document.flename}}",
+    }) as never;
+    expect(integrationStepConfigured(step)).toBe(false);
+
+    step.params = buildStepParameters(op, "4", {
+      message: "did {{document.filename}}",
+    }) as never;
+    expect(integrationStepConfigured(step)).toBe(true);
+  });
+
+  it("rejects a steps reference at or past the step's own position", () => {
+    const op = operationById("discordNotify")!;
+    const step = newIntegrationStep(op);
+    step.params = buildStepParameters(op, "4", {
+      message: "see {{steps.1.body.ocs.data.url}}",
+    }) as never;
+    // Fine as step 2 (step 1 ran before it); a self-reference as step 1 fails every run.
+    expect(integrationStepConfigured(step, 2)).toBe(true);
+    expect(integrationStepConfigured(step, 1)).toBe(false);
+  });
+
+  it("is not configured while the size cap is unparseable", () => {
+    const op = operationById("discordAttach")!;
+    const step = newIntegrationStep(op);
+    step.params = buildStepParameters(op, "4", {
+      message: "",
+      maxFileMb: "abc",
+    }) as never;
+    expect(integrationStepConfigured(step)).toBe(false);
+
+    step.params = buildStepParameters(op, "4", {
+      message: "",
+      maxFileMb: "25",
+    }) as never;
+    expect(integrationStepConfigured(step)).toBe(true);
+  });
+
   it("leaves ordinary tool steps alone", () => {
     const toolStep = {
       toolId: "compress",

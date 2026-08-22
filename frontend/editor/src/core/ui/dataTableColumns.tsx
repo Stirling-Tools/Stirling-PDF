@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useId, useState, type ReactNode } from "react";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@app/ui/Chip";
 import { Button } from "@app/ui/Button";
@@ -381,6 +381,95 @@ function caps<T>(
   });
 }
 
+/** One capability a row unlocks: its name, plus the line that explains it. */
+export interface CellDetail {
+  label: string;
+  description?: string;
+}
+
+function InfoGlyph() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.25 4.75a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0Zm2.5 10.75h-2.5v-7h2.5v7Z" />
+    </svg>
+  );
+}
+
+/** The (i) discloses the whole list - names and explanations together - so a
+ *  column of these stays a column rather than a wall of prose. */
+function DetailsCell({
+  items,
+  toggleLabel,
+}: {
+  items: CellDetail[];
+  toggleLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const listId = useId();
+  return (
+    <div className="sui-dtc__details">
+      <button
+        type="button"
+        className="sui-dtc__details-toggle"
+        aria-label={toggleLabel}
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+      >
+        <InfoGlyph />
+      </button>
+      {open && (
+        <ul className="sui-dtc__details-list" id={listId}>
+          {items.map((i) => (
+            <li key={i.label} className="sui-dtc__detail">
+              <span className="sui-dtc__detail-name">{i.label}</span>
+              {i.description && (
+                <span className="sui-dtc__note">{i.description}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A list of named capabilities - the tasks an integration unlocks, the scopes a
+ * key grants. Distinct from `labels`: these are ours, not the user's, and each
+ * carries the sentence that says what it does.
+ */
+function details<T>(
+  o: Common & {
+    get: (row: T) => CellDetail[];
+    /** Accessible name for the (i) that discloses the list. */
+    toggleLabel: (row: T) => string;
+  },
+): DataTableColumn<T> {
+  return base<T>(o, {
+    align: "left",
+    nowrap: false,
+    fit: false,
+    sortValue: (r) => o.get(r)[0]?.label ?? undefined,
+    sortFn: "alphanumeric",
+    interactive: true,
+    renderCell: (r) => {
+      const items = o.get(r);
+      if (items.length === 0) return null;
+      return <DetailsCell items={items} toggleLabel={o.toggleLabel(r)} />;
+    },
+  });
+}
+
 function entity<T>(
   o: Common & {
     /** Semantic leading icon (component owns its size + colour container). */
@@ -561,6 +650,7 @@ export const column = {
   badge,
   labels,
   caps,
+  details,
   entity,
   actions,
   progress,

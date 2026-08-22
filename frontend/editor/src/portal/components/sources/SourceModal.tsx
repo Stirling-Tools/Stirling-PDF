@@ -156,19 +156,29 @@ export function SourceModal({
     setReveal(null);
     setSubmitting(false);
     setDeleting(false);
+    // The modal is permanently mounted, so an edit closed mid-fetch leaves loading stuck true
+    // (its cleanup stops the .finally from resetting it) unless every open resets it.
+    setLoading(false);
+    // Reset before any fetch too: a rejected edit fetch must not leave the previous source's
+    // values in a saveable form - saving would write that source's config onto this one.
+    setType(OFFERED_TYPES[0]);
+    setName("");
+    setOptions(defaultOptions(OFFERED_TYPES[0]));
+    setEnabled(true);
+    setLoaded(null);
     if (!sourceId) {
       setStage("type");
-      setType(OFFERED_TYPES[0]);
-      setName("");
-      setOptions(defaultOptions(OFFERED_TYPES[0]));
-      setEnabled(true);
-      setLoaded(null);
       return;
     }
     setStage("configure");
     setLoading(true);
+    // Guard against a stale fetch: a fast close+reopen to another source would otherwise let the
+    // earlier resolution clobber this one's state, and a save then write one source's config onto
+    // another.
+    let ignore = false;
     fetchSource(sourceId)
       .then((source) => {
+        if (ignore) return;
         const resolved = typeFor(source.type);
         setLoaded(source);
         setType(resolved);
@@ -176,8 +186,15 @@ export function SourceModal({
         setOptions(optionsFor(resolved, source.options));
         setEnabled(source.enabled ?? true);
       })
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (!ignore) setError(errorMessage(e));
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [open, sourceId]);
 
   function chooseType(next: CreatableSourceType) {
