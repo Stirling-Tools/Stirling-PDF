@@ -35,11 +35,23 @@ import type {
   FormField,
   FormFillState,
   WidgetCoordinates,
+  FormMode,
+  CreatableFieldType,
+  NewFieldDefinition,
+  ModifyFieldDefinition,
+  SkippedFieldEdit,
 } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
+import { applyFieldEdits } from "@app/tools/formFill/formApi";
+import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+
+/** A field queued for creation, with a client-side id for list keys. */
+export interface PendingField extends NewFieldDefinition {
+  id: string;
+}
 
 // ---------------------------------------------------------------------------
 // FormValuesStore — external store for field values (outside React state)
@@ -206,6 +218,63 @@ export interface FormFillContextValue {
   setProviderMode: (mode: "pdflib" | "pdfbox") => void;
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
+
+  // --- Structural editing (create / modify modes) ---
+
+  /** Current tool mode. */
+  mode: FormMode;
+  /** Switch mode. Switching clears the other mode's uncommitted working state. */
+  setMode: (mode: FormMode) => void;
+
+  // --- Create mode ---
+  /** Field type currently armed for placement (null = not placing). */
+  creationType: CreatableFieldType | null;
+  setCreationType: (type: CreatableFieldType | null) => void;
+  /** Fields drawn but not yet committed to the PDF. */
+  pendingFields: PendingField[];
+  /** Queue a new field (id + default name auto-assigned). Returns the new id. */
+  addPendingField: (
+    field: Omit<NewFieldDefinition, "name"> & { name?: string },
+  ) => string;
+  updatePendingField: (id: string, patch: Partial<NewFieldDefinition>) => void;
+  removePendingField: (id: string) => void;
+  clearPendingFields: () => void;
+  /** POST queued fields to the backend; resolves to the updated PDF blob. */
+  commitNewFields: (file: File | Blob) => Promise<Blob>;
+
+  // --- Modify mode ---
+  /** Field currently selected for editing in modify mode. */
+  selectedFieldName: string | null;
+  setSelectedField: (name: string | null) => void;
+  /** Staged (uncommitted) property/geometry changes, keyed by original field name. */
+  modifiedFields: Record<string, ModifyFieldDefinition>;
+  /** Merge a partial change for a field into the staged set. */
+  stageModification: (
+    targetName: string,
+    patch: Partial<ModifyFieldDefinition>,
+  ) => void;
+  /** Discard staged changes for a single field. */
+  clearModification: (targetName: string) => void;
+  /** Field names marked for deletion. */
+  deletedFieldNames: string[];
+  /** Toggle a field's deletion mark. */
+  toggleFieldDeleted: (name: string) => void;
+  /** Discard all staged modifications and deletions. */
+  clearModifications: () => void;
+  /** POST staged modifications + deletions; resolves to the updated PDF blob. */
+  commitModifications: (file: File | Blob) => Promise<Blob>;
+
+  /** True when create or modify mode has uncommitted work. */
+  hasUncommittedChanges: boolean;
+
+  /** Edits the last commit asked for but the document could not take. */
+  skippedEdits: SkippedFieldEdit[];
+  /** May exceed skippedEdits.length when the report was truncated. */
+  skippedTotal: number;
+  clearSkippedEdits: () => void;
+
+  /** True while a field is being dragged, so Escape handlers elsewhere stand down. */
+  dragActiveRef: React.MutableRefObject<boolean>;
 }
 
 const FormFillContext = createContext<FormFillContextValue | null>(null);
@@ -307,6 +376,44 @@ export function FormFillProvider({
   // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
 
+  // --- Structural editing state (create / modify modes) ---
+  const [mode, setModeState] = useState<FormMode>("fill");
+  const [creationType, setCreationType] = useState<CreatableFieldType | null>(
+    null,
+  );
+  const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
+  const [selectedFieldName, setSelectedField] = useState<string | null>(null);
+  const [modifiedFields, setModifiedFields] = useState<
+    Record<string, ModifyFieldDefinition>
+  >({});
+  const [deletedFieldNames, setDeletedFieldNames] = useState<string[]>([]);
+  const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
+  const [skippedTotal, setSkippedTotal] = useState(0);
+  const clearSkippedEdits = useCallback(() => {
+    setSkippedEdits([]);
+    setSkippedTotal(0);
+  }, []);
+  /** Which file the staged edits belong to, so they cannot be committed onto another. */
+  const editedFileIdRef = useRef<string | null>(null);
+  /** Survives an in-flight fetch, unlike forFileIdRef, so staged edits can be stamped. */
+  const lastKnownFileIdRef = useRef<string | null>(null);
+  /** Set by the edit overlay so other Escape handlers do not steal a drag's cancel. */
+  const dragActiveRef = useRef(false);
+  // Monotonic counter for client-side pending-field ids and default names.
+  const pendingCounterRef = useRef(0);
+
+  const clearEditingState = useCallback(() => {
+    setCreationType(null);
+    setPendingFields([]);
+    setSelectedField(null);
+    setModifiedFields({});
+    setDeletedFieldNames([]);
+    editedFileIdRef.current = null;
+    // The report describes the batch just discarded, so it must not outlive it.
+    setSkippedEdits([]);
+    setSkippedTotal(0);
+  }, []);
+
   const fetchFields = useCallback(
     async (file: File | Blob, fileId?: string) => {
       // Increment version so any in-flight fetch for a previous file is discarded.
@@ -316,12 +423,25 @@ export function FormFillProvider({
       // correctly discarded.
       const version = ++fetchVersionRef.current;
 
+      // Staged edits reference the previous document's fields; committing them against a
+      // different file would edit the wrong PDF. Checked here, before any await, because
+      // forFileIdRef is null for the whole fetch and the success path may never run.
+      if (
+        editedFileIdRef.current != null &&
+        (fileId ?? null) !== editedFileIdRef.current
+      ) {
+        clearEditingState();
+      }
+
+      lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
       // prevent rendering fields from a previous document during the fetch.
       forFileIdRef.current = null;
       setForFileId(null);
       valuesStore.reset({});
       dispatch({ type: "RESET" });
+      // Deliberately keeps create/modify state: the viewer re-fetches on provider
+      // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
       try {
         let fields = await providerRef.current.fetchFields(file);
@@ -333,8 +453,8 @@ export function FormFillProvider({
           return;
         }
 
-        // When the pdfbox provider is active the backend doesn't return signature fields
-        // (they're not fillable). Fetch them via pdflib so their appearances still render.
+        // pdfbox returns signature fields without a rendered appearance; merge the
+        // pdfium ones by name, since appending would list a signature twice.
         if (providerModeRef.current === "pdfbox") {
           try {
             // Convert File/Blob to ArrayBuffer for pdfiumService
@@ -342,9 +462,7 @@ export function FormFillProvider({
             const sigFields =
               await fetchSignatureFieldsWithAppearances(arrayBuffer);
             if (fetchVersionRef.current !== version) return; // stale check after async
-            if (sigFields.length > 0) {
-              fields = [...fields, ...sigFields];
-            }
+            fields = mergeSignatureAppearances(fields, sigFields);
           } catch (e) {
             console.warn(
               "[FormFill] Failed to extract signature appearances for pdfbox mode:",
@@ -373,7 +491,7 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
-    [valuesStore],
+    [valuesStore, clearEditingState],
   );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
@@ -481,7 +599,155 @@ export function FormFillProvider({
     setForFileId(null);
     valuesStore.reset({});
     dispatch({ type: "RESET" });
-  }, [valuesStore]);
+    clearEditingState();
+  }, [valuesStore, clearEditingState]);
+
+  // --- Mode switching ---
+  const setMode = useCallback(
+    (next: FormMode) => {
+      setModeState((prev) => {
+        if (prev === next) return prev;
+        // Leaving a mode discards its uncommitted working state so the user
+        // doesn't carry half-drawn fields or staged edits between modes.
+        clearEditingState();
+        return next;
+      });
+    },
+    [clearEditingState],
+  );
+
+  // --- Create mode ---
+  const addPendingField = useCallback(
+    (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
+      editedFileIdRef.current = lastKnownFileIdRef.current;
+      const seq = ++pendingCounterRef.current;
+      const id = `pending-${seq}`;
+      // Friendly, readable default names that match how the viewer labels
+      // fields, instead of cryptic "Field_5".
+      const TYPE_DEFAULT_NAME: Record<string, string> = {
+        text: "Text field",
+        checkbox: "Checkbox",
+        combobox: "Dropdown",
+        listbox: "List",
+        radio: "Radio group",
+        button: "Button",
+        signature: "Signature",
+      };
+      const defaultName =
+        field.name?.trim() ||
+        `${TYPE_DEFAULT_NAME[field.type] ?? "Field"} ${seq}`;
+      // Choice/radio fields are useless without options, so seed defaults.
+      const needsOptions =
+        field.type === "combobox" ||
+        field.type === "listbox" ||
+        field.type === "radio";
+      const options =
+        field.options ?? (needsOptions ? ["Option 1", "Option 2"] : undefined);
+      setPendingFields((prev) => [
+        ...prev,
+        { ...field, name: defaultName, options, id } as PendingField,
+      ]);
+      return id;
+    },
+    [],
+  );
+
+  const updatePendingField = useCallback(
+    (id: string, patch: Partial<NewFieldDefinition>) => {
+      setPendingFields((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      );
+    },
+    [],
+  );
+
+  const removePendingField = useCallback((id: string) => {
+    setPendingFields((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  const clearPendingFields = useCallback(() => {
+    setPendingFields([]);
+    setCreationType(null);
+  }, []);
+
+  const commitNewFields = useCallback(
+    async (file: File | Blob): Promise<Blob> => {
+      // Strip the client-side id before sending to the backend.
+      const definitions: NewFieldDefinition[] = pendingFields.map(
+        ({ id: _id, ...rest }) => rest,
+      );
+      const result = await applyFieldEdits(file, { add: definitions });
+      setSkippedEdits(result.skipped);
+      setSkippedTotal(result.skippedTotal);
+      setPendingFields([]);
+      setCreationType(null);
+      // The batch is gone, so the stamp must not survive to trigger a clear on the
+      // post-commit re-fetch; that would wipe the skip report we just set.
+      editedFileIdRef.current = null;
+      return result.blob;
+    },
+    [pendingFields],
+  );
+
+  // --- Modify mode ---
+  const stageModification = useCallback(
+    (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
+      editedFileIdRef.current = lastKnownFileIdRef.current;
+      setModifiedFields((prev) => ({
+        ...prev,
+        [targetName]: { ...prev[targetName], targetName, ...patch },
+      }));
+    },
+    [],
+  );
+
+  const clearModification = useCallback((targetName: string) => {
+    setModifiedFields((prev) => {
+      if (!(targetName in prev)) return prev;
+      const { [targetName]: _removed, ...rest } = prev;
+      return rest;
+    });
+  }, []);
+
+  const toggleFieldDeleted = useCallback((name: string) => {
+    editedFileIdRef.current = lastKnownFileIdRef.current;
+    setDeletedFieldNames((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+    );
+  }, []);
+
+  const clearModifications = useCallback(() => {
+    setModifiedFields({});
+    setDeletedFieldNames([]);
+    setSelectedField(null);
+  }, []);
+
+  const commitModifications = useCallback(
+    async (file: File | Blob): Promise<Blob> => {
+      // Apply property/geometry changes (for fields not being deleted) and the
+      // deletions in a single backend round-trip.
+      const updates = Object.values(modifiedFields).filter(
+        (m) => !deletedFieldNames.includes(m.targetName),
+      );
+      const result = await applyFieldEdits(file, {
+        modify: updates,
+        delete: deletedFieldNames,
+      });
+      setSkippedEdits(result.skipped);
+      setSkippedTotal(result.skippedTotal);
+      setModifiedFields({});
+      setDeletedFieldNames([]);
+      setSelectedField(null);
+      editedFileIdRef.current = null;
+      return result.blob;
+    },
+    [modifiedFields, deletedFieldNames],
+  );
+
+  const hasUncommittedChanges =
+    pendingFields.length > 0 ||
+    Object.keys(modifiedFields).length > 0 ||
+    deletedFieldNames.length > 0;
 
   const fieldsByPage = useMemo(() => {
     const map = new Map<number, FormField[]>();
@@ -511,6 +777,31 @@ export function FormFillProvider({
       activeProviderName: providerRef.current.name,
       setProviderMode,
       forFileId,
+      // editing
+      mode,
+      setMode,
+      creationType,
+      setCreationType,
+      pendingFields,
+      addPendingField,
+      updatePendingField,
+      removePendingField,
+      clearPendingFields,
+      commitNewFields,
+      selectedFieldName,
+      setSelectedField,
+      modifiedFields,
+      stageModification,
+      clearModification,
+      deletedFieldNames,
+      toggleFieldDeleted,
+      clearModifications,
+      commitModifications,
+      hasUncommittedChanges,
+      skippedEdits,
+      skippedTotal,
+      clearSkippedEdits,
+      dragActiveRef,
     }),
     [
       state,
@@ -527,6 +818,28 @@ export function FormFillProvider({
       providerMode,
       setProviderMode,
       forFileId,
+      mode,
+      setMode,
+      creationType,
+      pendingFields,
+      addPendingField,
+      updatePendingField,
+      removePendingField,
+      clearPendingFields,
+      commitNewFields,
+      selectedFieldName,
+      modifiedFields,
+      stageModification,
+      clearModification,
+      deletedFieldNames,
+      toggleFieldDeleted,
+      clearModifications,
+      commitModifications,
+      hasUncommittedChanges,
+      skippedEdits,
+      skippedTotal,
+      clearSkippedEdits,
+      dragActiveRef,
     ],
   );
 

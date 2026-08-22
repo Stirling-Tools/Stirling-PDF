@@ -13,6 +13,8 @@ export interface WidgetCoordinates {
   exportValue?: string;
   /** Font size in PDF points */
   fontSize?: number;
+  /** CropBox height in PDF points; lets the editor reverse the backend's Y-flip when sending coordinates back. */
+  cropBoxHeight?: number;
 }
 
 export interface FormField {
@@ -34,6 +36,10 @@ export interface FormField {
   buttonLabel?: string | null;
   /** Action descriptor for push buttons */
   buttonAction?: ButtonAction | null;
+  /** Same action as the editable spec string the backend round-trips ("reset", "uri:<url>", ...) */
+  buttonActionSpec?: string | null;
+  /** Text field /MaxLen; >0 also makes it a comb field */
+  maxLength?: number | null;
   /** Pre-rendered appearance image for signed signature fields (data URL). */
   appearanceDataUrl?: string;
 }
@@ -66,6 +72,105 @@ export interface ButtonAction {
   /** For 'submitForm' actions: submit flags bitmask */
   submitFlags?: number;
 }
+
+/** Field types that can be created/edited structurally through the editor. */
+export type CreatableFieldType =
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
+
+export const CREATABLE_FIELD_TYPES: CreatableFieldType[] = [
+  "text",
+  "checkbox",
+  "combobox",
+  "listbox",
+  "radio",
+  "button",
+  "signature",
+];
+
+/**
+ * A new field queued for creation. Coordinates are CropBox-relative,
+ * lower-left-origin PDF points - the reverse of what WidgetCoordinates carries.
+ */
+export interface NewFieldDefinition {
+  name: string;
+  label?: string;
+  type: CreatableFieldType;
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
+}
+
+/**
+ * A change to an existing field. Only non-undefined properties are applied.
+ * Coordinates (when present) are CropBox-relative, lower-left-origin PDF points.
+ */
+export interface ModifyFieldDefinition {
+  targetName: string;
+  name?: string;
+  label?: string;
+  type?: FormFieldType;
+  pageIndex?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
+}
+
+/** A batch of field edits committed in one request via /api/v1/form/edit-fields. */
+export interface FieldEditBatch {
+  add?: NewFieldDefinition[];
+  modify?: ModifyFieldDefinition[];
+  delete?: string[];
+}
+
+/** One requested edit the document could not take. The rest of the batch still applied. */
+export interface SkippedFieldEdit {
+  operation: "add" | "modify" | "delete";
+  target?: string | null;
+  reason?: string | null;
+}
+
+/** The updated PDF plus whatever the backend had to drop. */
+export interface FieldEditResult {
+  blob: Blob;
+  /** Capped at 20 entries so the response header stays inside Jetty's budget. */
+  skipped: SkippedFieldEdit[];
+  /** How many were skipped in total, which may exceed skipped.length. */
+  skippedTotal: number;
+}
+
+/** The form tool's working mode. */
+export type FormMode = "fill" | "create" | "modify";
 
 export interface FormFillState {
   /** Fields fetched from backend with coordinates */

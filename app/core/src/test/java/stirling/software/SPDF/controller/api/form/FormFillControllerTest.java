@@ -330,6 +330,149 @@ class FormFillControllerTest {
         }
     }
 
+    // ── addFields ──────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("addFields")
+    class AddFields {
+
+        @Test
+        @DisplayName("throws when fields payload is null")
+        void nullPayload() {
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("throws when fields payload is an empty list")
+        void emptyPayload() {
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), "[]".getBytes()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("processes a valid new-field payload")
+        void validPayload() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+
+            String json =
+                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]";
+            ResponseEntity<Resource> response = controller.addFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+        }
+    }
+
+    // ── editFields (combined) ──────────────────────────────────────────
+
+    @Nested
+    @DisplayName("editFields")
+    class EditFields {
+
+        @Test
+        @DisplayName("throws when edits payload is null")
+        void nullPayload() {
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("throws when all sections are empty")
+        void emptyBatch() {
+            assertThatThrownBy(
+                            () ->
+                                    controller.editFields(
+                                            pdfFile(),
+                                            "{\"add\":[],\"modify\":[],\"delete\":[]}".getBytes()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("processes a combined add/delete batch")
+        void validBatch() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createMinimalPdf();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+
+            String json =
+                    "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
+                            + "\"y\":700,\"width\":200,\"height\":20}],\"modify\":[],"
+                            + "\"delete\":[]}";
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("refuses a field name containing a period before touching the document")
+        void refusesPeriodInName() throws Exception {
+            String json =
+                    "{\"add\":[{\"name\":\"Customer.Name\",\"type\":\"text\",\"pageIndex\":0,"
+                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]}";
+
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), json.getBytes()))
+                    .hasMessageContaining("period");
+            // Rejected up front, so the document is never even loaded.
+            verify(pdfDocumentFactory, never()).load(any(MockMultipartFile.class));
+        }
+
+        @Test
+        @DisplayName("renaming a nested field to its own qualified name is not a rename")
+        void allowsUnchangedQualifiedName() throws Exception {
+            MockMultipartFile file = pdfFile();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(createMinimalPdf());
+
+            String json =
+                    "{\"modify\":[{\"targetName\":\"Customer.Name\",\"name\":\"Customer.Name\","
+                            + "\"x\":10,\"y\":10}]}";
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        }
+
+        @Test
+        @DisplayName("reports a dropped edit as base64 JSON in the skipped-edits header")
+        void reportsSkippedEdits() throws Exception {
+            MockMultipartFile file = pdfFile();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(createMinimalPdf());
+
+            String json = "{\"delete\":[\"noSuchField\"]}";
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            String encoded =
+                    response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER);
+            assertThat(encoded).isNotNull();
+            String report =
+                    new String(
+                            java.util.Base64.getDecoder().decode(encoded),
+                            java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(report).contains("noSuchField").contains("delete");
+            // Base64 rather than percent-encoding, so spaces survive as spaces.
+            assertThat(report).contains("no field with that name exists");
+        }
+
+        @Test
+        @DisplayName("omits the skipped-edits header when everything applied")
+        void noHeaderOnCleanBatch() throws Exception {
+            MockMultipartFile file = pdfFile();
+            when(pdfDocumentFactory.load(eq(file))).thenReturn(createMinimalPdf());
+
+            String json =
+                    "{\"add\":[{\"name\":\"clean\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
+                            + "\"y\":700,\"width\":200,\"height\":20}]}";
+            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes());
+
+            assertThat(response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER))
+                    .isNull();
+        }
+    }
+
     // ── buildBaseName ──────────────────────────────────────────────────
 
     @Nested

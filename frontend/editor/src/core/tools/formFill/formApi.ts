@@ -2,7 +2,14 @@
  * API service for form-related backend calls.
  */
 import apiClient from "@app/services/apiClient";
-import type { FormField } from "@app/tools/formFill/types";
+import type {
+  FormField,
+  NewFieldDefinition,
+  ModifyFieldDefinition,
+  FieldEditBatch,
+  FieldEditResult,
+  SkippedFieldEdit,
+} from "@app/tools/formFill/types";
 
 /**
  * Fetch form fields with coordinates from the backend.
@@ -87,5 +94,101 @@ export async function extractFormFieldsXlsx(
   const response = await apiClient.post("/api/v1/form/extract-xlsx", formData, {
     responseType: "blob",
   });
+  return response.data;
+}
+
+/** POST /api/v1/form/add-fields: create fields, returns the updated PDF blob. */
+export async function addFormFields(
+  file: File | Blob,
+  fields: NewFieldDefinition[],
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "fields",
+    new Blob([JSON.stringify(fields)], { type: "application/json" }),
+  );
+
+  const response = await apiClient.post("/api/v1/form/add-fields", formData, {
+    responseType: "blob",
+  });
+  return response.data;
+}
+
+/** POST /api/v1/form/modify-fields: rename/retype/move/resize, returns the updated PDF blob. */
+export async function modifyFormFields(
+  file: File | Blob,
+  updates: ModifyFieldDefinition[],
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "updates",
+    new Blob([JSON.stringify(updates)], { type: "application/json" }),
+  );
+
+  const response = await apiClient.post(
+    "/api/v1/form/modify-fields",
+    formData,
+    { responseType: "blob" },
+  );
+  return response.data;
+}
+
+/** POST /api/v1/form/edit-fields: add + modify + delete in one request. */
+export async function applyFieldEdits(
+  file: File | Blob,
+  batch: FieldEditBatch,
+): Promise<FieldEditResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "edits",
+    new Blob([JSON.stringify(batch)], { type: "application/json" }),
+  );
+
+  const response = await apiClient.post("/api/v1/form/edit-fields", formData, {
+    responseType: "blob",
+  });
+  return {
+    blob: response.data,
+    skipped: parseSkippedEdits(response.headers?.[SKIPPED_EDITS_HEADER]),
+    skippedTotal: Number(response.headers?.[SKIPPED_EDITS_TOTAL_HEADER]) || 0,
+  };
+}
+
+/** Set by the backend when it could not apply every requested edit. */
+const SKIPPED_EDITS_HEADER = "x-stirling-skipped-field-edits";
+const SKIPPED_EDITS_TOTAL_HEADER = "x-stirling-skipped-field-edits-total";
+
+/** Base64 JSON, so a reason containing spaces or non-ASCII survives the header intact. */
+function parseSkippedEdits(raw: unknown): SkippedFieldEdit[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const bytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
+    return Array.isArray(parsed) ? (parsed as SkippedFieldEdit[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** POST /api/v1/form/delete-fields: delete by name, returns the updated PDF blob. */
+export async function deleteFormFields(
+  file: File | Blob,
+  names: string[],
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "names",
+    new Blob([JSON.stringify(names)], { type: "application/json" }),
+  );
+
+  const response = await apiClient.post(
+    "/api/v1/form/delete-fields",
+    formData,
+    { responseType: "blob" },
+  );
   return response.data;
 }
