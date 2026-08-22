@@ -1,7 +1,7 @@
 // Fetch the active .onnx from the backend serve endpoint, verify its SHA-256, and keep it in the
 // Cache API keyed by checksum so it is downloaded only once per device (then reused across reloads).
 
-const MODEL_FILE_URL = "/api/v1/ai/form-detection-model/file";
+const MODEL_FILE_URL = "/api/v1/form/form-detection-model/file";
 const CACHE_NAME = "stirling-form-detection-models";
 
 function toHex(buf: ArrayBuffer): string {

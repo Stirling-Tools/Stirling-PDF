@@ -486,7 +486,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "Automatically detect form fields with AI and make your PDF fillable.",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.GENERAL,
+        subcategoryId: SubcategoryId.AUTOMATION,
         maxFiles: 1,
         endpoints: ["form-detection"],
         unavailableMessage: t(

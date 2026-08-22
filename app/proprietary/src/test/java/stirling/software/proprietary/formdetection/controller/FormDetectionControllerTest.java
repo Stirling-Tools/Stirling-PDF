@@ -46,7 +46,7 @@ class FormDetectionControllerTest {
         Mockito.when(manager.isReady()).thenReturn(false);
 
         mvc(manager, Mockito.mock(OnnxFormDetector.class), Mockito.mock(PageRasterizer.class))
-                .perform(multipart("/api/v1/ai/form-detection/detect").file(pdf()))
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.reason").value("DEPENDENCY"));
     }
@@ -62,7 +62,7 @@ class FormDetectionControllerTest {
                 .thenReturn(List.of()); // no pages -> no detections, detector never called
 
         mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
-                .perform(multipart("/api/v1/ai/form-detection/detect").file(pdf()))
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.detections").isArray())
                 .andExpect(jsonPath("$.detections").isEmpty());
@@ -83,7 +83,7 @@ class FormDetectionControllerTest {
         Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt())).thenReturn(tooMany);
 
         mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
-                .perform(multipart("/api/v1/ai/form-detection/detect").file(pdf()))
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reason").value("LIMIT"));
     }
@@ -99,7 +99,7 @@ class FormDetectionControllerTest {
 
         mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
                 .perform(
-                        multipart("/api/v1/ai/form-detection/detect")
+                        multipart("/api/v1/form/form-detection/detect")
                                 .file(pdf())
                                 .param("confThreshold", "-42"))
                 .andExpect(status().isOk())

@@ -35,7 +35,7 @@ const MODEL_STATUS_NOT_INSTALLED = {
 };
 
 async function stubModelStatus(page: Page) {
-  await page.route("**/api/v1/ai/form-detection-model/status", (route) =>
+  await page.route("**/api/v1/form/form-detection-model/status", (route) =>
     route.fulfill({ json: MODEL_STATUS_NOT_INSTALLED }),
   );
 }

@@ -73,7 +73,7 @@ function modelStatus(overrides: Record<string, unknown> = {}) {
 }
 
 async function stubStatus(page: Page, overrides: Record<string, unknown> = {}) {
-  await page.route("**/api/v1/ai/form-detection-model/status", (r: Route) =>
+  await page.route("**/api/v1/form/form-detection-model/status", (r: Route) =>
     r.fulfill({ json: modelStatus(overrides) }),
   );
 }
@@ -111,7 +111,7 @@ async function stubDetect(
 ) {
   const pdf = fs.readFileSync(SAMPLE_PDF);
   const detections = opts.detections ?? DETECTIONS;
-  await page.route("**/api/v1/ai/form-detection/detect", async (r: Route) => {
+  await page.route("**/api/v1/form/form-detection/detect", async (r: Route) => {
     if (opts.delayMs) await new Promise((res) => setTimeout(res, opts.delayMs));
     const body = r.request().postData() ?? "";
     if (body.includes("applyToPdf") && body.includes("true")) {

@@ -443,7 +443,7 @@ public class ApplicationProperties {
 
     /**
      * Auto Form Detection settings. The model itself is downloaded on demand by an admin (see
-     * {@code /api/v1/ai/form-detection-model/*}); only lightweight pointers are persisted here.
+     * {@code /api/v1/form/form-detection-model/*}); only lightweight pointers are persisted here.
      */
     @Data
     public static class FormDetection {

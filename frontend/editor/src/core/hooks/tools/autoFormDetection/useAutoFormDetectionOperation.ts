@@ -22,8 +22,8 @@ import {
   resolveConfidence,
 } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
-const DETECT_ENDPOINT = "/api/v1/ai/form-detection/detect";
-const STATUS_URL = "/api/v1/ai/form-detection-model/status";
+const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
+const STATUS_URL = "/api/v1/form/form-detection-model/status";
 
 export const buildAutoFormDetectionFormData = (
   parameters: AutoFormDetectionParameters,

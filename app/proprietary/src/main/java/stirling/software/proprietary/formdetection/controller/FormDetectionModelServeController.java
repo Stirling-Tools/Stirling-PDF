@@ -36,7 +36,7 @@ import stirling.software.proprietary.formdetection.service.FormDetectionModelMan
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/ai/form-detection-model")
+@RequestMapping("/api/v1/form/form-detection-model")
 @RequiredArgsConstructor
 @Tag(name = "Auto Form Detection")
 public class FormDetectionModelServeController {

@@ -77,7 +77,7 @@ function modelStatus(overrides: StatusOverrides = {}) {
 }
 
 async function stubStatus(page: Page, overrides: StatusOverrides = {}) {
-  await page.route("**/api/v1/ai/form-detection-model/status", (r: Route) =>
+  await page.route("**/api/v1/form/form-detection-model/status", (r: Route) =>
     r.fulfill({ json: modelStatus(overrides) }),
   );
 }
@@ -117,7 +117,7 @@ async function stubDetect(page: Page, delayMs = 0) {
       confidence: 0.74,
     },
   ];
-  await page.route("**/api/v1/ai/form-detection/detect", async (r: Route) => {
+  await page.route("**/api/v1/form/form-detection/detect", async (r: Route) => {
     if (delayMs) await new Promise((res) => setTimeout(res, delayMs));
     const body = r.request().postData() ?? "";
     if (body.includes("applyToPdf") && body.includes("true")) {

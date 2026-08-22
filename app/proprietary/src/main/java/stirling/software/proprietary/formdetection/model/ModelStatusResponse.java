@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Snapshot returned by {@code GET /api/v1/ai/form-detection-model/status}. Includes the full
+ * Snapshot returned by {@code GET /api/v1/form/form-detection-model/status}. Includes the full
  * catalog so the browser can read the active model's parity-critical pipeline spec.
  */
 @Data

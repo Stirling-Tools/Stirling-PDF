@@ -34,7 +34,7 @@ class FormDetectionModelControllerTest {
         Mockito.when(manager.status()).thenReturn(notInstalled());
 
         mvc(manager)
-                .perform(get("/api/v1/ai/form-detection-model/status"))
+                .perform(get("/api/v1/form/form-detection-model/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("not_installed"))
                 .andExpect(jsonPath("$.writable").value(true));
@@ -47,7 +47,7 @@ class FormDetectionModelControllerTest {
 
         mvc(manager)
                 .perform(
-                        post("/api/v1/ai/form-detection-model/install")
+                        post("/api/v1/form/form-detection-model/install")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"modelId\":\"\"}"))
                 .andExpect(status().isBadRequest());
@@ -60,7 +60,7 @@ class FormDetectionModelControllerTest {
 
         mvc(manager)
                 .perform(
-                        post("/api/v1/ai/form-detection-model/install")
+                        post("/api/v1/form/form-detection-model/install")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"modelId\":\"ffdnet-s\"}"))
                 .andExpect(status().isAccepted());
@@ -76,7 +76,7 @@ class FormDetectionModelControllerTest {
 
         mvc(manager)
                 .perform(
-                        post("/api/v1/ai/form-detection-model/install")
+                        post("/api/v1/form/form-detection-model/install")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"modelId\":\"ffdnet-s\"}"))
                 .andExpect(status().isConflict());
@@ -88,7 +88,7 @@ class FormDetectionModelControllerTest {
         Mockito.when(manager.status()).thenReturn(notInstalled());
 
         mvc(manager)
-                .perform(delete("/api/v1/ai/form-detection-model"))
+                .perform(delete("/api/v1/form/form-detection-model"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("not_installed"));
     }

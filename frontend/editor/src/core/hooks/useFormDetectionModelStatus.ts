@@ -51,10 +51,10 @@ export interface FormDetectionModelStatus {
   downloadingModelId?: string | null;
 }
 
-const STATUS_URL = "/api/v1/ai/form-detection-model/status";
-const INSTALL_URL = "/api/v1/ai/form-detection-model/install";
-const CONFIG_URL = "/api/v1/ai/form-detection-model/config";
-const MODEL_URL = "/api/v1/ai/form-detection-model";
+const STATUS_URL = "/api/v1/form/form-detection-model/status";
+const INSTALL_URL = "/api/v1/form/form-detection-model/install";
+const CONFIG_URL = "/api/v1/form/form-detection-model/config";
+const MODEL_URL = "/api/v1/form/form-detection-model";
 
 /**
  * Polls the Auto Form Detection model status and exposes admin install/uninstall actions.
