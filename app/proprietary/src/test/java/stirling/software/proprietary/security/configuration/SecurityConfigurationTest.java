@@ -168,7 +168,9 @@ class SecurityConfigurationTest {
         }
 
         private CorsConfiguration configFor(CorsConfigurationSource source) {
-            return ((UrlBasedCorsConfigurationSource) source).getCorsConfigurations().get("/**");
+            return ((UrlBasedCorsConfigurationSource) source)
+                    .getCorsConfigurations()
+                    .get("/api/**");
         }
     }
 
