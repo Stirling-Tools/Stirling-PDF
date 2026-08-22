@@ -22,6 +22,7 @@
   cursor: pointer;
   transition: transform var(--motion-fast);
 }
+
 .sui-avatar--interactive:hover {
   transform: scale(1.05);
 }
@@ -31,16 +32,19 @@
   height: 1.25rem;
   font-size: 0.625rem;
 }
+
 .sui-avatar--sm {
   width: 1.625rem;
   height: 1.625rem;
   font-size: 0.6875rem;
 }
+
 .sui-avatar--md {
   width: 2rem;
   height: 2rem;
   font-size: 0.8125rem;
 }
+
 .sui-avatar--lg {
   width: 2.5rem;
   height: 2.5rem;
@@ -63,18 +67,23 @@
 .sui-avatar--blue {
   background: var(--grad-blue-btn);
 }
+
 .sui-avatar--purple {
   background: var(--grad-purple-btn);
 }
+
 .sui-avatar--green {
   background: var(--grad-green-btn);
 }
+
 .sui-avatar--amber {
   background: var(--grad-amber-btn);
 }
+
 .sui-avatar--red {
   background: var(--grad-red-btn);
 }
+
 .sui-avatar--neutral {
   background: var(--c-surface-sunken);
   color: var(--c-text-muted);

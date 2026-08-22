@@ -1,10 +1,12 @@
 .sui-radio-group {
   display: flex;
 }
+
 .sui-radio-group--vertical {
   flex-direction: column;
   gap: var(--space-2);
 }
+
 .sui-radio-group--horizontal {
   flex-direction: row;
   gap: var(--space-4);
@@ -19,6 +21,7 @@
   font-size: 0.8125rem;
   color: var(--c-text-muted);
 }
+
 .sui-radio--disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -67,10 +70,12 @@
   display: flex;
   flex-direction: column;
 }
+
 .sui-radio__label {
   color: var(--c-text);
   font-weight: 500;
 }
+
 .sui-radio__desc {
   font-size: 0.75rem;
   color: var(--c-text-subtle);

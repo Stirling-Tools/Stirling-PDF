@@ -4,6 +4,7 @@
 }
 
 .sui-dd__menu {
+
   /* Positioned (fixed, portaled to <body>) entirely by the Menu component. */
   min-width: 12rem;
   padding: var(--space-1);
@@ -28,6 +29,7 @@
   font-size: 0.8125rem;
   color: var(--c-text-muted);
   border-radius: var(--radius-sm);
+
   /* Explicit button reset: hosts without a global button reset (e.g. the
      editor) would otherwise show the UA's buttonface background and border. */
   background: none;

@@ -11,5 +11,6 @@
    and negative-margin it back so the hover surface still extends past the text. */
 .sui-brand-switcher__trigger.sui-btn {
   --button-padding-x: 0.375rem;
+
   margin-inline: -0.375rem;
 }

@@ -37,6 +37,7 @@
   overflow-y: auto;
   opacity: 0;
   transform: translateX(-1rem);
+
   /* Only fade/slide; width is driven by the inline custom property so
    * dragging the resizer doesn't animate. */
   transition:
@@ -74,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px 6px 18px;
+  padding: 12px 18px 6px;
   margin-top: 4px;
   flex-shrink: 0;
 }
@@ -182,6 +183,7 @@
 }
 
 @media (max-width: 900px) {
+
   /* Cap the user width on narrow viewports so the tree can't squeeze
    * out the file grid. The custom property is still honoured but capped. */
   .folder-tree-panel[data-active="true"] {

@@ -32,6 +32,7 @@ a {
   color: var(--c-accent-text);
   text-decoration: none;
 }
+
 a:hover {
   text-decoration: underline;
 }

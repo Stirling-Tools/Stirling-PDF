@@ -5,12 +5,14 @@
 
 .portal-graph-edge {
   position: absolute;
+
   /* A wide drop target: the wire is a thin line, but a dragged step can be released anywhere across
      the row, so the whole band between the nodes catches it. `left` is the column centre, so pull
      back by half to keep the band centred on it. Line, insert and warning are placed absolutely
      within. */
   width: 16rem;
   transform: translateX(-50%);
+
   --edge-color: var(--c-border-strong);
 }
 
@@ -47,6 +49,7 @@
 .portal-graph-edge__insert.sui-ai {
   position: absolute;
   top: 50%;
+
   /* Beside the wire: the column centre is 50%, nudge clear of the line and centre on the row. */
   left: 50%;
   transform: translate(0.6rem, -50%);
@@ -128,6 +131,7 @@
   padding: 0.0625rem 0.375rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--c-warning);
+
   /* Matches the shared Banner's warning treatment: tinted ground, amber border and glyph, ordinary
      text. Amber words would not clear 4.5:1 at this size, and the tint is what makes the neutral
      text read as part of a warning rather than as stray body copy. */

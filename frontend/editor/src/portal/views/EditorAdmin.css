@@ -50,9 +50,9 @@
   max-width: 52rem;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Deployment targets                                                       */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Deployment targets
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor__targets {
   display: grid;
@@ -94,10 +94,12 @@
   background: var(--color-bg-subtle);
   color: var(--c-text-subtle);
 }
+
 .portal-editor__target-icon--blue {
   background: var(--c-primary-tint);
   color: var(--c-accent-text);
 }
+
 .portal-editor__target-icon--purple {
   background: var(--color-purple-light);
   color: var(--color-purple-dark);
@@ -129,9 +131,9 @@
   color: var(--c-text-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Upgrade nudge (shared by locked targets / pairings / offline card)        */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Upgrade nudge (shared by locked targets / pairings / offline card)
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor__lock {
   display: flex;
@@ -151,9 +153,9 @@
   color: var(--c-text-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Pairing                                                                  */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Pairing
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor__pairings {
   display: grid;
@@ -194,10 +196,12 @@
   background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
   color: var(--c-accent-text);
 }
+
 .portal-editor__pairing-icon--purple {
   background: var(--color-purple-light);
   color: var(--color-purple-dark);
 }
+
 .portal-editor__pairing-icon--green {
   background: var(--color-green-light);
   color: var(--color-green-dark);
@@ -244,9 +248,9 @@
   margin-top: auto;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Instance health table cells                                              */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Instance health table cells
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor__cell-stack {
   display: flex;
@@ -276,9 +280,9 @@
   color: var(--c-text-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Operations row (rotation + offline activation)                           */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Operations row (rotation + offline activation)
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor__ops {
   display: grid;

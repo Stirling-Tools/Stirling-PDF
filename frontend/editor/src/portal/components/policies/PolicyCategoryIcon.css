@@ -10,6 +10,7 @@
   border-radius: var(--radius-lg);
   background: var(--c-surface-sunken);
   color: var(--c-text-subtle);
+
   /* The shared MUI outline glyph inherits its size from here. */
   font-size: 1.15rem;
 }

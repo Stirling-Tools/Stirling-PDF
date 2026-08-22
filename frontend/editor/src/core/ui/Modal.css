@@ -12,6 +12,7 @@
 }
 
 .sui-modal {
+
   /* Set our own font: the modal portals to <body>, so it can't inherit the
      app's font through the DOM (the portal's .portal-scope isn't an ancestor). */
   font-family: var(--font-sans);
@@ -36,6 +37,7 @@
     padding: 1rem 0.75rem;
     align-items: center;
   }
+
   .sui-modal {
     max-height: calc(100dvh - 2rem);
   }
@@ -44,12 +46,15 @@
 .sui-modal--sm {
   max-width: 24rem;
 }
+
 .sui-modal--md {
   max-width: 32rem;
 }
+
 .sui-modal--lg {
   max-width: 48rem;
 }
+
 .sui-modal--xl {
   max-width: 64rem;
 }

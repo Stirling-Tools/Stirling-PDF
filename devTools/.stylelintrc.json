@@ -6,13 +6,19 @@
     "@stylistic/stylelint-plugin"
   ],
   "ignoreFiles": [
-    "app/core/src/main/resources/static/css/bootstrap*.css",
-    "app/core/src/main/resources/static/css/cookieconsent.css",
-    "app/core/src/main/resources/static/css/cookieconsentCustomisation.css",
-    "app/core/src/main/resources/static/css/prism.css",
-    "app/core/src/main/resources/static/pdfjs-legacy/**/*.css"
+    "../app/core/src/main/resources/static/css/bootstrap*.css",
+    "../app/core/src/main/resources/static/css/cookieconsent.css",
+    "../app/core/src/main/resources/static/css/cookieconsentCustomisation.css",
+    "../app/core/src/main/resources/static/css/prism.css",
+    "../app/core/src/main/resources/static/pdfjs-legacy/**/*.css",
+    "../frontend/editor/dist/**/*",
+    "../frontend/editor/src-tauri/**/*",
+    "../frontend/editor/**/cookieconsent.css",
+    "../frontend/editor/**/cookieconsentCustomisation.css"
   ],
   "rules": {
+    "keyframe-declaration-no-important": null,
+    "property-disallowed-list": null,
     "property-no-vendor-prefix": null,
     "value-no-vendor-prefix": null,
     "selector-no-vendor-prefix": null,
@@ -26,6 +32,37 @@
     "declaration-block-no-redundant-longhand-properties": null,
     "media-feature-range-notation": "prefix",
     "selector-attribute-quotes": null,
+    "number-max-precision": null,
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": ["tailwind"]
+      }
+    ],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreProperties": ["user-drag"]
+      }
+    ],
+    "declaration-property-value-keyword-no-deprecated": [
+      true,
+      {
+        "ignoreKeywords": ["break-word"]
+      }
+    ],
+    "property-no-deprecated": [
+      true,
+      {
+        "ignoreProperties": ["clip", "page-break-after"]
+      }
+    ],
     "at-rule-no-vendor-prefix": null,
     "selector-not-notation": null,
     "no-duplicate-selectors": [

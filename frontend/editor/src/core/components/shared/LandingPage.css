@@ -11,17 +11,21 @@
     opacity: 0;
     transform: translateY(0.75rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .landing-logo-enter {
   animation: landing-fade-up 0.2s ease-out both;
 }
+
 .landing-actions-enter {
   animation: landing-fade-up 0.2s ease-out 0.2s both;
 }
+
 @media (prefers-reduced-motion: reduce) {
   .landing-logo-enter,
   .landing-actions-enter {
@@ -67,7 +71,7 @@
 .landing-sheet {
   position: absolute;
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: #fff;
   cursor: default;
 }
 
@@ -131,6 +135,7 @@
   border-radius: 9999px;
   background-color: var(--c-illustration-line);
 }
+
 .landing-bar--strong {
   background-color: var(--c-illustration-line-strong);
 }
@@ -150,6 +155,7 @@
   outline: 2px dashed var(--c-primary);
   outline-offset: 4px;
 }
+
 .landing-dropzone[data-reject] {
   outline: 2px dashed var(--mantine-color-red-6);
   outline-offset: 4px;

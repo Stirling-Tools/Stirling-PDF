@@ -1,6 +1,7 @@
 /* Page container hover effects - optimized for smooth scrolling */
 .pageContainer {
   transition: transform 0.2s ease-in-out;
+
   /* Enable hardware acceleration for smoother scrolling */
   will-change: transform;
   transform: translateZ(0);
@@ -23,9 +24,11 @@
   0% {
     background-color: color-mix(in srgb, var(--c-primary) 32%, transparent);
   }
+
   60% {
     background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
   }
+
   100% {
     background-color: color-mix(in srgb, var(--c-primary) 0%, transparent);
   }
@@ -56,6 +59,7 @@
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }

@@ -38,8 +38,8 @@
 
 /* onImage: white dots over dark photography / gradients. */
 .sui-carousel-dots--onImage {
-  --sui-dot-color: #ffffff;
-  --sui-dot-active-color: #ffffff;
+  --sui-dot-color: #fff;
+  --sui-dot-active-color: #fff;
 }
 
 .sui-carousel-dots--onImage .sui-carousel-dots__dot {

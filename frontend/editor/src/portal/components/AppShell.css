@@ -26,6 +26,7 @@
   flex: 1 1 auto;
   min-height: 0; /* scroll instead of growing past the viewport */
   overflow-y: auto;
+
   /* Hold the scrollbar's width whether or not it is showing. Without this, a page that grows past
      the viewport (an editor panel filling in, say) makes the bar appear and shunts everything
      sideways as it does. */
@@ -63,8 +64,10 @@
   .portal-shell__topbar {
     display: flex;
   }
+
   .portal-shell__scrim {
     display: block;
+
     /* fadeIn keyframes come from core tokens.css */
     animation: fadeIn var(--motion-fast) both;
   }
