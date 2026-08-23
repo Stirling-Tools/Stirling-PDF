@@ -314,7 +314,8 @@ public class FormUtils {
                             findPageIndexForAnnotation(document, fieldDict, annotationPageMap);
                     if (pageIndex >= 0) {
                         PDRectangle rectangle = new PDRectangle(rectArray);
-                        result.add(
+                        addWidget(
+                                result,
                                 createWidgetCoordinates(
                                         document, rectangle, pageIndex, null, field));
                     } else {
@@ -387,7 +388,8 @@ public class FormUtils {
                     }
                 }
 
-                result.add(
+                addWidget(
+                        result,
                         createWidgetCoordinates(
                                 document, rectangle, pageIndex, exportValue, field));
             } catch (Exception e) {
@@ -399,6 +401,15 @@ public class FormUtils {
         }
 
         return result;
+    }
+
+    /** Unreadable geometry yields null, which must never reach the list the comparator walks. */
+    private void addWidget(
+            List<FormFieldWithCoordinates.WidgetCoordinates> target,
+            FormFieldWithCoordinates.WidgetCoordinates widget) {
+        if (widget != null) {
+            target.add(widget);
+        }
     }
 
     private FormFieldWithCoordinates.WidgetCoordinates createWidgetCoordinates(
@@ -438,13 +449,14 @@ public class FormUtils {
         float finalW = width;
         float finalH = height;
 
-        // Validate coordinates are within reasonable bounds
-        if (finalX < -1.0f
-                || finalY < -1.0f
-                || finalX > cropBox.getWidth() * 2 // Allow some horizontal overflow
-                || finalY > cropHeight + 1.0f) {
+        // Only nonsense is rejected. A widget outside the visible page is legal and must still be
+        // reported, or the field loses its geometry and the user cannot drag it back.
+        if (!Float.isFinite(finalX)
+                || !Float.isFinite(finalY)
+                || !Float.isFinite(finalW)
+                || !Float.isFinite(finalH)) {
             log.warn(
-                    "Widget coordinates out of bounds for field '{}': page={}, x={}, y={}, w={}, h={}",
+                    "Widget coordinates are not finite for field '{}': page={}, x={}, y={}, w={}, h={}",
                     field.getFullyQualifiedName(),
                     pageIndex,
                     finalX,
@@ -452,6 +464,12 @@ public class FormUtils {
                     finalW,
                     finalH);
             return null;
+        }
+        if (finalX < 0 || finalY < 0 || finalX > cropBox.getWidth() || finalY > cropHeight) {
+            log.debug(
+                    "Widget for field '{}' sits outside page {}",
+                    field.getFullyQualifiedName(),
+                    pageIndex);
         }
 
         return FormFieldWithCoordinates.WidgetCoordinates.builder()
@@ -1756,12 +1774,22 @@ public class FormUtils {
 
             List<String> sanitizedOptions = sanitizeOptions(modification.options());
 
-            try {
-                FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
-                if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
-                    handler = FormFieldTypeSupport.TEXT;
-                }
+            FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
+            if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
+                // Falling back to a text field here would silently retype the field and report
+                // success, so refuse instead and leave the original alone.
+                recordSkip(
+                        skipped,
+                        "modify",
+                        lookupName,
+                        "'"
+                                + resolvedType
+                                + "' cannot be rebuilt, so the field was left as it was");
+                releaseReservedName(existingNames, reservedName, qualified);
+                continue;
+            }
 
+            try {
                 // Create new field first - if this fails, original field is preserved
                 createNewField(
                         handler,
@@ -1773,6 +1801,13 @@ public class FormUtils {
                         sanitizedOptions); // Don't reuse widget for type changes
 
                 removeFieldFromDocument(document, acroForm, originalField);
+
+                // A rebuilt toggle has no /AP yet, so without this it renders blank and cannot
+                // tick.
+                applyButtonAppearances(
+                        document,
+                        acroForm,
+                        List.of(Map.entry(prefix + desiredName, replacementDefinition)));
 
                 log.debug(
                         "Successfully replaced field '{}' with type '{}'",
@@ -1939,6 +1974,11 @@ public class FormUtils {
      * Moves/resizes a field's widgets. The rect describes widget 0; the rest shift by the same
      * delta and keep their own size, so a radio group travels intact instead of being normalised.
      */
+    /** A size PDFBox would write as "Infinity" or a zero-area box makes the field unusable. */
+    private static boolean unusableSize(Float value) {
+        return value != null && (!Float.isFinite(value) || value <= 0);
+    }
+
     private void updateWidgetGeometry(
             PDDocument document,
             PDField field,
@@ -1946,6 +1986,23 @@ public class FormUtils {
             List<SkippedFieldEdit> skipped) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null || widgets.isEmpty()) {
+            return;
+        }
+        if (unusableSize(modification.width()) || unusableSize(modification.height())) {
+            recordSkip(
+                    skipped,
+                    "modify",
+                    field.getFullyQualifiedName(),
+                    "a width and height above zero are required, so the size was left as it was");
+            return;
+        }
+        if (modification.x() != null && !Float.isFinite(modification.x())
+                || modification.y() != null && !Float.isFinite(modification.y())) {
+            recordSkip(
+                    skipped,
+                    "modify",
+                    field.getFullyQualifiedName(),
+                    "the position is not a usable number, so the field was left where it was");
             return;
         }
         PDAnnotationWidget anchor = widgets.get(0);
@@ -3596,19 +3653,25 @@ public class FormUtils {
     static final class FieldCoordinateComparator implements Comparator<FormFieldWithCoordinates> {
 
         private static int firstWidgetPageIndex(FormFieldWithCoordinates f) {
-            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+            return (f.getWidgets() != null
+                            && !f.getWidgets().isEmpty()
+                            && f.getWidgets().getFirst() != null)
                     ? f.getWidgets().getFirst().getPageIndex()
                     : -1;
         }
 
         private static float firstWidgetY(FormFieldWithCoordinates f) {
-            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+            return (f.getWidgets() != null
+                            && !f.getWidgets().isEmpty()
+                            && f.getWidgets().getFirst() != null)
                     ? f.getWidgets().getFirst().getY()
                     : 0;
         }
 
         private static float firstWidgetX(FormFieldWithCoordinates f) {
-            return (f.getWidgets() != null && !f.getWidgets().isEmpty())
+            return (f.getWidgets() != null
+                            && !f.getWidgets().isEmpty()
+                            && f.getWidgets().getFirst() != null)
                     ? f.getWidgets().getFirst().getX()
                     : 0;
         }
