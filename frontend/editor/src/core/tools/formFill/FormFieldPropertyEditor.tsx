@@ -11,6 +11,7 @@ import {
   Group,
   Text,
   Alert,
+  Tooltip,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -18,6 +19,44 @@ import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
+/** A switch's help has to wrap the control: Mantine does not surface a tooltip from its label. */
+function SwitchWithHelp({
+  help,
+  children,
+}: {
+  help: string;
+  children: React.ReactElement;
+}) {
+  return (
+    <Tooltip
+      label={help}
+      multiline
+      w={250}
+      withArrow
+      openDelay={250}
+      position="top-start"
+    >
+      {children}
+    </Tooltip>
+  );
+}
+
+/** Labels carry their own explanation on hover, so the panel stays uncluttered. */
+function LabelWithHelp({ text, help }: { text: string; help: string }) {
+  return (
+    <Tooltip
+      label={help}
+      multiline
+      w={250}
+      withArrow
+      openDelay={250}
+      position="top-start"
+    >
+      <span style={{ cursor: "help" }}>{text}</span>
+    </Tooltip>
+  );
+}
 
 export interface EditableFieldProps {
   name?: string;
@@ -141,7 +180,15 @@ export function FormFieldPropertyEditor({
       {showName && (
         <TextInput
           size="xs"
-          label={t("formFill.editor.name", "Field name")}
+          label={
+            <LabelWithHelp
+              text={t("formFill.editor.name", "Field name")}
+              help={t(
+                "formFill.editor.nameHelp",
+                "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces.",
+              )}
+            />
+          }
           value={value.name ?? ""}
           onChange={(e) => onChange({ name: e.currentTarget.value })}
         />
@@ -150,9 +197,24 @@ export function FormFieldPropertyEditor({
       <TextInput
         size="xs"
         label={
-          isButton
-            ? t("formFill.editor.caption", "Button caption")
-            : t("formFill.editor.label", "Label")
+          <LabelWithHelp
+            text={
+              isButton
+                ? t("formFill.editor.caption", "Button caption")
+                : t("formFill.editor.label", "Label")
+            }
+            help={
+              isButton
+                ? t(
+                    "formFill.editor.captionHelp",
+                    "The text printed on the button face.",
+                  )
+                : t(
+                    "formFill.editor.labelHelp",
+                    "The wording shown to whoever fills the form. Leave it blank to fall back to the field name.",
+                  )
+            }
+          />
         }
         value={value.label ?? ""}
         onChange={(e) => onChange({ label: e.currentTarget.value })}
@@ -161,7 +223,15 @@ export function FormFieldPropertyEditor({
       {allowTypeChange && (
         <Select
           size="xs"
-          label={t("formFill.editor.type", "Type")}
+          label={
+            <LabelWithHelp
+              text={t("formFill.editor.type", "Type")}
+              help={t(
+                "formFill.editor.typeHelp",
+                "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over.",
+              )}
+            />
+          }
           value={canRetype ? value.type : null}
           data={TYPE_CHANGE_OPTIONS.map((tp) => ({
             value: tp,
@@ -177,7 +247,13 @@ export function FormFieldPropertyEditor({
       {hasOptions && (
         <Stack gap={4}>
           <Text size="xs" fw={600}>
-            {t("formFill.editor.options", "Options")}
+            <LabelWithHelp
+              text={t("formFill.editor.options", "Options")}
+              help={t(
+                "formFill.editor.optionsHelp",
+                "The choices offered in the list. Each one is stored as typed, so keep them short and distinct.",
+              )}
+            />
           </Text>
           {(value.options ?? []).length === 0 && (
             <Text size="xs" c="dimmed">
@@ -224,7 +300,15 @@ export function FormFieldPropertyEditor({
       {isFillable && (
         <TextInput
           size="xs"
-          label={t("formFill.editor.defaultValue", "Default value")}
+          label={
+            <LabelWithHelp
+              text={t("formFill.editor.defaultValue", "Default value")}
+              help={t(
+                "formFill.editor.defaultValueHelp",
+                "What the field contains before anyone fills it in. Leave blank for an empty field.",
+              )}
+            />
+          }
           value={value.defaultValue ?? ""}
           onChange={(e) => onChange({ defaultValue: e.currentTarget.value })}
         />
@@ -232,7 +316,15 @@ export function FormFieldPropertyEditor({
 
       <TextInput
         size="xs"
-        label={t("formFill.editor.tooltip", "Tooltip")}
+        label={
+          <LabelWithHelp
+            text={t("formFill.editor.tooltip", "Tooltip")}
+            help={t(
+              "formFill.editor.tooltipHelp",
+              "The hint shown when someone hovers the field in a PDF reader.",
+            )}
+          />
+        }
         value={value.tooltip ?? ""}
         onChange={(e) => onChange({ tooltip: e.currentTarget.value })}
       />
@@ -241,7 +333,15 @@ export function FormFieldPropertyEditor({
         <>
           <Select
             size="xs"
-            label={t("formFill.editor.action", "Button action")}
+            label={
+              <LabelWithHelp
+                text={t("formFill.editor.action", "Button action")}
+                help={t(
+                  "formFill.editor.actionHelp",
+                  "What the button does when clicked.",
+                )}
+              />
+            }
             value={action.kind}
             data={[
               { value: "none", label: t("formFill.editor.actionNone", "None") },
@@ -272,7 +372,15 @@ export function FormFieldPropertyEditor({
           {(action.kind === "uri" || action.kind === "submit") && (
             <TextInput
               size="xs"
-              label={t("formFill.editor.actionUrl", "URL")}
+              label={
+                <LabelWithHelp
+                  text={t("formFill.editor.actionUrl", "URL")}
+                  help={t(
+                    "formFill.editor.actionUrlHelp",
+                    "The address the button opens or submits to.",
+                  )}
+                />
+              }
               value={action.url}
               onChange={(e) =>
                 onChange({
@@ -290,7 +398,15 @@ export function FormFieldPropertyEditor({
       {isVariableText && (
         <NumberInput
           size="xs"
-          label={t("formFill.editor.fontSize", "Font size")}
+          label={
+            <LabelWithHelp
+              text={t("formFill.editor.fontSize", "Font size")}
+              help={t(
+                "formFill.editor.fontSizeHelp",
+                "Text size inside the field. Leave blank to let the reader size it to fit.",
+              )}
+            />
+          }
           value={value.fontSize ?? ""}
           min={1}
           max={144}
@@ -302,15 +418,30 @@ export function FormFieldPropertyEditor({
 
       {isText && (
         <>
-          <Switch
-            size="xs"
-            label={t("formFill.editor.multiline", "Multi-line")}
-            checked={!!value.multiline}
-            onChange={(e) => onChange({ multiline: e.currentTarget.checked })}
-          />
+          <SwitchWithHelp
+            help={t(
+              "formFill.editor.multilineHelp",
+              "Allows more than one line of text and wraps at the field's edge.",
+            )}
+          >
+            <Switch
+              size="xs"
+              label={t("formFill.editor.multiline", "Multi-line")}
+              checked={!!value.multiline}
+              onChange={(e) => onChange({ multiline: e.currentTarget.checked })}
+            />
+          </SwitchWithHelp>
           <NumberInput
             size="xs"
-            label={t("formFill.editor.maxLength", "Max length (comb)")}
+            label={
+              <LabelWithHelp
+                text={t("formFill.editor.maxLength", "Max length (comb)")}
+                help={t(
+                  "formFill.editor.maxLengthHelp",
+                  "Caps how many characters fit, drawn as evenly spaced boxes.",
+                )}
+              />
+            }
             value={value.maxLength ? value.maxLength : ""}
             min={0}
             max={500}
@@ -323,30 +454,51 @@ export function FormFieldPropertyEditor({
       )}
 
       {value.type === "listbox" && (
-        <Switch
-          size="xs"
-          label={t("formFill.editor.multiSelect", "Allow multiple selection")}
-          checked={!!value.multiSelect}
-          onChange={(e) => onChange({ multiSelect: e.currentTarget.checked })}
-        />
+        <SwitchWithHelp
+          help={t(
+            "formFill.editor.multiSelectHelp",
+            "Lets more than one option be chosen at once.",
+          )}
+        >
+          <Switch
+            size="xs"
+            label={t("formFill.editor.multiSelect", "Allow multiple selection")}
+            checked={!!value.multiSelect}
+            onChange={(e) => onChange({ multiSelect: e.currentTarget.checked })}
+          />
+        </SwitchWithHelp>
       )}
 
       {isFillable && (
-        <Switch
-          size="xs"
-          label={t("formFill.editor.required", "Required")}
-          checked={!!value.required}
-          onChange={(e) => onChange({ required: e.currentTarget.checked })}
-        />
+        <SwitchWithHelp
+          help={t(
+            "formFill.editor.requiredHelp",
+            "The form cannot be submitted until this field is filled in.",
+          )}
+        >
+          <Switch
+            size="xs"
+            label={t("formFill.editor.required", "Required")}
+            checked={!!value.required}
+            onChange={(e) => onChange({ required: e.currentTarget.checked })}
+          />
+        </SwitchWithHelp>
       )}
 
       {isFillable && (
-        <Switch
-          size="xs"
-          label={t("formFill.editor.readOnly", "Read-only")}
-          checked={!!value.readOnly}
-          onChange={(e) => onChange({ readOnly: e.currentTarget.checked })}
-        />
+        <SwitchWithHelp
+          help={t(
+            "formFill.editor.readOnlyHelp",
+            "Shows a value but stops anyone editing it.",
+          )}
+        >
+          <Switch
+            size="xs"
+            label={t("formFill.editor.readOnly", "Read-only")}
+            checked={!!value.readOnly}
+            onChange={(e) => onChange({ readOnly: e.currentTarget.checked })}
+          />
+        </SwitchWithHelp>
       )}
     </Stack>
   );

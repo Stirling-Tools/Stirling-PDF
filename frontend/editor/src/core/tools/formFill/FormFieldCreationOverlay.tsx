@@ -67,6 +67,7 @@ export function FormFieldCreationOverlay({
     setCreationType,
     pendingFields,
     addPendingField,
+    selectedFieldName,
     setSelectedField,
     state,
     forFileId,
@@ -122,12 +123,18 @@ export function FormFieldCreationOverlay({
       e.preventDefault();
       // Only start a drag on the bare overlay, never on a pending outline.
       if (e.target !== rootRef.current) return;
+      // With something selected, clicking away means "deselect", the way every editor behaves.
+      // The next click, with nothing selected, is the one that draws.
+      if (selectedFieldName) {
+        setSelectedField(null);
+        return;
+      }
       rootRef.current?.setPointerCapture(e.pointerId);
       const p = localPoint(e);
       dragStartRef.current = p;
       setDragRect({ left: p.x, top: p.y, width: 0, height: 0 });
     },
-    [active, localPoint],
+    [active, localPoint, selectedFieldName, setSelectedField],
   );
 
   const handlePointerMove = useCallback(
@@ -260,7 +267,12 @@ export function FormFieldCreationOverlay({
         pointerEvents: active ? "auto" : "none",
         // Without this the browser claims the gesture as a pan and drags never start on touch.
         touchAction: active ? "none" : "auto",
-        cursor: active ? "crosshair" : "default",
+        // Crosshair means the next click draws; the arrow means it clears the selection.
+        cursor: !active
+          ? "default"
+          : selectedFieldName
+            ? "default"
+            : "crosshair",
         userSelect: "none",
         WebkitUserSelect: "none",
         zIndex: 5,
