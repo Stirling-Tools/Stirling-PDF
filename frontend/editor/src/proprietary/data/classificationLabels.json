@@ -977,7 +977,7 @@
     },
     {
       "id": "transcript",
-      "name": "Transcript",
+      "name": "Academic transcript",
       "icon": "school"
     },
     {
@@ -1364,8 +1364,6 @@
         "expense-report",
         "budget",
         "financial-forecast",
-        "payslip",
-        "payroll-document",
         "tax-form",
         "tax-return",
         "tax-statement",
@@ -1376,12 +1374,14 @@
         "audit-report",
         "annual-report",
         "quarterly-report",
-        "pricing-sheet",
         "price-list",
         "loan-document",
         "mortgage-document",
         "investment-summary",
-        "donation-receipt"
+        "donation-receipt",
+        "subscription-confirmation",
+        "gift-certificate",
+        "utility-bill"
       ]
     },
     {
@@ -1428,7 +1428,13 @@
         "articles-of-incorporation",
         "bylaws",
         "shareholder-agreement",
-        "board-resolution"
+        "board-resolution",
+        "grant-agreement",
+        "sponsorship-agreement",
+        "warranty-document",
+        "membership-document",
+        "patent",
+        "statement-of-work"
       ]
     },
     {
@@ -1452,10 +1458,11 @@
         "termination-letter",
         "reference-letter",
         "recommendation-letter",
-        "training-material",
         "organization-chart",
         "benefits-summary",
-        "hr-memo"
+        "hr-memo",
+        "payslip",
+        "payroll-document"
       ]
     },
     {
@@ -1475,7 +1482,8 @@
         "press-release",
         "complaint-letter",
         "demand-letter",
-        "confirmation-letter"
+        "confirmation-letter",
+        "meeting-notes"
       ]
     },
     {
@@ -1532,12 +1540,13 @@
         "safety-data-sheet",
         "safety-procedure",
         "warehouse-receipt",
-        "return-authorization"
+        "return-authorization",
+        "faq-document"
       ]
     },
     {
       "id": "sales",
-      "name": "Marketing",
+      "name": "Sales and marketing",
       "icon": "campaign",
       "labelIds": [
         "proposal",
@@ -1557,8 +1566,9 @@
         "request-for-proposal",
         "request-for-quotation",
         "tender-document",
-        "statement-of-work",
-        "scope-of-work"
+        "scope-of-work",
+        "fact-sheet",
+        "pricing-sheet"
       ]
     },
     {
@@ -1576,7 +1586,6 @@
         "blueprint",
         "technical-drawing",
         "floor-plan",
-        "patent",
         "test-plan",
         "test-report",
         "release-notes",
@@ -1595,7 +1604,6 @@
         "project-charter",
         "roadmap",
         "timeline",
-        "meeting-notes",
         "action-plan",
         "retrospective"
       ]
@@ -1617,12 +1625,13 @@
         "thesis",
         "dissertation",
         "study-guide",
-        "academic-record"
+        "academic-record",
+        "training-material"
       ]
     },
     {
       "id": "health",
-      "name": "Medical",
+      "name": "Medical and insurance",
       "icon": "medical-services",
       "labelIds": [
         "medical-report",
@@ -1652,8 +1661,7 @@
         "closing-statement",
         "tenancy-agreement",
         "eviction-notice",
-        "hoa-document",
-        "utility-bill"
+        "hoa-document"
       ]
     },
     {
@@ -1663,11 +1671,8 @@
       "labelIds": [
         "permit",
         "license",
-        "registration-form",
-        "application-form",
         "government-notice",
         "grant-application",
-        "grant-agreement",
         "visa-document",
         "immigration-document",
         "legal-filing"
@@ -1675,7 +1680,7 @@
     },
     {
       "id": "travel",
-      "name": "Travel",
+      "name": "Events and travel",
       "icon": "flight",
       "labelIds": [
         "itinerary",
@@ -1701,18 +1706,13 @@
         "intake-form",
         "order-form",
         "claim-form",
-        "warranty-document",
-        "membership-document",
-        "subscription-confirmation",
-        "gift-certificate",
-        "sponsorship-agreement",
         "petition",
         "agenda",
-        "fact-sheet",
-        "faq-document",
         "glossary",
         "index",
-        "table-of-contents"
+        "table-of-contents",
+        "registration-form",
+        "application-form"
       ]
     }
   ]

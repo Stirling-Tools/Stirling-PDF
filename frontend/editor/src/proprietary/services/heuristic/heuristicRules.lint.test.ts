@@ -2,6 +2,7 @@
 // malformed rules, so authoring mistakes must fail here instead.
 
 import { describe, expect, it } from "vitest";
+import { DEFAULT_CLASSIFICATION_LABELS } from "@app/data/classificationLabels";
 import { compileRegex } from "@app/services/heuristic/heuristicEngine";
 import rules from "@app/services/heuristic/heuristicRules.json";
 
@@ -75,6 +76,19 @@ describe("heuristicRules.json pack lint", () => {
     const ids = new Set(labels.map((l) => l.id));
     const orphans = Object.keys(priors).filter((k) => !ids.has(k));
     expect(orphans, "priors keyed to no label never apply").toEqual([]);
+  });
+
+  it("emits only label ids the vocabulary can name", () => {
+    const vocabulary = new Set(DEFAULT_CLASSIFICATION_LABELS.map((l) => l.id));
+    // Suppressed rules (menu, recipe...) exist to win a document away from a
+    // wrong label and deliberately have no vocabulary entry.
+    const unnameable = labels
+      .filter((l) => l.emit !== false && !vocabulary.has(l.id))
+      .map((l) => l.id);
+    expect(
+      unnameable,
+      "an emitted id with no label renders as a raw slug in Other",
+    ).toEqual([]);
   });
 
   it("compiles every regex/filename/metadata/negative pattern", () => {
