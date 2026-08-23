@@ -154,7 +154,11 @@ export async function applyFieldEdits(
     new Blob([JSON.stringify(batch)], { type: "application/json" }),
   );
 
-  const includeFields = supportsFieldBundle();
+  // Off for now. Skipping the follow-up fetch changes when the viewer settles its page scale:
+  // the page renders at ~1.5x and then stops responding to zoom. The reader and the endpoint are
+  // both tested and ready; this flips back on once that interaction is understood.
+  const BUNDLE_ENABLED = false;
+  const includeFields = BUNDLE_ENABLED && supportsFieldBundle();
   const response = await apiClient.post("/api/v1/form/edit-fields", formData, {
     responseType: "blob",
     params: includeFields ? { includeFields: true } : undefined,

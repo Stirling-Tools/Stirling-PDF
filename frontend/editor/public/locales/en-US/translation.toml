@@ -4337,6 +4337,13 @@ tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
 type = "Type"
 typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
 
+[formFill.switch]
+apply = "Apply and switch"
+body = "This tab has changes you have not applied yet. Switching tabs discards them."
+discard = "Discard and switch"
+keep = "Keep editing"
+title = "Unapplied changes"
+
 [formFill.mode]
 create = "Create"
 fill = "Fill"

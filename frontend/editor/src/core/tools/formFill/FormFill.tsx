@@ -16,6 +16,9 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
+  Modal,
+  Group,
+  Stack,
 } from "@mantine/core";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { Button } from "@app/ui/Button";
@@ -78,7 +81,6 @@ const FormFill = (_props: BaseToolProps) => {
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
     setHasUnsavedChanges,
-    requestNavigation,
     registerNavigationWarningHandlers,
     unregisterNavigationWarningHandlers,
   } = useNavigation();
@@ -296,24 +298,42 @@ const FormFill = (_props: BaseToolProps) => {
     await handleSave();
   }, [mode, currentFile, commitNewFields, commitModifications, handleSave]);
 
-  // Switching tabs discards that tab's working state, so it gets the same
-  // Apply / Discard / Keep working choice the app already shows when navigating.
-  useEffect(() => {
-    registerNavigationWarningHandlers({
-      onApplyAndContinue: applyCurrentMode,
-      onDiscardAndContinue: async () => {
-        clearPendingFields();
-        clearModifications();
-      },
-    });
-    return () => unregisterNavigationWarningHandlers();
-  }, [
-    applyCurrentMode,
-    clearPendingFields,
-    clearModifications,
-    registerNavigationWarningHandlers,
-    unregisterNavigationWarningHandlers,
-  ]);
+  // Switching tabs throws away that tab's working state, so it asks first. Owned here rather
+  // than through the app-wide warning handlers, which hold a single registration app-wide.
+  const [pendingMode, setPendingMode] = useState<FormMode | null>(null);
+  const [switching, setSwitching] = useState(false);
+
+  const requestMode = useCallback(
+    (next: FormMode) => {
+      if (next === mode) return;
+      if (hasUncommittedChanges) {
+        setPendingMode(next);
+        return;
+      }
+      setMode(next);
+    },
+    [mode, hasUncommittedChanges, setMode],
+  );
+
+  const discardAndSwitch = useCallback(() => {
+    const next = pendingMode;
+    setPendingMode(null);
+    if (next) setMode(next);
+  }, [pendingMode, setMode]);
+
+  const applyAndSwitch = useCallback(async () => {
+    const next = pendingMode;
+    setSwitching(true);
+    try {
+      await applyCurrentMode();
+      setPendingMode(null);
+      if (next) setMode(next);
+    } catch (err) {
+      console.error("[FormFill] Could not apply before switching tabs:", err);
+    } finally {
+      setSwitching(false);
+    }
+  }, [pendingMode, applyCurrentMode, setMode]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
@@ -417,11 +437,48 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
+      <Modal
+        opened={pendingMode !== null}
+        onClose={() => setPendingMode(null)}
+        title={t("formFill.switch.title", "Unapplied changes")}
+        centered
+        withinPortal
+        zIndex={2000}
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {t(
+              "formFill.switch.body",
+              "This tab has changes you have not applied yet. Switching tabs discards them.",
+            )}
+          </Text>
+          <Group justify="flex-end" gap="xs">
+            <Button variant="quiet" onClick={() => setPendingMode(null)}>
+              {t("formFill.switch.keep", "Keep editing")}
+            </Button>
+            <Button
+              variant="secondary"
+              data-testid="form-switch-discard"
+              onClick={discardAndSwitch}
+            >
+              {t("formFill.switch.discard", "Discard and switch")}
+            </Button>
+            <Button
+              data-testid="form-switch-apply"
+              loading={switching}
+              onClick={applyAndSwitch}
+            >
+              {t("formFill.switch.apply", "Apply and switch")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
-          onChange={(val) => requestNavigation(() => setMode(val as FormMode))}
+          onChange={(val) => requestMode(val as FormMode)}
           options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
