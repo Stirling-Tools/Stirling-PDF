@@ -178,6 +178,43 @@ jobs:
           xcodebuild -version
           command -v actool
 
+      # TEMPORARY DIAGNOSTIC - remove once the Liquid Glass icon compiles.
+      # Tauri discards actool's output and only reports "did not generate
+      # Assets.car", so run actool ourselves with the same arguments and print
+      # everything. Horizon.icon is a known-good SVG-based bundle used as a
+      # control: if it compiles and ours does not, the fault is in our bundle.
+      - name: PROBE actool on the .icon bundle
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -x
+          probe() {
+            local src="$1" label="$2"
+            rm -rf "/tmp/$label" && mkdir -p "/tmp/$label/out"
+            cp -R "$src" "/tmp/$label/Icon.icon"
+            echo "===== $label: bundle contents ====="
+            find "/tmp/$label/Icon.icon" -type f -exec ls -l {} \;
+            echo "===== $label: actool ====="
+            actool "/tmp/$label/Icon.icon" --compile "/tmp/$label/out" \
+              --output-format human-readable-text --notices --warnings \
+              --output-partial-info-plist "/tmp/$label/out/partial.plist" \
+              --app-icon Icon --include-all-app-icons \
+              --accent-color AccentColor --enable-on-demand-resources NO \
+              --development-region en --target-device mac \
+              --minimum-deployment-target 26.0 --platform macosx
+            echo "actool exit=$?"
+            echo "===== $label: output dir ====="
+            ls -la "/tmp/$label/out" || true
+          }
+          probe "frontend/editor/src-tauri/icons/macos/app.icon" ours || true
+          BASE=https://raw.githubusercontent.com/dfabulich/unofficial-apple-icon-composer-json-schema/main/example-icon-composer-icons/Horizon.icon
+          mkdir -p /tmp/Horizon.icon/Assets
+          for f in icon.json Assets/green-circle-icon.svg Assets/path22-3.svg; do
+            curl -fsSL "$BASE/$f" -o "/tmp/Horizon.icon/$f"
+          done
+          probe /tmp/Horizon.icon control || true
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
