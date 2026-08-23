@@ -24,32 +24,19 @@ applyDevWorktreeLabel();
 startEagerWasmCompilation();
 if (typeof window !== "undefined") {
   try {
-    const descriptor = Object.getOwnPropertyDescriptor(
-      window,
-      "devicePixelRatio",
-    );
-    if (!descriptor || descriptor.configurable !== false) {
-      const current: PropertyDescriptor | undefined = descriptor;
-      const getOriginal = (): number => {
-        if (current && typeof current.get === "function") {
-          return current.get.call(window);
-        }
-        if (
-          current &&
-          "value" in current &&
-          typeof current.value === "number"
-        ) {
-          return current.value;
-        }
-        return window.devicePixelRatio;
-      };
-      Object.defineProperty(window, "devicePixelRatio", {
-        get() {
-          return Math.min(getOriginal() || 1, 1.5);
-        },
-        configurable: true,
-      });
-    }
+    const protoDescriptor =
+      Object.getOwnPropertyDescriptor(Window.prototype, "devicePixelRatio") ||
+      Object.getOwnPropertyDescriptor(window, "devicePixelRatio");
+    const fallbackDPR = window.devicePixelRatio;
+    Object.defineProperty(window, "devicePixelRatio", {
+      get() {
+        const currentDPR = protoDescriptor?.get
+          ? protoDescriptor.get.call(window)
+          : fallbackDPR;
+        return Math.min(currentDPR || 1, 1.5);
+      },
+      configurable: true,
+    });
   } catch (error) {
     console.warn("Failed to override window.devicePixelRatio:", error);
   }

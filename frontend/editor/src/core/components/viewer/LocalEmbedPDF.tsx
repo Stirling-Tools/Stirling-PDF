@@ -635,102 +635,97 @@ const PageContent = React.memo(function PageContent({
               pageIndex={pageIndex}
               pdfRenderMode={pdfRenderMode}
             />
+          </LazyPageContent>
 
-            <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
+          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
-            <div
-              className="pdf-selection-layer"
-              style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-            >
-              <SelectionLayer
-                documentId={documentId}
-                pageIndex={pageIndex}
-                background="var(--pdf-selection-bg)"
-                selectionMenu={(props) => <TextSelectionMenu {...props} />}
-              />
-            </div>
-            <TextSelectionHandler
+          <div
+            className="pdf-selection-layer"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          >
+            <SelectionLayer
               documentId={documentId}
               pageIndex={pageIndex}
+              background="var(--pdf-selection-bg)"
+              selectionMenu={(props) => <TextSelectionMenu {...props} />}
             />
+          </div>
+          <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
-            {/* ButtonAppearanceOverlay, renders PDF-native button visuals as bitmaps */}
-            {enableFormFill && file && (
-              <ButtonAppearanceOverlay
-                pageIndex={pageIndex}
-                pdfSource={file}
-                pageWidth={width}
-                pageHeight={height}
-              />
-            )}
+          {/* ButtonAppearanceOverlay, renders PDF-native button visuals as bitmaps */}
+          {enableFormFill && file && (
+            <ButtonAppearanceOverlay
+              pageIndex={pageIndex}
+              pdfSource={file}
+              pageWidth={width}
+              pageHeight={height}
+            />
+          )}
 
-            {/* FormFieldOverlay for interactive form filling */}
-            {enableFormFill && (
-              <FormFieldOverlay
-                documentId={documentId}
-                pageIndex={pageIndex}
-                pageWidth={width}
-                pageHeight={height}
-                fileId={fileId}
-              />
-            )}
+          {/* FormFieldOverlay for interactive form filling */}
+          {enableFormFill && (
+            <FormFieldOverlay
+              documentId={documentId}
+              pageIndex={pageIndex}
+              pageWidth={width}
+              pageHeight={height}
+              fileId={fileId}
+            />
+          )}
 
-            {/* SignatureFieldOverlay, bitmaps of digital-signature appearances */}
-            {file && (
-              <SignatureFieldOverlay
-                documentId={documentId}
-                pageIndex={pageIndex}
-                pdfSource={file}
-                pageWidth={width}
-                pageHeight={height}
-              />
-            )}
+          {/* SignatureFieldOverlay, bitmaps of digital-signature appearances */}
+          {file && (
+            <SignatureFieldOverlay
+              documentId={documentId}
+              pageIndex={pageIndex}
+              pdfSource={file}
+              pageWidth={width}
+              pageHeight={height}
+            />
+          )}
 
-            {/* AnnotationLayer, for annotation editing and annotation-based redactions */}
-            {(enableAnnotations || enableRedaction) && (
-              <AnnotationLayer
-                documentId={documentId}
-                pageIndex={pageIndex}
-                selectionOutline={{ color: "#007ACC" }}
-                selectionMenu={(props) => (
-                  <AnnotationSelectionMenu {...props} />
-                )}
-                style={
-                  !showBakedAnnotations
-                    ? { opacity: 0, pointerEvents: "none" }
-                    : undefined
-                }
-              />
-            )}
+          {/* AnnotationLayer, for annotation editing and annotation-based redactions */}
+          {(enableAnnotations || enableRedaction) && (
+            <AnnotationLayer
+              documentId={documentId}
+              pageIndex={pageIndex}
+              selectionOutline={{ color: "#007ACC" }}
+              selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
+              style={
+                !showBakedAnnotations
+                  ? { opacity: 0, pointerEvents: "none" }
+                  : undefined
+              }
+            />
+          )}
 
-            {enableRedaction && (
-              <RedactionLayer
-                documentId={documentId}
-                pageIndex={pageIndex}
-                selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
-              />
-            )}
+          {enableRedaction && (
+            <RedactionLayer
+              documentId={documentId}
+              pageIndex={pageIndex}
+              selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+            />
+          )}
 
-            {/* LinkLayer, uses EmbedPDF annotation state for link rendering */}
-            <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+          {/* LinkLayer, uses EmbedPDF annotation state for link rendering */}
+          <LinkLayer documentId={documentId} pageIndex={pageIndex} />
 
-            {/* Signature preview overlay (opt-in; off by default) */}
-            {signatureOverlayEnabled && (
-              <SignaturePreviewLayer
-                pageIndex={pageIndex}
-                pageWidth={width}
-                pageHeight={height}
-                previews={signaturePreviews}
-                readOnly={signaturePreviewsReadOnly}
-                placementMode={signaturePlacementMode}
-                placementData={signaturePlacementData}
-                placementType={signaturePlacementType}
-                onChange={onSignaturePreviewsChange}
-                selectedId={selectedSignatureId}
-                onSelect={onSelectSignature}
-              />
-            )}
-          </LazyPageContent>
+          {/* Signature preview overlay (opt-in; off by default) */}
+          {signatureOverlayEnabled && (
+            <SignaturePreviewLayer
+              pageIndex={pageIndex}
+              pageWidth={width}
+              pageHeight={height}
+              previews={signaturePreviews}
+              readOnly={signaturePreviewsReadOnly}
+              placementMode={signaturePlacementMode}
+              placementData={signaturePlacementData}
+              placementType={signaturePlacementType}
+              onChange={onSignaturePreviewsChange}
+              selectedId={selectedSignatureId}
+              onSelect={onSelectSignature}
+            />
+          )}
         </div>
       </PagePointerProvider>
     </Rotate>

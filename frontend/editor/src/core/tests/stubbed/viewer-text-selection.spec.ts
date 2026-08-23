@@ -281,14 +281,6 @@ test("Ctrl+A selects text on every page of a multi-page document", async ({
 
   await page.keyboard.press("Control+A");
 
-  // LazyPageContent only mounts children (including SelectionLayer) for
-  // pages within 300px of the viewport. After Ctrl+A creates a cross-page
-  // selection, scroll the last page into view so its SelectionLayer mounts
-  // and renders the selection rects from the existing selection state.
-  const lastPage = page.locator('[data-page-index="2"]');
-  await lastPage.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1_000);
-
   // After Ctrl+A, at least two pages should carry selection rects. That's
   // the multi-page invariant: single-page select-all would only ever paint
   // the page currently in view.

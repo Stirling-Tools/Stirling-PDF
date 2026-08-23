@@ -279,6 +279,11 @@ export async function mockAppApis(
   await page.route("**/api/v1/policies/runs", (route: Route) =>
     route.fulfill({ json: [] }),
   );
+
+  // Teams: stub team endpoints so app initialization does not hit proxy 500
+  await page.route("**/api/v1/team/**", (route: Route) =>
+    route.fulfill({ json: {} }),
+  );
 }
 
 /**

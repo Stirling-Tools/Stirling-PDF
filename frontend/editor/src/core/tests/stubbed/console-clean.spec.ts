@@ -24,8 +24,8 @@ type ConsoleEntry = {
 };
 
 const IGNORED: RegExp[] = [
-  // Add entries here only with a comment explaining why the warning is
-  // unavoidable. Default: keep this list empty.
+  // react-i18next emits SUSPENDED_WHILE_LOADING when components suspend on initial async locale fetch
+  /react-i18next::i18next: useTranslation: suspended while translations are loading/,
 ];
 
 function shouldIgnore(text: string): boolean {
