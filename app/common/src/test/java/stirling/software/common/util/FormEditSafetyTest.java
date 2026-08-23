@@ -147,4 +147,55 @@ class FormEditSafetyTest {
             assertNotNull(stray.getWidgets().getFirst(), "a null entry would crash the overlay");
         }
     }
+
+    private static FormUtils.ModifyFormFieldDefinition withValue(String target, String value) {
+        return new FormUtils.ModifyFormFieldDefinition(
+                target, null, null, null, null, null, null, null, null, null, null, null, value,
+                null, null, null, null, null, null);
+    }
+
+    private static FormUtils.ModifyFormFieldDefinition withOptions(
+            String target, List<String> options) {
+        return new FormUtils.ModifyFormFieldDefinition(
+                target, null, null, null, null, null, null, null, null, null, null, options, null,
+                null, null, null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("a value a radio group cannot hold does not destroy the group")
+    void badRadioValueLeavesTheGroupIntact() throws IOException {
+        try (PDDocument document = formWith("plan", "radio")) {
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+
+            FormUtils.modifyFormFields(
+                    document, List.of(withValue("plan", "not-an-option")), skipped);
+
+            PDField field = document.getDocumentCatalog().getAcroForm(null).getField("plan");
+            assertTrue(
+                    field instanceof PDRadioButton,
+                    "a rejected value must not turn the group into another kind of field");
+            assertEquals(
+                    2,
+                    field.getWidgets().size(),
+                    "the group's options must survive a rejected value");
+            assertFalse(skipped.isEmpty(), "the caller must be told the value was not applied");
+        }
+    }
+
+    @Test
+    @DisplayName("editing a radio group's options is either applied or reported, never ignored")
+    void radioOptionEditIsNotSilentlyDropped() throws IOException {
+        try (PDDocument document = formWith("plan", "radio")) {
+            List<FormUtils.SkippedFieldEdit> skipped = new ArrayList<>();
+
+            FormUtils.modifyFormFields(
+                    document, List.of(withOptions("plan", List.of("a", "b", "c"))), skipped);
+
+            PDField field = document.getDocumentCatalog().getAcroForm(null).getField("plan");
+            boolean applied = field.getWidgets().size() == 3;
+            assertTrue(
+                    applied || !skipped.isEmpty(),
+                    "a change the UI shows as saved must either happen or be reported as skipped");
+        }
+    }
 }

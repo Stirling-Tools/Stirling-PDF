@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Blob } from "node:buffer";
+import { Blob as NodeBlob } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -10,10 +10,12 @@ import { readFieldBundle } from "@app/tools/formFill/fieldBundle";
  * Java defers the deflated entry's sizes to a data descriptor, so the local header reports zero.
  */
 
+/** node:buffer's Blob satisfies the reader at runtime; TypeScript treats it as a separate type. */
 function fixture(name: string): Blob {
-  return new Blob([
+  const blob = new NodeBlob([
     readFileSync(join(import.meta.dirname, "__fixtures__", name)),
   ]);
+  return blob as unknown as Blob;
 }
 
 describe("readFieldBundle against real backend output", () => {

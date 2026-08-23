@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Blob } from "node:buffer";
+import { Blob as NodeBlob } from "node:buffer";
 import { deflateRawSync } from "node:zlib";
 
 import {
@@ -11,6 +11,11 @@ import {
  * Builds ZIPs the way the backend does, using node:buffer's Blob: jsdom's ignores slice() ranges
  * and has no stream(), so it silently cannot exercise an archive reader at all.
  */
+
+/** node:buffer's Blob satisfies the reader at runtime; TypeScript treats it as a separate type. */
+function asBlob(blob: NodeBlob): Blob {
+  return blob as unknown as Blob;
+}
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
@@ -94,7 +99,9 @@ function buildZip(entries: BuildEntry[]): Blob {
   eocd.setUint32(12, centralSize, true);
   eocd.setUint32(16, centralStart, true);
 
-  return new Blob([...chunks, ...central, new Uint8Array(eocd.buffer)]);
+  return asBlob(
+    new NodeBlob([...chunks, ...central, new Uint8Array(eocd.buffer)]),
+  );
 }
 
 const FIELDS = [
@@ -159,7 +166,9 @@ describe("readFieldBundle", () => {
 
   it("returns null for a bare pdf so the caller can fall back", async () => {
     expect(
-      await readFieldBundle(new Blob(["%PDF-1.7 not a zip at all"])),
+      await readFieldBundle(
+        asBlob(new NodeBlob(["%PDF-1.7 not a zip at all"])),
+      ),
     ).toBeNull();
   });
 

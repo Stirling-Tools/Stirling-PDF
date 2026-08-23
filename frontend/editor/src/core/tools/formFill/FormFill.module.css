@@ -30,7 +30,7 @@
   width: 100%;
 }
 
-/* Equal-width segments that can shrink, so a long translation ellipsises inside its
+/* Equal-width segments that can shrink, so a long translation truncates inside its
    own tab instead of pushing the others off the edge. */
 /* Mantine's size="xs" writes height:26px as an INLINE style, which would clip the
    taller stacked tabs; only !important can outrank it. */

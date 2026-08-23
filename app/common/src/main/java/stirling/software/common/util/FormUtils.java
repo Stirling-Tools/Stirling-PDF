@@ -1888,6 +1888,14 @@ public class FormUtils {
             if (modification.multiSelect() != null) {
                 choiceField.setMultiSelect(modification.multiSelect());
             }
+        } else if (modification.options() != null && !(field instanceof PDChoice)) {
+            // Only a choice field stores an option list, so say so rather than drop the edit and
+            // let the panel report it as saved.
+            recordSkip(
+                    skipped,
+                    "modify",
+                    field.getFullyQualifiedName(),
+                    "only dropdown and list fields have an editable option list");
         }
 
         // Update tooltip on widgets
