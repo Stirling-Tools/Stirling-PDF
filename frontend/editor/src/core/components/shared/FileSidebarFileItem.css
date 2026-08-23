@@ -373,6 +373,28 @@
   color: var(--c-text);
 }
 
+/* Menu header: the full file name the row had to truncate, plus its size. */
+.file-sidebar-kebab-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 6px;
+}
+
+.file-sidebar-kebab-header-name {
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.file-sidebar-kebab-header-meta {
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  text-transform: none;
+}
+
 /* ---- Date group headers ---- */
 .file-sidebar-date-group-header {
   font-size: 11px;

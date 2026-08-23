@@ -1,7 +1,6 @@
 alphabet = "Abjad"
 apply = "Terapkan"
 applyAndContinue = "Simpan & Keluar"
-areYouSure = "Apakah Anda yakin ingin keluar?"
 back = "Kembali"
 black = "Hitam"
 blue = "Biru"
@@ -106,6 +105,7 @@ undoSuccess = "Operasi berhasil dibatalkan"
 unknown = "Tidak diketahui"
 unpin = "Lepas Sematan File (ganti setelah alat dijalankan)"
 unsavedChanges = "Anda memiliki perubahan yang belum disimpan pada PDF Anda."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Perubahan Belum Disimpan"
 unsupported = "Tidak didukung"
 username = "Nama pengguna"
@@ -1879,6 +1879,9 @@ width = "Lebar"
 [app]
 description = "Alternatif Adobe Acrobat Gratis (10M+ Unduhan)"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "Konversi ke PDF/A-3b"
 convertToPdfA3bDescription = "Membuat PDF arsip dengan lampiran tersemat"
@@ -2933,12 +2936,16 @@ text = "Agar izin ini tidak dapat diubah, gunakan alat Tambah Kata Sandi untuk m
 [chat.actions]
 copy = "Salin pesan"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Opsi agen Stirling"
+assistant = "AI Assistant"
 clearChat = "Hapus obrolan"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "Operasi ini akan menggunakan kredit cloud Anda"
 tooltip = "Pilih warna dari layar"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Pilih warna"
 
 [common]
+actions = "Actions"
 back = "Kembali"
 cancel = "Batal"
 close = "Tutup"
+codeSample = "Code sample"
 collapse = "Ciutkan"
 confirm = "Konfirmasi"
 continue = "Lanjut"
 copied = "Disalin!"
 copy = "Salin"
 done = "Selesai"
+enterValue = "Enter value"
 error = "Error"
 expand = "Perluas"
 loading = "Memuat..."
 next = "Berikutnya"
+open = "Open"
 preview = "Pratinjau"
 previous = "Sebelumnya"
 refresh = "Muat Ulang"
 remaining = "Tersisa"
 retry = "Coba Lagi"
 save = "Simpan"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Bersihkan yang dipilih"
@@ -3185,6 +3199,7 @@ title = "Metode Kompresi"
 [compress.settings]
 desiredSize = "Ukuran file yang diinginkan"
 desiredSizePlaceholder = "Masukkan ukuran"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Kompresi adalah cara mudah untuk mengurangi ukuran file. Pilih Ukuran File untuk memasukkan ukuran target dan biarkan kami menyesuaikan kualitas untuk Anda. Pilih Kualitas untuk mengatur kekuatan kompresi secara manual."
@@ -3387,6 +3402,24 @@ pdfOptions = "Opsi PDF"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Pilih format sumber terlebih dahulu"
 settings = "Pengaturan"
 single = "Tunggal"
@@ -3565,7 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Cari..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edit"
@@ -3824,11 +3861,13 @@ shareSelected = "Bagikan yang Dipilih"
 sharing = "Berbagi"
 showAll = "Tampilkan Semua"
 showHistory = "Tampilkan Riwayat"
+sortBy = "Sort files"
 sortByDate = "Urutkan berdasarkan Tanggal"
 sortByName = "Urutkan berdasarkan Nama"
 sortBySize = "Urutkan berdasarkan Ukuran"
 storage = "Penyimpanan"
 storageState = "Penyimpanan"
+storageUsed = "Storage used"
 synced = "Tersinkron"
 title = "Unggah File PDF"
 toolChain = "Alat yang Diterapkan"
@@ -3874,8 +3913,12 @@ addFiles = "Tambahkan file"
 addingFiles = "Menambahkan file…"
 collapse = "Ciutkan bilah samping"
 customizeGroups = "Sesuaikan grup"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "Buka file untuk memulai"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "Perluas bilah samping"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive belum dikonfigurasi"
@@ -3888,15 +3931,17 @@ openFromComputer = "Buka dari komputer"
 openSettings = "Buka pengaturan"
 other = "Lainnya"
 recent = "Terbaru"
-search = "Cari"
-searchPlaceholder = "Cari file..."
 viewAll = "Lihat semua {{count}} file"
 
 [fileSidebar.fileItem]
 closeViewer = "Tutup penampil"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "Buka di penampil"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3908,6 +3953,14 @@ reset = "Reset ke default"
 subtitle = "Kelompokkan file Anda ke dalam kategori induk. Tambahkan label yang sudah ada atau label baru ke kategori, ganti namanya, atau buat sendiri. File yang tidak termasuk dalam kategori mana pun akan muncul di “Lainnya”."
 title = "Kategori sidebar"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "Tambahkan ke ruang kerja"
 addToWorkspaceCount = "Tambahkan {{count}} ke ruang kerja"
@@ -3918,7 +3971,6 @@ backToMyFiles = "Kembali ke File Saya"
 breadcrumbs = "Jalur folder"
 cancel = "Batal"
 classification = "Klasifikasi"
-clearSearch = "Hapus pencarian"
 clearSelection = "Hapus pilihan"
 closeDetails = "Tutup detail"
 create = "Buat"
@@ -3950,6 +4002,7 @@ downloadAll = "Unduh semua"
 downloadVersion = "Unduh versi ini"
 dropOverlay = "Lepaskan file untuk mengunggah"
 dropOverlaySub = "File dimulai di Lokal. Gunakan 'Pindahkan ke' atau 'Simpan ke cloud' untuk mengaturnya ke dalam folder."
+duplicate = "Duplicate"
 file = "File"
 fileInfo = "File info"
 fileMenu = "Tindakan file"
@@ -3983,8 +4036,6 @@ resizeFolderTree = "Ubah ukuran pohon folder (tombol panah, Shift untuk langkah 
 save = "Simpan"
 saveToServer = "Simpan ke server"
 saveToServerDisabledHint = "Menyimpan ke server tidak diaktifkan di server ini. Minta administrator Anda untuk mengaktifkannya."
-search = "Cari"
-searchPlaceholder = "Cari folder ini & subfoldernya"
 selectAll = "Pilih semua"
 selectAllHint = "Klik untuk memilih semua. Tip: tahan Ctrl (atau Cmd) untuk menambah file satu per satu, Shift untuk memilih rentang."
 selectedCount = "{{count}} dipilih"
@@ -4044,6 +4095,10 @@ title = "Belum ada file cloud"
 hint = "File yang disimpan tanpa mengunggah tetap di sini. Lepaskan file untuk menambahkannya."
 title = "Tidak ada file khusus lokal"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "File yang Anda buka atau edit akan muncul di sini."
 title = "Belum ada yang diubah"
@@ -4063,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Tidak dapat menghapus folder."
 deleteFolderFailedDetail = "Tidak dapat menghapus folder: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Tidak dapat memperbarui tampilan folder."
 folderAppearanceFailedDetail = "Tidak dapat memperbarui tampilan folder: {{message}}"
 moveFilesFailed = "Tidak dapat memindahkan file."
@@ -4112,6 +4169,11 @@ local = "Lokal"
 localHint = "Hanya disimpan di peramban ini"
 shared = "Dibagikan"
 sharedHint = "Dibagikan kepada Anda melalui tautan"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Terlama dulu"
@@ -4168,6 +4230,7 @@ noFilesInStorageOpen = "Tidak ada file di penyimpanan. Buka beberapa file terleb
 open = "Buka"
 openFile = "Buka File"
 openFiles = "Buka File"
+selectFile = "Select {{name}}"
 selectFromStorage = "Pilih dari Penyimpanan"
 upload = "Unggah"
 uploadFile = "Unggah File"
@@ -4241,9 +4304,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "Semua tersimpan"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Gagal mengekstrak CSV"
 extractXlsxError = "Gagal mengekstrak XLSX"
+filled = "filled"
 flattenAfterFilling = "Ratakan setelah mengisi"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "wajib"
 requiredFieldsError = "Harap isi semua bidang wajib"
 rescanFields = "Pindai ulang bidang"
@@ -4795,9 +4863,6 @@ title = "Gambar ke PDF"
 [imageToPdf]
 tags = "konversi,img,jpg,gambar,foto"
 
-[infoBanner]
-dismiss = "Tutup"
-
 [invite]
 acceptError = "Gagal membuat akun"
 accountFor = "Membuat akun untuk"
@@ -4979,6 +5044,34 @@ uploadSuccess = "Unggah Berhasil!"
 uploadSuccessMessage = "Gambar Anda telah ditransfer."
 validating = "Memvalidasi sesi..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "Pindai untuk mengunggah foto. Gambar otomatis dikonversi ke PDF."
 descriptionNoConvert = "Pindai untuk mengunggah foto dari perangkat seluler Anda."
@@ -4997,8 +5090,13 @@ title = "Unggah dari Ponsel"
 tags = "Alat multi,Operasi multi,UI,klik seret,front end,sisi klien,interaktif,sulit diatur,pindah"
 title = "Alat Multi PDF"
 
-[navbar]
-search = "Cari"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "Autentikasi tidak berhasil. Anda dapat menutup jendela ini dan mencoba lagi."
@@ -5127,6 +5225,7 @@ activeFiles = "Tampilan <strong>Active Files</strong> menampilkan semua PDF yang
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Tutup"
 cropSettings = "Sekarang setelah kita memilih file yang ingin dipotong, kita dapat mengonfigurasi alat Crop untuk memilih area yang ingin kita potong pada PDF."
+dialogLabel = "Onboarding"
 fileCheckbox = "Mengklik salah satu file akan memilihnya untuk diproses. Anda dapat memilih beberapa file untuk operasi batch."
 fileReplacement = "File yang telah diubah akan menggantikan file asli di Workbench secara otomatis, sehingga Anda dapat dengan mudah menjalankannya melalui lebih banyak alat."
 filesButton = "Tombol <strong>Files</strong> pada bilah Akses Cepat memungkinkan Anda mengunggah PDF untuk menggunakan alat."
@@ -5563,6 +5662,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5742,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5853,6 +5954,11 @@ header = "PDF ke PDF/A"
 tags = "arsip, jangka panjang, standar, konversi, penyimpanan, pelestarian"
 title = "PDF Ke PDF/A"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "cetak,standar,konversi,produksi,pracetak,arsip"
 title = "PDF ke PDF/X"
@@ -5928,6 +6034,7 @@ small = "500 Kredit"
 xsmall = "100 Kredit"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Pilih paket yang sesuai kebutuhan Anda"
 title = "Paket yang Tersedia"
 
@@ -6507,6 +6614,7 @@ reachedTitle = "Batas pengeluaran bulanan tercapai"
 title = "Tidak dapat membuka portal Stripe"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "dari {{allowance}} PDF gratis digunakan"
 capSuffix_other = "dari {{allowance}} PDF gratis digunakan"
 eyebrow = "Uji coba Processor"
@@ -6756,6 +6864,32 @@ label = "Jira"
 description = "Kirim email dokumen atau notifikasi saat kebijakan berjalan."
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "Simpan dokumen yang diproses ke Nextcloud."
@@ -6960,11 +7094,6 @@ title = "SDK resmi"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "Tidak ada dokumentasi yang cocok"
-placeholder = "Cari dokumentasi"
-results = "{{count}} hasil"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Kemampuan bernama yang dibundel dan dipanggil agen Anda sebagai satu alat. Setiap skill adalah rantai operasi deterministik dengan evaluasi terlampir."
@@ -7063,11 +7192,11 @@ editorAction = "Editor"
 empty = "Tidak ada dokumen yang cocok dengan filter ini."
 rowActions = "Tindakan baris"
 sensitiveLabel = "Sensitif"
-sensitiveTitle = "Sensitif — akses diperlukan"
 
 [portal.documents.table.columns]
 action = "Pipeline / Tindakan"
 document = "Dokumen"
+labels = "Labels"
 product = "Produk"
 status = "Status"
 time = "Waktu"
@@ -7083,6 +7212,7 @@ host = "Host"
 lastSeen = "Terakhir terlihat"
 region = "Region"
 status = "Status"
+target = "Target"
 version = "Versi"
 
 [portal.editorAdmin.health.empty]
@@ -7156,6 +7286,56 @@ running = "Berjalan"
 description = "Tampilan ini mengalami error tak terduga. Coba lagi, atau pilih bagian lain dari sidebar."
 retry = "Coba lagi"
 title = "Terjadi kesalahan pada halaman ini"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Kembali"
@@ -7263,11 +7443,6 @@ cancel = "Batal"
 confirm = "Cabut key"
 title = "Cabut API key"
 
-[portal.infrastructure.attestationLabel]
-attested = "Teratestasi"
-inScope = "Dalam cakupan"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter peristiwa audit berdasarkan kategori"
 heading = "Log audit"
@@ -7339,11 +7514,6 @@ info = "Info"
 success = "Berhasil"
 warning = "Peringatan"
 
-[portal.infrastructure.certLabel]
-certified = "Tersertifikasi"
-inProgress = "Sedang berlangsung"
-notStarted = "Belum dimulai"
-
 [portal.infrastructure.createKey]
 cancel = "Batal"
 createKey = "Buat kunci"
@@ -7357,237 +7527,9 @@ subtitleCreated = "Salin rahasia ini sekarang — tidak akan ditampilkan lagi."
 title = "Buat API key"
 titleCreated = "Kunci dibuat"
 
-[portal.infrastructure.deployLabel]
-live = "Live"
-queued = "Dalam antrean"
-rolledBack = "Di-rollback"
-rolling = "Sedang diluncurkan"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "Diterapkan oleh"
-environment = "Environment"
-product = "Produk"
-status = "Status"
-version = "Versi"
-when = "Kapan"
-
-[portal.infrastructure.deployments.recent]
-heading = "Penerapan terbaru"
-subheading = "Rollout terbaru di seluruh produk dan environment."
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "Instans"
-latency = "Latensi"
-load = "Beban"
-p99 = "P99"
-region = "Region"
-status = "Status"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "Versi"
-
-[portal.infrastructure.deployments.regions]
-heading = "Region"
-subheading = "Kesehatan langsung untuk setiap region Stirling yang diterapkan — latensi, beban, dan versi rollout."
-
-[portal.infrastructure.deployments.regions.empty]
-description = "Region yang diterapkan muncul di sini setelah workspace Anda disediakan."
-title = "Tidak ada region yang diterapkan"
-
 [portal.infrastructure.keyLabel]
 active = "Aktif"
 revoked = "Dicabut"
-
-[portal.infrastructure.modelLabel]
-active = "Aktif"
-degraded = "Menurun"
-disabled = "Dinonaktifkan"
-
-[portal.infrastructure.models]
-heading = "Model"
-msValue = "{{value}} ms"
-subheading = "Katalog model dan routing yang mendukung pemrosesan dokumen di seluruh workspace Anda."
-
-[portal.infrastructure.models.byom]
-description = "Daftarkan model on-prem atau yang dihosting sendiri dan pin ke region untuk pemrosesan terikat residensi data."
-title = "Bawa model Anda sendiri"
-
-[portal.infrastructure.models.catalogue]
-heading = "Katalog"
-sub = "Model terkelola yang tersedia untuk workspace Anda, dengan latensi dan biaya langsung."
-subEnterprise = "Model terkelola, bawa-sendiri, dan on-prem — dengan pinning per region tersedia."
-
-[portal.infrastructure.models.catalogue.empty]
-description = "Model dalam katalog workspace Anda muncul di sini."
-title = "Tidak ada model tersedia"
-
-[portal.infrastructure.models.columns]
-cost = "Biaya"
-latency = "Latensi"
-load = "Beban"
-model = "Model"
-status = "Status"
-type = "Jenis"
-version = "Versi"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/panggilan"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "Model aktif"
-avgLatency = "Latensi rata-rata"
-included = "Termasuk"
-monthlySpend = "Pengeluaran model bulanan"
-
-[portal.infrastructure.models.routing]
-empty = "Tidak ada aturan routing yang dikonfigurasi."
-heading = "Aturan routing"
-sub = "Model mana yang menangani setiap operasi. Default berlaku saat tidak ada aturan yang lebih spesifik yang cocok."
-subLocked = "Rutekan operasi ke model tertentu — tersedia pada paket berbayar."
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Tingkatkan ke Pro untuk mengontrol model mana yang menangani setiap operasi dan jenis dokumen."
-title = "Routing model adalah fitur berbayar"
-
-[portal.infrastructure.models.routingColumns]
-default = "Default"
-docType = "Jenis dokumen"
-modelForAria = "Model untuk {{operation}}"
-operation = "Operasi"
-routedTo = "Dirutekan ke"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Klasifikasi"
-extraction = "Ekstraksi"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Menurun"
-down = "Down"
-healthy = "Sehat"
-
-[portal.infrastructure.security.access.byok]
-description = "Sediakan kunci dari KMS Anda sendiri. Stirling mengenkripsi dengannya tetapi masih dapat membaca."
-label = "Bring your own key (BYOK)"
-
-[portal.infrastructure.security.access.hyok]
-description = "Kunci tidak pernah meninggalkan KMS Anda. Stirling hanya menyimpan ciphertext."
-label = "Hold your own key (HYOK)"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling mengelola kunci enkripsi. Paling sederhana — tanpa operasi kunci di sisi Anda."
-label = "Kunci yang dipegang Stirling"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "Kebijakan akses dokumen"
-subheading = "Mengontrol siapa yang dapat mendekripsi dokumen yang diproses saat disimpan."
-
-[portal.infrastructure.security.attestations]
-heading = "Atestasi kepatuhan"
-noReport = "Tidak ada laporan tersedia"
-subheading = "Postur audit per framework, dengan laporan tersedia pada kontrol yang diaudit."
-viewReport = "Lihat laporan →"
-
-[portal.infrastructure.security.compliance]
-heading = "Kepatuhan"
-subheading = "Atestasi dan sertifikasi yang mencakup platform Stirling."
-
-[portal.infrastructure.security.empty]
-description = "Konfigurasi keamanan workspace Anda akan muncul di sini."
-title = "Postur keamanan tidak tersedia"
-
-[portal.infrastructure.security.hyokBanner]
-description = "Dengan HYOK, kunci enkripsi tidak pernah meninggalkan KMS Anda. Stirling menyimpan dan memproses hanya ciphertext yang dapat Anda cabut kapan saja."
-title = "Stirling tidak dapat mendekripsi dokumen Anda"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "Tidak ada rentang IP yang dikonfigurasi — semua IP diizinkan."
-heading = "IP allowlist"
-sub = "Akses API dibatasi ke rentang CIDR ini."
-subLocked = "Batasi akses API ke rentang IP yang dikenal — tersedia pada paket berbayar."
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Tingkatkan ke Pro untuk membatasi akses API ke jaringan tertentu."
-title = "IP allowlisting adalah fitur berbayar"
-
-[portal.infrastructure.security.ipColumns]
-added = "Ditambahkan"
-addedBy = "Ditambahkan oleh"
-cidr = "CIDR"
-label = "Label"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "Manajemen kunci enkripsi"
-keyId = "Pengidentifikasi kunci"
-lastRotated = "Terakhir dirotasi"
-rotateKey = "Rotasi kunci"
-rotationPolicy = "Kebijakan rotasi"
-subheading = "Penitipan kunci yang mengenkripsi dokumen saat disimpan — siapa yang dapat mendekripsi, dan bagaimana kunci dirotasi."
-
-[portal.infrastructure.security.managedBanner]
-description = "Penitipan bring-your-own-key (BYOK) dan hold-your-own-key (HYOK) tersedia pada Enterprise. Tingkatkan untuk menyediakan kunci dari KMS Anda sendiri."
-title = "Kunci dikelola oleh Stirling pada paket Anda"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asia Pacific"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · batas data GDPR"
-label = "European Union"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "United States"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "Residensi data"
-subheading = "Tempat dokumen disimpan dan diproses."
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} digunakan"
-
-[portal.infrastructure.storage.empty]
-description = "Penyimpanan yang terhubung dan penggunaan muncul di sini."
-title = "Tidak ada penyimpanan yang dikonfigurasi"
-
-[portal.infrastructure.storage.lifecycle]
-active = "Aktif"
-activeRange = "0–{{value}}h"
-archived = "Diarsipkan"
-coldStorage = "cold storage"
-deleted = "Dihapus"
-never = "tidak pernah"
-purged = "dibersihkan"
-
-[portal.infrastructure.storage.providers]
-connect = "Hubungkan"
-connected = "Terhubung"
-heading = "Penyedia terhubung"
-subheading = "Tempat artefak yang diproses ditulis."
-
-[portal.infrastructure.storage.retention]
-heading = "Retensi"
-subheading = "Berapa lama artefak disimpan sebelum penghapusan siklus hidup."
-windowLabel = "Jendela retensi default"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} hari"
-days_other = "{{count}} hari"
-never = "Jangan pernah hapus"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "Total penggunaan"
-progressLabel = "Penyimpanan digunakan"
-subheading = "Penyimpanan yang digunakan di seluruh penyedia terhubung."
 
 [portal.infrastructure.tabs]
 apiKeys = "API Key"
@@ -7598,11 +7540,9 @@ security = "Keamanan"
 storage = "Penyimpanan"
 
 [portal.integrations]
-addAnother = "Tambah lagi"
 availableHeading = "Tersedia"
 comingSoonHeading = "Segera hadir"
 connect = "Hubungkan"
-connectedHeading = "Terhubung"
 connectionCount_one = "{{count}} koneksi"
 connectionCount_other = "{{count}} koneksi"
 customApi = "API kustom"
@@ -7619,6 +7559,10 @@ notify = "Notifikasi"
 security = "Keamanan"
 signing = "Penandatanganan"
 storage = "Penyimpanan"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Terhubung"
@@ -7650,7 +7594,6 @@ integrations = "Integrasi"
 pipelines = "Pipeline"
 policies = "Kebijakan"
 procurement = "Pengadaan"
-settings = "Pengaturan"
 sources = "Sumber"
 usage = "Penggunaan & Penagihan"
 users = "Pengguna"
@@ -7667,7 +7610,7 @@ title = "Pipeline"
 newPipeline = "Pipeline baru"
 
 [portal.pipelines.builder]
-addStep = "Tambah alat"
+activate = "Activate"
 back = "Kembali ke pipeline"
 cannotFollow = "Tidak dapat mengambil {{produced}}"
 chooseAccount = "Pilih akun"
@@ -7675,28 +7618,38 @@ chooseDestination = "Pilih tujuan"
 chooseOperation = "Pilih apa yang dilakukan langkah ini"
 chooseSource = "Pilih sumber"
 discard = "Buang perubahan"
-enabled = "Diaktifkan"
 inputs = "Input"
 inputSource = "Sumber input"
 inputTrigger = "Pemicu"
 keepEditing = "Lanjutkan mengedit"
+moreActions = "More actions"
 needsConfiguring = "Perlu disiapkan"
-needsUpload = "Memerlukan file yang di-upload"
-noSources = "Belum ada sumber yang terhubung. Buat satu untuk digunakan sebagai input."
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "Tidak ada alat yang cocok dengan pencarian Anda."
-pipelineSettings = "Pengaturan pipeline"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Cari alat"
-selectToolBody = "Tambahkan alat untuk membangun pipeline Anda."
-selectToolTitle = "Belum ada alat"
 sendToSystem = "Kirim ke sistem lain"
 stepsIncompatible = "Langkah-langkah ini tidak dapat berjalan pada hasil dari langkah sebelumnya: {{tools}}."
 stepsNeedSetup = "Langkah-langkah ini masih perlu disiapkan sebelum menyimpan: {{tools}}."
-toolSettings = "Pengaturan alat"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "Operasi tidak dikenali, dipertahankan apa adanya."
 unsavedBody = "Anda memiliki perubahan yang belum disimpan. Simpan sebelum keluar, atau buang?"
 unsavedTitle = "Perubahan belum disimpan"
-uploadUnsupported = "File yang di-upload belum didukung di pipeline, jadi langkah ini tidak dapat disimpan: {{tools}}."
 usesDefaults = "Berjalan dengan pengaturan default"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Menggabungkan setiap file dari langkah sebelumnya"
@@ -7708,30 +7661,35 @@ undeclared-operation = "Tidak dapat memeriksa apa yang diterima langkah ini"
 
 [portal.pipelines.composer]
 addTool = "Tambah alat"
-cancel = "Batal"
-chainEmpty = "Tambahkan alat untuk mulai membangun pipeline Anda."
 create = "Buat pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Menampilkan parameter alat ini untuk diedit belum didukung."
-moveDown = "Pindah ke bawah"
-moveUp = "Pindah ke atas"
+editSource = "Edit source"
 name = "Nama"
 namePlaceholder = "mis. Redaction sweep"
 noToolSettings = "Alat ini tidak memiliki pengaturan yang dapat dikonfigurasi."
-operations_one = "Operasi ({{count}})"
-operations_other = "Operasi ({{count}})"
 output = "Output"
-removeStep = "Hapus operasi"
 save = "Simpan perubahan"
 scheduleEvery = "Jalankan setiap"
-sources = "Sumber"
-sourcesLoading = "Memuat sumber..."
 trigger = "Trigger"
 triggerManual = "Hanya manual"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "hari"
 hours = "jam"
 minutes = "menit"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Hapus \"{{name}}\"? Ini tidak dapat dibatalkan."
@@ -7750,6 +7708,37 @@ connectSource = "Hubungkan sumber"
 description = "Buat pipeline pertama Anda: pilih sumber yang dijalankannya, rangkai operasi, dan pilih tempat output dituju."
 title = "Belum ada pipeline"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "Aktif"
 paused = "Dijeda"
@@ -7762,7 +7751,6 @@ completed_one = "Jalankan selesai."
 completed_other = "Semua {{count}} proses berjalan selesai."
 empty = "Tidak ada yang dijalankan: sumber tidak memiliki dokumen untuk diproses."
 failed = "Proses berjalan gagal: {{error}}"
-historyCleared = "Riwayat dihapus. Proses berikutnya memproses ulang semua yang saat ini ada di sumber."
 inFlight = "Tidak ada yang baru untuk dijalankan: dokumen masih diproses dari proses sebelumnya."
 parked_one = "Tidak ada yang dijalankan: {{count}} dokumen sebelumnya gagal dan diparkir. Perbaiki penyebabnya, lalu hapus riwayat untuk mencobanya lagi."
 parked_other = "Tidak ada yang dijalankan: {{count}} dokumen sebelumnya gagal dan diparkir. Perbaiki penyebabnya, lalu hapus riwayat untuk mencobanya lagi."
@@ -7778,6 +7766,7 @@ name = "Pipeline"
 sources = "Sumber"
 status = "Status"
 steps = "Langkah"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "Pemantauan folder"
@@ -8091,6 +8080,24 @@ label = "Lampirkan ke issue Jira"
 [portal.policies.operations.mailgunEmail]
 description = "Mengirim dokumen yang diproses sebagai lampiran."
 label = "Email dokumen (Mailgun)"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "Menulis dokumen yang diproses ke dalam folder."
@@ -8566,16 +8573,6 @@ maxed = "Maksimal"
 subtitle = "Uji coba gratis Anda berjalan hingga {{date}}. Tidak perlu kartu."
 title = "Uji coba Enterprise"
 
-[portal.search]
-ariaLabel = "Cari"
-placeholder = "Cari Stirling — endpoint, pipeline, dokumen…"
-
-[portal.search.empty]
-noActionsDescription = "Tindakan cepat akan muncul di sini setelah tersedia."
-noActionsTitle = "Tidak ada tindakan cepat"
-noMatches = "Tidak ada kecocokan untuk \"{{query}}\""
-noMatchesDescription = "Coba kata kunci lain atau jelajahi katalog."
-
 [portal.settings.groups]
 admin = "Admin"
 
@@ -8626,10 +8623,6 @@ cancel = "Batal"
 confirm = "Hapus"
 title = "Hapus sumber?"
 
-[portal.sources.empty]
-description = "Hubungkan folder (dan, segera, cloud storage) agar kebijakan Anda memiliki tempat untuk menarik dokumen."
-title = "Belum ada sumber yang terhubung"
-
 [portal.sources.kpi]
 inUse = "Digunakan"
 total = "Koneksi"
@@ -8668,6 +8661,7 @@ unused = "Tidak digunakan"
 documents = "Dokumen"
 source = "Sumber"
 status = "Status"
+type = "Type"
 usedBy = "Kebijakan"
 
 [portal.sources.types.box]
@@ -9863,9 +9857,6 @@ title = "Kebijakan & Privasi"
 [settings.preferences]
 title = "Preferensi"
 
-[settings.search]
-placeholder = "Cari halaman pengaturan..."
-
 [settings.security]
 description = "Perbarui kata sandi Anda untuk menjaga keamanan akun."
 title = "Keamanan"
@@ -10011,6 +10002,7 @@ last = "Halaman terakhir"
 maintainRatio = "Alihkan pertahankan rasio aspek"
 next = "Halaman berikutnya"
 noSavedSigs = "Tidak ditemukan tanda tangan yang disimpan"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Tanda Tangan Pribadi"
 previous = "Halaman sebelumnya"
 redo = "Ulangi"
@@ -10049,6 +10041,7 @@ backgroundRemovalFailedTitle = "Penghapusan latar belakang gagal"
 hint = "Unggah gambar PNG atau JPG dari tanda tangan Anda"
 label = "Unggah gambar tanda tangan"
 placeholder = "Pilih berkas gambar"
+previewAlt = "Current image signature"
 processing = "Memproses gambar..."
 removeBackground = "Hapus latar belakang putih (buat transparan)"
 
@@ -10061,6 +10054,17 @@ resumeHint = "Lanjutkan penempatan untuk mengklik dan menambahkan tanda tangan A
 saved = "Pilih tanda tangan tersimpan di atas, lalu klik di mana saja pada PDF untuk menempatkannya."
 text = "Setelah memasukkan nama Anda di atas, klik di mana saja pada PDF untuk menempatkan tanda tangan Anda."
 title = "Cara menambahkan tanda tangan"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Pindahkan Tanda Tangan"
@@ -10508,6 +10512,23 @@ title = "Unggah ke Server"
 updateButton = "Perbarui di Server"
 uploadButton = "Unggah ke Server"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10657,7 +10678,6 @@ goBack = "Kembali"
 pdfTools = "Alat PDF"
 placeholder = "Pilih alat untuk memulai"
 premiumFeature = "Fitur premium:"
-searchTools = "Cari alat"
 toolsHeader = "Alat"
 viewAllTools = "Lihat semua alat"
 
@@ -10704,6 +10724,9 @@ pageFormatting = "Pemformatan Halaman"
 removal = "Penghapusan"
 signing = "Penandatanganan"
 verification = "Verifikasi"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "Tidak ada alat ditemukan"
@@ -10862,6 +10885,13 @@ approver = "Menyetujui kebijakan"
 editor = "Editor"
 processor = "Processor"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "Batalkan undangan ke {{email}}? Mereka tidak akan dapat bergabung dengan tautan saat ini."
 cancelInviteTitle = "Batalkan undangan"
@@ -10881,10 +10911,8 @@ title = "Belum ada anggota"
 addToTeam = "Tambahkan ke tim"
 guestCount = "{{count}} tamu"
 guests = "Tamu"
-guestsDesc = "Kolaborator eksternal, dibatasi pada yang Anda bagikan. Hanya Editor."
 ledBy = "dipimpin oleh {{owner}}"
 org = "Organisasi"
-orgDesc = "Pemilik dengan otoritas seluruh org dan persetujuan kebijakan"
 owners = "{{count}} pemilik"
 team = "Tim {{name}}"
 teamMeta = "{{count}} orang"
@@ -10924,12 +10952,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Diundang oleh {{who}}"
 cancel = "Batal"
-count = "{{count}} tertunda"
-desc = "Orang yang diundang yang belum bergabung. Mereka menempati satu kursi hingga menerima."
 expiresInDays_one = "Kedaluwarsa dalam {{count}} hari"
 expiresInDays_other = "Kedaluwarsa dalam {{count}} hari"
 expiresToday = "Kedaluwarsa hari ini"
 title = "Undangan tertunda"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "Terjadi kesalahan saat menghubungi backend, atau Anda tidak memiliki akses. Coba lagi."
@@ -11120,12 +11150,15 @@ searchPlaceholder = "Cari lampiran"
 title = "Lampiran"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Judul bookmark"
 bookmarkTitleRequired = "Judul bookmark wajib diisi"
 closeSidebar = "Tutup bilah sisi bookmark"
 collapseAll = "Ciutkan semua bookmark"
+empty = "No bookmarks in this document"
 expandAll = "Luaskan semua bookmark"
 searchPlaceholder = "Cari bookmark"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Tambahkan komentar"
@@ -11147,10 +11180,12 @@ locateAnnotation = "Temukan di dokumen"
 moreActions = "Tindakan lainnya"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Halaman {{page}}"
 placingHint = "Klik sebuah halaman untuk menempatkan… (batalkan)"
 removeCommentOnly = "Hanya hapus komentar"
 saveReply = "Simpan balasan"
+searchPlaceholder = "Search comments"
 title = "Komentar"
 typeComment = "Komentar"
 typeInsertText = "Sisipkan Teks"
@@ -11173,6 +11208,7 @@ unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
 closeSidebar = "Tutup bilah sisi layer"
 hideAll = "Sembunyikan semua layer"
 showAll = "Tampilkan semua layer"
+title = "Layers"
 
 [viewer.link]
 delete = "Hapus tautan"
@@ -11529,6 +11565,7 @@ exitRedaction = "Keluar dari Mode Redaksi"
 exportAll = "Ekspor PDF"
 exportSelected = "Ekspor Halaman yang Dipilih"
 formFill = "Isi Formulir"
+hideToolbar = "Hide toolbar"
 multiTool = "Multi-Tool"
 panMode = "Mode Geser"
 print = "Cetak PDF"
@@ -11549,6 +11586,7 @@ selectAll = "Pilih Semua"
 selectByNumber = "Pilih berdasarkan Nomor Halaman"
 selectLanguage = "Pilih bahasa"
 share = "Bagikan"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Tampilkan/Sembunyikan Anotasi"
 toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
 toggleBookmarks = "Tampilkan/Sembunyikan Penanda Halaman"

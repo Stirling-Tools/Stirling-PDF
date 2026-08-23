@@ -3,6 +3,12 @@
 // (SwaggerDoc.json). Regenerate with: task frontend:tool-models
 // Tools that take only a file input have no parameters; their model is Record<string, never>.
 
+export interface AccessibilityReportRequest {
+  /**
+   * Profile to check against
+   */
+  profile?: "ua1" | "ua2";
+}
 export interface AddAttachmentRequest {
   /**
    * The image file to be overlaid onto the PDF.
@@ -894,11 +900,52 @@ export interface PdfToPdfARequest {
     | "pdfa-2b"
     | "pdfa-3"
     | "pdfa-3b"
+    | "pdfa-1a"
+    | "pdfa-2a"
+    | "pdfa-3a"
     | "pdfx";
+  /**
+   * Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.
+   */
+  pdfUa?: boolean;
   /**
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
+}
+export interface PdfToPdfUaRequest {
+  /**
+   * Alternative descriptions for figures, as key=text pairs separated by newlines. Keys come from the accessibility-report endpoint's figuresNeedingDescription list, for example "0:12=Bar chart of quarterly revenue". Descriptions are never invented, so without these an illustrated document cannot claim conformance.
+   */
+  altText?: string;
+  /**
+   * Embed fonts the document references but does not carry. Required for conformance and needs Ghostscript.
+   */
+  embedFonts?: boolean;
+  /**
+   * What to do with an existing structure tree: keep it, rebuild it, or decide automatically
+   */
+  existingTags?: "auto" | "keep" | "rebuild";
+  /**
+   * How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.
+   */
+  figurePolicy?: "require-alt" | "mark-decorative";
+  /**
+   * Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.
+   */
+  language?: string;
+  /**
+   * Replace the language the document already declares. Off by default, so a document is never relabelled into a language it is not written in.
+   */
+  overrideLanguage?: boolean;
+  /**
+   * PDF/UA conformance level to target
+   */
+  profile?: "ua1" | "ua2";
+  /**
+   * Document title, required by PDF/UA. Falls back to the first heading, then the filename.
+   */
+  title?: string;
 }
 export interface PdfToPresentationRequest {
   /**
@@ -1466,6 +1513,7 @@ export type ToolEndpoint =
   | "/api/v1/convert/pdf/text"
   | "/api/v1/convert/pdf/text-editor"
   | "/api/v1/convert/pdf/text-editor/metadata"
+  | "/api/v1/convert/pdf/ua"
   | "/api/v1/convert/pdf/vector"
   | "/api/v1/convert/pdf/word"
   | "/api/v1/convert/pdf/xlsx"
@@ -1528,6 +1576,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/show-javascript"
   | "/api/v1/misc/unlock-pdf-forms"
   | "/api/v1/misc/update-metadata"
+  | "/api/v1/security/accessibility-report"
   | "/api/v1/security/add-password"
   | "/api/v1/security/add-watermark"
   | "/api/v1/security/auto-redact"
@@ -1567,6 +1616,7 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
   "/api/v1/convert/pdf/text-editor": ConvertPdfTextEditorRequest;
   "/api/v1/convert/pdf/text-editor/metadata": ConvertPdfTextEditorMetadataRequest;
+  "/api/v1/convert/pdf/ua": PdfToPdfUaRequest;
   "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
@@ -1629,6 +1679,7 @@ export interface ToolApiParams {
   "/api/v1/misc/show-javascript": MiscShowJavascriptRequest;
   "/api/v1/misc/unlock-pdf-forms": MiscUnlockPdfFormsRequest;
   "/api/v1/misc/update-metadata": MetadataRequest;
+  "/api/v1/security/accessibility-report": AccessibilityReportRequest;
   "/api/v1/security/add-password": AddPasswordRequest;
   "/api/v1/security/add-watermark": AddWatermarkRequest;
   "/api/v1/security/auto-redact": RedactPdfRequest;
@@ -1669,6 +1720,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/pdf/text",
   "/api/v1/convert/pdf/text-editor",
   "/api/v1/convert/pdf/text-editor/metadata",
+  "/api/v1/convert/pdf/ua",
   "/api/v1/convert/pdf/vector",
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
@@ -1731,6 +1783,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/show-javascript",
   "/api/v1/misc/unlock-pdf-forms",
   "/api/v1/misc/update-metadata",
+  "/api/v1/security/accessibility-report",
   "/api/v1/security/add-password",
   "/api/v1/security/add-watermark",
   "/api/v1/security/auto-redact",

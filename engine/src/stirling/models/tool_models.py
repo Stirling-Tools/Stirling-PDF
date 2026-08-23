@@ -11,6 +11,19 @@ from pydantic import Field, RootModel, SecretStr
 from stirling.models.base import ApiModel
 
 
+class Profile(StrEnum):
+    """
+    Profile to check against
+    """
+
+    ua1 = "ua1"
+    ua2 = "ua2"
+
+
+class AccessibilityReportParams(ApiModel):
+    profile: Profile = Field(Profile.ua1, description="Profile to check against")
+
+
 class AddCommentsParams(ApiModel):
     comments: str = Field(
         ...,
@@ -852,11 +865,18 @@ class OutputFormat1(StrEnum):
     pdfa_2b = "pdfa-2b"
     pdfa_3 = "pdfa-3"
     pdfa_3b = "pdfa-3b"
+    pdfa_1a = "pdfa-1a"
+    pdfa_2a = "pdfa-2a"
+    pdfa_3a = "pdfa-3a"
     pdfx = "pdfx"
 
 
 class PdfToPdfaParams(ApiModel):
     output_format: OutputFormat1 = Field(..., description="The output format type (PDF/A or PDF/X)")
+    pdf_ua: bool = Field(
+        False,
+        description="Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.",
+    )
     strict: bool | None = Field(
         None, description="If true, the conversion will fail if the output is not perfectly compliant"
     )
@@ -893,6 +913,65 @@ class OutputFormat3(StrEnum):
 
 class PdfToTextParams(ApiModel):
     output_format: OutputFormat3 = Field(..., description="The output Text or RTF format")
+
+
+class ExistingTags(StrEnum):
+    """
+    What to do with an existing structure tree: keep it, rebuild it, or decide automatically
+    """
+
+    auto = "auto"
+    keep = "keep"
+    rebuild = "rebuild"
+
+
+class FigurePolicy(StrEnum):
+    """
+    How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.
+    """
+
+    require_alt = "require-alt"
+    mark_decorative = "mark-decorative"
+
+
+class Profile1(StrEnum):
+    """
+    PDF/UA conformance level to target
+    """
+
+    ua1 = "ua1"
+    ua2 = "ua2"
+
+
+class PdfToUaParams(ApiModel):
+    alt_text: str | None = Field(
+        None,
+        description='Alternative descriptions for figures, as key=text pairs separated by newlines. Keys come from the accessibility-report endpoint\'s figuresNeedingDescription list, for example "0:12=Bar chart of quarterly revenue". Descriptions are never invented, so without these an illustrated document cannot claim conformance.',
+    )
+    embed_fonts: bool = Field(
+        True,
+        description="Embed fonts the document references but does not carry. Required for conformance and needs Ghostscript.",
+    )
+    existing_tags: ExistingTags = Field(
+        ExistingTags.auto,
+        description="What to do with an existing structure tree: keep it, rebuild it, or decide automatically",
+    )
+    figure_policy: FigurePolicy = Field(
+        FigurePolicy.require_alt,
+        description="How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.",
+    )
+    language: str = Field(
+        "en-GB",
+        description="Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.",
+    )
+    override_language: bool = Field(
+        False,
+        description="Replace the language the document already declares. Off by default, so a document is never relabelled into a language it is not written in.",
+    )
+    profile: Profile1 = Field(Profile1.ua1, description="PDF/UA conformance level to target")
+    title: str | None = Field(
+        None, description="Document title, required by PDF/UA. Falls back to the first heading, then the filename."
+    )
 
 
 class OutputFormat4(StrEnum):
@@ -1460,6 +1539,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToUaParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1505,6 +1585,7 @@ class Model(
         | ScannerEffectParams
         | UnlockPdfFormsParams
         | UpdateMetadataParams
+        | AccessibilityReportParams
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
@@ -1535,6 +1616,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToUaParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1580,6 +1662,7 @@ class Model(
         | ScannerEffectParams
         | UnlockPdfFormsParams
         | UpdateMetadataParams
+        | AccessibilityReportParams
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
@@ -1611,6 +1694,7 @@ type ParamToolModel = (
     | PdfToPdfaParams
     | PdfToPresentationParams
     | PdfToTextParams
+    | PdfToUaParams
     | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
@@ -1656,6 +1740,7 @@ type ParamToolModel = (
     | ScannerEffectParams
     | UnlockPdfFormsParams
     | UpdateMetadataParams
+    | AccessibilityReportParams
     | AddPasswordParams
     | AddWatermarkParams
     | AutoRedactParams
@@ -1688,6 +1773,7 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
+    PDF_TO_UA = "/api/v1/convert/pdf/ua"
     PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
@@ -1733,6 +1819,7 @@ class ToolEndpoint(StrEnum):
     SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
     UNLOCK_PDF_FORMS = "/api/v1/misc/unlock-pdf-forms"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
+    ACCESSIBILITY_REPORT = "/api/v1/security/accessibility-report"
     ADD_PASSWORD = "/api/v1/security/add-password"
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
@@ -1763,6 +1850,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
+    ToolEndpoint.PDF_TO_UA: PdfToUaParams,
     ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
@@ -1808,6 +1896,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
     ToolEndpoint.UNLOCK_PDF_FORMS: UnlockPdfFormsParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
+    ToolEndpoint.ACCESSIBILITY_REPORT: AccessibilityReportParams,
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
