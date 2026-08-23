@@ -399,9 +399,7 @@ jobs:
             echo "Warning: COSIGN_PRIVATE_KEY not set, skipping unoserver image signing"
           fi
 
-      # Standalone AI engine image. Same shape as the unoserver image above:
-      # release publishes <version>+latest, main/testMain republishes :alpha only
-      # when the engine source hash differs from the published image's annotation.
+      # Standalone AI engine image, same shape as the unoserver image above.
       - name: Compute engine image source hash
         id: engineHash
         if: env.RUN_ENGINE == 'true'

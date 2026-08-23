@@ -67,9 +67,8 @@ COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
-# Stage 2b: AI engine runtime. Built at its final path so the venv's pyvenv.cfg and
-# interpreter symlink still resolve after the copy. uv's managed CPython is used rather
-# than a system one because the runtime base is Ubuntu noble, which ships Python 3.12.
+# Stage 2b: AI engine. Built at its final path so the venv resolves after the copy, on uv's
+# managed CPython because the runtime base ships Python 3.12.
 FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b8cacfb2d5f42555580b62415a98e0a3 AS engine-build
 ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
 WORKDIR /opt/stirling-engine
@@ -78,8 +77,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv python install 3.13 \
     && uv sync --frozen --no-dev --no-install-project --group engine --python-preference only-managed
 
-# Drop what a server runtime never loads (headers, docs, the GUI and packaging stdlib)
-# and strip debug symbols from compiled extensions. Saves ~20MB.
+# Drop what a server never loads and strip debug symbols. Saves ~20MB.
 RUN set -eux; \
     apt-get update && apt-get install -y --no-install-recommends binutils; \
     P="$(ls -d /opt/stirling-engine/python/cpython-*)"; \
@@ -110,9 +108,7 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
-# AI engine. init-without-ocr.sh starts it when this directory is present, so the
-# lite and full images stay unaffected. settings.py resolves ENGINE_ROOT from
-# src/stirling/config/, which puts it at /opt/stirling-engine.
+# init-without-ocr.sh starts the engine when this directory exists, so other images are unaffected.
 COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /opt/stirling-engine/python
 COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
 COPY --link --chown=1000:1000 engine/.env  /opt/stirling-engine/.env

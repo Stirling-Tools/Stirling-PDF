@@ -21,9 +21,7 @@ _READ_PERMISSION = "read"
 # write lock. With multiple worker processes opening the same file, they collide on
 # startup schema-init and get "database is locked". Wait for the lock instead.
 _BUSY_TIMEOUT_MS = 5000
-# A journal_mode change answers SQLITE_BUSY straight away instead of consulting the
-# busy handler, so busy_timeout does not cover it. Workers booting together therefore
-# still collide on the WAL switch and need their own retry.
+# journal_mode answers SQLITE_BUSY without consulting the busy handler, so it needs its own retry.
 _WAL_SWITCH_ATTEMPTS = 10
 _WAL_RETRY_DELAY_S = 0.1
 # sqlite stores TIMESTAMP as TEXT. We normalise to UTC ISO 8601 ``YYYY-MM-DD HH:MM:SS``
@@ -45,8 +43,6 @@ def _enable_wal(conn: sqlite3.Connection) -> None:
             if row is not None and str(row[0]).lower() == "wal":
                 return  # another worker won the race and already switched it
             time.sleep(_WAL_RETRY_DELAY_S)
-    # WAL only improves write concurrency, so boot on the default journal rather than
-    # taking the whole engine down over it.
     logger.warning("Could not switch the document store to WAL; continuing on the default journal mode.")
 
 

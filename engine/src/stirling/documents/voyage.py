@@ -1,15 +1,7 @@
-"""VoyageAI embeddings over its OpenAI-shaped REST API, without the `voyageai` SDK.
+"""VoyageAI embeddings over its OpenAI-shaped REST API.
 
-The SDK imports PIL, langchain-text-splitters, numpy and tokenizers at module scope
-to support multimodal embeddings, its own chunking helper and a local inference
-backend - none of which the engine uses, since it chunks via
-:mod:`stirling.documents.chunker`. That import chain costs ~207MB in the image.
-
-Voyage's `/v1/embeddings` endpoint takes `Authorization: Bearer <key>` and returns
-the same `{data: [{embedding, index}], model, usage}` body as OpenAI, so the openai
-client speaks it directly. The one field OpenAI has no equivalent for is
-`input_type`, which Voyage uses to optimise query embeddings differently from
-document embeddings; it is forwarded here.
+The `voyageai` SDK pulls PIL, numpy, tokenizers and langchain at import for multimodal,
+chunking and local-inference features the engine never uses (~207MB).
 """
 
 from __future__ import annotations
@@ -25,9 +17,7 @@ from pydantic_ai.providers.openai import OpenAIProvider
 VOYAGE_BASE_URL = "https://api.voyageai.com/v1"
 VOYAGE_API_KEY_ENV = "VOYAGE_API_KEY"
 
-# Stands in for an unset key so a keyless engine still boots, as it did when the SDK
-# resolved credentials lazily. Passing it explicitly also stops the OpenAI client
-# falling back to OPENAI_API_KEY and sending that key to Voyage.
+# Keeps a keyless engine bootable, and stops the client falling back to OPENAI_API_KEY.
 _MISSING_API_KEY = "stirling-voyage-api-key-not-configured"
 
 

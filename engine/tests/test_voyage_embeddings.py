@@ -15,8 +15,7 @@ from pydantic_ai.providers.openai import OpenAIProvider
 from stirling.documents.embedder import _build_embedder
 from stirling.documents.voyage import VOYAGE_BASE_URL, VoyageEmbeddingModel, build_voyage_model
 
-# Voyage's documented /v1/embeddings response body; identical in shape to OpenAI's,
-# except that `usage` carries only total_tokens.
+# Voyage's documented response body: OpenAI's shape, minus prompt_tokens.
 VOYAGE_RESPONSE = {
     "object": "list",
     "data": [
@@ -30,15 +29,12 @@ VOYAGE_RESPONSE = {
 
 @dataclass
 class SentRequest:
-    """One captured outbound embeddings call."""
-
     url: str
     auth: str | None
     body: dict[str, Any]
 
 
 def _recording_model(sent: list[SentRequest]) -> VoyageEmbeddingModel:
-    """A Voyage model whose HTTP calls are captured instead of sent."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         sent.append(
@@ -72,7 +68,7 @@ async def test_posts_to_voyage_embeddings_endpoint_with_bearer_auth() -> None:
     [("embed_query", "query"), ("embed_documents", "document")],
 )
 async def test_forwards_voyage_input_type(call: str, expected: str) -> None:
-    """Voyage embeds queries and documents differently; the stock OpenAI model drops this field."""
+    """The stock OpenAI model drops this field; Voyage needs it."""
     sent: list[SentRequest] = []
     embedder = Embedder(_recording_model(sent))
     await getattr(embedder, call)(["text"])
@@ -105,7 +101,6 @@ def test_build_voyage_model_reads_the_api_key_from_the_environment(monkeypatch: 
 
 
 def test_build_voyage_model_without_a_key_still_constructs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A keyless engine has to boot; the SDK resolved credentials lazily too."""
     monkeypatch.delenv("VOYAGE_API_KEY", raising=False)
 
     assert build_voyage_model("voyage-4").model_name == "voyage-4"
@@ -122,7 +117,6 @@ async def test_embedding_without_a_key_fails_with_a_clear_error(monkeypatch: pyt
 
 @pytest.mark.anyio
 async def test_an_openai_key_is_never_sent_to_voyage(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Without a Voyage key the OpenAI client would otherwise fall back to OPENAI_API_KEY."""
     monkeypatch.delenv("VOYAGE_API_KEY", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-secret")
     model = build_voyage_model("voyage-4")
@@ -132,7 +126,6 @@ async def test_an_openai_key_is_never_sent_to_voyage(monkeypatch: pytest.MonkeyP
 
 
 def test_env_form_routes_voyageai_through_the_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    """`STIRLING_RAG_EMBEDDING_MODEL=voyageai:voyage-4` must not need the voyageai SDK."""
     monkeypatch.setenv("VOYAGE_API_KEY", "pa-env-key")
 
     embedder = _build_embedder("voyageai:voyage-4")
@@ -148,13 +141,12 @@ def test_config_push_form_routes_voyageai_through_the_adapter() -> None:
 
 
 def test_the_voyageai_sdk_is_not_installed() -> None:
-    """Guards the ~207MB the SDK's PIL/numpy/tokenizers/langchain import chain would add back."""
+    """Guards the ~207MB the SDK would add back."""
     with pytest.raises(ImportError):
         __import__("voyageai")
 
 
-# Live API checks. Skipped unless VOYAGE_API_KEY is set, so CI stays offline; these
-# cover the one thing a mock cannot: that Voyage really accepts what we send.
+# Live checks, skipped unless VOYAGE_API_KEY is set so CI stays offline.
 live_only = pytest.mark.skipif(
     not os.environ.get("VOYAGE_API_KEY"),
     reason="set VOYAGE_API_KEY to run the live VoyageAI checks",
@@ -178,7 +170,7 @@ async def test_live_voyage_returns_usable_embeddings() -> None:
 @live_only
 @pytest.mark.anyio
 async def test_live_voyage_honours_input_type_server_side() -> None:
-    """The whole point of forwarding input_type: Voyage embeds the same text differently."""
+    """Voyage embeds the same text differently per input_type."""
     embedder = Embedder(build_voyage_model("voyage-4"))
     text = "How do I combine two PDFs?"
 
@@ -205,7 +197,7 @@ async def test_live_voyage_ranks_the_relevant_document_first() -> None:
 @live_only
 @pytest.mark.anyio
 async def test_live_voyage_accepts_voyage_only_parameters() -> None:
-    """extra_body reaches Voyage: output_dimension has no OpenAI equivalent."""
+    """output_dimension has no OpenAI equivalent, so this proves extra_body lands."""
     result = await Embedder(build_voyage_model("voyage-4")).embed_documents(
         ["dimension test"], settings={"extra_body": {"output_dimension": 256}}
     )

@@ -96,8 +96,7 @@ configs/
 __pycache__/
 **/__pycache__/
 
-# Python virtualenvs. Images build their own; a host venv is large and platform-specific,
-# and its interpreter symlinks make the build fail outright on some hosts.
+# Python virtualenvs. Large, platform-specific, and their symlinks break the build.
 .venv/
 **/.venv/
 venv/

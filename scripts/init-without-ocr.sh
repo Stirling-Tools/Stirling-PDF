@@ -890,7 +890,6 @@ log "Setting permissions..."
 mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
-# The fat image bundles the AI engine, whose sqlite store needs a writable data dir.
 # Chowned here rather than at build time so it follows PUID/PGID remapping.
 if [ -d "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}" ]; then
   mkdir -p "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}/data" || true
@@ -969,8 +968,7 @@ else
 fi
 
 # ---------- AI engine ----------
-# Only the fat image ships the engine; elsewhere this directory is absent and the
-# block is skipped. The backend defaults to http://localhost:5001, so no wiring needed.
+# Only the fat image ships it. The backend already defaults to http://localhost:5001.
 STIRLING_ENGINE_HOME="${STIRLING_ENGINE_HOME:-/opt/stirling-engine}"
 ENGINE_PID=""
 if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
@@ -983,9 +981,7 @@ if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
     --workers "${STIRLING_ENGINE_WORKERS:-2}"
     --app-dir "$STIRLING_ENGINE_HOME/src"
   )
-  # init.sh exports PYTHONPATH pointing at unoserver's Python 3.12 venv. Inheriting it
-  # makes the engine's 3.13 interpreter import 3.12 packages and fail on their C extensions,
-  # so it is dropped here; the engine resolves everything from its own venv.
+  # init.sh exports PYTHONPATH for unoserver's 3.12 venv; inheriting it breaks the 3.13 engine.
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     env -u PYTHONPATH "${ENGINE_CMD[@]}" &
   elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
@@ -1114,7 +1110,6 @@ fi
 wait "$JAVA_PID" || true
 exit_code=$?
 
-# Stop the bundled engine alongside the app so the container exits cleanly.
 if [ -n "$ENGINE_PID" ] && kill -0 "$ENGINE_PID" 2>/dev/null; then
   log "Stopping AI engine (PID $ENGINE_PID)..."
   kill "$ENGINE_PID" 2>/dev/null || true

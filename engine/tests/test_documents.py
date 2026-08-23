@@ -655,7 +655,7 @@ def _dummy_tool_def() -> object:
 
 
 def test_many_stores_open_the_same_file_without_locking_out(tmp_path: Path) -> None:
-    """Uvicorn workers all construct a store against one file on boot; the WAL switch races."""
+    """Workers all construct a store against one file on boot; the WAL switch races."""
     import concurrent.futures
 
     db_path = tmp_path / "rag.db"
