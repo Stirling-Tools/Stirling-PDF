@@ -102,9 +102,13 @@ export async function renderPdfiumPageDataUrl(
       const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
       let pixels: Uint8ClampedArray;
       if (stride === w * 4) {
-        // Zero-copy: Access WASM memory directly without a manual loop
-        const pixelData = heap.subarray(bufferPtr, bufferPtr + w * h * 4);
-        pixels = new Uint8ClampedArray(pixelData);
+        // Zero-copy: view the WASM memory buffer directly. `ImageData` copies
+        // the bytes on construction, so no extra allocation/copy is needed.
+        pixels = new Uint8ClampedArray(
+          (m.pdfium.wasmExports as any).memory.buffer,
+          bufferPtr,
+          w * h * 4,
+        );
       } else {
         // Fallback row-by-row copy if stride has padding
         pixels = new Uint8ClampedArray(w * h * 4);

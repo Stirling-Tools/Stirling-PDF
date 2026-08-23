@@ -29,10 +29,23 @@ if (typeof window !== "undefined") {
       "devicePixelRatio",
     );
     if (!descriptor || descriptor.configurable !== false) {
-      const originalDPR = window.devicePixelRatio;
+      const current: PropertyDescriptor | undefined = descriptor;
+      const getOriginal = (): number => {
+        if (current && typeof current.get === "function") {
+          return current.get.call(window);
+        }
+        if (
+          current &&
+          "value" in current &&
+          typeof current.value === "number"
+        ) {
+          return current.value;
+        }
+        return window.devicePixelRatio;
+      };
       Object.defineProperty(window, "devicePixelRatio", {
         get() {
-          return Math.min(originalDPR || 1, 1.5);
+          return Math.min(getOriginal() || 1, 1.5);
         },
         configurable: true,
       });

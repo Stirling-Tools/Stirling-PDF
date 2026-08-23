@@ -37,11 +37,15 @@ export function useFileWithUrl(
       try {
         url = URL.createObjectURL(file);
         if (globalUseFileWithUrlCache.size >= MAX_CACHE_SIZE) {
-          const [oldKey] = globalUseFileWithUrlCache.entries().next().value as [
-            string,
-            string,
-          ];
+          // Evict the oldest entry and free its object URL to avoid leaking
+          // the underlying Blob memory.
+          const oldKey = globalUseFileWithUrlCache.keys().next()
+            .value as string;
+          const oldUrl = globalUseFileWithUrlCache.get(oldKey);
           globalUseFileWithUrlCache.delete(oldKey);
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+          }
         }
         globalUseFileWithUrlCache.set(key, url);
       } catch (error) {
@@ -52,6 +56,11 @@ export function useFileWithUrl(
         );
         return null;
       }
+    } else {
+      // Refresh recency so the cache behaves as a true LRU and frequently
+      // reused URLs aren't evicted first.
+      globalUseFileWithUrlCache.delete(key);
+      globalUseFileWithUrlCache.set(key, url);
     }
 
     return { file, url };

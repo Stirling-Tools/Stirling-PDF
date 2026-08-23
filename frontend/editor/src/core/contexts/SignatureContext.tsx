@@ -150,6 +150,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const storeImageData = useCallback((id: string, data: string) => {
+    const existing = imageDataStore.current.get(id);
+    if (existing && existing !== data && existing.startsWith("blob:")) {
+      URL.revokeObjectURL(existing);
+    }
     imageDataStore.current.set(id, data);
   }, []);
 
