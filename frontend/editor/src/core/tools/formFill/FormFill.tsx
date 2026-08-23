@@ -27,6 +27,7 @@ import {
   useAllFormValues,
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
+import { useFieldShortcuts } from "@app/tools/formFill/useFieldShortcuts";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
@@ -147,6 +148,8 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
+  useFieldShortcuts();
+
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
 

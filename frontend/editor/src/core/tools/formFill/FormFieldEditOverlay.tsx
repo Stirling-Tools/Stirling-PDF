@@ -10,6 +10,10 @@ import React, {
   useEffect,
 } from "react";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import {
+  pendingIdFrom,
+  pendingSelectionName,
+} from "@app/tools/formFill/pendingSelection";
 import type { FormField } from "@app/tools/formFill/types";
 import {
   pixelsToBackendRect,
@@ -108,6 +112,8 @@ export function FormFieldEditOverlay({
     deletedFieldNames,
     forFileId,
     dragActiveRef,
+    pendingFields,
+    updatePendingField,
   } = useFormFill();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -148,12 +154,63 @@ export function FormFieldEditOverlay({
     [modifiedFields, pageIndex, scaleX, scaleY, pageHeightPts],
   );
 
-  const fieldsOnPage = useMemo(
+  // A drawn-but-unapplied field is shown as a one-widget field so selection, dragging and the
+  // resize handles all work on it before it has a PDF name.
+  const pendingOnPage = useMemo(
     () =>
-      state.fields.filter((f) =>
+      pendingFields
+        .filter((f) => f.pageIndex === pageIndex)
+        .map(
+          (f): FormField => ({
+            name: pendingSelectionName(f.id),
+            label: f.name,
+            type: f.type,
+            value: "",
+            options: f.options ?? null,
+            displayOptions: null,
+            required: f.required ?? false,
+            readOnly: f.readOnly ?? false,
+            multiSelect: f.multiSelect ?? false,
+            multiline: f.multiline ?? false,
+            tooltip: f.tooltip ?? null,
+            widgets: [
+              {
+                pageIndex: f.pageIndex,
+                x: f.x,
+                y: f.y,
+                width: f.width,
+                height: f.height,
+              },
+            ],
+          }),
+        ),
+    [pendingFields, pageIndex],
+  );
+
+  const fieldsOnPage = useMemo(
+    () => [
+      ...state.fields.filter((f) =>
         f.widgets?.some((w) => w.pageIndex === pageIndex),
       ),
-    [state.fields, pageIndex],
+      ...pendingOnPage,
+    ],
+    [state.fields, pageIndex, pendingOnPage],
+  );
+
+  /** Pending geometry lives in the queue; committed geometry is staged as a modification. */
+  const commitGeometry = useCallback(
+    (
+      fieldName: string,
+      pdf: { x: number; y: number; width: number; height: number },
+    ) => {
+      const pendingId = pendingIdFrom(fieldName);
+      if (pendingId) {
+        updatePendingField(pendingId, { pageIndex, ...pdf });
+        return;
+      }
+      stageModification(fieldName, { pageIndex, ...pdf });
+    },
+    [pageIndex, stageModification, updatePendingField],
   );
 
   const selectedField = useMemo(
@@ -317,8 +374,7 @@ export function FormFieldEditOverlay({
       const pdf = roundPdfRect(
         pixelsToBackendRect(clamped, scaleX, scaleY, pageHeightPts),
       );
-      stageModification(it.fieldName, {
-        pageIndex,
+      commitGeometry(it.fieldName, {
         x: pdf.x,
         y: pdf.y,
         width: pdf.width,
@@ -394,8 +450,7 @@ export function FormFieldEditOverlay({
       const pdf = roundPdfRect(
         pixelsToBackendRect(moved, scaleX, scaleY, pageHeightPts),
       );
-      stageModification(selectedField.name, {
-        pageIndex,
+      commitGeometry(selectedField.name, {
         x: pdf.x,
         y: pdf.y,
         width: pdf.width,
@@ -422,7 +477,10 @@ export function FormFieldEditOverlay({
 
   const fileMismatch =
     fileId != null && forFileId != null && fileId !== forFileId;
-  if (mode !== "modify" || fileMismatch || !pageWidthPts) return null;
+  const creating = mode === "create";
+  if ((mode !== "modify" && !creating) || fileMismatch || !pageWidthPts) {
+    return null;
+  }
 
   const selectedRect = selectedField
     ? (liveRect ?? fieldRect(selectedField))
@@ -444,12 +502,14 @@ export function FormFieldEditOverlay({
       style={{
         position: "absolute",
         inset: 0,
-        pointerEvents: "auto",
+        // In create mode the bare page belongs to the drawing layer underneath, so only the
+        // boxes below take pointer events; the root would otherwise swallow every new drag.
+        pointerEvents: creating ? "none" : "auto",
         // touch-action stays on the draggable boxes below, not here: claiming every
         // gesture over the page would stop touch users panning the document at all.
         userSelect: "none",
         WebkitUserSelect: "none",
-        zIndex: 5,
+        zIndex: creating ? 6 : 5,
       }}
     >
       {fieldsOnPage.map((field) => {
@@ -463,7 +523,7 @@ export function FormFieldEditOverlay({
         return (
           <div
             key={field.name}
-            data-testid={`form-edit-field-${field.name}`}
+            data-testid={`form-edit-field-${pendingIdFrom(field.name) ?? field.name}`}
             onPointerDown={(e) => {
               if (isDeleted) return;
               e.stopPropagation();
@@ -494,6 +554,7 @@ export function FormFieldEditOverlay({
               boxSizing: "border-box",
               // Claim the gesture only where a drag can actually start, so touch users can
               // still pan the page over boxes that are not draggable.
+              pointerEvents: "auto",
               touchAction:
                 !isDeleted && (field.widgets?.length ?? 0) === 1
                   ? "none"
@@ -557,6 +618,8 @@ export function FormFieldEditOverlay({
                 touchAction: "none",
                 cursor: h.cursor,
                 boxSizing: "border-box",
+                // The root is transparent while creating, so handles claim events themselves.
+                pointerEvents: "auto",
               }}
             />
           );

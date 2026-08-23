@@ -10,6 +10,7 @@ import React, {
   useEffect,
 } from "react";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { pendingSelectionName } from "@app/tools/formFill/pendingSelection";
 import type { CreatableFieldType } from "@app/tools/formFill/types";
 import {
   pixelsToBackendRect,
@@ -66,6 +67,7 @@ export function FormFieldCreationOverlay({
     setCreationType,
     pendingFields,
     addPendingField,
+    setSelectedField,
     state,
     forFileId,
   } = useFormFill();
@@ -199,7 +201,7 @@ export function FormFieldCreationOverlay({
         pixelsToBackendRect(pixelRect, scaleX, scaleY, pageHeightPts),
       );
 
-      addPendingField({
+      const id = addPendingField({
         type: creationType,
         pageIndex,
         x: pdf.x,
@@ -207,6 +209,8 @@ export function FormFieldCreationOverlay({
         width: pdf.width,
         height: pdf.height,
       });
+      // Selected the moment it lands, so it can be nudged or resized without another click.
+      setSelectedField(pendingSelectionName(id));
     },
     [
       active,
@@ -219,6 +223,7 @@ export function FormFieldCreationOverlay({
       pageHeight,
       pageIndex,
       addPendingField,
+      setSelectedField,
     ],
   );
 

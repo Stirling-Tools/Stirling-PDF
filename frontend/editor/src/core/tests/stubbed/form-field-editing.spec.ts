@@ -234,6 +234,61 @@ test.describe("Form field editor", () => {
     await expect(page.getByTestId("form-create-commit")).toBeDisabled();
   });
 
+  test("create mode: a drawn field is selected and can be resized straight away", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page);
+    await openFormTool(page);
+
+    await selectMode(page, "Create");
+    await page.getByTestId("form-create-type-text").click();
+    await drawField(page);
+
+    // Selected on placement, so the resize handles are live without another click.
+    const box = page.locator('[data-testid^="form-edit-field-pending-"]');
+    await expect(box).toHaveCount(1);
+    const before = await box.boundingBox();
+    expect(before).not.toBeNull();
+
+    const handle = page.getByTestId("form-edit-handle-se");
+    await expect(handle).toBeVisible();
+    const grip = await handle.boundingBox();
+    expect(grip).not.toBeNull();
+    await page.mouse.move(
+      grip!.x + grip!.width / 2,
+      grip!.y + grip!.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(grip!.x + 60, grip!.y + 40, { steps: 8 });
+    await page.mouse.up();
+
+    const after = await box.boundingBox();
+    expect(after!.width).toBeGreaterThan(before!.width + 20);
+  });
+
+  test("create mode: Delete removes the drawn field before it is applied", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page);
+    await openFormTool(page);
+
+    await selectMode(page, "Create");
+    await page.getByTestId("form-create-type-text").click();
+    await drawField(page);
+
+    await expect(
+      page.locator('[data-testid^="form-edit-field-pending-"]'),
+    ).toHaveCount(1);
+
+    await page.keyboard.press("Delete");
+
+    await expect(
+      page.locator('[data-testid^="form-edit-field-pending-"]'),
+    ).toHaveCount(0);
+    // Nothing queued means nothing to apply.
+    await expect(page.getByTestId("form-create-commit")).toBeDisabled();
+  });
+
   test("create mode: drawing a radio field commits a radio definition", async ({
     page,
   }) => {
