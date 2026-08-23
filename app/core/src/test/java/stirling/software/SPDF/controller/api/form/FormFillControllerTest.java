@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -644,6 +645,50 @@ class FormFillControllerTest {
             byte[] body = drainBody(controller.editFields(file, editsPayload(), false));
 
             assertThat(new String(body, 0, 5)).isEqualTo("%PDF-");
+        }
+    }
+
+    // -- skipped-edits header budget -----------------------------------
+
+    @Nested
+    @DisplayName("skipped-edits header")
+    class SkipHeaderBudget {
+
+        @Test
+        @DisplayName("stays within budget however long the reported names are")
+        void staysWithinBudget() throws Exception {
+            java.util.List<FormUtils.SkippedFieldEdit> skipped = new java.util.ArrayList<>();
+            String huge = "x".repeat(20000);
+            for (int i = 0; i < 40; i++) {
+                skipped.add(new FormUtils.SkippedFieldEdit("modify", huge, huge));
+            }
+
+            var method =
+                    FormFillController.class.getDeclaredMethod(
+                            "withSkippedEdits", ResponseEntity.class, java.util.List.class);
+            method.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Resource> response =
+                    (ResponseEntity<Resource>)
+                            method.invoke(controller, streamingOk(new byte[] {1}), skipped);
+
+            String header = response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER);
+            assertThat(header).isNotNull();
+            // Not merely short: an empty header would pass a length check while telling the
+            // user nothing, because the alert renders only when it has entries.
+            String decoded =
+                    new String(
+                            java.util.Base64.getDecoder().decode(header),
+                            java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(decoded).startsWith("[{");
+            assertThat(decoded).contains("...");
+            // Overflowing the container's header budget turns the reply into an error page,
+            // which loses the edited PDF the user just saved.
+            assertThat(header.length()).isLessThanOrEqualTo(4096);
+            assertThat(
+                            response.getHeaders()
+                                    .getFirst(FormFillController.SKIPPED_EDITS_TOTAL_HEADER))
+                    .isEqualTo("40");
         }
     }
 }

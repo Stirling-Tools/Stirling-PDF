@@ -426,6 +426,12 @@ export function FormFillProvider({
     null,
   );
 
+  // What the user typed, carried across the re-fetch that opening the form tool triggers.
+  const retainedValuesRef = useRef<{
+    fileId: string | null;
+    values: Record<string, string>;
+  } | null>(null);
+
   const clearEditingState = useCallback(() => {
     setCreationType(null);
     setPendingFields([]);
@@ -469,6 +475,17 @@ export function FormFillProvider({
         setSkippedEdits([]);
         setSkippedTotal(0);
       }
+
+      // Same document reloading means the typed values are still the user's; a different one
+      // means they belong to a document that is no longer open.
+      const sameDocument = (fileId ?? null) === lastKnownFileIdRef.current;
+      const carried =
+        retainedValuesRef.current?.fileId === (fileId ?? null)
+          ? retainedValuesRef.current.values
+          : sameDocument
+            ? { ...valuesStore.values }
+            : {};
+      retainedValuesRef.current = null;
 
       lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
@@ -519,13 +536,21 @@ export function FormFillProvider({
 
         // Initialise values in the external store
         const values: Record<string, string> = {};
+        let edited = false;
         for (const field of fields) {
-          values[field.name] = field.value ?? "";
+          const stored = field.value ?? "";
+          values[field.name] = carried[field.name] ?? stored;
+          edited = edited || values[field.name] !== stored;
         }
         valuesStore.reset(values);
         forFileIdRef.current = fileId ?? null;
         setForFileId(fileId ?? null);
         dispatch({ type: "FETCH_SUCCESS", fields });
+        // After FETCH_SUCCESS, which clears the flag; and only when a value genuinely differs,
+        // or the unsaved-changes prompt cries wolf on every navigation.
+        if (edited) {
+          dispatch({ type: "MARK_DIRTY" });
+        }
       } catch (err) {
         if (fetchVersionRef.current !== version) return; // stale
         const msg =
@@ -612,6 +637,11 @@ export function FormFillProvider({
       fetchVersionRef.current++;
       forFileIdRef.current = null;
       setForFileId(null);
+      // The viewer re-fetches straight after this, and that fetch is where they are restored.
+      retainedValuesRef.current = {
+        fileId: lastKnownFileIdRef.current,
+        values: { ...valuesStore.values },
+      };
       valuesStore.reset({});
       dispatch({ type: "RESET" });
 

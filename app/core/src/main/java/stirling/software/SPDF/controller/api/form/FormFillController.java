@@ -76,8 +76,13 @@ public class FormFillController {
     /** How many were skipped in total, which may exceed the number listed in the header above. */
     public static final String SKIPPED_EDITS_TOTAL_HEADER = "X-Stirling-Skipped-Field-Edits-Total";
 
-    /** Keeps the header well inside Jetty's 8KB response-header budget. */
+    /** Keeps the header well inside Jetty's response-header budget. */
     private static final int MAX_REPORTED_SKIPS = 20;
+
+    /** Bytes of encoded header value, well under the container's limit for the whole header set. */
+    private static final int MAX_SKIP_HEADER_BYTES = 4096;
+
+    private static final int MAX_SKIP_FIELD_CHARS = 120;
 
     /** Entry names inside the {@code ?includeFields=true} bundle. */
     private static final String FIELDS_ENTRY = "fields.json";
@@ -127,17 +132,31 @@ public class FormFillController {
         if (skipped.isEmpty()) {
             return response;
         }
-        // Jetty's response header limit is 8KB; truncate rather than lose the edited PDF.
-        List<FormUtils.SkippedFieldEdit> reported =
-                skipped.size() > MAX_REPORTED_SKIPS
-                        ? skipped.subList(0, MAX_REPORTED_SKIPS)
-                        : skipped;
-        String encoded =
-                Base64.getEncoder()
-                        .encodeToString(
-                                objectMapper
-                                        .writeValueAsString(reported)
-                                        .getBytes(StandardCharsets.UTF_8));
+        // A count cap alone is not enough: one very long field name can still overflow the
+        // header budget and turn the response into an error page, losing the edited PDF.
+        List<FormUtils.SkippedFieldEdit> reported = new ArrayList<>();
+        String encoded = "";
+        for (FormUtils.SkippedFieldEdit edit : skipped) {
+            if (reported.size() >= MAX_REPORTED_SKIPS) {
+                break;
+            }
+            reported.add(
+                    new FormUtils.SkippedFieldEdit(
+                            edit.operation(),
+                            FormUtils.abbreviate(edit.target(), MAX_SKIP_FIELD_CHARS),
+                            FormUtils.abbreviate(edit.reason(), MAX_SKIP_FIELD_CHARS)));
+            String candidate =
+                    Base64.getEncoder()
+                            .encodeToString(
+                                    objectMapper
+                                            .writeValueAsString(reported)
+                                            .getBytes(StandardCharsets.UTF_8));
+            if (candidate.length() > MAX_SKIP_HEADER_BYTES) {
+                reported.removeLast();
+                break;
+            }
+            encoded = candidate;
+        }
         return ResponseEntity.status(response.getStatusCode())
                 .headers(response.getHeaders())
                 .header(SKIPPED_EDITS_TOTAL_HEADER, String.valueOf(skipped.size()))

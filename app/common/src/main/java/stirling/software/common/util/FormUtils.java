@@ -1696,7 +1696,7 @@ public class FormUtils {
                         skipped,
                         "modify",
                         lookupName,
-                        "'" + resolvedType + "' is not a supported field type");
+                        "'" + abbreviate(resolvedType, 60) + "' is not a supported field type");
                 continue;
             }
 
@@ -3631,6 +3631,14 @@ public class FormUtils {
      * a bare success. {@code operation} is "add", "modify" or "delete".
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    /** Skip reasons travel in a response header, so an echoed value cannot be unbounded. */
+    public static String abbreviate(String value, int max) {
+        if (value == null || value.length() <= max) {
+            return value;
+        }
+        return value.substring(0, max) + "...";
+    }
+
     public record SkippedFieldEdit(String operation, String target, String reason) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

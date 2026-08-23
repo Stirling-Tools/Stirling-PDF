@@ -267,3 +267,74 @@ describe("FormFillContext bundled field list", () => {
     expect(fetchFields.mock.calls.length).toBe(afterFirst + 1);
   });
 });
+
+describe("FormFillContext value retention", () => {
+  beforeEach(() => {
+    applyFieldEdits.mockReset();
+    fetchFields.mockReset();
+    fetchFields.mockResolvedValue([
+      { name: "who", type: "text", value: "", widgets: [{ pageIndex: 0 }] },
+    ]);
+  });
+
+  it("keeps what the user typed when the same file is re-fetched", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.setValue("who", "Ada"));
+    expect(hook.current.getValue("who")).toBe("Ada");
+
+    // Opening the form tool switches provider, which re-fetches the very same document.
+    act(() => hook.current.setProviderMode("pdfbox"));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    expect(hook.current.getValue("who")).toBe("Ada");
+  });
+
+  it("drops retained values when a different document is opened", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.setValue("who", "Ada"));
+
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-B");
+    });
+
+    expect(hook.current.getValue("who")).toBe("");
+  });
+
+  it("does not report unsaved changes when nothing was typed", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    act(() => hook.current.setProviderMode("pdfbox"));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    // A sticky dirty flag makes the leave-page warning fire on every navigation.
+    expect(hook.current.state.isDirty).toBe(false);
+  });
+
+  it("still reports unsaved changes when something was typed", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+    act(() => hook.current.setValue("who", "Ada"));
+
+    act(() => hook.current.setProviderMode("pdfbox"));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    expect(hook.current.state.isDirty).toBe(true);
+  });
+});
