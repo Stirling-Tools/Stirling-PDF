@@ -471,7 +471,10 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "phone-a.pdf" })
         .click();
-      await page.getByRole("button", { name: /Show details/i }).click();
+      // On a phone a selection swaps the toolbar for a contextual bar, so the
+      // bulk actions - Show details among them - live behind one trigger.
+      await page.locator(".files-page-toolbar-bulk-trigger").click();
+      await page.getByRole("menuitem", { name: /Show details/i }).click();
       // Drawer opens, file name shown inside it.
       await expect(page.locator(".mantine-Drawer-content")).toBeVisible({
         timeout: 3_000,
