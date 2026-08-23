@@ -215,16 +215,24 @@ export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
 };
 
-export function TextSelectionMenu({
+export function TextSelectionMenu(props: TextSelectionMenuProps) {
+  const contextDocId = useActiveDocumentId();
+  const documentId = props.documentId ?? contextDocId;
+
+  if (!documentId) {
+    return null;
+  }
+
+  return <TextSelectionMenuInner {...props} documentId={documentId} />;
+}
+
+function TextSelectionMenuInner({
   selected,
   menuWrapperProps,
   placement,
-  documentId: propsDocumentId,
-}: TextSelectionMenuProps) {
+  documentId,
+}: TextSelectionMenuProps & { documentId: string }) {
   const { t } = useTranslation();
-  const contextDocId = useActiveDocumentId();
-  const documentId = propsDocumentId ?? contextDocId;
-
   const { provides: selection } = useSelectionCapability();
   const { provides: annotationProvides } = useAnnotation(documentId ?? "");
 
