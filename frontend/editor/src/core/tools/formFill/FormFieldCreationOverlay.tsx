@@ -9,7 +9,6 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import type { CreatableFieldType } from "@app/tools/formFill/types";
 import {
@@ -105,25 +104,6 @@ export function FormFieldCreationOverlay({
 
   const active = mode === "create" && creationType != null;
 
-  // Text selection is driven by the viewer's interaction manager, so preventDefault on this
-  // overlay cannot stop it; pausing is what SignaturePreviewLayer does while placing.
-  const { provides: interactionManager } = useInteractionManagerCapability();
-  const pausedRef = useRef(false);
-  const pauseViewer = useCallback(() => {
-    if (!pausedRef.current) {
-      pausedRef.current = true;
-      interactionManager?.pause();
-    }
-  }, [interactionManager]);
-  const resumeViewer = useCallback(() => {
-    if (pausedRef.current) {
-      pausedRef.current = false;
-      interactionManager?.resume();
-    }
-  }, [interactionManager]);
-  // A pointer lost outside the window would otherwise leave the viewer paused for good.
-  useEffect(() => resumeViewer, [resumeViewer]);
-
   // Stale-file guard: don't draw on a page whose fields belong to another file.
   const fileMismatch =
     fileId != null && forFileId != null && fileId !== forFileId;
@@ -138,7 +118,6 @@ export function FormFieldCreationOverlay({
       if (!active) return;
       // Before the bare-overlay check: a press on a pending outline must not select text either.
       e.preventDefault();
-      pauseViewer();
       // Only start a drag on the bare overlay, never on a pending outline.
       if (e.target !== rootRef.current) return;
       rootRef.current?.setPointerCapture(e.pointerId);
@@ -146,7 +125,7 @@ export function FormFieldCreationOverlay({
       dragStartRef.current = p;
       setDragRect({ left: p.x, top: p.y, width: 0, height: 0 });
     },
-    [active, localPoint, pauseViewer],
+    [active, localPoint],
   );
 
   const handlePointerMove = useCallback(
@@ -270,14 +249,8 @@ export function FormFieldCreationOverlay({
       data-testid={`form-create-overlay-${pageIndex}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={(e) => {
-        resumeViewer();
-        finishDrag(e);
-      }}
-      onPointerCancel={(e) => {
-        resumeViewer();
-        cancelDrag(e);
-      }}
+      onPointerUp={finishDrag}
+      onPointerCancel={cancelDrag}
       style={{
         position: "absolute",
         inset: 0,

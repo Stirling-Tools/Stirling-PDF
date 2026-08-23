@@ -101,6 +101,7 @@ import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrappe
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
+import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
 import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
@@ -1011,6 +1012,7 @@ export function LocalEmbedPDF({
             <ZoomAPIBridge />
             <ScrollAPIBridge />
             <SelectionAPIBridge />
+            <FormCreationInteractionLock />
             <PanAPIBridge />
             <SpreadAPIBridge />
             <SearchAPIBridge />
