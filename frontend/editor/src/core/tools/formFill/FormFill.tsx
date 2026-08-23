@@ -77,6 +77,10 @@ const FormFill = (_props: BaseToolProps) => {
     selectedTool,
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
+    setHasUnsavedChanges,
+    requestNavigation,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
   } = useNavigation();
   const { state: fileState } = useFileState();
 
@@ -90,6 +94,10 @@ const FormFill = (_props: BaseToolProps) => {
     mode,
     setMode,
     hasUncommittedChanges,
+    commitNewFields,
+    commitModifications,
+    clearPendingFields,
+    clearModifications,
   } = useFormFill();
 
   const MODE_TABS: ModeTabDef[] = useMemo(
@@ -163,6 +171,11 @@ const FormFill = (_props: BaseToolProps) => {
     );
     return () => unregisterUnsavedChangesChecker();
   }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+
+  // requestNavigation gates on this flag rather than on the checker above.
+  useEffect(() => {
+    setHasUnsavedChanges(hasUncommittedChanges || formState.isDirty);
+  }, [hasUncommittedChanges, formState.isDirty, setHasUnsavedChanges]);
 
   // Subscribing read: getFiles() during render doesn't re-run when the workbench
   // changes, so the panel kept showing the pre-hydration (or pre-version) file.
@@ -270,6 +283,38 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [currentFile, submitForm, flatten, validateForm]);
 
+  const applyCurrentMode = useCallback(async () => {
+    if (!currentFile) return;
+    if (mode === "create") {
+      dispatchFormApply(await commitNewFields(currentFile));
+      return;
+    }
+    if (mode === "modify") {
+      dispatchFormApply(await commitModifications(currentFile));
+      return;
+    }
+    await handleSave();
+  }, [mode, currentFile, commitNewFields, commitModifications, handleSave]);
+
+  // Switching tabs discards that tab's working state, so it gets the same
+  // Apply / Discard / Keep working choice the app already shows when navigating.
+  useEffect(() => {
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: applyCurrentMode,
+      onDiscardAndContinue: async () => {
+        clearPendingFields();
+        clearModifications();
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [
+    applyCurrentMode,
+    clearPendingFields,
+    clearModifications,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
+
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
   flattenChangedRef.current = flattenChanged;
@@ -376,7 +421,7 @@ const FormFill = (_props: BaseToolProps) => {
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
-          onChange={(val) => setMode(val as FormMode)}
+          onChange={(val) => requestNavigation(() => setMode(val as FormMode))}
           options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
