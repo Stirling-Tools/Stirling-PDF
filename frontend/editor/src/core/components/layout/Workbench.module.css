@@ -39,6 +39,13 @@
   background: var(--c-hover);
 }
 
+@media (max-width: 64rem) {
+  .workbenchBarReopenTab {
+    width: 3rem;
+    height: 1.375rem;
+  }
+}
+
 .workbenchBarWrapper {
   display: grid;
   grid-template-rows: 1fr;

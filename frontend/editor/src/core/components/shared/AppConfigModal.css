@@ -40,40 +40,76 @@
   flex-direction: column;
 }
 
-/* Mobile: compact icon-only navigation */
+/* Mobile: two-level settings navigation */
 @media (max-width: 1024px) {
   .modal-container {
-    height: 100vh !important;
+    flex-direction: column;
+    height: 100dvh !important;
     max-height: none !important;
   }
 
   .modal-nav {
-    width: 5rem; /* 80px - wider for larger icons */
-    height: 100vh !important;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    height: auto !important;
     max-height: none !important;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 0;
   }
 
   .modal-nav-scroll {
-    padding: 1rem 0.5rem;
+    padding: 0.75rem 0.75rem 2rem;
   }
 
   .modal-nav-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-nav-section > .mantine-Text-root {
+    padding: 0 0.5rem;
   }
 
   .modal-nav-item.mobile {
-    padding: 1rem;
-    justify-content: center;
-    border-radius: 0.75rem;
-    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.625rem;
+    min-height: 3rem;
+    border-radius: 0.625rem;
+    margin-bottom: 0.125rem;
+    gap: 0.75rem;
+  }
+
+  .modal-nav-item .modal-nav-item-badge {
+    display: inline-flex;
+  }
+
+  .modal-nav-chevron {
+    flex-shrink: 0;
+    color: var(--c-text-subtle);
   }
 
   .modal-content {
-    height: 100vh !important;
+    height: auto !important;
+    flex: 1;
+    min-height: 0;
     max-height: none !important;
     border-radius: 0;
+  }
+
+  .modal-body {
+    padding: 1rem;
+    padding-top: 0.75rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .modal-body [id^="setting-"] {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.625rem;
+  }
+
+  .modal-body [id^="setting-"]:has(.mantine-Switch-root) {
+    flex-direction: row;
+    align-items: center !important;
   }
 }
 
@@ -243,6 +279,7 @@
 @media (max-width: 1024px) {
   .settings-sticky-footer {
     padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
     margin: 0 -1rem;
     margin-bottom: -1rem;
   }
