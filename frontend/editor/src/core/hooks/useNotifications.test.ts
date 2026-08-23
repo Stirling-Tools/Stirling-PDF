@@ -25,7 +25,8 @@ vi.mock("@app/services/notificationRetry", () => ({
   loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
-const { useNotifications } = await import("@app/hooks/useNotifications");
+const { useNotifications, refreshNotificationsNow } =
+  await import("@app/hooks/useNotifications");
 
 /** A fetch result. Reviewer by default, so a test says nothing about filtering unless it means to. */
 function feed(
@@ -243,9 +244,12 @@ describe("useNotifications", () => {
     expect(result.current.unreadCount).toBe(0);
   });
 
-  it("joins the read in flight rather than starting a second one", async () => {
+  it("chains one fresh read behind the read in flight rather than joining it", async () => {
+    // A refresh exists to observe a write the caller just made. The read in flight may have
+    // started before that write, so joining it would report the world without it - and the
+    // caller would wait a whole poll interval for news of their own action.
     let release: (fetched: FetchedNotifications) => void = () => {};
-    fetchNotifications.mockImplementation(
+    fetchNotifications.mockImplementationOnce(
       () =>
         new Promise<FetchedNotifications>((resolve) => {
           release = resolve;
@@ -255,7 +259,9 @@ describe("useNotifications", () => {
     const first = renderHook(() => useNotifications());
     expect(fetchNotifications).toHaveBeenCalledTimes(1);
 
-    // A refresh from a row, twice over, and a second bell mounting - all mid-read.
+    // A refresh from a row, twice over, and a second bell mounting - all mid-read. The
+    // refreshes share ONE chained read; the mount joins what is already there.
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
     act(() => {
       first.result.current.refresh();
       first.result.current.refresh();
@@ -263,14 +269,46 @@ describe("useNotifications", () => {
     const second = renderHook(() => useNotifications());
     expect(fetchNotifications).toHaveBeenCalledTimes(1);
 
-    await act(async () => release(feed([notification("a")])));
-    expect(first.result.current.notifications).toHaveLength(1);
+    // The stale read lands empty; the chained fresh read is what delivers the row.
+    await act(async () => release(feed([])));
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(first.result.current.notifications).toHaveLength(1),
+    );
     expect(second.result.current.notifications).toHaveLength(1);
+  });
 
-    // Once it has landed, the next refresh does go and read again.
-    fetchNotifications.mockResolvedValue(feed([]));
-    await act(async () => second.result.current.refresh());
-    expect(fetchNotifications).toHaveBeenCalledTimes(2);
+  it("shows a just-reported failure without waiting for the poll", async () => {
+    const hook = renderHook(() => useNotifications());
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(1));
+    expect(hook.result.current.unreadCount).toBe(0);
+
+    // The failure report chain: row recorded server-side, then the re-read.
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
+    act(() => refreshNotificationsNow());
+
+    await waitFor(() => expect(hook.result.current.unreadCount).toBe(1));
+  });
+
+  it("still lands the row when the refresh races a poll read already in flight", async () => {
+    let releaseStale: (fetched: FetchedNotifications) => void = () => {};
+    fetchNotifications.mockImplementationOnce(
+      () =>
+        new Promise<FetchedNotifications>((resolve) => {
+          releaseStale = resolve;
+        }),
+    );
+
+    const hook = renderHook(() => useNotifications());
+    expect(fetchNotifications).toHaveBeenCalledTimes(1);
+
+    // The failure is recorded while a poll's read is still in flight, then its refresh fires.
+    // Joining that stale read would miss the row until the next poll interval.
+    fetchNotifications.mockResolvedValue(feed([notification("a")]));
+    act(() => refreshNotificationsNow());
+    await act(async () => releaseStale(feed([])));
+
+    await waitFor(() => expect(hook.result.current.unreadCount).toBe(1));
   });
 
   it("keeps its own list rather than one left by a bell that has gone", async () => {

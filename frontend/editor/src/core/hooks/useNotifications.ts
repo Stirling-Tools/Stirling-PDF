@@ -152,6 +152,31 @@ function load(): Promise<void> {
   return pending;
 }
 
+/** Set while a fresh read is chained behind the one in flight, so callers share it. */
+let freshReadQueued = false;
+
+/**
+ * A read that must observe a write the caller just made. It never joins a read already in
+ * flight, because that read may have started before the write and would report the world
+ * without it; a fresh read is chained behind it instead. Callers arriving in the same
+ * window share the one chained read.
+ */
+function loadFresh(): void {
+  const inFlightRead = inFlight;
+  if (!inFlightRead) {
+    void load();
+    return;
+  }
+  if (freshReadQueued) return;
+  freshReadQueued = true;
+  void inFlightRead.finally(() => {
+    freshReadQueued = false;
+    // The last bell may have unmounted while the stale read was landing.
+    if (subscribers.size === 0) return;
+    void load();
+  });
+}
+
 function startPolling(): void {
   cycle += 1;
   // From disk, not memory: another tab may have moved the marker on.
@@ -194,7 +219,8 @@ function markAllSeen(): void {
 }
 
 function refresh(): void {
-  void load();
+  // A row calls this after changing something server-side, so the read must be fresh.
+  loadFresh();
 }
 
 /**
@@ -203,7 +229,7 @@ function refresh(): void {
  */
 export function refreshNotificationsNow(): void {
   if (subscribers.size === 0) return;
-  void load();
+  loadFresh();
 }
 
 export interface NotificationsState {
