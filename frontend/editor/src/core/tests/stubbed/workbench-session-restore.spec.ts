@@ -54,25 +54,28 @@ test.describe("Workbench survives the editor/processor switch", () => {
       page.getByRole("radio", { name: /Active Files/i }),
     ).toBeChecked();
 
-    // Out through the sidebar footer switch - the real user path. The editor
-    // tree (and every provider) unmounts here, which is the loss being tested.
+    // Out through the sidebar footer switch - the real user path.
     await page.getByRole("button", { name: "Open PDF Processor" }).click();
-    await expect(page.locator(".file-sidebar-file-item")).toHaveCount(0, {
-      timeout: 15000,
-    });
+    await expect(page).toHaveURL(/\/processor/, { timeout: 15000 });
 
     // Split the two halves of the feature: if this fails the writer is at fault,
     // if it passes but the view below is wrong the seeding is.
     expect(
-      await page.evaluate(() =>
-        JSON.parse(
+      await page.evaluate(() => ({
+        session: JSON.parse(
           sessionStorage.getItem("stirling.workbench.session") ?? "{}",
         ),
-      ),
-    ).toMatchObject({ workbench: "fileEditor" });
+        returnPath: sessionStorage.getItem(
+          "stirling.workbench.editorReturnPath",
+        ),
+      })),
+    ).toMatchObject({
+      session: { workbench: "fileEditor" },
+      returnPath: "/editor",
+    });
 
-    // Return to the editor. The stub portal can't hold a session, so this is a
-    // fresh load; the restore path is the same one a client-side return runs.
+    // Load the editor cold. Every provider mounts from nothing here, which is
+    // the loss the restore has to cover on the way back.
     await page.goto("/editor", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".file-sidebar-file-item")).toHaveCount(

@@ -44,14 +44,18 @@ function leafByOriginalId(
   return map;
 }
 
-/** How long to keep re-asserting the view before accepting whatever the workbench settled on. */
-const REOPEN_SETTLE_MS = 5000;
+/** How long to hold the guard before accepting whatever the workbench settled on. */
+const SETTLE_TIMEOUT_MS = 5000;
 
 /** Released a beat late, so effects reacting to the same commit still see the restore in progress. */
 const RELEASE_GRACE_MS = 250;
 
-/** Reopens the recorded view and reasserts it once the restored files finish hydrating, because
- *  HomePage recomputes a default view from hydrated files and would otherwise win that race. */
+/**
+ * Reopen the recorded view, then hold the restore guard until the files have hydrated.
+ *
+ * The view is written ONCE. Re-asserting it after hydration would also overwrite a view the user
+ * picked in the meantime; holding the guard is what keeps HomePage's defaults off it instead.
+ */
 function reopenView(
   store: FileStateStore,
   reopen: (view: WorkbenchType) => void,
@@ -77,11 +81,9 @@ function reopenView(
     return;
   }
   const unsubscribe = store.subscribe(() => {
-    if (!hydrated()) return;
-    reopen(view);
-    stop();
+    if (hydrated()) stop();
   });
-  const timer = setTimeout(stop, REOPEN_SETTLE_MS);
+  const timer = setTimeout(stop, SETTLE_TIMEOUT_MS);
 }
 
 export function WorkbenchSessionPersistence() {

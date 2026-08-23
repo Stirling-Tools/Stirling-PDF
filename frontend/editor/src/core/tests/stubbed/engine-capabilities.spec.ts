@@ -115,10 +115,8 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
 
     // Rendering it is the assertion that matters: the metadata record survives
     // even when the bytes were never stored, so a filename proves nothing.
-    await restored.hover();
-    await restored
-      .locator(".file-sidebar-eye-btn")
-      .click({ timeout: 15_000, force: true });
+    // The session restore reopens it in the viewer, so nothing needs clicking -
+    // a rendered tile here still means the bytes were read back from storage.
 
     const firstPage = page.locator('[data-page-index="0"]').first();
     await expect(firstPage).toBeVisible({ timeout: 60_000 });
