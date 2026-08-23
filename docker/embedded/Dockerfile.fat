@@ -73,13 +73,13 @@ FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b
 ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
 WORKDIR /opt/stirling-engine
 COPY engine/pyproject.toml engine/uv.lock ./
+# One layer: trimming in a second RUN would cache the untrimmed copy too, and this build
+# exports every layer to a GHA cache that is capped repo-wide. Trimming saves ~20MB.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv python install 3.13 \
-    && uv sync --frozen --no-dev --no-install-project --group engine --python-preference only-managed
-
-# Drop what a server never loads and strip debug symbols. Saves ~20MB.
-RUN set -eux; \
+    set -eux; \
     apt-get update && apt-get install -y --no-install-recommends binutils; \
+    uv python install 3.13; \
+    uv sync --frozen --no-dev --no-install-project --group engine --python-preference only-managed; \
     P="$(ls -d /opt/stirling-engine/python/cpython-*)"; \
     rm -rf "$P/share" "$P/include" \
            "$P/lib/python3.13/idlelib" "$P/lib/python3.13/tkinter" \
@@ -88,7 +88,7 @@ RUN set -eux; \
     find /opt/stirling-engine -name '__pycache__' -type d -prune -exec rm -rf {} + ; \
     find /opt/stirling-engine \( -name '*.so' -o -name '*.so.*' \) -print0 \
       | xargs -0 -r strip --strip-unneeded 2>/dev/null || true; \
-    rm -rf /var/lib/apt/lists/*
+    apt-get purge -y binutils; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*
 
 
 # Stage 3: Final runtime image on top of pre-built base
