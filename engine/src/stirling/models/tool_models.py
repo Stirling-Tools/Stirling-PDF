@@ -1023,6 +1023,7 @@ class CustomMode(StrEnum):
     CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
     DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
     ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
+    ODD_EVEN_MERGE: Interleaves the two halves of the document back together (the inverse of Odd-Even Split).
     REMOVE_FIRST: Removes the first page.
     REMOVE_LAST: Removes the last page.
     REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
@@ -1035,6 +1036,7 @@ class CustomMode(StrEnum):
     booklet_sort = "BOOKLET_SORT"
     side_stitch_booklet_sort = "SIDE_STITCH_BOOKLET_SORT"
     odd_even_split = "ODD_EVEN_SPLIT"
+    odd_even_merge = "ODD_EVEN_MERGE"
     remove_first = "REMOVE_FIRST"
     remove_last = "REMOVE_LAST"
     remove_first_and_last = "REMOVE_FIRST_AND_LAST"
@@ -1044,7 +1046,7 @@ class CustomMode(StrEnum):
 class RearrangePagesParams(ApiModel):
     custom_mode: CustomMode | None = Field(
         None,
-        description="The custom mode for page rearrangement. Valid values are:\nCUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.\nDUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\nODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\nREMOVE_FIRST: Removes the first page.\nREMOVE_LAST: Removes the last page.\nREMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n",
+        description="The custom mode for page rearrangement. Valid values are:\nCUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.\nDUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\nODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\nODD_EVEN_MERGE: Interleaves the two halves of the document back together (the inverse of Odd-Even Split).\nREMOVE_FIRST: Removes the first page.\nREMOVE_LAST: Removes the last page.\nREMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n",
     )
     page_numbers: str = Field(
         "all",

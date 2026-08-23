@@ -49,6 +49,7 @@ class RearrangePagesPDFControllerTest {
                             File f =
                                     Files.createTempFile("test", inv.<String>getArgument(0))
                                             .toFile();
+                            f.deleteOnExit();
                             TempFile tf = mock(TempFile.class);
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
