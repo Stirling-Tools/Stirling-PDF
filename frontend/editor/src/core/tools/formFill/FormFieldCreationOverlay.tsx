@@ -69,6 +69,7 @@ export function FormFieldCreationOverlay({
     addPendingField,
     selectedFieldName,
     setSelectedField,
+    previewing,
     state,
     forFileId,
   } = useFormFill();
@@ -105,7 +106,7 @@ export function FormFieldCreationOverlay({
   // Precompute snap edges once (not on every pointermove).
   const snapTargets = useMemo(() => collectSnapTargets(snapRects), [snapRects]);
 
-  const active = mode === "create" && creationType != null;
+  const active = mode === "create" && creationType != null && !previewing;
 
   // Stale-file guard: don't draw on a page whose fields belong to another file.
   const fileMismatch =

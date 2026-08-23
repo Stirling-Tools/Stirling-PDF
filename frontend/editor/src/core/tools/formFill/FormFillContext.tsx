@@ -244,6 +244,9 @@ export interface FormFillContextValue {
   // --- Create mode ---
   /** Field type currently armed for placement (null = not placing). */
   creationType: CreatableFieldType | null;
+  /** True while the user holds Preview, which hides the editing chrome. */
+  previewing: boolean;
+  setPreviewing: (previewing: boolean) => void;
   setCreationType: (type: CreatableFieldType | null) => void;
   /** Fields drawn but not yet committed to the PDF. */
   pendingFields: PendingField[];
@@ -397,6 +400,7 @@ export function FormFillProvider({
     null,
   );
   const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
+  const [previewing, setPreviewing] = useState(false);
   const [selectedFieldName, setSelectedField] = useState<string | null>(null);
   const [modifiedFields, setModifiedFields] = useState<
     Record<string, ModifyFieldDefinition>
@@ -865,6 +869,8 @@ export function FormFillProvider({
       mode,
       setMode,
       creationType,
+      previewing,
+      setPreviewing,
       setCreationType,
       pendingFields,
       addPendingField,
@@ -905,6 +911,8 @@ export function FormFillProvider({
       mode,
       setMode,
       creationType,
+      previewing,
+      setPreviewing,
       pendingFields,
       addPendingField,
       updatePendingField,

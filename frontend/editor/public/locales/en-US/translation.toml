@@ -4332,6 +4332,8 @@ skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
 [formFill.create]
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
 commit = "Add {{count}} field(s) to PDF"
 editField = "Edit field"
 empty = "No fields drawn yet."
@@ -4381,12 +4383,6 @@ tooltip = "Tooltip"
 tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
 type = "Type"
 typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
-
-[formFill.switch]
-apply = "Save & Switch"
-body = "This tab has changes you have not applied yet. Switching tabs discards them."
-discard = "Discard & Switch"
-title = "Unapplied changes"
 
 [formFill.mode]
 create = "Create"

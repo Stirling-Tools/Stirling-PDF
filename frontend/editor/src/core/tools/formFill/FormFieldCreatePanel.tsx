@@ -1,9 +1,18 @@
 /** Left panel for "create" mode; drawing happens in FormFieldCreationOverlay. */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Stack, Text, Group, Alert, Collapse, Paper } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Alert,
+  Collapse,
+  Paper,
+  Tooltip,
+} from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -49,6 +58,7 @@ export function FormFieldCreatePanel({
     updatePendingField,
     removePendingField,
     commitNewFields,
+    setPreviewing,
   } = useFormFill();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -208,6 +218,33 @@ export function FormFieldCreatePanel({
       </div>
 
       <div className={styles.footer}>
+        <Tooltip
+          label={t(
+            "formFill.create.previewHelp",
+            "Hold to see the fields as they will look once added, without the editing outlines.",
+          )}
+          openDelay={250}
+          withArrow
+        >
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            disabled={pendingFields.length === 0}
+            data-testid="form-create-preview"
+            // Held, not toggled: releasing always restores the editing view, so preview
+            // cannot be left switched on by accident.
+            onPointerDown={() => setPreviewing(true)}
+            onPointerUp={() => setPreviewing(false)}
+            onPointerLeave={() => setPreviewing(false)}
+            onPointerCancel={() => setPreviewing(false)}
+            onBlur={() => setPreviewing(false)}
+            leftSection={<VisibilityOutlinedIcon fontSize="small" />}
+          >
+            {t("formFill.create.preview", "Hold to preview")}
+          </Button>
+        </Tooltip>
         <Button
           size="sm"
           onClick={handleCommit}

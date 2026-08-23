@@ -433,13 +433,6 @@ const FormFill = (_props: BaseToolProps) => {
     <div className={styles.root}>
       <UnsavedChangesDialog
         opened={pendingMode !== null}
-        title={t("formFill.switch.title", "Unapplied changes")}
-        body={t(
-          "formFill.switch.body",
-          "This tab has changes you have not applied yet. Switching tabs discards them.",
-        )}
-        saveLabel={t("formFill.switch.apply", "Save & Switch")}
-        discardLabel={t("formFill.switch.discard", "Discard & Switch")}
         saving={switching}
         onKeepWorking={() => setPendingMode(null)}
         onDiscard={discardAndSwitch}

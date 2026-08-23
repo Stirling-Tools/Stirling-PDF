@@ -114,6 +114,7 @@ export function FormFieldEditOverlay({
     dragActiveRef,
     pendingFields,
     updatePendingField,
+    previewing,
   } = useFormFill();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -495,6 +496,43 @@ export function FormFieldEditOverlay({
   const creating = mode === "create";
   if ((mode !== "modify" && !creating) || fileMismatch || !pageWidthPts) {
     return null;
+  }
+
+  // Preview drops the chrome but still draws queued fields, plainly: they have no widget in the
+  // document yet, so hiding them outright would show everything except what is being added.
+  if (previewing) {
+    return (
+      <div
+        data-testid={`form-preview-overlay-${pageIndex}`}
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 5,
+        }}
+      >
+        {pendingOnPage.map((field) => {
+          const rect = fieldRect(field);
+          if (!rect) return null;
+          return (
+            <div
+              key={field.name}
+              data-testid={`form-preview-field-${pendingIdFrom(field.name)}`}
+              style={{
+                position: "absolute",
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                border: `1px solid ${FORM_COLORS.neutralBorder}`,
+                borderRadius: 2,
+                boxSizing: "border-box",
+              }}
+            />
+          );
+        })}
+      </div>
+    );
   }
 
   const selectedRect = selectedField

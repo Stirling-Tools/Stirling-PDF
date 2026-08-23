@@ -12,11 +12,6 @@ import { Z_INDEX_TOAST } from "@app/styles/zIndex";
 
 export interface UnsavedChangesDialogProps {
   opened: boolean;
-  /** Defaults to the app-wide wording; override where the choice is narrower than leaving. */
-  title?: string;
-  body?: string;
-  saveLabel?: string;
-  discardLabel?: string;
   saving?: boolean;
   onKeepWorking: () => void;
   onDiscard: () => void;
@@ -27,10 +22,6 @@ export interface UnsavedChangesDialogProps {
 
 export function UnsavedChangesDialog({
   opened,
-  title,
-  body,
-  saveLabel,
-  discardLabel,
   saving = false,
   onKeepWorking,
   onDiscard,
@@ -38,7 +29,7 @@ export function UnsavedChangesDialog({
   onExport,
 }: UnsavedChangesDialogProps) {
   const { t } = useTranslation();
-  const heading = title ?? t("unsavedChangesTitle", "Unsaved changes");
+  const heading = t("unsavedChangesTitle", "Unsaved changes");
 
   return (
     <Modal
@@ -66,11 +57,10 @@ export function UnsavedChangesDialog({
             {heading}
           </Text>
           <Text size="sm" c="var(--c-text-muted)" lh={1.5}>
-            {body ??
-              t(
-                "unsavedChangesBody",
-                "You have unsaved changes to your PDF. Are you sure you want to leave?",
-              )}
+            {t(
+              "unsavedChangesBody",
+              "You have unsaved changes to your PDF. Are you sure you want to leave?",
+            )}
           </Text>
         </Stack>
 
@@ -83,7 +73,7 @@ export function UnsavedChangesDialog({
               data-testid="unsaved-save"
               onClick={onSave}
             >
-              {saveLabel ?? t("applyAndContinue", "Save & Leave")}
+              {t("applyAndContinue", "Save & Leave")}
             </Button>
           )}
           {onExport && (
@@ -106,7 +96,7 @@ export function UnsavedChangesDialog({
               data-testid="unsaved-discard"
               onClick={onDiscard}
             >
-              {discardLabel ?? t("discardChanges", "Discard & Leave")}
+              {t("discardChanges", "Discard & Leave")}
             </Button>
           </Group>
         </Stack>
