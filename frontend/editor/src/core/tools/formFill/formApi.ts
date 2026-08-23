@@ -166,7 +166,8 @@ export async function applyFieldEdits(
   };
   if (!includeFields) return result;
 
-  // A backend that ignored the flag returns a bare PDF; the caller then fetches fields as before.
+  // Null only when the backend ignored the flag and sent a bare PDF; an unreadable archive throws
+  // rather than letting the caller save the archive over the user's document.
   const bundle = await readFieldBundle(response.data);
   return bundle
     ? { ...result, blob: bundle.pdf, fields: bundle.fields }

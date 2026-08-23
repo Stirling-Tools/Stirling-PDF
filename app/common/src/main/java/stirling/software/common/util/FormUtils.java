@@ -474,12 +474,40 @@ public class FormUtils {
      *
      * @param document PDF document to repair
      */
+    /**
+     * PDFBox reads /Opt entries without following references, so an option stored indirectly - as
+     * real forms do - silently disappears. Resolving in place keeps the value and the reader
+     * honest.
+     */
+    private void resolveIndirectChoiceOptions(PDAcroForm acroForm) {
+        try {
+            for (PDField field : acroForm.getFieldTree()) {
+                if (!(field instanceof PDChoice)) {
+                    continue;
+                }
+                COSBase raw = field.getCOSObject().getDictionaryObject(COSName.OPT);
+                if (!(raw instanceof COSArray options)) {
+                    continue;
+                }
+                for (int i = 0; i < options.size(); i++) {
+                    COSBase resolved = options.getObject(i);
+                    if (resolved != null && resolved != options.get(i)) {
+                        options.set(i, resolved);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not resolve indirect choice options: {}", e.getMessage());
+        }
+    }
+
     public void repairMissingWidgetPageReferences(PDDocument document) {
         try {
             PDAcroForm acroForm = getAcroFormSafely(document);
             if (acroForm == null) {
                 return;
             }
+            resolveIndirectChoiceOptions(acroForm);
 
             log.debug("Checking for widgets with missing page references...");
             int repairedCount = 0;
@@ -1293,6 +1321,11 @@ public class FormUtils {
                     return null;
                 }
                 return String.join(",", selected);
+            }
+            // A signature has no text value; getValueAsString would emit a JVM identity hash that
+            // changes on every load, so the same document would describe itself differently.
+            if (field instanceof PDSignatureField) {
+                return null;
             }
             return field.getValueAsString();
         } catch (Exception e) {

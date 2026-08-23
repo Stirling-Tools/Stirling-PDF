@@ -142,14 +142,16 @@ async function readEntryBytes(
 }
 
 /**
- * Returns null when the body is not the bundle - an older backend ignoring the flag, say - so the
- * caller can fall back to fetching the fields separately.
+ * Null means the body is a plain PDF, so the caller keeps it and fetches fields separately. A body
+ * that is an archive but unreadable throws: it is not the document, and saving it would destroy one.
  */
 export async function readFieldBundle(blob: Blob): Promise<FieldBundle | null> {
   if (!(await looksZipped(blob))) return null;
-  const eocd = await readEocd(blob);
-  if (!eocd) return null;
 
+  const eocd = await readEocd(blob);
+  if (!eocd) {
+    throw new Error("Edited PDF bundle is a truncated or corrupt archive");
+  }
   const directory = parseCentralDirectory(
     await blob.slice(eocd.offset, eocd.offset + eocd.size).arrayBuffer(),
   );
@@ -157,12 +159,19 @@ export async function readFieldBundle(blob: Blob): Promise<FieldBundle | null> {
     (entry) => entry.name === DOCUMENT_ENTRY,
   );
   const fieldsEntry = directory.find((entry) => entry.name === FIELDS_ENTRY);
-  if (!documentEntry || !fieldsEntry) return null;
+  if (!documentEntry || !fieldsEntry) {
+    throw new Error(
+      `Edited PDF bundle is missing ${DOCUMENT_ENTRY} or ${FIELDS_ENTRY}`,
+    );
+  }
 
   const [pdf, fields] = await Promise.all([
     readEntry(blob, documentEntry, "application/pdf"),
     readEntryBytes(blob, fieldsEntry),
   ]);
   const parsed: unknown = JSON.parse(new TextDecoder().decode(fields));
-  return Array.isArray(parsed) ? { pdf, fields: parsed as FormField[] } : null;
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Edited PDF bundle's ${FIELDS_ENTRY} is not a list`);
+  }
+  return { pdf, fields: parsed as FormField[] };
 }

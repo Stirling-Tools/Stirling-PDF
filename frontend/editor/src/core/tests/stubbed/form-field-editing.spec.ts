@@ -89,8 +89,8 @@ async function stubFormEndpoints(page: Page, fields: unknown[] = []) {
     route.fulfill({ json: fields }),
   );
 
-  // The UI routes create/modify/delete commits through the combined endpoint.
-  await page.route("**/api/v1/form/edit-fields", (route: Route) => {
+  // Trailing ** so the glob still matches once a query string is appended.
+  await page.route("**/api/v1/form/edit-fields**", (route: Route) => {
     captured["edit-fields"] = route.request().postData() ?? "";
     route.fulfill({
       status: 200,

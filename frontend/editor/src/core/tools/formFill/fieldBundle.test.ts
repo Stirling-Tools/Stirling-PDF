@@ -140,7 +140,8 @@ describe("readFieldBundle", () => {
   });
 
   it("survives an extra field in the local header", async () => {
-    // Java writes extended-timestamp extras, and their length differs from the central copy.
+    // Some writers put an extra field in the local header only, so the payload offset
+    // has to be read from there rather than from the central directory.
     const result = await readFieldBundle(bundle([{}, { extra: 9 }]));
 
     // Byte-exact on purpose: a slice starting early still contains the header, so
@@ -162,7 +163,7 @@ describe("readFieldBundle", () => {
     ).toBeNull();
   });
 
-  it("returns null when the expected entries are absent", async () => {
+  it("throws when the expected entries are absent", async () => {
     const wrong = buildZip([
       {
         name: "other.txt",
@@ -171,10 +172,10 @@ describe("readFieldBundle", () => {
       },
     ]);
 
-    expect(await readFieldBundle(wrong)).toBeNull();
+    await expect(readFieldBundle(wrong)).rejects.toThrow(/missing/i);
   });
 
-  it("returns null when the field list is not an array", async () => {
+  it("throws when the field list is not an array", async () => {
     const notArray = buildZip([
       {
         name: "fields.json",
@@ -188,7 +189,7 @@ describe("readFieldBundle", () => {
       },
     ]);
 
-    expect(await readFieldBundle(notArray)).toBeNull();
+    await expect(readFieldBundle(notArray)).rejects.toThrow(/not a list/i);
   });
 
   it("keeps the pdf byte-exact through the slice", async () => {
@@ -206,5 +207,26 @@ describe("readFieldBundle", () => {
     const result = await readFieldBundle(zip);
 
     expect(new Uint8Array(await result!.pdf.arrayBuffer())).toEqual(bytes);
+  });
+
+  it("throws rather than handing back a truncated archive as the document", async () => {
+    const whole = bundle();
+    // Losing the tail loses the central directory, which is how a cut-off download arrives.
+    const truncated = whole.slice(0, whole.size - 40);
+
+    // Returning this blob would let the caller save a ZIP over the user's PDF.
+    await expect(readFieldBundle(truncated)).rejects.toThrow(
+      /corrupt|truncated/i,
+    );
+  });
+
+  it("never resolves to a blob that is still the archive", async () => {
+    const whole = bundle();
+
+    const result = await readFieldBundle(whole);
+
+    expect(result!.pdf.size).toBeLessThan(whole.size);
+    const head = new Uint8Array(await result!.pdf.slice(0, 2).arrayBuffer());
+    expect(String.fromCharCode(...head)).not.toBe("PK");
   });
 });

@@ -196,7 +196,8 @@ class FormFieldBundleTest {
         byte[] editedPdf = bundle.get("document.pdf");
         assertThat(new String(editedPdf, 0, 5, StandardCharsets.UTF_8)).isEqualTo("%PDF-");
 
-        // The comparison that matters: ask the endpoint this feature deletes, and demand a match.
+        // The comparison that matters: ask the endpoint this feature stops re-calling,
+        // and demand a match.
         MockMultipartFile saved =
                 new MockMultipartFile("file", style.name() + ".pdf", "application/pdf", editedPdf);
         try (PDDocument reloaded = Loader.loadPDF(editedPdf)) {
@@ -324,7 +325,8 @@ class FormFieldBundleTest {
                 zipBytes.length - pdfSize,
                 100.0 * (zipBytes.length - pdfSize) / pdfSize);
 
-        // Deflating the JSON is the whole reason small documents do not balloon here.
+        // True for a field list this repetitive; on a tiny list the ~200 bytes of zip framing can
+        // exceed what deflate saves, so this is a property of the fixture, not of every document.
         assertThat(zipBytes.length).isLessThan(pdfSize + jsonSize);
     }
 

@@ -420,6 +420,12 @@ export function FormFillProvider({
   // Monotonic counter for client-side pending-field ids and default names.
   const pendingCounterRef = useRef(0);
 
+  // Fields the last commit's response carried, adopted by the next fetch instead of uploading
+  // the document again to ask. Size-checked so a different document cannot pick them up.
+  const bundledFieldsRef = useRef<{ fields: FormField[]; size: number } | null>(
+    null,
+  );
+
   const clearEditingState = useCallback(() => {
     setCreationType(null);
     setPendingFields([]);
@@ -427,16 +433,11 @@ export function FormFillProvider({
     setModifiedFields({});
     setDeletedFieldNames([]);
     editedFileIdRef.current = null;
-    // The report describes the batch just discarded, so it must not outlive it.
+    // Report and field list both describe the batch just discarded, so neither outlives it.
+    bundledFieldsRef.current = null;
     setSkippedEdits([]);
     setSkippedTotal(0);
   }, []);
-
-  // Fields the last commit's response carried, adopted by the next fetch instead of uploading
-  // the document again to ask. Size-checked so a different document cannot pick them up.
-  const bundledFieldsRef = useRef<{ fields: FormField[]; size: number } | null>(
-    null,
-  );
 
   const fetchFields = useCallback(
     async (file: File | Blob, fileId?: string) => {

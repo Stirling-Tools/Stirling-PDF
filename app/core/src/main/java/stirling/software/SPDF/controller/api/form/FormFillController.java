@@ -586,8 +586,7 @@ public class FormFillController {
             zip = tempFileManager.createManagedTempFile(".zip");
             writeFieldBundle(zip.getPath(), pdf.getPath(), fields);
             ResponseEntity<Resource> response =
-                    WebResponseUtils.fileToWebResponse(
-                            zip, baseName + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+                    WebResponseUtils.zipFileToWebResponse(zip, baseName + ".zip");
             zipTransferred = true;
             return response;
         } finally {
@@ -607,7 +606,7 @@ public class FormFillController {
         CRC32 crc = new CRC32();
         try (InputStream in = Files.newInputStream(pdfPath)) {
             byte[] buffer = new byte[8192];
-            for (int read; (read = in.read(buffer)) > 0; ) {
+            for (int read; (read = in.read(buffer)) != -1; ) {
                 crc.update(buffer, 0, read);
             }
         }

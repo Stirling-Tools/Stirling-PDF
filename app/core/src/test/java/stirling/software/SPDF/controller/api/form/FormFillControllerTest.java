@@ -613,7 +613,7 @@ class FormFillControllerTest {
             entriesOf(zip);
             byte[] bundledPdf = payloads.get("document.pdf");
 
-            // Re-ask the endpoint this feature exists to delete, using the returned bytes.
+            // Re-ask the endpoint this feature stops re-calling, using the returned bytes.
             MockMultipartFile saved =
                     new MockMultipartFile("file", "test.pdf", "application/pdf", bundledPdf);
             try (PDDocument reloaded = org.apache.pdfbox.Loader.loadPDF(bundledPdf)) {
