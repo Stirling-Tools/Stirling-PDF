@@ -178,6 +178,27 @@ jobs:
           xcodebuild -version
           command -v actool
 
+      # TEMPORARY DIAGNOSTIC - hidden vs visible parent directory.
+      # Tauri compiles from tempfile::tempdir(), which defaults to a ".tmp"
+      # prefix. If actool skips hidden paths, that is an upstream bug.
+      - name: PROBE hidden parent directory
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        shell: bash
+        run: |
+          try_dir() {
+            local dir="$1" label="$2"
+            rm -rf "$dir"; mkdir -p "$dir/out"
+            cp -R frontend/editor/src-tauri/icons/macos/app.icon "$dir/Icon.icon"
+            echo "########## $label -> $dir"
+            actool "$dir/Icon.icon" --compile "$dir/out"               --output-format human-readable-text --notices --warnings               --output-partial-info-plist "$dir/out/assetcatalog_generated_info.plist"               --app-icon Icon --include-all-app-icons               --accent-color AccentColor --enable-on-demand-resources NO               --development-region en --target-device mac               --minimum-deployment-target 26.0 --platform macosx 2>&1 | tail -6
+            echo "########## $label exit=${PIPESTATUS[0]} car=$(ls -1 "$dir/out/Assets.car" 2>/dev/null || echo NONE)"
+          }
+          T="${TMPDIR%/}"
+          try_dir "$T/visible-parent" VISIBLE
+          try_dir "$T/.tmpHIDDEN1" HIDDEN
+          try_dir "$T/.hidden-parent/nested" HIDDEN-ANCESTOR
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
