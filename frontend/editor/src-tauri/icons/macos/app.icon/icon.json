@@ -4,25 +4,35 @@
   },
   "groups": [
     {
-      "name": "Foreground",
+      "name": "Mark",
       "layers": [
         {
-          "image-name": "glyph.png",
-          "name": "Glyph",
+          "image-name": "mark-left.svg",
+          "name": "Mark Left",
           "glass": true,
           "hidden": false,
           "position": {
-            "scale": 1.75,
+            "scale": 1.0,
             "translation-in-points": [0, 0]
           }
+        },
+        {
+          "image-name": "mark-right.svg",
+          "name": "Mark Right",
+          "glass": true,
+          "hidden": false,
+          "position": {
+            "scale": 1.0,
+            "translation-in-points": [0, 0]
+          },
+          "opacity": 0.6
         }
       ],
       "specular": true,
       "shadow": {
         "kind": "layer-color",
         "opacity": 0.5
-      },
-      "blur-material": null
+      }
     }
   ],
   "supported-platforms": {
