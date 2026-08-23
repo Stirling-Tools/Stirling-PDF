@@ -86,7 +86,7 @@ jobs:
           # ARM64: NSIS only (WiX MSI has no arm64 support in Tauri) and no JPDFium
           # natives yet - flip jpdfium_platforms to windows-arm64 once JPDFium ships it.
           WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
-          MACOS='{"platform":"macos-26","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          MACOS='{"platform":"macos-26","args":"--target universal-apple-darwin --verbose","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
           case "$PLATFORM" in
@@ -177,29 +177,6 @@ jobs:
           echo "Selected $xcode"
           xcodebuild -version
           command -v actool
-
-      # TEMPORARY DIAGNOSTIC - remove once the Liquid Glass icon compiles.
-      # actool succeeds from /tmp but fails inside Tauri, which compiles from
-      # tempfile::tempdir() i.e. the sandboxed per-user $TMPDIR. Run the same
-      # command from both locations to find which one actool objects to.
-      - name: PROBE actool location sensitivity
-        if: runner.os == 'macOS'
-        continue-on-error: true
-        shell: bash
-        run: |
-          run_actool() {
-            local root="$1" label="$2" cwd="$3"
-            rm -rf "$root/probe-$label"; mkdir -p "$root/probe-$label/out"
-            cp -R frontend/editor/src-tauri/icons/macos/app.icon "$root/probe-$label/Icon.icon"
-            echo "########## $label : root=$root cwd=${cwd:-$PWD}"
-            ( [ -n "$cwd" ] && cd "$cwd";               actool "$root/probe-$label/Icon.icon" --compile "$root/probe-$label/out"                 --output-format human-readable-text --notices --warnings                 --output-partial-info-plist "$root/probe-$label/out/assetcatalog_generated_info.plist"                 --app-icon Icon --include-all-app-icons                 --accent-color AccentColor --enable-on-demand-resources NO                 --development-region en --target-device mac                 --minimum-deployment-target 26.0 --platform macosx ) 2>&1 | tail -20
-            echo "########## $label exit=${PIPESTATUS[0]} produced:"
-            ls -la "$root/probe-$label/out" 2>/dev/null | tail -5
-          }
-          echo "TMPDIR=$TMPDIR"
-          run_actool /tmp slash-tmp ""
-          run_actool "${TMPDIR%/}" private-tmpdir ""
-          run_actool "${TMPDIR%/}" private-tmpdir-from-editor "$PWD/frontend/editor"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
