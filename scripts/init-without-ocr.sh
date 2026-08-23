@@ -971,7 +971,9 @@ fi
 # Only the fat image ships it. The backend already defaults to http://localhost:5001.
 STIRLING_ENGINE_HOME="${STIRLING_ENGINE_HOME:-/opt/stirling-engine}"
 ENGINE_PID=""
-if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
+if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ] && [ "${AIENGINE_ENABLED:-true}" = "false" ]; then
+  log "AI engine bundled but AIENGINE_ENABLED=false; not starting it."
+elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
   log "Starting bundled AI engine on port ${STIRLING_ENGINE_PORT:-5001}..."
   ENGINE_CMD=(
     "$STIRLING_ENGINE_HOME/.venv/bin/python" -m uvicorn
