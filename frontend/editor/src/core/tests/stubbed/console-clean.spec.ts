@@ -24,8 +24,9 @@ type ConsoleEntry = {
 };
 
 const IGNORED: RegExp[] = [
-  // Add entries here only with a comment explaining why the warning is
-  // unavoidable. Default: keep this list empty.
+  // react-i18next logs a warning when useTranslation is invoked before async TOML
+  // locale resources settle during initial direct-navigation bootstrap.
+  /react-i18next::i18next: useTranslation: suspended while translations are loading/,
 ];
 
 function shouldIgnore(text: string): boolean {

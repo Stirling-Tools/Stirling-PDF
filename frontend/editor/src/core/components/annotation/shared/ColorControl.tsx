@@ -64,17 +64,20 @@ export function ColorControl({
       withinPortal
     >
       <Popover.Target>
-        <Tooltip label={label}>
-          <ActionIcon
-            aria-label={label}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={label} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
+            aria-label={label}
           >
-            <ColorSwatch color={localColor} size={18} />
-          </ActionIcon>
+            <ColorSwatch
+              color={localColor}
+              size={18}
+              style={{ cursor: "pointer" }}
+            />
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

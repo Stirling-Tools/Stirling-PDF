@@ -1123,7 +1123,10 @@ export function LocalEmbedPDF({
                                       pageIndex={pageIndex}
                                       background="var(--pdf-selection-bg)"
                                       selectionMenu={(props) => (
-                                        <TextSelectionMenu {...props} />
+                                        <TextSelectionMenu
+                                          {...props}
+                                          documentId={documentId}
+                                        />
                                       )}
                                     />
                                   </div>

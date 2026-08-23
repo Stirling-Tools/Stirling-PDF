@@ -35,8 +35,12 @@ const Redact = (props: BaseToolProps) => {
 
   // Navigation and redaction context
   const { actions: navActions } = useNavigationActions();
-  const { setRedactionConfig, setRedactionMode, redactionConfig } =
-    useRedaction();
+  const {
+    setRedactionConfig,
+    setRedactionMode,
+    deactivateRedact,
+    redactionConfig,
+  } = useRedaction();
   const { workbench } = useNavigationState();
   const hasOpenedViewer = useRef(false);
 
@@ -46,6 +50,14 @@ const Redact = (props: BaseToolProps) => {
     useRedactOperation,
     props,
   );
+
+  // Clean up redaction mode when tool unmounts
+  useEffect(() => {
+    return () => {
+      setRedactionMode(false);
+      deactivateRedact();
+    };
+  }, [setRedactionMode, deactivateRedact]);
 
   // Get total file count from context (any files in workbench, not just selected)
   const { state: fileState } = useFileState();
@@ -112,11 +124,20 @@ const Redact = (props: BaseToolProps) => {
 
   // Reset viewer flag when mode changes back to automatic
   useEffect(() => {
-    if (base.params.parameters.mode === "automatic") {
+    if (
+      base.params.parameters.mode === "automatic" &&
+      redactionConfig?.mode !== "manual"
+    ) {
       hasOpenedViewer.current = false;
       setRedactionMode(false);
+      deactivateRedact();
     }
-  }, [base.params.parameters.mode, setRedactionMode]);
+  }, [
+    base.params.parameters.mode,
+    redactionConfig?.mode,
+    setRedactionMode,
+    deactivateRedact,
+  ]);
 
   const isExecuteDisabled = () => {
     if (base.params.parameters.mode === "manual") {
