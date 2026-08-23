@@ -35,6 +35,29 @@ tasks:
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
+      - assets-car
+
+  assets-car:
+    desc: "Compile the macOS Liquid Glass app icon"
+    platforms: [darwin]
+    cmds:
+      # Tauri can compile icons/macos/app.icon itself, but its own actool call
+      # fails inside the bundler; compiling here and handing it the finished
+      # Assets.car takes the supported prebuilt-.car path instead.
+      - cmd: |
+          set -eu
+          ICONS=frontend/editor/src-tauri/icons/macos
+          WORK=$(mktemp -d)/build
+          mkdir -p "$WORK/out"
+          cp -R "$ICONS/app.icon" "$WORK/Icon.icon"
+          actool "$WORK/Icon.icon" --compile "$WORK/out" \
+            --output-format human-readable-text --notices --warnings \
+            --output-partial-info-plist "$WORK/out/assetcatalog_generated_info.plist" \
+            --app-icon Icon --include-all-app-icons \
+            --enable-on-demand-resources NO --development-region en \
+            --target-device mac --minimum-deployment-target 26.0 --platform macosx
+          cp "$WORK/out/Assets.car" "$ICONS/Assets.car"
+          echo "Compiled $ICONS/Assets.car ($(wc -c < "$ICONS/Assets.car") bytes)"
 
   provisioner:
     desc: "Build installer provisioner"

@@ -31,7 +31,6 @@
     "icon": [
       "icons/windows/app.ico",
       "icons/macos/app.icns",
-      "icons/macos/app.icon",
       "icons/macos/app-512.png"
     ],
     "resources": ["libs/*.jar", "runtime/jre/**/*"],
