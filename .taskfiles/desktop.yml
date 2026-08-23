@@ -40,13 +40,14 @@ tasks:
   assets-car:
     desc: "Compile the macOS Liquid Glass app icon"
     platforms: [darwin]
+    dir: editor/src-tauri
     cmds:
       # Tauri can compile icons/macos/app.icon itself, but its own actool call
       # fails inside the bundler; compiling here and handing it the finished
       # Assets.car takes the supported prebuilt-.car path instead.
       - cmd: |
           set -eu
-          ICONS=frontend/editor/src-tauri/icons/macos
+          ICONS=icons/macos
           WORK=$(mktemp -d)/build
           mkdir -p "$WORK/out"
           cp -R "$ICONS/app.icon" "$WORK/Icon.icon"
