@@ -67,6 +67,32 @@ COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
+# Stage 2b: AI engine runtime. Built at its final path so the venv's pyvenv.cfg and
+# interpreter symlink still resolve after the copy. uv's managed CPython is used rather
+# than a system one because the runtime base is Ubuntu noble, which ships Python 3.12.
+FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b8cacfb2d5f42555580b62415a98e0a3 AS engine-build
+ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
+WORKDIR /opt/stirling-engine
+COPY engine/pyproject.toml engine/uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv python install 3.13 \
+    && uv sync --frozen --no-dev --no-install-project --group engine --python-preference only-managed
+
+# Drop what a server runtime never loads (headers, docs, the GUI and packaging stdlib)
+# and strip debug symbols from compiled extensions. Saves ~20MB.
+RUN set -eux; \
+    apt-get update && apt-get install -y --no-install-recommends binutils; \
+    P="$(ls -d /opt/stirling-engine/python/cpython-*)"; \
+    rm -rf "$P/share" "$P/include" \
+           "$P/lib/python3.13/idlelib" "$P/lib/python3.13/tkinter" \
+           "$P/lib/python3.13/ensurepip" "$P/lib/python3.13/pydoc_data" \
+           "$P/lib/python3.13/test" "$P/lib/python3.13/lib2to3"; \
+    find /opt/stirling-engine -name '__pycache__' -type d -prune -exec rm -rf {} + ; \
+    find /opt/stirling-engine \( -name '*.so' -o -name '*.so.*' \) -print0 \
+      | xargs -0 -r strip --strip-unneeded 2>/dev/null || true; \
+    rm -rf /var/lib/apt/lists/*
+
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
@@ -84,6 +110,14 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
+# AI engine. init-without-ocr.sh starts it when this directory is present, so the
+# lite and full images stay unaffected. settings.py resolves ENGINE_ROOT from
+# src/stirling/config/, which puts it at /opt/stirling-engine.
+COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /opt/stirling-engine/python
+COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
+COPY --link --chown=1000:1000 engine/.env  /opt/stirling-engine/.env
+COPY --link --chown=1000:1000 engine/src/  /opt/stirling-engine/src/
+
 # Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
@@ -97,6 +131,8 @@ RUN set -eux; \
     ln -s /storage /app/storage; \
     chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
+    mkdir -p /opt/stirling-engine/data; \
+    chown -R stirlingpdfuser:stirlingpdfgroup /opt/stirling-engine/data; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
@@ -116,6 +152,10 @@ ENV VERSION_TAG=$VERSION_TAG \
     PGID=1000 \
     UMASK=022 \
     FAT_DOCKER=true \
+    AIENGINE_ENABLED=true \
+    STIRLING_ENGINE_HOME=/opt/stirling-engine \
+    STIRLING_ENGINE_PORT=5001 \
+    STIRLING_ENGINE_WORKERS=2 \
     INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \

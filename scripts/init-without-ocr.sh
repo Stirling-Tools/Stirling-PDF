@@ -890,6 +890,12 @@ log "Setting permissions..."
 mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
+# The fat image bundles the AI engine, whose sqlite store needs a writable data dir.
+# Chowned here rather than at build time so it follows PUID/PGID remapping.
+if [ -d "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}" ]; then
+  mkdir -p "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}/data" || true
+  CHOWN_PATHS+=("${STIRLING_ENGINE_HOME:-/opt/stirling-engine}/data")
+fi
 CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
   if [ -e "$p" ]; then
@@ -960,6 +966,39 @@ else
   # Legacy fallback for Spring Boot 3 layered layout
   export JAVA_MAIN_CLASS=org.springframework.boot.loader.launch.JarLauncher
   JAVA_CMD+=("org.springframework.boot.loader.launch.JarLauncher")
+fi
+
+# ---------- AI engine ----------
+# Only the fat image ships the engine; elsewhere this directory is absent and the
+# block is skipped. The backend defaults to http://localhost:5001, so no wiring needed.
+STIRLING_ENGINE_HOME="${STIRLING_ENGINE_HOME:-/opt/stirling-engine}"
+ENGINE_PID=""
+if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
+  log "Starting bundled AI engine on port ${STIRLING_ENGINE_PORT:-5001}..."
+  ENGINE_CMD=(
+    "$STIRLING_ENGINE_HOME/.venv/bin/python" -m uvicorn
+    stirling.api.app:app
+    --host 127.0.0.1
+    --port "${STIRLING_ENGINE_PORT:-5001}"
+    --workers "${STIRLING_ENGINE_WORKERS:-2}"
+    --app-dir "$STIRLING_ENGINE_HOME/src"
+  )
+  # init.sh exports PYTHONPATH pointing at unoserver's Python 3.12 venv. Inheriting it
+  # makes the engine's 3.13 interpreter import 3.12 packages and fail on their C extensions,
+  # so it is dropped here; the engine resolves everything from its own venv.
+  if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
+    env -u PYTHONPATH "${ENGINE_CMD[@]}" &
+  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+    env -u PYTHONPATH \
+        HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
+        USER="$RUNTIME_USER" \
+        LOGNAME="$RUNTIME_USER" \
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${ENGINE_CMD[@]}" &
+  else
+    env -u PYTHONPATH "${ENGINE_CMD[@]}" &
+  fi
+  ENGINE_PID=$!
+  log "AI engine started (PID $ENGINE_PID)"
 fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
@@ -1074,6 +1113,13 @@ fi
 
 wait "$JAVA_PID" || true
 exit_code=$?
+
+# Stop the bundled engine alongside the app so the container exits cleanly.
+if [ -n "$ENGINE_PID" ] && kill -0 "$ENGINE_PID" 2>/dev/null; then
+  log "Stopping AI engine (PID $ENGINE_PID)..."
+  kill "$ENGINE_PID" 2>/dev/null || true
+  wait "$ENGINE_PID" 2>/dev/null || true
+fi
 case "$exit_code" in
   0)   log "Stirling PDF exited normally." ;;
   137) log "Stirling PDF was OOM-killed (exit 137). Check container memory limits." ;;
