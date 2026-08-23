@@ -1,7 +1,9 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 if (import.meta.env.DEV) {
   void import("@app/debug/memoryTelemetry");
 }
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createAppQueryClient } from "@app/query/queryClient";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
@@ -124,6 +126,7 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
+  const [queryClient] = useState(createAppQueryClient);
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     worker: true,
@@ -135,75 +138,77 @@ export function AppProviders({
   });
 
   return (
-    <PreferencesProvider>
-      <ThemeProvider>
-        <ErrorBoundary>
-          <BannerProvider>
-            <AppConfigProvider
-              retryOptions={appConfigRetryOptions}
-              {...appConfigProviderProps}
-            >
-              <PosthogTrackingInitializer />
-              <ScarfTrackingInitializer />
-              <AppConfigLoader />
-              <ServerDefaultsSync />
-              {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                  No-ops inside Tauri — the desktop popup handles that flow. */}
-              <UpdateStartupPopup />
-              <PdfEngineProvider
-                engine={engine}
-                isLoading={isLoading}
-                error={error}
+    <QueryClientProvider client={queryClient}>
+      <PreferencesProvider>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <BannerProvider>
+              <AppConfigProvider
+                retryOptions={appConfigRetryOptions}
+                {...appConfigProviderProps}
               >
-                <FileContextProvider
-                  enableUrlSync={true}
-                  enablePersistence={true}
+                <PosthogTrackingInitializer />
+                <ScarfTrackingInitializer />
+                <AppConfigLoader />
+                <ServerDefaultsSync />
+                {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+                  No-ops inside Tauri — the desktop popup handles that flow. */}
+                <UpdateStartupPopup />
+                <PdfEngineProvider
+                  engine={engine}
+                  isLoading={isLoading}
+                  error={error}
                 >
-                  <FolderProvider>
-                    <AppInitializer />
-                    <BrandingAssetManager />
-                    <ToolRegistryProvider>
-                      <NavigationProvider>
-                        <FilesModalProvider>
-                          <ToolWorkflowProvider>
-                            <HotkeyProvider>
-                              <SidebarProvider>
-                                <ViewerProvider>
-                                  <PageEditorProvider>
-                                    <SignatureProvider>
-                                      <SigningOverlayProvider>
-                                        <RedactionProvider>
-                                          <FormFillProvider>
-                                            <AnnotationProvider>
-                                              <WorkbenchBarProvider>
-                                                <TourOrchestrationProvider>
-                                                  <AdminTourOrchestrationProvider>
-                                                    <FolderFileContextProvider>
-                                                      {children}
-                                                    </FolderFileContextProvider>
-                                                  </AdminTourOrchestrationProvider>
-                                                </TourOrchestrationProvider>
-                                              </WorkbenchBarProvider>
-                                            </AnnotationProvider>
-                                          </FormFillProvider>
-                                        </RedactionProvider>
-                                      </SigningOverlayProvider>
-                                    </SignatureProvider>
-                                  </PageEditorProvider>
-                                </ViewerProvider>
-                              </SidebarProvider>
-                            </HotkeyProvider>
-                          </ToolWorkflowProvider>
-                        </FilesModalProvider>
-                      </NavigationProvider>
-                    </ToolRegistryProvider>
-                  </FolderProvider>
-                </FileContextProvider>
-              </PdfEngineProvider>
-            </AppConfigProvider>
-          </BannerProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
-    </PreferencesProvider>
+                  <FileContextProvider
+                    enableUrlSync={true}
+                    enablePersistence={true}
+                  >
+                    <FolderProvider>
+                      <AppInitializer />
+                      <BrandingAssetManager />
+                      <ToolRegistryProvider>
+                        <NavigationProvider>
+                          <FilesModalProvider>
+                            <ToolWorkflowProvider>
+                              <HotkeyProvider>
+                                <SidebarProvider>
+                                  <ViewerProvider>
+                                    <PageEditorProvider>
+                                      <SignatureProvider>
+                                        <SigningOverlayProvider>
+                                          <RedactionProvider>
+                                            <FormFillProvider>
+                                              <AnnotationProvider>
+                                                <WorkbenchBarProvider>
+                                                  <TourOrchestrationProvider>
+                                                    <AdminTourOrchestrationProvider>
+                                                      <FolderFileContextProvider>
+                                                        {children}
+                                                      </FolderFileContextProvider>
+                                                    </AdminTourOrchestrationProvider>
+                                                  </TourOrchestrationProvider>
+                                                </WorkbenchBarProvider>
+                                              </AnnotationProvider>
+                                            </FormFillProvider>
+                                          </RedactionProvider>
+                                        </SigningOverlayProvider>
+                                      </SignatureProvider>
+                                    </PageEditorProvider>
+                                  </ViewerProvider>
+                                </SidebarProvider>
+                              </HotkeyProvider>
+                            </ToolWorkflowProvider>
+                          </FilesModalProvider>
+                        </NavigationProvider>
+                      </ToolRegistryProvider>
+                    </FolderProvider>
+                  </FileContextProvider>
+                </PdfEngineProvider>
+              </AppConfigProvider>
+            </BannerProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </PreferencesProvider>
+    </QueryClientProvider>
   );
 }

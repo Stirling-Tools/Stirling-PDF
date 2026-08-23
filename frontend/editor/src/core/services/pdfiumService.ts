@@ -80,16 +80,29 @@ function wasmUrl(): string {
  * This is the low-level PDFium WASM interface with all C functions wrapped.
  * Prefer `withDocument()` for document-scoped work.
  */
-export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
-  if (_module) return _module;
-  if (!_initPromise) {
-    // Ensure eager compilation has started if PDF service is requested before idle timeout
-    startEagerWasmCompilation();
 
-    const overrides: PdfiumModuleOverrides = {
-      locateFile: () => wasmUrl(),
-    };
+/** Reuses the WASM pre-compiled at boot. Every failure must reach this promise:
+ *  `instantiateWasm` reports success by callback, so a rejection inside it leaves
+ *  `init()` pending forever - and with it every thumbnail, parse and form read. */
+async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
+  // Ensure eager compilation has started if PDF service is requested before idle timeout
+  startEagerWasmCompilation();
 
+  const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
+  const container = await pdfiumWasmModulePromise;
+  // The pre-compiled WASM is exposed as `{ module }`. Test doubles may resolve a
+  // bare module-shaped value, so fall back to the container itself in that case.
+  const precompiled =
+    container?.module ?? (container as unknown as WebAssembly.Module | null);
+
+  let reportFailure: (error: unknown) => void = () => {};
+  const instantiateFailed = new Promise<never>((_, reject) => {
+    reportFailure = reject;
+  });
+
+  // No pre-compiled module: leave instantiateWasm alone so emscripten fetches the
+  // WASM itself and rejects init() on failure, instead of a fallback that can't.
+  if (precompiled) {
     overrides.instantiateWasm = (
       imports: WebAssembly.Imports,
       successCallback: (
@@ -97,48 +110,34 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
         module: WebAssembly.Module,
       ) => void,
     ) => {
-      pdfiumWasmModulePromise
-        .then(async (container) => {
-          if (container?.module) {
-            const wasmModule = container.module;
-            const instance = await WebAssembly.instantiate(wasmModule, imports);
-            successCallback(instance, wasmModule);
-          } else {
-            throw new Error("No pre-compiled WASM module found");
-          }
-        })
-        .catch((err: unknown) => {
-          console.warn(
-            "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
-            err,
-          );
-          WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
-            (result) => {
-              successCallback(result.instance, result.module);
-            },
-          );
-        });
+      WebAssembly.instantiate(precompiled, imports)
+        .then((instance) => successCallback(instance, precompiled))
+        .catch(reportFailure);
     };
+  }
 
-    _initPromise = init(overrides as Partial<PdfiumModule>).then((m) => {
-      // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
-      try {
-        m.PDFiumExt_Init();
-      } catch {
-        /* already initialized */
-      }
-      _module = m;
+  const m = await Promise.race([
+    init(overrides as Partial<PdfiumModule>),
+    instantiateFailed,
+  ]);
+  // Call PDFiumExt_Init to ensure extensions (form fill etc.) are set up
+  try {
+    m.PDFiumExt_Init();
+  } catch {
+    /* already initialized */
+  }
+  _module = m;
+  return m;
+}
 
-      // Null out the module reference in the container to release WebAssembly.Module (13MB) memory
-      pdfiumWasmModulePromise
-        .then((container) => {
-          if (container) {
-            container.module = null;
-          }
-        })
-        .catch(() => {});
-
-      return m;
+export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
+  if (_module) return _module;
+  if (!_initPromise) {
+    _initPromise = initPdfiumModule().catch((error: unknown) => {
+      // Don't cache the failure: every PDF feature in the app goes through here,
+      // so a transient WASM fetch would take them all down for the session.
+      _initPromise = null;
+      throw error;
     });
   }
   return _initPromise;

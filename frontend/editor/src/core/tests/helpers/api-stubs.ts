@@ -126,7 +126,11 @@ export interface MockAppApiOptions {
     username?: string;
     email?: string;
     roles?: string[];
-  };
+    /** Spring role string (e.g. "ROLE_ADMIN") — drives `isAdmin` in the auth seam. */
+    role?: string;
+    /** Portal (Processor) access flag — gates the super search's Processor lanes. */
+    portalAccess?: boolean;
+  } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
   /** Default locale. */

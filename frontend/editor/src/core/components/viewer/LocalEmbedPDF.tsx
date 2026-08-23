@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
-import { EmbedPDF } from "@embedpdf/core/react";
+import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useEngineContext } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -422,6 +422,7 @@ import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandle
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
@@ -555,6 +556,21 @@ interface PageContentProps {
   showBakedAnnotations: boolean;
   file: File | Blob | undefined;
   fileId: string | null | undefined;
+  signatureOverlayEnabled: boolean;
+  signaturePreviews: SignaturePreview[];
+  signaturePreviewsReadOnly: boolean;
+  signaturePlacementMode: boolean;
+  signaturePlacementData?: string;
+  signaturePlacementType?: "canvas" | "image" | "text";
+  onSignaturePreviewsChange: (previews: SignaturePreview[]) => void;
+  selectedSignatureId: string | null;
+  onSelectSignature: (id: string | null) => void;
+}
+
+function normalizePageRotation(rotation: number | null | undefined): number {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return ((Math.round(value) % 4) + 4) % 4;
 }
 
 const PageContent = React.memo(function PageContent({
@@ -569,7 +585,21 @@ const PageContent = React.memo(function PageContent({
   showBakedAnnotations,
   file,
   fileId,
+  signatureOverlayEnabled,
+  signaturePreviews,
+  signaturePreviewsReadOnly,
+  signaturePlacementMode,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  selectedSignatureId,
+  onSelectSignature,
 }: PageContentProps) {
+  const documentState = useDocumentState(documentId);
+  const pageRotation = normalizePageRotation(
+    documentState?.document?.pages?.[pageIndex]?.rotation,
+  );
+
   return (
     <Rotate
       key={`${documentId}-${pageIndex}`}
@@ -581,6 +611,7 @@ const PageContent = React.memo(function PageContent({
           data-page-index={pageIndex}
           data-page-width={width}
           data-page-height={height}
+          data-page-rotation={pageRotation}
           style={{
             width,
             height,
@@ -682,6 +713,23 @@ const PageContent = React.memo(function PageContent({
 
             {/* LinkLayer, uses EmbedPDF annotation state for link rendering */}
             <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+
+            {/* Signature preview overlay (opt-in; off by default) */}
+            {signatureOverlayEnabled && (
+              <SignaturePreviewLayer
+                pageIndex={pageIndex}
+                pageWidth={width}
+                pageHeight={height}
+                previews={signaturePreviews}
+                readOnly={signaturePreviewsReadOnly}
+                placementMode={signaturePlacementMode}
+                placementData={signaturePlacementData}
+                placementType={signaturePlacementType}
+                onChange={onSignaturePreviewsChange}
+                selectedId={selectedSignatureId}
+                onSelect={onSelectSignature}
+              />
+            )}
           </LazyPageContent>
         </div>
       </PagePointerProvider>
@@ -749,7 +797,6 @@ const DocumentScroller = React.memo(function DocumentScroller({
 
   return <Scroller documentId={documentId} renderPage={renderPage} />;
 });
-
 export function LocalEmbedPDF({
   file,
   url,
@@ -1024,6 +1071,15 @@ export function LocalEmbedPDF({
           showBakedAnnotations={showBakedAnnotations}
           file={file}
           fileId={fileId}
+          signatureOverlayEnabled={_signatureOverlayEnabled}
+          signaturePreviews={localSignaturePreviews}
+          signaturePreviewsReadOnly={_signaturePreviewsReadOnly}
+          signaturePlacementMode={signaturePlacementMode}
+          signaturePlacementData={_signaturePlacementData}
+          signaturePlacementType={_signaturePlacementType}
+          onSignaturePreviewsChange={_handleSignaturePreviewsChange}
+          selectedSignatureId={selectedSignatureId}
+          onSelectSignature={setSelectedSignatureId}
         />
       ),
     [
@@ -1034,6 +1090,14 @@ export function LocalEmbedPDF({
       pdfRenderMode,
       file,
       fileId,
+      _signatureOverlayEnabled,
+      localSignaturePreviews,
+      _signaturePreviewsReadOnly,
+      signaturePlacementMode,
+      _signaturePlacementData,
+      _signaturePlacementType,
+      _handleSignaturePreviewsChange,
+      selectedSignatureId,
     ],
   );
 
@@ -1087,7 +1151,11 @@ export function LocalEmbedPDF({
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>❌</div>
-          <Text c="red" size="sm" style={{ textAlign: "center" }}>
+          <Text
+            c="var(--color-red-dark)"
+            size="sm"
+            style={{ textAlign: "center" }}
+          >
             Error loading PDF engine: {error.message}
           </Text>
         </Stack>

@@ -31,8 +31,12 @@ interface AppConfigModalProps {
   urlSync?: boolean;
   /** Section to land on when opening (used by non-URL hosts like the portal). */
   initialSection?: NavKey | null;
+  /** Accepted for interface parity with the core shell; this shell ignores it. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the saas registry sections. */
   extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 const AppConfigModal: React.FC<AppConfigModalProps> = ({
@@ -40,6 +44,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   onClose,
   initialSection,
   extraSections,
+  hiddenSectionKeys,
 }) => {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
@@ -153,8 +158,23 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       isAnonymous,
       t,
     });
-    return extraSections?.length ? [...sections, ...extraSections] : sections;
-  }, [openLogoutConfirm, isDev, isAnonymous, t, extraSections]);
+    const base = hiddenSectionKeys?.length
+      ? sections
+          .map((sec) => ({
+            ...sec,
+            items: sec.items.filter((i) => !hiddenSectionKeys.includes(i.key)),
+          }))
+          .filter((sec) => sec.items.length > 0)
+      : sections;
+    return extraSections?.length ? [...base, ...extraSections] : base;
+  }, [
+    openLogoutConfirm,
+    isDev,
+    isAnonymous,
+    t,
+    extraSections,
+    hiddenSectionKeys,
+  ]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {

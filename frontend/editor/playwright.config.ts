@@ -17,9 +17,12 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * @see https://playwright.dev/docs/test-configuration
  */
+/** Shared by every stubbed project so a spec sees one layout on all engines. */
+const STUBBED_VIEWPORT = { width: 1920, height: 1080 };
+
 const chromiumViewport = {
   ...devices["Desktop Chrome"],
-  viewport: { width: 1920, height: 1080 },
+  viewport: STUBBED_VIEWPORT,
 };
 
 export default defineConfig({
@@ -55,7 +58,8 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed - no backend required, chromium-only for CI speed
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
@@ -93,16 +97,17 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser coverage for the stubbed suite (opt-in locally)
+    // Cross-browser coverage for the stubbed suite. Same viewport as `stubbed`,
+    // or a layout difference here reads as an engine outage.
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Firefox"] },
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"] },
+      use: { ...devices["Desktop Safari"], viewport: STUBBED_VIEWPORT },
     },
   ],
 

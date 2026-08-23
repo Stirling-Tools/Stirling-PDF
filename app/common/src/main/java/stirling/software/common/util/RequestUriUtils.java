@@ -5,6 +5,10 @@ import java.util.regex.Pattern;
 public class RequestUriUtils {
 
     private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
+    // Invite tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
+    private static final Pattern INVITE_LINK_PATTERN =
+            Pattern.compile(
+                    "^/invite/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
@@ -56,8 +60,10 @@ public class RequestUriUtils {
             return true;
         }
 
-        // Mobile scanner page for QR code-based file uploads (peer-to-peer, no backend auth needed)
-        if (normalizedUri.startsWith("/mobile-scanner")) {
+        // Mobile pages reached by scanning a QR code (peer-to-peer, no backend auth
+        // needed): /mobile-scanner uploads photos, /mobile-sign draws a signature.
+        if (normalizedUri.startsWith("/mobile-scanner")
+                || normalizedUri.startsWith("/mobile-sign")) {
             return true;
         }
 
@@ -207,7 +213,9 @@ public class RequestUriUtils {
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
-                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches();
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
+                // Invite-accept SPA bootstrap; data APIs remain protected
+                || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

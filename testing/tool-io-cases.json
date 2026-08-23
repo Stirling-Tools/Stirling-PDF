@@ -1,0 +1,335 @@
+{
+  "$comment": [
+    "Shared conformance cases for the tool I/O compatibility check.",
+    "Run by Java (ToolChainValidatorConformanceTest), the frontend (toolIOCompat.test.ts) and the",
+    "engine (test_tool_io_compat.py) against their own implementations, which must agree.",
+    "Specs are synthetic, so retyping a real endpoint never invalidates a case.",
+    "'expected' is matched on stepIndex/severity/code; messages are free text."
+  ],
+  "specs": {
+    "pdfToPdf": { "accepts": ["PDF"], "produces": "PDF", "arity": "SISO", "cases": [] },
+    "pdfToPdfSplit": { "accepts": ["PDF"], "produces": "PDF", "arity": "SIMO", "cases": [] },
+    "pdfMerge": { "accepts": ["PDF"], "produces": "PDF", "arity": "MISO", "cases": [] },
+    "addPassword": { "accepts": ["PDF"], "produces": "PDF_ENCRYPTED", "arity": "SISO", "cases": [] },
+    "removePassword": { "accepts": ["PDF_ENCRYPTED"], "produces": "PDF", "arity": "SISO", "cases": [] },
+    "extractImages": { "accepts": ["PDF"], "produces": "IMAGE", "arity": "SIMO", "cases": [] },
+    "imageToPdf": { "accepts": ["IMAGE"], "produces": "PDF", "arity": "MISO", "cases": [] },
+    "getAttachments": { "accepts": ["PDF"], "produces": "ZIP", "arity": "SISO", "cases": [] },
+    "getInfo": { "accepts": ["PDF"], "produces": "JSON", "arity": "SISO", "cases": [] },
+    "validateOnly": { "accepts": ["PDF"], "produces": "NONE", "arity": "SISO", "cases": [] },
+    "anyToPdf": { "accepts": ["ANY"], "produces": "PDF", "arity": "SISO", "cases": [] },
+    "pdfToAny": { "accepts": ["PDF"], "produces": "ANY", "arity": "SISO", "cases": [] },
+    "pdfOrImage": { "accepts": ["PDF", "IMAGE"], "produces": "PDF", "arity": "SISO", "cases": [] },
+    "pdfToImageConfigurable": {
+      "accepts": ["PDF"],
+      "produces": "IMAGE",
+      "arity": "SIMO",
+      "cases": [
+        {
+          "when": [{ "param": "singleOrMultiple", "matches": ["single"] }],
+          "produces": "IMAGE",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "addPasswordConfigurable": {
+      "accepts": ["PDF"],
+      "produces": "PDF_ENCRYPTED",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [{ "param": "password", "matches": [""] }],
+          "produces": "PDF",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "pdfToImageMixedCase": {
+      "accepts": ["PDF"],
+      "produces": "IMAGE",
+      "arity": "SIMO",
+      "cases": [
+        {
+          "when": [{ "param": "singleOrMultiple", "matches": ["  SiNgLe "] }],
+          "produces": "IMAGE",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "addPasswordTwoKeys": {
+      "accepts": ["PDF"],
+      "produces": "PDF_ENCRYPTED",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [
+            { "param": "password", "matches": [""] },
+            { "param": "ownerPassword", "matches": [""] }
+          ],
+          "produces": "PDF",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "autoRotateShape": {
+      "accepts": ["PDF"],
+      "produces": "PDF",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [{ "param": "dryRun", "matches": ["true"], "default": "false" }],
+          "produces": "JSON",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "changePermsShape": {
+      "accepts": ["PDF"],
+      "produces": "PDF_ENCRYPTED",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [
+            { "param": "password", "matches": [""], "default": "" },
+            { "param": "ownerPassword", "matches": [""], "default": "" }
+          ],
+          "produces": "PDF",
+          "arity": "SISO"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "a plain pdf chain is clean",
+      "steps": [{ "spec": "pdfToPdf" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "an empty chain is clean",
+      "steps": [],
+      "expected": []
+    },
+    {
+      "name": "a single step is never a transition",
+      "steps": [{ "spec": "extractImages" }],
+      "expected": []
+    },
+    {
+      "name": "encrypting then editing is rejected",
+      "steps": [{ "spec": "addPassword" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "encrypting then decrypting is allowed",
+      "steps": [{ "spec": "addPassword" }, { "spec": "removePassword" }],
+      "expected": []
+    },
+    {
+      "name": "decrypting then editing is allowed",
+      "steps": [{ "spec": "removePassword" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "an ordinary tool cannot be handed an encrypted pdf from source",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 0, "severity": "ERROR", "code": "source-mismatch" }]
+    },
+    {
+      "name": "remove-password is the one thing an encrypted source can start with",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": "removePassword" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "extracted images cannot feed a pdf tool",
+      "steps": [{ "spec": "extractImages" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "extracted images can feed an image tool, and fan in",
+      "steps": [{ "spec": "extractImages" }, { "spec": "imageToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "splitting then a single-file tool fans out",
+      "steps": [{ "spec": "pdfToPdfSplit" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-out" }]
+    },
+    {
+      "name": "splitting then merging fans in",
+      "steps": [{ "spec": "pdfToPdfSplit" }, { "spec": "pdfMerge" }],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "an archive deliverable does not feed a pdf tool",
+      "steps": [{ "spec": "getAttachments" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "a json report does not feed a pdf tool",
+      "steps": [{ "spec": "getInfo" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "a step producing no file terminates the chain",
+      "steps": [{ "spec": "validateOnly" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "a tool accepting anything swallows any upstream output",
+      "steps": [{ "spec": "extractImages" }, { "spec": "anyToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-out" }]
+    },
+    {
+      "name": "a tool producing anything satisfies any downstream input",
+      "steps": [{ "spec": "pdfToAny" }, { "spec": "imageToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "a source of unknown type is not checked against step one",
+      "steps": [{ "spec": "imageToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "a multi-format tool accepts either branch",
+      "steps": [{ "spec": "extractImages" }, { "spec": "pdfOrImage" }],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-out" }]
+    },
+    {
+      "name": "an unconfigured parameter-dependent output only warns",
+      "steps": [{ "spec": "addPasswordConfigurable" }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "output-uncertain" }]
+    },
+    {
+      "name": "configuring the parameter to the encrypting branch makes it an error",
+      "steps": [
+        { "spec": "addPasswordConfigurable", "parameters": { "password": "hunter2" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "configuring the parameter to the non-encrypting branch clears it",
+      "steps": [
+        { "spec": "addPasswordConfigurable", "parameters": { "password": "" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a multi-condition case needs every condition to hold",
+      "steps": [
+        {
+          "spec": "addPasswordTwoKeys",
+          "parameters": { "password": "", "ownerPassword": "hunter2" }
+        },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "a multi-condition case applies when every condition holds",
+      "steps": [
+        { "spec": "addPasswordTwoKeys", "parameters": { "password": "", "ownerPassword": "" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a multi-condition case is unresolved when one condition is unconfigured",
+      "steps": [
+        { "spec": "addPasswordTwoKeys", "parameters": { "password": "" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "output-uncertain" }]
+    },
+    {
+      "name": "the single branch of an arity case produces one file, so no fan-out",
+      "steps": [
+        { "spec": "pdfToImageConfigurable", "parameters": { "singleOrMultiple": "single" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": []
+    },
+    {
+      "name": "the default branch of an arity case fans in",
+      "steps": [
+        { "spec": "pdfToImageConfigurable", "parameters": { "singleOrMultiple": "multiple" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "a condition matches regardless of the casing and padding it was declared with",
+      "steps": [
+        { "spec": "pdfToImageMixedCase", "parameters": { "singleOrMultiple": "SINGLE" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a condition declared in mixed case still fails on a genuinely different value",
+      "steps": [
+        { "spec": "pdfToImageMixedCase", "parameters": { "singleOrMultiple": "multiple" } },
+        { "spec": "imageToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "an absent parameter takes its default, which here does not trigger the case",
+      "steps": [{ "spec": "autoRotateShape" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "an explicit value overrides the default and triggers the case",
+      "steps": [
+        { "spec": "autoRotateShape", "parameters": { "dryRun": "true" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "an absent parameter whose default triggers the case resolves to that branch",
+      "steps": [{ "spec": "changePermsShape" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "setting the branch parameter away from its default flips the outcome",
+      "steps": [
+        {
+          "spec": "changePermsShape",
+          "parameters": { "password": "hunter2", "ownerPassword": "hunter2" }
+        },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "an undeclared step warns and stops the chain being checked past it",
+      "steps": [{ "spec": "addPassword" }, { "spec": null }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "undeclared-operation" }]
+    },
+    {
+      "name": "the source format is not re-applied to a step that follows an undeclared one",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": "removePassword" }, { "spec": null }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 1, "severity": "WARN", "code": "undeclared-operation" }]
+    },
+    {
+      "name": "an undeclared first step does not pass the source format on to the next step",
+      "sourceFormat": "PDF_ENCRYPTED",
+      "steps": [{ "spec": null }, { "spec": "pdfToPdf" }],
+      "expected": [{ "stepIndex": 0, "severity": "WARN", "code": "undeclared-operation" }]
+    },
+    {
+      "name": "every broken transition is reported, not just the first",
+      "steps": [{ "spec": "extractImages" }, { "spec": "pdfToPdf" }, { "spec": "imageToPdf" }],
+      "expected": [
+        { "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" },
+        { "stepIndex": 2, "severity": "ERROR", "code": "format-mismatch" }
+      ]
+    }
+  ]
+}

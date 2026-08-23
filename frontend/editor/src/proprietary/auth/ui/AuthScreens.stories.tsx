@@ -1,8 +1,7 @@
 import { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import type { SpringLoginState } from "@app/auth/ui/useSpringLogin";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
@@ -34,8 +33,6 @@ interface LoginArgs {
   providers: string[];
   /** all = OAuth + email · normal = email only · oauth2 = SSO only. */
   loginMethod: LoginMethod;
-  /** Show the "Don't have an account? Sign up" prompt below the form. */
-  showSignupPrompt: boolean;
   /** Show the first-time-setup default admin credentials card. */
   showDefaultCredentials: boolean;
 }
@@ -73,7 +70,6 @@ function useFakeSpringLogin(
 function LoginPreview({
   providers,
   loginMethod,
-  showSignupPrompt,
   showDefaultCredentials,
 }: LoginArgs) {
   const login = useFakeSpringLogin(providers, loginMethod);
@@ -84,17 +80,14 @@ function LoginPreview({
         logoSrc={loginHeader}
         logoDarkSrc={darkLogo}
         showEmailForm={login.isUserPassAllowed}
-        footer={
-          <>
-            {showDefaultCredentials && <AuthDefaultCredentials />}
-            {showSignupPrompt && <AuthSignupPrompt onSignUp={() => {}} />}
-          </>
-        }
+        footer={showDefaultCredentials ? <AuthDefaultCredentials /> : undefined}
       />
     </AuthShell>
   );
 }
 
+// The shared signup form, as used by the SaaS and desktop account screens.
+// Self-hosted has no signup page - accounts are created by an admin.
 function SignupPreview() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -155,10 +148,6 @@ const meta: Meta<LoginArgs> = {
       description:
         "all = OAuth + email · normal = email only · oauth2 = SSO only",
     },
-    showSignupPrompt: {
-      control: "boolean",
-      description: "Show the sign-up prompt below the form",
-    },
     showDefaultCredentials: {
       control: "boolean",
       description: "Show the first-time-setup default admin credentials card",
@@ -167,7 +156,6 @@ const meta: Meta<LoginArgs> = {
   args: {
     providers: ["google", "github", "oidc"],
     loginMethod: "all",
-    showSignupPrompt: true,
     showDefaultCredentials: false,
   },
 };

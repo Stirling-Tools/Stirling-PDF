@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
 
 export const DefaultAppBanner: React.FC = () => {
   const { t } = useTranslation();
-  const { isDefault, isLoading, handleSetDefault } = useDefaultApp();
-  const [dismissed, setDismissed] = useState(false);
-
-  const handleDismissPrompt = () => {
-    setDismissed(true);
-  };
+  const {
+    isDefault,
+    isLoading,
+    promptDismissed,
+    handleSetDefault,
+    dontRemindAgain,
+  } = useDefaultApp();
+  const [sessionDismissed, setSessionDismissed] = useState(false);
 
   return (
-    <InfoBanner
+    <AppBanner
       icon="picture-as-pdf-rounded"
       message={t(
         "defaultApp.prompt.message",
@@ -22,9 +24,14 @@ export const DefaultAppBanner: React.FC = () => {
       buttonText={t("defaultApp.setDefault", "Set Default")}
       buttonIcon="check-circle-rounded"
       onButtonClick={handleSetDefault}
-      onDismiss={handleDismissPrompt}
+      secondaryButtonText={t(
+        "defaultApp.prompt.dontRemind",
+        "Don't remind me again",
+      )}
+      onSecondaryButtonClick={dontRemindAgain}
+      onDismiss={() => setSessionDismissed(true)}
       loading={isLoading}
-      show={!dismissed && isDefault === false}
+      show={!sessionDismissed && !promptDismissed && isDefault === false}
     />
   );
 };

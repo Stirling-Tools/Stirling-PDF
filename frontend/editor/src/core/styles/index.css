@@ -41,6 +41,9 @@ code {
 /* CSS Variables */
 :root {
   --footer-height: 2rem;
+  --pdf-page-bg: var(--c-pdf-page-bg);
+  --pdf-shimmer-mid: var(--c-pdf-shimmer-mid);
+  --pdf-shimmer-peak: var(--c-pdf-shimmer-peak);
 }
 
 /* Footer link styling - make buttons and links look identical */
@@ -62,7 +65,7 @@ code {
 }
 
 .stirling-link {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
@@ -110,13 +113,6 @@ code {
   );
   animation: pdf-page-shimmer 2.5s infinite;
   pointer-events: none;
-}
-
-/* Light / dark theme tokens for shimmer background */
-:root {
-  --pdf-page-bg: var(--c-pdf-page-bg);
-  --pdf-shimmer-mid: var(--c-pdf-shimmer-mid);
-  --pdf-shimmer-peak: var(--c-pdf-shimmer-peak);
 }
 
 /* Smooth fade-in for lazy-loaded/rendered tile images */

@@ -1,4 +1,8 @@
 import { apiClient } from "@portal/api/http";
+import {
+  type SupportingFileBindings,
+  type ToolApiStep,
+} from "@app/hooks/tools/shared/toolAutomation";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -14,7 +18,7 @@ import { apiClient } from "@portal/api/http";
 export interface PipelineStep {
   operation: string;
   parameters: Record<string, unknown>;
-  fileParameters?: Record<string, string>;
+  fileParameters?: SupportingFileBindings;
 }
 
 /** When a policy input fires automatically. `type` keys a trigger bean (e.g. "schedule"). */
@@ -122,7 +126,13 @@ export type PolicyRunStatus =
   | "FAILED"
   | "CANCELLED";
 
-/** A run's current state. Mirrors the backend `PolicyRunView` (outputs elided). */
+/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
+export interface RunOutputFile {
+  fileId: string;
+  fileName: string | null;
+}
+
+/** A run's current state. Mirrors the backend `PolicyRunView`. */
 export interface PolicyRunView {
   runId: string;
   policyId: string | null;
@@ -132,6 +142,11 @@ export interface PolicyRunView {
   /** Human-readable failure message; set when status is FAILED. */
   error: string | null;
   errorCode: string | null;
+  /**
+   * Files the run produced, present once it completes. Whole-run, not per step: the backend keeps
+   * one flat list, so nothing here can be attributed to an individual step.
+   */
+  outputs?: RunOutputFile[] | null;
   createdAt: number;
 }
 
@@ -195,6 +210,63 @@ export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
+  );
+}
+
+/** What an ad-hoc test run posts: the steps as they stand, with no source and no trigger. */
+export interface TestRunDefinition {
+  name: string;
+  steps: ToolApiStep[];
+  output: OutputSpec;
+}
+
+/**
+ * A fresh, in-memory supporting file sent inline with a test run, bound to the run key a test step's
+ * `fileParameters` references. Only unsaved picks ride along here; a stored file keeps its
+ * `asset:<id>` binding, which the backend resolves from the saved policy (see `runPipelineTest`).
+ */
+export interface TestRunAsset {
+  key: string;
+  file: File;
+}
+
+/**
+ * POST /api/v1/policies/run: run a definition against one uploaded file now. The builder's test
+ * path - callers force an inline output so nothing reaches the pipeline's real destination, and
+ * the pipeline need not be saved first. Fresh supporting files travel as keyed `assets[i]` parts;
+ * a stored file keeps its `asset:<id>` binding, and `policyId` lets the backend resolve it from that
+ * saved policy (so its bytes need not be re-sent).
+ */
+export async function runPipelineTest(
+  definition: TestRunDefinition,
+  file: File,
+  assets: TestRunAsset[] = [],
+  policyId?: string,
+): Promise<{ runId: string }> {
+  const form = new FormData();
+  form.append(
+    "json",
+    new Blob([JSON.stringify(definition)], { type: "application/json" }),
+  );
+  form.append("fileInput", file);
+  if (policyId) form.append("policyId", policyId);
+  assets.forEach((asset, i) => {
+    form.append(`assets[${i}].key`, asset.key);
+    form.append(`assets[${i}].file`, asset.file);
+  });
+  // The POST returns the identifier as `jobId`, but it is the same run id every other endpoint
+  // (fetchRun, fetchRunOutput) calls `runId`; normalise to that here so callers see one name.
+  const res = await apiClient.local.multipart<{ jobId: string }>(
+    "/api/v1/policies/run",
+    form,
+  );
+  return { runId: res.jobId };
+}
+
+/** GET /api/v1/general/files/{id}: download one of a run's outputs. */
+export async function fetchRunOutput(fileId: string): Promise<Blob> {
+  return apiClient.local.blob(
+    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
   );
 }
 

@@ -3,9 +3,12 @@
 // (Edge / Google Translate / extensions) from crashing the app via
 // parent-mismatch DOMExceptions. See the module for details.
 import "@app/utils/patchDomForTranslators";
+// WebKit is missing several APIs the app assumes (ReadableStream async
+// iteration, which pdf.js needs for all text extraction; requestIdleCallback).
+import "@app/utils/engineShims";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "../vite-env.d.ts"; // eslint-disable-line no-restricted-imports -- Outside app paths
+import "../vite-env.d.ts"; // oxlint-disable-line no-restricted-imports -- Outside app paths
 import "@app/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -36,6 +39,15 @@ if (typeof window !== "undefined") {
     }
   } catch (error) {
     console.warn("Failed to override window.devicePixelRatio:", error);
+  }
+
+  const scheduleCompilation = () =>
+    requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
+
+  if (document.readyState === "complete") {
+    scheduleCompilation();
+  } else {
+    window.addEventListener("load", scheduleCompilation);
   }
 }
 

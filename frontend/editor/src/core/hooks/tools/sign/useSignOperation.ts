@@ -5,6 +5,7 @@ import {
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
+  validateSignParameters,
   SignParameters,
   DEFAULT_PARAMETERS,
 } from "@app/hooks/tools/sign/useSignParameters";
@@ -51,6 +52,7 @@ export const buildSignFormData = (
 
 // Static configuration object
 export const signOperationConfig = defineSingleFileTool({
+  validateParams: validateSignParameters,
   buildFormData: buildSignFormData,
   operationType: "sign",
   // Signing is applied client-side in the viewer (see createStampTool ->
