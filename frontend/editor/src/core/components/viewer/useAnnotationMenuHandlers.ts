@@ -14,6 +14,8 @@ import type {
   AnnotationPatch,
 } from "@app/components/viewer/viewerTypes";
 import type { ScrollActions } from "@app/contexts/viewer/viewerActions";
+import { openExternalTab } from "@app/platform/openExternalTab";
+import { getExternalHref } from "@app/utils/externalUrl";
 
 export type AnnotationType =
   | "textMarkup"
@@ -370,7 +372,15 @@ export function useAnnotationMenuHandlers({
   const onGoToLink = useCallback(() => {
     if (!firstLinkTarget) return;
     if (firstLinkTarget.type === "uri") {
-      window.open(firstLinkTarget.uri, "_blank", "noopener,noreferrer");
+      const href = getExternalHref(firstLinkTarget.uri);
+      if (href) {
+        void openExternalTab(href);
+      } else {
+        console.warn(
+          "[useAnnotationMenuHandlers] Blocked unsafe URL:",
+          firstLinkTarget.uri,
+        );
+      }
     } else {
       scrollActions.scrollToPage(firstLinkTarget.pageIndex + 1);
     }

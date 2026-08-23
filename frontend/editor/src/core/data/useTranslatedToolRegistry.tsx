@@ -712,7 +712,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["rearrange-pages"],
         operationConfig: asRegistryConfig(reorganizePagesOperationConfig),
         synonyms: getSynonyms(t, "reorganizePages"),
-        automationSettings: null,
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/reorganizePages/ReorganizePagesSettings"),
+        ),
       },
       scalePages: {
         icon: (
