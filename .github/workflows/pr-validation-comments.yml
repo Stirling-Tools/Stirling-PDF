@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-validation-comments:
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.name == matrix.workflow
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.name == 'Build and Test Workflow'
     name: Build validation comment (${{ matrix.label }})
     runs-on: ubuntu-latest
     strategy:
@@ -227,7 +227,7 @@ jobs:
 
 
   license-validation-comments:
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.name == matrix.workflow
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.name == 'License Report Workflow'
     name: License validation comment (${{ matrix.label }})
     runs-on: ubuntu-latest
     strategy:
@@ -419,6 +419,3 @@ jobs:
                 comment_id: existing.id,
               });
             }
-
-
-
