@@ -51,6 +51,15 @@ COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
+# Compile the network guard here (not only in base) so it ships regardless of the pinned base version.
+FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
@@ -67,6 +76,10 @@ COPY --link --from=jar-extract --chown=1000:1000 /layers/application/           
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
+
+# LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
+COPY --link --from=office-guard-build \
+     /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 # Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/

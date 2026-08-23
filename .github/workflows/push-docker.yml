@@ -280,6 +280,7 @@ jobs:
             docker/unoserver/entrypoint.sh \
             docker/unoserver/healthcheck.sh \
             docker/unoserver/VERSION \
+            docker/base/security/soffice_no_network.c \
             | sha256sum | cut -d' ' -f1)
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
           echo "Unoserver source hash: ${hash}"

@@ -1,6 +1,14 @@
 # Standalone unoserver image for Stirling-PDF remote UNO mode.
 # Pinned to unoserver 3.7 to match Stirling-PDF's client (avoids wire mismatch).
 
+# Compile the LibreOffice network guard (LD_PRELOAD connect() blocker).
+FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
 FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea
 
 ARG UNOSERVER_VERSION=3.7
@@ -62,6 +70,9 @@ RUN set -eu; \
 
 COPY --chmod=0644 docker/unoserver/fonts.conf /etc/fonts/conf.d/100-stirling.conf
 RUN fc-cache -f
+
+# LibreOffice network guard (loaded via LD_PRELOAD by the entrypoint).
+COPY --from=office-guard-build /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 # venv with --system-site-packages so it picks up distro python3-uno.
 RUN python3 -m venv /opt/unoserver-venv --system-site-packages && \

@@ -826,3 +826,15 @@ def step_response_matches_regex(context, pattern):
     assert re.match(
         pattern, response_text
     ), f"Response '{response_text}' does not match the expected pattern '{pattern}'"
+
+
+@then("the response PDF should contain {count:d} embedded images")
+def step_response_pdf_embedded_image_count(context, count):
+    reader = PdfReader(io.BytesIO(context.response.content))
+    total = 0
+    for page in reader.pages:
+        try:
+            total += len(page.images)
+        except Exception:
+            pass
+    assert total == count, f"Expected {count} embedded images in response PDF, found {total}"

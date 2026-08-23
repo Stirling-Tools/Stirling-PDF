@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,36 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
+
+    // LD_PRELOAD SSRF guard for soffice; null when LIBREOFFICE_ALLOW_NETWORK set or lib missing.
+    private static final String OFFICE_NETWORK_GUARD_LIB = resolveOfficeNetworkGuard();
+
+    private static String resolveOfficeNetworkGuard() {
+        String allow = System.getenv("LIBREOFFICE_ALLOW_NETWORK");
+        if (allow != null) {
+            String v = allow.trim().toLowerCase(Locale.ROOT);
+            if (v.equals("1") || v.equals("true") || v.equals("yes") || v.equals("on")) {
+                return null;
+            }
+        }
+        String override = System.getenv("LIBREOFFICE_NETWORK_GUARD_LIB");
+        String path =
+                (override != null && !override.isBlank())
+                        ? override.trim()
+                        : "/usr/local/lib/stirling/soffice_no_network.so";
+        return Files.exists(Path.of(path)) ? path : null;
+    }
+
+    private static boolean isSofficeEngineCommand(List<String> command) {
+        if (command == null || command.isEmpty() || command.get(0) == null) {
+            return false;
+        }
+        String exe = command.get(0);
+        int slash = Math.max(exe.lastIndexOf('/'), exe.lastIndexOf('\\'));
+        String base = (slash >= 0 ? exe.substring(slash + 1) : exe).toLowerCase(Locale.ROOT);
+        return base.equals("soffice") || base.equals("soffice.bin");
+    }
+
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -223,6 +254,19 @@ public class ProcessExecutor {
             validateCommand(commandToRun);
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
+
+            // Guard the soffice engine only, not the unoconvert client (remote-UNO connects out).
+            if (processType == Processes.LIBRE_OFFICE
+                    && OFFICE_NETWORK_GUARD_LIB != null
+                    && isSofficeEngineCommand(commandToRun)) {
+                Map<String, String> env = processBuilder.environment();
+                String existing = env.get("LD_PRELOAD");
+                env.put(
+                        "LD_PRELOAD",
+                        (existing == null || existing.isBlank())
+                                ? OFFICE_NETWORK_GUARD_LIB
+                                : OFFICE_NETWORK_GUARD_LIB + " " + existing);
+            }
 
             // Use the working directory if it's set
             if (workingDirectory != null) {

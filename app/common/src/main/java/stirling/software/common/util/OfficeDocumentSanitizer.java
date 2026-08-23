@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
-// Strips external refs from OOXML/ODF uploads so LibreOffice can't be made to fetch them.
+// Strips external/file references from office uploads so LibreOffice can't be made to fetch them.
 @Component
 @Slf4j
 public class OfficeDocumentSanitizer {
@@ -81,10 +82,18 @@ public class OfficeDocumentSanitizer {
             log.debug("Office document sanitization disabled by configuration");
             return documentBytes;
         }
-        if (!isSanitizableExtension(extension)) {
-            return documentBytes;
+        // Route by content, not extension (a flat-ODF renamed .xml still needs sanitizing).
+        if (looksLikeZip(documentBytes)) {
+            return sanitizeZipContainer(documentBytes);
         }
+        if (looksLikeXml(documentBytes)) {
+            return sanitizeFlatXml(documentBytes);
+        }
+        // Binary formats we can't introspect pass through; the network guard contains their SSRF.
+        return documentBytes;
+    }
 
+    private byte[] sanitizeZipContainer(byte[] documentBytes) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
         try (ZipInputStream zipIn =
                         ZipSecurity.createHardenedInputStream(
@@ -115,6 +124,92 @@ public class OfficeDocumentSanitizer {
             }
         }
         return out.toByteArray();
+    }
+
+    // Flat single-file XML: strip all out-of-document refs; fail CLOSED on unparseable.
+    byte[] sanitizeFlatXml(byte[] xmlBytes) throws IOException {
+        byte[] cleaned = tryStripFlatXml(xmlBytes);
+        if (cleaned != null) {
+            return cleaned;
+        }
+        // DOCTYPE trips the hardened parser; strip and retry so benign DOCTYPE files convert.
+        byte[] withoutDoctype = stripDoctype(xmlBytes);
+        if (withoutDoctype != null) {
+            cleaned = tryStripFlatXml(withoutDoctype);
+            if (cleaned != null) {
+                return cleaned;
+            }
+        }
+        throw new IOException("XML document could not be parsed for sanitization and was rejected");
+    }
+
+    // Returns null (not the original bytes) to signal a parse failure to the caller.
+    private byte[] tryStripFlatXml(byte[] xmlBytes) {
+        try {
+            Document doc = parseSecurely(xmlBytes);
+            Element root = doc.getDocumentElement();
+            if (root == null) {
+                return xmlBytes;
+            }
+            if (!stripExternalHrefs(root, true)) {
+                return xmlBytes;
+            }
+            return serializeDocument(doc);
+        } catch (ParserConfigurationException
+                | SAXException
+                | IOException
+                | TransformerException e) {
+            log.warn("Single-file XML did not parse for sanitization: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // Strip leading <!DOCTYPE ...> so parsing works; null if absent/unterminated.
+    private static byte[] stripDoctype(byte[] xmlBytes) {
+        String s = new String(xmlBytes, StandardCharsets.UTF_8);
+        int start = s.indexOf("<!DOCTYPE");
+        if (start < 0) {
+            return null;
+        }
+        int depth = 0;
+        for (int i = start + "<!DOCTYPE".length(); i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '[') {
+                depth++;
+            } else if (c == ']') {
+                if (depth > 0) {
+                    depth--;
+                }
+            } else if (c == '>' && depth == 0) {
+                return (s.substring(0, start) + s.substring(i + 1))
+                        .getBytes(StandardCharsets.UTF_8);
+            }
+        }
+        return null;
+    }
+
+    private static boolean looksLikeZip(byte[] b) {
+        return b.length >= 4 && b[0] == 'P' && b[1] == 'K' && b[2] == 3 && b[3] == 4;
+    }
+
+    private static boolean looksLikeXml(byte[] b) {
+        int i = 0;
+        int n = b.length;
+        if (n >= 3 && (b[0] & 0xFF) == 0xEF && (b[1] & 0xFF) == 0xBB && (b[2] & 0xFF) == 0xBF) {
+            i = 3; // UTF-8 BOM
+        } else if (n >= 2 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xFE) {
+            i = 2; // UTF-16 LE BOM
+        } else if (n >= 2 && (b[0] & 0xFF) == 0xFE && (b[1] & 0xFF) == 0xFF) {
+            i = 2; // UTF-16 BE BOM
+        }
+        for (; i < n; i++) {
+            byte c = b[i];
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == 0) {
+                continue;
+            }
+            return c == '<';
+        }
+        return false;
     }
 
     private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
@@ -189,56 +284,67 @@ public class OfficeDocumentSanitizer {
         if (root == null) {
             return xmlBytes;
         }
-        boolean modified = stripExternalHrefs(root);
+        boolean modified = stripExternalHrefs(root, false);
         if (!modified) {
             return xmlBytes;
         }
         return serializeDocument(doc);
     }
 
-    private boolean stripExternalHrefs(Node node) {
+    // flatMode: flat XML has no package, so strip all refs but #frag/data: (zip keeps relatives).
+    private boolean stripExternalHrefs(Node node, boolean flatMode) {
         boolean modified = false;
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             NamedNodeMap attrs = node.getAttributes();
-            List<String> hrefAttrsToRemove = new ArrayList<>();
+            List<String> attrsToRemove = new ArrayList<>();
             for (int i = 0; i < attrs.getLength(); i++) {
                 Node attr = attrs.item(i);
                 String name = attr.getNodeName();
-                if (name == null) {
-                    continue;
-                }
-                String lower = name.toLowerCase(Locale.ROOT);
-                if (!(lower.equals("xlink:href")
-                        || lower.endsWith(":href")
-                        || lower.equals("href"))) {
+                if (name == null || !isReferenceAttribute(name)) {
                     continue;
                 }
                 String value = attr.getNodeValue();
-                if (!isExternalUrl(value)) {
+                boolean dangerous = flatMode ? isOutsideDocumentRef(value) : isExternalUrl(value);
+                if (!dangerous || isAdminAllowed(value)) {
                     continue;
                 }
-                if (isAdminAllowed(value)) {
-                    continue;
-                }
-                log.warn(
-                        "Stripping ODF external href attribute ({}): {}",
-                        name,
-                        truncateForLog(value));
-                hrefAttrsToRemove.add(name);
+                log.warn("Stripping reference attribute ({}): {}", name, truncateForLog(value));
+                attrsToRemove.add(name);
             }
             Element element = (Element) node;
-            for (String attrName : hrefAttrsToRemove) {
+            for (String attrName : attrsToRemove) {
                 element.removeAttribute(attrName);
                 modified = true;
             }
         }
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
-            if (stripExternalHrefs(children.item(i))) {
+            if (stripExternalHrefs(children.item(i), flatMode)) {
                 modified = true;
             }
         }
         return modified;
+    }
+
+    private static boolean isReferenceAttribute(String name) {
+        String lower = name.toLowerCase(Locale.ROOT);
+        return lower.equals("href")
+                || lower.endsWith(":href")
+                || lower.equals("src")
+                || lower.endsWith(":src");
+    }
+
+    // Flat XML: anything but a #fragment or data: URI points outside the document and is stripped.
+    private static boolean isOutsideDocumentRef(String url) {
+        if (url == null) {
+            return false;
+        }
+        String trimmed = url.trim();
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        return !(lower.startsWith("#") || lower.startsWith("data:"));
     }
 
     private boolean isExternalUrl(String url) {
@@ -249,14 +355,27 @@ public class OfficeDocumentSanitizer {
         if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("../")) {
             return false;
         }
+        // Absolute/UNC/drive-letter paths are never valid in-package references.
+        if (trimmed.startsWith("/") || trimmed.startsWith("\\")) {
+            return true;
+        }
+        if (trimmed.length() >= 3
+                && Character.isLetter(trimmed.charAt(0))
+                && trimmed.charAt(1) == ':'
+                && (trimmed.charAt(2) == '\\' || trimmed.charAt(2) == '/')) {
+            return true;
+        }
         return trimmed.startsWith("http://")
                 || trimmed.startsWith("https://")
                 || trimmed.startsWith("ftp://")
                 || trimmed.startsWith("ftps://")
                 || trimmed.startsWith("file:")
                 || trimmed.startsWith("smb:")
-                || trimmed.startsWith("\\\\")
-                || trimmed.startsWith("//");
+                || trimmed.startsWith("webdav:")
+                || trimmed.startsWith("davs:")
+                || trimmed.startsWith("dav:")
+                || trimmed.startsWith("vnd.sun.star.webdav:")
+                || trimmed.startsWith("vnd.sun.star.pkg:");
     }
 
     // Preserved only with an explicit allowedDomains entry; MEDIUM default would admit public URLs.

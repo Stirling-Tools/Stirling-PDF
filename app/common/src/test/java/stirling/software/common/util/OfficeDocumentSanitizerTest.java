@@ -343,6 +343,112 @@ class OfficeDocumentSanitizerTest {
         assertTrue(out.contains("#anchor"));
     }
 
+    private static String flatOdf(String href) {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<office:document"
+                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                + " xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\""
+                + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                + " office:mimetype=\"application/vnd.oasis.opendocument.text\">"
+                + "<office:body><office:text>"
+                + "<draw:frame><draw:image xlink:href=\""
+                + href
+                + "\"/></draw:frame>"
+                + "</office:text></office:body></office:document>";
+    }
+
+    @Test
+    void sanitize_flatOdfStripsExternalHref() throws IOException {
+        byte[] fodt = flatOdf(EXTERNAL_URL).getBytes(StandardCharsets.UTF_8);
+        String out = new String(sanitizer.sanitize(fodt, "fodt"), StandardCharsets.UTF_8);
+        assertFalse(out.contains(EXTERNAL_URL), "flat-ODF external href must be stripped");
+    }
+
+    @Test
+    void sanitize_flatOdfStripsFileHrefLocalReadback() throws IOException {
+        // Local-file readback (#7628): file:// reference must be removed before LibreOffice.
+        byte[] fodt = flatOdf("file:///etc/passwd").getBytes(StandardCharsets.UTF_8);
+        String out = new String(sanitizer.sanitize(fodt, "fodt"), StandardCharsets.UTF_8);
+        assertFalse(out.contains("file:///etc/passwd"), "flat-ODF file: href must be stripped");
+    }
+
+    @Test
+    void sanitize_flatOdfSanitizedRegardlessOfExtension() throws IOException {
+        // #7629 bypass: identical bytes renamed .xml/.txt must still be sanitized by content.
+        byte[] fodt = flatOdf(EXTERNAL_URL).getBytes(StandardCharsets.UTF_8);
+        for (String ext : new String[] {"xml", "txt", "dat", "fods", "unknown"}) {
+            String out = new String(sanitizer.sanitize(fodt, ext), StandardCharsets.UTF_8);
+            assertFalse(
+                    out.contains(EXTERNAL_URL),
+                    "external href must be stripped even when extension is ." + ext);
+        }
+    }
+
+    @Test
+    void sanitize_flatOdfKeepsInDocumentRefsAndInlineData() throws IOException {
+        // A single-file doc legitimately references only in-document anchors and data: URIs.
+        byte[] anchor = flatOdf("#anchor").getBytes(StandardCharsets.UTF_8);
+        byte[] inline =
+                flatOdf("data:image/png;base64,iVBORw0KGgo=").getBytes(StandardCharsets.UTF_8);
+        assertTrue(
+                new String(sanitizer.sanitize(anchor, "fodt"), StandardCharsets.UTF_8)
+                        .contains("#anchor"));
+        assertTrue(
+                new String(sanitizer.sanitize(inline, "fodt"), StandardCharsets.UTF_8)
+                        .contains("data:image/png;base64"));
+    }
+
+    @Test
+    void sanitize_flatOdfStripsTraversalAndAbsolutePaths() throws IOException {
+        // #7628 H1: flat XML has no package, so ../ traversal and absolute paths are external.
+        for (String href :
+                new String[] {
+                    "../../../../etc/passwd", "/etc/passwd", "\\\\attacker\\share\\x", "C:/secret"
+                }) {
+            byte[] fodt = flatOdf(href).getBytes(StandardCharsets.UTF_8);
+            String out = new String(sanitizer.sanitize(fodt, "fodt"), StandardCharsets.UTF_8);
+            assertFalse(out.contains(href), "flat-ODF must strip filesystem ref: " + href);
+        }
+    }
+
+    @Test
+    void sanitize_flatOdfDoctypeDoesNotFailOpen() throws IOException {
+        // #7628 C1: a DOCTYPE makes the strict parser reject the doc; must NOT pass through raw.
+        String doc =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                        + "<!DOCTYPE office:document>"
+                        + "<office:document"
+                        + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                        + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                        + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                        + "<office:body><office:text><draw:frame>"
+                        + "<draw:image xlink:href=\"file:///etc/passwd\"/>"
+                        + "</draw:frame></office:text></office:body></office:document>";
+        byte[] fodt = doc.getBytes(StandardCharsets.UTF_8);
+        String out = new String(sanitizer.sanitize(fodt, "fodt"), StandardCharsets.UTF_8);
+        assertFalse(out.contains("file:///etc/passwd"), "DOCTYPE payload must be sanitized");
+    }
+
+    @Test
+    void sanitize_flatOdfStripsSrcAttribute() throws IOException {
+        String doc =
+                "<?xml version=\"1.0\"?><doc xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                        + "<img src=\"file:///etc/passwd\"/></doc>";
+        String out =
+                new String(
+                        sanitizer.sanitize(doc.getBytes(StandardCharsets.UTF_8), "xml"),
+                        StandardCharsets.UTF_8);
+        assertFalse(out.contains("file:///etc/passwd"), "src attribute must be stripped");
+    }
+
+    @Test
+    void sanitize_unparseableXmlIsRejectedNotPassedThrough() {
+        // Fail closed: XML-detected content that cannot be parsed is rejected, not passed raw.
+        byte[] garbage = "<not-well-formed <<< &amp".getBytes(StandardCharsets.UTF_8);
+        assertThrows(IOException.class, () -> sanitizer.sanitize(garbage, "fodt"));
+    }
+
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
