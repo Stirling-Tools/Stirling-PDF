@@ -659,25 +659,6 @@
   color: var(--auth-text-primary);
 }
 
-/* "Don't have an account? Sign up" row beneath the login form. */
-.auth-signup-prompt {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem; /* 6px */
-  margin-top: 1.5rem; /* 24px */
-  font-size: 0.875rem; /* 14px */
-  color: var(--auth-label-text);
-}
-
-.auth-signup-link.sui-btn.mantine-Button-root {
-  padding: 0;
-  min-height: 0;
-  height: auto;
-  font-size: 0.875rem; /* 14px */
-  font-weight: 700;
-}
-
 /* Email login button - red CTA style matching SaaS version */
 .auth-cta-button {
   background-color: var(--c-brand) !important;
@@ -764,12 +745,6 @@
 .auth-expand-inner {
   overflow: hidden;
   min-height: 0;
-}
-
-.oauth-container-fullwidth {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .oauth-button-fullwidth {

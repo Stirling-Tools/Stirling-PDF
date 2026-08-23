@@ -32,6 +32,14 @@
  * promise see the UI flip exactly once the new state is visible — no
  * intermediate flash of the old value.
  *
+ * <h2>Freshness</h2>
+ *
+ * The figures drain as metered work runs, so a mounted consumer re-reads the
+ * wallet every {@link WALLET_POLL_MS} and again whenever the tab regains
+ * visibility. Those refreshes are silent — they leave {@code loading} and
+ * {@code error} alone and only commit fresher data — so consumers that gate on
+ * those flags don't flicker on a background tick.
+ *
  * <h2>Dev preview fallback</h2>
  *
  * When the hook is rendered outside the saas app (e.g. on {@code
@@ -128,6 +136,7 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.freeAllowance !== next.freeAllowance ||
     prev.freeRemaining !== next.freeRemaining ||
     prev.pricePerDocMinor !== next.pricePerDocMinor ||
+    prev.bundleRatePerCreditMinor !== next.bundleRatePerCreditMinor ||
     prev.currency !== next.currency ||
     prev.estimatedBillMinor !== next.estimatedBillMinor ||
     prev.capUsd !== next.capUsd ||
@@ -177,6 +186,13 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
   return prev;
 }
 
+/**
+ * How often a mounted consumer re-reads the wallet. Matches the app query
+ * client's staleTime, so the sidebar meter and anything cached elsewhere age
+ * out on the same clock.
+ */
+const WALLET_POLL_MS = 30_000;
+
 export function useWallet(): UseWalletResult {
   // Resolved once: the dev-preview side-channel when rendered outside the real
   // app (saas /dev/payg-preview route), else null (every real build + desktop).
@@ -200,13 +216,29 @@ export function useWallet(): UseWalletResult {
   // "the request fired." Cleared when no load is pending.
   const inFlight = useRef<Promise<void> | null>(null);
 
+  // Set for refreshes the user didn't ask for (the poll below). Silence governs
+  // whether a load may RAISE `loading` / `error`, never whether it may clear
+  // them: consumers gate on both — the limit modals do
+  // `if (loading || !wallet) return null`, and Plan swaps in an error alert —
+  // so a background tick must not blink an open modal out or replace a working
+  // page over a transient failure. Clearing is always the latest request's job,
+  // silent or not; a silent load that skipped the clear would strand `loading`
+  // true after superseding a visible one, which suppresses those modals for the
+  // rest of the session.
+  const silentRefresh = useRef(false);
+
   useEffect(() => {
     const reqId = ++latestReqId.current;
     let cancelled = false;
 
+    const silent = silentRefresh.current;
+    silentRefresh.current = false;
+
     const promise = (async () => {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (devPreview) {
         const synth = devPreview.buildWallet(devPreview.role());
@@ -220,11 +252,22 @@ export function useWallet(): UseWalletResult {
         const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, res.data));
+        // Fresh data retires any earlier failure, including one a silent poll
+        // is recovering from — otherwise Plan keeps its alert over good data.
+        setError(null);
       } catch (e: unknown) {
         if (cancelled || reqId !== latestReqId.current) return;
-        console.warn("[useWallet] fetch failed", e);
-        setError(e instanceof Error ? e.message : "Failed to load wallet");
+        if (!silent) {
+          console.warn("[useWallet] fetch failed", e);
+          setError(e instanceof Error ? e.message : "Failed to load wallet");
+        }
+        // A failed background refresh is a non-event: the last good snapshot
+        // stands and the next tick self-heals, so it neither surfaces nor
+        // logs — otherwise an offline tab warns every WALLET_POLL_MS.
       } finally {
+        // Deliberately not gated on `silent`: whichever load is latest owns
+        // settling the flag, or a silent refresh that supersedes a visible one
+        // leaves it stuck true.
         if (!cancelled && reqId === latestReqId.current) {
           setLoading(false);
         }
@@ -240,6 +283,46 @@ export function useWallet(): UseWalletResult {
       // upstream ensures stale results don't commit.
     };
   }, [devPreview, refetchTick]);
+
+  // The wallet drains as automation, AI and API work runs, so a figure fetched
+  // on mount goes stale while the user watches it. Refresh on a timer, and
+  // immediately on returning to the tab — coming back to a stale number is the
+  // case people actually notice. Hidden tabs don't poll, and the dev-preview
+  // wallet is synthesised locally so there is nothing to re-read.
+  useEffect(() => {
+    if (devPreview) return;
+
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const refresh = () => {
+      silentRefresh.current = true;
+      setRefetchTick((t) => t + 1);
+    };
+    const stop = () => {
+      if (timer !== undefined) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    const start = () => {
+      stop();
+      timer = setInterval(refresh, WALLET_POLL_MS);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [devPreview]);
 
   const refetch = useCallback(async () => {
     setRefetchTick((t) => t + 1);

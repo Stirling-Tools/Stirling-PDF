@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
@@ -20,7 +21,6 @@ import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -30,7 +30,6 @@ export default function Login() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showMagicLinkForm, setShowMagicLinkForm] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
@@ -43,7 +42,6 @@ export default function Login() {
       const emailFromQuery = url.searchParams.get("email");
       if (emailFromQuery) {
         setEmail(emailFromQuery);
-        setShowEmailForm(true);
       }
     } catch (_) {
       // ignore
@@ -167,10 +165,10 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // Fresh login with no explicit destination: let the role-based landing
-        // redirect route team leads to the processor. User is redirected by the
-        // auth state change.
-        if (!nextPath) markLoginLandingPending();
+        // No explicit destination: land team leads on the processor and everyone
+        // else on the editor. Resolved here rather than by bouncing through "/"
+        // so the app isn't torn down and remounted on the way.
+        if (!nextPath) navigate(await resolveLandingPath(), { replace: true });
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
@@ -256,15 +254,8 @@ export default function Login() {
     }
   };
 
-  const toggleEmailForm = () => {
-    setShowEmailForm((v) => !v);
-    setShowMagicLinkForm(false);
-    setMagicLinkSent(false);
-  };
-
   const toggleMagicLink = () => {
     setShowMagicLinkForm((v) => !v);
-    setShowEmailForm(false);
     setMagicLinkSent(false);
   };
 
@@ -334,7 +325,7 @@ export default function Login() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "var(--c-success)",
+                      color: "var(--color-green-dark)",
                       margin: 0,
                     }}
                   >
@@ -374,71 +365,30 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Email & Password button */}
-      <Button
-        variant="secondary"
-        disabled={isSigningIn}
-        onClick={toggleEmailForm}
-        className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
-        style={{ marginBottom: "0.75rem" }}
-      >
-        <span className="oauth-btn-group">
-          <span className="auth-at-icon">@</span>
-          <span className="oauth-btn-label">{`${t("login.signInWith", "Sign in with")} email`}</span>
-        </span>
-      </Button>
-
-      {/* Email form — animated expand */}
-      <div
-        className={`auth-expand-grid ${showEmailForm ? "auth-expand-grid--open" : ""}`}
-      >
-        <div className="auth-expand-inner">
-          <div style={{ paddingBottom: "0.5rem" }}>
-            <EmailPasswordForm
-              email={email}
-              password={password}
-              setEmail={setEmail}
-              setPassword={setPassword}
-              onSubmit={signInWithEmail}
-              isSubmitting={isSigningIn}
-              submitButtonText={
-                isSigningIn ? t("login.loggingIn") : t("login.login")
-              }
-            />
-            <Button
-              variant="tertiary"
-              onClick={() => navigate("/auth/reset")}
-              className="auth-link-black"
-              style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
-            >
-              {t("login.forgotPassword", "Forgot your password?")}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Skip */}
-      <div style={{ textAlign: "center", margin: "1rem 0" }}>
+      {/* Email + password form — always visible (no expander toggle) */}
+      <div style={{ paddingBottom: "0.5rem" }}>
+        <EmailPasswordForm
+          email={email}
+          password={password}
+          setEmail={setEmail}
+          setPassword={setPassword}
+          onSubmit={signInWithEmail}
+          isSubmitting={isSigningIn}
+          submitButtonText={
+            isSigningIn ? t("login.loggingIn") : t("login.login")
+          }
+        />
         <Button
           variant="tertiary"
-          onClick={handleAnonymousSignIn}
-          disabled={isSigningIn}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: 700,
-            color: "var(--c-text)",
-          }}
+          onClick={() => navigate("/auth/reset")}
+          className="auth-link-black"
+          style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
         >
-          {isSigningIn
-            ? t("login.signingIn", "Signing in...")
-            : `${t("signup.skip", "Skip")} →`}
+          {t("login.forgotPassword", "Forgot your password?")}
         </Button>
       </div>
 
-      {/* Bottom */}
+      {/* Create an account — pushed to the bottom */}
       <div
         style={{
           textAlign: "center",
@@ -454,10 +404,31 @@ export default function Login() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-text-subtle)",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("login.createAccount", "Create an account")}
+        </Button>
+      </div>
+
+      {/* Skip — small + muted, at the very bottom */}
+      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+        <Button
+          variant="tertiary"
+          onClick={handleAnonymousSignIn}
+          disabled={isSigningIn}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+            fontWeight: 500,
+            color: "var(--c-text-subtle)",
+          }}
+        >
+          {isSigningIn
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
         </Button>
       </div>
     </AuthLayout>

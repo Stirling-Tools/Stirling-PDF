@@ -29,6 +29,12 @@ export interface ConnectionFieldDef {
   defaultValue?: string;
   /** Shown only when another field has one of these values, e.g. auth fields per authType. */
   visibleWhen?: { key: string; oneOf: string[] };
+  /**
+   * When this field changes, move another field onto the default paired with the new value (FTP
+   * port per encryption mode) — but only while the target still holds a default, never a custom
+   * value the operator typed.
+   */
+  syncsDefault?: { targetKey: string; map: Record<string, string> };
 }
 
 export interface CreatableConnectionType {
@@ -119,6 +125,162 @@ const S3_FIELDS: ConnectionFieldDef[] = [
     labelKey: `${PREFIX}.s3.fields.secretAccessKey.label`,
     control: "password",
     required: true,
+  },
+];
+
+// Network file servers (SFTP/FTP/SMB). The protocol is baked into presetConfig; the operator
+// supplies host and credentials. host/port/username/password reuse the shared commonFields copy.
+const SFTP_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.sftp.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "22",
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    helperTextKey: `${PREFIX}.sftp.fields.password.helperText`,
+  },
+  {
+    key: "privateKey",
+    labelKey: `${PREFIX}.sftp.fields.privateKey.label`,
+    control: "textarea",
+    helperTextKey: `${PREFIX}.sftp.fields.privateKey.helperText`,
+  },
+  {
+    key: "privateKeyPassphrase",
+    labelKey: `${PREFIX}.sftp.fields.passphrase.label`,
+    control: "password",
+  },
+  {
+    key: "hostKeyFingerprint",
+    labelKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.label`,
+    control: "text",
+    placeholderKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.placeholder`,
+    helperTextKey: `${PREFIX}.sftp.fields.hostKeyFingerprint.helperText`,
+  },
+];
+
+const FTP_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.ftp.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "21",
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    required: true,
+  },
+  {
+    key: "security",
+    labelKey: `${PREFIX}.ftp.fields.security.label`,
+    control: "select",
+    defaultValue: "NONE",
+    helperTextKey: `${PREFIX}.ftp.fields.security.helperText`,
+    // Implicit FTPS listens on 990; follow the untouched port default across modes.
+    syncsDefault: {
+      targetKey: "port",
+      map: { NONE: "21", EXPLICIT: "21", IMPLICIT: "990" },
+    },
+    options: [
+      { value: "NONE", labelKey: `${PREFIX}.ftp.fields.security.options.none` },
+      {
+        value: "EXPLICIT",
+        labelKey: `${PREFIX}.ftp.fields.security.options.explicit`,
+      },
+      {
+        value: "IMPLICIT",
+        labelKey: `${PREFIX}.ftp.fields.security.options.implicit`,
+      },
+    ],
+  },
+  {
+    key: "passive",
+    labelKey: `${PREFIX}.ftp.fields.passive.label`,
+    control: "select",
+    defaultValue: "true",
+    options: [
+      {
+        value: "true",
+        labelKey: `${PREFIX}.ftp.fields.passive.options.passive`,
+      },
+      {
+        value: "false",
+        labelKey: `${PREFIX}.ftp.fields.passive.options.active`,
+      },
+    ],
+  },
+];
+
+const SMB_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "host",
+    labelKey: `${COMMON}.host.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.smb.hostPlaceholder`,
+  },
+  {
+    key: "port",
+    labelKey: `${COMMON}.port.label`,
+    control: "text",
+    defaultValue: "445",
+  },
+  {
+    key: "share",
+    labelKey: `${PREFIX}.smb.fields.share.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.smb.fields.share.placeholder`,
+  },
+  {
+    key: "username",
+    labelKey: `${COMMON}.username.label`,
+    control: "text",
+    required: true,
+  },
+  {
+    key: "password",
+    labelKey: `${COMMON}.password.label`,
+    control: "password",
+    required: true,
+  },
+  {
+    key: "domain",
+    labelKey: `${PREFIX}.smb.fields.domain.label`,
+    control: "text",
+    helperTextKey: `${PREFIX}.smb.fields.domain.helperText`,
   },
 ];
 
@@ -334,6 +496,57 @@ const field = {
   }),
 };
 
+/** The three modes an n8n Webhook node can be set to, asked for rather than baked into the preset
+ * because it is the operator's choice; field values apply over `presetConfig`, so the answer wins. */
+const N8N_AUTH_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "authType",
+    labelKey: `${PREFIX}.n8n.fields.authType.label`,
+    control: "select",
+    required: true,
+    defaultValue: "NONE",
+    helperTextKey: `${PREFIX}.n8n.fields.authType.helperText`,
+    options: [
+      {
+        value: "NONE",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.none.label`,
+      },
+      {
+        value: "HEADER",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.header.label`,
+      },
+      {
+        value: "BASIC",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.basic.label`,
+      },
+    ],
+  },
+  {
+    key: "headerName",
+    labelKey: `${PREFIX}.n8n.fields.headerName.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.n8n.fields.headerName.placeholder`,
+    helperTextKey: `${PREFIX}.n8n.fields.headerName.helperText`,
+    visibleWhen: { key: "authType", oneOf: ["HEADER"] },
+  },
+  {
+    key: "token",
+    labelKey: `${PREFIX}.n8n.fields.token.label`,
+    control: "password",
+    required: true,
+    visibleWhen: { key: "authType", oneOf: ["HEADER"] },
+  },
+  {
+    ...field.username(),
+    visibleWhen: { key: "authType", oneOf: ["BASIC"] },
+  },
+  {
+    ...field.password(),
+    visibleWhen: { key: "authType", oneOf: ["BASIC"] },
+  },
+];
+
 /**
  * A vendor whose integration is "an HTTP API with known mechanics". The auth shape, and the base
  * URL when the vendor has a single global one, are baked into `preset`; the operator supplies only
@@ -530,6 +743,26 @@ const API_PRESETS: CreatableConnectionType[] = [
     searchTerms: ["make", "automation", "workflow", "trigger", "no-code"],
     identifyHosts: ["zapier.com"],
   }),
+  // Usually self-hosted, so there is no global host to bake in. The node's three auth options are
+  // mirrored exactly; BEARER or TOKEN_LOGIN would be auth it cannot be configured for.
+  apiPreset({
+    id: "n8n",
+    category: "notify",
+    preset: { authType: "NONE" },
+    fields: [field.webhookUrl("n8n"), ...N8N_AUTH_FIELDS],
+    searchTerms: [
+      "n8n",
+      "automation",
+      "workflow",
+      "trigger",
+      "self-hosted",
+      "no-code",
+      "low-code",
+    ],
+    // n8n Cloud instances live at <tenant>.app.n8n.cloud; a self-hosted one is recovered from
+    // its presetId marker instead, since its host is whatever the operator chose.
+    identifyHosts: ["n8n.cloud"],
+  }),
   apiPreset({
     id: "webhook",
     category: "notify",
@@ -586,6 +819,46 @@ export const CREATABLE_CONNECTION_TYPES: CreatableConnectionType[] = [
     descriptionKey: `${PREFIX}.s3.description`,
     searchTerms: ["aws", "bucket", "minio", "object storage"],
     fields: S3_FIELDS,
+  },
+  {
+    id: "sftp",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.sftp.label`,
+    descriptionKey: `${PREFIX}.sftp.description`,
+    searchTerms: ["sftp", "ssh", "scp", "drop folder", "file transfer"],
+    presetConfig: { protocol: "SFTP" },
+    fields: SFTP_FIELDS,
+  },
+  {
+    id: "ftp",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.ftp.label`,
+    descriptionKey: `${PREFIX}.ftp.description`,
+    searchTerms: ["ftp", "ftps", "file transfer", "drop folder"],
+    presetConfig: { protocol: "FTP" },
+    fields: FTP_FIELDS,
+  },
+  {
+    id: "smb",
+    integrationType: "NETWORK",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.smb.label`,
+    descriptionKey: `${PREFIX}.smb.description`,
+    searchTerms: [
+      "smb",
+      "cifs",
+      "samba",
+      "network drive",
+      "windows share",
+      "unc",
+    ],
+    presetConfig: { protocol: "SMB" },
+    fields: SMB_FIELDS,
   },
   {
     id: "purview",

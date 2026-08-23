@@ -12,6 +12,7 @@ import {
   formatPeriodDate,
   MeterBar,
   meterState,
+  remainingMeter,
 } from "@app/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
@@ -48,7 +49,8 @@ export function useFreeSnapshot(): FreeSnapshot {
 
 export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
   const { t } = useTranslation();
-  const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
+  const remaining = Math.max(0, snap.billableLimit - snap.billableUsed);
+  const { state, pct } = remainingMeter(remaining, snap.billableLimit);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.free.state.limitReached", "Limit reached")
@@ -60,8 +62,9 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
-      figure={snap.billableUsed.toLocaleString()}
-      capSuffix={t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
+      barLabel={t("payg.free.hero.barAria", "Free PDFs remaining")}
+      figure={remaining.toLocaleString()}
+      capSuffix={t("payg.free.hero.capSuffix", "of {{limit}} free PDFs left", {
         limit: snap.billableLimit.toLocaleString(),
       })}
       statusLabel={stateLabel}
@@ -122,6 +125,7 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
+      barLabel={t("payg.spendCapMeter.barAria", "Spend against cap")}
       figure={`${symbol}${snap.spent.toLocaleString()}`}
       capSuffix={t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
         amount: `${symbol}${snap.cap.toLocaleString()}`,
@@ -173,15 +177,15 @@ export function prepaidSnapshotFromWallet(
 }
 
 /**
- * Prepaid capacity meter. The bar fills as the pool is drawn down ({@code used =
- * total − remaining}), so it WARNs when the pool is running low and DEGRADEs once
- * exhausted — same bands as the free/cap meters. Prepaid is consumed ahead of the
- * meter and outside the spend cap, so it reads as its own dimension.
+ * Prepaid capacity meter. The bar shows what is left and drains towards empty,
+ * while the bands still key on what is gone ({@code used = total − remaining}), so
+ * it WARNs when the pool is running low and DEGRADEs once exhausted — same bands
+ * as the free/cap meters. Prepaid is consumed ahead of the meter and outside the
+ * spend cap, so it reads as its own dimension.
  */
 export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
   const { t } = useTranslation();
-  const used = Math.max(0, snap.total - snap.remaining);
-  const { state, pct } = meterState(used, snap.total);
+  const { state, pct } = remainingMeter(snap.remaining, snap.total);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.prepaid.state.exhausted", "Used up")
@@ -193,10 +197,11 @@ export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
+      barLabel={t("payg.prepaid.card.title", "Prepaid capacity")}
       figure={snap.remaining.toLocaleString()}
       capSuffix={t(
         "payg.prepaid.meter.capSuffix",
-        "of {{total}} prepaid PDFs",
+        "of {{total}} prepaid credits",
         {
           total: snap.total.toLocaleString(),
         },

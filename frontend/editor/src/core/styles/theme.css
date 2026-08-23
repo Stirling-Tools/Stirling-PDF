@@ -49,11 +49,9 @@
     var(--p-green-500) 30%,
     transparent
   ); /* Green border for active badge */
-}
 
-/* CSS variables for Tailwind + Mantine integration */
+  /* CSS variables for Tailwind + Mantine integration */
 
-:root {
   /* Global animation durations */
   --fullscreen-anim-duration-in: 0.28s;
   --fullscreen-anim-duration-out: 0.22s;
@@ -63,6 +61,8 @@
   --gray-100: 243 244 246;
   --gray-200: 229 231 235;
   --gray-300: 209 213 219;
+  /* Channel form of gray-400. Only for decorative fills/borders — as text it
+     reaches 2.3:1, so label copy uses --gray-600. */
   --gray-400: 156 163 175;
   --gray-500: 107 114 128;
   --gray-600: 75 85 99;
@@ -88,9 +88,9 @@
   --color-primary-900: var(--p-blue-700);
 
   /* Success (green) */
-  --color-green-50: var(--p-green-500);
-  --color-green-100: var(--p-green-500);
-  --color-green-200: var(--p-green-500);
+  --color-green-50: var(--p-green-50);
+  --color-green-100: var(--p-green-100);
+  --color-green-200: var(--p-green-200);
   --color-green-300: var(--p-green-500);
   --color-green-400: var(--p-green-500);
   --color-green-500: var(--p-green-500);
@@ -100,9 +100,9 @@
   --color-green-900: var(--p-green-700);
 
   /* Warning (yellow) */
-  --color-yellow-50: var(--p-amber-400);
-  --color-yellow-100: var(--p-amber-400);
-  --color-yellow-200: var(--p-amber-400);
+  --color-yellow-50: var(--p-amber-50);
+  --color-yellow-100: var(--p-amber-100);
+  --color-yellow-200: var(--p-amber-200);
   --color-yellow-300: var(--p-amber-400);
   --color-yellow-400: var(--p-amber-400);
 
@@ -133,9 +133,9 @@
   --color-yellow-800: var(--p-amber-600);
   --color-yellow-900: var(--p-amber-600);
 
-  --color-red-50: var(--p-red-400);
-  --color-red-100: var(--p-red-400);
-  --color-red-200: var(--p-red-400);
+  --color-red-50: var(--p-red-50);
+  --color-red-100: var(--p-red-100);
+  --color-red-200: var(--p-red-200);
   --color-red-300: var(--p-red-400);
   --color-red-400: var(--p-red-400);
   --color-red-500: var(--p-red-500);
@@ -246,6 +246,37 @@
   /* API Keys section colors (light mode) */
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
 
+  --modal-nav-bg: var(--p-gray-100);
+  --modal-nav-section-title: var(--p-gray-500);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 8%,
+    transparent
+  );
+  --modal-content-bg: var(--p-white);
+  --modal-header-border: rgba(0, 0, 0, 0.06);
+  --api-keys-card-bg: var(--p-white);
+  --api-keys-card-border: var(--p-gray-200);
+  --api-keys-input-bg: var(--p-gray-50);
+  --api-keys-input-border: var(--p-gray-200);
+  --usage-inactive: var(--p-gray-200);
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
+  --color-amber-50: var(--p-amber-400);
+  --color-amber-100: var(--p-amber-400);
+  --color-amber-200: var(--p-amber-400);
+  --color-amber-300: var(--p-amber-400);
+  --color-amber-400: var(--p-amber-400);
+  --color-amber-500: var(--p-amber-500);
+  --color-amber-600: var(--p-amber-600);
+  --color-amber-700: var(--p-amber-600);
+  --color-amber-800: var(--p-amber-600);
+  --color-amber-900: var(--p-amber-600);
+
   /* PDF Report Colors (always light) */
   --pdf-light-text-muted: 100 116 139;
   --pdf-light-box-bg: 248 250 252;
@@ -284,12 +315,25 @@
   --dropdown-panel-bg: var(--mantine-color-white);
   --dropdown-panel-border: var(--mantine-color-gray-4);
   --dropdown-group-label: var(--mantine-color-gray-6);
-}
 
-/* Onboarding (light mode) */
-:root {
+  /* Onboarding (light mode) */
   --onboarding-step-active: var(--p-gray-800);
   --onboarding-step-inactive: var(--p-gray-300);
+
+  /* PDF Link Overlay (viewer) */
+  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 32%, transparent);
+  --link-hover-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 4px color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 25%, transparent);
+  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 88%, transparent);
+  --link-toolbar-border: rgba(255, 255, 255, 0.1);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
+
+  --shadow-color: color-mix(in srgb, var(--p-blue-700) 55%, transparent);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -367,10 +411,10 @@
   --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
 
   /* Success (green) - dark */
-  --color-green-50: var(--p-green-700);
-  --color-green-100: var(--p-green-700);
-  --color-green-200: var(--p-green-700);
-  --color-green-300: var(--p-green-700);
+  --color-green-50: var(--p-zinc-775);
+  --color-green-100: var(--p-zinc-700);
+  --color-green-200: var(--p-zinc-600);
+  --color-green-300: var(--p-zinc-500);
   --color-green-400: var(--p-green-600);
   --color-green-500: var(--p-green-500);
   --color-green-600: var(--p-green-600);
@@ -379,10 +423,10 @@
   --color-green-900: var(--p-green-500);
 
   /* Warning (yellow) - dark */
-  --color-yellow-50: var(--p-amber-600);
-  --color-yellow-100: var(--p-amber-600);
-  --color-yellow-200: var(--p-amber-600);
-  --color-yellow-300: var(--p-amber-600);
+  --color-yellow-50: var(--p-zinc-775);
+  --color-yellow-100: var(--p-zinc-700);
+  --color-yellow-200: var(--p-zinc-600);
+  --color-yellow-300: var(--p-zinc-500);
   --color-yellow-400: var(--p-amber-600);
   --color-yellow-500: var(--p-amber-500);
   --color-yellow-600: var(--p-amber-400);
@@ -461,6 +505,28 @@
   /* API Keys section colors (dark mode) */
   --api-keys-card-shadow: none;
 
+  /* Migrated from the former saas-theme.css (dark) — see the light block. */
+  --modal-nav-bg: var(--p-zinc-850);
+  --modal-nav-section-title: var(--p-zinc-300);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 15%,
+    transparent
+  );
+  --modal-content-bg: var(--p-zinc-800);
+  --modal-header-border: rgba(255, 255, 255, 0.05);
+  --api-keys-card-bg: var(--p-zinc-800);
+  --api-keys-card-border: var(--p-zinc-650);
+  --api-keys-input-bg: var(--p-zinc-850);
+  --api-keys-input-border: var(--p-zinc-650);
+  --usage-inactive: var(--p-zinc-650);
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
+
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: var(--p-blue-400); /* purple */
   --code-str-color: var(--p-green-500); /* green */
@@ -484,6 +550,19 @@
   --dropdown-panel-bg: var(--mantine-color-dark-7);
   --dropdown-panel-border: var(--mantine-color-dark-4);
   --dropdown-group-label: var(--mantine-color-dark-2);
+
+  /* PDF Link Overlay (viewer) */
+  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
+  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
+  --link-hover-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
+  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
+  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
+  --link-toolbar-border: rgba(255, 255, 255, 0.07);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
 }
 
 /* Dropzone drop state styling */
@@ -493,13 +572,6 @@
 }
 
 /* Plan section card borders - only override in dark mode */
-[data-mantine-color-scheme="dark"] .plan-card {
-}
-
-[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: var(--p-c-c2c8e0) !important;
-}
-
 /* Current plan badge - use light mode green in dark mode */
 [data-mantine-color-scheme="dark"] .current-plan-badge {
   background-color: var(--color-green-300) !important;
@@ -507,12 +579,15 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: var(--p-azure-500) !important;
+  background-color: var(--p-azure-700) !important;
 }
 
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
   background-color: var(--p-royal-700) !important;
+  /* The fill is set here, so the label has to be set with it — left alone it
+     keeps the scheme's default ink and reads as dark-on-deep-blue. */
+  color: var(--p-white) !important;
 }
 
 /* Lighter grey for disabled plan buttons */
@@ -581,34 +656,6 @@
     border-color 0.2s ease;
 }
 /* ── PDF Link Overlay (viewer) ── */
-:root {
-  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
-  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 32%, transparent);
-  --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 1px 4px color-mix(in srgb, var(--p-azure-500) 12%, transparent);
-  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 25%, transparent);
-  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 88%, transparent);
-  --link-toolbar-border: rgba(255, 255, 255, 0.1);
-  --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
-    0 0 0 0.5px rgba(255, 255, 255, 0.05);
-}
-
-[data-mantine-color-scheme="dark"] {
-  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
-  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
-  --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
-  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
-  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
-  --link-toolbar-border: rgba(255, 255, 255, 0.07);
-  --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04);
-}
-
 /* ── Link hit-area ── */
 .pdf-link-overlay {
   position: absolute;
@@ -739,26 +786,11 @@
 
 .pdf-link-toolbar-btn:hover {
   background: rgba(255, 255, 255, 0.08);
-}
-
-.pdf-link-toolbar-btn--delete:hover {
-  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
-  color: var(--p-art-red-light);
-}
-
-.pdf-link-toolbar-sep {
-  width: 1px;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  margin: 0 4px;
+  color: #fff;
 }
 
 .pdf-link-toolbar-btn:last-child {
   border-radius: 0 9px 9px 0;
-}
-
-.pdf-link-toolbar-btn:hover {
-  color: #fff;
 }
 
 .pdf-link-toolbar-btn--delete {
@@ -770,23 +802,20 @@
   color: var(--p-red-400);
 }
 
-.pdf-link-toolbar-btn--go:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
 .pdf-link-toolbar-btn--go {
   min-width: 0;
+}
+
+.pdf-link-toolbar-btn--go:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .pdf-link-toolbar-sep {
   width: 1px;
   height: 16px;
   background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
   flex-shrink: 0;
-}
-
-:root {
-  --shadow-color: color-mix(in srgb, var(--p-blue-700) 55%, transparent);
 }
 
 [data-theme="dark"] {

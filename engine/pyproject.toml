@@ -1,33 +1,72 @@
 [project]
 name = "engine"
 version = "0.1.0"
-description = "AI Document Engine"
-requires-python = ">=3.13"
-dependencies = [
-    "cryptography>=44.0.0",
-    "fastapi>=0.116.0",
-    "pgvector>=0.3.6",
-    "psycopg[binary,pool]>=3.2",
-    "pydantic>=2.0.0",
-    # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration
-    "pydantic-ai>=1.99.0,<2.0.0",
-    "pydantic-ai-slim[voyageai]>=1.99.0,<2.0.0",
-    "pydantic-settings>=2.0.0",
-    "python-dotenv>=1.2.1",
-    "sqlite-vec>=0.1.6",
-    "uvicorn>=0.35.0",
-    "opentelemetry-sdk>=1.39.0",
-    "posthog>=3.0.0",
-]
+description = "Stirling PDF Python projects"
+requires-python = ">=3.13,<3.14"
+dependencies = []
 
 [dependency-groups]
-dev = [
-    "anyio>=4.0.0",
-    "datamodel-code-generator[ruff]>=0.26.0",
-    "pytest>=8.0.0",
-    "pyright>=1.1.408",
-    "referencing>=0.35.0",
-    "ruff>=0.14.10",
+# Runtime dependencies for the AI document engine service.
+engine = [
+    "cryptography>=50.0.0",
+    "fastapi>=0.141.1",
+    "opentelemetry-sdk>=1.39.1",
+    "pgvector>=0.5.0",
+    "posthog>=7.38.3",
+    "psycopg[binary,pool]>=3.3.4",
+    "pydantic>=2.13.4",
+    # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration.
+    "pydantic-ai>=1.107.2,<2.0.0",
+    "pydantic-ai-slim[voyageai]>=1.107.2,<2.0.0",
+    "pydantic-settings>=2.15.0",
+    "python-dotenv>=1.2.2",
+    "sqlite-vec>=0.1.9",
+    "uvicorn>=0.52.3",
+]
+# Type checking, testing, model generation, and formatting tools for the engine.
+engine-dev = [
+    "anyio>=4.14.2",
+    "datamodel-code-generator[ruff]==0.64.0",
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "referencing>=0.37.0",
+    "ruff==0.15.5",
+]
+# Dependencies for the Cucumber/Python integration test suite.
+cucumber = [
+    "behave>=1.3.3",
+    "behave-html-formatter>=0.9.10",
+    "opencv-python-headless>=5.0.0.93",
+    "pdf2image>=1.17.0",
+    "pillow>=12.3.0",
+    "pypdf[crypto]>=6.15.0",
+    "qrcode[pil]>=8.2",
+    "reportlab>=5.0.0",
+    "requests>=2.34.2",
+]
+# Shared Python utilities used by repository scripts and CI workflows.
+tools = [
+    "deep-translator>=1.11.4",
+    "defusedxml>=0.7.1",
+    "fonttools>=4.63.0",
+    "fpdf2>=2.8.8",
+    "openai>=2.53.0",
+    "requests>=2.34.2",
+    "tomli-w>=1.2.0",
+    "tomlkit>=0.15.1",
+    "urllib3>=2.7.0",
+    "unoserver>=3.7",
+    "weasyprint>=69.0",
+]
+# Release-signature verification dependencies.
+updater-signatures = [
+    "cryptography>=50.0.0",
+]
+# Pinned repository-wide pre-commit tooling.
+pre-commit = [
+    "codespell==2.4.3",
+    "ruff==0.15.5",
+    "tomli-w==1.2.0",
 ]
 
 [build-system]
@@ -36,9 +75,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
-exclude = [
-    "tests",
-]
+exclude = ["tests"]
+
+[tool.uv]
+default-groups = []
 
 [tool.ruff]
 line-length = 120
@@ -53,14 +93,16 @@ select = [
     "W",
     "RUF100",
     "UP",
-    "PYI",    # flake8-pyi: flags deprecated typing constructs
-    "FA",     # flake8-future-annotations: flags missing future annotations imports
-    "BLE",    # flake8-blind-except: flags bare `except Exception`
+    "PYI", # flake8-pyi: flags deprecated typing constructs
+    "FA",  # flake8-future-annotations: flags missing future annotations imports
+    "BLE", # flake8-blind-except: flags bare `except Exception`
 ]
+
+[tool.ruff.lint.isort]
+known-first-party = ["stirling", "tests"]
 
 [tool.pyright]
 pythonVersion = "3.13"
-
 reportImportCycles = "warning"
 reportUnnecessaryCast = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"

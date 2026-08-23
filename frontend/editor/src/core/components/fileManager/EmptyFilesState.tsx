@@ -103,7 +103,7 @@ const EmptyFilesState: React.FC = () => {
               icon={icons.uploadIconName}
               width="1.25rem"
               height="1.25rem"
-              style={{ color: "var(--c-primary)" }}
+              style={{ color: "var(--c-accent-text)" }}
             />
             {isUploadHover && (
               <span style={{ marginLeft: ".5rem" }}>

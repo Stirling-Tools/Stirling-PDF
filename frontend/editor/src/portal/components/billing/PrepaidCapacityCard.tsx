@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@app/ui";
-import { formatPeriodDate, MeterBar, meterState } from "@app/billing";
+import { formatPeriodDate, MeterBar, remainingMeter } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 
 /**
@@ -10,8 +10,8 @@ import type { Wallet } from "@portal/api/billing";
  *   - No bundle → a slim "Get 12 months for the price of 10" offer nudge with a
  *     "Review offer" CTA (the demo's commit-nudge card), shown only when a buyer
  *     ({@code onBuy}, leader) is present.
- *   - Bundle held → the capacity meter (fills as the pool is drawn down, so it
- *     warns as capacity runs low) plus a "Top up" action for the leader.
+ *   - Bundle held → the capacity meter (drains towards empty as the pool is drawn
+ *     down, so it warns as capacity runs low) plus a "Top up" action for the leader.
  *
  * Prepaid is consumed before metered billing and sits outside the spend limit, so
  * it reads as its own dimension. Buying/topping up opens {@code BundleCheckoutModal}
@@ -55,8 +55,7 @@ export function PrepaidCapacityCard({
 
   const remaining = wallet.prepaidUnitsRemaining;
   const total = wallet.prepaidUnitsTotal;
-  const used = Math.max(0, total - remaining);
-  const { state, pct } = meterState(used, total);
+  const { state, pct } = remainingMeter(remaining, total);
   const stateLabel =
     state === "DEGRADED"
       ? t("portal.billing.prepaid.state.exhausted", "Used up")
@@ -72,10 +71,11 @@ export function PrepaidCapacityCard({
       <MeterBar
         state={state}
         pct={pct}
+        barLabel={t("portal.billing.prepaid.eyebrow", "Prepaid capacity")}
         figure={remaining.toLocaleString()}
         capSuffix={t(
           "portal.billing.prepaid.capSuffix",
-          "of {{total}} prepaid PDFs",
+          "of {{total}} prepaid credits",
           {
             total: total.toLocaleString(),
           },

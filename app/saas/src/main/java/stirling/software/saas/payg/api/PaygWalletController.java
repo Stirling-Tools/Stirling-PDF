@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.api;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -206,6 +207,12 @@ public class PaygWalletController {
         // Prepaid while pools still have units to draw; once exhausted the meter is live again.
         String billingMode = prepaidRemaining > 0 ? BILLING_MODE_PREPAID : BILLING_MODE_PAYG;
 
+        // Per-credit rate for the bundle calculator — the bundle:processor price, NOT the metered
+        // per-doc rate. Resolved in the team's currency (USD fallback), null when the price is
+        // unsynced.
+        BigDecimal bundleRatePerCreditMinor =
+                billingService.resolveBundleRatePerCreditMinor(billing.currency());
+
         WalletSnapshotResponse body =
                 new WalletSnapshotResponse(
                         teamId,
@@ -234,7 +241,8 @@ public class PaygWalletController {
                         prepaidRemaining,
                         prepaidTotal,
                         prepaidExpiresAt,
-                        billingMode);
+                        billingMode,
+                        bundleRatePerCreditMinor);
         return ResponseEntity.ok(body);
     }
 
@@ -419,7 +427,7 @@ public class PaygWalletController {
 
     private Optional<TeamMembership> primaryMembership(Long userId) {
         List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 
     private List<MemberRow> buildMemberRows(
@@ -512,6 +520,7 @@ public class PaygWalletController {
                 0L,
                 0L,
                 null,
-                BILLING_MODE_PAYG);
+                BILLING_MODE_PAYG,
+                null);
     }
 }

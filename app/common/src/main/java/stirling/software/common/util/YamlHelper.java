@@ -114,7 +114,7 @@ public class YamlHelper {
 
         for (NodeTuple tuple : mappingNode.getValue()) {
             ScalarNode keyNode = (tuple.getKeyNode() instanceof ScalarNode sk) ? sk : null;
-            if (keyNode == null || !keyNode.getValue().equals(keys.get(0))) {
+            if (keyNode == null || !keyNode.getValue().equals(keys.getFirst())) {
                 updatedTuples.add(tuple);
                 continue;
             }

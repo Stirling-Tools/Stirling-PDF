@@ -37,6 +37,7 @@ jobs:
     timeout-minutes: 3
     outputs:
       build: ${{ steps.changes.outputs.build }}
+      backend: ${{ steps.changes.outputs.backend }}
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
@@ -48,20 +49,26 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
           filters: .github/config/.files.yaml
 
-  build:
+  gradle-cache-prime:
     needs: [files-changed]
+    uses: ./.github/workflows/gradle-cache-prime.yml
+    secrets: inherit
+
+  build:
+    if: needs.files-changed.outputs.backend == 'true'
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
       contents: read
@@ -76,7 +83,7 @@ jobs:
     # works after Hibernate's ddl-auto=update migrates the schema. Gated on
     # the `project` filter so doc-only PRs skip this ~5-minute job.
     if: needs.files-changed.outputs.project == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/db-migration-test.yml
@@ -84,7 +91,7 @@ jobs:
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/check-openapi.yml
@@ -99,6 +106,18 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
+  # Required (in all-checks-passed). Scans the stories a branch touches in both
+  # light and dark; an axe violation in either theme blocks the merge. The
+  # whole-suite sweep (nightly.yml) still covers stories a change affects without
+  # touching them directly.
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
+    secrets: inherit
+
   playwright-e2e:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -109,7 +128,7 @@ jobs:
 
   playwright-e2e-live:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/e2e-live.yml
@@ -117,15 +136,17 @@ jobs:
 
   playwright-e2e-enterprise:
     if: needs.files-changed.outputs.proprietary == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/build-enterprise.yml
     secrets: inherit
+    with:
+      use_shared_cache: true
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, build]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/check-licence.yml
@@ -133,7 +154,7 @@ jobs:
 
   docker-compose-tests:
     if: needs.files-changed.outputs.project == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
       contents: read
@@ -144,8 +165,22 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      needs.files-changed.outputs.project == 'true' &&
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.build.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-generateOpenApiDocs.result) &&
+      contains(fromJSON('["success", "skipped"]'), needs.check-licence.result)
+    needs:
+      [
+        files-changed,
+        build,
+        check-generateOpenApiDocs,
+        check-licence,
+        gradle-cache-prime,
+      ]
     permissions:
       contents: read
       packages: read
@@ -157,19 +192,21 @@ jobs:
 
   tauri-build:
     if: needs.files-changed.outputs.tauri == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
-    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
-    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # PR smoke build: macOS + Windows (the platforms our developers use).
+    # sign: true only reaches macOS - tauri-build's per-platform gate keeps
+    # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
+    # The full signed multi-OS matrix runs on release;
     # nightly still warms the Rust cache with all-OS defaults.
     with:
-      platform: linux
-      sign: false
-      minimal: true
+      platform: windows-macos
+      sign: true
+      use_shared_cache: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -187,12 +224,14 @@ jobs:
   # frontend filter, so a CSS-only PR does not pay for a backend build.
   generated-models:
     if: needs.files-changed.outputs.generated-models == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
+    with:
+      use_shared_cache: true
 
   pre-commit:
     needs: [files-changed]
@@ -239,10 +278,12 @@ jobs:
     if: always()
     needs:
       - files-changed
+      - gradle-cache-prime
       - build
       - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
+      - frontend-a11y
       - playwright-e2e
       - playwright-e2e-live
       - playwright-e2e-enterprise
@@ -257,7 +298,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -265,10 +306,12 @@ jobs:
         env:
           RESULTS: |
             files-changed=${{ needs.files-changed.result }}
+            gradle-cache-prime=${{ needs.gradle-cache-prime.result }}
             build=${{ needs.build.result }}
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
+            frontend-a11y=${{ needs.frontend-a11y.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
             playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}

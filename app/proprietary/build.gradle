@@ -27,7 +27,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
@@ -36,6 +36,15 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+
+    // PDF/UA tagging and its validation oracle.
+    implementation 'org.verapdf:validation-model:1.30.2'
+    // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
+    implementation "org.mozilla:rhino:${rhinoVersion}"
+    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    runtimeOnly 'com.sun.xml.bind:jaxb-impl:2.3.9'
+    runtimeOnly 'com.sun.xml.bind:jaxb-core:4.0.9'
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
@@ -59,13 +68,22 @@ dependencies {
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly 'org.postgresql:postgresql:42.7.13'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
+
+    // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:
+    // jsch fork BSD, commons-net Apache-2.0, smbj Apache-2.0 (BouncyCastle already on classpath).
+    implementation "com.github.mwiede:jsch:${jschVersion}"
+    implementation "commons-net:commons-net:${commonsNetVersion}"
+    implementation "com.hierynomus:smbj:${smbjVersion}"
+
+    // Streaming AEAD (AES-GCM-HKDF segments) for storage encryption at rest. Apache-2.0.
+    implementation "com.google.crypto.tink:tink:${tinkVersion}"
 
     // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
     // root) so policy.source repositories can be exercised against embedded H2.
