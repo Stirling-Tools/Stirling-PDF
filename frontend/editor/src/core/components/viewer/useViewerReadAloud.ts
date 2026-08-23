@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileSelectors } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
@@ -60,7 +60,7 @@ function createHighlightElement(
 
 export function useViewerReadAloud(defaultLanguage?: string) {
   const viewer = useViewer();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
 
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);

@@ -8,9 +8,8 @@ import type { Tier } from "@portal/contexts/TierContext";
 
 /**
  * Base query: the org roster (flavor-resolved via usersBackend). Keyed the same
- * as the Users view's roster query (qk.usersRoster), so Home's onboarding read
- * and the Users page share one cache entry — the roster is fetched once across
- * both. Used by useOnboardingProgress.
+ * as the Users view's roster query (qk.usersRoster), so callers share one cache
+ * entry — the roster is fetched once across all of them.
  */
 export function useUsersRoster(tier: Tier): AsyncState<UsersResponse> {
   return toAsyncState(
