@@ -1,0 +1,31 @@
+{
+  "fill": {
+    "solid": "srgb:0.55686,0.19216,0.19216,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Foreground",
+      "layers": [
+        {
+          "image-name": "glyph.png",
+          "name": "Glyph",
+          "glass": true,
+          "hidden": false,
+          "position": {
+            "scale": 1.75,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "specular": true,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.5
+      },
+      "blur-material": null
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}

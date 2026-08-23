@@ -379,6 +379,21 @@ jobs:
             exit 1
           fi
 
+      # Tauri compiles the Liquid Glass icon (icons/macos/app.icon) with actool,
+      # but skips it silently when actool is older than 26. macos-15 defaults to
+      # Xcode 16.4, so select the newest Xcode 26 or the glass icon is dropped.
+      - name: Select Xcode 26 (Liquid Glass app icon)
+        if: matrix.platform == 'macos-15'
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then
+            echo "No Xcode 26 found - the Liquid Glass icon would be silently skipped"
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE"
+          echo "Selected $XCODE"
+          actool --version | head -3
+
       - name: Build Tauri app (signed)
         if: env.SIGN_BUNDLE == 'true'
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0

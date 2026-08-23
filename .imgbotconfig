@@ -1,6 +1,7 @@
 {
   "ignoredFiles": [
     "frontend/editor/src-tauri/icons/macos/*",
+    "frontend/editor/src-tauri/icons/macos/app.icon/Assets/*",
     "frontend/editor/src-tauri/icons/linux/*",
     "frontend/editor/src-tauri/icons/windows/*"
   ]
