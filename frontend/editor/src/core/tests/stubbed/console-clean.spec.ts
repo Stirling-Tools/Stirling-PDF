@@ -24,6 +24,8 @@ type ConsoleEntry = {
 };
 
 const IGNORED: RegExp[] = [
+  // WebKit warns when link rel="preload" assets (logos, WASM) are not consumed within seconds of window load event
+  /was preloaded using link preload but not used within a few seconds/,
   // react-i18next emits SUSPENDED_WHILE_LOADING when components suspend on initial async locale fetch
   /react-i18next::i18next: useTranslation: suspended while translations are loading/,
 ];

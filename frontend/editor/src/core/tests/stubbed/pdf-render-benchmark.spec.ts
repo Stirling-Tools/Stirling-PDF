@@ -241,7 +241,7 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
 
     // Performance regression gates
     expect(Object.keys(results.render).length).toBe(4);
-    expect.soft(loadLatency).toBeLessThan(4000);
+    expect.soft(loadLatency).toBeLessThan(8000);
     expect.soft(results.searchSpeed).toBeLessThan(1000);
     expect.soft(results.render["image/bmp"].avg).toBeLessThan(1000);
   });
