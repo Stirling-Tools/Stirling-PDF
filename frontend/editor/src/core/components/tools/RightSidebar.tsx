@@ -237,7 +237,10 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : (
+            ) : showCloseButton || !isMobile ? (
+              /* Without a back button this header is just the collapse control,
+                 which has no meaning on mobile - the slider switches panes. Drop
+                 it there so the tool list starts under the tabs. */
               <div className="tool-panel__compact-header">
                 <span className="tool-panel__compact-title">
                   {t("toolPanel.pdfTools", "PDF Tools")}
@@ -272,7 +275,7 @@ export default function RightSidebar() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
 
             <ToolPanel
               allToolsView={allToolsView}
