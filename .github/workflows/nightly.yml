@@ -127,7 +127,9 @@ jobs:
   # Runs the @nightly tag (conversion scenarios) plus a 10-shard concurrency run
   # of every other feature.
   cucumber-nightly:
-    environment: ci-unsigned
+    environment:
+      name: ci-unsigned
+      deployment: false
     name: Cucumber (nightly scenarios + full concurrency)
     runs-on: ubuntu-latest
     # Fork pull requests get no MAVEN_* secrets, so the image build cannot work.
@@ -146,13 +148,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
           cache-dependency-glob: |
