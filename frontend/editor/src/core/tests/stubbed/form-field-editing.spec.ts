@@ -266,6 +266,64 @@ test.describe("Form field editor", () => {
     expect(after!.width).toBeGreaterThan(before!.width + 20);
   });
 
+  test("create mode: drawing a field shows one box, and moving it leaves none behind", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page);
+    await openFormTool(page);
+
+    await selectMode(page, "Create");
+    await page.getByTestId("form-create-type-text").click();
+    await drawField(page);
+
+    // Measures geometry rather than hit-testing: the duplicate box was pointer-events:none,
+    // so elementsFromPoint skipped it and the bug sailed through. Counts every bordered box any
+    // overlay draws over the point.
+    const boxesAt = ([x, y]: [number, number]) =>
+      page.evaluate(
+        ([px, py]) =>
+          Array.from(
+            document.querySelectorAll(
+              '[data-testid^="form-create-overlay-"] div, [data-testid^="form-edit-overlay-"] div',
+            ),
+          ).filter((el) => {
+            const style = getComputedStyle(el);
+            if (style.borderStyle === "none" || style.display === "none") {
+              return false;
+            }
+            const r = el.getBoundingClientRect();
+            // Ignore the resize grips, which are far smaller than any field box.
+            if (r.width < 12 || r.height < 12) return false;
+            return (
+              px >= r.left && px <= r.right && py >= r.top && py <= r.bottom
+            );
+          }).length,
+        [x, y],
+      );
+
+    const box = page
+      .locator('[data-testid^="form-edit-field-pending-"]')
+      .first();
+    const before = await box.boundingBox();
+    expect(before).not.toBeNull();
+    const origin: [number, number] = [
+      before!.x + before!.width / 2,
+      before!.y + before!.height / 2,
+    ];
+
+    expect(await boxesAt(origin)).toBe(1);
+
+    await page.mouse.move(origin[0], origin[1]);
+    await page.mouse.down();
+    await page.mouse.move(origin[0] + 90, origin[1] + 60, { steps: 10 });
+    await page.mouse.up();
+
+    const after = await box.boundingBox();
+    expect(Math.abs(after!.x - before!.x)).toBeGreaterThan(20);
+    // Nothing left behind where it used to be.
+    expect(await boxesAt(origin)).toBe(0);
+  });
+
   test("create mode: Delete removes the drawn field before it is applied", async ({
     page,
   }) => {

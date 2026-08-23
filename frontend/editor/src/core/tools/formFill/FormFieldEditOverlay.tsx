@@ -129,6 +129,21 @@ export function FormFieldEditOverlay({
     (field: FormField): PixelRect | null => {
       const widget = field.widgets?.find((w) => w.pageIndex === pageIndex);
       if (!widget) return null;
+      // A queued field stores PDF coordinates, not the top-left widget ones the extractor
+      // produces, so it needs the other transform or it renders far from where it was drawn.
+      if (pendingIdFrom(field.name)) {
+        return backendRectToPixels(
+          {
+            x: widget.x,
+            y: widget.y,
+            width: widget.width,
+            height: widget.height,
+          },
+          scaleX,
+          scaleY,
+          pageHeightPts,
+        );
+      }
       const staged = modifiedFields[field.name];
       if (
         staged &&

@@ -246,8 +246,6 @@ export function FormFieldCreationOverlay({
 
   if (mode !== "create" || fileMismatch || !pageWidthPts) return null;
 
-  const pendingOnPage = pendingFields.filter((p) => p.pageIndex === pageIndex);
-
   return (
     <div
       ref={rootRef}
@@ -268,45 +266,8 @@ export function FormFieldCreationOverlay({
         zIndex: 5,
       }}
     >
-      {/* Already-queued fields on this page */}
-      {pendingOnPage.map((pf) => {
-        const r = backendRectToPixels(pf, scaleX, scaleY, pageHeightPts);
-        return (
-          <div
-            key={pf.id}
-            style={{
-              position: "absolute",
-              left: r.left,
-              top: r.top,
-              width: r.width,
-              height: r.height,
-              border: `1.5px dashed ${FORM_COLORS.accent}`,
-              background: FORM_COLORS.accentFill,
-              borderRadius: 2,
-              pointerEvents: "none",
-              boxSizing: "border-box",
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: -16,
-                left: 0,
-                fontSize: 10,
-                lineHeight: "14px",
-                padding: "0 4px",
-                background: FORM_COLORS.accent,
-                color: "#fff",
-                borderRadius: 2,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {pf.name}
-            </span>
-          </div>
-        );
-      })}
-
+      {/* Queued fields are drawn by FormFieldEditOverlay, which also moves and resizes
+          them; drawing them here too would show two boxes and leave one behind on drag. */}
       {/* Live drag preview */}
       {dragRect && creationType && (
         <div
