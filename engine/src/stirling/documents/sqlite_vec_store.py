@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import math
 import re
 import sqlite3
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -19,9 +21,33 @@ _READ_PERMISSION = "read"
 # write lock. With multiple worker processes opening the same file, they collide on
 # startup schema-init and get "database is locked". Wait for the lock instead.
 _BUSY_TIMEOUT_MS = 5000
+# A journal_mode change answers SQLITE_BUSY straight away instead of consulting the
+# busy handler, so busy_timeout does not cover it. Workers booting together therefore
+# still collide on the WAL switch and need their own retry.
+_WAL_SWITCH_ATTEMPTS = 10
+_WAL_RETRY_DELAY_S = 0.1
 # sqlite stores TIMESTAMP as TEXT. We normalise to UTC ISO 8601 ``YYYY-MM-DD HH:MM:SS``
 # so lexicographic comparison against ``datetime('now')`` matches chronological order.
 _SQLITE_DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+
+logger = logging.getLogger(__name__)
+
+
+def _enable_wal(conn: sqlite3.Connection) -> None:
+    """Switch the connection to WAL, tolerating workers racing to do the same."""
+    for _ in range(_WAL_SWITCH_ATTEMPTS):
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            return
+        except sqlite3.OperationalError:
+            row = conn.execute("PRAGMA journal_mode").fetchone()
+            if row is not None and str(row[0]).lower() == "wal":
+                return  # another worker won the race and already switched it
+            time.sleep(_WAL_RETRY_DELAY_S)
+    # WAL only improves write concurrency, so boot on the default journal rather than
+    # taking the whole engine down over it.
+    logger.warning("Could not switch the document store to WAL; continuing on the default journal mode.")
 
 
 def _to_sqlite_utc(dt: datetime | None) -> str | None:
@@ -58,7 +84,7 @@ class SqliteVecStore(DocumentStore):
         if self._db_path is not None:
             # Set before the WAL switch below: that pragma also takes the lock.
             conn.execute(f"PRAGMA busy_timeout={_BUSY_TIMEOUT_MS}")
-            conn.execute("PRAGMA journal_mode=WAL")
+            _enable_wal(conn)
 
         self._conn = conn
         self._lock = asyncio.Lock()

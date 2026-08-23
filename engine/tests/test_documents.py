@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from stirling.contracts import PageText
@@ -647,3 +649,19 @@ def _dummy_tool_def() -> object:
     """Sentinel passed to ``_prepare_search_knowledge``. The callback only inspects
     ``_search_count``; it doesn't read anything off the tool_def or context."""
     return object()
+
+
+# concurrent store startup
+
+
+def test_many_stores_open_the_same_file_without_locking_out(tmp_path: Path) -> None:
+    """Uvicorn workers all construct a store against one file on boot; the WAL switch races."""
+    import concurrent.futures
+
+    db_path = tmp_path / "rag.db"
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        stores = list(pool.map(lambda _: SqliteVecStore(db_path), range(8)))
+
+    assert len(stores) == 8
+    mode = stores[0]._conn.execute("PRAGMA journal_mode").fetchone()[0]
+    assert str(mode).lower() == "wal"
