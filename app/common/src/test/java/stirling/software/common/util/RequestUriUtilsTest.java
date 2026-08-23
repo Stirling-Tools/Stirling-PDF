@@ -206,12 +206,24 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkTokenTrailingSlash() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f/", ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkWithContextPath() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/share/abc123", "/app"));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkWithInvalidTokenLength() {
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62fa", ""));
     }
 
     @Test
