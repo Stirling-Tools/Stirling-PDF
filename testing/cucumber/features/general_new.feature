@@ -96,6 +96,7 @@ Feature: General PDF Operations API Validation
         Examples:
             | customMode     | expectedPages |
             | ODD_EVEN_SPLIT | 4             |
+            | ODD_EVEN_MERGE | 4             |
 
 
     @scale-pages @positive
