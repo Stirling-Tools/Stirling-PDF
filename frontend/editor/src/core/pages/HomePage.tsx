@@ -15,6 +15,7 @@ import {
   useNavigationState,
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
+import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
@@ -128,12 +129,23 @@ export default function HomePage() {
   // Sync the /files* URL into the workbench state so the file manager view
   // takes over the workbench area when the user lands on it. This is the
   // only state-of-truth for the active workbench, so keep the URL pinned.
+  // Only a real navigation away from /files is "leaving": on mount this effect would otherwise
+  // pick a default from files that have not hydrated yet, overwriting a view someone else restored.
+  const wasOnFilesRef = useRef(location.pathname.startsWith("/files"));
   useEffect(() => {
-    if (location.pathname.startsWith("/files")) {
+    const onFiles = location.pathname.startsWith("/files");
+    const leftFiles = wasOnFilesRef.current && !onFiles;
+    wasOnFilesRef.current = onFiles;
+
+    if (onFiles) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (navigationState.workbench === "myFiles") {
+    } else if (
+      leftFiles &&
+      navigationState.workbench === "myFiles" &&
+      !isApplyingRestoredView()
+    ) {
       // Leaving the file manager - drop back to a sensible default.
       actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
     }
@@ -176,7 +188,9 @@ export default function HomePage() {
       navigationState.workbench,
     );
 
-    if (action) {
+    // A session restore fills an empty workbench too, but it already knows which view the user
+    // left - so it wins over this heuristic rather than being overwritten by it.
+    if (action && !isApplyingRestoredView()) {
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
