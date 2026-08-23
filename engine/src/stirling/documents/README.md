@@ -70,6 +70,42 @@ Provider credentials (and any local overrides) go in the uncommitted
 VOYAGE_API_KEY=your-key
 ```
 
+### Embedding providers
+
+`STIRLING_RAG_EMBEDDING_MODEL` takes a `provider:model` string. VoyageAI and
+OpenAI are reached over their own APIs; anything exposing an OpenAI-compatible
+`/v1/embeddings` endpoint (vLLM, Ollama, Text Embeddings Inference, llama.cpp)
+is reached by pointing a base URL at it, which is how self-hosted models such as
+Qwen3-Embedding are used:
+
+```
+STIRLING_RAG_EMBEDDING_MODEL=openai:Qwen/Qwen3-Embedding-0.6B
+OPENAI_BASE_URL=http://vllm:8000/v1
+```
+
+`OPENAI_BASE_URL` is global and also redirects chat completions. To move only
+embeddings, push `provider`, `api_key` and `base_url` through admin AI settings,
+which routes to the same OpenAI-compatible client.
+
+Ollama has its own provider prefix, and it reads its own base URL rather than
+`OPENAI_BASE_URL`. Omitting `OLLAMA_BASE_URL` fails the first embed call, not
+startup:
+
+```
+STIRLING_RAG_EMBEDDING_MODEL=ollama:nomic-embed-text
+OLLAMA_BASE_URL=http://ollama:11434/v1
+```
+
+Model choice matters more than the wiring here. On a retrieval smoke test,
+`nomic-embed-text` matched VoyageAI, while `qwen3-embedding:0.6b` served by
+Ollama ranked a relevant passage last; validate a local embedder against your own
+corpus before adopting it.
+
+VoyageAI is spoken over its OpenAI-shaped REST API by
+[`voyage.py`](voyage.py) rather than the `voyageai` SDK, whose import chain pulls
+PIL, numpy, tokenizers and langchain for multimodal, local-inference and chunking
+features this engine does not use.
+
 ## Backends
 
 **`sqlite`** - Embedded sqlite-vec. Single `.db` file, zero ops. Ideal for dev
