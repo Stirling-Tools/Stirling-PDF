@@ -41,6 +41,7 @@ import type {
   ModifyFieldDefinition,
   SkippedFieldEdit,
 } from "@app/tools/formFill/types";
+import { pendingIdFrom } from "@app/tools/formFill/pendingSelection";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
@@ -244,6 +245,9 @@ export interface FormFillContextValue {
   // --- Create mode ---
   /** Field type currently armed for placement (null = not placing). */
   creationType: CreatableFieldType | null;
+  /** Steps back one staged edit; false when there was nothing left to undo. */
+  undo: () => boolean;
+  canUndo: boolean;
   /** True while the user holds Preview, which hides the editing chrome. */
   previewing: boolean;
   setPreviewing: (previewing: boolean) => void;
@@ -401,11 +405,62 @@ export function FormFillProvider({
   );
   const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
   const [previewing, setPreviewing] = useState(false);
+
+  // Undo covers the staged edits, which is what the user has been doing here; the applied
+  // document keeps its own version history elsewhere.
+  const undoStackRef = useRef<
+    {
+      pending: PendingField[];
+      modified: Record<string, ModifyFieldDefinition>;
+      deleted: string[];
+    }[]
+  >([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const liveEditsRef = useRef({
+    pending: [] as PendingField[],
+    modified: {} as Record<string, ModifyFieldDefinition>,
+    deleted: [] as string[],
+  });
+
+  const rememberForUndo = useCallback(() => {
+    const live = liveEditsRef.current;
+    undoStackRef.current.push({
+      pending: [...live.pending],
+      modified: { ...live.modified },
+      deleted: [...live.deleted],
+    });
+    // A long session should not grow without bound.
+    if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+    setCanUndo(true);
+  }, []);
+
+  const undo = useCallback(() => {
+    const previous = undoStackRef.current.pop();
+    setCanUndo(undoStackRef.current.length > 0);
+    if (!previous) return false;
+    setPendingFields(previous.pending);
+    setModifiedFields(previous.modified);
+    setDeletedFieldNames(previous.deleted);
+    // A selection pointing at a field the undo removed would swallow the next click.
+    setSelectedField((current) => {
+      const id = pendingIdFrom(current);
+      if (!id) return current;
+      return previous.pending.some((f) => f.id === id) ? current : null;
+    });
+    return true;
+  }, []);
   const [selectedFieldName, setSelectedField] = useState<string | null>(null);
   const [modifiedFields, setModifiedFields] = useState<
     Record<string, ModifyFieldDefinition>
   >({});
   const [deletedFieldNames, setDeletedFieldNames] = useState<string[]>([]);
+
+  liveEditsRef.current = {
+    pending: pendingFields,
+    modified: modifiedFields,
+    deleted: deletedFieldNames,
+  };
+
   const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
   const [skippedTotal, setSkippedTotal] = useState(0);
   const clearSkippedEdits = useCallback(() => {
@@ -699,6 +754,7 @@ export function FormFillProvider({
   // --- Create mode ---
   const addPendingField = useCallback(
     (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
+      rememberForUndo();
       editedFileIdRef.current = lastKnownFileIdRef.current;
       const seq = ++pendingCounterRef.current;
       const id = `pending-${seq}`;
@@ -734,6 +790,7 @@ export function FormFillProvider({
 
   const updatePendingField = useCallback(
     (id: string, patch: Partial<NewFieldDefinition>) => {
+      rememberForUndo();
       setPendingFields((prev) =>
         prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
       );
@@ -741,9 +798,13 @@ export function FormFillProvider({
     [],
   );
 
-  const removePendingField = useCallback((id: string) => {
-    setPendingFields((prev) => prev.filter((f) => f.id !== id));
-  }, []);
+  const removePendingField = useCallback(
+    (id: string) => {
+      rememberForUndo();
+      setPendingFields((prev) => prev.filter((f) => f.id !== id));
+    },
+    [rememberForUndo],
+  );
 
   const clearPendingFields = useCallback(() => {
     setPendingFields([]);
@@ -776,6 +837,7 @@ export function FormFillProvider({
   // --- Modify mode ---
   const stageModification = useCallback(
     (targetName: string, patch: Partial<ModifyFieldDefinition>) => {
+      rememberForUndo();
       editedFileIdRef.current = lastKnownFileIdRef.current;
       setModifiedFields((prev) => ({
         ...prev,
@@ -794,6 +856,7 @@ export function FormFillProvider({
   }, []);
 
   const toggleFieldDeleted = useCallback((name: string) => {
+    rememberForUndo();
     editedFileIdRef.current = lastKnownFileIdRef.current;
     setDeletedFieldNames((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
@@ -871,6 +934,8 @@ export function FormFillProvider({
       creationType,
       previewing,
       setPreviewing,
+      undo,
+      canUndo,
       setCreationType,
       pendingFields,
       addPendingField,
@@ -913,6 +978,8 @@ export function FormFillProvider({
       creationType,
       previewing,
       setPreviewing,
+      undo,
+      canUndo,
       pendingFields,
       addPendingField,
       updatePendingField,

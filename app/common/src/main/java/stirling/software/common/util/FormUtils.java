@@ -1820,7 +1820,7 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
-                recordSkip(skipped, "modify", lookupName, e.getMessage());
+                recordSkip(skipped, "modify", lookupName, readableFailure(e));
                 releaseReservedName(existingNames, reservedName, qualified);
             }
         }
@@ -2400,7 +2400,7 @@ public class FormUtils {
                         resolvedType,
                         e.getMessage(),
                         e);
-                recordSkip(skipped, "add", uniqueName, e.getMessage());
+                recordSkip(skipped, "add", uniqueName, readableFailure(e));
             }
         }
 
@@ -3639,6 +3639,33 @@ public class FormUtils {
      * a bare success. {@code operation} is "add", "modify" or "delete".
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    /**
+     * Turns a library failure into something a person can act on. Raw messages like "/DR is a
+     * required entry" name PDF internals the user has never heard of.
+     */
+    public static String readableFailure(Throwable failure) {
+        String raw = failure == null ? null : failure.getMessage();
+        if (raw == null || raw.isBlank()) {
+            return "this PDF would not accept the change";
+        }
+        String lower = raw.toLowerCase(java.util.Locale.ROOT);
+        if (lower.contains("/dr") || lower.contains("default resources")) {
+            return "this PDF's form has no font settings, so the field could not be styled";
+        }
+        if (lower.contains("font") && lower.contains("not")) {
+            return "the font this field asks for is not embedded in the PDF";
+        }
+        if (lower.contains("encrypt") || lower.contains("password")) {
+            return "the PDF is protected, so its form cannot be changed";
+        }
+        if (lower.contains("read-only") || lower.contains("readonly")) {
+            return "the field is read-only in this PDF";
+        }
+        // Anything unrecognised stays vague rather than leaking internals at the user.
+        log.debug("Unmapped form edit failure: {}", raw);
+        return "this PDF would not accept the change";
+    }
+
     /** Skip reasons travel in a response header, so an echoed value cannot be unbounded. */
     public static String abbreviate(String value, int max) {
         if (value == null || value.length() <= max) {

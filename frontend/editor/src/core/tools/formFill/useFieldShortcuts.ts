@@ -29,6 +29,7 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    undo,
   } = useFormFill();
 
   const clipboardRef = useRef<Copied | null>(null);
@@ -43,6 +44,7 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    undo,
   });
   latest.current = {
     mode,
@@ -53,6 +55,7 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    undo,
   };
 
   useEffect(() => {
@@ -65,6 +68,12 @@ export function useFieldShortcuts() {
       const selected = ctx.selectedFieldName;
       const pendingId = pendingIdFrom(selected);
       const copyOrPaste = event.ctrlKey || event.metaKey;
+
+      // Undo steps back through the staged edits, newest first.
+      if (copyOrPaste && event.key.toLowerCase() === "z" && !event.shiftKey) {
+        if (ctx.undo()) event.preventDefault();
+        return;
+      }
 
       if (copyOrPaste && event.key.toLowerCase() === "c") {
         if (!selected) return;

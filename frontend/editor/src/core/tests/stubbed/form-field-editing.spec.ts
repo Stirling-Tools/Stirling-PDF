@@ -247,23 +247,25 @@ test.describe("Form field editor", () => {
     // Selected on placement, so the resize handles are live without another click.
     const box = page.locator('[data-testid^="form-edit-field-pending-"]');
     await expect(box).toHaveCount(1);
+    // WebKit paints a beat after the element exists, so measure only once it is visible.
+    await expect(box).toBeVisible();
     const before = await box.boundingBox();
     expect(before).not.toBeNull();
 
     const handle = page.getByTestId("form-edit-handle-se");
     await expect(handle).toBeVisible();
+    // hover() waits for actionability and centres on the grip; a hand-computed point
+    // intermittently misses a 9px target once the layout shifts under it.
+    await handle.hover();
     const grip = await handle.boundingBox();
     expect(grip).not.toBeNull();
-    await page.mouse.move(
-      grip!.x + grip!.width / 2,
-      grip!.y + grip!.height / 2,
-    );
     await page.mouse.down();
-    await page.mouse.move(grip!.x + 60, grip!.y + 40, { steps: 8 });
+    await page.mouse.move(grip!.x + 80, grip!.y + 50, { steps: 12 });
     await page.mouse.up();
 
-    const after = await box.boundingBox();
-    expect(after!.width).toBeGreaterThan(before!.width + 20);
+    await expect
+      .poll(async () => (await box.boundingBox())?.width ?? 0)
+      .toBeGreaterThan(before!.width + 20);
   });
 
   test("create mode: drawing a field shows one box, and moving it leaves none behind", async ({
@@ -304,6 +306,8 @@ test.describe("Form field editor", () => {
     const box = page
       .locator('[data-testid^="form-edit-field-pending-"]')
       .first();
+    // WebKit paints a beat after the element exists, so measure only once it is visible.
+    await expect(box).toBeVisible();
     const before = await box.boundingBox();
     expect(before).not.toBeNull();
     const origin: [number, number] = [
@@ -311,7 +315,7 @@ test.describe("Form field editor", () => {
       before!.y + before!.height / 2,
     ];
 
-    expect(await boxesAt(origin)).toBe(1);
+    await expect.poll(() => boxesAt(origin)).toBe(1);
 
     await page.mouse.move(origin[0], origin[1]);
     await page.mouse.down();

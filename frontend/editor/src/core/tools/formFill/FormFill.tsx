@@ -92,6 +92,7 @@ const FormFill = (_props: BaseToolProps) => {
     mode,
     setMode,
     hasUncommittedChanges,
+    forFileId,
     commitNewFields,
     commitModifications,
   } = useFormFill();
@@ -153,6 +154,27 @@ const FormFill = (_props: BaseToolProps) => {
   }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   useFieldShortcuts();
+
+  // A document with nothing to fill lands on Create: Fill would show an empty panel and leave
+  // the user hunting for the tab that does what they came for. Decided once per document, and
+  // only after the field list has settled - fields arrive a beat after the fetch reports done,
+  // so deciding immediately sends a form that does have fields to the wrong tab.
+  const autoModeFileRef = useRef<string | null>(null);
+  const fieldCountRef = useRef(0);
+  fieldCountRef.current = formState.fields.length;
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  useEffect(() => {
+    if (formState.loading || !forFileId) return undefined;
+    if (autoModeFileRef.current === forFileId) return undefined;
+    const settle = window.setTimeout(() => {
+      autoModeFileRef.current = forFileId;
+      if (fieldCountRef.current === 0 && modeRef.current === "fill") {
+        setMode("create");
+      }
+    }, 300);
+    return () => window.clearTimeout(settle);
+  }, [formState.loading, formState.fields.length, forFileId, setMode]);
 
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
