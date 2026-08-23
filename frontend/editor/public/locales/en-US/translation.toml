@@ -1,7 +1,6 @@
 alphabet = "Alphabet"
 apply = "Apply"
 applyAndContinue = "Save & Leave"
-areYouSure = "Are you sure you want to leave?"
 back = "Back"
 black = "Black"
 blue = "Blue"
@@ -106,6 +105,7 @@ undoSuccess = "Operation undone successfully"
 unknown = "Unknown"
 unpin = "Unpin File (replace after tool run)"
 unsavedChanges = "You have unsaved changes to your PDF."
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "Unsaved Changes"
 unsupported = "Unsupported"
 username = "Username"
@@ -4338,10 +4338,9 @@ type = "Type"
 typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
 
 [formFill.switch]
-apply = "Apply and switch"
+apply = "Save & Switch"
 body = "This tab has changes you have not applied yet. Switching tabs discards them."
-discard = "Discard and switch"
-keep = "Keep editing"
+discard = "Discard & Switch"
 title = "Unapplied changes"
 
 [formFill.mode]

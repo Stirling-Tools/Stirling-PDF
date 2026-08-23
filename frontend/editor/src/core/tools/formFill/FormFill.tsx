@@ -16,10 +16,8 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  Modal,
-  Group,
-  Stack,
 } from "@mantine/core";
+import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -81,8 +79,6 @@ const FormFill = (_props: BaseToolProps) => {
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
     setHasUnsavedChanges,
-    registerNavigationWarningHandlers,
-    unregisterNavigationWarningHandlers,
   } = useNavigation();
   const { state: fileState } = useFileState();
 
@@ -98,8 +94,6 @@ const FormFill = (_props: BaseToolProps) => {
     hasUncommittedChanges,
     commitNewFields,
     commitModifications,
-    clearPendingFields,
-    clearModifications,
   } = useFormFill();
 
   const MODE_TABS: ModeTabDef[] = useMemo(
@@ -437,42 +431,20 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
-      <Modal
+      <UnsavedChangesDialog
         opened={pendingMode !== null}
-        onClose={() => setPendingMode(null)}
         title={t("formFill.switch.title", "Unapplied changes")}
-        centered
-        withinPortal
-        zIndex={2000}
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            {t(
-              "formFill.switch.body",
-              "This tab has changes you have not applied yet. Switching tabs discards them.",
-            )}
-          </Text>
-          <Group justify="flex-end" gap="xs">
-            <Button variant="quiet" onClick={() => setPendingMode(null)}>
-              {t("formFill.switch.keep", "Keep editing")}
-            </Button>
-            <Button
-              variant="secondary"
-              data-testid="form-switch-discard"
-              onClick={discardAndSwitch}
-            >
-              {t("formFill.switch.discard", "Discard and switch")}
-            </Button>
-            <Button
-              data-testid="form-switch-apply"
-              loading={switching}
-              onClick={applyAndSwitch}
-            >
-              {t("formFill.switch.apply", "Apply and switch")}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        body={t(
+          "formFill.switch.body",
+          "This tab has changes you have not applied yet. Switching tabs discards them.",
+        )}
+        saveLabel={t("formFill.switch.apply", "Save & Switch")}
+        discardLabel={t("formFill.switch.discard", "Discard & Switch")}
+        saving={switching}
+        onKeepWorking={() => setPendingMode(null)}
+        onDiscard={discardAndSwitch}
+        onSave={applyAndSwitch}
+      />
 
       {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
