@@ -72,7 +72,11 @@ interface ModeTabDef {
 
 const FormFill = (_props: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedTool } = useNavigation();
+  const {
+    selectedTool,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+  } = useNavigation();
   const { state: fileState } = useFileState();
 
   const {
@@ -84,6 +88,7 @@ const FormFill = (_props: BaseToolProps) => {
     validateForm,
     mode,
     setMode,
+    hasUncommittedChanges,
   } = useFormFill();
 
   const MODE_TABS: ModeTabDef[] = useMemo(
@@ -144,6 +149,17 @@ const FormFill = (_props: BaseToolProps) => {
   const activeFieldRef = useRef<HTMLDivElement>(null);
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
+
+  // Fields drawn or edited but never applied are lost on navigation, so the app's existing
+  // leave-warning needs to hear about them the way other tools report theirs.
+  const hasUncommittedRef = useRef(false);
+  hasUncommittedRef.current = hasUncommittedChanges;
+  useEffect(() => {
+    registerUnsavedChangesChecker(
+      () => hasUncommittedRef.current || isDirtyRef.current,
+    );
+    return () => unregisterUnsavedChangesChecker();
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   // Subscribing read: getFiles() during render doesn't re-run when the workbench
   // changes, so the panel kept showing the pre-hydration (or pre-version) file.
