@@ -18,6 +18,7 @@ runs:
         JAVA_VERSION: ${{ inputs.java-version }}
         JAVA_ARCHITECTURE: ${{ inputs.architecture }}
         RUNNER_ARCHITECTURE: ${{ runner.arch }}
+        RUNNER_OS_NAME: ${{ runner.os }}
       run: |
         set -euo pipefail
         if [ "${JAVA_VERSION}" != "25" ]; then
@@ -38,6 +39,9 @@ runs:
 
         java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
         java_home="${!java_home_variable:-}"
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ]; then
+          java_home="$(arch -x86_64 /usr/libexec/java_home -v "${JAVA_VERSION}" 2>/dev/null || true)"
+        fi
         if [ -z "${java_home}" ]; then
           echo "JDK 25 is not installed on this runner (${java_home_variable} is missing)" >&2
           exit 1
