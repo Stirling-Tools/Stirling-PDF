@@ -21,6 +21,7 @@ import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { RootGate } from "@app/routes/RootGate";
 import { RequireAuth } from "@app/auth/guards/RequireAuth";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -106,17 +107,21 @@ export default function App() {
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/invite/:token" element={<InviteAccept />} />
                     <Route path="/share/:token" element={<ShareLinkPage />} />
-                    <Route
-                      path="/mail"
-                      element={
-                        <RequireAuth
-                          loading={<LoadingFallback />}
-                          fallback={<Navigate to="/login?from=%2Fmail" replace />}
-                        >
-                          <EmailInboxPage />
-                        </RequireAuth>
-                      }
-                    />
+                    {EMAIL_MAILBOX_ENABLED && (
+                      <Route
+                        path="/mail"
+                        element={
+                          <RequireAuth
+                            loading={<LoadingFallback />}
+                            fallback={
+                              <Navigate to="/login?from=%2Fmail" replace />
+                            }
+                          >
+                            <EmailInboxPage />
+                          </RequireAuth>
+                        }
+                      />
+                    )}
                     {/* The editor and its tool routes - Landing handles auth logic */}
                     <Route path="/*" element={<Landing />} />
                   </Routes>

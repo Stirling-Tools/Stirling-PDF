@@ -14,6 +14,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -123,19 +124,21 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         </Button>
       )}
 
-      <Button
-        variant="tertiary"
-        accent="neutral"
-        leftSection={<EmailOutlinedIcon />}
-        justify={buttonJustify}
-        onClick={() => navigate("/mail")}
-        fullWidth={!horizontal}
-        size={buttonSize}
-      >
-        {horizontal
-          ? t("fileManager.emailShort", "Email")
-          : t("fileManager.email", "Email inbox")}
-      </Button>
+      {EMAIL_MAILBOX_ENABLED && (
+        <Button
+          variant="tertiary"
+          accent="neutral"
+          leftSection={<EmailOutlinedIcon />}
+          justify={buttonJustify}
+          onClick={() => navigate("/mail")}
+          fullWidth={!horizontal}
+          size={buttonSize}
+        >
+          {horizontal
+            ? t("fileManager.emailShort", "Email")
+            : t("fileManager.email", "Email inbox")}
+        </Button>
+      )}
 
       {!shouldHideMobileQR && (
         <Button

@@ -1,13 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Stack,
-  Paper,
-  Text,
-  TextInput,
-  Loader,
-  Group,
-} from "@mantine/core";
+import { Stack, Paper, Text, TextInput, Loader, Group } from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";

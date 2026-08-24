@@ -78,8 +78,7 @@ const DEMO_MESSAGES: MailMessage[] = [
     sender: "Nordlicht GmbH",
     address: "buchhaltung@nordlicht.example",
     subject: "Rechnung 2026-0814",
-    preview:
-      "Anbei finden Sie die Rechnung für den aktuellen Abrechnungszeitraum.",
+    preview: "Attached is the invoice for the current billing period.",
     date: "Heute, 09:42",
     unread: true,
     labels: [],
@@ -100,7 +99,7 @@ const DEMO_MESSAGES: MailMessage[] = [
     address: "mara.hoffmann@example.com",
     subject: "Vertragsunterlagen zur Freigabe",
     preview:
-      "Die aktualisierten Unterlagen liegen im Anhang. Bitte um kurze Rückmeldung.",
+      "The updated documents are attached. Please provide a brief response.",
     date: "Gestern",
     hasAttachment: true,
     labels: [],
@@ -116,7 +115,8 @@ const DEMO_MESSAGES: MailMessage[] = [
         id: "terms-docx",
         name: "Anlage_A.docx",
         type: "DOCX",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         size: "74 KB",
       },
     ],
@@ -125,9 +125,9 @@ const DEMO_MESSAGES: MailMessage[] = [
     id: "meeting-03",
     sender: "Projektteam",
     address: "projektteam@example.com",
-    subject: "Nächste Schritte",
+    subject: "Next steps",
     preview:
-      "Danke für das Gespräch. Die nächsten Schritte sind im Überblick zusammengefasst.",
+      "Thank you for the discussion. The next steps are summarized below.",
     date: "12. Aug.",
     labels: [],
     attachments: [],
@@ -262,19 +262,20 @@ export default function EmailInboxPage() {
             id: message.id,
             sender: sender.name,
             address: sender.address,
-          subject: message.subject || "(Ohne Betreff)",
-          preview: message.preview,
-          date: message.date,
-          unread: message.unread,
-          labels: message.labels ?? [],
-          hasAttachment: true,
-          attachments: message.attachments.map((attachment) => ({
-            id: attachment.id,
-            name: attachment.name,
-            type: attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
-            mimeType: attachment.mimeType,
-            size: formatFileSize(attachment.size),
-          })),
+            subject: message.subject || "(Ohne Betreff)",
+            preview: message.preview,
+            date: message.date,
+            unread: message.unread,
+            labels: message.labels ?? [],
+            hasAttachment: true,
+            attachments: message.attachments.map((attachment) => ({
+              id: attachment.id,
+              name: attachment.name,
+              type:
+                attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
+              mimeType: attachment.mimeType,
+              size: formatFileSize(attachment.size),
+            })),
           };
         });
       setMessages((current) =>
@@ -370,7 +371,9 @@ export default function EmailInboxPage() {
   );
   const attachmentTypeOptions = useMemo(
     () =>
-      Array.from(new Set([...attachmentTypes, ...customAttachmentTypes])).sort(),
+      Array.from(
+        new Set([...attachmentTypes, ...customAttachmentTypes]),
+      ).sort(),
     [attachmentTypes, customAttachmentTypes],
   );
 
@@ -382,27 +385,30 @@ export default function EmailInboxPage() {
       selectedLabels.length === 0
     )
       return messages;
-    return messages.filter((message) =>
-      (normalizedQuery
-        ? [message.sender, message.address, message.subject, message.preview]
-            .join(" ")
-            .toLocaleLowerCase()
-            .includes(normalizedQuery)
-        : true) &&
-      (selectedAttachmentTypes.length > 0
-        ? message.attachments.some(
-            (attachment) => selectedAttachmentTypes.includes(attachment.type),
-          )
-        : true) &&
-      (selectedLabels.length > 0
-        ? selectedLabels.some((label) =>
-            (message.labels ?? []).includes(label),
-          )
-        : true),
+    return messages.filter(
+      (message) =>
+        (normalizedQuery
+          ? [message.sender, message.address, message.subject, message.preview]
+              .join(" ")
+              .toLocaleLowerCase()
+              .includes(normalizedQuery)
+          : true) &&
+        (selectedAttachmentTypes.length > 0
+          ? message.attachments.some((attachment) =>
+              selectedAttachmentTypes.includes(attachment.type),
+            )
+          : true) &&
+        (selectedLabels.length > 0
+          ? selectedLabels.some((label) =>
+              (message.labels ?? []).includes(label),
+            )
+          : true),
     );
   }, [messages, query, selectedAttachmentTypes, selectedLabels]);
 
-  const unreadMessageCount = messages.filter((message) => message.unread).length;
+  const unreadMessageCount = messages.filter(
+    (message) => message.unread,
+  ).length;
 
   const selectedMessage =
     filteredMessages.find((message) => message.id === selectedMessageId) ??
@@ -423,7 +429,7 @@ export default function EmailInboxPage() {
   const disconnectAccount = async () => {
     if (
       !window.confirm(
-        "Gmail trennen? Die lokale Verbindung wird gelöscht und der Google-Zugriff widerrufen.",
+        "Disconnect Gmail? The local connection will be deleted and Google access revoked.",
       )
     ) {
       return;
@@ -471,7 +477,7 @@ export default function EmailInboxPage() {
     if (
       alreadyExists &&
       !window.confirm(
-        `Die Datei "${attachment.name}" ist bereits vorhanden. Soll sie erneut importiert werden?`,
+        `The file "${attachment.name}" already exists. Import it again?`,
       )
     ) {
       return;
@@ -496,16 +502,16 @@ export default function EmailInboxPage() {
         <div className="email-page-brand">
           <ActionIcon
             variant="tertiary"
-            aria-label={t("email.back", "Zurück")}
+            aria-label={t("email.back", "Back")}
             onClick={() => navigate("/editor")}
           >
             <ArrowBackIcon fontSize="small" />
           </ActionIcon>
           <div>
             <div className="email-page-eyebrow">
-              {t("email.eyebrow", "Dateiquellen")}
+              {t("email.eyebrow", "File sources")}
             </div>
-            <h1>{t("email.title", "E-Mail-Postfach")}</h1>
+            <h1>{t("email.title", "Email inbox")}</h1>
           </div>
         </div>
         <div className="email-page-header-actions">
@@ -513,19 +519,19 @@ export default function EmailInboxPage() {
             <span className="email-status-dot" />
             {t("email.cacheReady", "Lokaler Cache aktiv")}
           </span>
-          <Tooltip label={t("email.refresh", "Postfach aktualisieren")}>
+          <Tooltip label={t("email.refresh", "Refresh inbox")}>
             <ActionIcon
               variant="tertiary"
-              aria-label={t("email.refresh", "Postfach aktualisieren")}
+              aria-label={t("email.refresh", "Refresh inbox")}
               onClick={refreshInbox}
             >
               <RefreshIcon fontSize="small" />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label={t("email.settings", "E-Mail-Einstellungen")}>
+          <Tooltip label={t("email.settings", "Email settings")}>
             <ActionIcon
               variant="tertiary"
-              aria-label={t("email.settings", "E-Mail-Einstellungen")}
+              aria-label={t("email.settings", "Email settings")}
               onClick={openSettings}
             >
               <SettingsOutlinedIcon fontSize="small" />
@@ -537,7 +543,7 @@ export default function EmailInboxPage() {
       <div className="email-page-body">
         <aside className="email-sidebar">
           <div className="email-sidebar-heading">
-            <span>{t("email.accounts", "Konten")}</span>
+            <span>{t("email.accounts", "Accounts")}</span>
             <Tooltip label={t("email.connectAccount", "Konto verbinden")}>
               <ActionIcon
                 variant="tertiary"
@@ -570,7 +576,7 @@ export default function EmailInboxPage() {
               <span>
                 {t(
                   "email.noAccountHint",
-                  "Verbinde ein Postfach, um Anhänge zu importieren.",
+                  "Connect a mailbox to import attachments.",
                 )}
               </span>
             </div>
@@ -578,14 +584,14 @@ export default function EmailInboxPage() {
 
           <Divider my="md" />
           <div className="email-sidebar-heading">
-            <span>{t("email.folders", "Postfach")}</span>
+            <span>{t("email.folders", "Mailbox")}</span>
           </div>
           <button
             className={`email-folder-row ${selectedFolder === "inbox" ? "is-active" : ""}`}
             onClick={() => setSelectedFolder("inbox")}
           >
             <InboxOutlinedIcon fontSize="small" />
-            <span>{t("email.inbox", "Posteingang")}</span>
+            <span>{t("email.inbox", "Inbox")}</span>
             {unreadMessageCount > 0 && (
               <Badge size="sm" variant="light">
                 {unreadMessageCount}
@@ -597,21 +603,21 @@ export default function EmailInboxPage() {
             onClick={() => setSelectedFolder("starred")}
           >
             <StarBorderIcon fontSize="small" />
-            <span>{t("email.starred", "Markiert")}</span>
+            <span>{t("email.starred", "Starred")}</span>
           </button>
           <button
             className={`email-folder-row ${selectedFolder === "trash" ? "is-active" : ""}`}
             onClick={() => setSelectedFolder("trash")}
           >
             <DeleteOutlineIcon fontSize="small" />
-            <span>{t("email.trash", "Papierkorb")}</span>
+            <span>{t("email.trash", "Trash")}</span>
           </button>
 
           <div className="email-sidebar-footer">
             <span className="email-sync-label">
-              {t("email.syncLabel", "Synchronisierung")}
+              {t("email.syncLabel", "Synchronization")}
             </span>
-            <strong>{t("email.syncTime", "Vor 4 Minuten")}</strong>
+            <strong>{t("email.syncTime", "4 minutes ago")}</strong>
             <span>
               {t(
                 "email.cacheHint",
@@ -623,29 +629,23 @@ export default function EmailInboxPage() {
 
         <section
           className="email-message-column"
-          aria-label={t("email.messageList", "E-Mail-Liste")}
+          aria-label={t("email.messageList", "Email list")}
         >
           <div className="email-column-toolbar">
             <div className="email-toolbar-top">
               <div>
                 <h2>{t("email.inbox", "Posteingang")}</h2>
                 <span>
-                  {filteredMessages.length} {t("email.messages", "Nachrichten")}
+                  {filteredMessages.length} {t("email.messages", "messages")}
                 </span>
               </div>
               <TextInput
                 className="email-search"
                 value={query}
                 onChange={(event) => setQuery(event.currentTarget.value)}
-                placeholder={t(
-                  "email.searchPlaceholder",
-                  "Nachrichten durchsuchen",
-                )}
+                placeholder={t("email.searchPlaceholder", "Search messages")}
                 leftSection={<SearchIcon fontSize="small" />}
-                aria-label={t(
-                  "email.searchPlaceholder",
-                  "Nachrichten durchsuchen",
-                )}
+                aria-label={t("email.searchPlaceholder", "Search messages")}
               />
             </div>
             <MultiSelect
@@ -662,22 +662,24 @@ export default function EmailInboxPage() {
                   addAttachmentType(attachmentTypeDraft);
                 }
               }}
-              placeholder={t("email.fileTypeFilter", "Dateityp")}
-              aria-label={t("email.fileTypeFilter", "Dateityp filtern")}
+              placeholder={t("email.fileTypeFilter", "File type")}
+              aria-label={t("email.fileTypeFilter", "Filter by file type")}
             />
             <TextInput
               className="email-type-custom-input"
               value={attachmentTypeDraft}
-              onChange={(event) => setAttachmentTypeDraft(event.currentTarget.value)}
+              onChange={(event) =>
+                setAttachmentTypeDraft(event.currentTarget.value)
+              }
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 addAttachmentType(attachmentTypeDraft);
               }}
               placeholder={t(
                 "email.customFileType",
-                "Eigenen Dateityp eingeben und Enter drücken",
+                "Enter a custom file type and press Enter",
               )}
-              aria-label={t("email.customFileType", "Eigenen Dateityp")}
+              aria-label={t("email.customFileType", "Custom file type")}
             />
             <MultiSelect
               className="email-label-filter"
@@ -686,7 +688,7 @@ export default function EmailInboxPage() {
               value={selectedLabels}
               onChange={setSelectedLabels}
               placeholder={t("email.labelFilter", "Label")}
-              aria-label={t("email.labelFilter", "Nach Labels filtern")}
+              aria-label={t("email.labelFilter", "Filter by labels")}
               searchable
             />
           </div>
@@ -744,18 +746,22 @@ export default function EmailInboxPage() {
             ) : (
               <div className="email-no-results">
                 <SearchIcon />
-                <strong>
-                  {t("email.noResults", "Keine Nachrichten gefunden")}
-                </strong>
+                <strong>{t("email.noResults", "No messages found")}</strong>
                 <span>
-                  {t("email.noResultsHint", "Passe deinen Suchbegriff an.")}
+                  {t("email.noResultsHint", "Try a different search term.")}
                 </span>
               </div>
             )}
             {loadingMore && (
-              <div className="email-loading-more" role="status" aria-live="polite">
+              <div
+                className="email-loading-more"
+                role="status"
+                aria-live="polite"
+              >
                 <span className="email-loading-spinner" aria-hidden="true" />
-                <span>{t("email.loadingMore", "Weitere Nachrichten werden geladen ...")}</span>
+                <span>
+                  {t("email.loadingMore", "Loading more messages ...")}
+                </span>
               </div>
             )}
           </ScrollArea>
@@ -763,20 +769,20 @@ export default function EmailInboxPage() {
 
         <section
           className="email-detail-column"
-          aria-label={t("email.messageDetails", "Nachrichtendetails")}
+          aria-label={t("email.messageDetails", "Message details")}
         >
           {selectedMessage ? (
             <>
               <div className="email-detail-toolbar">
                 <span className="email-detail-label">
-                  {t("email.message", "Nachricht")}
+                  {t("email.message", "Message")}
                 </span>
                 <Menu shadow="md" width={220} position="bottom-end">
                   <Menu.Target>
-                    <Tooltip label={t("email.moreActions", "Weitere Aktionen")}>
+                    <Tooltip label={t("email.moreActions", "More actions")}>
                       <ActionIcon
                         variant="tertiary"
-                        aria-label={t("email.moreActions", "Weitere Aktionen")}
+                        aria-label={t("email.moreActions", "More actions")}
                       >
                         <MoreHorizIcon fontSize="small" />
                       </ActionIcon>
@@ -785,7 +791,9 @@ export default function EmailInboxPage() {
                   <Menu.Dropdown>
                     <Menu.Item
                       onClick={() =>
-                        void navigator.clipboard.writeText(selectedMessage.subject)
+                        void navigator.clipboard.writeText(
+                          selectedMessage.subject,
+                        )
                       }
                     >
                       {t("email.copySubject", "Betreff kopieren")}
@@ -801,7 +809,7 @@ export default function EmailInboxPage() {
                     </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item onClick={refreshInbox}>
-                      {t("email.refresh", "Postfach aktualisieren")}
+                      {t("email.refresh", "Refresh inbox")}
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
@@ -842,14 +850,14 @@ export default function EmailInboxPage() {
                   <p className="email-message-body-copy">
                     {t(
                       "email.demoBody",
-                      "Die angehängten Dateien können nach dem Download direkt in den Stirling-PDF-Arbeitsbereich übernommen werden.",
+                      "Attached files can be transferred directly into the Stirling PDF workspace after download.",
                     )}
                   </p>
 
                   {selectedAttachments && selectedAttachments.length > 0 && (
                     <div className="email-attachments">
                       <div className="email-section-label">
-                        <span>{t("email.attachments", "Anhänge")}</span>
+                        <span>{t("email.attachments", "Attachments")}</span>
                         <span>{selectedAttachments.length}</span>
                       </div>
                       {selectedAttachments.map((attachment) => (
@@ -871,12 +879,15 @@ export default function EmailInboxPage() {
                               <CloudDownloadOutlinedIcon fontSize="small" />
                             }
                             onClick={() =>
-                              void importAttachment(selectedMessage.id, attachment)
+                              void importAttachment(
+                                selectedMessage.id,
+                                attachment,
+                              )
                             }
                           >
                             {downloadedAttachment === attachment.id
                               ? t("email.queued", "Vorgemerkt")
-                              : t("email.download", "Importieren")}
+                              : t("email.download", "Import")}
                           </Button>
                         </div>
                       ))}
@@ -884,7 +895,7 @@ export default function EmailInboxPage() {
                         <EmailOutlinedIcon fontSize="inherit" />{" "}
                         {t(
                           "email.storageNote",
-                          "Anhänge werden im Datei-Workflow gespeichert, E-Mail-Daten bleiben im lokalen Cache.",
+                          "Attachments are stored in the file workflow; email data remains in the local cache.",
                         )}
                       </p>
                     </div>
@@ -895,12 +906,9 @@ export default function EmailInboxPage() {
           ) : (
             <div className="email-detail-empty">
               <EmailOutlinedIcon />
-              <strong>{t("email.selectMessage", "Nachricht auswählen")}</strong>
+              <strong>{t("email.selectMessage", "Select a message")}</strong>
               <span>
-                {t(
-                  "email.selectMessageHint",
-                  "Wähle eine E-Mail aus der Liste aus.",
-                )}
+                {t("email.selectMessageHint", "Choose an email from the list.")}
               </span>
             </div>
           )}
@@ -916,11 +924,11 @@ export default function EmailInboxPage() {
             <span className="email-page-eyebrow">
               {t("email.firstSetup", "Erster Schritt")}
             </span>
-            <h2>{t("email.connectTitle", "Postfach verbinden")}</h2>
+            <h2>{t("email.connectTitle", "Connect mailbox")}</h2>
             <p>
               {t(
                 "email.connectDescription",
-                "Verbinde dein E-Mail-Konto, um Anhänge sicher in deinen PDF-Workflow zu übernehmen.",
+                "Connect your email account to securely transfer attachments into your PDF workflow.",
               )}
             </p>
             <div className="email-provider-actions">
@@ -936,7 +944,7 @@ export default function EmailInboxPage() {
             <small>
               {t(
                 "email.oauthNote",
-                "Die Anmeldung erfolgt über OAuth. Passwörter werden nicht in Stirling gespeichert.",
+                "Sign-in uses OAuth. Passwords are not stored by Stirling.",
               )}
             </small>
           </div>
@@ -946,14 +954,14 @@ export default function EmailInboxPage() {
       <Modal
         opened={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        title={t("email.settings", "E-Mail-Einstellungen")}
+        title={t("email.settings", "Email settings")}
         centered
       >
         <TextInput
           label={t("email.displayName", "Anzeigename")}
           description={t(
             "email.displayNameHint",
-            "Dieser Name wird statt der E-Mail-Adresse im Postfach angezeigt.",
+            "This name is displayed instead of the email address in the mailbox.",
           )}
           value={draftDisplayName}
           onChange={(event) => setDraftDisplayName(event.currentTarget.value)}
@@ -968,16 +976,14 @@ export default function EmailInboxPage() {
             onClick={() => void disconnectAccount()}
             className="email-disconnect-button"
           >
-            Gmail-Verbindung trennen
+            Disconnect Gmail
           </Button>
         )}
         <div className="email-settings-actions">
           <Button variant="secondary" onClick={() => setSettingsOpen(false)}>
             {t("email.cancel", "Abbrechen")}
           </Button>
-          <Button onClick={saveSettings}>
-            {t("email.save", "Speichern")}
-          </Button>
+          <Button onClick={saveSettings}>{t("email.save", "Speichern")}</Button>
         </div>
       </Modal>
     </main>
