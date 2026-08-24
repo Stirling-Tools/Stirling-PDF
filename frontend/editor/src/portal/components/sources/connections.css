@@ -4,12 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.portal-sources__connection-picker .sui-select,
-.portal-sources__connection-picker > div:first-child {
-  align-self: stretch;
 }
 
 .portal-sources__connection-create-actions {
