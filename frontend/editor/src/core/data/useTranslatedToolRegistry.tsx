@@ -20,6 +20,7 @@ import {
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import { classifyOperationConfig } from "@app/hooks/tools/classify/useClassifyOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
@@ -1337,6 +1338,30 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         synonyms: getSynonyms(t, "compare"),
         supportsAutomate: false,
+      },
+      classify: {
+        icon: (
+          <LocalIcon
+            icon="label-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.classify.title", "Classify"),
+        // No interactive UI: this is a pipeline step, registered so a pipeline can name it.
+        component: null,
+        description: t(
+          "home.classify.desc",
+          "Identify what kind of document this is and tag it.",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.AI,
+        maxFiles: -1,
+        endpoints: ["classify-and-label"],
+        operationConfig: asRegistryConfig(classifyOperationConfig),
+        automationSettings: null,
+        // Pipeline-only: there is no interactive classify tool to open in the editor.
+        hiddenFromToolList: true,
       },
       compress: {
         icon: (
