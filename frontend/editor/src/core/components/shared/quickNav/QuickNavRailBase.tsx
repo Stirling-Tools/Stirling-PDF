@@ -39,8 +39,12 @@ export interface QuickNavEntry {
 export interface QuickNavRailBaseProps {
   /**
    * Groups of entries, rendered in order with a divider between each. The first
-   * group is the core landing zones (the apps); later groups hold destinations
-   * and actions within them.
+   * group is the app switcher (the core landing zones); later groups hold
+   * destinations and actions within them.
+   *
+   * A switcher holding one app is dropped: with nowhere to switch to it is a
+   * permanently-current tile that does nothing, which is what any build without
+   * the processor would otherwise show.
    */
   groups: QuickNavEntry[][];
   /** Pinned to the bottom of the bar (the account control). */
@@ -110,7 +114,14 @@ function RailButton({
  */
 export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
   const { t } = useTranslation();
-  const populated = groups.filter((group) => group.length > 0);
+  const [switcher, ...rest] = groups;
+  // Switching apps needs at least two of them, so a lone app is dropped rather
+  // than drawn as a tile that only ever points at where you already are. The
+  // divider follows automatically: the group below becomes the first one.
+  const populated = [
+    ...(switcher && switcher.length > 1 ? [switcher] : []),
+    ...rest,
+  ].filter((group) => group.length > 0);
   return (
     <nav
       className="quick-nav-rail"

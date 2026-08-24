@@ -40,8 +40,8 @@ export function useQuickNavSurfaces(): {
       kind: "destination",
       // Files and reader mode are both inside the editor app, so the app stays
       // current while you're in them - as the current app, not the current page,
-      // which the entry for the place you're in claims. It also stays clickable:
-      // My Files suppresses the workbench bar, making this the only way back out.
+      // which the entry for the place you're in claims. Still clickable, as a
+      // second way back out of My Files alongside the brand header's back arrow.
       isActive: true,
       currentKind: "app",
       onClick: () =>
