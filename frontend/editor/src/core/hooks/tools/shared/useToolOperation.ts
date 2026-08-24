@@ -226,10 +226,7 @@ export const useToolOperation = <TParams>(
             : [];
         }
       };
-      window.addEventListener(
-        FILE_EVENTS.markError,
-        errorListener as EventListener,
-      );
+      window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
         let processedFiles: File[];
@@ -617,10 +614,7 @@ export const useToolOperation = <TParams>(
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
-        window.removeEventListener(
-          FILE_EVENTS.markError,
-          errorListener as EventListener,
-        );
+        window.removeEventListener(FILE_EVENTS.markError, errorListener);
         actions.setLoading(false);
         actions.setProgress(null);
       }

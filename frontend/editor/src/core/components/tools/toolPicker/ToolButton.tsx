@@ -74,7 +74,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
-  const fav = isFavorite(id as ToolId);
+  const fav = isFavorite(id);
 
   // Check if this tool will route to SaaS backend (desktop only)
   const rawEndpoint = tool.operationConfig?.endpoint;
@@ -308,7 +308,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     hasStars && !visuallyUnavailable ? (
       <FavoriteStar
         isFavorite={fav}
-        onToggle={() => toggleFavorite(id as ToolId)}
+        onToggle={() => toggleFavorite(id)}
         className="tool-button-star"
         size="xs"
       />
