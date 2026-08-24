@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   setActiveFileId: vi.fn(),
   restoreWorkbench: vi.fn(),
   workbench: "viewer" as string,
+  authUser: null as { id: string } | null,
+  authLoading: false,
+  pathname: "/editor",
   activeFileId: null as string | null,
 }));
 
@@ -19,6 +22,12 @@ vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
     actions: { restoreWorkbench: mocks.restoreWorkbench },
   }),
+}));
+vi.mock("react-router-dom", () => ({
+  useLocation: () => ({ pathname: mocks.pathname }),
+}));
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({ user: mocks.authUser, loading: mocks.authLoading }),
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
   useViewer: () => ({
@@ -92,6 +101,9 @@ beforeEach(() => {
   actions.addStirlingFileStubs.mockResolvedValue([]);
   mocks.getLeafStirlingFileStubs.mockResolvedValue([]);
   mocks.workbench = "viewer";
+  mocks.authUser = null;
+  mocks.authLoading = false;
+  mocks.pathname = "/editor";
   mocks.activeFileId = null;
 });
 afterEach(() => vi.useRealTimers());
@@ -101,6 +113,7 @@ describe("restore", () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
+        v: 2,
         fileIds: ["root-a", "root-b"],
         selectedFileIds: ["root-b"],
       }),
@@ -129,7 +142,7 @@ describe("restore", () => {
   it("does not touch a workbench that already holds files", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ fileIds: ["root-a"], selectedFileIds: [] }),
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
     mount(makeStore([stub("already-open", "already-open")]));
 
@@ -140,7 +153,11 @@ describe("restore", () => {
   it("restores what still exists and says how much is gone", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ fileIds: ["root-a", "gone"], selectedFileIds: [] }),
+      JSON.stringify({
+        v: 2,
+        fileIds: ["root-a", "gone"],
+        selectedFileIds: [],
+      }),
     );
     mocks.getLeafStirlingFileStubs.mockResolvedValue([
       stub("root-a", "root-a"),
@@ -151,6 +168,25 @@ describe("restore", () => {
     await waitFor(() => expect(mocks.alert).toHaveBeenCalled());
     expect(actions.addStirlingFileStubs.mock.calls[0][0]).toHaveLength(1);
     expect(mocks.alert.mock.calls[0][0].alertType).toBe("warning");
+  });
+
+  it("does not say 'the rest' when nothing at all could be restored", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: ["gone-1", "gone-2"],
+        selectedFileIds: [],
+      }),
+    );
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([]);
+
+    mount(makeStore());
+
+    await waitFor(() => expect(mocks.alert).toHaveBeenCalled());
+    expect(mocks.alert.mock.calls[0][0].title).toBe(
+      "workbench.sessionRestore.none",
+    );
   });
 
   it("does nothing when no session was recorded", async () => {
@@ -164,6 +200,7 @@ describe("restore", () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
+        v: 2,
         fileIds: ["root-a"],
         selectedFileIds: ["root-a"],
         workbench: "fileEditor",
@@ -185,6 +222,7 @@ describe("restore", () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
+        v: 2,
         fileIds: ["root-a"],
         selectedFileIds: [],
         workbench: "myFiles",
@@ -203,6 +241,118 @@ describe("restore", () => {
   });
 });
 
+describe("whose workbench it is", () => {
+  const record = (userId: string | null) =>
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: ["root-a"],
+        selectedFileIds: [],
+        userId,
+      }),
+    );
+
+  it("does not open one user's workbench for the next person in the tab", async () => {
+    record("user-a");
+    mocks.authUser = { id: "user-b" };
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+
+    mount(makeStore());
+
+    await act(async () => {});
+    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    // And the record is gone, so it cannot resurface later in the session.
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+
+  it("reopens it for the user who left it", async () => {
+    record("user-a");
+    mocks.authUser = { id: "user-a" };
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+
+    mount(makeStore());
+
+    await waitFor(() =>
+      expect(actions.addStirlingFileStubs).toHaveBeenCalled(),
+    );
+  });
+
+  it("waits for the session before deciding", async () => {
+    record("user-a");
+    mocks.authUser = null;
+    mocks.authLoading = true;
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+
+    mount(makeStore());
+
+    await act(async () => {});
+    // Neither restored nor discarded - who is signed in is not known yet.
+    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull();
+  });
+});
+
+describe("signing out", () => {
+  it("drops the workbench when the identity goes away, whichever button did it", async () => {
+    mocks.authUser = { id: "user-a" };
+    const store = makeStore([stub("f1", "f1")]);
+    const view = mount(store);
+    await act(async () => {});
+
+    // Any sign-out path: the settings modal, an expiry, a 401 - all end here.
+    mocks.authUser = null;
+    view.rerender(
+      <FileStoreContext.Provider value={store as never}>
+        <FileActionsContext.Provider
+          value={{ actions, dispatch: vi.fn() } as never}
+        >
+          <WorkbenchSessionPersistence />
+        </FileActionsContext.Provider>
+      </FileStoreContext.Provider>,
+    );
+    await act(async () => {});
+
+    // ...and the teardown flush that follows must not put it back.
+    act(() => store.notify());
+    view.unmount();
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+});
+
+describe("on the login screen", () => {
+  it("neither restores nor records - signing out must not rebuild the workbench there", async () => {
+    mocks.pathname = "/login";
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+
+    // And the unmount flush must not write either.
+    store.state.files.ids = ["f1" as never];
+    store.state.files.byId = { f1: stub("f1", "f1") } as never;
+    act(() => store.notify());
+    unmount();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+      "root-a",
+    ]);
+  });
+});
+
 describe("writer", () => {
   it("mirrors the open files and selection as original ids, debounced", async () => {
     vi.useFakeTimers();
@@ -217,7 +367,7 @@ describe("writer", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
     });
-    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!)).toEqual({
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!)).toMatchObject({
       fileIds: ["root-a"],
       selectedFileIds: ["root-a"],
       workbench: "viewer",
@@ -243,7 +393,7 @@ describe("writer", () => {
     vi.useFakeTimers();
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ fileIds: ["root-a"], selectedFileIds: [] }),
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
     // Restore is still awaiting storage, so this mount's empty state is not the truth.
     mocks.getLeafStirlingFileStubs.mockReturnValue(new Promise(() => {}));

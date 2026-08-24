@@ -12,11 +12,17 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useAuth } from "@app/auth/UseSession";
+import { useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/constants/routes";
 import { fileStorage } from "@app/services/fileStorage";
 import { alert } from "@app/components/toast";
 import { WORKBENCH_SESSION_RESTORE } from "@app/constants/featureFlags";
 import {
   beginRestoredView,
+  clearWorkbenchSession,
+  resumeWorkbenchSession,
+  suspendWorkbenchSession,
   endRestoredView,
   isSeedableView,
   originalIdOf,
@@ -44,7 +50,8 @@ function leafByOriginalId(
   return map;
 }
 
-/** How long to hold the guard before accepting whatever the workbench settled on. */
+/** How long to wait for the NEXT file to hydrate before giving up on holding the view. Restarted on
+ *  each arrival, so a slow device with large documents keeps the view as long as it makes progress. */
 const SETTLE_TIMEOUT_MS = 5000;
 
 /** Released a beat late, so effects reacting to the same commit still see the restore in progress. */
@@ -66,24 +73,38 @@ function reopenView(
   }: { view: WorkbenchType; fileCount: number; token: number },
 ): void {
   reopen(view);
-  const hydrated = () =>
-    store.selectors.getFiles(store.getState().files.ids).length >= fileCount;
+  const loaded = () =>
+    store.selectors.getFiles(store.getState().files.ids).length;
 
   const release = () =>
     setTimeout(() => endRestoredView(token), RELEASE_GRACE_MS);
+  if (loaded() >= fileCount) {
+    release();
+    return;
+  }
+
+  let timer: ReturnType<typeof setTimeout>;
   const stop = () => {
     clearTimeout(timer);
     unsubscribe();
     release();
   };
-  if (hydrated()) {
-    release();
-    return;
-  }
+  const waitForNext = () => {
+    clearTimeout(timer);
+    timer = setTimeout(stop, SETTLE_TIMEOUT_MS);
+  };
+
+  let seen = loaded();
   const unsubscribe = store.subscribe(() => {
-    if (hydrated()) stop();
+    const now = loaded();
+    if (now >= fileCount) return stop();
+    // Progress, not completion: give the remaining files a fresh window.
+    if (now > seen) {
+      seen = now;
+      waitForNext();
+    }
   });
-  const timer = setTimeout(stop, SETTLE_TIMEOUT_MS);
+  waitForNext();
 }
 
 export function WorkbenchSessionPersistence() {
@@ -92,6 +113,11 @@ export function WorkbenchSessionPersistence() {
   const { workbench } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { activeFileId, setActiveFileId } = useViewer();
+  const { user, loading: authLoading } = useAuth();
+  // Login/signup mount the editor's providers too. Nothing there is the user's workbench, so this
+  // records nothing and restores nothing - otherwise signing out rebuilds it on the login screen.
+  const onAuthRoute = isAuthRoute(useLocation().pathname);
+  const userId = user?.id != null ? String(user.id) : null;
   const { t } = useTranslation();
   // Captured before the writer below can overwrite it with the empty boot state.
   const [saved] = useState(readWorkbenchSession);
@@ -113,18 +139,21 @@ export function WorkbenchSessionPersistence() {
         .map(toOriginal)
         .filter(isPresent),
       workbench,
+      userId,
       activeFileId: activeFileId
         ? (toOriginal(activeFileId as FileId) ?? undefined)
         : undefined,
     });
-  }, [store, workbench, activeFileId]);
+  }, [store, workbench, activeFileId, userId]);
 
   // Read by the file subscription, which must not resubscribe on every view change.
   const writeRef = useRef(write);
   writeRef.current = write;
 
   useEffect(() => {
-    if (!store) return;
+    if (!store || onAuthRoute) return;
+    // This mount is a new session: undo any suspension left by a sign-out in this page's lifetime.
+    resumeWorkbenchSession();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = store.subscribe(() => {
       clearTimeout(timer);
@@ -136,14 +165,36 @@ export function WorkbenchSessionPersistence() {
       writeRef.current();
       unsubscribe();
     };
-  }, [store]);
+  }, [store, onAuthRoute]);
 
   // Changing view touches no file state, so the subscription above never sees it.
   useEffect(() => write(), [write]);
 
+  // Signing out is the one event that must drop the record, and it happens through many different
+  // buttons (SaaS signs out straight from the settings modal, and a session can simply expire), so
+  // watch the identity itself rather than trying to catch every caller.
+  const previousUserId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (authLoading) return;
+    const previous = previousUserId.current;
+    previousUserId.current = userId;
+    if (previous != null && userId == null) suspendWorkbenchSession();
+  }, [authLoading, userId]);
+
   useEffect(() => {
     if (restoreStarted.current) return;
+    if (onAuthRoute) return;
+    // Who is signed in decides whether this record is theirs to reopen, so settle that first.
+    if (authLoading) return;
     restoreStarted.current = true;
+
+    // A tab can outlive a sign-out (the logout clears it, but a 401 bounce or an expiry does not),
+    // and the next person to sign in here must not open the last person's documents.
+    if (saved && (saved.userId ?? null) !== userId) {
+      clearWorkbenchSession();
+      restoreSettled.current = true;
+      return;
+    }
 
     const nothingToDo =
       !WORKBENCH_SESSION_RESTORE ||
@@ -198,11 +249,17 @@ export function WorkbenchSessionPersistence() {
         if (missing > 0) {
           alert({
             alertType: "warning",
-            title: t(
-              "workbench.sessionRestore.partial",
-              "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device.",
-              { restored: stubs.length, total: saved.fileIds.length },
-            ),
+            title:
+              stubs.length === 0
+                ? t(
+                    "workbench.sessionRestore.none",
+                    "Your previous files are no longer stored on this device.",
+                  )
+                : t(
+                    "workbench.sessionRestore.partial",
+                    "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device.",
+                    { restored: stubs.length, total: saved.fileIds.length },
+                  ),
           });
         }
       } finally {
@@ -211,7 +268,17 @@ export function WorkbenchSessionPersistence() {
         restoreSettled.current = true;
       }
     })();
-  }, [saved, store, actions, navigationActions, setActiveFileId, t]);
+  }, [
+    saved,
+    store,
+    actions,
+    navigationActions,
+    setActiveFileId,
+    t,
+    authLoading,
+    userId,
+    onAuthRoute,
+  ]);
 
   return null;
 }

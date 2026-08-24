@@ -4,6 +4,10 @@
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 const SESSION_KEY = "stirling.workbench.session";
+/** Bumped when the record's shape or meaning changes, so an old one is discarded rather than
+ *  half-read. v2: `userId` became meaningful - v1 records were written without a real owner and
+ *  would otherwise look like they belonged to an anonymous session forever. */
+const SESSION_VERSION = 2;
 const RETURN_PATH_KEY = "stirling.workbench.editorReturnPath";
 
 // All ids are ORIGINAL file ids - a file's stable identity across versions.
@@ -13,6 +17,8 @@ export interface WorkbenchSession {
   /** Which view was on screen. Absent for a record written before this was tracked. */
   workbench?: string;
   activeFileId?: string;
+  /** Who the workbench belonged to, so the next person to use this tab does not inherit it. */
+  userId?: string | null;
 }
 
 /** A file's stable identity across versions - what the session records. */
@@ -24,7 +30,10 @@ export function readWorkbenchSession(): WorkbenchSession | null {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<WorkbenchSession>;
+    const parsed = JSON.parse(raw) as Partial<WorkbenchSession> & {
+      v?: number;
+    };
+    if (parsed.v !== SESSION_VERSION) return null;
     if (!Array.isArray(parsed.fileIds)) return null;
     return {
       fileIds: parsed.fileIds.filter((id) => typeof id === "string"),
@@ -37,17 +46,56 @@ export function readWorkbenchSession(): WorkbenchSession | null {
         typeof parsed.activeFileId === "string"
           ? parsed.activeFileId
           : undefined,
+      userId: typeof parsed.userId === "string" ? parsed.userId : null,
     };
   } catch {
     return null;
   }
 }
 
+// Sign-out clears the record, but signing out also tears the editor down - and that teardown
+// flushes the workbench one last time, recreating what we just deleted (with no user attached).
+// So a sign-out has to stop writing too, not merely clear.
+let writesSuspended = false;
+
+/** Sign-out: drop the record and stop recording, so the teardown cannot put it back. */
+export function suspendWorkbenchSession(): void {
+  writesSuspended = true;
+  clearWorkbenchSession();
+}
+
+/** A fresh editor mount is a new session, so recording starts again. */
+export function resumeWorkbenchSession(): void {
+  writesSuspended = false;
+}
+
 export function writeWorkbenchSession(session: WorkbenchSession): void {
+  if (writesSuspended) return;
+  // A workbench recorded by a signed-in user must never be rewritten as anonymous. That write is
+  // the teardown that follows a sign-out, and keeping its result would hand the workbench to
+  // whoever signs in next. Catches every sign-out path, not just the ones that call suspend.
+  if (session.userId == null && readWorkbenchSession()?.userId != null) {
+    clearWorkbenchSession();
+    return;
+  }
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ ...session, v: SESSION_VERSION }),
+    );
   } catch {
-    // Storage refused (quota, privacy mode): the session just won't survive.
+    // Storage refused (quota, privacy mode). setItem is atomic, so the PREVIOUS record would
+    // survive and restore an older workbench - drop it, so the failure is "no restore" instead.
+    clearWorkbenchSession();
+  }
+}
+
+/** Drop the record: on sign-out, and whenever it would otherwise be restored for the wrong person. */
+export function clearWorkbenchSession(): void {
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // A record we cannot remove is also one we cannot read.
   }
 }
 
