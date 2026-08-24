@@ -37,10 +37,19 @@ runs:
           *) echo "Unsupported runner architecture: ${architecture}" >&2; exit 1 ;;
         esac
 
+        runner_architecture="$(printf '%s' "${RUNNER_ARCHITECTURE}" | tr '[:lower:]' '[:upper:]')"
+        if [ "${RUNNER_OS_NAME}" = "macOS" ] && [ -n "${JAVA_HOME:-}" ]; then
+          runner_java_binary="${JAVA_HOME}/bin/java"
+          if [ "${runner_architecture}" = "ARM64" ] && file "${runner_java_binary}" | grep -q "arm64"; then
+            echo "JAVA_HOME_${JAVA_VERSION}_ARM64=${JAVA_HOME}" >> "${GITHUB_ENV}"
+          elif [ "${runner_architecture}" = "X64" ] && file "${runner_java_binary}" | grep -q "x86_64"; then
+            echo "JAVA_HOME_${JAVA_VERSION}_X64=${JAVA_HOME}" >> "${GITHUB_ENV}"
+          fi
+        fi
+
         java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
         java_home="${!java_home_variable:-}"
         if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
-          runner_architecture="$(printf '%s' "${RUNNER_ARCHITECTURE}" | tr '[:lower:]' '[:upper:]')"
           if [ "${architecture}" = "${runner_architecture}" ] && [ -n "${JAVA_HOME:-}" ]; then
             java_home="${JAVA_HOME}"
           fi
