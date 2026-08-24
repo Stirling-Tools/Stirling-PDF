@@ -6,6 +6,7 @@ import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { useGoToEditor } from "@portal/hooks/useGoToEditor";
+import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
 import { BrandMark } from "@app/components/shared/BrandMark";
@@ -74,14 +75,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   } = useUI();
   const { pathname } = useLocation();
   const goToEditor = useGoToEditor();
+  // Same count the editor's rail shows: the hooks behind it read app config and
+  // the REST API, both of which this shell already has.
+  const signingCount = useSigningBadgeCount();
 
   // Deliberately the same bar the editor renders: same groups, same order, same
   // account control. Everything except Processor hands off to the editor app,
   // since that is where those destinations and tools live.
-  //
-  // Reader is intentionally absent. Reader mode is a boolean, not a route, so
-  // from here it could only call goToEditor() - the same thing Editor does, and
-  // two icons for one destination is a decoy. It returns when reader is routable.
   const apps: QuickNavEntry[] = [
     {
       id: "editor",
@@ -119,8 +119,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ),
       kind: "destination",
-      // /files IS a route, so unlike reader mode this deep-links cleanly.
       onClick: () => goToEditor("/files"),
+    },
+    {
+      id: "reader",
+      label: t("quickNav.reader", "Reader"),
+      icon: (
+        <LocalIcon
+          icon="menu-book-outline-rounded"
+          width="1.125rem"
+          height="1.125rem"
+        />
+      ),
+      kind: "destination",
+      // The editor reaches the reader by selecting the read tool; /read is that
+      // tool's route, so this lands on the same place rather than the editor's
+      // default view.
+      onClick: () => goToEditor("/read"),
     },
     {
       id: "automate",
@@ -146,8 +161,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ),
       kind: "action",
-      // No badge here: the count comes from a hook that needs the editor's
-      // signing context, which the portal doesn't mount.
+      badge: signingCount,
       onClick: () => goToEditor("/shared-sign"),
     },
   ];
