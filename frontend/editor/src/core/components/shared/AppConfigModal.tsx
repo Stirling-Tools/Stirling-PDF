@@ -219,8 +219,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return false;
-    // URL restore on close is owned by the host onClose so the modal and the
-    // saas override unwind the same way; doing it here too raced that write.
     onClose();
     return true;
   }, [confirmIfDirty, onClose]);
