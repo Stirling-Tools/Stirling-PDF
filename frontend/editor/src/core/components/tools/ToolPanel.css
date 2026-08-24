@@ -20,12 +20,12 @@
 }
 
 /* Full-height panel flush to the window edge, not a rounded card inset from it.
-   Keeps the class name: the layout still distinguishes this from the mobile and
-   fullscreen variants, which bring their own border. */
+   No border on the workbench side: it reads as separate the same way the file
+   sidebar opposite does, by being a surface against the canvas. A rule on one
+   side only made the two edges of the workbench disagree. */
 .tool-panel--floating {
   height: 100vh;
   background: var(--c-surface);
-  border-left: 1px solid var(--c-border-subtle);
 }
 
 .tool-panel__collapsed-strip {
