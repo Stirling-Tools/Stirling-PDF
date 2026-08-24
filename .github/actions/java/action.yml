@@ -56,6 +56,25 @@ runs:
             java_home=""
           fi
         fi
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ]; then
+          jdk_version="25.0.3+9"
+          jdk_archive="OpenJDK25U-jdk_x64_mac_hotspot_25.0.3_9.tar.gz"
+          jdk_sha256="4c539a18b4d656960ff6766727e9ca546fc17f7a29714dba9e7b47bdcb37c447"
+          jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}"
+          archive_path="${jdk_root}/${jdk_archive}"
+          mkdir -p "${jdk_root}"
+          if [ ! -f "${archive_path}" ]; then
+            curl --fail --location --retry 3 --retry-delay 2 \
+              --output "${archive_path}" \
+              "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3%2B9/${jdk_archive}"
+          fi
+          printf '%s  %s\n' "${jdk_sha256}" "${archive_path}" | shasum -a 256 -c -
+          if [ ! -x "${jdk_root}/Contents/Home/bin/jlink" ]; then
+            rm -rf "${jdk_root}/Contents"
+            tar -xzf "${archive_path}" -C "${jdk_root}"
+          fi
+          java_home="$(find "${jdk_root}" -type d -path '*/Contents/Home' -print -quit)"
+        fi
         if [ -z "${java_home}" ]; then
           echo "JDK 25 is not installed on this runner (${java_home_variable} is missing)" >&2
           exit 1
@@ -68,6 +87,7 @@ runs:
 
         export JAVA_HOME="${shell_java_home}"
         export PATH="${shell_java_home}/bin:${PATH}"
+        echo "JAVA_HOME_${JAVA_VERSION}_${architecture}=${java_home}" >> "${GITHUB_ENV}"
         echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
         echo "${java_home}/bin" >> "${GITHUB_PATH}"
         java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
