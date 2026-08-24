@@ -232,7 +232,7 @@ public class GmailOAuthService {
     }
 
     public GmailMessagePage listMessages(
-            GmailToken token, String folder, String types, String pageToken)
+            GmailToken token, String folder, String types, String query, String pageToken)
             throws IOException, InterruptedException {
         String label =
                 switch (folder) {
@@ -244,17 +244,18 @@ public class GmailOAuthService {
                 pageToken == null || pageToken.isBlank()
                         ? ""
                         : "&pageToken=" + URLEncoder.encode(pageToken, StandardCharsets.UTF_8);
-        String typeQuery = buildAttachmentTypeQuery(types);
+        String gmailQuery = buildGmailQuery(types, query);
         JsonNode list =
                 sendJson(
                         token,
                         GMAIL_API_URI
                                 + "/messages?labelIds="
                                 + label
-                                + "&maxResults=25&q=has%3Aattachment"
-                                + typeQuery
+                                + "&maxResults=25&q="
+                                + URLEncoder.encode(gmailQuery, StandardCharsets.UTF_8)
                                 + pageQuery);
         List<GmailMessage> messages = new ArrayList<>();
+        Map<String, String> labelNames = loadLabelNames(token);
         for (JsonNode item : list.path("messages")) {
             JsonNode message =
                     sendJson(
@@ -263,27 +264,30 @@ public class GmailOAuthService {
                                     + "/messages/"
                                     + item.path("id").asText()
                                     + "?format=full");
-            messages.add(toMessage(message));
+            messages.add(toMessage(message, labelNames));
         }
         return new GmailMessagePage(messages, list.path("nextPageToken").asText(null));
     }
 
-    private String buildAttachmentTypeQuery(String types) {
-        if (types == null || types.isBlank()) {
-            return "";
+    private String buildGmailQuery(String types, String query) {
+        StringBuilder gmailQuery = new StringBuilder("has:attachment");
+        if (types != null && !types.isBlank()) {
+            String filenameQuery =
+                    Arrays.stream(types.split(","))
+                            .map(String::trim)
+                            .map(String::toLowerCase)
+                            .filter(type -> type.matches("[a-z0-9]{1,10}"))
+                            .distinct()
+                            .map(type -> "filename:" + type)
+                            .collect(Collectors.joining(" "));
+            if (!filenameQuery.isBlank()) {
+                gmailQuery.append(" {").append(filenameQuery).append("}");
+            }
         }
-        String filenameQuery =
-                Arrays.stream(types.split(","))
-                        .map(String::trim)
-                        .map(String::toLowerCase)
-                        .filter(type -> type.matches("[a-z0-9]{1,10}"))
-                        .distinct()
-                        .map(type -> "filename:" + type)
-                        .collect(Collectors.joining(" "));
-        if (filenameQuery.isBlank()) {
-            return "";
+        if (query != null && !query.isBlank()) {
+            gmailQuery.append(' ').append(query.trim());
         }
-        return "%20" + URLEncoder.encode("{" + filenameQuery + "}", StandardCharsets.UTF_8);
+        return gmailQuery.toString();
     }
 
     public GmailAttachmentData downloadAttachment(
@@ -297,11 +301,33 @@ public class GmailOAuthService {
         return new GmailAttachmentData(data);
     }
 
-    private GmailMessage toMessage(JsonNode message) {
+    private Map<String, String> loadLabelNames(GmailToken token)
+            throws IOException, InterruptedException {
+        Map<String, String> labelNames = new LinkedHashMap<>();
+        JsonNode response = sendJson(token, GMAIL_API_URI + "/labels");
+        for (JsonNode label : response.path("labels")) {
+            String id = label.path("id").asText("");
+            String name = label.path("name").asText("");
+            if (!id.isBlank() && !name.isBlank()) {
+                labelNames.put(id, name);
+            }
+        }
+        return labelNames;
+    }
+
+    private GmailMessage toMessage(JsonNode message, Map<String, String> labelNames) {
         JsonNode payload = message.path("payload");
         String from = header(payload, "From");
         String subject = header(payload, "Subject");
         String date = header(payload, "Date");
+        List<String> labels = new ArrayList<>();
+        for (JsonNode labelId : message.path("labelIds")) {
+            String id = labelId.asText("");
+            String name = labelNames.get(id);
+            if (!"UNREAD".equals(id) && name != null && !name.isBlank()) {
+                labels.add(name);
+            }
+        }
         List<GmailAttachment> attachments = new ArrayList<>();
         collectAttachments(payload, attachments);
         return new GmailMessage(
@@ -311,6 +337,7 @@ public class GmailOAuthService {
                 message.path("snippet").asText(""),
                 date,
                 message.path("labelIds").toString().contains("UNREAD"),
+                labels,
                 attachments);
     }
 
@@ -390,6 +417,7 @@ public class GmailOAuthService {
             String preview,
             String date,
             boolean unread,
+            List<String> labels,
             List<GmailAttachment> attachments) {}
 
     public record GmailMessagePage(List<GmailMessage> messages, String nextPageToken) {}

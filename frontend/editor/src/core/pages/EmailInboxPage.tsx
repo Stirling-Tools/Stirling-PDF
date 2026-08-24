@@ -50,6 +50,7 @@ interface MailMessage {
   preview: string;
   date: string;
   unread?: boolean;
+  labels: string[];
   hasAttachment?: boolean;
   attachments: MailAttachment[];
 }
@@ -81,6 +82,7 @@ const DEMO_MESSAGES: MailMessage[] = [
       "Anbei finden Sie die Rechnung für den aktuellen Abrechnungszeitraum.",
     date: "Heute, 09:42",
     unread: true,
+    labels: [],
     hasAttachment: true,
     attachments: [
       {
@@ -101,6 +103,7 @@ const DEMO_MESSAGES: MailMessage[] = [
       "Die aktualisierten Unterlagen liegen im Anhang. Bitte um kurze Rückmeldung.",
     date: "Gestern",
     hasAttachment: true,
+    labels: [],
     attachments: [
       {
         id: "contract-pdf",
@@ -126,6 +129,7 @@ const DEMO_MESSAGES: MailMessage[] = [
     preview:
       "Danke für das Gespräch. Die nächsten Schritte sind im Überblick zusammengefasst.",
     date: "12. Aug.",
+    labels: [],
     attachments: [],
   },
 ];
@@ -166,6 +170,11 @@ export default function EmailInboxPage() {
   const [selectedAttachmentTypes, setSelectedAttachmentTypes] = useState<
     string[]
   >([]);
+  const [customAttachmentTypes, setCustomAttachmentTypes] = useState<string[]>(
+    [],
+  );
+  const [attachmentTypeDraft, setAttachmentTypeDraft] = useState("");
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [downloadedAttachment, setDownloadedAttachment] = useState<
     string | null
   >(null);
@@ -233,6 +242,7 @@ export default function EmailInboxPage() {
           preview: string;
           date: string;
           unread: boolean;
+          labels?: string[];
           attachments: Array<{
             id: string;
             name: string;
@@ -242,7 +252,7 @@ export default function EmailInboxPage() {
         }>;
         nextPageToken?: string | null;
       }>(
-        `/api/v1/email/gmail/messages?folder=${selectedFolder}${selectedAttachmentTypes.length > 0 ? `&types=${encodeURIComponent(selectedAttachmentTypes.join(","))}` : ""}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+        `/api/v1/email/gmail/messages?folder=${selectedFolder}${selectedAttachmentTypes.length > 0 ? `&types=${encodeURIComponent(selectedAttachmentTypes.join(","))}` : ""}${query.trim() ? `&query=${encodeURIComponent(query.trim())}` : ""}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
       );
       const mappedMessages = data.messages
         .filter((message) => message.attachments.length > 0)
@@ -256,6 +266,7 @@ export default function EmailInboxPage() {
           preview: message.preview,
           date: message.date,
           unread: message.unread,
+          labels: message.labels ?? [],
           hasAttachment: true,
           attachments: message.attachments.map((attachment) => ({
             id: attachment.id,
@@ -287,6 +298,7 @@ export default function EmailInboxPage() {
     selectedFolder,
     refreshVersion,
     selectedAttachmentTypes,
+    query,
   ]);
 
   const refreshInbox = () => {
@@ -308,6 +320,19 @@ export default function EmailInboxPage() {
     }
   };
 
+  useEffect(() => {
+    const element = messageListViewportRef.current;
+    if (
+      !element ||
+      !nextPageToken ||
+      loadingMore ||
+      element.scrollHeight > element.clientHeight + 120
+    ) {
+      return;
+    }
+    void loadMessages(nextPageToken);
+  }, [messages, nextPageToken, loadingMore, selectedLabels]);
+
   const attachmentTypes = useMemo(
     () =>
       Array.from(
@@ -319,10 +344,26 @@ export default function EmailInboxPage() {
       ).sort(),
     [messages],
   );
+  const availableLabels = useMemo(
+    () =>
+      Array.from(
+        new Set(messages.flatMap((message) => message.labels ?? [])),
+      ).sort((left, right) => left.localeCompare(right)),
+    [messages],
+  );
+  const attachmentTypeOptions = useMemo(
+    () =>
+      Array.from(new Set([...attachmentTypes, ...customAttachmentTypes])).sort(),
+    [attachmentTypes, customAttachmentTypes],
+  );
 
   const filteredMessages = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery && selectedAttachmentTypes.length === 0)
+    if (
+      !normalizedQuery &&
+      selectedAttachmentTypes.length === 0 &&
+      selectedLabels.length === 0
+    )
       return messages;
     return messages.filter((message) =>
       (normalizedQuery
@@ -335,9 +376,14 @@ export default function EmailInboxPage() {
         ? message.attachments.some(
             (attachment) => selectedAttachmentTypes.includes(attachment.type),
           )
+        : true) &&
+      (selectedLabels.length > 0
+        ? selectedLabels.some((label) =>
+            (message.labels ?? []).includes(label),
+          )
         : true),
     );
-  }, [messages, query, selectedAttachmentTypes]);
+  }, [messages, query, selectedAttachmentTypes, selectedLabels]);
 
   const unreadMessageCount = messages.filter((message) => message.unread).length;
 
@@ -372,10 +418,23 @@ export default function EmailInboxPage() {
       setMessages([]);
       setNextPageToken(null);
       setSelectedAttachmentTypes([]);
+      setSelectedLabels([]);
       setSettingsOpen(false);
     } catch {
       // Keep the connected state visible when the server could not complete the request.
     }
+  };
+
+  const addAttachmentType = (value: string) => {
+    const type = value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{1,10}$/.test(type)) return;
+    setCustomAttachmentTypes((current) =>
+      current.includes(type) ? current : [...current, type],
+    );
+    setSelectedAttachmentTypes((current) =>
+      current.includes(type) ? current : [...current, type],
+    );
+    setAttachmentTypeDraft("");
   };
 
   const importAttachment = async (
@@ -575,11 +634,43 @@ export default function EmailInboxPage() {
             <MultiSelect
               className="email-type-filter"
               clearable
-              data={attachmentTypes}
+              searchable
+              data={attachmentTypeOptions}
               value={selectedAttachmentTypes}
               onChange={setSelectedAttachmentTypes}
+              onSearchChange={setAttachmentTypeDraft}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && attachmentTypeDraft.trim()) {
+                  event.preventDefault();
+                  addAttachmentType(attachmentTypeDraft);
+                }
+              }}
               placeholder={t("email.fileTypeFilter", "Dateityp")}
               aria-label={t("email.fileTypeFilter", "Dateityp filtern")}
+            />
+            <TextInput
+              className="email-type-custom-input"
+              value={attachmentTypeDraft}
+              onChange={(event) => setAttachmentTypeDraft(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                addAttachmentType(attachmentTypeDraft);
+              }}
+              placeholder={t(
+                "email.customFileType",
+                "Eigenen Dateityp eingeben und Enter drücken",
+              )}
+              aria-label={t("email.customFileType", "Eigenen Dateityp")}
+            />
+            <MultiSelect
+              className="email-label-filter"
+              clearable
+              data={availableLabels}
+              value={selectedLabels}
+              onChange={setSelectedLabels}
+              placeholder={t("email.labelFilter", "Label")}
+              aria-label={t("email.labelFilter", "Nach Labels filtern")}
+              searchable
             />
           </div>
           <ScrollArea
@@ -615,6 +706,15 @@ export default function EmailInboxPage() {
                     <span className="email-message-preview">
                       {message.preview}
                     </span>
+                    {(message.labels ?? []).length > 0 && (
+                      <span className="email-message-labels">
+                        {(message.labels ?? []).slice(0, 3).map((label) => (
+                          <span className="email-label-tag" key={label}>
+                            {label}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     {message.hasAttachment && (
                       <span className="email-attachment-indicator">
                         <AttachFileIcon fontSize="inherit" />{" "}
@@ -700,6 +800,15 @@ export default function EmailInboxPage() {
                       <StarBorderIcon fontSize="small" />
                     </ActionIcon>
                   </div>
+                  {(selectedMessage.labels ?? []).length > 0 && (
+                    <div className="email-detail-labels">
+                      {(selectedMessage.labels ?? []).map((label) => (
+                        <span className="email-label-tag" key={label}>
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="email-sender-row">
                     <span className="email-message-avatar is-large">
                       {selectedMessage.sender.charAt(0)}
