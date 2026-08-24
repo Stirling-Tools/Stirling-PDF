@@ -4,8 +4,6 @@
  * without needing to make API calls
  */
 
-// window.pdfjsLib is declared (narrowly) in formDetection/pdfRender.ts.
-
 export interface SignatureDetectionResult {
   hasSignatures: boolean;
   signatureCount?: number;
@@ -24,8 +22,8 @@ const detectSignaturesInFile = async (
   file: File,
 ): Promise<SignatureDetectionResult> => {
   try {
-    const pdfjsLib = (window as { pdfjsLib?: any }).pdfjsLib;
-    if (!pdfjsLib) {
+    // Ensure PDF.js is available
+    if (!window.pdfjsLib) {
       return {
         hasSignatures: false,
         error: "PDF.js not available",
@@ -36,7 +34,8 @@ const detectSignaturesInFile = async (
     const arrayBuffer = await file.arrayBuffer();
 
     // Load the PDF document
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer })
+      .promise;
 
     let totalSignatures = 0;
 
@@ -47,7 +46,7 @@ const detectSignaturesInFile = async (
 
       // Count signature annotations (Type: /Sig)
       const signatureAnnotations = annotations.filter(
-        (annotation: any) =>
+        (annotation: { subtype?: string; fieldType?: string }) =>
           annotation.subtype === "Widget" && annotation.fieldType === "Sig",
       );
 
@@ -56,7 +55,11 @@ const detectSignaturesInFile = async (
 
     // Also check for document-level signatures in AcroForm
     const metadata = await pdf.getMetadata();
-    if (metadata?.info?.Signature || metadata?.metadata?.has("dc:signature")) {
+    const info = metadata?.info as { Signature?: unknown } | undefined;
+    const xmpMetadata = metadata?.metadata as
+      | { has?: (name: string) => boolean }
+      | undefined;
+    if (info?.Signature || xmpMetadata?.has?.("dc:signature")) {
       totalSignatures = Math.max(totalSignatures, 1);
     }
 
