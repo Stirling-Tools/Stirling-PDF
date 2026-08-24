@@ -39,8 +39,22 @@ runs:
 
         java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
         java_home="${!java_home_variable:-}"
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
+          runner_architecture="$(printf '%s' "${RUNNER_ARCHITECTURE}" | tr '[:lower:]' '[:upper:]')"
+          if [ "${architecture}" = "${runner_architecture}" ] && [ -n "${JAVA_HOME:-}" ]; then
+            java_home="${JAVA_HOME}"
+          fi
+        fi
         if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ]; then
           java_home="$(arch -x86_64 /usr/libexec/java_home -v "${JAVA_VERSION}" 2>/dev/null || true)"
+        fi
+        if [ -n "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
+          java_binary="${java_home}/bin/java"
+          if [ "${architecture}" = "X64" ] && ! file "${java_binary}" | grep -q "x86_64"; then
+            java_home=""
+          elif [ "${architecture}" = "ARM64" ] && ! file "${java_binary}" | grep -q "arm64"; then
+            java_home=""
+          fi
         fi
         if [ -z "${java_home}" ]; then
           echo "JDK 25 is not installed on this runner (${java_home_variable} is missing)" >&2
