@@ -5187,6 +5187,30 @@ openProcessor = "Open PDF Processor"
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
+
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
 title = "Authentication Failed"
@@ -7506,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7517,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
