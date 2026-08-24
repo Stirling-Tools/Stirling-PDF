@@ -29,7 +29,8 @@ runs:
         if [ -z "${architecture}" ]; then
           architecture="${RUNNER_ARCHITECTURE}"
         fi
-        case "${architecture^^}" in
+        normalized_architecture="$(printf '%s' "${architecture}" | tr '[:lower:]' '[:upper:]')"
+        case "${normalized_architecture}" in
           X64|AMD64|X86_64) architecture=X64 ;;
           ARM64|AARCH64) architecture=ARM64 ;;
           *) echo "Unsupported runner architecture: ${architecture}" >&2; exit 1 ;;
@@ -42,8 +43,13 @@ runs:
           exit 1
         fi
 
-        export JAVA_HOME="${java_home}"
-        export PATH="${java_home}/bin:${PATH}"
+        shell_java_home="${java_home}"
+        if command -v cygpath >/dev/null 2>&1; then
+          shell_java_home="$(cygpath --unix "${java_home}")"
+        fi
+
+        export JAVA_HOME="${shell_java_home}"
+        export PATH="${shell_java_home}/bin:${PATH}"
         echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
         echo "${java_home}/bin" >> "${GITHUB_PATH}"
         java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
