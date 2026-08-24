@@ -14,6 +14,9 @@ vi.mock("@app/services/saasErrorInterceptor", () => ({
 
 function axiosError(config: Record<string, unknown>, status = 500) {
   return {
+    // The interceptor only ever sees real AxiosErrors; handleHttpError gates on
+    // axios.isAxiosError, so the fixture must carry the marker.
+    isAxiosError: true,
     config: { url: "/api/v1/general/thing", ...config },
     response: { status, data: { error: "boom" } },
     message: "Request failed",

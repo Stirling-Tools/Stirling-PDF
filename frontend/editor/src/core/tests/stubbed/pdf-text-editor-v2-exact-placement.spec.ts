@@ -108,13 +108,19 @@ for (const c of EDITS) {
     expect(runId).toBeTruthy();
 
     const overlay = page.locator(`[data-testid="v2-run-${runId}"]`);
-    const before = (await overlay.innerText()).replace(/\u00a0/g, " ");
+    // WebKit's innerText appends a trailing newline Chromium omits. Strip it
+    // on every read, or comparing before/after skews instead of matching.
+    const before = (await overlay.innerText())
+      .replace(/\u00a0/g, " ")
+      .replace(/\n+$/, "");
     await overlay.click();
     await page.waitForTimeout(150);
     await c.keys(page);
     await page.waitForTimeout(300);
 
-    const after = (await overlay.innerText()).replace(/\u00a0/g, " ");
+    const after = (await overlay.innerText())
+      .replace(/\u00a0/g, " ")
+      .replace(/\n+$/, "");
     expect(after).toBe(c.expect(before));
   });
 }
@@ -130,14 +136,18 @@ test("typing leaves the text intact apart from the typed character", async ({
   expect(runId).toBeTruthy();
 
   const overlay = page.locator(`[data-testid="v2-run-${runId}"]`);
-  const before = (await overlay.innerText()).replace(/\u00a0/g, " ");
+  const before = (await overlay.innerText())
+    .replace(/\u00a0/g, " ")
+    .replace(/\n+$/, "");
   await overlay.click();
   await page.waitForTimeout(120);
   await page.keyboard.press("End");
   await page.keyboard.type("Z");
   await page.waitForTimeout(200);
 
-  const after = (await overlay.innerText()).replace(/\u00a0/g, " ");
+  const after = (await overlay.innerText())
+    .replace(/\u00a0/g, " ")
+    .replace(/\n+$/, "");
   expect(after.replace("Z", "")).toBe(before);
   expect(after).toContain("Z");
 });

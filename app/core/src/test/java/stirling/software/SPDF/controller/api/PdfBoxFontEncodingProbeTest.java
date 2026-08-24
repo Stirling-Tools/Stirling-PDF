@@ -26,6 +26,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.Test;
  *       redirects unmappable ones to LiberationSans).
  * </ol>
  */
+@Disabled("Diagnostic probe: dumps PDFBox font encoding tables to stdout and asserts nothing. Kept for font debugging; run manually.")
 public class PdfBoxFontEncodingProbeTest {
 
     private static final Path PROJECT_ROOT =
@@ -96,7 +98,11 @@ public class PdfBoxFontEncodingProbeTest {
         try (PDDocument check = Loader.loadPDF(out.toByteArray())) {
             PDFRenderer renderer = new PDFRenderer(check);
             java.awt.image.BufferedImage img = renderer.renderImageWithDPI(0, 100);
-            Path png = PROJECT_ROOT.resolve("test-screenshots/pdfbox-probe-q4b-rendered.png");
+            // Build dir, not the repo root: this render is a debugging aid and was
+            // twice committed by accident when it landed in the working tree.
+            Path png =
+                    Paths.get(System.getProperty("user.dir"), "build", "probe-output")
+                            .resolve("pdfbox-probe-q4b-rendered.png");
             Files.createDirectories(png.getParent());
             ImageIO.write(img, "PNG", png.toFile());
             System.out.println(

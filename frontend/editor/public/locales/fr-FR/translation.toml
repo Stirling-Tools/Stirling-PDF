@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Inverser l’ordre du document pour que la dernière page devie
 SIDE_STITCH_BOOKLET_SORT = "Organiser les pages pour l’impression en livret agrafé sur le côté (optimisé pour une reliure latérale)."
 
 [pdfTextEditor]
+conversionFailed = "Échec de la conversion du PDF. Veuillez réessayer."
+converting = "Conversion du PDF en format modifiable..."
+currentFile = "Fichier actuel : {{name}}"
+imageLabel = "Image placée"
+noTextOnPage = "Aucun texte modifiable n'a été détecté sur cette page."
+pagePreviewAlt = "Aperçu de la page"
+pageSummary = "Page {{number}} sur {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Éditeur JSON de PDF"
+viewLabel = "Éditeur PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Appliquer les modifications"
+clearText = "Effacer le texte"
+downloadCopy = "Télécharger une copie"
+moreOptions = "Plus d’options"
+reset = "Réinitialiser les modifications"
+
+[pdfTextEditor.badges]
+earlyAccess = "Accès anticipé"
+modified = "Modifié"
+
+[pdfTextEditor.empty]
+dropzone = "Glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
+dropzoneWithFiles = "Sélectionnez un fichier depuis l'onglet Fichiers, ou glissez-déposez un fichier PDF ou JSON ici, ou cliquez pour parcourir"
+title = "Aucun document chargé"
+
+[pdfTextEditor.errors]
+invalidJson = "Impossible de lire le fichier JSON. Assurez-vous qu'il a été généré par l'outil PDF vers JSON."
+pdfConversion = "Impossible de convertir le JSON modifié en PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Toutes les polices"
+currentPageFonts = "Polices sur cette page"
+details = "Détails de la police"
+embedded = "Intégrée"
+fallback = "remplacement"
+infoMessage = "Informations sur la reproduction des polices disponibles."
+missing = "manquante"
+perfect = "parfait"
+perfectMessage = "Toutes les polices peuvent être reproduites parfaitement."
+subset = "sous-ensemble"
+suggestions = "Notes"
+type = "Type"
+warningMessage = "Certaines polices peuvent ne pas s'afficher correctement."
+warnings = "Avertissements"
+webFormat = "Format Web"
+
+[pdfTextEditor.groupingMode]
+auto = "Auto"
+paragraph = "Paragraphe"
+singleLine = "Ligne unique"
+
+[pdfTextEditor.manual]
+expandWidth = "Étendre jusqu'au bord de la page"
+merge = "Fusionner la sélection"
+mergeTooltip = "Fusionner les boîtes sélectionnées"
+resetWidth = "Réinitialiser la largeur"
+resizeHandle = "Ajuster la largeur du texte"
+ungroup = "Dissocier la sélection"
+ungroupTooltip = "Scinder le paragraphe en lignes"
+widthMenu = "Options de largeur"
+
+[pdfTextEditor.modeChange]
+cancel = "Annuler"
+confirm = "Réinitialiser et changer de mode"
+title = "Confirmer le changement de mode"
+warning = "Changer le mode de regroupement du texte réinitialisera toutes les modifications non enregistrées. Voulez-vous vraiment continuer ?"
+
+[pdfTextEditor.options.advanced]
+title = "Paramètres avancés"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Ajuste automatiquement le texte horizontalement pour tenir dans sa boîte englobante d'origine lorsque le rendu de police diffère du PDF."
+title = "Ajuster automatiquement le texte aux cadres"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Lorsqu'il est activé, l'éditeur exporte chaque boîte de texte modifiée comme un seul élément de texte PDF afin d'éviter le chevauchement de glyphes ou les polices mixtes."
+title = "Verrouiller le texte modifié à un seul élément PDF"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Détecte automatiquement le type de page et regroupe le texte en conséquence."
+paragraphDescription = "Regroupe les lignes alignées en boîtes de texte multiligne."
+singleLineDescription = "Conserve chaque ligne de texte du PDF comme une boîte distincte."
+title = "Mode de regroupement du texte"
+
+[pdfTextEditor.pageType]
+paragraph = "Page de paragraphe"
+sparse = "Texte clairsemé"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Cette visionneuse alpha évolue encore—certaines polices, couleurs, effets de transparence et détails de mise en page peuvent légèrement varier. Veuillez vérifier le PDF généré avant de le partager."
@@ -5930,6 +6021,32 @@ title = "Variations de l’aperçu"
 [pdfTextEditor.tooltip.textFocus]
 text = "Cet espace de travail se concentre sur l’édition du texte et le repositionnement des images intégrées. Les illustrations complexes de page, widgets de formulaire et graphismes en couches sont préservés pour l’export mais ne sont pas entièrement modifiables ici."
 title = "Focus texte et image"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Fonctionne mieux avec :"
+bestFor1 = "PDF simples contenant principalement du texte et des images"
+bestFor2 = "Documents avec une mise en forme de paragraphe standard"
+bestFor3 = "Lettres, essais, rapports et documents simples"
+dontShowAgain = "Ne plus afficher"
+experimental = "Fonctionnalité expérimentale en développement actif. Attendez-vous à une certaine instabilité et à des problèmes à l'usage."
+feedback = "Fonction en accès anticipé. Merci de signaler tout problème rencontré pour nous aider à l'améliorer !"
+gotIt = "Compris"
+howItWorks = "Cet outil convertit votre PDF en un format modifiable où vous pouvez modifier le texte et repositionner des images. Les changements sont enregistrés dans un nouveau PDF."
+issue1 = "La couleur du texte n'est pas encore conservée (sera ajoutée bientôt)"
+issue2 = "Le mode Paragraphe présente plus de problèmes d'alignement et d'espacement - mode Ligne unique recommandé"
+issue3 = "L'aperçu diffère du PDF exporté - les PDF exportés sont plus proches de l'original"
+issue4 = "L'alignement du texte pivoté peut nécessiter un ajustement manuel"
+issue5 = "Les effets de transparence et de superposition peuvent varier par rapport à l'original"
+knownIssues = "Problèmes connus (en cours de correction) :"
+limitation1 = "Le rendu des polices peut différer légèrement du PDF original"
+limitation2 = "Les graphiques complexes, champs de formulaire et annotations sont conservés mais non modifiables"
+limitation3 = "Les fichiers volumineux peuvent prendre du temps à convertir et à traiter"
+limitations = "Limitations actuelles :"
+notIdealFor = "Peu adapté à :"
+notIdealFor1 = "PDF avec des mises en forme spéciales comme des puces, des tableaux ou des mises en page multicolonnes"
+notIdealFor2 = "Magazines, brochures ou documents très graphiques"
+notIdealFor3 = "Manuels d'instructions aux mises en page complexes"
+title = "Bienvenue dans l'éditeur de texte PDF (accès anticipé)"
 
 [PDFToCSV]
 header = "PDF en CSV"

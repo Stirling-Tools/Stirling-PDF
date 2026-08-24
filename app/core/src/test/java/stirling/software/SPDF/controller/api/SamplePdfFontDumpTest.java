@@ -38,6 +38,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDType3CharProc;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.Test;
  * <p>Not a real regression test - run with --tests SamplePdfFontDumpTest -i to see the stdout
  * output.
  */
+@Disabled("Diagnostic probe: dumps Sample.pdf font internals to stdout and asserts nothing. Kept for font debugging; run manually.")
 public class SamplePdfFontDumpTest {
 
     private static final Path SAMPLE =

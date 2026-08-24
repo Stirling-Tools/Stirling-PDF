@@ -294,6 +294,9 @@ tasks.register('copyFrontendAssets', Copy) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
+        // Backend ships its own NotoSans-Regular.ttf here and it is git-tracked;
+        // letting the editor's copy win would dirty the source tree on every build.
+        exclude 'fonts/NotoSans-Regular.ttf'
     }
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed

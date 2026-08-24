@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Sənədi elə çevirin ki, son səhifə birinci olsun və s."
 SIDE_STITCH_BOOKLET_SORT = "Yan tikişli broşür çapı üçün səhifələri düzün (yan bağlama üçün optimallaşdırılıb)."
 
 [pdfTextEditor]
+conversionFailed = "PDF-i çevirmək alınmadı. Yenidən cəhd edin."
+converting = "PDF redaktə edilə bilən formata çevrilir..."
+currentFile = "Cari fayl: {{name}}"
+imageLabel = "Yerləşdirilmiş şəkil"
+noTextOnPage = "Bu səhifədə redaktə oluna bilən mətn aşkar edilmədi."
+pagePreviewAlt = "Səhifə önbaxışı"
+pageSummary = "Səhifə {{number}}/{{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON Redaktoru"
+viewLabel = "PDF redaktoru"
+
+[pdfTextEditor.actions]
+applyChanges = "Dəyişiklikləri tətbiq et"
+clearText = "Mətni təmizlə"
+downloadCopy = "Nüsxəni endir"
+moreOptions = "Daha çox seçim"
+reset = "Dəyişiklikləri sıfırla"
+
+[pdfTextEditor.badges]
+earlyAccess = "Erkən Giriş"
+modified = "Redaktə edilib"
+
+[pdfTextEditor.empty]
+dropzone = "Buraya PDF və ya JSON faylını sürükləyib buraxın və ya baxmaq üçün klikləyin"
+dropzoneWithFiles = "Fayllar vərəqindən bir fayl seçin və ya buraya PDF və ya JSON faylını sürükləyib buraxın, yaxud baxmaq üçün klikləyin"
+title = "Sənəd yüklənməyib"
+
+[pdfTextEditor.errors]
+invalidJson = "JSON faylını oxumaq mümkün deyil. Onun PDF to JSON aləti ilə yaradıldığından əmin olun."
+pdfConversion = "Redaktə olunmuş JSON-u yenidən PDF-ə çevirmək mümkün deyil."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Bütün şriftlər"
+currentPageFonts = "Bu səhifədəki şriftlər"
+details = "Şrift detalları"
+embedded = "Gömülü"
+fallback = "ehtiyat"
+infoMessage = "Şriftlərin göstərilməsi barədə məlumat var."
+missing = "çatışmır"
+perfect = "mükəmməl"
+perfectMessage = "Bütün şriftlər mükəmməl şəkildə göstərilə bilər."
+subset = "alt dəst"
+suggestions = "Qeydlər"
+type = "Növ"
+warningMessage = "Bəzi şriftlər düzgün göstərilməyə bilər."
+warnings = "Xəbərdarlıqlar"
+webFormat = "Veb formatı"
+
+[pdfTextEditor.groupingMode]
+auto = "Avto"
+paragraph = "Paraqraf"
+singleLine = "Tək sətir"
+
+[pdfTextEditor.manual]
+expandWidth = "Səhifə kənarınadək genişləndir"
+merge = "Seçimi birləşdir"
+mergeTooltip = "Seçilmiş qutuları birləşdir"
+resetWidth = "Eni sıfırla"
+resizeHandle = "Mətnin enini tənzimlə"
+ungroup = "Seçimi qruplaşdırmadan çıxar"
+ungroupTooltip = "Abzası yenidən sətirlərə böl"
+widthMenu = "En seçimləri"
+
+[pdfTextEditor.modeChange]
+cancel = "Ləğv et"
+confirm = "Sıfırla və rejimi dəyiş"
+title = "Rejim dəyişikliyini təsdiqlə"
+warning = "Mətn qruplaşdırma rejimini dəyişmək yadda saxlanmamış bütün dəyişiklikləri sıfırlayacaq. Davam etmək istədiyinizə əminsiniz?"
+
+[pdfTextEditor.options.advanced]
+title = "Qabaqcıl ayarlar"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Şrift göstərilişi PDF-dən fərqləndikdə, mətni orijinal sərhəd qutusuna üfüqi sığdırmaq üçün avtomatik miqyaslayır."
+title = "Mətni avtomatik miqyasla"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Aktiv olduqda, redaktor hər redaktə edilmiş mətn qutusunu üst-üstə düşən qliflərdən və ya qarışıq şriftlərdən qaçmaq üçün bir PDF mətn elementi kimi ixrac edir."
+title = "Redaktə olunmuş mətni tək PDF elementinə kilidlə"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Səhifə növünü avtomatik aşkar edir və mətni uyğun qruplaşdırır."
+paragraphDescription = "Düzülmüş sətirləri çoxsətirli abzas mətn qutularına qruplaşdırır."
+singleLineDescription = "Hər PDF mətn sətrini ayrı mətn qutusu kimi saxlayır."
+title = "Mətn qruplaşdırma rejimi"
+
+[pdfTextEditor.pageType]
+paragraph = "Paraqraf səhifəsi"
+sparse = "Seyrək mətn"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Bu alfa görüntüləyici hələ inkişaf edir—bəzi şriftlər, rənglər, şəffaflıq effektləri və maket detalları bir qədər dəyişə bilər. Zəhmət olmasa paylaşmazdan əvvəl yaradılan PDF-i iki dəfə yoxlayın."
@@ -5930,6 +6021,32 @@ title = "Ön baxış fərqliliyi"
 [pdfTextEditor.tooltip.textFocus]
 text = "Bu iş sahəsi mətni redaktə etməyə və daxil edilmiş şəkilləri yenidən yerləşdirməyə fokuslanır. Mürəkkəb səhifə qrafikası, forma vidcetləri və laylı qrafika ixrac üçün qorunur, lakin burada tam redaktə edilə bilmir."
 title = "Mətn və şəkil fokuslanması"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Ən yaxşı uyğun:"
+bestFor1 = "Əsasən mətn və şəkillərdən ibarət sadə PDF-lər"
+bestFor2 = "Standart abzas formatlı sənədlər"
+bestFor3 = "Məktublar, esselər, hesabatlar və əsas sənədlər"
+dontShowAgain = "Bir daha göstərmə"
+experimental = "Bu, aktiv inkişafda olan eksperimental funksiyadır. İstifadə zamanı müəyyən qeyri-sabitlik və problemlər gözləniləndir."
+feedback = "Bu, erkən giriş funksiyasıdır. Təkmilləşdirməyə kömək üçün rast gəldiyiniz problemləri bildirin!"
+gotIt = "Anladım"
+howItWorks = "Bu alət PDF-inizi redaktə edilə bilən formata çevirir, burada mətni dəyişə və şəkillərin yerini dəyişə bilərsiniz. Dəyişikliklər yeni PDF kimi saxlanılır."
+issue1 = "Mətn rəngi hazırda saxlanmır (tezliklə əlavə olunacaq)"
+issue2 = "Abzas rejimində düzülüş və aralıq problemləri daha çoxdur - Tək sətir rejimi tövsiyə olunur"
+issue3 = "Önizləmə görüntüsü ixrac olunan PDF-dən fərqlənir - ixrac olunan PDF-lər orijinala daha yaxındır"
+issue4 = "Döndərilmiş mətnin düzülüşü əl ilə tənzimləmə tələb edə bilər"
+issue5 = "Şəffaflıq və qat effektləri orijinaldan fərqlənə bilər"
+knownIssues = "Məlum problemlər (düzəldilir):"
+limitation1 = "Şrift göstərilməsi orijinal PDF-dən azca fərqlənə bilər"
+limitation2 = "Mürəkkəb qrafika, forma sahələri və annotasiyalar saxlanılır, lakin redaktə olunmur"
+limitation3 = "Böyük faylların çevrilməsi və işlənməsi vaxt apara bilər"
+limitations = "Cari məhdudiyyətlər:"
+notIdealFor = "Aşağıdakılar üçün uyğun deyil:"
+notIdealFor1 = "Markerli siyahılar, cədvəllər və ya çoxsütunlu yerləşim kimi xüsusi formatlı PDF-lər"
+notIdealFor2 = "Jurnallar, broşürlər və ya dizaynı mürəkkəb sənədlər"
+notIdealFor3 = "Mürəkkəb yerləşimli təlimat kitabçaları"
+title = "PDF Text Editor-ə xoş gəldiniz (Erkən Giriş)"
 
 [PDFToCSV]
 header = "PDF-i CSV-ə"

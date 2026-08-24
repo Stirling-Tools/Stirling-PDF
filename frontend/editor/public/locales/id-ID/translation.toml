@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Balik dokumen sehingga halaman terakhir menjadi pertama dan set
 SIDE_STITCH_BOOKLET_SORT = "Susun halaman untuk pencetakan buklet jahit samping (dioptimalkan untuk penjilidan di sisi)."
 
 [pdfTextEditor]
+conversionFailed = "Gagal mengonversi PDF. Coba lagi."
+converting = "Mengonversi PDF ke format yang dapat diedit..."
+currentFile = "File saat ini: {{name}}"
+imageLabel = "Gambar ditempatkan"
+noTextOnPage = "Tidak ada teks yang dapat diedit ditemukan di halaman ini."
+pagePreviewAlt = "Pratinjau halaman"
+pageSummary = "Halaman {{number}} dari {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor JSON PDF"
+viewLabel = "Editor PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Terapkan Perubahan"
+clearText = "Bersihkan teks"
+downloadCopy = "Unduh Salinan"
+moreOptions = "Opsi lainnya"
+reset = "Reset Perubahan"
+
+[pdfTextEditor.badges]
+earlyAccess = "Akses Awal"
+modified = "Diedit"
+
+[pdfTextEditor.empty]
+dropzone = "Seret dan letakkan file PDF atau JSON di sini, atau klik untuk memilih"
+dropzoneWithFiles = "Pilih file dari tab File, atau seret dan letakkan file PDF atau JSON di sini, atau klik untuk memilih"
+title = "Tidak ada dokumen dimuat"
+
+[pdfTextEditor.errors]
+invalidJson = "Tidak dapat membaca file JSON. Pastikan file tersebut dihasilkan oleh alat PDF ke JSON."
+pdfConversion = "Tidak dapat mengonversi JSON yang diedit kembali menjadi PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Semua font"
+currentPageFonts = "Font pada halaman ini"
+details = "Detail Font"
+embedded = "Tertanam"
+fallback = "fallback"
+infoMessage = "Informasi reproduksi font tersedia."
+missing = "hilang"
+perfect = "sempurna"
+perfectMessage = "Semua font dapat direproduksi dengan sempurna."
+subset = "subset"
+suggestions = "Catatan"
+type = "Tipe"
+warningMessage = "Beberapa font mungkin tidak dirender dengan benar."
+warnings = "Peringatan"
+webFormat = "Format Web"
+
+[pdfTextEditor.groupingMode]
+auto = "Otomatis"
+paragraph = "Paragraf"
+singleLine = "Satu Baris"
+
+[pdfTextEditor.manual]
+expandWidth = "Perluas hingga tepi halaman"
+merge = "Gabungkan pilihan"
+mergeTooltip = "Gabungkan kotak yang dipilih"
+resetWidth = "Reset lebar"
+resizeHandle = "Sesuaikan lebar teks"
+ungroup = "Lepas grup pilihan"
+ungroupTooltip = "Pecah paragraf kembali menjadi baris"
+widthMenu = "Opsi lebar"
+
+[pdfTextEditor.modeChange]
+cancel = "Batal"
+confirm = "Reset dan Ubah Mode"
+title = "Konfirmasi Perubahan Mode"
+warning = "Mengubah mode pengelompokan teks akan mereset semua perubahan yang belum disimpan. Anda yakin ingin melanjutkan?"
+
+[pdfTextEditor.options.advanced]
+title = "Pengaturan Lanjutan"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Secara otomatis menskalakan teks secara horizontal agar pas dalam kotak pembatas aslinya saat perenderan font berbeda dari PDF."
+title = "Sesuaikan teks otomatis ke kotak"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Saat diaktifkan, editor mengekspor setiap kotak teks yang diedit sebagai satu elemen teks PDF untuk menghindari glif yang saling tumpang tindih atau font campuran."
+title = "Kunci teks yang diedit ke satu elemen PDF"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Secara otomatis mendeteksi jenis halaman dan mengelompokkan teks dengan tepat."
+paragraphDescription = "Mengelompokkan baris yang sejajar menjadi kotak teks paragraf multi-baris."
+singleLineDescription = "Membiarkan setiap baris teks PDF sebagai kotak teks terpisah."
+title = "Mode Pengelompokan Teks"
+
+[pdfTextEditor.pageType]
+paragraph = "Halaman paragraf"
+sparse = "Teks tersebar"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Penampil alpha ini masih berkembang—beberapa font, warna, efek transparansi, dan detail tata letak mungkin sedikit bergeser. Harap periksa kembali PDF yang dihasilkan sebelum dibagikan."
@@ -5930,6 +6021,32 @@ title = "Perbedaan Pratinjau"
 [pdfTextEditor.tooltip.textFocus]
 text = "Ruang kerja ini berfokus pada pengeditan teks dan memosisikan ulang gambar tersemat. Karya seni halaman yang kompleks, widget formulir, dan grafik berlapis dipertahankan untuk ekspor tetapi tidak sepenuhnya dapat diedit di sini."
 title = "Fokus Teks dan Gambar"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Paling cocok untuk:"
+bestFor1 = "PDF sederhana yang berisi terutama teks dan gambar"
+bestFor2 = "Dokumen dengan pemformatan paragraf standar"
+bestFor3 = "Surat, esai, laporan, dan dokumen dasar"
+dontShowAgain = "Jangan tampilkan lagi"
+experimental = "Ini adalah fitur eksperimental yang sedang aktif dikembangkan. Harap maklum, mungkin ada ketidakstabilan dan masalah saat digunakan."
+feedback = "Ini adalah fitur akses awal. Harap laporkan masalah apa pun yang Anda temui untuk membantu kami meningkatkan!"
+gotIt = "Mengerti"
+howItWorks = "Alat ini mengonversi PDF Anda ke format yang dapat diedit di mana Anda dapat mengubah konten teks dan memosisikan ulang gambar. Perubahan disimpan kembali sebagai PDF baru."
+issue1 = "Warna teks saat ini belum dipertahankan (akan segera ditambahkan)"
+issue2 = "Mode Paragraf memiliki lebih banyak masalah perataan dan spasi - Mode Satu Baris direkomendasikan"
+issue3 = "Tampilan pratinjau berbeda dari PDF yang diekspor - PDF yang diekspor lebih mendekati aslinya"
+issue4 = "Perataan teks yang diputar mungkin perlu penyesuaian manual"
+issue5 = "Efek transparansi dan pelapisan mungkin berbeda dari aslinya"
+knownIssues = "Masalah yang Diketahui (Sedang Diperbaiki):"
+limitation1 = "Perenderan font mungkin sedikit berbeda dari PDF asli"
+limitation2 = "Grafik kompleks, bidang formulir, dan anotasi dipertahankan tetapi tidak dapat diedit"
+limitation3 = "File besar mungkin memerlukan waktu untuk dikonversi dan diproses"
+limitations = "Batasan saat ini:"
+notIdealFor = "Kurang ideal untuk:"
+notIdealFor1 = "PDF dengan pemformatan khusus seperti bullet, tabel, atau tata letak multi-kolom"
+notIdealFor2 = "Majalah, brosur, atau dokumen dengan desain kompleks"
+notIdealFor3 = "Manual instruksi dengan tata letak kompleks"
+title = "Selamat datang di PDF Text Editor (Akses Awal)"
 
 [PDFToCSV]
 header = "PDF ke CSV"

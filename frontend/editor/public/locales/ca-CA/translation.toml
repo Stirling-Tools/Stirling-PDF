@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Capgira el document de manera que l'última pàgina passi a ser
 SIDE_STITCH_BOOKLET_SORT = "Organitza les pàgines per a la impressió de fulletó amb cosit lateral (optimitzat per a l'enquadernació lateral)."
 
 [pdfTextEditor]
+conversionFailed = "No s'ha pogut convertir el PDF. Torna-ho a provar."
+converting = "Convertint el PDF a format editable..."
+currentFile = "Fitxer actual: {{name}}"
+imageLabel = "Imatge col·locada"
+noTextOnPage = "No s'ha detectat text editable en aquesta pàgina."
+pagePreviewAlt = "Vista prèvia"
+pageSummary = "Pàgina {{number}} de {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor JSON de PDF"
+viewLabel = "Editor de PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Aplica els canvis"
+clearText = "Esborra el text"
+downloadCopy = "Baixa una còpia"
+moreOptions = "Més opcions"
+reset = "Restableix els canvis"
+
+[pdfTextEditor.badges]
+earlyAccess = "Accés anticipat"
+modified = "Editat"
+
+[pdfTextEditor.empty]
+dropzone = "Arrossegueu i deixeu anar un fitxer PDF o JSON aquí, o feu clic per explorar"
+dropzoneWithFiles = "Seleccioneu un fitxer de la pestanya Fitxers o arrossegueu i deixeu anar aquí un fitxer PDF o JSON, o feu clic per explorar"
+title = "No s'ha carregat cap document"
+
+[pdfTextEditor.errors]
+invalidJson = "No es pot llegir el fitxer JSON. Assegura't que s'hagi generat amb l'eina de PDF a JSON."
+pdfConversion = "No es pot convertir el JSON editat de nou a PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Tots els tipus de lletra"
+currentPageFonts = "Tipus de lletra en aquesta pàgina"
+details = "Detalls del tipus de lletra"
+embedded = "Incrustada"
+fallback = "alternativa"
+infoMessage = "Informació disponible sobre la reproducció de tipus de lletra."
+missing = "absent"
+perfect = "perfecte"
+perfectMessage = "Tots els tipus de lletra es poden reproduir perfectament."
+subset = "subconjunt"
+suggestions = "Notes"
+type = "Tipus"
+warningMessage = "Alguns tipus de lletra poden no representar-se correctament."
+warnings = "Avisos"
+webFormat = "Format web"
+
+[pdfTextEditor.groupingMode]
+auto = "Automàtic"
+paragraph = "Paràgraf"
+singleLine = "Línia única"
+
+[pdfTextEditor.manual]
+expandWidth = "Amplia fins a la vora de la pàgina"
+merge = "Fusiona la selecció"
+mergeTooltip = "Fusiona els quadres seleccionats"
+resetWidth = "Restableix l'amplada"
+resizeHandle = "Ajusta l'amplada del text"
+ungroup = "Desagrupa la selecció"
+ungroupTooltip = "Separa el paràgraf de nou en línies"
+widthMenu = "Opcions d'amplada"
+
+[pdfTextEditor.modeChange]
+cancel = "Cancel·la"
+confirm = "Restableix i canvia el mode"
+title = "Confirma el canvi de mode"
+warning = "Canviar el mode d'agrupació del text restablirà tots els canvis no desats. Segur que vols continuar?"
+
+[pdfTextEditor.options.advanced]
+title = "Paràmetres avançats"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Ajusta automàticament el text horitzontalment perquè encaixi dins del seu quadre delimitador original quan la representació del tipus de lletra difereix del PDF."
+title = "Autoajusta el text a les caixes"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Quan s'habilita, l'editor exporta cada quadre de text editat com un sol element de text del PDF per evitar glifs superposats o tipus de lletra barrejats."
+title = "Bloqueja el text editat a un únic element del PDF"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Detecta automàticament el tipus de pàgina i agrupa el text adequadament."
+paragraphDescription = "Agrupa línies alineades en quadres de text de paràgraf multilínia."
+singleLineDescription = "Manté cada línia de text del PDF com un quadre de text separat."
+title = "Mode d'agrupació del text"
+
+[pdfTextEditor.pageType]
+paragraph = "Pàgina de paràgrafs"
+sparse = "Text dispers"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Aquest visor alfa encara està evolucionant; certs tipus de lletra, colors, efectes de transparència i detalls de disposició poden variar lleugerament. Revisa dues vegades el PDF generat abans de compartir-lo."
@@ -5930,6 +6021,32 @@ title = "Variacions de previsualització"
 [pdfTextEditor.tooltip.textFocus]
 text = "Aquest espai de treball se centra en l’edició de text i el reposicionament d’imatges incrustades. Els elements gràfics complexos, els ginys de formulari i els gràfics amb capes es conserven per a l’exportació però no són totalment editables aquí."
 title = "Enfocament en text i imatge"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Funciona millor amb:"
+bestFor1 = "PDF simples amb principalment text i imatges"
+bestFor2 = "Documents amb format de paràgraf estàndard"
+bestFor3 = "Cartes, assaigs, informes i documents bàsics"
+dontShowAgain = "No ho tornis a mostrar"
+experimental = "Funció experimental en desenvolupament actiu. Espera una certa inestabilitat i problemes durant l'ús."
+feedback = "Aquesta és una funció d'accés anticipat. Si us plau, informa de qualsevol problema que trobis per ajudar-nos a millorar!"
+gotIt = "D'acord"
+howItWorks = "Aquesta eina converteix el PDF a un format editable on pots modificar el contingut del text i reposicionar imatges. Els canvis es guarden com un nou PDF."
+issue1 = "El color del text no es conserva actualment (s'afegirà aviat)"
+issue2 = "El mode Paràgraf té més problemes d'alineació i espaiat; es recomana el mode Línia única"
+issue3 = "La vista prèvia difereix del PDF exportat; els PDF exportats s'assemblen més a l'original"
+issue4 = "L'alineació del text girat pot requerir ajust manual"
+issue5 = "La transparència i els efectes de capes poden variar respecte a l'original"
+knownIssues = "Problemes coneguts (en procés de correcció):"
+limitation1 = "La representació del tipus de lletra pot diferir lleugerament del PDF original"
+limitation2 = "Els gràfics complexos, els camps de formulari i les anotacions es conserven però no són editables"
+limitation3 = "Els fitxers grans poden trigar a convertir-se i processar-se"
+limitations = "Limitacions actuals:"
+notIdealFor = "No és ideal per a:"
+notIdealFor1 = "PDF amb formats especials com vinyetes, taules o dissenys multicolumna"
+notIdealFor2 = "Revistes, fullets o documents molt dissenyats"
+notIdealFor3 = "Manuals d'instruccions amb dissenys complexos"
+title = "Benvingut a l'Editor de text PDF (accés anticipat)"
 
 [PDFToCSV]
 header = "PDF a CSV"

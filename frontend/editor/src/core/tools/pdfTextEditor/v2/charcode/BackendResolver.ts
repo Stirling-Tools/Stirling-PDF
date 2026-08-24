@@ -27,6 +27,9 @@ const inFlight = new Set<string>();
 
 /** Hard cap on CONCURRENT auto-prefetches. */
 const MAX_CONCURRENT_AUTO_PREFETCH = 2;
+// Font batches in flight within a single prefetch. Matches the cap
+// prewarmPageCharcodes uses so both paths load the backend the same way.
+const PREFETCH_BATCH_CONCURRENCY = 6;
 let autoPrefetchActive = 0;
 
 /** Short-lived cache of the serialized document, shared by prefetch bursts. */
@@ -139,7 +142,9 @@ function maybeAutoPrefetch(
   ctx: ResolverContext,
 ): void {
   // Never round-trip whitespace - it has no reusable glyph (see resolve()).
-  chars = chars.filter((ch) => !/\s/.test(ch));
+  // Dedupe too: resolve() pushes one entry per occurrence, so a repeated
+  // character would otherwise cost one request per repeat.
+  chars = [...new Set(chars.filter((ch) => !/\s/.test(ch)))];
   if (chars.length === 0) return;
   // Concurrency cap: dropping is safe - the chars stay cache-miss and a
   // later keystroke re-fires once a slot frees up.
@@ -171,39 +176,81 @@ function maybeAutoPrefetch(
       const pdfBase64 = uint8ToBase64(bytes);
       const pageIdx = pageIdxOfPagePtr(ctx);
 
-      // Per-char prefetch: for each missing char, resolve the font that
-      // actually renders it on the page, name that font.
-      await Promise.all(
-        chars.map(async (ch) => {
-          const perCharFont = findFontForChar(ch, ctx) || fontPtr;
-          const json = await postCharcodes({
-            pdfBase64,
-            pageIndex: pageIdx >= 0 ? pageIdx : 0,
-            locatorChar: ch,
-            fontName: readFontName(ctx.module, perCharFont),
-            // Program-bytes hash: the only identity that survives PDFium's
-            // subset-tag stripping.
-            fontSha256: getCachedFontProgramSha256(perCharFont) ?? undefined,
-            text: ch,
-          });
-          const code =
-            json && !json.error && json.charcodes && json.charcodes.length > 0
-              ? json.charcodes[0]
-              : null;
-          if (code === null && (!json || json.error)) {
-            // Network failure / backend error: retry after the TTL. Only a
-            // real "encoded 0 of N" answer is a permanent miss.
-            setTransientNull(cacheKey(perCharFont, ch));
-          } else {
-            charCache.set(cacheKey(perCharFont, ch), code);
-          }
-          // Stop the per-keystroke prefetch storm. resolve looks this char up
-          // under the QUERIED font, not perCharFont.
-          if (perCharFont !== fontPtr) {
-            charCache.set(cacheKey(fontPtr, ch), null);
-          }
-        }),
-      );
+      // Batch by font: one request per font carrying all of that font's
+      // missing chars, mirroring prewarmPageCharcodes. Previously this fired
+      // one request per character, each re-sending the entire base64 PDF.
+      const byFont = new Map<number, string[]>();
+      for (const ch of chars) {
+        const perCharFont = findFontForChar(ch, ctx) || fontPtr;
+        const arr = byFont.get(perCharFont);
+        if (arr) arr.push(ch);
+        else byFont.set(perCharFont, [ch]);
+      }
+
+      const batches = [...byFont.entries()];
+      let batchIdx = 0;
+      const workers: Promise<void>[] = [];
+      for (
+        let w = 0;
+        w < Math.min(PREFETCH_BATCH_CONCURRENCY, batches.length);
+        w++
+      ) {
+        workers.push(
+          (async () => {
+            while (true) {
+              const me = batchIdx++;
+              if (me >= batches.length) return;
+              const [perCharFont, fontChars] = batches[me];
+              const json = await postCharcodes({
+                pdfBase64,
+                pageIndex: pageIdx >= 0 ? pageIdx : 0,
+                // Any of this font's chars is a valid locator.
+                locatorChar: fontChars[0],
+                fontName: readFontName(ctx.module, perCharFont),
+                // Program-bytes hash: the only identity that survives PDFium's
+                // subset-tag stripping.
+                fontSha256:
+                  getCachedFontProgramSha256(perCharFont) ?? undefined,
+                text: fontChars.join(""),
+              });
+
+              if (!json || json.error) {
+                // Network failure / backend error: retry after the TTL. Only a
+                // real "encoded 0 of N" answer is a permanent miss.
+                for (const ch of fontChars) {
+                  setTransientNull(cacheKey(perCharFont, ch));
+                }
+              } else {
+                // The backend appends one charcode per NON-missing char, in
+                // request order.
+                const missing = new Set(json.missing ?? []);
+                const codes = json.charcodes ?? [];
+                let k = 0;
+                for (const ch of fontChars) {
+                  if (missing.has(ch)) {
+                    charCache.set(cacheKey(perCharFont, ch), null);
+                    continue;
+                  }
+                  const code = codes[k++];
+                  charCache.set(
+                    cacheKey(perCharFont, ch),
+                    typeof code === "number" ? code : null,
+                  );
+                }
+              }
+
+              // Stop the per-keystroke prefetch storm. resolve looks these
+              // chars up under the QUERIED font, not perCharFont.
+              if (perCharFont !== fontPtr) {
+                for (const ch of fontChars) {
+                  charCache.set(cacheKey(fontPtr, ch), null);
+                }
+              }
+            }
+          })(),
+        );
+      }
+      await Promise.all(workers);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (typeof console !== "undefined") {
@@ -483,12 +530,12 @@ export async function prewarmBackendCacheForPage(
   // Always log entry so tests + debug have a single signal that "prewarm was at
   // least invoked for page N" regardless of which early-return path the body.
   if (typeof console !== "undefined") {
-    console.log(`[v2.charcode] backend prewarm-start pageIdx=${pageIndex}`);
+    console.debug(`[v2.charcode] backend prewarm-start pageIdx=${pageIndex}`);
   }
   const editorCtx = getEditorContextForPage(pageIndex);
   if (!editorCtx) {
     if (typeof console !== "undefined") {
-      console.log(
+      console.debug(
         `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=0 (no-editor-ctx)`,
       );
     }
@@ -497,7 +544,7 @@ export async function prewarmBackendCacheForPage(
   const { module: m, pagePtr } = editorCtx;
   if (prewarmedPages.has(pagePtr)) {
     if (typeof console !== "undefined") {
-      console.log(
+      console.debug(
         `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=0 (already-prewarmed)`,
       );
     }
@@ -641,20 +688,8 @@ export async function prewarmBackendCacheForPage(
       );
     }
     await Promise.all(workers);
-    // Expose cache state for tests so a failing assertion can dump exactly what
-    // got cached vs. what was missed.
-    if (typeof window !== "undefined") {
-      const w = window as unknown as {
-        __v2_charcode_cache_dump?: () => Record<string, number | null>;
-      };
-      w.__v2_charcode_cache_dump = () => {
-        const out: Record<string, number | null> = {};
-        for (const [k, v] of charCache.entries()) out[k] = v;
-        return out;
-      };
-    }
     if (typeof console !== "undefined") {
-      console.log(
+      console.debug(
         `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=${probes.length} succeeded=${probesSucceeded}`,
       );
     }

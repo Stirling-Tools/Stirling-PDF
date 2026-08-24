@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Obrátit dokument tak, aby se poslední stránka stala první a
 SIDE_STITCH_BOOKLET_SORT = "Uspořádat stránky pro brožuru se sešitím po straně (optimalizováno pro vazbu na straně)."
 
 [pdfTextEditor]
+conversionFailed = "Nepodařilo se převést PDF. Zkuste to znovu."
+converting = "Převádím PDF do editovatelného formátu..."
+currentFile = "Aktuální soubor: {{name}}"
+imageLabel = "Vložený obrázek"
+noTextOnPage = "Na této stránce nebyl zjištěn žádný editovatelný text."
+pagePreviewAlt = "Náhled stránky"
+pageSummary = "Strana {{number}} z {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor PDF JSON"
+viewLabel = "Editor PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Apply Changes"
+clearText = "Vymazat text"
+downloadCopy = "Download Copy"
+moreOptions = "Další možnosti"
+reset = "Obnovit změny"
+
+[pdfTextEditor.badges]
+earlyAccess = "Předběžný přístup"
+modified = "Upraveno"
+
+[pdfTextEditor.empty]
+dropzone = "Sem přetáhněte soubor PDF nebo JSON, případně kliknutím vyberte"
+dropzoneWithFiles = "Vyberte soubor na kartě Soubory, nebo sem přetáhněte soubor PDF či JSON, případně kliknutím vyberte"
+title = "Není načten žádný dokument"
+
+[pdfTextEditor.errors]
+invalidJson = "Nelze přečíst soubor JSON. Ujistěte se, že byl vytvořen nástrojem PDF to JSON."
+pdfConversion = "Nelze převést upravený JSON zpět na PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Všechny fonty"
+currentPageFonts = "Fonty na této stránce"
+details = "Detaily fontu"
+embedded = "Vložené"
+fallback = "fallback"
+infoMessage = "K dispozici jsou informace o reprodukci fontů."
+missing = "chybí"
+perfect = "perfect"
+perfectMessage = "Všechny fonty lze reprodukovat dokonale."
+subset = "subset"
+suggestions = "Poznámky"
+type = "Typ"
+warningMessage = "Některé fonty se nemusí vykreslit správně."
+warnings = "Varování"
+webFormat = "Webový formát"
+
+[pdfTextEditor.groupingMode]
+auto = "Auto"
+paragraph = "Odstavec"
+singleLine = "Jeden řádek"
+
+[pdfTextEditor.manual]
+expandWidth = "Roztáhnout k okraji stránky"
+merge = "Sloučit výběr"
+mergeTooltip = "Sloučit vybrané rámečky"
+resetWidth = "Obnovit šířku"
+resizeHandle = "Upravit šířku textu"
+ungroup = "Zrušit seskupení"
+ungroupTooltip = "Rozdělit odstavec zpět na řádky"
+widthMenu = "Možnosti šířky"
+
+[pdfTextEditor.modeChange]
+cancel = "Zrušit"
+confirm = "Resetovat a změnit režim"
+title = "Potvrdit změnu režimu"
+warning = "Změna režimu seskupení textu resetuje všechny neuložené změny. Opravdu chcete pokračovat?"
+
+[pdfTextEditor.options.advanced]
+title = "Advanced Settings"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Automaticky vodorovně škáluje text, aby se vešel do původního ohraničujícího rámečku, když se vykreslení fontu liší od PDF."
+title = "Automaticky přizpůsobit text rámečkům"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Při zapnutí editor exportuje každý upravený textový rámeček jako jeden textový prvek PDF, aby se předešlo překrývání znaků nebo míchání fontů."
+title = "Uzamknout upravený text do jednoho prvku PDF"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Automaticky detekuje typ stránky a vhodně seskupí text."
+paragraphDescription = "Seskupí zarovnané řádky do vícerádkových textových rámečků."
+singleLineDescription = "Ponechá každý řádek textu PDF jako samostatný textový rámeček."
+title = "Režim seskupení textu"
+
+[pdfTextEditor.pageType]
+paragraph = "Odstavcová stránka"
+sparse = "Řídký text"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
@@ -5930,6 +6021,32 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Nejlépe funguje s:"
+bestFor1 = "Jednodušší PDF obsahující hlavně text a obrázky"
+bestFor2 = "Dokumenty se standardním odstavcovým formátováním"
+bestFor3 = "Dopisy, eseje, zprávy a základní dokumenty"
+dontShowAgain = "Příště nezobrazovat"
+experimental = "Jde o experimentální funkci ve vývoji. Během používání můžete narazit na nestabilitu a problémy."
+feedback = "Toto je funkce v režimu předběžného přístupu. Prosíme, hlaste jakékoli problémy, abychom ji mohli zlepšit!"
+gotIt = "Rozumím"
+howItWorks = "Tento nástroj převede vaše PDF do editovatelného formátu, kde můžete upravovat text a přesouvat obrázky. Změny se uloží zpět jako nové PDF."
+issue1 = "Barva textu se zatím nezachovává (brzy bude přidáno)"
+issue2 = "Režim Odstavec má více problémů se zarovnáním a rozestupy – doporučen režim Jeden řádek"
+issue3 = "Zobrazení náhledu se liší od exportovaného PDF – exportované PDF je bližší originálu"
+issue4 = "Zarovnání otočeného textu může vyžadovat ruční úpravu"
+issue5 = "Efekty průhlednosti a vrstvení se mohou lišit od originálu"
+knownIssues = "Známé problémy (probíhá oprava):"
+limitation1 = "Vykreslení fontů se může mírně lišit od původního PDF"
+limitation2 = "Složitá grafika, formulářová pole a anotace jsou zachovány, ale nelze je upravovat"
+limitation3 = "Převod a zpracování velkých souborů může chvíli trvat"
+limitations = "Aktuální omezení:"
+notIdealFor = "Nevhodné pro:"
+notIdealFor1 = "PDF se speciálním formátováním jako odrážky, tabulky nebo vícesloupcové rozvržení"
+notIdealFor2 = "Magazíny, brožury nebo graficky náročné dokumenty"
+notIdealFor3 = "Příručky se složitým rozvržením"
+title = "Vítejte v editoru textu PDF (předběžný přístup)"
 
 [PDFToCSV]
 header = "PDF na CSV"

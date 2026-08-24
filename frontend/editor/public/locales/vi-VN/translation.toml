@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Đảo thứ tự tài liệu để trang cuối thành trang �
 SIDE_STITCH_BOOKLET_SORT = "Sắp xếp trang để in sổ tay ghim cạnh (tối ưu cho đóng gáy bên)."
 
 [pdfTextEditor]
+conversionFailed = "Không thể chuyển đổi PDF. Vui lòng thử lại."
+converting = "Đang chuyển PDF sang định dạng có thể chỉnh sửa..."
+currentFile = "Tệp hiện tại: {{name}}"
+imageLabel = "Ảnh đã đặt"
+noTextOnPage = "Không phát hiện văn bản có thể chỉnh sửa trên trang này."
+pagePreviewAlt = "Xem trước trang"
+pageSummary = "Trang {{number}}/{{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Trình chỉnh sửa PDF JSON"
+viewLabel = "Trình chỉnh sửa PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Áp dụng thay đổi"
+clearText = "Xóa văn bản"
+downloadCopy = "Tải bản sao"
+moreOptions = "Tùy chọn khác"
+reset = "Đặt lại thay đổi"
+
+[pdfTextEditor.badges]
+earlyAccess = "Truy cập sớm"
+modified = "Đã chỉnh sửa"
+
+[pdfTextEditor.empty]
+dropzone = "Kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
+dropzoneWithFiles = "Chọn một tệp từ tab Tệp, hoặc kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
+title = "Chưa tải tài liệu"
+
+[pdfTextEditor.errors]
+invalidJson = "Không thể đọc tệp JSON. Hãy đảm bảo tệp được tạo bởi công cụ PDF to JSON."
+pdfConversion = "Không thể chuyển JSON đã chỉnh sửa lại thành PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Tất cả font"
+currentPageFonts = "Font trên trang này"
+details = "Chi tiết font"
+embedded = "Nhúng"
+fallback = "dự phòng"
+infoMessage = "Có thông tin về tái tạo font."
+missing = "thiếu"
+perfect = "hoàn hảo"
+perfectMessage = "Tất cả font có thể tái tạo hoàn hảo."
+subset = "nhúng một phần"
+suggestions = "Ghi chú"
+type = "Loại"
+warningMessage = "Một số font có thể không hiển thị đúng."
+warnings = "Cảnh báo"
+webFormat = "Định dạng Web"
+
+[pdfTextEditor.groupingMode]
+auto = "Tự động"
+paragraph = "Đoạn văn"
+singleLine = "Một dòng"
+
+[pdfTextEditor.manual]
+expandWidth = "Mở rộng tới mép trang"
+merge = "Gộp vùng chọn"
+mergeTooltip = "Gộp các hộp đã chọn"
+resetWidth = "Đặt lại độ rộng"
+resizeHandle = "Điều chỉnh độ rộng văn bản"
+ungroup = "Bỏ nhóm vùng chọn"
+ungroupTooltip = "Tách đoạn thành các dòng"
+widthMenu = "Tùy chọn độ rộng"
+
+[pdfTextEditor.modeChange]
+cancel = "Hủy"
+confirm = "Đặt lại và đổi chế độ"
+title = "Xác nhận đổi chế độ"
+warning = "Đổi chế độ nhóm văn bản sẽ đặt lại mọi thay đổi chưa lưu. Bạn có chắc muốn tiếp tục?"
+
+[pdfTextEditor.options.advanced]
+title = "Cài đặt nâng cao"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Tự động co giãn văn bản theo chiều ngang để vừa với hộp giới hạn gốc khi cách hiển thị font khác so với PDF."
+title = "Tự căn chỉnh văn bản cho vừa hộp"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Khi bật, trình chỉnh sửa xuất mỗi hộp văn bản đã chỉnh sửa thành một phần tử văn bản PDF để tránh chồng ký tự hoặc trộn font."
+title = "Khóa văn bản đã chỉnh sửa thành một phần tử PDF duy nhất"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Tự động nhận diện loại trang và nhóm văn bản phù hợp."
+paragraphDescription = "Nhóm các dòng thẳng hàng thành hộp văn bản đoạn nhiều dòng."
+singleLineDescription = "Giữ mỗi dòng văn bản PDF thành một hộp riêng."
+title = "Chế độ nhóm văn bản"
+
+[pdfTextEditor.pageType]
+paragraph = "Trang đoạn văn"
+sparse = "Văn bản thưa"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Trình xem alpha này vẫn đang phát triển—một số phông chữ, màu sắc, hiệu ứng trong suốt và chi tiết bố cục có thể thay đổi nhẹ. Vui lòng kiểm tra lại PDF đã tạo trước khi chia sẻ."
@@ -5930,6 +6021,32 @@ title = "Sai lệch khi xem trước"
 [pdfTextEditor.tooltip.textFocus]
 text = "Không gian làm việc này tập trung vào chỉnh sửa văn bản và thay đổi vị trí hình ảnh nhúng. Tác phẩm trang phức tạp, tiện ích biểu mẫu và đồ họa nhiều lớp sẽ được giữ lại khi xuất nhưng không thể chỉnh sửa đầy đủ tại đây."
 title = "Tập trung Văn bản và Hình ảnh"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Tốt nhất cho:"
+bestFor1 = "PDF đơn giản chủ yếu gồm văn bản và hình ảnh"
+bestFor2 = "Tài liệu có định dạng đoạn văn tiêu chuẩn"
+bestFor3 = "Thư, bài luận, báo cáo và tài liệu cơ bản"
+dontShowAgain = "Đừng hiển thị lại"
+experimental = "Đây là tính năng thử nghiệm đang được phát triển tích cực. Có thể sẽ không ổn định và phát sinh lỗi khi sử dụng."
+feedback = "Đây là tính năng truy cập sớm. Vui lòng báo lỗi bạn gặp để giúp chúng tôi cải thiện!"
+gotIt = "Đã hiểu"
+howItWorks = "Công cụ này chuyển PDF của bạn sang định dạng có thể chỉnh sửa, nơi bạn có thể sửa nội dung văn bản và đặt lại vị trí hình ảnh. Thay đổi sẽ được lưu thành một PDF mới."
+issue1 = "Hiện chưa giữ màu văn bản (sẽ sớm bổ sung)"
+issue2 = "Chế độ Đoạn có nhiều vấn đề căn chỉnh và giãn cách hơn - khuyến nghị dùng chế độ Dòng đơn"
+issue3 = "Bản xem trước khác với PDF xuất ra - PDF xuất ra gần với bản gốc hơn"
+issue4 = "Căn chỉnh văn bản xoay có thể cần chỉnh tay"
+issue5 = "Hiệu ứng trong suốt và lớp có thể khác bản gốc"
+knownIssues = "Vấn đề đã biết (đang sửa):"
+limitation1 = "Hiển thị font có thể hơi khác so với PDF gốc"
+limitation2 = "Đồ họa phức tạp, trường biểu mẫu và chú thích được giữ lại nhưng không thể chỉnh sửa"
+limitation3 = "Tệp lớn có thể mất thời gian để chuyển đổi và xử lý"
+limitations = "Giới hạn hiện tại:"
+notIdealFor = "Không phù hợp cho:"
+notIdealFor1 = "PDF có định dạng đặc biệt như gạch đầu dòng, bảng hoặc bố cục nhiều cột"
+notIdealFor2 = "Tạp chí, brochure hoặc tài liệu thiết kế phức tạp"
+notIdealFor3 = "Sổ tay hướng dẫn có bố cục phức tạp"
+title = "Chào mừng đến với PDF Text Editor (Truy cập sớm)"
 
 [PDFToCSV]
 header = "PDF sang CSV"

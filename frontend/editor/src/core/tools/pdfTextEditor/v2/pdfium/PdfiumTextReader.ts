@@ -289,7 +289,7 @@ function alignToText(
   const ends = new Array<number>(text.length).fill(Number.NaN);
   let g = 0;
   let placed = 0;
-  for (let i = 0; i < text.length; ) {
+  for (let i = 0; i < text.length;) {
     const cp = text.codePointAt(i) ?? 0;
     const units = cp > 0xffff ? 2 : 1;
     if (g < glyphs.length && glyphs[g].cp === cp) {

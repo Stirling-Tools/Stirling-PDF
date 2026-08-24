@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Preklopiť dokument tak, aby sa posledná strana stala prvou a 
 SIDE_STITCH_BOOKLET_SORT = "Usporiadať strany pre tlač brožúry s bočnou väzbou (optimalizované pre viazanie na boku)."
 
 [pdfTextEditor]
+conversionFailed = "Konverzia PDF zlyhala. Skúste znova."
+converting = "Prevádza sa PDF na upraviteľný formát..."
+currentFile = "Aktuálny súbor: {{name}}"
+imageLabel = "Umiestnený obrázok"
+noTextOnPage = "Na tejto strane sa nenašiel žiadny upraviteľný text."
+pagePreviewAlt = "Náhľad strany"
+pageSummary = "Strana {{number}} z {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Editor JSON pre PDF"
+viewLabel = "Editor PDF"
+
+[pdfTextEditor.actions]
+applyChanges = "Použiť zmeny"
+clearText = "Vymazať text"
+downloadCopy = "Stiahnuť kópiu"
+moreOptions = "Ďalšie možnosti"
+reset = "Resetovať zmeny"
+
+[pdfTextEditor.badges]
+earlyAccess = "Skorý prístup"
+modified = "Upravené"
+
+[pdfTextEditor.empty]
+dropzone = "Pretiahnite sem súbor PDF alebo JSON, alebo kliknite pre prehľadanie"
+dropzoneWithFiles = "Vyberte súbor na karte Súbory, alebo sem presuňte súbor PDF alebo JSON, prípadne kliknite pre prehľadanie"
+title = "Žiadny dokument nie je načítaný"
+
+[pdfTextEditor.errors]
+invalidJson = "Nedá sa prečítať súbor JSON. Uistite sa, že bol vytvorený nástrojom PDF to JSON."
+pdfConversion = "Nedá sa skonvertovať upravený JSON späť na PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Všetky písma"
+currentPageFonts = "Písma na tejto strane"
+details = "Podrobnosti o písme"
+embedded = "Vložené"
+fallback = "náhradné"
+infoMessage = "K dispozícii sú informácie o reprodukcii písiem."
+missing = "chýba"
+perfect = "dokonalé"
+perfectMessage = "Všetky písma možno reprodukovať dokonale."
+subset = "podmnožina"
+suggestions = "Poznámky"
+type = "Typ"
+warningMessage = "Niektoré písma sa nemusia vykresliť správne."
+warnings = "Upozornenia"
+webFormat = "Webový formát"
+
+[pdfTextEditor.groupingMode]
+auto = "Auto"
+paragraph = "Odsek"
+singleLine = "Jeden riadok"
+
+[pdfTextEditor.manual]
+expandWidth = "Rozšíriť po okraj stránky"
+merge = "Zlúčiť výber"
+mergeTooltip = "Zlúčiť vybrané boxy"
+resetWidth = "Resetovať šírku"
+resizeHandle = "Upraviť šírku textu"
+ungroup = "Zrušiť zoskupenie výberu"
+ungroupTooltip = "Rozdeliť odsek späť na riadky"
+widthMenu = "Možnosti šírky"
+
+[pdfTextEditor.modeChange]
+cancel = "Zrušiť"
+confirm = "Resetovať a zmeniť režim"
+title = "Potvrdiť zmenu režimu"
+warning = "Zmena režimu zoskupovania textu resetuje všetky neuložené zmeny. Naozaj chcete pokračovať?"
+
+[pdfTextEditor.options.advanced]
+title = "Pokročilé nastavenia"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Automaticky horizontálne škáluje text, aby sa zmestil do pôvodného ohraničujúceho boxu, keď sa vykresľovanie písma líši od PDF."
+title = "Automaticky prispôsobiť text do boxov"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Keď je zapnuté, editor exportuje každý upravený textový box ako jeden PDF textový prvok, aby sa predišlo prekrývaniu glyfov alebo miešaniu písiem."
+title = "Uzamknúť upravovaný text na jeden PDF prvok"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Automaticky rozpozná typ strany a vhodne zoskupí text."
+paragraphDescription = "Zarovnané riadky zoskupí do viacriadkových odsekových textových boxov."
+singleLineDescription = "Každý riadok textu PDF ponechá ako samostatný textový box."
+title = "Režim zoskupovania textu"
+
+[pdfTextEditor.pageType]
+paragraph = "Strana s odsekmi"
+sparse = "Riedky text"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Tento alfa prehliadač sa stále vyvíja—niektoré písma, farby, efekty priehľadnosti a detaily rozloženia sa môžu mierne zmeniť. Pred zdieľaním si, prosím, vygenerované PDF skontrolujte."
@@ -5930,6 +6021,32 @@ title = "Odchýlky náhľadu"
 [pdfTextEditor.tooltip.textFocus]
 text = "Tento pracovný priestor sa zameriava na úpravu textu a premiestňovanie vložených obrázkov. Zložitá grafika strán, formulárové widgety a vrstvená grafika sú zachované na export, ale nie sú tu plne upraviteľné."
 title = "Zameranie na text a obrázky"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Najlepšie pre:"
+bestFor1 = "Jednoduché PDF s prevažne textom a obrázkami"
+bestFor2 = "Dokumenty so štandardným formátovaním odsekov"
+bestFor3 = "Listy, eseje, správy a základné dokumenty"
+dontShowAgain = "Nezobrazovať znova"
+experimental = "Toto je experimentálna funkcia v aktívnom vývoji. Počas používania očakávajte určitú nestabilitu a problémy."
+feedback = "Toto je funkcia v skorom prístupe. Prosím, nahláste akékoľvek problémy, aby ste nám pomohli zlepšiť sa!"
+gotIt = "Rozumiem"
+howItWorks = "Tento nástroj konvertuje váš PDF do editovateľného formátu, kde môžete upravovať text a presúvať obrázky. Zmeny sa uložia späť ako nové PDF."
+issue1 = "Farba textu sa zatiaľ nezachováva (čoskoro pribudne)"
+issue2 = "Režim odseku má viac problémov so zarovnaním a rozostupmi – odporúčaný je režim Jednotlivý riadok"
+issue3 = "Zobrazenie v náhľade sa líši od exportovaného PDF – exportované PDF je bližšie originálu"
+issue4 = "Zarovnanie otočeného textu môže vyžadovať ručné doladenie"
+issue5 = "Efekty priehľadnosti a vrstvenia sa môžu líšiť od originálu"
+knownIssues = "Známe problémy (opravujeme):"
+limitation1 = "Vykresľovanie písma sa môže mierne líšiť od pôvodného PDF"
+limitation2 = "Zložitá grafika, formuláre a anotácie sa zachovajú, ale nie sú upraviteľné"
+limitation3 = "Veľké súbory môžu trvať dlhšie na konverziu a spracovanie"
+limitations = "Aktuálne obmedzenia:"
+notIdealFor = "Nie je ideálne pre:"
+notIdealFor1 = "PDF so špeciálnym formátovaním ako odrážky, tabuľky alebo viacstĺpcové rozloženia"
+notIdealFor2 = "Magazíny, brožúry alebo graficky náročné dokumenty"
+notIdealFor3 = "Návody s komplexným rozložením"
+title = "Vitajte v PDF Text Editore (Early Access)"
 
 [PDFToCSV]
 header = "PDF na CSV"

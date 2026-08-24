@@ -292,7 +292,8 @@ test.describe("PDF text editor v2 - save", () => {
     // Capture the original first-run text, then edit it.
     const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
-    const original = (await firstRun.innerText()) ?? "";
+    // Trailing newline only: WebKit adds one, and this spec asserts on spaces.
+    const original = ((await firstRun.innerText()) ?? "").replace(/\n+$/, "");
     const appended = " (Hello!)";
     const edited = `${original}${appended}`;
 
@@ -438,7 +439,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
 
     const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
-    const original = (await firstRun.innerText()) ?? "";
+    // Trailing newline only: WebKit adds one, and this spec asserts on spaces.
+    const original = ((await firstRun.innerText()) ?? "").replace(/\n+$/, "");
     const appended = " Hello World";
     await typeIntoRun(page, runTestId, appended);
     await expect(firstRun).toContainText("Hello World");
@@ -3421,7 +3423,7 @@ test.describe("PDF text editor v2 - paragraph recognition", () => {
     const allTexts = await Promise.all(
       (await runs.all()).map((r) => r.innerText()),
     );
-    const paragraphLike = allTexts.find((t) => t.includes("\n"));
+    const paragraphLike = allTexts.find((t) => t.trimEnd().includes("\n"));
     expect(paragraphLike).toBeTruthy();
     expect(paragraphLike!.toLowerCase()).toContain("first line");
     expect(paragraphLike!.toLowerCase()).toContain("fourth line");
@@ -3630,7 +3632,10 @@ test.describe("PDF text editor v2 - undo restores form-xobject text", () => {
       .setInputFiles(FORM_XOBJECT_PDF);
     const target = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
-    const original = (await target.innerText()) ?? "";
+    // Compared after stripping WebKit's trailing newline; `toContain` on the
+    // array (rather than `.some(...)`) prints both sides when it fails.
+    const stripNl = (t: string) => t.replace(/\r?\n+$/, "");
+    const original = stripNl((await target.innerText()) ?? "");
 
     await typeIntoRun(page, runTestId, "ZZZ");
     await expect(target).toContainText("ZZZ");
@@ -3641,7 +3646,7 @@ test.describe("PDF text editor v2 - undo restores form-xobject text", () => {
     const undoneTexts = await Promise.all(
       (await undoneRuns.all()).map((r) => r.innerText()),
     );
-    expect(undoneTexts.some((t) => t === original)).toBe(true);
+    expect(undoneTexts.map(stripNl)).toContain(original);
   });
 });
 
@@ -3806,7 +3811,8 @@ test.describe("PDF text editor v2 - paragraph line wrap fidelity", () => {
       );
       return runs
         .map((el) => {
-          const text = el.innerText || "";
+          // Drop WebKit's trailing newline before counting source lines.
+          const text = (el.innerText || "").replace(/\r?\n$/, "");
           const sourceLines = text.split(/\r?\n/).length;
           if (sourceLines < 2) return null;
           const lh =
@@ -5908,7 +5914,7 @@ test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline
       return;
     }
     const tid = (await tagline.getAttribute("data-testid")) ?? "";
-    const original = (await tagline.innerText()) ?? "";
+    const original = ((await tagline.innerText()) ?? "").replace(/\n+$/, "");
     await typeIntoRun(page, tid, "F", "end");
 
     const modelText = await page.evaluate((id) => {

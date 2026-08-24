@@ -121,7 +121,7 @@ export class RawPdf {
     // carry only /Size and /ID, so walk backwards until /Root turns up.
     let rootNum = -1;
     let trailerId: string | null = null;
-    for (let at = src.length; ; ) {
+    for (let at = src.length; ;) {
       at = src.lastIndexOf("trailer", at - 1);
       if (at < 0) break;
       const chunk = src.slice(at, at + 2048);

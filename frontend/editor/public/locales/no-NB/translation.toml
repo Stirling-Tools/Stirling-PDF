@@ -5913,8 +5913,99 @@ REVERSE_ORDER = "Snu dokumentet slik at siste side blir først, og så videre."
 SIDE_STITCH_BOOKLET_SORT = "Ordne sider for hefteutskrift med sidehefting (optimalisert for innbinding på siden)."
 
 [pdfTextEditor]
+conversionFailed = "Kunne ikke konvertere PDF. Prøv igjen."
+converting = "Konverterer PDF til redigerbart format..."
+currentFile = "Gjeldende fil: {{name}}"
+imageLabel = "Plassert bilde"
+noTextOnPage = "Ingen redigerbar tekst ble oppdaget på denne siden."
+pagePreviewAlt = "Forhåndsvisning av side"
+pageSummary = "Side {{number}} av {{total}}"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-redigerer"
+viewLabel = "PDF-redigerer"
+
+[pdfTextEditor.actions]
+applyChanges = "Bruk endringer"
+clearText = "Tøm tekst"
+downloadCopy = "Last ned kopi"
+moreOptions = "Flere alternativer"
+reset = "Tilbakestill endringer"
+
+[pdfTextEditor.badges]
+earlyAccess = "Tidlig tilgang"
+modified = "Redigert"
+
+[pdfTextEditor.empty]
+dropzone = "Dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
+dropzoneWithFiles = "Velg en fil fra fanen Filer, eller dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
+title = "Ingen dokument lastet inn"
+
+[pdfTextEditor.errors]
+invalidJson = "Kan ikke lese JSON-filen. Sørg for at den ble generert av PDF til JSON-verktøyet."
+pdfConversion = "Kan ikke konvertere den redigerte JSON-en tilbake til en PDF."
+
+[pdfTextEditor.fontAnalysis]
+allFonts = "Alle skrifter"
+currentPageFonts = "Skrifter på denne siden"
+details = "Skriftdetaljer"
+embedded = "Innebygd"
+fallback = "reserve"
+infoMessage = "Informasjon om skriftgjengivelse er tilgjengelig."
+missing = "mangler"
+perfect = "perfekt"
+perfectMessage = "Alle skrifter kan gjengis perfekt."
+subset = "delsett"
+suggestions = "Merknader"
+type = "Type"
+warningMessage = "Noen skrifter kan ikke gjengis riktig."
+warnings = "Advarsler"
+webFormat = "Web-format"
+
+[pdfTextEditor.groupingMode]
+auto = "Auto"
+paragraph = "Avsnitt"
+singleLine = "Én linje"
+
+[pdfTextEditor.manual]
+expandWidth = "Utvid til sidekant"
+merge = "Slå sammen utvalg"
+mergeTooltip = "Slå sammen valgte bokser"
+resetWidth = "Tilbakestill bredde"
+resizeHandle = "Juster tekstbredde"
+ungroup = "Opphev gruppering av utvalg"
+ungroupTooltip = "Del avsnitt tilbake til linjer"
+widthMenu = "Breddealternativer"
+
+[pdfTextEditor.modeChange]
+cancel = "Avbryt"
+confirm = "Tilbakestill og bytt modus"
+title = "Bekreft modusendring"
+warning = "Å endre tekstgrupperingsmodus vil tilbakestille alle ulagrede endringer. Er du sikker på at du vil fortsette?"
+
+[pdfTextEditor.options.advanced]
+title = "Avanserte innstillinger"
+
+[pdfTextEditor.options.autoScaleText]
+description = "Skalerer automatisk teksten horisontalt for å passe i sin opprinnelige avgrensningsboks når skriftrendering avviker fra PDF-en."
+title = "Autoskalere tekst til å passe i bokser"
+
+[pdfTextEditor.options.forceSingleElement]
+description = "Når aktivert, eksporterer editoren hver redigerte tekstboks som ett PDF-tekstelement for å unngå overlappende glyfer eller blandede skrifttyper."
+title = "Lås redigert tekst til ett PDF-element"
+
+[pdfTextEditor.options.groupingMode]
+autoDescription = "Oppdager automatisk sidetype og grupperer tekst hensiktsmessig."
+paragraphDescription = "Grupperer justerte linjer til flerlinjede avsnittstekstbokser."
+singleLineDescription = "Beholder hver PDF-tekstlinje som en egen tekstboks."
+title = "Tekstgrupperingsmodus"
+
+[pdfTextEditor.pageType]
+paragraph = "Avsnittsside"
+sparse = "Sparsom tekst"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Denne alpha-visningen er fortsatt under utvikling—visse skrifter, farger, gjennomsiktighetseffekter og layoutdetaljer kan endres litt. Dobbeltsjekk generert PDF før du deler."
@@ -5930,6 +6021,32 @@ title = "Forhåndsvisningsavvik"
 [pdfTextEditor.tooltip.textFocus]
 text = "Dette arbeidsområdet fokuserer på å redigere tekst og reposisjonere innebygde bilder. Kompleks sidegrafikk, skjemawidgets og lagdelte grafikk bevares for eksport, men er ikke fullt redigerbare her."
 title = "Fokus på tekst og bilder"
+
+[pdfTextEditor.welcomeBanner]
+bestFor = "Fungerer best med:"
+bestFor1 = "Enkle PDF-er som hovedsakelig inneholder tekst og bilder"
+bestFor2 = "Dokumenter med standard avsnittsformatering"
+bestFor3 = "Brev, essays, rapporter og grunnleggende dokumenter"
+dontShowAgain = "Ikke vis igjen"
+experimental = "Dette er en eksperimentell funksjon i aktiv utvikling. Forvent noe ustabilitet og problemer under bruk."
+feedback = "Dette er en tidlig tilgang-funksjon. Rapporter gjerne eventuelle problemer du møter for å hjelpe oss å forbedre oss!"
+gotIt = "Forstått"
+howItWorks = "Dette verktøyet konverterer PDF-en til et redigerbart format der du kan endre tekstinnhold og flytte bilder. Endringer lagres tilbake som en ny PDF."
+issue1 = "Tekstfarge bevares ikke for øyeblikket (kommer snart)"
+issue2 = "Avsnittsmodus har flere justerings- og avstandsproblemer – Enkeltlinje-modus anbefales"
+issue3 = "Forhåndsvisningen kan avvike fra den eksporterte PDF-en – eksporterte PDF-er er nærmere originalen"
+issue4 = "Roterte tekster kan trenge manuell justering"
+issue5 = "Gjennomsiktighet og lagdelte effekter kan avvike fra originalen"
+knownIssues = "Kjente problemer (under utbedring):"
+limitation1 = "Skriftgjengivelse kan avvike litt fra den opprinnelige PDF-en"
+limitation2 = "Kompleks grafikk, skjemafelt og merknader bevares men er ikke redigerbare"
+limitation3 = "Store filer kan ta tid å konvertere og behandle"
+limitations = "Gjeldende begrensninger:"
+notIdealFor = "Ikke ideell for:"
+notIdealFor1 = "PDF-er med spesiell formatering som punktlister, tabeller eller flerkolonneoppsett"
+notIdealFor2 = "Magasiner, brosjyrer eller tungt designede dokumenter"
+notIdealFor3 = "Brukerhåndbøker med komplekse oppsett"
+title = "Velkommen til PDF Text Editor (Tidlig tilgang)"
 
 [PDFToCSV]
 header = "PDF til CSV"
