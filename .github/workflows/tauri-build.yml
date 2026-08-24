@@ -26,6 +26,10 @@ on:
         required: false
         type: boolean
         default: false
+      use_shared_cache:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       platform:
@@ -57,13 +61,18 @@ permissions:
 
 jobs:
   determine-matrix:
+    # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
+    # signing environment - release-signing would block every PR run.
+    environment:
+      name: ci-signing
+      deployment: false
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -103,6 +112,12 @@ jobs:
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
   build:
+    # Windows/GPG signing only runs on main (see the per-step gates below), so only
+    # that path needs the reviewer-gated release-signing environment. Everything else
+    # (PRs, merge queue, nightly) signs macOS only and uses ci-signing, which has no
+    # approval or branch restriction.
+    environment:
+      name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
     needs: determine-matrix
     strategy:
       fail-fast: false
@@ -110,7 +125,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     env:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
-      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
       # Per-platform sign gate. macOS signs on any run with the cert available,
@@ -120,7 +134,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -150,7 +164,7 @@ jobs:
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: frontend/editor/src-tauri
           # Stable key shared across workflows so the nightly warmer.
@@ -159,6 +173,24 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
           # Save the dependency cache even if a later step fails
           cache-on-failure: true
+
+      - name: Restore cache Gradle User Home
+        if: inputs.use_shared_cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Restore cache Gradle
+        if: inputs.use_shared_cache == false
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
@@ -178,17 +210,6 @@ jobs:
         with:
           java-version: "25"
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
-
-      - name: Cache Gradle User Home
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -262,38 +283,6 @@ jobs:
             } else {
               Write-Host "Warning: Could not find PKCS11 config file"
             }
-          }
-
-      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
-      - name: Import Windows Code Signing Certificate
-        if: ${{ inputs.sign && startsWith(matrix.platform, 'windows') && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        shell: powershell
-        run: |
-          if ($env:WINDOWS_CERTIFICATE) {
-            Write-Host "Importing Windows Code Signing Certificate..."
-
-            # Decode base64 certificate and save to file
-            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
-            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
-            [IO.File]::WriteAllBytes($certPath, $certBytes)
-
-            # Import certificate to CurrentUser\My store
-            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
-
-            # Extract and set thumbprint as environment variable
-            $thumbprint = $cert.Thumbprint
-            Write-Host "Certificate imported with thumbprint: $thumbprint"
-            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
-
-            # Clean up certificate file
-            Remove-Item $certPath
-
-            Write-Host "Windows certificate import completed."
-          } else {
-            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
           }
 
       - name: Import Apple Developer Certificate
@@ -688,6 +677,17 @@ jobs:
             fi
           done
 
+      - name: Cleanup temporary files
+        if: always()
+        shell: bash
+        run: |
+          rm -f certificate.p12
+          rm -rf "$RUNNER_TEMP/msi-verify"
+          if [ "${{ matrix.platform }}" = "macos-15" ]; then
+            security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          fi
+        continue-on-error: true
+
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
@@ -703,7 +703,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
@@ -795,7 +795,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
