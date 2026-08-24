@@ -61,6 +61,7 @@ export interface EmbedPdfViewerProps {
   signaturePlacementMode?: boolean;
   signaturePlacementData?: string;
   signaturePlacementType?: "canvas" | "image" | "text";
+  signaturePlacementAspectRatio?: number;
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
@@ -75,6 +76,7 @@ const EmbedPdfViewerContent = ({
   signaturePlacementMode,
   signaturePlacementData,
   signaturePlacementType,
+  signaturePlacementAspectRatio,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
 }: EmbedPdfViewerProps) => {
@@ -1255,6 +1257,7 @@ const EmbedPdfViewerContent = ({
               signaturePlacementMode={signaturePlacementMode}
               signaturePlacementData={signaturePlacementData}
               signaturePlacementType={signaturePlacementType}
+              signaturePlacementAspectRatio={signaturePlacementAspectRatio}
               onSignaturePreviewsChange={onSignaturePreviewsChange}
               signatureOverlayApiRef={signatureOverlayApiRef}
             />

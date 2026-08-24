@@ -114,7 +114,11 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
-                        anyBoolean());
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull());
     }
 
     @Test
@@ -132,7 +136,11 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
-                        anyBoolean());
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull());
     }
 
     // ---- Valid P12 certificate ----
@@ -149,7 +157,11 @@ class CertificateSubmissionValidatorTest {
                         anyString(),
                         isNull(),
                         isNull(),
-                        anyBoolean()))
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "P12", "password");
@@ -172,7 +184,11 @@ class CertificateSubmissionValidatorTest {
                         anyString(),
                         isNull(),
                         isNull(),
-                        anyBoolean()))
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "PKCS12", "password");
@@ -192,7 +208,11 @@ class CertificateSubmissionValidatorTest {
                         anyString(),
                         isNull(),
                         isNull(),
-                        anyBoolean()))
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "PFX", "password");
@@ -291,7 +311,11 @@ class CertificateSubmissionValidatorTest {
                         anyString(),
                         isNull(),
                         isNull(),
-                        anyBoolean());
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull());
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
                 .isInstanceOf(ResponseStatusException.class)
@@ -346,7 +370,11 @@ class CertificateSubmissionValidatorTest {
                         anyString(),
                         isNull(),
                         isNull(),
-                        anyBoolean()))
+                        anyBoolean(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(jksBytes, "JKS", "jkspass");

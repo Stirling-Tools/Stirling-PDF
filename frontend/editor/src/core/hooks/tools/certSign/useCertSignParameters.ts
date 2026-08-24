@@ -30,6 +30,20 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+  /**
+   * Interactive visible-signature box on the PDF (page fractions, top-left origin).
+   * Null means page-only / legacy default 200×50 pt corner widget (no signatureRect* sent).
+   */
+  certAppearanceRect: CertAppearanceRect | null;
+}
+
+/** Visible cert widget placement; coordinates are 0–1 page fractions (top-left origin). */
+export interface CertAppearanceRect {
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -42,6 +56,7 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  certAppearanceRect: null,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
