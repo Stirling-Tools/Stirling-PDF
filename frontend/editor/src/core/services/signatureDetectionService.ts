@@ -4,13 +4,6 @@
  * without needing to make API calls
  */
 
-// PDF.js types (simplified)
-declare global {
-  interface Window {
-    pdfjsLib?: any;
-  }
-}
-
 export interface SignatureDetectionResult {
   hasSignatures: boolean;
   signatureCount?: number;
@@ -53,7 +46,7 @@ const detectSignaturesInFile = async (
 
       // Count signature annotations (Type: /Sig)
       const signatureAnnotations = annotations.filter(
-        (annotation: any) =>
+        (annotation: { subtype?: string; fieldType?: string }) =>
           annotation.subtype === "Widget" && annotation.fieldType === "Sig",
       );
 
@@ -62,7 +55,11 @@ const detectSignaturesInFile = async (
 
     // Also check for document-level signatures in AcroForm
     const metadata = await pdf.getMetadata();
-    if (metadata?.info?.Signature || metadata?.metadata?.has("dc:signature")) {
+    const info = metadata?.info as { Signature?: unknown } | undefined;
+    const xmpMetadata = metadata?.metadata as
+      | { has?: (name: string) => boolean }
+      | undefined;
+    if (info?.Signature || xmpMetadata?.has?.("dc:signature")) {
       totalSignatures = Math.max(totalSignatures, 1);
     }
 
