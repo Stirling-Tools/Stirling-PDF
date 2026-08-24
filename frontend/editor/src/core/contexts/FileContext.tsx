@@ -66,6 +66,7 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import { processResponse } from "@app/utils/toolResponseProcessor";
@@ -114,6 +115,7 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
+  const continueResolutions = useResolutionContinuation();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
@@ -448,8 +450,18 @@ function FileContextInner({
       );
 
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+
+      // The modal is the remove-password tool by another door: if this unlock is the fix an
+      // open failure was waiting for, carry the resolution through just as a tool run would.
+      continueResolutions({
+        operation: "removePassword",
+        inputFileIds: [fileId],
+        outputs: [
+          { file: unlockedFile, fileId: childStub.id, sourceFileId: fileId },
+        ],
+      });
     },
-    [consumeFilesWrapper, t],
+    [consumeFilesWrapper, continueResolutions, t],
   );
 
   const handleUnlockSubmit = useCallback(async () => {

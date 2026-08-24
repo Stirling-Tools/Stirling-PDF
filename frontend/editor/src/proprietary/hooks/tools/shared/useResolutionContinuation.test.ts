@@ -336,6 +336,40 @@ describe("useResolutionContinuation", () => {
     expect(refreshNotificationsNow).toHaveBeenCalled();
   });
 
+  it("re-runs nothing from a success that is not the row's declared resolution", async () => {
+    // The failure wants an unlock; what succeeded is compress on the same document. However
+    // real that success, it fixed nothing the row is about, so the policy must not re-run.
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow()],
+      viewerReviewsTeam: false,
+    });
+    // A compress stash on the same file lets the run past the local gate, proving the kind
+    // check itself is what refuses it rather than the gate never asking.
+    loadRetryPayload.mockResolvedValue({
+      operation: "compress",
+      endpoint: "/api/v1/misc/compress-pdf",
+      params: {},
+      fileIds: ["f-locked"],
+      recordedAt: 0,
+    });
+
+    continuation()({
+      operation: "compress",
+      inputFileIds: ["f-locked"],
+      outputs: [
+        {
+          file: new File(["pdf"], "smaller.pdf"),
+          fileId: "f-out",
+          sourceFileId: "f-locked",
+        },
+      ],
+    });
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
   it("does not resolve a tool failure from a different operation's success", async () => {
     fetchNotifications.mockResolvedValue({
       notifications: [toolRow()],
