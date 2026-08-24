@@ -24,10 +24,6 @@ import {
 import { alert } from "@app/components/toast";
 import "@app/components/viewer/TextSelectionMenu.css";
 
-// ---------------------------------------------------------------------------
-// Inline SVG Icons matching EmbedPDF selection toolbar design
-// ---------------------------------------------------------------------------
-
 function CopyIcon() {
   return (
     <svg
@@ -206,10 +202,6 @@ function RedactIcon() {
     </svg>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
