@@ -24,7 +24,6 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { useOpenPlan } from "@app/hooks/useOpenPlan";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
@@ -255,7 +254,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { displayName, profilePictureUrl, isAnonymous } =
       useAccountIdentity();
     const credits = useFreeCreditsSummary();
-    const otherApp = useOtherAppSwitch();
     const openPlan = useOpenPlan();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
@@ -1363,7 +1361,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — the shared footer: credits, app switch, account row. */}
+        {/* Box 3 — the shared footer. Switching apps and opening settings both
+            belong to the quick nav rail, so what is left here is the wallet. */}
         <NavFooter
           className="file-sidebar-footer-box"
           displayName={displayName}
@@ -1372,7 +1371,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           showAccount={!accountHoisted}
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
-          otherApp={otherApp}
           collapsed={collapsed}
         />
       </div>

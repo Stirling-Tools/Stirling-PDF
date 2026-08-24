@@ -20,11 +20,9 @@ export interface QuickNavRailContainerProps extends Omit<
   "footer"
 > {
   /**
-   * Opens the config modal. Passing it also opts this rail into owning the
-   * account control, which means the sidebar beside it must drop its own account
-   * row (FileSidebar's accountHoisted) so one user isn't drawn twice. The editor
-   * does this; the processor leaves the account in its sidebar footer and passes
-   * nothing here.
+   * Opens the config modal. This rail is the account control in both apps, so
+   * the sidebar beside it renders no account row of its own (FileSidebar's
+   * accountHoisted, NavFooter's showAccount) and one user is never drawn twice.
    */
   onOpenSettings?: () => void;
   /**

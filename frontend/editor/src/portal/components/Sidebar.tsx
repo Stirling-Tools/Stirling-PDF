@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
-import { useGoToEditor } from "@portal/hooks/useGoToEditor";
 import { CloseIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -32,7 +31,6 @@ export const MOBILE_QUERY = "(max-width: 48rem)";
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const {
-    openSettings,
     mobileNavOpen,
     closeMobileNav,
     sidebarCollapsed,
@@ -50,7 +48,6 @@ export function Sidebar() {
   // off-canvas drawer, so the icon-rail state never applies there.
   const collapsed = sidebarCollapsed && !isMobile;
 
-  const goToEditor = useGoToEditor();
 
   // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
   // a takeover modal (matching the marketing prototype).
@@ -139,10 +136,9 @@ export function Sidebar() {
         className="portal-sidebar__footer"
         displayName={displayName}
         profilePictureUrl={profilePictureUrl}
-        onOpenSettings={openSettings}
+        showAccount={false}
         credits={credits}
         onOpenPlan={openPlan ?? undefined}
-        otherApp={{ app: "editor", onOpen: goToEditor }}
         accountExtras={<LinkAccountFooterItem />}
         collapsed={collapsed}
       />
