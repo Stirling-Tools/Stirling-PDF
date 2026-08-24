@@ -194,10 +194,9 @@ jobs:
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
           architecture: "x64"
 
       - name: Capture x86_64 JAVA_HOME
@@ -206,10 +205,9 @@ jobs:
 
       # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0

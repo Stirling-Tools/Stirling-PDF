@@ -1,0 +1,48 @@
+name: Local Java
+description: Configure the JDK already installed on the GitHub Actions runner
+inputs:
+  java-version:
+    description: JDK major version
+    required: false
+    default: "25"
+  architecture:
+    description: Compatibility input for existing workflow call sites
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Configure preinstalled JDK
+      shell: bash
+      env:
+        JAVA_VERSION: ${{ inputs.java-version }}
+        JAVA_ARCHITECTURE: ${{ inputs.architecture }}
+        RUNNER_ARCHITECTURE: ${{ runner.arch }}
+      run: |
+        set -euo pipefail
+        if [ "${JAVA_VERSION}" != "25" ]; then
+          echo "This repository requires JDK 25; received ${JAVA_VERSION}" >&2
+          exit 1
+        fi
+
+        architecture="${JAVA_ARCHITECTURE}"
+        if [ -z "${architecture}" ]; then
+          architecture="${RUNNER_ARCHITECTURE}"
+        fi
+        case "${architecture^^}" in
+          X64|AMD64|X86_64) architecture=X64 ;;
+          ARM64|AARCH64) architecture=ARM64 ;;
+          *) echo "Unsupported runner architecture: ${architecture}" >&2; exit 1 ;;
+        esac
+
+        java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
+        java_home="${!java_home_variable:-}"
+        if [ -z "${java_home}" ]; then
+          echo "JDK 25 is not installed on this runner (${java_home_variable} is missing)" >&2
+          exit 1
+        fi
+
+        echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
+        echo "${java_home}/bin" >> "${GITHUB_PATH}"
+        java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
+        grep -Eq "version \"${JAVA_VERSION}(\.|\")" "${RUNNER_TEMP}/java-version.txt"
