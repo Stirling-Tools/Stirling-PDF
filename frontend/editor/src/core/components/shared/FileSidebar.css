@@ -49,7 +49,7 @@
   border-radius: 0;
 }
 
-/* ---- Header row (collapse toggle) ---- */
+/* ---- Header row (brand lockup + collapse toggle) ---- */
 .file-sidebar-header {
   display: flex;
   align-items: center;
@@ -59,7 +59,19 @@
 }
 
 .file-sidebar-collapse-toggle {
+  margin-left: auto;
   flex-shrink: 0;
+}
+
+/* Collapsed to an icon rail there is no room for the mark and the toggle side by
+   side, so they stack and the toggle gives up the trailing-edge push. */
+.file-sidebar[data-collapsed="true"] .file-sidebar-header {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0;
+}
+.file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {
+  margin-left: 0;
 }
 
 /* ---- Three floating nav-surface boxes (controls / files / footer) ---- */

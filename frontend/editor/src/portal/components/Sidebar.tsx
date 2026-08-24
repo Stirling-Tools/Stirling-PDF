@@ -1,11 +1,12 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon, NavItem, NavSurface } from "@app/ui";
+import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
+import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
 import { useOpenPlan } from "@portal/hooks/useOpenPlan";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -96,22 +97,21 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* Header row: the collapse toggle on desktop, the drawer's close button on
-          mobile. Both need a home now that the sidebar reaches the top of the
-          window with no brand row above it. */}
+      {/* Header row: the brand lockup, the collapse toggle beside it, and the
+          drawer's close button on mobile. */}
       <div className="portal-sidebar__header">
-        <ActionIcon
-          variant="tertiary"
-          className="portal-sidebar__collapse"
-          aria-label={
-            collapsed
-              ? t("fileSidebar.expand", "Expand sidebar")
-              : t("fileSidebar.collapse", "Collapse sidebar")
-          }
-          onClick={toggleSidebarCollapsed}
-        >
-          <SidebarToggleIcon size={18} />
-        </ActionIcon>
+        <BrandSwitcher
+          current="processor"
+          // Wrapped, not passed by reference: onSwitch hands over the target app
+          // id, which goToEditor would take as a tool path.
+          onSwitch={() => goToEditor()}
+          collapsed={collapsed}
+        />
+
+        <SidebarToggleButton
+          collapsed={collapsed}
+          onToggle={toggleSidebarCollapsed}
+        />
 
         <ActionIcon
           variant="tertiary"

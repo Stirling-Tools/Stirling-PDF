@@ -103,9 +103,9 @@ export interface FileSidebarProps {
    * row and keeps the rest (credits, plan, app switch).
    */
   accountHoisted?: boolean;
-  /** Accessible name override for the toggle button. */
+  /** Accessible name override for the collapse toggle. */
   toggleAriaLabel?: string;
-  /** Icon override for the toggle button (e.g. back-arrow on /files). */
+  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
   toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
@@ -161,11 +161,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onToggleCollapse,
       onOpenSettings,
       accountHoisted = false,
+      toggleAriaLabel,
+      toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
-      toggleAriaLabel,
-      toggleIcon,
     },
     ref,
   ) {
