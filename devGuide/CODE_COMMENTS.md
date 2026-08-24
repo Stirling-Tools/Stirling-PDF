@@ -105,9 +105,18 @@ spelled out.
 
 ## The linter
 
-`task comment-lint` checks the lines your branch adds. It runs in `task
-pre-commit`, so the git hook and CI both get it, and it also runs as a Claude Code
-`PostToolUse` hook so an agent sees findings on the file it just wrote.
+`task comment-lint` checks added lines only. With no arguments it compares the
+working tree against HEAD, which is what a pre-commit run wants: the lines you are
+about to commit. On a CI pull request it compares against the target branch. To
+ask what a whole branch adds, name the base:
+
+```bash
+task comment-lint -- --since origin/main
+```
+
+It runs inside `task pre-commit`, so the git hook and CI both get it, and it also
+runs as a Claude Code `PostToolUse` hook so an agent sees findings on the file it
+just wrote.
 
 Two engines, one rule set (`scripts/lint/comment-rules.mjs`):
 

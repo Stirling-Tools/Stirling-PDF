@@ -172,6 +172,7 @@ tasks:
     aliases: [comments]
     cmds:
       - task: pre-commit:comment-lint
+        vars: { CLI_ARGS: '{{.CLI_ARGS}}' }
 
   fix:
     desc: "Auto-fix all components"

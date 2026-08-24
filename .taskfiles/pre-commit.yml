@@ -139,8 +139,14 @@ tasks:
       block of commented-out code. Everything else it reports is advisory.
 
       Scoped to added lines, so touching an old file never surfaces the standing
-      backlog. On a CI pull request it diffs against the target branch; locally it
-      diffs the working tree against HEAD. The standard is devGuide/CODE_COMMENTS.md.
+      backlog. The standard is devGuide/CODE_COMMENTS.md.
+
+      With no arguments it diffs the working tree against HEAD, which is what a
+      pre-commit run wants: the lines you are about to commit. On a CI pull request
+      it diffs against the target branch instead, via GITHUB_BASE_REF.
+
+      To ask what a whole branch adds, name the base:
+        task comment-lint -- --since origin/main
 
       Full tree (report only):     task pre-commit:comment-lint:all
       Fixture corpus:             task pre-commit:comment-lint:selftest
@@ -150,7 +156,7 @@ tasks:
     deps: [":frontend:install"]
     cmds:
       - node scripts/lint/comment-lint.mjs --selftest
-      - node scripts/lint/comment-lint.mjs
+      - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
 
   comment-lint:all:
     desc: "Report every comment finding in the tree (never fails)"
