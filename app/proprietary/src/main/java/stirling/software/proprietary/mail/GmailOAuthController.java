@@ -3,8 +3,12 @@ package stirling.software.proprietary.mail;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,10 +67,68 @@ public class GmailOAuthController {
                         ? null
                         : (GmailOAuthService.GmailProfile)
                                 session.getAttribute(PROFILE_SESSION_KEY);
-        return ResponseEntity.ok(
-                profile == null
-                        ? Map.of("connected", false)
-                        : Map.of("connected", true, "email", profile.email(), "provider", "Gmail"));
+        boolean tokenPresent = session != null && session.getAttribute(TOKEN_SESSION_KEY) != null;
+        ResponseEntity<?> response =
+                ResponseEntity.ok(
+                        profile == null
+                                ? Map.of("connected", false)
+                                : Map.of(
+                                        "connected",
+                                        true,
+                                        "email",
+                                        profile.email(),
+                                        "provider",
+                                        "Gmail"));
+        log.info(
+                "Gmail status: requestUri={}, sessionPresent={}, profilePresent={}, tokenPresent={}, forwardedHost={}, forwardedProto={}, forwardedPort={}",
+                request.getRequestURI(),
+                session != null,
+                profile != null,
+                tokenPresent,
+                request.getHeader("X-Forwarded-Host"),
+                request.getHeader("X-Forwarded-Proto"),
+                request.getHeader("X-Forwarded-Port"));
+        return response;
+    }
+
+    @GetMapping("/api/v1/email/gmail/messages")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<GmailOAuthService.GmailMessage>> messages(HttpServletRequest request)
+            throws IOException, InterruptedException {
+        GmailOAuthService.GmailToken token = sessionToken(request);
+        return ResponseEntity.ok(gmailOAuthService.listMessages(token));
+    }
+
+    @GetMapping("/api/v1/email/gmail/messages/{messageId}/attachments/{attachmentId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> attachment(
+            @org.springframework.web.bind.annotation.PathVariable String messageId,
+            @org.springframework.web.bind.annotation.PathVariable String attachmentId,
+            HttpServletRequest request)
+            throws IOException, InterruptedException {
+        GmailOAuthService.GmailAttachmentData attachment =
+                gmailOAuthService.downloadAttachment(
+                        sessionToken(request), messageId, attachmentId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(
+                ContentDisposition.attachment().filename(attachmentId).build());
+        return new ResponseEntity<>(
+                attachment.data(), headers, org.springframework.http.HttpStatus.OK);
+    }
+
+    private GmailOAuthService.GmailToken sessionToken(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        GmailOAuthService.GmailToken token =
+                session == null
+                        ? null
+                        : (GmailOAuthService.GmailToken) session.getAttribute(TOKEN_SESSION_KEY);
+        if (token == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    "Gmail mailbox is not connected");
+        }
+        return token;
     }
 
     @GetMapping("/api/v1/email/gmail/callback")

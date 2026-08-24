@@ -13,7 +13,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import apiClient from "@app/services/apiClient";
@@ -38,6 +38,12 @@ interface MailMessage {
   unread?: boolean;
   hasAttachment?: boolean;
   attachments: MailAttachment[];
+}
+
+function formatFileSize(size: number): string {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 const DEMO_MESSAGES: MailMessage[] = [
@@ -99,9 +105,17 @@ const DEMO_ACCOUNT = {
 export default function EmailInboxPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [accountConnected, setAccountConnected] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [accountConnected, setAccountConnected] = useState(
+    searchParams.get("gmail") === "connected",
+  );
   const [accountEmail, setAccountEmail] = useState(DEMO_ACCOUNT.email);
+  const [accountProvider, setAccountProvider] = useState<Provider>(
+    searchParams.get("gmail") === "connected" ? "Gmail" : DEMO_ACCOUNT.provider,
+  );
+  const [mailboxConfirmed, setMailboxConfirmed] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("work");
+  const [messages, setMessages] = useState<MailMessage[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState(
     DEMO_MESSAGES[0].id,
   );
@@ -109,37 +123,95 @@ export default function EmailInboxPage() {
   const [downloadedAttachment, setDownloadedAttachment] = useState<
     string | null
   >(null);
+  const connectedFromCallback = searchParams.get("gmail") === "connected";
 
   useEffect(() => {
     let active = true;
+    if (connectedFromCallback) {
+      setAccountConnected(true);
+      setSearchParams({}, { replace: true });
+    }
     apiClient
-      .get<{ connected: boolean; email?: string }>("/api/v1/email/gmail/status")
+      .get<{ connected: boolean; email?: string; provider?: Provider }>(
+        "/api/v1/email/gmail/status",
+      )
       .then(({ data }) => {
         if (!active) return;
-        setAccountConnected(data.connected);
+        setAccountConnected(data.connected || connectedFromCallback);
+        setMailboxConfirmed(data.connected);
         if (data.email) setAccountEmail(data.email);
+        if (data.provider) setAccountProvider(data.provider);
+        else if (connectedFromCallback) setAccountProvider("Gmail");
       })
       .catch(() => {
-        if (active) setAccountConnected(false);
+        if (active) {
+          setAccountConnected(false);
+          setMailboxConfirmed(false);
+        }
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [connectedFromCallback, setSearchParams]);
 
-  const messages = useMemo(() => {
+  useEffect(() => {
+    if (!mailboxConfirmed) return;
+    apiClient
+      .get<
+        Array<{
+          id: string;
+          sender: string;
+          subject: string;
+          preview: string;
+          date: string;
+          unread: boolean;
+          attachments: Array<{
+            id: string;
+            name: string;
+            mimeType: string;
+            size: number;
+          }>;
+        }>
+      >("/api/v1/email/gmail/messages")
+      .then(({ data }) => {
+        setMessages(
+          data
+            .filter((message) => message.attachments.length > 0)
+            .map((message) => ({
+            id: message.id,
+            sender: message.sender.split(" <")[0] || message.sender,
+            address: message.sender.match(/<([^>]+)>/)?.[1] ?? message.sender,
+            subject: message.subject || "(Ohne Betreff)",
+            preview: message.preview,
+            date: message.date,
+            unread: message.unread,
+            hasAttachment: message.attachments.length > 0,
+            attachments: message.attachments.map((attachment) => ({
+              id: attachment.id,
+              name: attachment.name,
+              type: attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
+              size: formatFileSize(attachment.size),
+            })),
+            })),
+        );
+      })
+      .catch(() => setMessages([]));
+  }, [mailboxConfirmed]);
+
+  const filteredMessages = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery) return DEMO_MESSAGES;
-    return DEMO_MESSAGES.filter((message) =>
+    if (!normalizedQuery) return messages;
+    return messages.filter((message) =>
       [message.sender, message.address, message.subject, message.preview]
         .join(" ")
         .toLocaleLowerCase()
         .includes(normalizedQuery),
     );
-  }, [query]);
+  }, [messages, query]);
 
   const selectedMessage =
-    messages.find((message) => message.id === selectedMessageId) ?? messages[0];
+    filteredMessages.find((message) => message.id === selectedMessageId) ??
+    filteredMessages[0];
 
   const connectAccount = async (provider: Provider) => {
     if (provider === "Gmail") {
@@ -150,6 +222,7 @@ export default function EmailInboxPage() {
       return;
     }
     setAccountConnected(true);
+    setAccountProvider("Microsoft 365");
     setSelectedAccount("work");
   };
 
@@ -218,7 +291,7 @@ export default function EmailInboxPage() {
               <span className="email-account-avatar">A</span>
               <span className="email-account-copy">
                 <strong>{accountEmail}</strong>
-                <span>{DEMO_ACCOUNT.provider}</span>
+                <span>{accountProvider}</span>
               </span>
               <span className="email-account-dot" />
             </button>
@@ -279,7 +352,7 @@ export default function EmailInboxPage() {
             <div>
               <h2>{t("email.inbox", "Posteingang")}</h2>
               <span>
-                {messages.length} {t("email.messages", "Nachrichten")}
+                {filteredMessages.length} {t("email.messages", "Nachrichten")}
               </span>
             </div>
             <TextInput
@@ -298,8 +371,8 @@ export default function EmailInboxPage() {
             />
           </div>
           <ScrollArea className="email-message-list">
-            {messages.length > 0 ? (
-              messages.map((message) => (
+            {filteredMessages.length > 0 ? (
+              filteredMessages.map((message) => (
                 <button
                   className={`email-message-row ${selectedMessage?.id === message.id ? "is-selected" : ""}`}
                   key={message.id}
