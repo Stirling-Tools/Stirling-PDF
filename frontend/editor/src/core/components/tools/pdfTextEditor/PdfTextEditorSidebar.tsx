@@ -91,6 +91,10 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
     onForceSingleTextElementChange,
     onGroupingModeChange,
     onAutoScaleTextChange,
+    whiteouts,
+    onClearWhiteouts,
+    whiteoutMode,
+    onWhiteoutModeChange,
   } = data;
 
   // Get page dimensions
@@ -353,6 +357,24 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 </Group>
               </Stack>
             </ToolStep>
+
+            {hasDocument && (
+              <Stack gap="xs" px="md">
+                <Button
+                  variant={whiteoutMode ? "primary" : "secondary"}
+                  onClick={() => onWhiteoutModeChange(!whiteoutMode)}
+                >
+                  {t("pdfTextEditor.whiteout.toggle", "Whiteout")}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => onClearWhiteouts(selectedPage)}
+                  disabled={(whiteouts[selectedPage] ?? []).length === 0}
+                >
+                  {t("pdfTextEditor.whiteout.clear", "Clear Whiteout")}
+                </Button>
+              </Stack>
+            )}
 
             {hasDocument && (
               <FontStatusPanel
