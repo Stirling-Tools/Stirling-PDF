@@ -17,11 +17,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import apiClient from "@app/services/apiClient";
+import { fileStorage } from "@app/services/fileStorage";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAllFiles } from "@app/contexts/file/fileHooks";
 import "@app/pages/EmailInboxPage.css";
 
 type Provider = "Microsoft 365" | "Gmail";
+type MailFolder = "inbox" | "starred" | "trash";
 
 interface MailAttachment {
   id: string;
@@ -127,6 +129,9 @@ export default function EmailInboxPage() {
     searchParams.get("gmail") === "connected" ? "Gmail" : DEMO_ACCOUNT.provider,
   );
   const [mailboxConfirmed, setMailboxConfirmed] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState<MailFolder>("inbox");
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("work");
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState(
@@ -167,11 +172,12 @@ export default function EmailInboxPage() {
     };
   }, [connectedFromCallback, setSearchParams]);
 
-  useEffect(() => {
-    if (!mailboxConfirmed) return;
-    apiClient
-      .get<
-        Array<{
+  const loadMessages = async (pageToken?: string) => {
+    if (!mailboxConfirmed || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data } = await apiClient.get<{
+        messages: Array<{
           id: string;
           sender: string;
           subject: string;
@@ -184,33 +190,61 @@ export default function EmailInboxPage() {
             mimeType: string;
             size: number;
           }>;
-        }>
-      >("/api/v1/email/gmail/messages")
-      .then(({ data }) => {
-        setMessages(
-          data
-            .filter((message) => message.attachments.length > 0)
-            .map((message) => ({
-            id: message.id,
-            sender: message.sender.split(" <")[0] || message.sender,
-            address: message.sender.match(/<([^>]+)>/)?.[1] ?? message.sender,
-            subject: message.subject || "(Ohne Betreff)",
-            preview: message.preview,
-            date: message.date,
-            unread: message.unread,
-            hasAttachment: message.attachments.length > 0,
-            attachments: message.attachments.map((attachment) => ({
-              id: attachment.id,
-              name: attachment.name,
-              type: attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
-              mimeType: attachment.mimeType,
-              size: formatFileSize(attachment.size),
-            })),
-            })),
-        );
-      })
-      .catch(() => setMessages([]));
-  }, [mailboxConfirmed]);
+        }>;
+        nextPageToken?: string | null;
+      }>(
+        `/api/v1/email/gmail/messages?folder=${selectedFolder}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+      );
+      const mappedMessages = data.messages
+        .filter((message) => message.attachments.length > 0)
+        .map((message) => ({
+          id: message.id,
+          sender: message.sender.split(" <")[0] || message.sender,
+          address: message.sender.match(/<([^>]+)>/)?.[1] ?? message.sender,
+          subject: message.subject || "(Ohne Betreff)",
+          preview: message.preview,
+          date: message.date,
+          unread: message.unread,
+          hasAttachment: true,
+          attachments: message.attachments.map((attachment) => ({
+            id: attachment.id,
+            name: attachment.name,
+            type: attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
+            mimeType: attachment.mimeType,
+            size: formatFileSize(attachment.size),
+          })),
+        }));
+      setMessages((current) =>
+        pageToken ? [...current, ...mappedMessages] : mappedMessages,
+      );
+      setNextPageToken(data.nextPageToken ?? null);
+    } catch {
+      if (!pageToken) setMessages([]);
+      setNextPageToken(null);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    setMessages([]);
+    setNextPageToken(null);
+    if (mailboxConfirmed) void loadMessages();
+  }, [mailboxConfirmed, selectedFolder]);
+
+  const handleMessageListScroll = (position: { x: number; y: number }) => {
+    const element = document.querySelector<HTMLElement>(
+      ".email-message-list .mantine-ScrollArea-viewport",
+    );
+    if (!element) return;
+    if (
+      nextPageToken &&
+      !loadingMore &&
+      element.scrollHeight - position.y - element.clientHeight < 120
+    ) {
+      void loadMessages(nextPageToken);
+    }
+  };
 
   const filteredMessages = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -244,8 +278,15 @@ export default function EmailInboxPage() {
     messageId: string,
     attachment: MailAttachment,
   ) => {
-    const alreadyExists = fileStubs.some(
-      (file) => file.name.toLocaleLowerCase() === attachment.name.toLocaleLowerCase(),
+    const normalizeFilename = (name: string) => name.trim().toLocaleLowerCase();
+    const storedFileStubs = await fileStorage.getAllStirlingFileStubs();
+    const existingFileNames = new Set(
+      [...fileStubs, ...storedFileStubs].map((file) =>
+        normalizeFilename(file.name),
+      ),
+    );
+    const alreadyExists = existingFileNames.has(
+      normalizeFilename(attachment.name),
     );
     if (
       alreadyExists &&
@@ -357,18 +398,27 @@ export default function EmailInboxPage() {
           <div className="email-sidebar-heading">
             <span>{t("email.folders", "Postfach")}</span>
           </div>
-          <button className="email-folder-row is-active">
+          <button
+            className={`email-folder-row ${selectedFolder === "inbox" ? "is-active" : ""}`}
+            onClick={() => setSelectedFolder("inbox")}
+          >
             <InboxOutlinedIcon fontSize="small" />
             <span>{t("email.inbox", "Posteingang")}</span>
             <Badge size="sm" variant="light">
               2
             </Badge>
           </button>
-          <button className="email-folder-row">
+          <button
+            className={`email-folder-row ${selectedFolder === "starred" ? "is-active" : ""}`}
+            onClick={() => setSelectedFolder("starred")}
+          >
             <StarBorderIcon fontSize="small" />
             <span>{t("email.starred", "Markiert")}</span>
           </button>
-          <button className="email-folder-row">
+          <button
+            className={`email-folder-row ${selectedFolder === "trash" ? "is-active" : ""}`}
+            onClick={() => setSelectedFolder("trash")}
+          >
             <DeleteOutlineIcon fontSize="small" />
             <span>{t("email.trash", "Papierkorb")}</span>
           </button>
@@ -413,7 +463,10 @@ export default function EmailInboxPage() {
               )}
             />
           </div>
-          <ScrollArea className="email-message-list">
+          <ScrollArea
+            className="email-message-list"
+            onScrollPositionChange={handleMessageListScroll}
+          >
             {filteredMessages.length > 0 ? (
               filteredMessages.map((message) => (
                 <button

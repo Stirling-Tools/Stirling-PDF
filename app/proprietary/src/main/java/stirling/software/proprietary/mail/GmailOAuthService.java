@@ -118,13 +118,26 @@ public class GmailOAuthService {
         return connections.get(username);
     }
 
-    public List<GmailMessage> listMessages(GmailToken token)
+    public GmailMessagePage listMessages(GmailToken token, String folder, String pageToken)
             throws IOException, InterruptedException {
+        String label =
+                switch (folder) {
+                    case "starred" -> "STARRED";
+                    case "trash" -> "TRASH";
+                    default -> "INBOX";
+                };
+        String pageQuery =
+                pageToken == null || pageToken.isBlank()
+                        ? ""
+                        : "&pageToken=" + URLEncoder.encode(pageToken, StandardCharsets.UTF_8);
         JsonNode list =
                 sendJson(
                         token,
                         GMAIL_API_URI
-                                + "/messages?labelIds=INBOX&maxResults=25&q=has%3Aattachment");
+                                + "/messages?labelIds="
+                                + label
+                                + "&maxResults=25&q=has%3Aattachment"
+                                + pageQuery);
         List<GmailMessage> messages = new ArrayList<>();
         for (JsonNode item : list.path("messages")) {
             JsonNode message =
@@ -136,7 +149,7 @@ public class GmailOAuthService {
                                     + "?format=full");
             messages.add(toMessage(message));
         }
-        return messages;
+        return new GmailMessagePage(messages, list.path("nextPageToken").asText(null));
     }
 
     public GmailAttachmentData downloadAttachment(
@@ -244,6 +257,8 @@ public class GmailOAuthService {
             String date,
             boolean unread,
             List<GmailAttachment> attachments) {}
+
+    public record GmailMessagePage(List<GmailMessage> messages, String nextPageToken) {}
 
     public record GmailAttachment(String id, String name, String mimeType, long size) {}
 
