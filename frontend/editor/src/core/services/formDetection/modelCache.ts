@@ -41,8 +41,31 @@ async function readWithProgress(
   return out.buffer;
 }
 
+/**
+ * Browsers only expose Web Crypto in a secure context, so an http:// deployment cannot hash the
+ * model it just downloaded.
+ */
+export class ChecksumUnsupportedError extends Error {
+  constructor() {
+    super(
+      "The model cannot be verified because Web Crypto is unavailable; serve the app over HTTPS (or localhost) to run detection in the browser",
+    );
+    this.name = "ChecksumUnsupportedError";
+  }
+}
+
+/** Whether this context can hash the downloaded model at all. */
+export function canVerifyChecksums(): boolean {
+  return typeof crypto !== "undefined" && crypto.subtle != null;
+}
+
 async function verify(bytes: ArrayBuffer, expectedSha?: string): Promise<void> {
   if (!expectedSha) return;
+  // Refusing beats skipping the check: an unverified model would go on to build a form the user
+  // has no way to know was never validated.
+  if (!canVerifyChecksums()) {
+    throw new ChecksumUnsupportedError();
+  }
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   const actual = toHex(digest);
   if (actual.toLowerCase() !== expectedSha.toLowerCase()) {

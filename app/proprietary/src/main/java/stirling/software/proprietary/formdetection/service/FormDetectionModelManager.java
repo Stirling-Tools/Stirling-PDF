@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -38,6 +39,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
+import stirling.software.proprietary.formdetection.inference.FormDetectionEngine;
 import stirling.software.proprietary.formdetection.model.FormDetectionStatus;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
@@ -90,6 +92,12 @@ public class FormDetectionModelManager {
     private final ModelCatalogService catalog;
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
+
+    /**
+     * Resolved lazily and by interface: the ONNX engine is absent from builds without onnxruntime,
+     * and an eager or concrete-typed dependency would fail startup there.
+     */
+    private final ObjectProvider<FormDetectionEngine> engineProvider;
 
     private final AtomicBoolean installing = new AtomicBoolean(false);
     private volatile FormDetectionStatus state = FormDetectionStatus.NOT_INSTALLED;
@@ -385,8 +393,13 @@ public class FormDetectionModelManager {
         }
     }
 
-    /** Mark a verified, on-disk model as the active one and (re)enable the feature. */
-    private void activate(String modelId, String expectedSha) {
+    /**
+     * Mark a verified, on-disk model as the active one and (re)enable the feature.
+     *
+     * <p>Synchronized because it runs on the install thread and writes settings, which the admin
+     * setters also do; without the shared monitor a concurrent toggle could drop one of the keys.
+     */
+    private synchronized void activate(String modelId, String expectedSha) {
         clearTombstone(modelId);
         applicationProperties.getFormDetection().setActiveModelId(modelId);
         try {
@@ -397,8 +410,18 @@ public class FormDetectionModelManager {
         activeSha = expectedSha;
         progress = 100;
         state = FormDetectionStatus.READY;
+        invalidateEngine();
         applyEndpointState();
         log.info("Auto Form Detection model '{}' installed and ready", modelId);
+    }
+
+    /**
+     * Drop any model an engine still holds. Reinstalling the same id leaves the loaded id
+     * unchanged, so without this the engine would keep serving from the session it opened before
+     * the swap.
+     */
+    private void invalidateEngine() {
+        engineProvider.ifAvailable(FormDetectionEngine::unload);
     }
 
     /** SHA-256 of an existing model file as lowercase hex, or {@code null} if it cannot be read. */
@@ -458,6 +481,8 @@ public class FormDetectionModelManager {
             state = FormDetectionStatus.NOT_INSTALLED;
             error = null;
         }
+        // The file is gone; releasing the engine's handle on it frees the native session too.
+        invalidateEngine();
         applyEndpointState();
     }
 

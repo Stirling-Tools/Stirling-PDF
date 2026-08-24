@@ -7,7 +7,11 @@ import { FormDetectionCatalogEntry } from "@app/hooks/useFormDetectionModelStatu
 import { applyFields } from "@app/services/formDetection/applyFields";
 import { toPdfPoints } from "@app/services/formDetection/coordinateMapping";
 import { decode, decodeRfDetr } from "@app/services/formDetection/decode";
-import { loadModelBytes } from "@app/services/formDetection/modelCache";
+import {
+  ChecksumUnsupportedError,
+  canVerifyChecksums,
+  loadModelBytes,
+} from "@app/services/formDetection/modelCache";
 import {
   getSession,
   runInference,
@@ -66,6 +70,11 @@ export async function runBrowserDetection(
       ? Math.min(1, Math.max(0, confThreshold))
       : spec.scoreThreshold;
 
+  // Checked up front so `auto` can hand off before spending a ~37MB download it cannot verify.
+  if (activeEntry.sha256 && !canVerifyChecksums()) {
+    throw new ChecksumUnsupportedError();
+  }
+
   const modelBytes = await loadModelBytes(
     activeEntry.sha256,
     (loadedBytes, totalBytes) =>
@@ -84,50 +93,45 @@ export async function runBrowserDetection(
       : "text";
   };
 
+  let fields: DetectedField[] = [];
+  // Each page is analysed as it renders, so only one page of pixels is ever held.
   // pdf.js may detach the input buffer, so give each consumer its own copy.
-  const pages = await renderPages(
+  const pageCount = await renderPages(
     pdfBytes.slice(0),
     spec.inputSize,
-    (page, pageCount) => {
-      if (pageCount > MAX_PAGES) {
-        throw new Error(
-          `PDF has ${pageCount} pages; the limit is ${MAX_PAGES}`,
-        );
-      }
-      onStage?.({ kind: "rendering", page, pageCount });
-    },
-  );
-  let fields: DetectedField[] = [];
-  for (const [index, page] of pages.entries()) {
-    onStage?.({
-      kind: "analyzing",
-      page: page.pageIndex + 1,
-      pageCount: pages.length,
-    });
-    const startedAt = performance.now();
-    const pre = preprocess(page.rgba, page.widthPx, page.heightPx, spec);
-    const out = await runInference(session, pre.chw, spec.inputSize);
-    // Measure the first page and bail before paying the same cost for every remaining one. The
-    // work already done is discarded rather than merged, so the server sees the whole document and
-    // the result cannot be a mix of two engines.
-    const pageMs = performance.now() - startedAt;
-    const budget = options?.pageBudgetMs;
-    if (index === 0 && budget && pageMs > budget && pages.length > 1) {
-      throw new BrowserEngineTooSlowError(pageMs);
-    }
-    for (const d of decodeFor(spec, out, pre, score)) {
-      const rect = toPdfPoints(d, page);
-      if (rect.w <= 0 || rect.h <= 0) {
-        continue;
-      }
-      fields.push({
-        type: fieldType(d.classId),
-        page: page.pageIndex,
-        rectInPdfPoints: rect,
-        confidence: d.score,
+    MAX_PAGES,
+    async (page, total) => {
+      onStage?.({
+        kind: "analyzing",
+        page: page.pageIndex + 1,
+        pageCount: total,
       });
-    }
-  }
+      const startedAt = performance.now();
+      const pre = preprocess(page.rgba, page.widthPx, page.heightPx, spec);
+      const out = await runInference(session, pre.chw, spec.inputSize);
+      // Measure the first page and bail before paying the same cost for every remaining one. The
+      // work already done is discarded rather than merged, so the server sees the whole document
+      // and the result cannot be a mix of two engines.
+      const pageMs = performance.now() - startedAt;
+      const budget = options?.pageBudgetMs;
+      if (page.pageIndex === 0 && budget && pageMs > budget && total > 1) {
+        throw new BrowserEngineTooSlowError(pageMs);
+      }
+      for (const d of decodeFor(spec, out, pre, score)) {
+        const rect = toPdfPoints(d, page);
+        if (rect.w <= 0 || rect.h <= 0) {
+          continue;
+        }
+        fields.push({
+          type: fieldType(d.classId),
+          page: page.pageIndex,
+          rectInPdfPoints: rect,
+          confidence: d.score,
+        });
+      }
+    },
+    (page, total) => onStage?.({ kind: "rendering", page, pageCount: total }),
+  );
   if (fields.length > MAX_FIELDS) {
     fields = fields
       .slice()
@@ -137,7 +141,7 @@ export async function runBrowserDetection(
 
   onStage?.({ kind: "applying" });
   const appliedPdf = await applyFields(pdfBytes.slice(0), fields);
-  return { fields, appliedPdf, pageCount: pages.length };
+  return { fields, appliedPdf, pageCount };
 }
 
 /**

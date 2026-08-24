@@ -56,8 +56,10 @@ export default function DetectionProgressPanel({
         "Getting the model ready...",
       );
       break;
+    // Each page is rendered and analysed back to back, so both stages share one band keyed on the
+    // page number. Giving them separate bands would send the bar backwards on every page.
     case "rendering":
-      value = 0.4 + 0.15 * (stage.page / Math.max(1, stage.pageCount));
+      value = 0.4 + 0.53 * (stage.page / Math.max(1, stage.pageCount));
       label = t(
         "autoFormDetection.progress.rendering",
         "Preparing page {{page}} of {{pageCount}}...",
@@ -65,7 +67,7 @@ export default function DetectionProgressPanel({
       );
       break;
     case "analyzing":
-      value = 0.55 + 0.38 * (stage.page / Math.max(1, stage.pageCount));
+      value = 0.4 + 0.53 * (stage.page / Math.max(1, stage.pageCount));
       label = t(
         "autoFormDetection.progress.analyzing",
         "Analyzing page {{page}} of {{pageCount}}...",

@@ -1,12 +1,15 @@
 package stirling.software.proprietary.formdetection.render;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -38,6 +41,13 @@ class PageRasterizerRotationTest {
         CustomPDFDocumentFactory factory =
                 new CustomPDFDocumentFactory(mock(PdfMetadataService.class));
         return new PageRasterizer(factory);
+    }
+
+    /** Gather the streamed pages; these fixtures are one page, so holding them all is fine. */
+    private List<PageRasterizer.RasterPage> collect(byte[] pdf) {
+        List<PageRasterizer.RasterPage> pages = new ArrayList<>();
+        rasterizer().rasterize(pdf, 1216, 100, pages::add);
+        return pages;
     }
 
     private static byte[] pdfWithBlackRect(int rotation, float llx, float lly) throws Exception {
@@ -107,7 +117,7 @@ class PageRasterizerRotationTest {
         assumeTrue(pdfiumAvailable(), "JPDFium native not available on this platform");
 
         byte[] pdf = pdfWithBlackRect(rotation, 0f, 0f);
-        List<PageRasterizer.RasterPage> pages = rasterizer().rasterize(pdf, 1216);
+        List<PageRasterizer.RasterPage> pages = collect(pdf);
         assertEquals(1, pages.size());
         PageRasterizer.RasterPage page = pages.get(0);
         assertEquals(rotation, page.rotationDegrees());
@@ -134,7 +144,7 @@ class PageRasterizerRotationTest {
             assertEquals(llx, check.getPage(0).getCropBox().getLowerLeftX(), 1e-3);
         }
 
-        List<PageRasterizer.RasterPage> pages = rasterizer().rasterize(pdf, 1216);
+        List<PageRasterizer.RasterPage> pages = collect(pdf);
         PageRasterizer.RasterPage page = pages.get(0);
         assertEquals(llx, page.cropLlxPt(), 1e-3);
         assertEquals(lly, page.cropLlyPt(), 1e-3);
@@ -147,5 +157,51 @@ class PageRasterizerRotationTest {
         assertEquals(lly + RECT_Y, r.y(), 2.0);
         assertEquals(RECT_W, r.w(), 3.0);
         assertEquals(RECT_H, r.h(), 3.0);
+    }
+
+    @Test
+    void rejectsAnOverLongDocumentWithoutRenderingAnyPage() throws Exception {
+        assumeTrue(pdfiumAvailable(), "JPDFium native not available on this platform");
+
+        byte[] pdf = pdfWithPages(3);
+        AtomicInteger rendered = new AtomicInteger();
+
+        assertThrows(
+                PageRasterizer.PageLimitExceededException.class,
+                () -> rasterizer().rasterize(pdf, 1216, 2, page -> rendered.incrementAndGet()));
+        // The whole point of the limit: refuse before paying for any bitmap.
+        assertEquals(0, rendered.get());
+    }
+
+    @Test
+    void rejectsEmptyAndCorruptInputAsUnreadableRatherThanFailingLater() {
+        assertThrows(
+                PageRasterizer.UnreadablePdfException.class,
+                () -> rasterizer().rasterize(new byte[0], 1216, 10, page -> {}));
+        assertThrows(
+                PageRasterizer.UnreadablePdfException.class,
+                () -> rasterizer().rasterize("not a pdf".getBytes(), 1216, 10, page -> {}));
+    }
+
+    @Test
+    void streamsPagesOneAtATime() throws Exception {
+        assumeTrue(pdfiumAvailable(), "JPDFium native not available on this platform");
+
+        byte[] pdf = pdfWithPages(3);
+        List<Integer> seen = new ArrayList<>();
+        rasterizer().rasterize(pdf, 1216, 10, page -> seen.add(page.pageIndex()));
+
+        assertEquals(List.of(0, 1, 2), seen);
+    }
+
+    private static byte[] pdfWithPages(int count) throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            for (int i = 0; i < count; i++) {
+                doc.addPage(new PDPage(PDRectangle.A6));
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return out.toByteArray();
+        }
     }
 }

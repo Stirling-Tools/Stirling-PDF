@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -32,6 +33,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
+import stirling.software.proprietary.formdetection.inference.FormDetectionEngine;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 
 class FormDetectionModelManagerTest {
@@ -40,6 +42,12 @@ class FormDetectionModelManagerTest {
     private byte[] modelBytes;
     private String modelSha;
     private int port;
+
+    /** Stands in for a build with no ONNX engine bean, which is the default packaging. */
+    @SuppressWarnings("unchecked")
+    private static ObjectProvider<FormDetectionEngine> noEngine() {
+        return Mockito.mock(ObjectProvider.class);
+    }
 
     @BeforeEach
     void startServer() throws Exception {
@@ -92,7 +100,7 @@ class FormDetectionModelManagerTest {
                 .thenReturn(Optional.empty());
         Mockito.when(catalog.getAll()).thenReturn(List.of(entry));
         // The real fetch only allows the catalog host, so stub the hop to the local test server.
-        return new FormDetectionModelManager(paths, catalog, props, ep) {
+        return new FormDetectionModelManager(paths, catalog, props, ep, noEngine()) {
             @Override
             HttpURLConnection openModelDownload(String url) throws IOException {
                 HttpURLConnection conn =
@@ -192,7 +200,8 @@ class FormDetectionModelManagerTest {
                         paths,
                         Mockito.mock(ModelCatalogService.class),
                         new ApplicationProperties(),
-                        Mockito.mock(EndpointConfiguration.class));
+                        Mockito.mock(EndpointConfiguration.class),
+                        noEngine());
 
         assertThrows(
                 IOException.class,

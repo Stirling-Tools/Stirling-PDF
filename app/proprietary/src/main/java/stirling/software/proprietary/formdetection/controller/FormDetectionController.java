@@ -79,6 +79,10 @@ public class FormDetectionController {
                     boolean applyToPdf)
             throws IOException {
 
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("reason", "INVALID_PDF", "message", "The uploaded file is empty"));
+        }
         if (!manager.isReady()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(
@@ -105,47 +109,50 @@ public class FormDetectionController {
                         : spec.getScoreThreshold();
         byte[] pdfBytes = file.getBytes();
 
-        List<DetectedField> detections = new ArrayList<>();
+        // Pages are consumed as they are rendered, so only one page of RGBA is ever live.
+        List<DetectedField> collected = new ArrayList<>();
+        List<DetectedField> detections;
         try {
-            List<PageRasterizer.RasterPage> pages =
-                    rasterizer.rasterize(pdfBytes, spec.getInputSize());
-            if (pages.size() > MAX_PAGES) {
-                return ResponseEntity.badRequest()
-                        .body(
-                                Map.of(
-                                        "reason",
-                                        "LIMIT",
-                                        "message",
-                                        "PDF has "
-                                                + pages.size()
-                                                + " pages; the limit is "
-                                                + MAX_PAGES));
-            }
-            for (PageRasterizer.RasterPage page : pages) {
-                Yolo.Preprocessed pre =
-                        Yolo.preprocess(page.rgba(), page.widthPx(), page.heightPx(), spec);
-                Map<String, Yolo.RawOutput> out = detector.infer(pre.chw(), spec.getInputSize());
-                for (Yolo.Detection d : decodeFor(spec, out, pre, score)) {
-                    DetectedField.RectPt rect = CoordinateMapper.toPdfPoints(d, page);
-                    if (rect.w() <= 0 || rect.h() <= 0) {
-                        continue;
-                    }
-                    detections.add(
-                            new DetectedField(
-                                    fieldType(spec, d.classId()),
-                                    page.pageIndex(),
-                                    rect,
-                                    d.score()));
-                }
-            }
-            if (detections.size() > MAX_FIELDS) {
+            rasterizer.rasterize(
+                    pdfBytes,
+                    spec.getInputSize(),
+                    MAX_PAGES,
+                    page -> {
+                        Yolo.Preprocessed pre =
+                                Yolo.preprocess(page.rgba(), page.widthPx(), page.heightPx(), spec);
+                        Map<String, Yolo.RawOutput> out =
+                                detector.infer(pre.chw(), spec.getInputSize());
+                        for (Yolo.Detection d : decodeFor(spec, out, pre, score)) {
+                            DetectedField.RectPt rect = CoordinateMapper.toPdfPoints(d, page);
+                            if (rect.w() <= 0 || rect.h() <= 0) {
+                                continue;
+                            }
+                            collected.add(
+                                    new DetectedField(
+                                            fieldType(spec, d.classId()),
+                                            page.pageIndex(),
+                                            rect,
+                                            d.score()));
+                        }
+                    });
+            detections = collected;
+            if (collected.size() > MAX_FIELDS) {
                 log.info(
                         "Capping {} detections to {} highest-confidence fields",
-                        detections.size(),
+                        collected.size(),
                         MAX_FIELDS);
-                detections.sort((a, b) -> Double.compare(b.confidence(), a.confidence()));
-                detections = new ArrayList<>(detections.subList(0, MAX_FIELDS));
+                collected.sort((a, b) -> Double.compare(b.confidence(), a.confidence()));
+                detections = new ArrayList<>(collected.subList(0, MAX_FIELDS));
             }
+        } catch (PageRasterizer.PageLimitExceededException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("reason", "LIMIT", "message", e.getMessage()));
+        } catch (PageRasterizer.UnreadablePdfException e) {
+            // The user's file is the problem, not the engine - do not report this as a dependency
+            // failure, which would send an admin looking for a missing model.
+            log.debug("Auto Form Detection rejected an unreadable PDF: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("reason", "INVALID_PDF", "message", e.getMessage()));
         } catch (IllegalStateException e) {
             // e.g. ONNX Runtime native unavailable for this OS/arch - report unavailable cleanly
             // rather than a 500. Cannot happen on a normally-built jar (all platforms bundled), but
@@ -156,6 +163,8 @@ public class FormDetectionController {
         }
 
         if (applyToPdf) {
+            // PDFium is more forgiving than PDFBox, so a file can rasterize and still fail to load
+            // here; that is still the file's fault rather than the server's.
             try (PDDocument document = pdfDocumentFactory.load(file)) {
                 FormUtils.repairMissingWidgetPageReferences(document);
                 List<NewFormFieldDefinition> defs = new ArrayList<>();
@@ -165,6 +174,16 @@ public class FormDetectionController {
                 FormUtils.addFields(document, defs);
                 return WebResponseUtils.pdfDocToWebResponse(
                         document, baseName(file) + ".pdf", tempFileManager);
+            } catch (IOException e) {
+                log.debug("Auto Form Detection could not apply fields: {}", e.getMessage());
+                return ResponseEntity.badRequest()
+                        .body(
+                                Map.of(
+                                        "reason",
+                                        "INVALID_PDF",
+                                        "message",
+                                        "The PDF could not be opened for editing; it may be"
+                                                + " corrupt or password-protected"));
             }
         }
         return ResponseEntity.ok(new DetectResponse(detections));

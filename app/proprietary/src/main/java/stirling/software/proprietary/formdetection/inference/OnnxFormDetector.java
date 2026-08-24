@@ -35,7 +35,7 @@ import ai.onnxruntime.OrtSession;
 @Service
 @ConditionalOnClass(name = "ai.onnxruntime.OrtEnvironment")
 @RequiredArgsConstructor
-public class OnnxFormDetector {
+public class OnnxFormDetector implements FormDetectionEngine {
 
     private final FormDetectionModelManager manager;
 
@@ -103,6 +103,7 @@ public class OnnxFormDetector {
     }
 
     /** Force the next inference to reload from disk (called after install/uninstall). */
+    @Override
     public void unload() {
         lock.writeLock().lock();
         try {

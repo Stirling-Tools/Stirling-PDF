@@ -4,7 +4,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -40,6 +39,18 @@ class FormDetectionControllerTest {
         return new MockMultipartFile("file", "test.pdf", "application/pdf", "%PDF-1.4".getBytes());
     }
 
+    /** A rasterizer that renders nothing, so the detector is never reached. */
+    private PageRasterizer noPages() {
+        return Mockito.mock(PageRasterizer.class);
+    }
+
+    private FormDetectionModelManager readyManager() {
+        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
+        Mockito.when(manager.isReady()).thenReturn(true);
+        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
+        return manager;
+    }
+
     @Test
     void detectReturns503WhenModelNotReady() throws Exception {
         FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
@@ -53,15 +64,7 @@ class FormDetectionControllerTest {
 
     @Test
     void detectReturnsEmptyDetectionsForBlankRender() throws Exception {
-        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
-        Mockito.when(manager.isReady()).thenReturn(true);
-        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
-
-        PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
-        Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt()))
-                .thenReturn(List.of()); // no pages -> no detections, detector never called
-
-        mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), noPages())
                 .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.detections").isArray())
@@ -70,34 +73,79 @@ class FormDetectionControllerTest {
 
     @Test
     void detectRejectsPdfsOverThePageLimit() throws Exception {
-        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
-        Mockito.when(manager.isReady()).thenReturn(true);
-        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
-
-        PageRasterizer.RasterPage blank =
-                new PageRasterizer.RasterPage(
-                        0, new byte[0], 1, 1, 1f, 1f, 1f, 1f, 0, 1f, 1f, 0f, 0f);
-        List<PageRasterizer.RasterPage> tooMany =
-                java.util.Collections.nCopies(FormDetectionController.MAX_PAGES + 1, blank);
         PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
-        Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt())).thenReturn(tooMany);
+        Mockito.doThrow(
+                        new PageRasterizer.PageLimitExceededException(
+                                FormDetectionController.MAX_PAGES + 1,
+                                FormDetectionController.MAX_PAGES))
+                .when(rasterizer)
+                .rasterize(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.any());
 
-        mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
                 .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reason").value("LIMIT"));
     }
 
     @Test
-    void detectToleratesOutOfRangeConfThreshold() throws Exception {
-        FormDetectionModelManager manager = Mockito.mock(FormDetectionModelManager.class);
-        Mockito.when(manager.isReady()).thenReturn(true);
-        Mockito.when(manager.getActiveEntry()).thenReturn(Optional.of(new ModelCatalogEntry()));
+    void detectPassesThePageLimitToTheRasterizerSoItIsCheckedBeforeRendering() throws Exception {
+        PageRasterizer rasterizer = noPages();
 
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
+                .andExpect(status().isOk());
+
+        Mockito.verify(rasterizer)
+                .rasterize(
+                        Mockito.any(),
+                        Mockito.anyInt(),
+                        Mockito.eq(FormDetectionController.MAX_PAGES),
+                        Mockito.any());
+    }
+
+    @Test
+    void detectRejectsAnUnreadablePdfAsBadRequestNotAsAMissingDependency() throws Exception {
         PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
-        Mockito.when(rasterizer.rasterize(Mockito.any(), Mockito.anyInt())).thenReturn(List.of());
+        Mockito.doThrow(new PageRasterizer.UnreadablePdfException("corrupt", null))
+                .when(rasterizer)
+                .rasterize(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.any());
 
-        mvc(manager, Mockito.mock(OnnxFormDetector.class), rasterizer)
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.reason").value("INVALID_PDF"));
+    }
+
+    @Test
+    void detectRejectsAnEmptyUploadBeforeTouchingTheEngine() throws Exception {
+        PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
+        MockMultipartFile empty =
+                new MockMultipartFile("file", "empty.pdf", "application/pdf", new byte[0]);
+
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(multipart("/api/v1/form/form-detection/detect").file(empty))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.reason").value("INVALID_PDF"));
+
+        Mockito.verifyNoInteractions(rasterizer);
+    }
+
+    @Test
+    void detectStillReports503WhenTheEngineItselfIsUnavailable() throws Exception {
+        PageRasterizer rasterizer = Mockito.mock(PageRasterizer.class);
+        Mockito.doThrow(new IllegalStateException("ONNX Runtime is unavailable"))
+                .when(rasterizer)
+                .rasterize(Mockito.any(), Mockito.anyInt(), Mockito.anyInt(), Mockito.any());
+
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), rasterizer)
+                .perform(multipart("/api/v1/form/form-detection/detect").file(pdf()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.reason").value("DEPENDENCY"));
+    }
+
+    @Test
+    void detectToleratesOutOfRangeConfThreshold() throws Exception {
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), noPages())
                 .perform(
                         multipart("/api/v1/form/form-detection/detect")
                                 .file(pdf())

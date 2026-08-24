@@ -26,18 +26,32 @@ function normalizeRotation(degrees: number): number {
   return (Math.floor(r / 90) * 90) % 360;
 }
 
+/**
+ * Render each page and hand it straight to `onPage`. Pages are streamed rather than returned as an
+ * array because one page is several megabytes of RGBA, and holding a long document worth of them at
+ * once is enough to crash the tab.
+ *
+ * `maxPages` is checked before anything is rendered, so an over-long document costs nothing.
+ * Returns the page count.
+ */
 export async function renderPages(
   pdfBytes: ArrayBuffer | Uint8Array,
   inputSize: number,
-  onPage?: (page: number, pageCount: number) => void,
-): Promise<RasterPage[]> {
+  maxPages: number,
+  onPage: (page: RasterPage, pageCount: number) => Promise<void> | void,
+  onPageStart?: (page: number, pageCount: number) => void,
+): Promise<number> {
   const data =
     pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes);
   const pdf = await pdfWorkerManager.createDocument(data);
   try {
-    const pages: RasterPage[] = [];
+    if (pdf.numPages > maxPages) {
+      throw new Error(
+        `PDF has ${pdf.numPages} pages; the limit is ${maxPages}`,
+      );
+    }
     for (let i = 1; i <= pdf.numPages; i++) {
-      onPage?.(i, pdf.numPages);
+      onPageStart?.(i, pdf.numPages);
       const page = await pdf.getPage(i);
       // Display-space dims (rotation applied); the crop box is page.view in user space.
       const base = page.getViewport({ scale: 1 });
@@ -61,23 +75,29 @@ export async function renderPages(
       await page.render({ canvas, canvasContext: ctx, viewport: vp }).promise;
 
       const rgba = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      pages.push({
-        pageIndex: i - 1,
-        rgba,
-        widthPx: canvas.width,
-        heightPx: canvas.height,
-        pageWidthPt,
-        pageHeightPt,
-        scaleX: pageWidthPt > 0 ? canvas.width / pageWidthPt : scale,
-        scaleY: pageHeightPt > 0 ? canvas.height / pageHeightPt : scale,
-        rotationDegrees: normalizeRotation(page.rotate ?? 0),
-        userWidthPt: urx - llx,
-        userHeightPt: ury - lly,
-        cropLlxPt: llx,
-        cropLlyPt: lly,
-      });
+      await onPage(
+        {
+          pageIndex: i - 1,
+          rgba,
+          widthPx: canvas.width,
+          heightPx: canvas.height,
+          pageWidthPt,
+          pageHeightPt,
+          scaleX: pageWidthPt > 0 ? canvas.width / pageWidthPt : scale,
+          scaleY: pageHeightPt > 0 ? canvas.height / pageHeightPt : scale,
+          rotationDegrees: normalizeRotation(page.rotate ?? 0),
+          userWidthPt: urx - llx,
+          userHeightPt: ury - lly,
+          cropLlxPt: llx,
+          cropLlyPt: lly,
+        },
+        pdf.numPages,
+      );
+      // Drop the backing bitmap now rather than waiting on GC to notice the canvas.
+      canvas.width = 0;
+      canvas.height = 0;
     }
-    return pages;
+    return pdf.numPages;
   } finally {
     pdfWorkerManager.destroyDocument(pdf);
   }
