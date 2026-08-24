@@ -22,6 +22,7 @@ declare global {
     __STIRLING_PDF_BASE_URL__?: string;
     STIRLING_PDF_API_BASE_URL?: string;
     endpointAvailabilityService?: unknown;
+    pdfjsLib?: typeof import("pdfjs-dist");
   }
 }
 
