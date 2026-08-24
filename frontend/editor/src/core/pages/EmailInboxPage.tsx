@@ -298,6 +298,7 @@ export default function EmailInboxPage() {
     selectedFolder,
     refreshVersion,
     selectedAttachmentTypes,
+    selectedLabels,
     query,
   ]);
 
@@ -319,6 +320,22 @@ export default function EmailInboxPage() {
       void loadMessages(nextPageToken);
     }
   };
+
+  useEffect(() => {
+    const element = messageListViewportRef.current;
+    if (!element) return;
+    const handleNativeScroll = () => {
+      if (
+        nextPageToken &&
+        !loadingMore &&
+        element.scrollHeight - element.scrollTop - element.clientHeight < 120
+      ) {
+        void loadMessages(nextPageToken);
+      }
+    };
+    element.addEventListener("scroll", handleNativeScroll, { passive: true });
+    return () => element.removeEventListener("scroll", handleNativeScroll);
+  }, [nextPageToken, loadingMore, messages.length, query, selectedFolder]);
 
   useEffect(() => {
     const element = messageListViewportRef.current;
