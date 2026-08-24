@@ -33,6 +33,11 @@ export interface QuickNavEntry {
   reason?: string;
   /** Count shown on the icon. Zero/undefined renders nothing. */
   badge?: number;
+  /**
+   * Severity of the badge: "danger" for something waiting on the user, "warning"
+   * for something they only need to be aware of.
+   */
+  badgeTone?: "danger" | "warning";
   onClick: () => void;
 }
 
@@ -65,6 +70,7 @@ export function RailButton({
   disabled,
   reason,
   badge,
+  badgeTone = "danger",
   onClick,
 }: Omit<QuickNavEntry, "id">) {
   return (
@@ -100,7 +106,11 @@ export function RailButton({
       >
         {icon}
         {badge !== undefined && badge > 0 && (
-          <span className="quick-nav-rail-badge" aria-hidden="true">
+          <span
+            className="quick-nav-rail-badge"
+            data-tone={badgeTone}
+            aria-hidden="true"
+          >
             {badge > 9 ? "9+" : badge}
           </span>
         )}

@@ -66,6 +66,10 @@ function MobileTopbar() {
  * hamburger. The Sidebar reads its state from context, so this shell stays
  * prop-free.
  */
+// PLACEHOLDER, matching the editor's rail: shown only while the real count is
+// zero so the badge design is visible on a quiet account.
+const PLACEHOLDER_SIGNING_COUNT = 2;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const {
@@ -161,7 +165,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ),
       kind: "action",
-      badge: signingCount,
+      badge: signingCount || PLACEHOLDER_SIGNING_COUNT,
+      badgeTone: "warning",
       onClick: () => goToEditor("/shared-sign"),
     },
   ];
@@ -191,6 +196,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           groups={[apps, within]}
           onOpenSettings={() => openSettings()}
           onOpenTeams={() => openSettings("teams")}
+          // Being here means the processor is available, so the gate is open.
+          notifications={{ disabled: false }}
         />
         <Sidebar />
       </div>

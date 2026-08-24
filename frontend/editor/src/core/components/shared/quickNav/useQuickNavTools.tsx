@@ -7,6 +7,10 @@ import type { ToolId } from "@app/types/toolId";
 
 const ICON_SIZE = "1.125rem";
 
+// PLACEHOLDER, shown only while the real count is zero, so the badge design can
+// be judged on a quiet account. Delete it and pass signingCount alone.
+const PLACEHOLDER_SIGNING_COUNT = 2;
+
 /**
  * The quick action shortcuts pinned to the rail.
  *
@@ -75,7 +79,9 @@ export function useQuickNavTools(): QuickNavEntry[] {
           height={ICON_SIZE}
         />,
       ),
-      badge: signingCount,
+      badge: signingCount || PLACEHOLDER_SIGNING_COUNT,
+      // Awareness, not action: a signing request is someone else's deadline.
+      badgeTone: "warning" as const,
     },
   ];
 }

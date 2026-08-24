@@ -120,7 +120,10 @@
   height: 0.875rem;
   padding: 0 0.1875rem;
   border-radius: var(--radius-pill);
-  background: var(--c-danger);
+  /* The solid step, not the base: a small disc of flat colour behind 9px
+     numerals needs the darker end of the ramp to stay legible. Pairs with the
+     warning tone below, which does the same. */
+  background: var(--c-danger-solid);
   color: var(--c-text-on-primary);
   font-size: 0.5625rem;
   font-weight: var(--font-weight-semibold);
@@ -128,6 +131,12 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
+}
+
+/* Awareness rather than action: the solid step of the amber ramp, which carries
+   white numerals where the lighter one would not. */
+.quick-nav-rail-badge[data-tone="warning"] {
+  background: var(--c-warning-solid);
 }
 
 /* Divides the core landing zones from the destinations and actions inside them.

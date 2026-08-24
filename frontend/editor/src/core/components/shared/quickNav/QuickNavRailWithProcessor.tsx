@@ -76,6 +76,13 @@ export function QuickNavRailWithProcessor({
       // opens its config modal at a section, and the modal reads the key back
       // out of the URL.
       onOpenTeams={() => navigate("/settings/teams")}
+      // The same gate as the processor entry above, from the same flag.
+      notifications={{
+        disabled: !portalAccess,
+        reason: !portalAccess
+          ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
+          : undefined,
+      }}
     />
   );
 }

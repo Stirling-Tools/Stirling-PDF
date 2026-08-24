@@ -6,6 +6,10 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  /* Sits further from the shortcuts above than they sit from each other: this is
+     identity, not navigation, and a filled disc reads closer to a line glyph than
+     the measured gap suggests. */
+  margin-top: var(--space-2);
   /* The brand row at the top centres the mark in a --nav-header-h block, so the
      gap above it is the gutter plus half that row's slack. Without matching it
      here the bottom of the bar sits visibly tighter than the top. */

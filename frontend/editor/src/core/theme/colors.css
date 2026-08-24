@@ -44,7 +44,7 @@ html[data-app-theme="light"] {
      non-text floor applies. Scheme-independent: a filled badge reads white on
      either ground. */
   --c-success-solid: var(--p-green-700);
-  --c-danger-solid: var(--p-red-600);
+  --c-danger-solid: var(--p-red-700);
   --c-warning-solid: var(--p-amber-700);
   --c-neutral-solid: var(--p-gray-600);
   --c-accent-solid: var(--p-blue-600);

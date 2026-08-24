@@ -10,6 +10,12 @@ import {
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
 
+// PLACEHOLDER counts, so the badge design can be judged before the features
+// behind them exist. Delete both when they do: notifications has no source at
+// all, and shared signing already has a real one that wins whenever it is
+// non-zero.
+const PLACEHOLDER_NOTIFICATION_COUNT = 3;
+
 export type {
   QuickNavEntry,
   QuickNavTarget,
@@ -31,6 +37,13 @@ export interface QuickNavRailContainerProps extends Omit<
    * shortcut to somewhere that doesn't exist.
    */
   onOpenTeams?: () => void;
+  /**
+   * Placeholder notifications bell - there is no notifications surface behind it
+   * yet, so it holds the slot without doing anything. Gated on the same signal as
+   * the processor entry, and disabled with `reason` when that signal is off, so
+   * the two can't disagree about who sees it.
+   */
+  notifications?: { disabled: boolean; reason?: string };
 }
 
 /**
@@ -40,6 +53,7 @@ export interface QuickNavRailContainerProps extends Omit<
 export function QuickNavRailContainer({
   onOpenSettings,
   onOpenTeams,
+  notifications,
   ...railProps
 }: QuickNavRailContainerProps) {
   const { t } = useTranslation();
@@ -56,8 +70,27 @@ export function QuickNavRailContainer({
         <QuickNavRailBase
           {...railProps}
           footer={
-            onOpenTeams || onOpenSettings ? (
+            notifications || onOpenTeams || onOpenSettings ? (
               <div className="quick-nav-rail-footer">
+                {notifications && (
+                  <RailButton
+                    label={t("quickNav.notifications", "Notifications")}
+                    icon={
+                      <LocalIcon
+                        icon="notifications-outline-rounded"
+                        width="1.125rem"
+                        height="1.125rem"
+                      />
+                    }
+                    kind="action"
+                    badge={PLACEHOLDER_NOTIFICATION_COUNT}
+                    disabled={notifications.disabled}
+                    reason={notifications.reason}
+                    // Nothing to open yet; the slot is here so its position is
+                    // settled before the surface behind it exists.
+                    onClick={() => {}}
+                  />
+                )}
                 {onOpenTeams && (
                   <RailButton
                     label={t("settings.workspace.teams", "Teams")}
