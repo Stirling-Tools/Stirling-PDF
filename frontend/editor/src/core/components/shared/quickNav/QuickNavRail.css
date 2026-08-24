@@ -6,6 +6,10 @@
 
 /* The bar's own stack: groups top-down, account control pushed to the bottom. */
 .quick-nav-rail {
+  /* One source for the icon spacing: the divider subtracts it to stay optically
+     centred between the groups, so the two can't be tuned apart. */
+  --quicknav-item-gap: var(--space-2);
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,7 +24,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--quicknav-item-gap);
   flex-shrink: 0;
   width: 100%;
 }
@@ -136,7 +140,7 @@
 .quick-nav-rail-divider {
   width: 100%;
   height: 0;
-  margin: var(--space-2) 0 calc(var(--space-2) - var(--space-1));
+  margin: var(--space-2) 0 max(0px, calc(var(--space-2) - var(--quicknav-item-gap)));
   border: 0;
   border-top: 1px solid var(--c-border);
 }
