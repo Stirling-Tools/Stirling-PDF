@@ -305,7 +305,8 @@ export function usePolicyAutoRun(): void {
       for (const outputId of outputIds) {
         if (isDispatched(nextCategory, outputId as FileId)) continue;
         const outputStub = stubsRef.current.find((s) => s.id === outputId);
-        // Not yet classified locally: defer, as this effect re-runs when the verdict lands.
+        // Nothing to escalate: either the heuristic already answered confidently, or it has
+        // not reported yet and this effect re-runs when the verdict lands.
         if (outputStub && !shouldDispatchToAi(nextCategory, outputStub))
           continue;
         void runPolicyOnFile(

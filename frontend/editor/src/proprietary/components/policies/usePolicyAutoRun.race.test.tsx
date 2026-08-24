@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { ClassificationConfidence } from "@app/types/fileContext";
 
 /**
  * Mid-run race: classification is in flight (its labelled output is still

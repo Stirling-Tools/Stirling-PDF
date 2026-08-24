@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { ClassificationConfidence } from "@app/types/fileContext";
 
 /**
  * Batch integration test (61 files, two chained upload policies) driving the real
