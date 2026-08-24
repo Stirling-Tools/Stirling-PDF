@@ -6,6 +6,7 @@ import { useQuickNavSurfaces } from "@app/components/shared/quickNav/useQuickNav
 import { useQuickNavTools } from "@app/components/shared/quickNav/useQuickNavTools";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { markAppSwap } from "@app/utils/appSwap";
 
 export interface QuickNavRailWithProcessorProps {
   /**
@@ -51,7 +52,6 @@ export function QuickNavRailWithProcessor({
     // BrandMark fills its own paths.
     icon: <BrandMark height="1.125rem" />,
     kind: "destination" as const,
-    currentKind: "app" as const,
     disabled: !portalAccess,
     reason: !portalAccess
       ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
@@ -59,7 +59,11 @@ export function QuickNavRailWithProcessor({
     // Through the guard: leaving for the processor is a route change out of the
     // editor, and without it an in-progress redaction or annotation is dropped
     // with no prompt.
-    onClick: () => requestNavigation(() => navigate(PORTAL_BASENAME)),
+    onClick: () =>
+      requestNavigation(() => {
+        markAppSwap();
+        navigate(PORTAL_BASENAME);
+      }),
   };
 
   return (
@@ -71,6 +75,7 @@ export function QuickNavRailWithProcessor({
         [...apps, processor],
         [...within, ...tools],
       ]}
+      currentApp="editor"
       onOpenSettings={onOpenSettings}
       // Deep link rather than a modal call: /settings/<key> is how the editor
       // opens its config modal at a section, and the modal reads the key back

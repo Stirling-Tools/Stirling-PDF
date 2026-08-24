@@ -44,12 +44,12 @@ export interface QuickNavEntry {
 export interface QuickNavRailBaseProps {
   /**
    * Groups of entries, rendered in order with a divider between each. The first
-   * group is the app switcher (the core landing zones); later groups hold
-   * destinations and actions within them.
+   * group is the app switcher; later groups hold destinations and actions within
+   * the app you are in.
    *
-   * A switcher holding one app is dropped: with nowhere to switch to it is a
-   * permanently-current tile that does nothing, which is what any build without
-   * the processor would otherwise show.
+   * The switcher holds only the apps you are NOT in - the one you are in is the
+   * brand mark above the bar - so it is empty, and dropped, in builds with
+   * nowhere else to go.
    */
   groups: QuickNavEntry[][];
   /** Pinned to the bottom of the bar (the account control). */
@@ -129,23 +129,25 @@ export function RailButton({
  */
 export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
   const { t } = useTranslation();
-  const [switcher, ...rest] = groups;
-  // Switching apps needs at least two of them, so a lone app is dropped rather
-  // than drawn as a tile that only ever points at where you already are. The
-  // divider follows automatically: the group below becomes the first one.
-  const populated = [
-    ...(switcher && switcher.length > 1 ? [switcher] : []),
-    ...rest,
-  ].filter((group) => group.length > 0);
+  // The switcher is groups[0] by contract; tagging it here rather than by
+  // rendered position means the tag survives it being dropped when empty, so the
+  // group below can't inherit its swap animation.
+  const populated = groups
+    .map((entries, index) => ({ entries, isSwitcher: index === 0 }))
+    .filter((group) => group.entries.length > 0);
   return (
     <nav
       className="quick-nav-rail"
       aria-label={t("quickNav.landmark", "Quick navigation")}
     >
       {populated.map((group, index) => (
-        <div className="quick-nav-rail-group" key={group[0].id}>
+        <div
+          className="quick-nav-rail-group"
+          data-switcher={group.isSwitcher || undefined}
+          key={group.entries[0].id}
+        >
           {index > 0 && <hr className="quick-nav-rail-divider" />}
-          {group.map((entry) => (
+          {group.entries.map((entry) => (
             <RailButton key={entry.id} {...entry} />
           ))}
         </div>

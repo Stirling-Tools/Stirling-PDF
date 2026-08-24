@@ -2,9 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BrandTile } from "@app/components/shared/BrandTile";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 
 const SIZE = "1.125rem";
@@ -24,30 +22,14 @@ export function useQuickNavSurfaces(): {
 } {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { handleToolSelect, handleBackToTools, readerMode } = useToolWorkflow();
+  const { handleToolSelect, readerMode } = useToolWorkflow();
   const { workbench } = useNavigationState();
 
   const inFiles = workbench === "myFiles";
 
-  const apps: QuickNavEntry[] = [
-    {
-      id: "editor",
-      label: t("quickNav.editor", "Editor"),
-      // The Stirling app tile, matching the lockup beside the editor's name in
-      // the processor's editor card - this entry switches apps, so it is branded
-      // rather than carrying a feature glyph.
-      icon: <BrandTile size={SIZE} />,
-      kind: "destination",
-      // Files and reader mode are both inside the editor app, so the app stays
-      // current while you're in them - as the current app, not the current page,
-      // which the entry for the place you're in claims. Still clickable, as a
-      // second way back out of My Files alongside the brand header's back arrow.
-      isActive: true,
-      currentKind: "app",
-      onClick: () =>
-        inFiles ? navigate(EDITOR_BASENAME) : handleBackToTools(),
-    },
-  ];
+  // Empty: the switcher holds only the apps you are NOT in, and the editor's own
+  // mark is the brand above the bar. Builds that ship the processor add it here.
+  const apps: QuickNavEntry[] = [];
 
   const within: QuickNavEntry[] = [
     {

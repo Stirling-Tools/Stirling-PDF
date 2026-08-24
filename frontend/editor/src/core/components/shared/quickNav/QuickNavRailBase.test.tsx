@@ -25,7 +25,6 @@ function entry(
   };
 }
 
-const EDITOR = entry("editor", { isActive: true, currentKind: "app" });
 const PROCESSOR = entry("processor");
 const WITHIN = [entry("files"), entry("reader")];
 
@@ -42,21 +41,34 @@ function renderRail(groups: QuickNavEntry[][]) {
 }
 
 describe("QuickNavRailBase — app switcher", () => {
-  it("renders the switcher when there is more than one app", () => {
-    const { labels, dividers } = renderRail([[EDITOR, PROCESSOR], WITHIN]);
+  it("renders the switcher for the app you are not in", () => {
+    // The app you ARE in is the brand mark above the bar, so the switcher holds
+    // only the other one.
+    const { labels, dividers } = renderRail([[PROCESSOR], WITHIN]);
 
-    expect(labels).toEqual(["editor", "processor", "files", "reader"]);
+    expect(labels).toEqual(["processor", "files", "reader"]);
     expect(dividers).toBe(1);
   });
 
-  it("drops a switcher holding a single app, and its divider with it", () => {
-    // Builds without the processor have nowhere to switch to, so the lone app
-    // tile would be permanently current and do nothing. The divider goes too:
+  it("drops an empty switcher, and its divider with it", () => {
+    // Builds with no second app have nothing to switch to. The divider goes too:
     // there is no longer a group above to divide from.
-    const { labels, dividers } = renderRail([[EDITOR], WITHIN]);
+    const { labels, dividers } = renderRail([[], WITHIN]);
 
     expect(labels).toEqual(["files", "reader"]);
     expect(dividers).toBe(0);
+  });
+
+  it("tags the switcher group, not whichever group renders first", () => {
+    // The swap animation targets the switcher; tagging by rendered position would
+    // hand it to the group below once the switcher was dropped.
+    const { container } = render(
+      withProviders(<QuickNavRailBase groups={[[], WITHIN]} />),
+    );
+
+    const groups = container.querySelectorAll(".quick-nav-rail-group");
+    expect(groups).toHaveLength(1);
+    expect(groups[0].getAttribute("data-switcher")).toBeNull();
   });
 });
 
@@ -68,7 +80,7 @@ describe("QuickNavRailBase — current state", () => {
       withProviders(
         <QuickNavRailBase
           groups={[
-            [EDITOR, PROCESSOR],
+            [entry("processor", { isActive: true, currentKind: "app" })],
             [entry("files", { isActive: true }), entry("reader")],
           ]}
         />,
@@ -79,7 +91,7 @@ describe("QuickNavRailBase — current state", () => {
       (el) => [el.getAttribute("aria-label"), el.getAttribute("aria-current")],
     );
     expect(current).toEqual([
-      ["editor", "true"],
+      ["processor", "true"],
       ["files", "page"],
     ]);
   });
@@ -91,7 +103,7 @@ describe("QuickNavRailBase — current state", () => {
       withProviders(
         <QuickNavRailBase
           groups={[
-            [EDITOR, entry("processor", { disabled: true, reason: "no access" })],
+            [entry("processor", { disabled: true, reason: "no access" })],
             WITHIN,
           ]}
         />,

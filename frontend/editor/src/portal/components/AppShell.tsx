@@ -7,9 +7,9 @@ import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { useGoToEditor } from "@portal/hooks/useGoToEditor";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
+import { markAppSwap } from "@app/utils/appSwap";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
-import { BrandMark } from "@app/components/shared/BrandMark";
 import { BrandTile } from "@app/components/shared/BrandTile";
 import "@app/components/layout/WorkspaceFrame.css";
 import {
@@ -93,19 +93,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       // The Stirling app tile - see the editor's own variant.
       icon: <BrandTile size="1.125rem" />,
       kind: "destination",
-      onClick: () => goToEditor(),
-    },
-    {
-      id: "processor",
-      label: t("quickNav.processor", "Processor"),
-      // The Stirling mark, not a feature glyph - see the editor's variant.
-      icon: <BrandMark height="1.125rem" />,
-      kind: "destination",
-      // Current app, not current page: the entry for wherever you are inside the
-      // processor is what claims the page.
-      isActive: true,
-      currentKind: "app",
-      onClick: () => {},
+      onClick: () => {
+        markAppSwap();
+        goToEditor();
+      },
     },
   ];
 
@@ -194,6 +185,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="workspace-frame">
         <QuickNavRailContainer
           groups={[apps, within]}
+          currentApp="processor"
           onOpenSettings={() => openSettings()}
           onOpenTeams={() => openSettings("teams")}
           // Being here means the processor is available, so the gate is open.
