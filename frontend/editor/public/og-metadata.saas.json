@@ -196,6 +196,11 @@
       "title": "Compress - Stirling PDF",
       "description": "Compress PDFs to reduce their file size."
     },
+    "classify": {
+      "image": "/og_images/home.png",
+      "title": "Classify - Stirling PDF",
+      "description": "Identify what kind of document this is and tag it."
+    },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract Pages - Stirling PDF",
@@ -593,6 +598,7 @@
     "/remove-cert-sign": "removeCertSign",
     "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
+    "/classify": "classify",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",

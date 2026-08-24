@@ -1,5 +1,7 @@
 // Shared types for the client-side heuristic (non-AI) document classifier.
 
+import type { ClassificationConfidence } from "@app/types/fileContext";
+
 /** Input document for the heuristic engine. */
 export interface HeuristicDoc {
   fileName: string;
@@ -11,7 +13,7 @@ export interface HeuristicDoc {
 }
 
 // "none" = no match or non-English; a real runtime value, not just a type state.
-export type HeuristicConfidence = "none" | "low" | "medium" | "high";
+export type HeuristicConfidence = ClassificationConfidence;
 
 /** One scored candidate label with the rule hits that produced its score (debug only). */
 export interface LabelScoreExplanation {
