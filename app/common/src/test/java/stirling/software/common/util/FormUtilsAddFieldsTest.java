@@ -22,8 +22,11 @@ import stirling.software.common.util.FormUtils.NewFormFieldDefinition;
 class FormUtilsAddFieldsTest {
 
     private NewFormFieldDefinition def(String type, int page, float x, float y, float w, float h) {
+        // name, label, type, pageIndex, x, y, width, height, required, multiSelect,
+        // options, defaultValue, tooltip, fontSize, readOnly, multiline, maxLength, buttonAction
         return new NewFormFieldDefinition(
-                null, null, type, page, x, y, w, h, false, null, null, null, null);
+                null, null, type, page, x, y, w, h, false, null, null, null, null, null, null, null,
+                null, null);
     }
 
     @Test

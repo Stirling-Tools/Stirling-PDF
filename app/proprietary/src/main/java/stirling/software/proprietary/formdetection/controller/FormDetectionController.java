@@ -211,6 +211,8 @@ public class FormDetectionController {
 
     private static NewFormFieldDefinition toDefinition(DetectedField f) {
         DetectedField.RectPt r = f.rectInPdfPoints();
+        // Trailing nulls are fontSize, readOnly, multiline, maxLength and buttonAction:
+        // a detector reports geometry and type only, so each takes its default.
         return new NewFormFieldDefinition(
                 null,
                 null,
@@ -221,6 +223,11 @@ public class FormDetectionController {
                 (float) r.w(),
                 (float) r.h(),
                 Boolean.FALSE,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
