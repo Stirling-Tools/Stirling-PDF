@@ -17,6 +17,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import apiClient from "@app/services/apiClient";
+import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useAllFiles } from "@app/contexts/file/fileHooks";
 import "@app/pages/EmailInboxPage.css";
 
 type Provider = "Microsoft 365" | "Gmail";
@@ -25,6 +27,7 @@ interface MailAttachment {
   id: string;
   name: string;
   type: string;
+  mimeType: string;
   size: string;
 }
 
@@ -62,6 +65,7 @@ const DEMO_MESSAGES: MailMessage[] = [
         id: "invoice-pdf",
         name: "Rechnung_2026-0814.pdf",
         type: "PDF",
+        mimeType: "application/pdf",
         size: "248 KB",
       },
     ],
@@ -80,9 +84,16 @@ const DEMO_MESSAGES: MailMessage[] = [
         id: "contract-pdf",
         name: "Vertragsunterlagen.pdf",
         type: "PDF",
+        mimeType: "application/pdf",
         size: "1,8 MB",
       },
-      { id: "terms-docx", name: "Anlage_A.docx", type: "DOCX", size: "74 KB" },
+      {
+        id: "terms-docx",
+        name: "Anlage_A.docx",
+        type: "DOCX",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        size: "74 KB",
+      },
     ],
   },
   {
@@ -105,6 +116,8 @@ const DEMO_ACCOUNT = {
 export default function EmailInboxPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { addFiles } = useFileHandler();
+  const { fileStubs } = useAllFiles();
   const [searchParams, setSearchParams] = useSearchParams();
   const [accountConnected, setAccountConnected] = useState(
     searchParams.get("gmail") === "connected",
@@ -190,6 +203,7 @@ export default function EmailInboxPage() {
               id: attachment.id,
               name: attachment.name,
               type: attachment.mimeType.split("/").pop()?.toUpperCase() ?? "FILE",
+              mimeType: attachment.mimeType,
               size: formatFileSize(attachment.size),
             })),
             })),
@@ -224,6 +238,35 @@ export default function EmailInboxPage() {
     setAccountConnected(true);
     setAccountProvider("Microsoft 365");
     setSelectedAccount("work");
+  };
+
+  const importAttachment = async (
+    messageId: string,
+    attachment: MailAttachment,
+  ) => {
+    const alreadyExists = fileStubs.some(
+      (file) => file.name.toLocaleLowerCase() === attachment.name.toLocaleLowerCase(),
+    );
+    if (
+      alreadyExists &&
+      !window.confirm(
+        `Die Datei "${attachment.name}" ist bereits vorhanden. Soll sie erneut importiert werden?`,
+      )
+    ) {
+      return;
+    }
+    setDownloadedAttachment(attachment.id);
+    try {
+      const { data } = await apiClient.get<Blob>(
+        `/api/v1/email/gmail/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachment.id)}`,
+        { responseType: "blob" },
+      );
+      await addFiles([
+        new File([data], attachment.name, { type: attachment.mimeType }),
+      ]);
+    } catch {
+      setDownloadedAttachment(null);
+    }
   };
 
   return (
@@ -497,7 +540,7 @@ export default function EmailInboxPage() {
                               <CloudDownloadOutlinedIcon fontSize="small" />
                             }
                             onClick={() =>
-                              setDownloadedAttachment(attachment.id)
+                              void importAttachment(selectedMessage.id, attachment)
                             }
                           >
                             {downloadedAttachment === attachment.id
