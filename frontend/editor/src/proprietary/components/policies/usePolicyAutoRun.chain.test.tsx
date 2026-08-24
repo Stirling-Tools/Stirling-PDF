@@ -61,10 +61,11 @@ import {
   updateRun,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
-import { runStoredPolicy } from "@app/services/policyApi";
+import { runStoredPolicy, getPolicyRun } from "@app/services/policyApi";
 import { fileStorage } from "@app/services/fileStorage";
 
 const runStored = vi.mocked(runStoredPolicy);
+const getPolicyRunMock = vi.mocked(getPolicyRun);
 const getFile = vi.mocked(fileStorage.getStirlingFile);
 
 /** Reset the shared file list between tests without swapping the array identity. */
@@ -230,6 +231,71 @@ describe("auto-run ordered chaining", () => {
       "backend-cls",
       expect.anything(),
     );
+  });
+
+  it("still escalates after the local pass has recorded its own run for the file", async () => {
+    // The regression that made the whole escalation dead in practice: the local heuristic records
+    // a run for the SAME (classification, file) pair, and recordRunStart claims the dispatch key.
+    // The auto-run then reads "already dispatched" and skips the server run forever. A
+    // browser-local run must not claim that key - it is the first pass, not the policy's run.
+    seedCompletedSecurityRun();
+    // The local pass ran on the chained output and recorded its own run for it.
+    recordRunStart({
+      runId: "local-classification-file-1-v2-123",
+      categoryId: "classification",
+      fileId: "file-1-v2",
+      fileName: "doc.pdf",
+      fileSize: 100,
+      target: "local",
+      browserLocal: true,
+      status: "COMPLETED",
+      outputs: [],
+      error: null,
+      startedAt: 0,
+    });
+    // Its verdict was unsure, so the AI must still be asked.
+    setFileStubs([
+      {
+        id: "file-1-v2",
+        name: "doc.pdf",
+        derivedFromTool: true,
+        classificationConfidence: "low",
+      },
+    ]);
+    runStored.mockResolvedValue("run-cls");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 100 }]);
+  });
+
+  it("does not poll a browser-local run against the server", async () => {
+    // There is no server-side run to ask about: polling 404s, and MAX_NOT_FOUND consecutive
+    // misses would mark a local run that actually succeeded as FAILED.
+    recordRunStart({
+      runId: "local-classification-file-9-456",
+      categoryId: "classification",
+      fileId: "file-9",
+      fileName: "doc.pdf",
+      fileSize: 100,
+      target: "local",
+      browserLocal: true,
+      status: "RUNNING",
+      outputs: [],
+      error: null,
+      startedAt: 0,
+    });
+    setFileStubs([]);
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+
+    expect(getPolicyRunMock).not.toHaveBeenCalled();
   });
 
   it("keeps classification out of the server chain when the AI engine is off", async () => {

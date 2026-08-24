@@ -328,6 +328,9 @@ export function usePolicyAutoRun(): void {
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
     for (const run of runs) {
+      // A browser-local run has no server-side status: polling it 404s (and after MAX_NOT_FOUND
+      // marks a run that actually succeeded as failed). Its own pass settles it.
+      if (run.browserLocal) continue;
       if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
