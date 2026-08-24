@@ -5,6 +5,7 @@
   overflow: hidden;
   border: 1px solid var(--code-border);
 }
+
 .sui-code__chrome {
   display: flex;
   align-items: center;
@@ -15,22 +16,26 @@
   font-size: 0.6875rem;
   color: var(--code-muted);
 }
+
 .sui-code__dots {
   display: inline-flex;
   gap: 0.375rem;
   align-items: center;
 }
+
 .sui-code__dots > span {
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 50%;
   background: var(--code-dot);
 }
+
 .sui-code__caption {
   color: var(--code-muted);
   margin-left: 0.25rem;
   font-family: var(--font-mono);
 }
+
 .sui-code__lang {
   margin-left: auto;
   font-family: var(--font-mono);
@@ -38,6 +43,7 @@
   letter-spacing: 0.05em;
   color: var(--code-dim);
 }
+
 .sui-code__copy {
   background: transparent;
   color: var(--code-text);
@@ -49,10 +55,13 @@
   font-family: var(--font-sans);
   transition: background var(--motion-fast);
 }
+
 .sui-code__copy:hover {
+
   /* Subtle tint that reads on both the light and dark code surfaces. */
   background: color-mix(in srgb, var(--code-text) 8%, transparent);
 }
+
 .sui-code__pre {
   margin: 0;
   padding: 0.875rem 1rem;
@@ -62,6 +71,7 @@
   overflow: auto;
   white-space: pre;
 }
+
 .sui-code__pre code {
   white-space: inherit;
   color: inherit;

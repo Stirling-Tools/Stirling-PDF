@@ -19,6 +19,7 @@
   .portal-docs--with-toc {
     grid-template-columns: 16rem minmax(0, 1fr);
   }
+
   .portal-docs__toc-col {
     display: none;
   }

@@ -30,6 +30,7 @@
 .sui-brandmark__a {
   fill: var(--c-brand-mark-soft);
 }
+
 .sui-brandmark__b {
   fill: var(--c-brand-mark);
 }
@@ -41,6 +42,7 @@
   fill: var(--c-text);
   transform: matrix(0.483871, 0.584583, 0, 0.338028, 13, 13.8169);
 }
+
 [data-brandmark-morph]:hover .sui-brandmark__b,
 [data-brandmark-morph]:focus-visible .sui-brandmark__b,
 [data-brandmark-morph].is-open .sui-brandmark__b {

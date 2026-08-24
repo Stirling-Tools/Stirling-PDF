@@ -1,16 +1,17 @@
 /* Auth-specific CSS variables for proprietary version */
 
 :root {
+
   /* Auth page colors (light mode) */
-  --auth-card-bg: #ffffff;
+  --auth-card-bg: #fff;
   --auth-label-text: var(--p-gray-700);
   --auth-input-border: var(--p-gray-300);
-  --auth-input-bg: #ffffff;
+  --auth-input-bg: #fff;
   --auth-input-text: var(--p-gray-900);
   --auth-border-focus: var(--p-blue-500);
   --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
   --auth-button-bg: var(--p-red-600);
-  --auth-button-text: #ffffff;
+  --auth-button-text: #fff;
   --auth-magic-button-bg: var(--p-gray-200);
   --auth-magic-button-text: var(--p-gray-700);
   --auth-text-primary: var(--p-gray-900);
@@ -40,7 +41,7 @@
   --auth-border-focus: var(--p-blue-500);
   --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
   --auth-button-bg: var(--p-red-600);
-  --auth-button-text: #ffffff;
+  --auth-button-text: #fff;
   --auth-magic-button-bg: var(--c-surface-raised);
   --auth-magic-button-text: var(--c-text);
   --auth-text-primary: var(--c-text);

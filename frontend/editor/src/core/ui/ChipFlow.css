@@ -4,6 +4,7 @@
   align-items: center;
   gap: 0.375rem;
 }
+
 .sui-chipflow__sep {
   color: var(--c-text-subtle);
   font-size: 0.75rem;

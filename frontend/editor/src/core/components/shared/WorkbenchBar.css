@@ -1,7 +1,9 @@
 /* ========== WORKBENCH BAR ========== */
+
 /* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
+
   /* Flex-wrap layout that reflows by content width (measured in JS, which sets
      data-wrapped). Roomy: row 1 is [views | search | globals] and the tool
      icons sit on their own full-width row below. Crowded (data-wrapped): the
@@ -14,6 +16,7 @@
   column-gap: 8px;
   min-height: 38px;
   padding: 0 8px;
+
   /* No left margin: the file sidebar's own 0.5rem padding already provides the
      gutter on that side, so adding one here would double it and leave the bar
      further from the sidebar than it is from the tool panel. */
@@ -32,6 +35,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+
   /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
      on very narrow viewports. */
   min-width: 0;
@@ -97,6 +101,7 @@
 }
 
 /* ---- Super search ---- */
+
 /* Roomy: grows to fill the centre between views and globals. */
 .workbench-bar-search {
   order: 2;
@@ -106,7 +111,7 @@
   align-items: center;
   justify-content: center;
   height: 38px;
-  transform: translateX(var(--workbench-bar-search-offset, 0px));
+  transform: translateX(var(--workbench-bar-search-offset, 0));
 }
 
 .workbench-bar-search .super-search {
@@ -144,6 +149,7 @@
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
+
 .workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll > * {
   flex-shrink: 0;
 }
@@ -157,6 +163,7 @@
   position: relative;
   display: flex;
   align-items: center;
+
   /* Symmetric side padding leaves room for the retract handle pinned right
      without knocking the centred tool icons off-centre. */
   padding: 4px 36px;
@@ -226,6 +233,7 @@
  * hover feedback comes from the icon colour darkening, not a bg tint. */
 .workbench-bar-action-icon {
   color: var(--c-text-muted) !important;
+
   /* min-* too: Mantine's ActionIcon sets min-width/min-height from --ai-size
    * (36px), which floors the width and defeats the 24px clamp. */
   width: 24px !important;

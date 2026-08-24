@@ -8,6 +8,7 @@
   flex-shrink: 0;
   position: sticky;
   top: 0;
+
   /* Slide between the full rail and the collapsed icon rail. Overridden by the
      drawer's transform transition under the mobile breakpoint below. */
   transition: width var(--motion-spring);
@@ -25,6 +26,7 @@
 .portal-sidebar__footer {
   overflow-x: hidden;
 }
+
 .portal-sidebar .sui-navitem__label,
 .portal-sidebar__section-label {
   white-space: nowrap;
@@ -59,17 +61,21 @@
       transform var(--motion-fast),
       visibility var(--motion-fast);
   }
+
   [dir="rtl"] .portal-sidebar {
     --sui-dir: -1;
   }
+
   .portal-sidebar--open {
     transform: translateX(0);
     visibility: visible;
     box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.35);
   }
+
   .portal-sidebar__close {
     display: inline-flex;
   }
+
   /* Collapse is a desktop affordance; the drawer is full-width on mobile. */
   .portal-sidebar__collapse {
     display: none;
@@ -80,38 +86,47 @@
 .portal-sidebar[data-collapsed] {
   width: var(--nav-rail-w);
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__logo {
   flex-direction: column;
   height: auto;
   padding: 0.5rem 0;
   gap: 0.375rem;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__collapse {
   margin-left: 0;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__nav {
   padding-inline: 0.375rem;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__section {
   padding-inline: 0;
   align-items: center;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__section-label {
   display: none;
 }
+
 .portal-sidebar[data-collapsed] .sui-navitem__label,
 .portal-sidebar[data-collapsed] .sui-navitem__trailing {
   display: none;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__navtip {
   display: flex;
 }
+
 .portal-sidebar[data-collapsed] .sui-navitem {
   justify-content: center;
   margin-inline: 0;
   padding-inline: 0;
   width: 100%;
 }
+
 /* Neutralise the active-item edge-bar geometry (negative margins + overhang)
    that assumes the full-width rail. */
 .portal-sidebar[data-collapsed] .sui-navitem.is-active {
@@ -121,6 +136,7 @@
   border-radius: 0.5rem;
   padding-left: 0;
 }
+
 .portal-sidebar[data-collapsed] .portal-sidebar__footer {
   margin-inline: 0.375rem;
 }

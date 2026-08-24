@@ -12,6 +12,7 @@
 }
 
 /* ── Editor plan card (always-free tools only, no billing window) ─────── */
+
 /* Reuses .payg-planhead chrome; the eyebrow sits in the flex top row so its
    default 8px bottom margin would misalign it against the role pill. */
 .paygf-editorcard__eyebrow {
@@ -22,6 +23,7 @@
 .paygf-proc {
   gap: 14px;
 }
+
 .paygf-proc__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -32,24 +34,29 @@
   text-transform: uppercase;
   color: var(--payg-accent);
 }
+
 .paygf-proc__split {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 20px;
 }
+
 .paygf-proc__pitch {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .paygf-proc__pitch .paygf-cta__subtitle {
   margin-top: 0;
 }
+
 /* Force the benefits into a single column inside the narrower left column. */
 .paygf-proc__benefits {
   grid-template-columns: 1fr;
 }
+
 .paygf-proc__aside {
   display: flex;
   flex-direction: column;
@@ -57,13 +64,16 @@
   padding-left: 20px;
   border-left: 1px solid var(--payg-divider);
 }
+
 .paygf-proc__cta {
   width: 100%;
   text-align: center;
 }
+
 .paygf-proc__reassure {
   text-align: center;
 }
+
 .paygf-proc__membernote {
   display: flex;
   align-items: flex-start;
@@ -72,16 +82,19 @@
   line-height: 1.45;
   color: var(--c-text-subtle);
 }
+
 .paygf-proc__membernote-icon {
   flex-shrink: 0;
   color: var(--c-text-subtle);
   font-size: 1.1rem !important;
   margin-top: 1px;
 }
+
 @media (max-width: 640px) {
   .paygf-proc__split {
     grid-template-columns: 1fr;
   }
+
   .paygf-proc__aside {
     padding-left: 0;
     padding-top: 16px;
@@ -97,17 +110,20 @@
   background: var(--payg-inset-bg);
   border: 1px solid var(--payg-card-border);
 }
+
 .paygf-meter__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
+
 .paygf-meter__figure {
   display: flex;
   align-items: baseline;
   gap: 7px;
 }
+
 .paygf-meter__num {
   font-size: 1.7rem;
   font-weight: 750;
@@ -116,14 +132,17 @@
   color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
+
 .paygf-meter__cap {
   font-size: 0.85rem;
   color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
+
 .paygf-meter .payg-bar {
   margin-top: 11px;
 }
+
 .paygf-meter__meta {
   margin-top: 10px;
   display: flex;
@@ -139,14 +158,14 @@
 .paygf-cta {
   padding: 18px 22px;
   border-radius: var(--payg-radius);
-  background: var(--payg-card-bg);
+
   /* Gradient border using padding-box / border-box trick so the inner bg
      stays solid + the outline gets the brand gradient. */
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--payg-card-bg), var(--payg-card-bg)) padding-box,
     linear-gradient(135deg, var(--payg-accent) 0%, var(--c-hue-purple) 100%)
-      border-box;
+    border-box;
   box-shadow: 0 10px 28px -18px
     color-mix(in srgb, var(--c-primary) 40%, transparent);
   display: flex;
@@ -159,6 +178,7 @@
   gap: 14px;
   align-items: center;
 }
+
 .paygf-cta__icon {
   flex-shrink: 0;
   padding: 10px;
@@ -171,9 +191,11 @@
   color: var(--c-text-on-primary) !important;
   font-size: 1.7rem !important;
 }
+
 .paygf-cta__heading-text {
   flex: 1 1 auto;
 }
+
 .paygf-cta__title {
   margin: 0;
   font-size: 1.2rem;
@@ -182,6 +204,7 @@
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
+
 .paygf-cta__subtitle {
   margin: 4px 0 0;
   font-size: 0.9rem;
@@ -197,6 +220,7 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px 16px;
 }
+
 .paygf-cta__benefits li {
   display: flex;
   align-items: flex-start;
@@ -205,6 +229,7 @@
   color: var(--c-text);
   line-height: 1.45;
 }
+
 .paygf-cta__check {
   flex-shrink: 0;
   color: var(--payg-accent);
@@ -219,10 +244,10 @@
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
-  padding-top: 4px;
   border-top: 1px solid var(--payg-divider);
   padding-top: 16px;
 }
+
 .paygf-cta__reassurance {
   margin: 0;
   font-size: 0.78rem;
@@ -241,6 +266,7 @@
   gap: 14px;
   align-items: flex-start;
 }
+
 .paygf-member-note__icon {
   flex-shrink: 0;
   color: var(--c-text-subtle);
@@ -249,6 +275,7 @@
   border-radius: 10px;
   font-size: 1.6rem !important;
 }
+
 .paygf-member-note__title {
   margin: 0;
   font-size: 1rem;
@@ -257,6 +284,7 @@
   letter-spacing: -0.005em;
   line-height: 1.3;
 }
+
 .paygf-member-note__body {
   margin: 6px 0 0;
   font-size: 0.875rem;
@@ -272,17 +300,20 @@
   gap: 14px;
   margin-top: var(--payg-gap);
 }
+
 @media (max-width: 640px) {
   .paygf-explainer {
     grid-template-columns: 1fr;
   }
 }
+
 .paygf-explainer__col {
   padding: 18px 20px;
   border-radius: 12px;
   background: var(--payg-card-bg);
   border: 1px solid var(--payg-card-border);
 }
+
 .paygf-explainer__label {
   display: inline-flex;
   align-items: center;
@@ -294,15 +325,19 @@
   color: var(--c-text-subtle);
   margin-bottom: 10px;
 }
+
 .paygf-explainer__icon {
   font-size: 1rem !important;
 }
+
 .paygf-explainer__icon--free {
   color: var(--color-green-dark);
 }
+
 .paygf-explainer__icon--paid {
   color: var(--payg-accent);
 }
+
 .paygf-explainer__text {
   margin: 0;
   font-size: 0.85rem;

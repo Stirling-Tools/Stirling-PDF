@@ -1,6 +1,6 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Subscribed-tier deployed-Editor hero                                     */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Subscribed-tier deployed-Editor hero
+──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor-hero {
   overflow: hidden;
@@ -22,6 +22,7 @@
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
 }
+
 .portal-editor-hero__mark {
   width: 100%;
   height: 100%;
@@ -84,6 +85,7 @@
   font-size: 0.75rem;
   color: var(--c-text-subtle);
 }
+
 .portal-editor-hero__meta-sep {
   color: var(--c-border);
 }
@@ -99,6 +101,7 @@
   .portal-editor-hero__row {
     flex-wrap: wrap;
   }
+
   .portal-editor-hero__action {
     width: 100%;
   }

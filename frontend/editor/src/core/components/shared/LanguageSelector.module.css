@@ -66,9 +66,11 @@
     height: 0;
     opacity: 0.6;
   }
+
   50% {
     opacity: 0.3;
   }
+
   100% {
     width: 100px;
     height: 100px;

@@ -4,6 +4,7 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
+
   /* Use Mantine variables in the editor; fall back to shared tokens in storybook */
   background: var(--mantine-color-body, var(--c-surface));
   border-radius: 16px;

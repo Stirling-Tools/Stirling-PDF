@@ -27,12 +27,15 @@
 .sui-toast--info {
   border-left-color: var(--c-primary);
 }
+
 .sui-toast--success {
   border-left-color: var(--color-green);
 }
+
 .sui-toast--warning {
   border-left-color: var(--color-amber);
 }
+
 .sui-toast--danger {
   border-left-color: var(--color-red);
 }
@@ -42,10 +45,12 @@
   min-width: 0;
   font-size: 0.8125rem;
 }
+
 .sui-toast__title {
   font-weight: 600;
   color: var(--c-text);
 }
+
 .sui-toast__desc {
   color: var(--c-text-subtle);
   margin-top: 0.125rem;

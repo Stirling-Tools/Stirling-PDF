@@ -1,11 +1,12 @@
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Stepped flow-modal header (prepay wizard, metered checkout, quote builder) */
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+Stepped flow-modal header (prepay wizard, metered checkout, quote builder)
+  ──────────────────────────────────────────────────────────────────────── */
 
 .portal-stepmodal__head {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+
   /* No bottom margin: the host band owns the space beneath it (FlowModal's header padding, or
      billing's own .portal-billing__bundle-head). Keeping one here doubled the header's inset. */
 }
@@ -38,12 +39,14 @@
 .portal-stepmodal__ident {
   min-width: 0;
 }
+
 .portal-stepmodal__flow-title {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--c-text);
 }
+
 /* Qualifies the title — for a step whose heading names a document that needs saying what it covers. */
 .portal-stepmodal__flow-sub {
   margin: 0.15rem 0 0;

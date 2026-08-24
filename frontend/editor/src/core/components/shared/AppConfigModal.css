@@ -11,6 +11,7 @@
       transparent
     );
   }
+
   100% {
     box-shadow: 0 0 0 6px transparent;
     background: transparent;
@@ -170,6 +171,7 @@
 .modal-nav-item-badge {
   display: none;
 }
+
 .modal-nav-item:hover .modal-nav-item-badge,
 .modal-nav-item:focus-within .modal-nav-item-badge,
 .modal-nav-item.active .modal-nav-item-badge {

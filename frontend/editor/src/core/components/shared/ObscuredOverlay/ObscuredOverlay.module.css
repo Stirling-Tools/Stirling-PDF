@@ -10,7 +10,7 @@
   justify-content: center;
   text-align: center;
   padding: 16px;
-  color: #ffffff;
+  color: #fff;
   font-weight: 600;
   background: rgba(0, 0, 0, 0.62);
   backdrop-filter: blur(6px);
@@ -27,7 +27,7 @@
 }
 
 .overlayMessage {
-  color: #ffffff;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -36,6 +36,6 @@
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  color: #fff;
   cursor: pointer;
 }

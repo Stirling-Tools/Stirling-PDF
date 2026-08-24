@@ -23,6 +23,7 @@
   bottom: 16px;
   pointer-events: auto;
   opacity: 1;
+
   /* Include box-shadow so the ChatFABButton hover shadow still animates */
   transition:
     opacity 160ms ease,

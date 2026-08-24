@@ -10,6 +10,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.35;
     transform: scale(0.7);
@@ -83,6 +84,7 @@
   background: color-mix(in srgb, var(--c-surface) 72%, transparent);
   backdrop-filter: blur(1px);
   border-radius: inherit;
+
   /* Let drag/drop events pass through to the card underneath. */
   pointer-events: none;
 }

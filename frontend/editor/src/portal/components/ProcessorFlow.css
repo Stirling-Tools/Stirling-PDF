@@ -150,6 +150,7 @@
   background: transparent;
   border-style: dashed;
   box-shadow: none;
+
   /* The dashed border and muted ink mark this as not-yet-available; fading the
      whole node with opacity would drop its label below the contrast floor. */
   color: var(--c-text-muted);
@@ -204,6 +205,7 @@
 }
 
 /* ── Policies card (core) ───────────────────────────────────────────────────── */
+
 /* Same secondary-surface treatment as the nodes it sits between. */
 .portal-pf__policies {
   align-self: center;
@@ -365,9 +367,11 @@
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-accent) 55%, transparent);
   }
+
   70% {
     box-shadow: 0 0 0 0.4rem transparent;
   }
+
   100% {
     box-shadow: 0 0 0 0 transparent;
   }
@@ -380,10 +384,12 @@
   .portal-pf__particles {
     display: none;
   }
+
   .portal-pf__cols {
     flex-direction: column;
     gap: 0.75rem;
   }
+
   .portal-pf__col,
   .portal-pf__policies {
     width: 100%;

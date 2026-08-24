@@ -11,7 +11,7 @@
   flex: 1 1 0%;
   background-color: rgb(
     var(--text-divider-rule-rgb, var(--gray-200)) /
-      var(--text-divider-opacity, 1)
+    var(--text-divider-opacity, 1)
   );
 }
 
@@ -40,7 +40,7 @@
 .text-divider.force-light .text-divider__rule {
   background-color: rgb(
     var(--text-divider-rule-rgb-light, var(--gray-200)) /
-      var(--text-divider-opacity, 1)
+    var(--text-divider-opacity, 1)
   );
 }
 

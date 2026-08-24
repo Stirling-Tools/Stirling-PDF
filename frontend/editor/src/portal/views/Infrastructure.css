@@ -14,6 +14,7 @@
   justify-content: space-between;
   gap: 1rem;
 }
+
 .portal-infra__head-text {
   display: flex;
   flex-direction: column;
@@ -159,7 +160,9 @@
 
 .portal-infra__key-head {
   width: 100%;
+
   --sui-btn-py: 0.875rem; /* 14px */
+
   padding: 0.875rem 1.125rem;
   background: transparent;
   text-align: left;

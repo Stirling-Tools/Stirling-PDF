@@ -1,6 +1,7 @@
 /* DIMENSIONS — single source for every non-colour length (spacing, radius, sizing, borders, z-index, shadow, type, motion). Theme-agnostic. */
 
 :root {
+
   /* ── Spacing — 4px grid. Canonical numeric scale + named aliases ── */
   --space-0: 0;
   --space-0_5: 0.125rem; /* 2px */
@@ -27,7 +28,6 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-pill: 9999px;
-
   --radius-nav: 0.625rem;
   --nav-gutter: 0.5rem;
   --nav-rail-w: 3.5rem;
@@ -46,7 +46,6 @@
   --font-mono:
     "SF Mono", "Fira Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
   --font-brand: "Alumni Sans", "Inter", sans-serif;
-
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
@@ -64,6 +63,7 @@
   --z-drawer: 50;
   --z-popover: 150;
   --z-toast: 200;
+
   /* Fullscreen tool-picker surfaces (editor) */
   --z-fullscreen-icon-svg: 1;
   --z-toolpicker-star: 1;

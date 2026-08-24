@@ -1,7 +1,7 @@
-/* ===================== PanelHeader ===================== */
-/* The header shared by the active-tool panel, the AI chat panel and the        */
-/* Policies detail/wizard. Mirrors the AI chat header treatment so it reads well */
-/* in both light and dark mode (thin border, no heavy fill).                     */
+/* ===================== PanelHeader =====================
+The header shared by the active-tool panel, the AI chat panel and the
+Policies detail/wizard. Mirrors the AI chat header treatment so it reads well
+in both light and dark mode (thin border, no heavy fill). */
 
 .sui-panelhdr {
   display: flex;
@@ -110,6 +110,7 @@ button.sui-panelhdr__bar:hover {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.45;
   }

@@ -1,0 +1,16 @@
+{
+  "ignoreFiles": [
+    "../app/core/src/main/resources/static/css/bootstrap*.css",
+    "../app/core/src/main/resources/static/css/cookieconsent.css",
+    "../app/core/src/main/resources/static/css/cookieconsentCustomisation.css",
+    "../app/core/src/main/resources/static/css/prism.css",
+    "../app/core/src/main/resources/static/pdfjs-legacy/**/*.css",
+    "../frontend/editor/dist/**/*",
+    "../frontend/editor/src-tauri/**/*",
+    "../frontend/editor/**/cookieconsent.css",
+    "../frontend/editor/**/cookieconsentCustomisation.css"
+  ],
+  "rules": {
+    "no-duplicate-selectors": true
+  }
+}

@@ -8,6 +8,7 @@
   line-height: 1.25;
   border-radius: 8px;
 }
+
 [data-mantine-color-scheme="dark"] .chart-tooltip {
   border-color: var(--c-border-subtle);
   box-shadow: none;

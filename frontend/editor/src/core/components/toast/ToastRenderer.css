@@ -56,6 +56,7 @@
 .toast-item--glow {
   animation: toast-glow-pulse 1.8s ease-in-out infinite;
 }
+
 @keyframes toast-glow-pulse {
   0%,
   100% {
@@ -64,6 +65,7 @@
       0 0 0 1px color-mix(in srgb, var(--toast-glow) 35%, transparent),
       0 0 10px -2px var(--toast-glow);
   }
+
   50% {
     box-shadow:
       var(--shadow-lg),

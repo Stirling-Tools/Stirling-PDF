@@ -33,10 +33,12 @@
 .policy-badge--enforcing svg {
   animation: policy-badge-spin 1s linear infinite;
 }
+
 @keyframes policy-badge-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

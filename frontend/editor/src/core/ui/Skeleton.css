@@ -14,9 +14,11 @@
 .sui-skel--text {
   border-radius: var(--radius-pill);
 }
+
 .sui-skel--rect {
   border-radius: var(--radius-md);
 }
+
 .sui-skel--circle {
   border-radius: 50%;
   aspect-ratio: 1 / 1;

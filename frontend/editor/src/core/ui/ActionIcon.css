@@ -1,10 +1,11 @@
 /* Mantine ActionIcon-backed — colour driven by the shared accent palette (accents.css). */
-@import "./accents.css";
+@import url("./accents.css");
 
 /* ---- shape ---- */
 .sui-ai--circle.mantine-ActionIcon-root {
   --ai-radius: 50%;
 }
+
 .sui-ai--pill.mantine-ActionIcon-root {
   --ai-radius: 9999px;
 }

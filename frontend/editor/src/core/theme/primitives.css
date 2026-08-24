@@ -1,8 +1,8 @@
 /* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
 
 :root {
-  --p-white: #ffffff;
-  --p-black: #000000;
+  --p-white: #fff;
+  --p-black: #000;
   --p-gray-50: #f9fafb;
   --p-gray-100: #f3f4f6;
   --p-gray-150: #eef0f2;
@@ -11,6 +11,7 @@
   --p-gray-300: #d1d5db;
   --p-gray-400: #9ca3af;
   --p-gray-500: #6b7280;
+
   /* Subtle body text in light mode. gray-500 clears 4.5:1 on pure white but
      falls under it on the --p-paper canvas; this is the same hue nudged dark
      enough to pass on the tinted surfaces too (4.94:1 on the blue banner tint,
@@ -31,6 +32,7 @@
   --p-zinc-600: #333338;
   --p-zinc-500: #3f3f46;
   --p-zinc-400: #52525b;
+
   /* Subtlest text shade that still clears 4.5:1 on the deepest dark
      surfaces; zinc-300 is a border/icon shade and reads at ~3:1 there. */
   --p-zinc-250: #9a9aa2;
@@ -179,6 +181,7 @@
   --p-c-acacac: #acacac;
   --p-c-c084fc: #c084fc;
   --p-art-red-muted: #c56565;
+
   /* Muted category hues for connection-picker marks. */
   --p-art-blue-muted: #4a7ab5;
   --p-art-green-muted: #5d8348;
