@@ -1,19 +1,16 @@
 .quick-nav-rail-container {
-  /* 36px surface + the standard --nav-gutter on the window edge. Sits on the
-     same gutter as every other floating box (file sidebar, workbench bar,
-     brand row) so the rail's glyph column shares the brand mark's axis. */
+  /* 36px surface, with half the standard gutter on each side so the bar sits the
+     same distance from the window edge as from the sidebar. The total is still
+     one gutter, so the surface keeps its full width. */
   width: var(--quicknav-rail-w);
   height: 100%;
   flex-shrink: 0;
   box-sizing: border-box;
   background-color: var(--c-bg);
-  /* Logical, not `padding-left`: this is a flex item that flips to the far edge
-     in RTL, so a physical side would put the gutter inboard. No inline-end
-     padding - the adjacent sidebar contributes its own, and doubling them left
-     a visibly wide gap between the two. */
+  /* Logical, not `padding-left`/`right`: this is a flex item that flips to the
+     far edge in RTL, where physical sides would mirror the wrong way. */
   padding-block: var(--nav-gutter);
-  padding-inline-start: var(--nav-gutter);
-  padding-inline-end: 0;
+  padding-inline: calc(var(--nav-gutter) / 2);
 }
 
 /* One solid bar, full height. Groups inside it are separated by spacing, not by
