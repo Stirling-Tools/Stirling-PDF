@@ -223,11 +223,20 @@
   background: var(--c-bg);
 }
 .email-column-toolbar {
+  flex-direction: column;
+  align-items: stretch;
   justify-content: space-between;
   gap: 0.75rem;
-  min-height: 5.15rem;
+  min-height: 7.25rem;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--c-border-subtle);
+}
+.email-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
 }
 .email-column-toolbar h2 {
   font-size: 0.98rem;
@@ -240,13 +249,13 @@
   font-size: 0.72rem;
 }
 .email-search {
-  width: min(15rem, 52%);
+  width: min(15rem, 60%);
 }
 .email-type-filter {
-  width: 8.5rem;
+  width: 100%;
 }
 .email-message-list {
-  height: calc(100% - 5.15rem);
+  height: calc(100% - 7.25rem);
 }
 .email-message-row {
   display: flex;
@@ -577,12 +586,15 @@
     border-right: 0;
   }
   .email-column-toolbar {
-    min-height: 4.75rem;
+    min-height: 7rem;
+  }
+  .email-toolbar-top {
+    gap: 0.5rem;
   }
   .email-search {
     width: 48%;
   }
   .email-message-list {
-    height: calc(100% - 4.75rem);
+    height: calc(100% - 7rem);
   }
 }

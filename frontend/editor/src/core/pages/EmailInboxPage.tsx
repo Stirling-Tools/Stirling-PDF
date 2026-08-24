@@ -6,7 +6,7 @@ import {
   Menu,
   Modal,
   ScrollArea,
-  Select,
+  MultiSelect,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -163,7 +163,9 @@ export default function EmailInboxPage() {
     DEMO_MESSAGES[0].id,
   );
   const [query, setQuery] = useState("");
-  const [attachmentType, setAttachmentType] = useState<string | null>(null);
+  const [selectedAttachmentTypes, setSelectedAttachmentTypes] = useState<
+    string[]
+  >([]);
   const [downloadedAttachment, setDownloadedAttachment] = useState<
     string | null
   >(null);
@@ -240,7 +242,7 @@ export default function EmailInboxPage() {
         }>;
         nextPageToken?: string | null;
       }>(
-        `/api/v1/email/gmail/messages?folder=${selectedFolder}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+        `/api/v1/email/gmail/messages?folder=${selectedFolder}${selectedAttachmentTypes.length > 0 ? `&types=${encodeURIComponent(selectedAttachmentTypes.join(","))}` : ""}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
       );
       const mappedMessages = data.messages
         .filter((message) => message.attachments.length > 0)
@@ -280,7 +282,12 @@ export default function EmailInboxPage() {
     setMessages([]);
     setNextPageToken(null);
     if (mailboxConfirmed) void loadMessages();
-  }, [mailboxConfirmed, selectedFolder, refreshVersion]);
+  }, [
+    mailboxConfirmed,
+    selectedFolder,
+    refreshVersion,
+    selectedAttachmentTypes,
+  ]);
 
   const refreshInbox = () => {
     setMessages([]);
@@ -315,7 +322,8 @@ export default function EmailInboxPage() {
 
   const filteredMessages = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery && !attachmentType) return messages;
+    if (!normalizedQuery && selectedAttachmentTypes.length === 0)
+      return messages;
     return messages.filter((message) =>
       (normalizedQuery
         ? [message.sender, message.address, message.subject, message.preview]
@@ -323,13 +331,13 @@ export default function EmailInboxPage() {
             .toLocaleLowerCase()
             .includes(normalizedQuery)
         : true) &&
-      (attachmentType
+      (selectedAttachmentTypes.length > 0
         ? message.attachments.some(
-            (attachment) => attachment.type === attachmentType,
+            (attachment) => selectedAttachmentTypes.includes(attachment.type),
           )
         : true),
     );
-  }, [attachmentType, messages, query]);
+  }, [messages, query, selectedAttachmentTypes]);
 
   const unreadMessageCount = messages.filter((message) => message.unread).length;
 
@@ -337,7 +345,9 @@ export default function EmailInboxPage() {
     filteredMessages.find((message) => message.id === selectedMessageId) ??
     filteredMessages[0];
   const selectedAttachments = selectedMessage?.attachments.filter(
-    (attachment) => !attachmentType || attachment.type === attachmentType,
+    (attachment) =>
+      selectedAttachmentTypes.length === 0 ||
+      selectedAttachmentTypes.includes(attachment.type),
   );
 
   const connectAccount = async () => {
@@ -519,32 +529,34 @@ export default function EmailInboxPage() {
           aria-label={t("email.messageList", "E-Mail-Liste")}
         >
           <div className="email-column-toolbar">
-            <div>
-              <h2>{t("email.inbox", "Posteingang")}</h2>
-              <span>
-                {filteredMessages.length} {t("email.messages", "Nachrichten")}
-              </span>
+            <div className="email-toolbar-top">
+              <div>
+                <h2>{t("email.inbox", "Posteingang")}</h2>
+                <span>
+                  {filteredMessages.length} {t("email.messages", "Nachrichten")}
+                </span>
+              </div>
+              <TextInput
+                className="email-search"
+                value={query}
+                onChange={(event) => setQuery(event.currentTarget.value)}
+                placeholder={t(
+                  "email.searchPlaceholder",
+                  "Nachrichten durchsuchen",
+                )}
+                leftSection={<SearchIcon fontSize="small" />}
+                aria-label={t(
+                  "email.searchPlaceholder",
+                  "Nachrichten durchsuchen",
+                )}
+              />
             </div>
-            <TextInput
-              className="email-search"
-              value={query}
-              onChange={(event) => setQuery(event.currentTarget.value)}
-              placeholder={t(
-                "email.searchPlaceholder",
-                "Nachrichten durchsuchen",
-              )}
-              leftSection={<SearchIcon fontSize="small" />}
-              aria-label={t(
-                "email.searchPlaceholder",
-                "Nachrichten durchsuchen",
-              )}
-            />
-            <Select
+            <MultiSelect
               className="email-type-filter"
               clearable
               data={attachmentTypes}
-              value={attachmentType}
-              onChange={setAttachmentType}
+              value={selectedAttachmentTypes}
+              onChange={setSelectedAttachmentTypes}
               placeholder={t("email.fileTypeFilter", "Dateityp")}
               aria-label={t("email.fileTypeFilter", "Dateityp filtern")}
             />

@@ -103,11 +103,12 @@ public class GmailOAuthController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<GmailOAuthService.GmailMessagePage> messages(
             @RequestParam(defaultValue = "inbox") String folder,
+            @RequestParam(required = false) String types,
             @RequestParam(required = false) String pageToken,
             HttpServletRequest request)
             throws IOException, InterruptedException {
         GmailOAuthService.GmailToken token = sessionToken(request);
-        return ResponseEntity.ok(gmailOAuthService.listMessages(token, folder, pageToken));
+        return ResponseEntity.ok(gmailOAuthService.listMessages(token, folder, types, pageToken));
     }
 
     @GetMapping("/api/v1/email/gmail/messages/{messageId}/attachments/{attachmentId}")

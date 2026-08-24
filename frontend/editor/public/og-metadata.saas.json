@@ -452,6 +452,11 @@
       "title": "Admin Features Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminMailbox": {
+      "image": "/og_images/home.png",
+      "title": "Admin Mailbox Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/adminPlan": {
       "image": "/og_images/home.png",
       "title": "Admin Plan Settings - Stirling PDF",
@@ -692,6 +697,7 @@
     "/settings/adminLegal": "/settings/adminLegal",
     "/settings/adminPremium": "/settings/adminPremium",
     "/settings/adminFeatures": "/settings/adminFeatures",
+    "/settings/adminMailbox": "/settings/adminMailbox",
     "/settings/adminPlan": "/settings/adminPlan",
     "/settings/adminAudit": "/settings/adminAudit",
     "/settings/adminUsage": "/settings/adminUsage",

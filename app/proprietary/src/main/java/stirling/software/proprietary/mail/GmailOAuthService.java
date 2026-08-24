@@ -9,7 +9,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +120,8 @@ public class GmailOAuthService {
         return connections.get(username);
     }
 
-    public GmailMessagePage listMessages(GmailToken token, String folder, String pageToken)
+    public GmailMessagePage listMessages(
+            GmailToken token, String folder, String types, String pageToken)
             throws IOException, InterruptedException {
         String label =
                 switch (folder) {
@@ -130,6 +133,7 @@ public class GmailOAuthService {
                 pageToken == null || pageToken.isBlank()
                         ? ""
                         : "&pageToken=" + URLEncoder.encode(pageToken, StandardCharsets.UTF_8);
+        String typeQuery = buildAttachmentTypeQuery(types);
         JsonNode list =
                 sendJson(
                         token,
@@ -137,6 +141,7 @@ public class GmailOAuthService {
                                 + "/messages?labelIds="
                                 + label
                                 + "&maxResults=25&q=has%3Aattachment"
+                                + typeQuery
                                 + pageQuery);
         List<GmailMessage> messages = new ArrayList<>();
         for (JsonNode item : list.path("messages")) {
@@ -150,6 +155,24 @@ public class GmailOAuthService {
             messages.add(toMessage(message));
         }
         return new GmailMessagePage(messages, list.path("nextPageToken").asText(null));
+    }
+
+    private String buildAttachmentTypeQuery(String types) {
+        if (types == null || types.isBlank()) {
+            return "";
+        }
+        String filenameQuery =
+                Arrays.stream(types.split(","))
+                        .map(String::trim)
+                        .map(String::toLowerCase)
+                        .filter(type -> type.matches("[a-z0-9]{1,10}"))
+                        .distinct()
+                        .map(type -> "filename:" + type)
+                        .collect(Collectors.joining(" "));
+        if (filenameQuery.isBlank()) {
+            return "";
+        }
+        return "%20" + URLEncoder.encode("{" + filenameQuery + "}", StandardCharsets.UTF_8);
     }
 
     public GmailAttachmentData downloadAttachment(

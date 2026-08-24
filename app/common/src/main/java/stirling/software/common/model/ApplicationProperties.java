@@ -66,6 +66,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Mailbox mailbox = new Mailbox();
     private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
@@ -81,6 +82,18 @@ public class ApplicationProperties {
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
+
+    @Data
+    public static class Mailbox {
+        private Gmail gmail = new Gmail();
+
+        @Data
+        public static class Gmail {
+            private String clientId = "";
+            @ToString.Exclude private String clientSecret = "";
+            private String redirectUri = "";
+        }
+    }
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
