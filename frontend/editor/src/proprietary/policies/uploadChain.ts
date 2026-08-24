@@ -1,4 +1,7 @@
-import { isClassificationCategory } from "@app/data/policyCategories";
+import {
+  policyRequiresAiEngine,
+  policyRewritesDocument,
+} from "@app/data/classificationPolicy";
 import type { PoliciesByCategory } from "@app/types/policies";
 
 /**
@@ -20,16 +23,15 @@ export function orderUploadCategories(
             s.sources.length === 0 ||
             s.sources.includes("editor")) &&
           (s.runOn ?? "upload") === "upload" &&
-          // Non-AI systems classify in the browser (useClientSideClassification), so keep the
-          // Classification policy out of the server chain when the AI engine is off.
-          !(id === "classification" && !aiEnabled),
+          // An escalation-only policy has nothing to do with no engine to escalate to.
+          !(policyRequiresAiEngine(id) && !aiEnabled),
       )
-      // Classification runs last: it's non-blocking, so an enforcement policy
-      // running after it would fork a new version and drop the user's edits.
+      // Annotating policies run last: a rewriting one after them would fork a new
+      // version from the pre-annotation state and drop their labels.
       .sort(([idA, a], [idB, b]) => {
-        const ca = isClassificationCategory(idA) ? 1 : 0;
-        const cb = isClassificationCategory(idB) ? 1 : 0;
-        if (ca !== cb) return ca - cb;
+        const ra = policyRewritesDocument(idA) ? 0 : 1;
+        const rb = policyRewritesDocument(idB) ? 0 : 1;
+        if (ra !== rb) return ra - rb;
         return (a.order ?? 0) - (b.order ?? 0);
       })
       .map(([id]) => id)
