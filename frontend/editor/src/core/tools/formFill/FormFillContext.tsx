@@ -1042,9 +1042,16 @@ export default FormFillContext;
  * or they leave a ghost at the original rect.
  */
 export function useStaleBakedFieldNames(): Set<string> {
-  const { mode, modifiedFields, deletedFieldNames } = useFormFill();
+  // Read the context directly: the viewer's appearance overlays render outside the form tool
+  // (and in isolation in Storybook), where there is no provider and nothing is staged.
+  const ctx = useContext(FormFillContext);
+  const mode = ctx?.mode ?? "fill";
+  const modifiedFields = ctx?.modifiedFields;
+  const deletedFieldNames = ctx?.deletedFieldNames;
   return useMemo(() => {
-    if (mode === "fill") return new Set<string>();
+    if (mode === "fill" || !modifiedFields || !deletedFieldNames) {
+      return new Set<string>();
+    }
     return new Set<string>([
       ...Object.keys(modifiedFields),
       ...deletedFieldNames,

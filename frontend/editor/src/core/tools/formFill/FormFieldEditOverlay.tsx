@@ -272,30 +272,28 @@ export function FormFieldEditOverlay({
     () =>
       pendingFields
         .filter((f) => f.pageIndex === pageIndex)
-        .map(
-          (f): FormField => ({
-            name: pendingSelectionName(f.id),
-            label: f.label || f.name,
-            type: f.type,
-            value: f.defaultValue ?? "",
-            options: f.options ?? null,
-            displayOptions: null,
-            required: f.required ?? false,
-            readOnly: f.readOnly ?? false,
-            multiSelect: f.multiSelect ?? false,
-            multiline: f.multiline ?? false,
-            tooltip: f.tooltip ?? null,
-            widgets: [
-              {
-                pageIndex: f.pageIndex,
-                x: f.x,
-                y: f.y,
-                width: f.width,
-                height: f.height,
-              },
-            ],
-          }),
-        ),
+        .map((f): FormField => ({
+          name: pendingSelectionName(f.id),
+          label: f.label || f.name,
+          type: f.type,
+          value: f.defaultValue ?? "",
+          options: f.options ?? null,
+          displayOptions: null,
+          required: f.required ?? false,
+          readOnly: f.readOnly ?? false,
+          multiSelect: f.multiSelect ?? false,
+          multiline: f.multiline ?? false,
+          tooltip: f.tooltip ?? null,
+          widgets: [
+            {
+              pageIndex: f.pageIndex,
+              x: f.x,
+              y: f.y,
+              width: f.width,
+              height: f.height,
+            },
+          ],
+        })),
     [pendingFields, pageIndex],
   );
 

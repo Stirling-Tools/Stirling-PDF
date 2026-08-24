@@ -290,7 +290,11 @@ test.describe("Form field editor", () => {
             ),
           ).filter((el) => {
             const style = getComputedStyle(el);
-            if (style.borderStyle === "none" || style.display === "none") {
+            // The field box is drawn with an outline, not a border, so that its border does not
+            // indent the content box and push the field preview inside it out of alignment.
+            const framed =
+              style.borderStyle !== "none" || style.outlineStyle !== "none";
+            if (!framed || style.display === "none") {
               return false;
             }
             const r = el.getBoundingClientRect();
