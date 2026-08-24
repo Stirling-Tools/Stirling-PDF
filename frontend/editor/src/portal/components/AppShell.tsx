@@ -7,7 +7,7 @@ import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { useGoToEditor } from "@portal/hooks/useGoToEditor";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
-import { withViewTransition } from "@app/utils/viewTransition";
+import { markAppSwap } from "@app/utils/appSwap";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
 import { BrandTile } from "@app/components/shared/BrandTile";
@@ -91,9 +91,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       id: "editor",
       label: t("quickNav.editor", "Editor"),
       // The Stirling app tile - see the editor's own variant.
-      icon: <BrandTile size="1.125rem" className="quicknav-mark-editor" />,
+      icon: <BrandTile size="1.125rem" />,
       kind: "destination",
-      onClick: () => withViewTransition(() => goToEditor()),
+      onClick: () => {
+        markAppSwap();
+        goToEditor();
+      },
     },
   ];
 

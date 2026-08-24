@@ -167,28 +167,49 @@
 }
 
 /* ---- App swap ----
-   Each app's mark carries a name of its own, so the browser matches them across
-   the navigation and animates the difference itself: switching moves the editor's
-   mark from the brand slot to the switcher slot while the processor's does the
-   reverse, and each resizes between the two icon scales on the way. Naming the
-   SLOTS instead would cross-fade two different marks in place; naming the APPS is
-   what makes it read as the two trading positions.
+   Switching apps replaces one React tree with another, so this is an arrival
+   animation rather than a transition: each mark starts where its counterpart sat
+   in the app you just left, and lands in its own slot. The brand rises from the
+   switcher slot as the switcher icon falls from the brand slot, which reads as
+   the two trading places.
 
-   Switching replaces one app's React tree with the other's, so there is no
-   element to transition - this works precisely because it operates on snapshots
-   of the before and after DOMs rather than on live nodes.
-
-   The bar itself is named too: it occupies the same box either side, so matching
-   it holds it still while its contents move, instead of the whole column fading.
-   withViewTransition() skips all of this under prefers-reduced-motion. */
-.quicknav-mark-editor {
-  view-transition-name: quicknav-mark-editor;
+   The travel is one --nav-header-h: the brand row's height is exactly the
+   distance between the mark's centre and the first rail glyph's centre. The scale
+   ends are the two icon sizes (1.6rem brand, 1.125rem glyph), so each mark grows
+   or shrinks into its new role instead of just sliding. */
+@keyframes quicknav-swap-rise {
+  from {
+    transform: translateY(var(--nav-header-h)) scale(0.703);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
 }
 
-.quicknav-mark-processor {
-  view-transition-name: quicknav-mark-processor;
+@keyframes quicknav-swap-fall {
+  from {
+    transform: translateY(calc(var(--nav-header-h) * -1)) scale(1.422);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
 }
 
-.quick-nav-rail-container {
-  view-transition-name: quicknav-rail;
+.quick-nav-rail-container[data-app-swapped] .quick-nav-rail-brand > * {
+  animation: quicknav-swap-rise var(--motion-spring) both;
+}
+
+.quick-nav-rail-container[data-app-swapped]
+  .quick-nav-rail-group[data-switcher]
+  .quick-nav-rail-item > :first-child {
+  animation: quicknav-swap-fall var(--motion-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-nav-rail-container[data-app-swapped] .quick-nav-rail-brand > *,
+  .quick-nav-rail-container[data-app-swapped]
+    .quick-nav-rail-group[data-switcher]
+    .quick-nav-rail-item > :first-child {
+    animation: none;
+  }
 }

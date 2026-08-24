@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { withViewTransition } from "@app/utils/viewTransition";
 
-type Doc = Document & { startViewTransition?: unknown };
+// The DOM lib types startViewTransition as required and fully-shaped; the stub
+// only needs the one field the helper reads, so go through unknown.
+type MutableDoc = { startViewTransition?: unknown };
+const doc = document as unknown as MutableDoc;
 
 function stubApi(): ReturnType<typeof vi.fn> {
   const start = vi.fn((cb: () => void) => {
     cb();
     return { finished: Promise.resolve() };
   });
-  (document as Doc).startViewTransition = start;
+  doc.startViewTransition = start;
   return start;
 }
 
@@ -22,7 +25,7 @@ function stubReducedMotion(reduced: boolean): void {
 }
 
 afterEach(() => {
-  delete (document as Doc).startViewTransition;
+  delete doc.startViewTransition;
   vi.unstubAllGlobals();
 });
 

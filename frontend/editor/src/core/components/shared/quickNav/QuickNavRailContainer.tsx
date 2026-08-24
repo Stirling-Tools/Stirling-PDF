@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { BrandTile } from "@app/components/shared/BrandTile";
+import { consumeAppSwap } from "@app/utils/appSwap";
 import {
   QuickNavRailBase,
   RailButton,
@@ -64,8 +66,18 @@ export function QuickNavRailContainer({
   ...railProps
 }: QuickNavRailContainerProps) {
   const { t } = useTranslation();
+  // Read in an effect, not a state initialiser: StrictMode double-invokes both,
+  // but a ref survives that, so the flag is consumed exactly once and a genuine
+  // switch can't be swallowed by the second pass.
+  const [swapped, setSwapped] = useState(false);
+  const checkedSwap = useRef(false);
+  useEffect(() => {
+    if (checkedSwap.current) return;
+    checkedSwap.current = true;
+    if (consumeAppSwap()) setSwapped(true);
+  }, []);
   return (
-    <div className="quick-nav-rail-container">
+    <div className="quick-nav-rail-container" data-app-swapped={swapped || undefined}>
       {/* The mark of the app you are in, in the leftmost column and above
           everything else, so the corner both carries the brand and says where you
           are. Outside the nav landmark: it labels the product, it is not somewhere
@@ -73,9 +85,9 @@ export function QuickNavRailContainer({
           which can afford the width. */}
       <div className="quick-nav-rail-brand">
         {currentApp === "processor" ? (
-          <BrandMark height="1.6rem" className="quicknav-mark-processor" />
+          <BrandMark height="1.6rem" />
         ) : (
-          <BrandTile size="1.6rem" className="quicknav-mark-editor" />
+          <BrandTile size="1.6rem" />
         )}
       </div>
       <NavSurface className="quick-nav-rail-surface">

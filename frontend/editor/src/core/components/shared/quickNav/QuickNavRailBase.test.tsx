@@ -58,6 +58,18 @@ describe("QuickNavRailBase — app switcher", () => {
     expect(labels).toEqual(["files", "reader"]);
     expect(dividers).toBe(0);
   });
+
+  it("tags the switcher group, not whichever group renders first", () => {
+    // The swap animation targets the switcher; tagging by rendered position would
+    // hand it to the group below once the switcher was dropped.
+    const { container } = render(
+      withProviders(<QuickNavRailBase groups={[[], WITHIN]} />),
+    );
+
+    const groups = container.querySelectorAll(".quick-nav-rail-group");
+    expect(groups).toHaveLength(1);
+    expect(groups[0].getAttribute("data-switcher")).toBeNull();
+  });
 });
 
 describe("QuickNavRailBase — current state", () => {
