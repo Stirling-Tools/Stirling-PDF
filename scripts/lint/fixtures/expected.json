@@ -1,0 +1,39 @@
+{
+  "allow.java": [],
+  "clean.java": [],
+  "clean.ts": [],
+  "deadcode.java": [
+    "5:CMT005:error"
+  ],
+  "docs.java": [
+    "6:CMT007:warn"
+  ],
+  "narration.java": [
+    "6:CMT003:warn",
+    "9:CMT003:warn",
+    "12:CMT008:warn",
+    "15:CMT004:warn"
+  ],
+  "narration.tsx": [
+    "2:CMT003:warn",
+    "5:CMT004:warn",
+    "8:CMT008:warn",
+    "13:CMT001:error"
+  ],
+  "restates.java": [
+    "6:CMT001:error",
+    "9:CMT001:error",
+    "17:CMT002:error",
+    "19:CMT002:error"
+  ],
+  "restates.py": [
+    "2:CMT001:error",
+    "5:CMT002:error"
+  ],
+  "restates.ts": [
+    "2:CMT001:error",
+    "14:CMT002:error",
+    "18:CMT002:error"
+  ],
+  "strings.java": []
+}

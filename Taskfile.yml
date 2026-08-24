@@ -165,6 +165,13 @@ tasks:
     cmds:
       - task: frontend:lint
       - task: engine:lint
+      - task: comment-lint
+
+  comment-lint:
+    desc: "Check comment quality on the lines this branch adds"
+    aliases: [comments]
+    cmds:
+      - task: pre-commit:comment-lint
 
   fix:
     desc: "Auto-fix all components"

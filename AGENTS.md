@@ -21,6 +21,36 @@ Task `desc:` fields should describe **what** the task does, not **how** it does 
 - `task docker:build` — build standard Docker image
 - `task docker:up` — start Docker compose stack
 
+## Comments
+
+A comment must carry information the code cannot. If a reader could derive it from the code in front of them, delete it.
+
+Write a comment when it does one of these four jobs:
+
+- **Contract.** What a caller must know that the signature cannot say: preconditions, invariants, units, ownership and lifetime, thread-safety, error semantics, side effects. Be generous here, this is the category the codebase is short of. Goes on the type/method/module as Javadoc, JSDoc, or a docstring.
+- **Why.** The non-obvious reason the code is shaped this way: the constraint it satisfies, the bug it avoids, the alternative rejected. Name the ticket, CVE, or spec when there is one.
+- **Hazard.** "Must stay in sync with X", "order matters because Y", "do not remove, it prevents Z".
+- **Map.** A short orientation at the top of a genuinely complex file: what it owns, and what it deliberately does not.
+
+Never write:
+
+- A comment that restates the next line. `// Handle drag start` above `handleDragStart` is noise.
+- Section banners or position markers: `// --- Types ---`, `// Helpers`, `// =====`.
+- Step narration in a function body (`// Step 1:`, `// Then we`). If the steps need labels they need names: extract functions. Numbering a real wizard step or a manual test procedure is fine.
+- Anything about the change rather than the code: `// No longer needed`, `// Previously this used X`, `// Renamed from`. That is the commit message's job. History used as *rationale* is fine; history as a changelog is not.
+- Commented-out code. Delete it, git remembers.
+- Doc tags that restate the signature. `@param blob - The blob` says nothing; omit the tag rather than pad it.
+- Docs on self-explanatory members with no constraint to state.
+
+Two tests before keeping a comment:
+
+- **Delete it.** Is any information lost? If not, it stays deleted.
+- **Could a name carry it instead?** A better identifier, an extracted function, or a named constant beats a comment. Prefer the code change.
+
+A comment block over ~12 lines outside a file or type header is either prose that belongs in `devGuide/`, or a sign the code needs restructuring.
+
+`task comment-lint` enforces the mechanical part of this on the lines you add, and runs inside `task pre-commit`. Full guidance, worked examples, and the rule list: @devGuide/CODE_COMMENTS.md
+
 ## Common Development Commands
 
 ### Build and Test
@@ -70,7 +100,7 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 - Avoid nested functions and nested classes unless the language construct requires them.
 - Prefer composition to inheritance when combining concepts.
 - Avoid speculative abstractions. Add a layer only when it removes real duplication or clarifies lifecycle.
-- Add comments sparingly and only when they explain non-obvious intent.
+- Comments follow the repo-wide rules in the "Comments" section above.
 
 #### Python Typing and Models
 - Deserialize into Pydantic models as early as possible.

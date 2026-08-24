@@ -59,6 +59,7 @@ tasks:
       - task: gitleaks
       - task: whitespace
       - task: toml-sort
+      - task: comment-lint
 
   fix:
     desc: "Auto-fix formatting, spelling, and secrets issues across the repo"
@@ -75,6 +76,7 @@ tasks:
         vars: { FIX: '1' }
       - task: codespell
       - task: gitleaks
+      - task: comment-lint
 
   install:
     desc: "Install the pinned pre-commit Python tools"
@@ -129,6 +131,38 @@ tasks:
     # this is a no-op. Secrets are never auto-fixed, so FIX has no effect.
     cmds:
       - "{{.GITLEAKS_BIN}} git --pre-commit --redact --staged --verbose"
+
+  comment-lint:
+    desc: "Check comment quality on the lines this branch adds"
+    summary: |
+      Blocks a comment that restates the code below it, a section banner, or a
+      block of commented-out code. Everything else it reports is advisory.
+
+      Scoped to added lines, so touching an old file never surfaces the standing
+      backlog. On a CI pull request it diffs against the target branch; locally it
+      diffs the working tree against HEAD. The standard is devGuide/CODE_COMMENTS.md.
+
+      Full tree (report only):     task pre-commit:comment-lint:all
+      Fixture corpus:             task pre-commit:comment-lint:selftest
+    # Depends on the frontend install because the .ts/.tsx half of the rule set
+    # runs as an oxlint plugin. Without it the TS engine warns and skips, which
+    # would leave the frontend silently unchecked on CI.
+    deps: [":frontend:install"]
+    cmds:
+      - node scripts/lint/comment-lint.mjs --selftest
+      - node scripts/lint/comment-lint.mjs
+
+  comment-lint:all:
+    desc: "Report every comment finding in the tree (never fails)"
+    deps: [":frontend:install"]
+    cmds:
+      - node scripts/lint/comment-lint.mjs --all
+
+  comment-lint:selftest:
+    desc: "Check both comment-lint engines against the fixture corpus"
+    deps: [":frontend:install"]
+    cmds:
+      - node scripts/lint/comment-lint.mjs --selftest
 
   gitleaks-bin:
     internal: true

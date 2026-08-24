@@ -296,8 +296,13 @@ docs/type3/signatures/
 
 **/application-dev-local.properties
 
-# Claude
-.claude/
+# Claude. Contents are ignored so personal config stays local, with the two
+# shared pieces re-included: settings.json (the comment-lint hook) and skills/.
+# The directory itself cannot be ignored or git will not look inside it.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+.claude/settings.local.json
 
 # Playwright MCP screenshots / traces
 .playwright-mcp/
