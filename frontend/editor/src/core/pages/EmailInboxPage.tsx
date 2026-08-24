@@ -13,6 +13,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloudDownloadOutlinedIcon from "@mui/icons-material/CloudDownloadOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
@@ -148,6 +149,9 @@ export default function EmailInboxPage() {
   const [accountConnected, setAccountConnected] = useState(
     searchParams.get("gmail") === "connected",
   );
+  const [connectDialogOpen, setConnectDialogOpen] = useState(
+    searchParams.get("gmail") !== "connected",
+  );
   const [accountEmail, setAccountEmail] = useState(DEMO_ACCOUNT.email);
   const [accountProvider, setAccountProvider] = useState<Provider>(
     searchParams.get("gmail") === "connected" ? "Gmail" : DEMO_ACCOUNT.provider,
@@ -205,6 +209,7 @@ export default function EmailInboxPage() {
     let active = true;
     if (connectedFromCallback) {
       setAccountConnected(true);
+      setConnectDialogOpen(false);
       setSearchParams({}, { replace: true });
     }
     apiClient
@@ -214,6 +219,7 @@ export default function EmailInboxPage() {
       .then(({ data }) => {
         if (!active) return;
         setAccountConnected(data.connected || connectedFromCallback);
+        setConnectDialogOpen(!data.connected && !connectedFromCallback);
         setMailboxConfirmed(data.connected);
         if (data.email) setAccountEmail(data.email);
         if (data.provider) setAccountProvider(data.provider);
@@ -222,6 +228,7 @@ export default function EmailInboxPage() {
       .catch(() => {
         if (active) {
           setAccountConnected(false);
+          setConnectDialogOpen(true);
           setMailboxConfirmed(false);
         }
       });
@@ -291,9 +298,13 @@ export default function EmailInboxPage() {
   };
 
   useEffect(() => {
-    setMessages([]);
     setNextPageToken(null);
-    if (mailboxConfirmed) void loadMessages();
+    if (mailboxConfirmed) {
+      setMessages([]);
+      void loadMessages();
+    } else {
+      setMessages(DEMO_MESSAGES);
+    }
   }, [
     mailboxConfirmed,
     selectedFolder,
@@ -437,6 +448,7 @@ export default function EmailInboxPage() {
     try {
       await apiClient.delete("/api/v1/email/gmail/connection");
       setAccountConnected(false);
+      setConnectDialogOpen(true);
       setMailboxConfirmed(false);
       setMessages([]);
       setNextPageToken(null);
@@ -548,7 +560,7 @@ export default function EmailInboxPage() {
               <ActionIcon
                 variant="tertiary"
                 aria-label={t("email.connectAccount", "Konto verbinden")}
-                onClick={() => setAccountConnected(true)}
+              onClick={() => setConnectDialogOpen(true)}
               >
                 <LinkIcon fontSize="small" />
               </ActionIcon>
@@ -915,14 +927,19 @@ export default function EmailInboxPage() {
         </section>
       </div>
 
-      {!accountConnected && (
+      {!accountConnected && connectDialogOpen && (
         <div className="email-connect-overlay">
           <div className="email-connect-panel">
-            <span className="email-connect-icon">
-              <LinkIcon />
-            </span>
-            <span className="email-page-eyebrow">
-              {t("email.firstSetup", "Erster Schritt")}
+            <ActionIcon
+              className="email-connect-close"
+              variant="tertiary"
+              aria-label={t("email.closeConnectDialog", "Close")}
+              onClick={() => setConnectDialogOpen(false)}
+            >
+              <CloseIcon fontSize="small" />
+            </ActionIcon>
+            <span className="email-connect-icon" aria-hidden="true">
+              <EmailOutlinedIcon />
             </span>
             <h2>{t("email.connectTitle", "Connect mailbox")}</h2>
             <p>
@@ -938,7 +955,7 @@ export default function EmailInboxPage() {
                 onClick={() => void connectAccount()}
                 leftSection={<EmailOutlinedIcon fontSize="small" />}
               >
-                Gmail verbinden
+                {t("email.connectGmail", "Connect Gmail")}
               </Button>
             </div>
             <small>
@@ -958,14 +975,14 @@ export default function EmailInboxPage() {
         centered
       >
         <TextInput
-          label={t("email.displayName", "Anzeigename")}
+          label={t("email.displayName", "Display name")}
           description={t(
             "email.displayNameHint",
             "This name is displayed instead of the email address in the mailbox.",
           )}
           value={draftDisplayName}
           onChange={(event) => setDraftDisplayName(event.currentTarget.value)}
-          placeholder={t("email.displayNamePlaceholder", "z. B. Peter Lustig")}
+          placeholder={t("email.displayNamePlaceholder", "e.g. Peter Example")}
           autoFocus
         />
         {accountConnected && (
@@ -981,9 +998,9 @@ export default function EmailInboxPage() {
         )}
         <div className="email-settings-actions">
           <Button variant="secondary" onClick={() => setSettingsOpen(false)}>
-            {t("email.cancel", "Abbrechen")}
+            {t("email.cancel", "Cancel")}
           </Button>
-          <Button onClick={saveSettings}>{t("email.save", "Speichern")}</Button>
+          <Button onClick={saveSettings}>{t("email.save", "Save")}</Button>
         </div>
       </Modal>
     </main>

@@ -83,18 +83,6 @@ public class ApplicationProperties {
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
 
-    @Data
-    public static class Mailbox {
-        private Gmail gmail = new Gmail();
-
-        @Data
-        public static class Gmail {
-            private String clientId = "";
-            @ToString.Exclude private String clientSecret = "";
-            private String redirectUri = "";
-        }
-    }
-
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
             throws IOException {
@@ -1427,6 +1415,23 @@ public class ApplicationProperties {
         private String sslTrust;
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
+    }
+
+    /**
+     * OAuth configuration for external mailbox providers.
+     *
+     * @since 2.15.x
+     */
+    @Data
+    public static class Mailbox {
+        private Gmail gmail = new Gmail();
+
+        @Data
+        public static class Gmail {
+            private String clientId = "";
+            @ToString.Exclude private String clientSecret = "";
+            private String redirectUri = "";
+        }
     }
 
     /**

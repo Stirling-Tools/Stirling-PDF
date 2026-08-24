@@ -534,31 +534,36 @@
   background: color-mix(in srgb, var(--c-bg) 88%, transparent);
 }
 .email-connect-panel {
-  width: min(26rem, 100%);
-  padding: 2rem;
+  position: relative;
+  width: min(30rem, 100%);
+  padding: 2.25rem 2.25rem 1.75rem;
   border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   background: var(--c-surface);
   box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 16%);
   text-align: center;
 }
+.email-connect-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+}
 .email-connect-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: 0.85rem;
-  border-radius: 0.75rem;
-  color: var(--c-text-on-primary);
-  background: var(--c-primary);
+  width: auto;
+  height: auto;
+  margin-bottom: 1.15rem;
+  color: var(--c-text-muted);
+  font-size: 2.25rem;
 }
 .email-connect-panel h2 {
-  margin-top: 0.35rem;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
 }
 .email-connect-panel p {
-  margin: 0.7rem 0 1.25rem;
+  max-width: 24rem;
+  margin: 0.75rem auto 1.5rem;
   color: var(--c-text-muted);
   font-size: 0.82rem;
   line-height: 1.55;
@@ -566,6 +571,7 @@
 .email-provider-actions {
   display: grid;
   gap: 0.55rem;
+  margin-top: 0.25rem;
 }
 .email-connect-panel small {
   display: block;
