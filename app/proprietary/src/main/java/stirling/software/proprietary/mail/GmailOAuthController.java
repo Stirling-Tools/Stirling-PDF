@@ -129,8 +129,8 @@ public class GmailOAuthController {
         String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
         String target =
                 frontendUrl == null || frontendUrl.isBlank()
-                        ? "/editor/mail?gmail=connected"
-                        : frontendUrl.trim().replaceAll("/$", "") + "/editor/mail?gmail=connected";
+                        ? "/mail?gmail=connected"
+                        : frontendUrl.trim().replaceAll("/$", "") + "/mail?gmail=connected";
         response.sendRedirect(target);
     }
 
