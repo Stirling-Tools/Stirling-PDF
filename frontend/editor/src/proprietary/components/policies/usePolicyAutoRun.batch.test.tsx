@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   workspace: [] as Array<{
     id: string;
     classificationLabels?: string[];
-    classificationConfidence?: "none" | "low" | "medium" | "high";
+    classificationConfidence?: ClassificationConfidence;
   }>,
   consumeSilentCalls: 0,
   consumeNonSilentCalls: 0,
