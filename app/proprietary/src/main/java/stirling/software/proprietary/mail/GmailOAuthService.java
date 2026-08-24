@@ -11,11 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,12 +23,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GmailOAuthService {
 
     private static final String AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -40,8 +41,8 @@ public class GmailOAuthService {
             "openid email https://www.googleapis.com/auth/gmail.readonly";
 
     private final ObjectMapper objectMapper;
+    private final GmailConnectionRepository connectionRepository;
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private final Map<String, GmailConnection> connections = new ConcurrentHashMap<>();
 
     @Value("${mailbox.gmail.client-id:}")
     private String clientId;
@@ -113,11 +114,121 @@ public class GmailOAuthService {
     }
 
     public void saveConnection(String username, GmailToken token, GmailProfile profile) {
-        connections.put(username, new GmailConnection(token, profile));
+        GmailConnectionEntity entity =
+                connectionRepository.findByUsername(username).orElseGet(GmailConnectionEntity::new);
+        String refreshToken = token.refreshToken();
+        if ((refreshToken == null || refreshToken.isBlank())
+                && entity.getRefreshToken() != null
+                && !entity.getRefreshToken().isBlank()) {
+            refreshToken = entity.getRefreshToken();
+        }
+        entity.setUsername(username);
+        entity.setAccessToken(token.accessToken());
+        entity.setRefreshToken(refreshToken == null ? "" : refreshToken);
+        entity.setExpiresAt(token.expiresAt());
+        entity.setEmail(profile.email());
+        entity.setDisplayName(profile.name());
+        connectionRepository.save(entity);
     }
 
     public GmailConnection getConnection(String username) {
-        return connections.get(username);
+        return connectionRepository
+                .findByUsername(username)
+                .map(
+                        entity ->
+                                new GmailConnection(
+                                        new GmailToken(
+                                                entity.getAccessToken(),
+                                                entity.getRefreshToken(),
+                                                entity.getExpiresAt()),
+                                        new GmailProfile(
+                                                entity.getEmail(), entity.getDisplayName())))
+                .orElse(null);
+    }
+
+    /** Removes the local connection and revokes the Google grant when possible. */
+    public boolean disconnect(String username) {
+        GmailConnectionEntity entity = connectionRepository.findByUsername(username).orElse(null);
+        if (entity == null) return false;
+        boolean revoked = false;
+        try {
+            String revokeToken =
+                    entity.getRefreshToken() == null || entity.getRefreshToken().isBlank()
+                            ? entity.getAccessToken()
+                            : entity.getRefreshToken();
+            revoked = revokeToken(revokeToken);
+        } catch (IOException e) {
+            log.warn(
+                    "Could not revoke Gmail OAuth grant for user '{}'; local connection removed",
+                    username,
+                    e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn(
+                    "Gmail OAuth revoke interrupted for user '{}'; local connection removed",
+                    username);
+        } finally {
+            connectionRepository.delete(entity);
+        }
+        return revoked;
+    }
+
+    private boolean revokeToken(String token) throws IOException, InterruptedException {
+        HttpRequest request =
+                HttpRequest.newBuilder(URI.create("https://oauth2.googleapis.com/revoke"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString("token=" + encode(token)))
+                        .build();
+        HttpResponse<String> response =
+                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.statusCode() / 100 == 2 || response.statusCode() == 400;
+    }
+
+    public GmailToken getValidToken(String username) throws IOException, InterruptedException {
+        GmailConnection connection = getConnection(username);
+        if (connection == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    "Gmail mailbox is not connected");
+        }
+        GmailToken token = connection.token();
+        if (token.expiresAt() > System.currentTimeMillis() + 60_000L) {
+            return token;
+        }
+        if (token.refreshToken() == null || token.refreshToken().isBlank()) {
+            throw new IOException("Gmail connection has no refresh token; reconnect required");
+        }
+        GmailToken refreshed = refreshToken(token.refreshToken());
+        saveConnection(username, refreshed, connection.profile());
+        return refreshed;
+    }
+
+    private GmailToken refreshToken(String refreshToken) throws IOException, InterruptedException {
+        requireConfigured();
+        Map<String, String> form = new LinkedHashMap<>();
+        form.put("client_id", clientId);
+        form.put("client_secret", clientSecret);
+        form.put("refresh_token", refreshToken);
+        form.put("grant_type", "refresh_token");
+        HttpRequest request =
+                HttpRequest.newBuilder(URI.create(TOKEN_URI))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(formEncode(form)))
+                        .build();
+        HttpResponse<String> response =
+                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() / 100 != 2) {
+            throw new IOException(
+                    "Gmail OAuth token refresh failed: HTTP " + response.statusCode());
+        }
+        JsonNode body = objectMapper.readTree(response.body());
+        String accessToken = body.path("access_token").asText("");
+        if (accessToken.isBlank()) {
+            throw new IOException("Gmail OAuth refresh response did not contain an access token");
+        }
+        long expiresIn = body.path("expires_in").asLong(3600);
+        return new GmailToken(
+                accessToken, refreshToken, System.currentTimeMillis() + expiresIn * 1000L);
     }
 
     public GmailMessagePage listMessages(

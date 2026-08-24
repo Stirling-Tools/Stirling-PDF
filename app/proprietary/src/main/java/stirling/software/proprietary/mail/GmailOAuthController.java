@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,7 +32,6 @@ public class GmailOAuthController {
 
     static final String STATE_SESSION_KEY = "stirling.gmail.oauth.state";
     static final String REDIRECT_URI_SESSION_KEY = "stirling.gmail.oauth.redirect-uri";
-    static final String TOKEN_SESSION_KEY = "stirling.gmail.oauth.token";
     static final String PROFILE_SESSION_KEY = "stirling.gmail.oauth.profile";
     static final String USER_SESSION_KEY = "stirling.gmail.oauth.username";
 
@@ -73,9 +73,7 @@ public class GmailOAuthController {
         GmailOAuthService.GmailConnection connection =
                 gmailOAuthService.getConnection(userService.getCurrentUsername());
         if (profile == null && connection != null) profile = connection.profile();
-        boolean tokenPresent =
-                (session != null && session.getAttribute(TOKEN_SESSION_KEY) != null)
-                        || connection != null;
+        boolean tokenPresent = connection != null;
         ResponseEntity<?> response =
                 ResponseEntity.ok(
                         profile == null
@@ -99,6 +97,19 @@ public class GmailOAuthController {
         return response;
     }
 
+    @DeleteMapping("/api/v1/email/gmail/connection")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> disconnect(HttpServletRequest request) {
+        String username = userService.getCurrentUsername();
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.removeAttribute(PROFILE_SESSION_KEY);
+            session.removeAttribute(USER_SESSION_KEY);
+        }
+        boolean revoked = gmailOAuthService.disconnect(username);
+        return ResponseEntity.ok(Map.of("disconnected", true, "googleRevoked", revoked));
+    }
+
     @GetMapping("/api/v1/email/gmail/messages")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<GmailOAuthService.GmailMessagePage> messages(
@@ -107,7 +118,7 @@ public class GmailOAuthController {
             @RequestParam(required = false) String pageToken,
             HttpServletRequest request)
             throws IOException, InterruptedException {
-        GmailOAuthService.GmailToken token = sessionToken(request);
+        GmailOAuthService.GmailToken token = currentToken();
         return ResponseEntity.ok(gmailOAuthService.listMessages(token, folder, types, pageToken));
     }
 
@@ -119,8 +130,7 @@ public class GmailOAuthController {
             HttpServletRequest request)
             throws IOException, InterruptedException {
         GmailOAuthService.GmailAttachmentData attachment =
-                gmailOAuthService.downloadAttachment(
-                        sessionToken(request), messageId, attachmentId);
+                gmailOAuthService.downloadAttachment(currentToken(), messageId, attachmentId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDisposition(
@@ -129,23 +139,8 @@ public class GmailOAuthController {
                 attachment.data(), headers, org.springframework.http.HttpStatus.OK);
     }
 
-    private GmailOAuthService.GmailToken sessionToken(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        GmailOAuthService.GmailToken token =
-                session == null
-                        ? null
-                        : (GmailOAuthService.GmailToken) session.getAttribute(TOKEN_SESSION_KEY);
-        if (token == null) {
-            GmailOAuthService.GmailConnection connection =
-                    gmailOAuthService.getConnection(userService.getCurrentUsername());
-            token = connection == null ? null : connection.token();
-        }
-        if (token == null) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.UNAUTHORIZED,
-                    "Gmail mailbox is not connected");
-        }
-        return token;
+    private GmailOAuthService.GmailToken currentToken() throws IOException, InterruptedException {
+        return gmailOAuthService.getValidToken(userService.getCurrentUsername());
     }
 
     @GetMapping("/api/v1/email/gmail/callback")
@@ -203,7 +198,6 @@ public class GmailOAuthController {
         GmailOAuthService.GmailProfile profile = gmailOAuthService.getProfile(token);
         session.removeAttribute(STATE_SESSION_KEY);
         session.removeAttribute(REDIRECT_URI_SESSION_KEY);
-        session.setAttribute(TOKEN_SESSION_KEY, token);
         session.setAttribute(PROFILE_SESSION_KEY, profile);
         String username = (String) session.getAttribute(USER_SESSION_KEY);
         if (username != null && !username.isBlank()) {

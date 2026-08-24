@@ -357,6 +357,27 @@ export default function EmailInboxPage() {
     window.location.assign(data.authorizationUrl);
   };
 
+  const disconnectAccount = async () => {
+    if (
+      !window.confirm(
+        "Gmail trennen? Die lokale Verbindung wird gelöscht und der Google-Zugriff widerrufen.",
+      )
+    ) {
+      return;
+    }
+    try {
+      await apiClient.delete("/api/v1/email/gmail/connection");
+      setAccountConnected(false);
+      setMailboxConfirmed(false);
+      setMessages([]);
+      setNextPageToken(null);
+      setSelectedAttachmentTypes([]);
+      setSettingsOpen(false);
+    } catch {
+      // Keep the connected state visible when the server could not complete the request.
+    }
+  };
+
   const importAttachment = async (
     messageId: string,
     attachment: MailAttachment,
@@ -810,9 +831,20 @@ export default function EmailInboxPage() {
           )}
           value={draftDisplayName}
           onChange={(event) => setDraftDisplayName(event.currentTarget.value)}
-          placeholder={t("email.displayNamePlaceholder", "z. B. Enrico Ludwig")}
+          placeholder={t("email.displayNamePlaceholder", "z. B. Peter Lustig")}
           autoFocus
         />
+        {accountConnected && (
+          <Button
+            variant="secondary"
+            accent="danger"
+            fullWidth
+            onClick={() => void disconnectAccount()}
+            className="email-disconnect-button"
+          >
+            Gmail-Verbindung trennen
+          </Button>
+        )}
         <div className="email-settings-actions">
           <Button variant="secondary" onClick={() => setSettingsOpen(false)}>
             {t("email.cancel", "Abbrechen")}
