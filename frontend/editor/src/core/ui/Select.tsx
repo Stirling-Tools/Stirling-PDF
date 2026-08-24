@@ -150,7 +150,10 @@ export function Select({
       // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
       ref={inputRef}
-      classNames={{ wrapper: "sui-mantine-wrapper" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        dropdown: "sui-mantine-dropdown",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />

@@ -28,6 +28,10 @@
   font-size: 0.875rem;
 }
 
+.sui-mantine-dropdown [role="option"] {
+  font-size: 0.875rem;
+}
+
 /* SUI focus ring — matches .sui-input:focus-within */
 .sui-mantine-wrapper[data-focused],
 .sui-mantine-wrapper:focus-within {

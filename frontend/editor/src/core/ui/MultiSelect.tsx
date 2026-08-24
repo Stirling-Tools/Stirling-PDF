@@ -174,6 +174,7 @@ export function MultiSelect({
       ref={inputRef}
       classNames={{
         wrapper: "sui-mantine-wrapper",
+        dropdown: "sui-mantine-dropdown",
         pill: "sui-mantine-pill",
         pillsList: "sui-mantine-pills-list",
       }}
