@@ -27,6 +27,7 @@ import {
 } from "@app/services/failureReporting";
 import { stashRetryPayload } from "@app/services/notificationRetry";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -125,6 +126,7 @@ export const useToolOperation = <TParams>(
 
   const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
+  const continueResolutions = useResolutionContinuation();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -538,6 +540,18 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // This success may itself be the fix an open failure was waiting for. Outputs
+            // pair with the inputs that produced them, index for index, in this branch.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: successSourceIds[index] ?? null,
+              })),
+            });
           } else {
             // Outputs are independent artifacts (format conversion, merge, split).
             // Create fresh root stubs with no parent chain, then swap out only the inputs
@@ -592,6 +606,18 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // Independent artifacts carry no per-output provenance, so only a run with one
+            // input and one output can be paired to a failure row.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: null,
+              })),
+            });
           }
         }
       } catch (error) {
@@ -659,6 +685,7 @@ export const useToolOperation = <TParams>(
       extractZipFiles,
       willUseCloud,
       checkCredits,
+      continueResolutions,
     ],
   );
 
