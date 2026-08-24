@@ -14,6 +14,7 @@
 //   node scripts/lint/comment-lint.mjs --all           whole tree, report only, never fails
 //   node scripts/lint/comment-lint.mjs <paths...>      those files, every line
 //   node scripts/lint/comment-lint.mjs --selftest      run the fixture corpus
+//                                        --quiet       ...saying nothing unless it fails
 //   node scripts/lint/comment-lint.mjs --json          machine-readable findings
 //
 // Exits non-zero only for a blocking rule on a line in scope. Advisory findings
@@ -464,13 +465,16 @@ function runSelfTest() {
     return 1;
   }
 
+  // --quiet says nothing unless something is wrong. It is how the lint tasks run
+  // the corpus first without burying their own output under eleven ok lines.
+  const quiet = flags.has("--quiet");
   const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
   let failures = 0;
   for (const name of files) {
     const want = (expected[name] ?? []).join(" | ");
     const got = actual[name].join(" | ");
     if (want === got) {
-      process.stdout.write(`ok    ${name} (${actual[name].length})\n`);
+      if (!quiet) process.stdout.write(`ok    ${name} (${actual[name].length})\n`);
       continue;
     }
     failures++;
@@ -483,12 +487,14 @@ function runSelfTest() {
     process.stdout.write(`FAIL  ${name} is in expected.json but the fixture is gone\n`);
   }
 
-  process.stdout.write(
-    failures === 0
-      ? "\ncomment-lint selftest: both engines match the corpus\n"
-      : `\ncomment-lint selftest: ${failures} fixture(s) differ. If intended, rerun with --update and review the diff.\n`,
-  );
-  return failures === 0 ? 0 : 1;
+  if (failures > 0) {
+    process.stdout.write(
+      `\ncomment-lint selftest: ${failures} fixture(s) differ. If intended, rerun with --update and review the diff.\n`,
+    );
+    return 1;
+  }
+  if (!quiet) process.stdout.write("\ncomment-lint selftest: both engines match the corpus\n");
+  return 0;
 }
 
 function isFlagValue(arg) {
@@ -502,5 +508,13 @@ function flagValue(flag) {
 }
 
 function git(args) {
-  return execFileSync("git", args, { cwd: REPO, encoding: "utf8", maxBuffer: 1 << 28 });
+  // stderr is captured rather than inherited so git's line-ending advice ("CRLF
+  // will be replaced by LF") does not print once per file on Windows. Real
+  // failures still surface: execFileSync throws, and the caller reads .stderr.
+  return execFileSync("git", args, {
+    cwd: REPO,
+    encoding: "utf8",
+    maxBuffer: 1 << 28,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 }

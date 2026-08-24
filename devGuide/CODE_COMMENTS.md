@@ -105,18 +105,23 @@ spelled out.
 
 ## The linter
 
-`task comment-lint` checks added lines only. With no arguments it compares the
-working tree against HEAD, which is what a pre-commit run wants: the lines you are
-about to commit. On a CI pull request it compares against the target branch. To
-ask what a whole branch adds, name the base:
+Two tasks, differing only in what counts as "new":
 
 ```bash
-task comment-lint -- --since origin/main
+task comment-lint          # what the working tree adds over HEAD
+task comment-lint:branch   # what the branch adds over origin/main (BASE=<ref> to change)
 ```
 
-It runs inside `task pre-commit`, so the git hook and CI both get it, and it also
-runs as a Claude Code `PostToolUse` hook so an agent sees findings on the file it
-just wrote.
+The first is the pre-commit question, so it reports nothing once you have
+committed. The second is the review question. On a CI pull request the plain task
+compares against the target branch automatically, via `GITHUB_BASE_REF`.
+
+Both run the fixture corpus first, silently. `task pre-commit:comment-lint:selftest`
+runs it verbosely when you want to see it.
+
+`task comment-lint` also runs inside `task pre-commit`, so the git hook and CI both
+get it, and the same rules run as a Claude Code `PostToolUse` hook so an agent sees
+findings on the file it just wrote.
 
 Two engines, one rule set (`scripts/lint/comment-rules.mjs`):
 

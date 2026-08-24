@@ -145,8 +145,9 @@ tasks:
       pre-commit run wants: the lines you are about to commit. On a CI pull request
       it diffs against the target branch instead, via GITHUB_BASE_REF.
 
-      To ask what a whole branch adds, name the base:
-        task comment-lint -- --since origin/main
+      To ask what a whole branch adds instead, use the branch variant, which
+      needs no argument passing:
+        task comment-lint:branch
 
       Full tree (report only):     task pre-commit:comment-lint:all
       Fixture corpus:             task pre-commit:comment-lint:selftest
@@ -155,8 +156,27 @@ tasks:
     # would leave the frontend silently unchecked on CI.
     deps: [":frontend:install"]
     cmds:
-      - node scripts/lint/comment-lint.mjs --selftest
+      - node scripts/lint/comment-lint.mjs --selftest --quiet
       - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
+
+  comment-lint:branch:
+    desc: "Check comment quality on everything this branch adds over its base"
+    summary: |
+      Like `task comment-lint`, but scoped to the whole branch rather than to
+      uncommitted work, so it still reports after you commit.
+
+      Exists as its own task because passing `-- --since origin/main` through Task
+      is not portable: with the npm build of Task the launcher is a PowerShell
+      script, and PowerShell strips the `--` before Task sees it, leaving Task to
+      print its own usage.
+
+      Override the base with BASE=<ref>.
+    vars:
+      BASE: '{{.BASE | default "origin/main"}}'
+    deps: [":frontend:install"]
+    cmds:
+      - node scripts/lint/comment-lint.mjs --selftest --quiet
+      - node scripts/lint/comment-lint.mjs --since {{.BASE}}
 
   comment-lint:all:
     desc: "Report every comment finding in the tree (never fails)"
