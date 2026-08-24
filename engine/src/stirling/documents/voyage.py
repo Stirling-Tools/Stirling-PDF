@@ -36,11 +36,13 @@ class VoyageEmbeddingModel(OpenAIEmbeddingModel):
             raise ValueError(
                 f"VoyageAI embeddings need an API key: set {VOYAGE_API_KEY_ENV} or push one via admin AI settings."
             )
-        merged: dict = dict(settings or {})
-        extra_body = dict(merged.get("extra_body") or {})
+        merged: EmbeddingSettings = {**(settings or {})}
+        # extra_body is declared `object`, so narrow rather than assume a mapping.
+        current = merged.get("extra_body")
+        extra_body: dict[str, object] = dict(current) if isinstance(current, dict) else {}
         extra_body.setdefault("input_type", input_type)
         merged["extra_body"] = extra_body
-        return await super().embed(inputs, input_type=input_type, settings=merged)  # type: ignore[arg-type]
+        return await super().embed(inputs, input_type=input_type, settings=merged)
 
 
 def build_voyage_model(
