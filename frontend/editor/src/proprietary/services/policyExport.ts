@@ -68,7 +68,9 @@ function activeExportPolicies(): ExportPolicy[] {
         s.configured &&
         s.status === "active" &&
         s.backendId &&
-        (s.sources.length === 0 || s.sources.includes("editor")) &&
+        // Same decode-time answer the upload path uses: blank sources mean "everywhere" for a
+        // catalogue tile but "not the editor" for a builder pipeline (see runsOnEditor).
+        s.runsOnEditor &&
         s.runOn === "export",
     )
     .map(([id, s]) => ({
