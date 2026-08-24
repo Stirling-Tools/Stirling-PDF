@@ -1,6 +1,6 @@
 /**
- * The bundled Material Symbols set only carries the filled variant, which reads as permanently
- * ringing. Mirrors the portal's own icon rather than importing it: core cannot reach into portal.
+ * An outline bell. The bundled Material Symbols set only carries the filled variant,
+ * which reads as permanently ringing.
  */
 export function BellIcon({ size = 18 }: { size?: number }) {
   return (

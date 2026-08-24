@@ -603,8 +603,7 @@ export default function WorkbenchBar({
             enforcingProgress={enforcingProgress}
           />
         )}
-        {/* Last in the globals, so it is the rightmost control. Workbench floats it instead
-            when the bar is down, so the bell is reachable whether or not a file is open. */}
+        {/* Last in the globals, so it is the rightmost control. */}
         <div className="workbench-bar-divider workbench-bar-globals-sep" />
         <NotificationBell />
       </div>
