@@ -29,7 +29,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAllFiles } from "@app/contexts/file/fileHooks";
 import "@app/pages/EmailInboxPage.css";
 
-type Provider = "Microsoft 365" | "Gmail";
+type Provider = "Gmail";
 type MailFolder = "inbox" | "starred" | "trash";
 
 interface MailAttachment {
@@ -119,7 +119,7 @@ const DEMO_MESSAGES: MailMessage[] = [
 
 const DEMO_ACCOUNT = {
   email: "anna.beispiel@unternehmen.de",
-  provider: "Microsoft 365" as Provider,
+  provider: "Gmail" as Provider,
 };
 
 export default function EmailInboxPage() {
@@ -291,17 +291,11 @@ export default function EmailInboxPage() {
     filteredMessages.find((message) => message.id === selectedMessageId) ??
     filteredMessages[0];
 
-  const connectAccount = async (provider: Provider) => {
-    if (provider === "Gmail") {
-      const { data } = await apiClient.get<{ authorizationUrl: string }>(
-        "/api/v1/email/gmail/connect",
-      );
-      window.location.assign(data.authorizationUrl);
-      return;
-    }
-    setAccountConnected(true);
-    setAccountProvider("Microsoft 365");
-    setSelectedAccount("work");
+  const connectAccount = async () => {
+    const { data } = await apiClient.get<{ authorizationUrl: string }>(
+      "/api/v1/email/gmail/connect",
+    );
+    window.location.assign(data.authorizationUrl);
   };
 
   const importAttachment = async (
@@ -686,15 +680,8 @@ export default function EmailInboxPage() {
             <div className="email-provider-actions">
               <Button
                 fullWidth
-                onClick={() => connectAccount("Microsoft 365")}
-                leftSection={<EmailOutlinedIcon fontSize="small" />}
-              >
-                Microsoft 365 verbinden
-              </Button>
-              <Button
-                fullWidth
                 variant="secondary"
-                onClick={() => connectAccount("Gmail")}
+                onClick={() => void connectAccount()}
                 leftSection={<EmailOutlinedIcon fontSize="small" />}
               >
                 Gmail verbinden
