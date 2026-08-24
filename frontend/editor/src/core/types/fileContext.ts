@@ -9,6 +9,9 @@ import { generateId } from "@app/utils/generateId";
 // Re-export FileId for convenience
 export type { FileId };
 
+/** How sure a classifier was about the labels it produced. */
+export type ClassificationConfidence = "none" | "low" | "medium" | "high";
+
 // Normalized state types
 export interface ProcessedFilePage {
   thumbnail?: string;
@@ -61,6 +64,11 @@ export interface StirlingFileStub extends BaseFileMetadata {
    * unclassified files / non-SaaS builds.
    */
   classificationLabels?: string[];
+  /**
+   * How sure the local heuristic was about {@link classificationLabels}: a confident verdict
+   * stands, an unsure one escalates to the AI. Undefined when the labels came from the AI.
+   */
+  classificationConfidence?: ClassificationConfidence;
   /**
    * This session proved the stored bytes unreadable (WebKit losing a blob's
    * backing store). The row renders as "data lost" instead of pretending the
