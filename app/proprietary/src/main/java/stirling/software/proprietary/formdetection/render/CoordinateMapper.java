@@ -1,5 +1,7 @@
 package stirling.software.proprietary.formdetection.render;
 
+import lombok.experimental.UtilityClass;
+
 import stirling.software.proprietary.formdetection.inference.Yolo;
 import stirling.software.proprietary.formdetection.model.DetectedField;
 
@@ -9,12 +11,10 @@ import stirling.software.proprietary.formdetection.model.DetectedField;
  * live in. The bitmap is display space: /Rotate baked in and the crop box anchored at (0,0), so the
  * mapping is scale + Y-flip, then the inverse page rotation, then the crop-box translation.
  */
-public final class CoordinateMapper {
+@UtilityClass
+public class CoordinateMapper {
 
-    private CoordinateMapper() {}
-
-    public static DetectedField.RectPt toPdfPoints(
-            Yolo.Detection d, PageRasterizer.RasterPage page) {
+    public DetectedField.RectPt toPdfPoints(Yolo.Detection d, PageRasterizer.RasterPage page) {
         float sx = page.scaleX() > 0 ? page.scaleX() : 1f;
         float sy = page.scaleY() > 0 ? page.scaleY() : 1f;
 
@@ -66,7 +66,7 @@ public final class CoordinateMapper {
         return new DetectedField.RectPt(x + page.cropLlxPt(), y + page.cropLlyPt(), w, h);
     }
 
-    private static double clamp(double v, double lo, double hi) {
+    private double clamp(double v, double lo, double hi) {
         return v < lo ? lo : Math.min(v, hi);
     }
 }

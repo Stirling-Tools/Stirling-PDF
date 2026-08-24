@@ -41,10 +41,6 @@ import stirling.software.proprietary.formdetection.service.FormDetectionModelMan
  * Server-side detection endpoint. Gated behind the {@code form-detection} endpoint key, which is
  * disabled until a model is installed (so the tool tile is greyed in the UI). Returns the shared
  * detection schema, or - when {@code applyToPdf=true} - the AcroForm-applied PDF.
- *
- * <p>Deliberately under {@code /api/v1/form}, not {@code /api/v1/ai}: anything on the AI prefix is
- * classified billable by {@code BillableOperationClassifier} and blocked with 402 when the instance
- * is unlinked - which would gate on-device detection that never touches the server.
  */
 @Slf4j
 @RestController

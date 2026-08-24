@@ -168,8 +168,8 @@ public class OnnxFormDetector implements FormDetectionEngine {
         if (session != null) {
             try {
                 session.close();
-            } catch (Exception ignored) {
-                // ignore
+            } catch (Exception _) {
+                // already closing
             }
             session = null;
         }

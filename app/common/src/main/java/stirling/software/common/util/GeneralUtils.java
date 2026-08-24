@@ -876,9 +876,12 @@ public class GeneralUtils {
      */
     private final Object SETTINGS_WRITE_LOCK = new Object();
 
+    /** Dotted-notation separator for settings keys; a literal, so compile it once. */
+    private final Pattern SETTINGS_KEY_SEPARATOR = Pattern.compile("\\.");
+
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         synchronized (SETTINGS_WRITE_LOCK) {
-            String[] keyArray = key.split("\\.");
+            String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
             Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
             YamlHelper settingsYaml = new YamlHelper(settingsPath);
             settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
@@ -909,7 +912,7 @@ public class GeneralUtils {
             for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                String[] keyArray = key.split("\\.");
+                String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
                 settingsYaml.updateValue(Arrays.asList(keyArray), value);
             }
 

@@ -26,10 +26,6 @@ import stirling.software.proprietary.formdetection.service.FormDetectionModelMan
  * Admin-managed lifecycle for the Auto Form Detection model. Lives under the never-gated {@code
  * form-detection-model} endpoint key so install/status stay reachable while the feature itself (the
  * {@code form-detection} detect endpoint) is disabled until a model is ready.
- *
- * <p>Deliberately under {@code /api/v1/form}, not {@code /api/v1/ai}: anything on the AI prefix is
- * classified billable by {@code BillableOperationClassifier} and blocked with 402 when the instance
- * is unlinked - which would gate on-device detection that never touches the server.
  */
 @Slf4j
 @RestController

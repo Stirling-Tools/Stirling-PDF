@@ -35,8 +35,7 @@ public class ModelCatalogService {
     @PostConstruct
     void load() {
         try (InputStream is = new ClassPathResource(CATALOG_RESOURCE).getInputStream()) {
-            List<ModelCatalogEntry> loaded =
-                    objectMapper.readValue(is, new TypeReference<List<ModelCatalogEntry>>() {});
+            List<ModelCatalogEntry> loaded = objectMapper.readValue(is, new TypeReference<>() {});
             Map<String, ModelCatalogEntry> map = new LinkedHashMap<>();
             for (ModelCatalogEntry entry : loaded) {
                 if (entry.getId() != null && !entry.getId().isBlank()) {
