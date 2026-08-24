@@ -13,6 +13,7 @@ import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+import EmailInboxPage from "@app/pages/EmailInboxPage";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
@@ -104,6 +105,7 @@ export default function App() {
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/invite/:token" element={<InviteAccept />} />
                     <Route path="/share/:token" element={<ShareLinkPage />} />
+                    <Route path="/mail" element={<EmailInboxPage />} />
                     {/* The editor and its tool routes - Landing handles auth logic */}
                     <Route path="/*" element={<Landing />} />
                   </Routes>

@@ -37,6 +37,7 @@ import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
@@ -1160,6 +1161,38 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 </div>
               </Tooltip>
             )}
+
+            <Tooltip
+              label={t("fileSidebar.email", "E-Mail-Postfach")}
+              position="right"
+              withinPortal
+              disabled={!collapsed}
+            >
+              <div
+                className="file-sidebar-action-row"
+                data-testid="email-button"
+                onClick={() => {
+                  if (collapsed && onToggleCollapse) onToggleCollapse();
+                  navigate("/mail");
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t("fileSidebar.email", "E-Mail-Postfach")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/mail");
+                  }
+                }}
+              >
+                <EmailOutlinedIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.email", "E-Mail-Postfach")}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
 
             {/* Watched Folders entry */}
             {WATCHED_FOLDERS_ENABLED && (

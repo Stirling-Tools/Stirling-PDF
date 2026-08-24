@@ -3,7 +3,9 @@ import { Stack, Text, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import PhonelinkIcon from "@mui/icons-material/Phonelink";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -36,6 +38,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
 
   const handleGoogleDriveClick = async () => {
@@ -119,6 +122,20 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
             : t("fileManager.googleDrive", "Google Drive")}
         </Button>
       )}
+
+      <Button
+        variant="tertiary"
+        accent="neutral"
+        leftSection={<EmailOutlinedIcon />}
+        justify={buttonJustify}
+        onClick={() => navigate("/mail")}
+        fullWidth={!horizontal}
+        size={buttonSize}
+      >
+        {horizontal
+          ? t("fileManager.emailShort", "Email")
+          : t("fileManager.email", "Email inbox")}
+      </Button>
 
       {!shouldHideMobileQR && (
         <Button

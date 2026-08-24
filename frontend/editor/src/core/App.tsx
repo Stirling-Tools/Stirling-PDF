@@ -6,6 +6,7 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
+import EmailInboxPage from "@app/pages/EmailInboxPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
@@ -50,6 +51,17 @@ export default function App() {
             <PublicRouteProviders>
               <MobileSignPage />
             </PublicRouteProviders>
+          }
+        />
+
+        <Route
+          path="/mail"
+          element={
+            <AppProviders>
+              <AppLayout>
+                <EmailInboxPage />
+              </AppLayout>
+            </AppProviders>
           }
         />
 
