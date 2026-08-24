@@ -25,6 +25,13 @@ export default function WorkbenchBarMobileActions({
 }: WorkbenchBarActionsProps) {
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
+  const showPrint = currentView === "viewer";
+  const showFileActions = !isCustomView;
+
+  // Custom workbench views own their content, so none of these apply. The
+  // desktop cluster renders nothing at all in that case; without this the
+  // trigger would still be there, opening an empty dropdown.
+  if (!showPrint && !showFileActions) return null;
 
   return (
     <Menu shadow="md" width={230} position="bottom-end">
@@ -39,7 +46,7 @@ export default function WorkbenchBarMobileActions({
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        {currentView === "viewer" && (
+        {showPrint && (
           <Menu.Item
             leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}
             disabled={exportDisabled}
@@ -48,7 +55,7 @@ export default function WorkbenchBarMobileActions({
             {t("workbenchBar.print", "Print PDF")}
           </Menu.Item>
         )}
-        {!isCustomView && (
+        {showFileActions && (
           <Menu.Item
             leftSection={
               <LocalIcon
@@ -63,7 +70,7 @@ export default function WorkbenchBarMobileActions({
             {downloadLabel}
           </Menu.Item>
         )}
-        {!isCustomView && saveAsIconName && (
+        {showFileActions && saveAsIconName && (
           <Menu.Item
             leftSection={
               <LocalIcon icon={saveAsIconName} width="1.1rem" height="1.1rem" />
@@ -74,7 +81,7 @@ export default function WorkbenchBarMobileActions({
             {t("workbenchBar.saveAs", "Save As")}
           </Menu.Item>
         )}
-        {!isCustomView && (
+        {showFileActions && (
           <>
             <Menu.Divider />
             <Menu.Item

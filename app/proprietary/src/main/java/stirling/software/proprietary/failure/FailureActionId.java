@@ -10,7 +10,10 @@ import lombok.Getter;
 @Getter
 public enum FailureActionId {
 
-    /** No kind offers this any more, but rows already {@code ACKNOWLEDGED} must stay closable. */
+    /**
+     * Kept in the vocabulary for as long as any persisted row is {@code ACKNOWLEDGED}: such rows
+     * must stay readable and closable whether or not any kind currently offers this.
+     */
     ACKNOWLEDGE(Execution.SERVER, "Acknowledge"),
 
     DISMISS(Execution.SERVER, "Dismiss"),
@@ -21,7 +24,7 @@ public enum FailureActionId {
     /** Ask the owner for the password, unlock the document in their client, then retry. */
     DECRYPT_AND_RETRY(Execution.CLIENT, "Decrypt and retry"),
 
-    /** Only the owner's client can resolve the id. */
+    /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 
     VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor");

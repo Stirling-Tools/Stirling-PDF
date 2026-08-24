@@ -30,8 +30,10 @@ import stirling.software.proprietary.failure.FailureActionException;
 @Tag(name = "Notifications", description = "Things worth telling the caller about")
 public class NotificationController {
 
+    /** How many notifications one read returns when the caller does not say: one panelful. */
     private static final int DEFAULT_LIMIT = 20;
 
+    /** The most one read may return however large a limit the caller asks for. */
     private static final int MAX_LIMIT = 100;
 
     private final NotificationService notifications;

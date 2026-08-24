@@ -6,30 +6,17 @@ import {
   useRef,
   useState,
 } from "react";
-import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Menu, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { BellIcon } from "@app/components/notifications/BellIcon";
+import { BellIcon, Button } from "@app/ui";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import { useNotifications } from "@app/hooks/useNotifications";
+import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import {
-  isResolvableHere,
-  useNotifications,
-} from "@app/hooks/useNotifications";
-import {
-  useNotificationActions,
-  type ClientActionRegistry,
-  type ClientActionSpec,
-  type NotificationActionContext,
-} from "@app/components/notifications/notificationActions";
-import { promoteActions } from "@app/components/notifications/notificationActionSlots";
-import type {
-  AppNotification,
-  NotificationActionOffer,
-} from "@app/services/notifications";
-import type { NotificationDocumentState } from "@app/hooks/useNotifications";
+  NotificationItem,
+  type PasswordPrompt,
+} from "@app/components/notifications/NotificationItem";
+import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import "@app/components/notifications/NotificationBell.css";
 
 /**
@@ -37,6 +24,14 @@ import "@app/components/notifications/NotificationBell.css";
  * mean, so a new source or failure kind needs no change here. In core because both shells mount it.
  */
 export function NotificationBell() {
+  // A build with no notifications API gets no bell at all, rather than one that polls a
+  // nonexistent endpoint forever to show nothing.
+  const available = useNotificationsAvailable();
+  if (!available) return null;
+  return <MountedNotificationBell />;
+}
+
+function MountedNotificationBell() {
   const { t } = useTranslation();
   const { notifications, unreadCount, documentStateFor, markAllSeen, refresh } =
     useNotifications();
@@ -44,13 +39,9 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const headingId = useId();
-  /**
-   * Where the new ones stop, frozen on open. An id rather than a count because opening marks
-   * everything read, and because one arriving on a poll must land above the divider, not shift it.
-   */
+  // Where the new ones stop, frozen when the panel opens (opening marks everything read).
   const [firstSeenId, setFirstSeenId] = useState<string | null>(null);
-  // Fixed to the viewport: the workbench bar clips its overflow, so an absolutely positioned panel
-  // would be cut off by its own toolbar.
+  // Viewport-fixed, because the workbench bar clips its own overflow.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
@@ -246,289 +237,5 @@ export function NotificationBell() {
         onSkip={closePrompt}
       />
     </div>
-  );
-}
-
-/** An action that asked for a password, with everything running it needs. */
-interface PasswordPrompt {
-  offer: NotificationActionOffer;
-  spec: ClientActionSpec;
-  context: NotificationActionContext;
-  /** The row's title, so the prompt can say which failure it is unlocking for. */
-  rowTitle: string;
-}
-
-/**
- * The server's reason wins, being about the failure rather than this browser. Otherwise only what we
- * actually looked up, so a row we never probed is never called absent.
- */
-/** The kind's own sentence, sharing the portal's copy. Empty for a kind this build has none for. */
-function summaryKeyOf(titleKey: string): string {
-  return titleKey.replace(/\.title$/, ".description");
-}
-
-function noteFor(
-  notification: AppNotification,
-  documentState: NotificationDocumentState,
-  withheldReasonKey: string | null,
-  t: TFunction,
-): string | null {
-  if (withheldReasonKey)
-    return t(withheldReasonKey, {
-      defaultValue: t(
-        "notifications.action.unavailable",
-        "Not available for this notification.",
-      ),
-    });
-  if (notification.ownership !== "MINE" || documentState.hasLocalFile)
-    return null;
-  if (!notification.fileId)
-    return t(
-      "notifications.noDocumentLinked",
-      "This failure is not linked to a specific document, so it cannot be opened or retried here.",
-    );
-  return isResolvableHere(notification)
-    ? t(
-        "notifications.notOnThisDevice",
-        "This document is not on this device, so it cannot be opened or retried here.",
-      )
-    : null;
-}
-
-interface NotificationItemProps {
-  notification: AppNotification;
-  unread: boolean;
-  documentState: NotificationDocumentState;
-  registry: ClientActionRegistry;
-  onDismissPanel: () => void;
-  /** Hand a password-collecting action to the panel, which owns the prompt. */
-  onRequestPassword: (prompt: PasswordPrompt) => void;
-}
-
-/** Its own component because the last attempt's message and the copy state are per-row. */
-function NotificationItem({
-  notification,
-  unread,
-  documentState,
-  registry,
-  onDismissPanel,
-  onRequestPassword,
-}: NotificationItemProps) {
-  const { t } = useTranslation();
-  const [message, setMessage] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  const title = t(notification.titleKey, notification.defaultTitle);
-  const context: NotificationActionContext = {
-    notification,
-    hasLocalFile: documentState.hasLocalFile,
-    retryPayload: documentState.retryPayload,
-  };
-
-  const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
-    notification.actions,
-    (offer) => {
-      const spec = registry[offer.id];
-      // An id this build has never heard of: skipped, not rendered unwired. The server ships new kinds
-      // and their actions ahead of the clients that understand them.
-      if (!spec) return false;
-      return spec.available(context);
-    },
-  );
-
-  const labelOf = (offer: NotificationActionOffer) =>
-    t(offer.labelKey, offer.defaultLabel);
-
-  const run = async (offer: NotificationActionOffer) => {
-    if (busy) return;
-    setMessage(null);
-
-    const spec = registry[offer.id];
-    if (!spec) return;
-    // A password action is handed to the panel, which prompts for it and runs it from there.
-    if (spec.needsPassword) {
-      onRequestPassword({ offer, spec, context, rowTitle: title });
-      return;
-    }
-
-    setBusy(offer.id);
-    const outcome = await spec.run(context);
-    setBusy(null);
-    if (outcome && !outcome.ok) {
-      setMessage(
-        outcome.message ??
-          t(
-            "notifications.action.failed",
-            "That did not work. Try again in a moment.",
-          ),
-      );
-      return;
-    }
-
-    if (spec.closesPanel) onDismissPanel();
-  };
-
-  const copyDetail = async () => {
-    if (!notification.detail) return;
-    try {
-      await navigator.clipboard.writeText(notification.detail);
-      setCopied(true);
-    } catch {
-      // No clipboard permission, and the message is on screen and selectable anyway.
-    }
-  };
-
-  const note = noteFor(notification, documentState, withheldReasonKey, t);
-  const summary = t(summaryKeyOf(notification.titleKey), { defaultValue: "" });
-
-  return (
-    <li
-      className="notification-bell__item"
-      data-severity={notification.severity.toLowerCase()}
-    >
-      {unread && (
-        <span
-          className="notification-bell__dot"
-          aria-label={t("notifications.unread", "Unread")}
-        />
-      )}
-      <span className="notification-bell__item-title">{title}</span>
-      {notification.occurrences > 1 && (
-        <span className="notification-bell__count">
-          {t("notifications.occurrences", {
-            count: notification.occurrences,
-            defaultValue: "{{count}} times",
-          })}
-        </span>
-      )}
-
-      {summary && <span className="notification-bell__detail">{summary}</span>}
-
-      {note && <span className="notification-bell__note">{note}</span>}
-
-      {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
-          out of the way so a row of near-equal buttons never competes for the click. */}
-      {primary && (
-        <span className="notification-bell__actions">
-          <ActionButton
-            variant="primary"
-            rowTitle={title}
-            label={labelOf(primary)}
-            busy={busy === primary.id}
-            onRun={() => void run(primary)}
-          />
-          {secondary && (
-            <ActionButton
-              variant="secondary"
-              rowTitle={title}
-              label={labelOf(secondary)}
-              busy={busy === secondary.id}
-              onRun={() => void run(secondary)}
-            />
-          )}
-          {(overflow.length > 0 || notification.detail) && (
-            <Menu withinPortal position="bottom-end" shadow="md" width={180}>
-              <Menu.Target>
-                <Tooltip
-                  label={t("notifications.action.more", "More options")}
-                  withinPortal
-                >
-                  <ActionIcon
-                    variant="tertiary"
-                    size="sm"
-                    className="notification-bell__more"
-                    aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
-                  >
-                    <MoreIcon />
-                  </ActionIcon>
-                </Tooltip>
-              </Menu.Target>
-              <Menu.Dropdown className="notification-bell__menu">
-                {overflow.map((offer) => (
-                  <Menu.Item
-                    key={offer.id}
-                    disabled={busy === offer.id}
-                    onClick={() => void run(offer)}
-                  >
-                    {labelOf(offer)}
-                  </Menu.Item>
-                ))}
-                {notification.detail && (
-                  <Menu.Item
-                    closeMenuOnClick={false}
-                    onClick={() => void copyDetail()}
-                  >
-                    {copied
-                      ? t("notifications.action.copiedLog", "Copied")
-                      : t("notifications.action.copyLog", "Copy log")}
-                  </Menu.Item>
-                )}
-              </Menu.Dropdown>
-            </Menu>
-          )}
-        </span>
-      )}
-
-      {message && (
-        <span className="notification-bell__message" role="alert">
-          {message}
-        </span>
-      )}
-    </li>
-  );
-}
-
-interface ActionButtonProps {
-  /** Solid for the row's answer, outlined for its runner-up, ghost for the rest. */
-  variant: "primary" | "secondary" | "tertiary";
-  rowTitle: string;
-  label: string;
-  busy: boolean;
-  onRun: () => void;
-}
-
-function ActionButton({
-  variant,
-  rowTitle,
-  label,
-  busy,
-  onRun,
-}: ActionButtonProps) {
-  return (
-    <Button
-      variant={variant}
-      size="sm"
-      fontSize="xs"
-      className="notification-bell__cta"
-      disabled={busy}
-      // Every row's buttons read alike, so the label alone would not say which failure this acts on.
-      aria-label={`${label}: ${rowTitle}`}
-      onClick={onRun}
-    >
-      {label}
-    </Button>
-  );
-}
-
-const ICON_PROPS = {
-  width: 14,
-  height: 14,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-};
-
-function MoreIcon() {
-  return (
-    <svg {...ICON_PROPS} strokeWidth={2.5}>
-      <circle cx="5" cy="12" r="0.5" />
-      <circle cx="12" cy="12" r="0.5" />
-      <circle cx="19" cy="12" r="0.5" />
-    </svg>
   );
 }

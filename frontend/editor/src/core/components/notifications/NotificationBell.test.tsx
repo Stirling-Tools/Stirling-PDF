@@ -40,6 +40,8 @@ vi.mock("@app/services/notifications", () => ({
 const h = vi.hoisted(() => ({
   hasLocalFile: true,
   retryPayload: { operation: "removePassword" } as unknown,
+  // This build has the notifications API, except in the one test about the build that does not.
+  notificationsAvailable: true,
   specs: {} as Record<
     string,
     {
@@ -54,6 +56,10 @@ const h = vi.hoisted(() => ({
 vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
   loadRetryPayload: () => Promise.resolve(h.retryPayload),
+}));
+
+vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
+  useNotificationsAvailable: () => h.notificationsAvailable,
 }));
 
 // Core's own registry is empty, so without this there are no client actions to test.
@@ -150,7 +156,19 @@ describe("NotificationBell", () => {
     fetchNotifications.mockReset().mockResolvedValue([]);
     h.hasLocalFile = true;
     h.retryPayload = { operation: "removePassword" };
+    h.notificationsAvailable = true;
     h.specs = {};
+  });
+
+  it("mounts nothing at all in a build with no notifications API", async () => {
+    // No bell and, above all, no poll: an OSS build must not sit on a timer collecting 404s.
+    h.notificationsAvailable = false;
+
+    render(<NotificationBell />);
+
+    await Promise.resolve();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(fetchNotifications).not.toHaveBeenCalled();
   });
 
   it("shows no badge when there is nothing to report", async () => {
