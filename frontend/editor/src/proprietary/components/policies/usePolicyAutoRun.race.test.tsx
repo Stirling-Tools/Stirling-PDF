@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
     sourceFileIds?: string[];
     derivedFromTool?: boolean;
     classificationLabels?: string[];
-    classificationConfidence?: "none" | "low" | "medium" | "high";
+    classificationConfidence?: ClassificationConfidence;
   }>,
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
