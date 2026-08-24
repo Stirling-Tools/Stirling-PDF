@@ -42,6 +42,8 @@ runs:
           exit 1
         fi
 
+        export JAVA_HOME="${java_home}"
+        export PATH="${java_home}/bin:${PATH}"
         echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
         echo "${java_home}/bin" >> "${GITHUB_PATH}"
         java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
