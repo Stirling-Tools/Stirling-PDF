@@ -13,6 +13,7 @@ import {
   useFileActions,
 } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
@@ -419,7 +420,7 @@ const EmbedPdfViewerContent = ({
                 return;
               case "0":
                 event.preventDefault();
-                zoomActions.requestZoom("fit-width");
+                zoomActions.requestZoom(ZoomMode.FitWidth);
                 return;
             }
           }
