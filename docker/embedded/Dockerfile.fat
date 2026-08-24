@@ -96,6 +96,30 @@ RUN apt-get update \
     && sh /tmp/slim-onnxruntime.sh /layers/dependencies
 
 
+# Stage 2b: AI engine. Built at its final path so the venv resolves after the copy, on uv's
+# managed CPython because the runtime base ships Python 3.12.
+FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b8cacfb2d5f42555580b62415a98e0a3 AS engine-build
+ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
+WORKDIR /opt/stirling-engine
+COPY engine/pyproject.toml engine/uv.lock ./
+# One layer: trimming in a second RUN would cache the untrimmed copy too, and this build
+# exports every layer to a GHA cache that is capped repo-wide. Trimming saves ~20MB.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    set -eux; \
+    apt-get update && apt-get install -y --no-install-recommends binutils; \
+    uv python install 3.13; \
+    uv sync --frozen --no-dev --no-install-project --group engine --python-preference only-managed; \
+    P="$(ls -d /opt/stirling-engine/python/cpython-*)"; \
+    rm -rf "$P/share" "$P/include" \
+           "$P/lib/python3.13/idlelib" "$P/lib/python3.13/tkinter" \
+           "$P/lib/python3.13/ensurepip" "$P/lib/python3.13/pydoc_data" \
+           "$P/lib/python3.13/test" "$P/lib/python3.13/lib2to3"; \
+    find /opt/stirling-engine -name '__pycache__' -type d -prune -exec rm -rf {} + ; \
+    find /opt/stirling-engine \( -name '*.so' -o -name '*.so.*' \) -print0 \
+      | xargs -0 -r strip --strip-unneeded 2>/dev/null || true; \
+    apt-get purge -y binutils; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*
+
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
@@ -113,6 +137,12 @@ COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
+# init-without-ocr.sh starts the engine when this directory exists, so other images are unaffected.
+COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /opt/stirling-engine/python
+COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
+COPY --link --chown=1000:1000 engine/.env  /opt/stirling-engine/.env
+COPY --link --chown=1000:1000 engine/src/  /opt/stirling-engine/src/
+
 # Pre-bundled default detection model; FormDetectionModelManager seeds it into /configs on startup.
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
 
@@ -129,6 +159,8 @@ RUN set -eux; \
     ln -s /storage /app/storage; \
     chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
+    mkdir -p /opt/stirling-engine/data; \
+    chown -R stirlingpdfuser:stirlingpdfgroup /opt/stirling-engine/data; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
@@ -149,6 +181,10 @@ ENV VERSION_TAG=$VERSION_TAG \
     PGID=1000 \
     UMASK=022 \
     FAT_DOCKER=true \
+    AIENGINE_ENABLED=true \
+    STIRLING_ENGINE_HOME=/opt/stirling-engine \
+    STIRLING_ENGINE_PORT=5001 \
+    STIRLING_ENGINE_WORKERS=2 \
     INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
