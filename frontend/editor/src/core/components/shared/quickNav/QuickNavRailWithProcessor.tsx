@@ -6,7 +6,8 @@ import { useQuickNavSurfaces } from "@app/components/shared/quickNav/useQuickNav
 import { useQuickNavTools } from "@app/components/shared/quickNav/useQuickNavTools";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { markAppSwap } from "@app/utils/appSwap";
+import { withViewTransition } from "@app/utils/viewTransition";
+import { preloadPortal } from "@app/routes/adminRouteExtensions";
 
 export interface QuickNavRailWithProcessorProps {
   /**
@@ -50,7 +51,7 @@ export function QuickNavRailWithProcessor({
     // branding is what says "another Stirling app" rather than "a tool in this
     // one". Keeps its brand colours - the rail's currentColor sizing applies, but
     // BrandMark fills its own paths.
-    icon: <BrandMark height="1.125rem" />,
+    icon: <BrandMark height="1.125rem" className="quicknav-mark-processor" />,
     kind: "destination" as const,
     disabled: !portalAccess,
     reason: !portalAccess
@@ -61,8 +62,11 @@ export function QuickNavRailWithProcessor({
     // with no prompt.
     onClick: () =>
       requestNavigation(() => {
-        markAppSwap();
-        navigate(PORTAL_BASENAME);
+        // Preload first: the transition captures the frame right after the
+        // navigation commits, and the portal is a lazy chunk.
+        void preloadPortal().then(() =>
+          withViewTransition(() => navigate(PORTAL_BASENAME)),
+        );
       }),
   };
 

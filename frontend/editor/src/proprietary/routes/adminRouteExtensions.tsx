@@ -21,6 +21,20 @@ const PortalApp = includePortal
   : null;
 
 /**
+ * Fetch the portal chunk without navigating.
+ *
+ * A view transition snapshots the DOM immediately after the navigation commits,
+ * so switching to a chunk that is still downloading would capture a suspense
+ * fallback as the "after" frame - the rail would animate out rather than across.
+ * Awaiting this first means the portal's own rail is on screen in that frame.
+ * The module cache makes the import inside lazy() a no-op second time.
+ */
+export function preloadPortal(): Promise<void> {
+  if (!includePortal) return Promise.resolve();
+  return import("@portal/PortalApp").then(() => undefined);
+}
+
+/**
  * The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*).
  * Access is gated inside PortalApp (its own AuthProvider + AuthGate, plus server
  * enforcement), so this just wires the lazy route into the editor's router when

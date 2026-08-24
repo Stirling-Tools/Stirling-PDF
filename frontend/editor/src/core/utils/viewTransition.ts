@@ -17,8 +17,15 @@ export function withViewTransition(update: () => void): Promise<void> {
     update();
     return Promise.resolve();
   }
+  // Documented behaviour, and the reason callers don't each check: someone who
+  // asked for less motion gets the state change without the animation.
+  const reduced =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const doc = document as ViewTransitionDoc;
-  if (doc.startViewTransition) {
+  if (doc.startViewTransition && !reduced) {
     return doc.startViewTransition(() => flushSync(update)).finished;
   }
   update();

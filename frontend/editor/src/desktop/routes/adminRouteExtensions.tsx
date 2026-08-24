@@ -8,3 +8,11 @@ import type { ReactElement } from "react";
 export function getAdminRouteExtensions(): ReactElement[] {
   return [];
 }
+
+/**
+ * No portal in this build, so nothing to fetch. Exists so the app-switch path can
+ * call it without knowing which layer it is in.
+ */
+export function preloadPortal(): Promise<void> {
+  return Promise.resolve();
+}

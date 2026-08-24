@@ -129,25 +129,16 @@ export function RailButton({
  */
 export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
   const { t } = useTranslation();
-  // The switcher is groups[0] by contract; tagging it here rather than by
-  // rendered position means the tag survives it being dropped when empty, so the
-  // group below can't inherit its swap animation.
-  const populated = groups
-    .map((entries, index) => ({ entries, isSwitcher: index === 0 }))
-    .filter((group) => group.entries.length > 0);
+  const populated = groups.filter((group) => group.length > 0);
   return (
     <nav
       className="quick-nav-rail"
       aria-label={t("quickNav.landmark", "Quick navigation")}
     >
       {populated.map((group, index) => (
-        <div
-          className="quick-nav-rail-group"
-          data-switcher={group.isSwitcher || undefined}
-          key={group.entries[0].id}
-        >
+        <div className="quick-nav-rail-group" key={group[0].id}>
           {index > 0 && <hr className="quick-nav-rail-divider" />}
-          {group.entries.map((entry) => (
+          {group.map((entry) => (
             <RailButton key={entry.id} {...entry} />
           ))}
         </div>
