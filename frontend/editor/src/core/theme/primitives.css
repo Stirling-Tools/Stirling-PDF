@@ -202,4 +202,9 @@
   --p-c-ffc107: #ffc107;
   --p-c-c2c8e0: #c2c8e0;
   --p-c-4f8ef5: #4f8ef5;
+  --p-c-1a1a1a: #1a1a1a;
+  --p-shimmer-light-mid: rgba(226, 232, 240, 0.4);
+  --p-shimmer-light-peak: rgba(203, 213, 225, 0.5);
+  --p-shimmer-dark-mid: rgba(60, 65, 75, 0.4);
+  --p-shimmer-dark-peak: rgba(75, 82, 95, 0.5);
 }

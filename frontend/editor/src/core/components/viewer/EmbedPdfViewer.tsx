@@ -34,6 +34,7 @@ import type {
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import { FileId } from "@app/types/file";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
@@ -135,6 +136,7 @@ const EmbedPdfViewerContent = ({
     historyApiRef,
     signatureConfig,
     isPlacementMode,
+    clearImageDataStore,
   } = useSignature();
 
   // Track whether there are unsaved annotation changes in this viewer session.
@@ -288,9 +290,20 @@ const EmbedPdfViewerContent = ({
   );
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
-  const currentFileStableId =
-    currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const currentFileStableId = currentFile
+    ? isStirlingFile(currentFile) && currentFile.fileId
+      ? currentFile.fileId
+      : (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
+    : null;
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+
+  // Clear signature image store when the active document changes or viewer unmounts
+  useEffect(() => {
+    clearImageDataStore();
+    return () => {
+      clearImageDataStore();
+    };
+  }, [currentFileStableId, clearImageDataStore]);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
@@ -1212,10 +1225,11 @@ const EmbedPdfViewerContent = ({
               position: "relative",
               flex: 1,
               overflow: "hidden",
-              minHeight: 0,
+              minHeight: "min(800px, 80vh)",
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
               transition: "margin-right 0.3s ease",
+              contain: "layout style",
             }}
           >
             <LocalEmbedPDF

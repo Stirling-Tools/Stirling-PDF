@@ -258,6 +258,12 @@ export async function mockAppApis(
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
   );
+  // Allow local WASM/Worker asset requests and translation requests to proceed without hitting proxy stub rules
+  await page.route("**/pdfium/**", (route: Route) => route.continue());
+  await page.route("**/locales/**", (route: Route) => route.continue());
+  await page.route("**/vendor/**", (route: Route) => route.continue());
+  await page.route("**/pdfjs/**", (route: Route) => route.continue());
+  await page.route("**/*pdfium.worker.js*", (route: Route) => route.continue());
 
   // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
   // load. Return an empty list so the stubbed (backend-free) env stays clean —
@@ -272,6 +278,11 @@ export async function mockAppApis(
   // console error fails the page's no-unexpected-output guard.
   await page.route("**/api/v1/policies/runs", (route: Route) =>
     route.fulfill({ json: [] }),
+  );
+
+  // Teams: stub team endpoints so app initialization does not hit proxy 500
+  await page.route("**/api/v1/team/**", (route: Route) =>
+    route.fulfill({ json: {} }),
   );
 }
 

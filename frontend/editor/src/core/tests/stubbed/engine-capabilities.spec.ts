@@ -106,6 +106,7 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
     const missingApis = recordMissingApiErrors(page);
 
     await uploadFiles(page, SAMPLE_PDF);
+    await page.waitForTimeout(500);
 
     // Full reload: FileContext rehydrates from IndexedDB, not from memory.
     await page.reload({ waitUntil: "domcontentloaded" });

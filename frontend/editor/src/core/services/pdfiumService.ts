@@ -80,6 +80,7 @@ function wasmUrl(): string {
  * This is the low-level PDFium WASM interface with all C functions wrapped.
  * Prefer `withDocument()` for document-scoped work.
  */
+
 /** Reuses the WASM pre-compiled at boot. Every failure must reach this promise:
  *  `instantiateWasm` reports success by callback, so a rejection inside it leaves
  *  `init()` pending forever - and with it every thumbnail, parse and form read. */
@@ -88,7 +89,11 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   startEagerWasmCompilation();
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
-  const precompiled = await pdfiumWasmModulePromise;
+  const container = await pdfiumWasmModulePromise;
+  // The pre-compiled WASM is exposed as `{ module }`. Test doubles may resolve a
+  // bare module-shaped value, so fall back to the container itself in that case.
+  const precompiled =
+    container?.module ?? (container as unknown as WebAssembly.Module | null);
 
   let reportFailure: (error: unknown) => void = () => {};
   const instantiateFailed = new Promise<never>((_, reject) => {
@@ -961,24 +966,22 @@ export async function renderPageToBitmap(
     // Render
     m.FPDF_RenderPageBitmap(bitmapPtr, pagePtr, 0, 0, w, h, 0, 0x01 | 0x10);
 
-    // Read pixel data
+    // Read pixel data, bulk row-copy avoids per-pixel getValue() FFI overhead.
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
     const stride = m.FPDFBitmap_GetStride(bitmapPtr);
+    const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
     const pixelData = new Uint8ClampedArray(w * h * 4);
 
     for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const srcOff = y * stride + x * 4;
-        const dstOff = (y * w + x) * 4;
-        // BGRA → RGBA
-        pixelData[dstOff] =
-          m.pdfium.getValue(bufferPtr + srcOff + 2, "i8") & 0xff;
-        pixelData[dstOff + 1] =
-          m.pdfium.getValue(bufferPtr + srcOff + 1, "i8") & 0xff;
-        pixelData[dstOff + 2] =
-          m.pdfium.getValue(bufferPtr + srcOff, "i8") & 0xff;
-        pixelData[dstOff + 3] =
-          m.pdfium.getValue(bufferPtr + srcOff + 3, "i8") & 0xff;
+      const srcRow = bufferPtr + y * stride;
+      const src = heap.subarray(srcRow, srcRow + w * 4);
+      const dstRow = y * w * 4;
+      for (let x = 0; x < w * 4; x += 4) {
+        // BGRA → RGBA channel swizzle
+        pixelData[dstRow + x] = src[x + 2]; // B→R
+        pixelData[dstRow + x + 1] = src[x + 1]; // G→G
+        pixelData[dstRow + x + 2] = src[x]; // R→B
+        pixelData[dstRow + x + 3] = src[x + 3]; // A→A
       }
     }
 
@@ -1446,17 +1449,24 @@ async function renderWidgetAppearance(
 
   let imageData: ImageData | null = null;
   if (ok) {
-    const rgba = new Uint8ClampedArray(
-      pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
-    );
+    // Scan HEAPU8 directly for visible pixels, avoids copying the full bitmap
+    // buffer when the annotation has no visible appearance (common case).
+    const heapView = pdfiumRuntime.HEAPU8;
     let hasVisible = false;
-    for (let i = 3; i < rgba.length; i += 4) {
-      if (rgba[i] > 0) {
+    for (let i = heapPtr + 3; i < heapPtr + bytes; i += 4) {
+      if (heapView[i] > 0) {
         hasVisible = true;
         break;
       }
     }
-    if (hasVisible) imageData = new ImageData(rgba, wDev, hDev);
+    if (hasVisible) {
+      // Copy only when we know we need the data, ImageData takes ownership
+      // of the passed buffer, so the copy must happen before free().
+      const rgba = new Uint8ClampedArray(
+        heapView.subarray(heapPtr, heapPtr + bytes),
+      );
+      imageData = new ImageData(rgba, wDev, hDev);
+    }
   }
   m.pdfium.wasmExports.free(heapPtr);
 
@@ -1499,17 +1509,20 @@ async function renderWidgetAppearance(
 
     m.FPDFBitmap_Destroy(bmp2);
 
-    const rgba2 = new Uint8ClampedArray(
-      pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
-    );
+    const heapView2 = pdfiumRuntime.HEAPU8;
     let hasVisible2 = false;
-    for (let i = 3; i < rgba2.length; i += 4) {
-      if (rgba2[i] > 0) {
+    for (let i = heap2 + 3; i < heap2 + bytes; i += 4) {
+      if (heapView2[i] > 0) {
         hasVisible2 = true;
         break;
       }
     }
-    if (hasVisible2) imageData = new ImageData(rgba2, wDev, hDev);
+    if (hasVisible2) {
+      const rgba2 = new Uint8ClampedArray(
+        heapView2.subarray(heap2, heap2 + bytes),
+      );
+      imageData = new ImageData(rgba2, wDev, hDev);
+    }
     m.pdfium.wasmExports.free(heap2);
   }
 
@@ -1685,17 +1698,20 @@ export async function renderSignatureFieldAppearances(
           m.FPDFBitmap_Destroy(bitmapPtr);
 
           if (ok) {
-            const rgba = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.subarray(heapPtr, heapPtr + bytes),
-            );
+            // Scan HEAPU8 directly for visible pixels, avoids a full-frame
+            // buffer copy when the annotation has no visible appearance.
+            const heapView = pdfiumRuntime.HEAPU8;
             let hasVisible = false;
-            for (let i = 3; i < rgba.length; i += 4) {
-              if (rgba[i] > 0) {
+            for (let i = heapPtr + 3; i < heapPtr + bytes; i += 4) {
+              if (heapView[i] > 0) {
                 hasVisible = true;
                 break;
               }
             }
             if (hasVisible) {
+              const rgba = new Uint8ClampedArray(
+                heapView.subarray(heapPtr, heapPtr + bytes),
+              );
               imageData = new ImageData(rgba, wDev, hDev);
             }
           }
@@ -1745,17 +1761,18 @@ export async function renderSignatureFieldAppearances(
 
             m.FPDFBitmap_Destroy(bmp2);
 
-            const rgba2 = new Uint8ClampedArray(
-              pdfiumRuntime.HEAPU8.subarray(heap2, heap2 + bytes),
-            );
+            const heapView2 = pdfiumRuntime.HEAPU8;
             let hasVisible2 = false;
-            for (let i = 3; i < rgba2.length; i += 4) {
-              if (rgba2[i] > 0) {
+            for (let i = heap2 + 3; i < heap2 + bytes; i += 4) {
+              if (heapView2[i] > 0) {
                 hasVisible2 = true;
                 break;
               }
             }
             if (hasVisible2) {
+              const rgba2 = new Uint8ClampedArray(
+                heapView2.subarray(heap2, heap2 + bytes),
+              );
               imageData = new ImageData(rgba2, wDev, hDev);
             }
             m.pdfium.wasmExports.free(heap2);

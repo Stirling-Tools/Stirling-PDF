@@ -11,6 +11,31 @@ import { getPdfiumModule } from "@app/services/pdfiumService";
 /** FPDF_ANNOT (0x01) | FPDF_LCD_TEXT (0x10). */
 const PDFIUM_RENDER_FLAGS = 0x01 | 0x10;
 
+/**
+ * Reusable canvas pool, avoids per-render createElement + GC pressure.
+ * During batch thumbnail generation (e.g. 50 pages) this reduces 50
+ * DOM element allocations to at most POOL_MAX reuses.
+ */
+const canvasPool: HTMLCanvasElement[] = [];
+const POOL_MAX = 4;
+
+function acquireCanvas(w: number, h: number): HTMLCanvasElement {
+  const canvas = canvasPool.pop() ?? document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  return canvas;
+}
+
+function releaseCanvas(canvas: HTMLCanvasElement): void {
+  if (canvasPool.length < POOL_MAX) {
+    // Clear dimensions to release pixel memory while keeping the element
+    canvas.width = 0;
+    canvas.height = 0;
+    canvasPool.push(canvas);
+  }
+  // else: let GC collect it
+}
+
 export interface RenderPdfiumPageOptions {
   /** When true (default), bake the page's own rotation into the bitmap.
    *  When false, render upright so callers can apply CSS rotation. */
@@ -19,6 +44,8 @@ export interface RenderPdfiumPageOptions {
   format?: "png" | "jpeg";
   /** JPEG quality [0,1]; ignored for PNG. */
   quality?: number;
+  /** Return a temporary Blob Object URL instead of a data URL. */
+  returnBlobUrl?: boolean;
 }
 
 /**
@@ -73,24 +100,55 @@ export async function renderPdfiumPageDataUrl(
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
       const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
-      const pixels = new Uint8ClampedArray(w * h * 4);
-
-      // @embedpdf/pdfium WASM stores pixels in RGBA byte order (not BGRA),
-      // so copy rows directly without channel swapping.
-      for (let y = 0; y < h; y++) {
-        const srcRow = bufferPtr + y * stride;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+      let pixels: Uint8ClampedArray;
+      if (stride === w * 4) {
+        // Zero-copy: view the WASM memory buffer directly. `ImageData` copies
+        // the bytes on construction, so no extra allocation/copy is needed.
+        pixels = new Uint8ClampedArray(
+          (m.pdfium.wasmExports as any).memory.buffer,
+          bufferPtr,
+          w * h * 4,
+        );
+      } else {
+        // Fallback row-by-row copy if stride has padding
+        pixels = new Uint8ClampedArray(w * h * 4);
+        for (let y = 0; y < h; y++) {
+          const srcRow = bufferPtr + y * stride;
+          pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+        }
       }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
+      const canvas = acquireCanvas(w, h);
       const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      ctx.putImageData(new ImageData(pixels, w, h), 0, 0);
-      return format === "jpeg"
-        ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
-        : canvas.toDataURL();
+      if (!ctx) {
+        releaseCanvas(canvas);
+        return null;
+      }
+      ctx.putImageData(
+        new ImageData(pixels as unknown as ImageDataArray, w, h),
+        0,
+        0,
+      );
+      let outputUrl: string | null = null;
+      if (options.returnBlobUrl) {
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(
+            (b) => resolve(b),
+            format === "jpeg" ? "image/jpeg" : "image/png",
+            quality ?? 0.8,
+          );
+        });
+        if (blob) {
+          outputUrl = URL.createObjectURL(blob);
+        }
+      } else {
+        outputUrl =
+          format === "jpeg"
+            ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
+            : canvas.toDataURL();
+      }
+      releaseCanvas(canvas);
+      return outputUrl;
     } finally {
       m.FPDFBitmap_Destroy(bitmapPtr);
     }

@@ -150,16 +150,22 @@ function AnnotationSelectionMenuInner({
       return;
     }
 
+    let frameId: number | null = null;
     const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-      const rect = wrapper.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
+      if (frameId !== null) return;
+
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        const wrapper = wrapperRef.current;
+        if (!wrapper) {
+          setMenuPosition(null);
+          return;
+        }
+        const rect = wrapper.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + 8,
+          left: rect.left + rect.width / 2,
+        });
       });
     };
 
@@ -177,8 +183,11 @@ function AnnotationSelectionMenuInner({
       observer.disconnect();
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
     };
-  }, [selected]);
+  }, [selected, annotation]);
 
   if (!selected || !annotation) return null;
 
