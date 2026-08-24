@@ -3,7 +3,6 @@ package stirling.software.proprietary.mail;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ContentDisposition;

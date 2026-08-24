@@ -318,6 +318,34 @@
   color: var(--c-accent-fg, var(--c-primary));
   font-size: 0.68rem;
 }
+.email-loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem 1rem;
+  color: var(--c-text-subtle);
+  font-size: 0.72rem;
+}
+.email-loading-spinner {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--c-border-subtle);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: email-loading-spin 0.75s linear infinite;
+}
+.email-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+@keyframes email-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .email-no-results,
 .email-detail-empty {
   display: flex;

@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, Divider, ScrollArea, TextInput, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Divider,
+  Modal,
+  ScrollArea,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloudDownloadOutlinedIcon from "@mui/icons-material/CloudDownloadOutlined";
@@ -128,10 +135,14 @@ export default function EmailInboxPage() {
   const [accountProvider, setAccountProvider] = useState<Provider>(
     searchParams.get("gmail") === "connected" ? "Gmail" : DEMO_ACCOUNT.provider,
   );
+  const [displayName, setDisplayName] = useState("");
+  const [draftDisplayName, setDraftDisplayName] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [mailboxConfirmed, setMailboxConfirmed] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<MailFolder>("inbox");
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const messageListViewportRef = useRef<HTMLDivElement>(null);
   const [selectedAccount, setSelectedAccount] = useState("work");
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState(
@@ -142,6 +153,27 @@ export default function EmailInboxPage() {
     string | null
   >(null);
   const connectedFromCallback = searchParams.get("gmail") === "connected";
+
+  useEffect(() => {
+    const savedName = window.localStorage.getItem(
+      `stirling.email.displayName.${accountEmail.toLocaleLowerCase()}`,
+    );
+    setDisplayName(savedName ?? "");
+  }, [accountEmail]);
+
+  const openSettings = () => {
+    setDraftDisplayName(displayName);
+    setSettingsOpen(true);
+  };
+
+  const saveSettings = () => {
+    const name = draftDisplayName.trim();
+    const storageKey = `stirling.email.displayName.${accountEmail.toLocaleLowerCase()}`;
+    if (name) window.localStorage.setItem(storageKey, name);
+    else window.localStorage.removeItem(storageKey);
+    setDisplayName(name);
+    setSettingsOpen(false);
+  };
 
   useEffect(() => {
     let active = true;
@@ -233,9 +265,7 @@ export default function EmailInboxPage() {
   }, [mailboxConfirmed, selectedFolder]);
 
   const handleMessageListScroll = (position: { x: number; y: number }) => {
-    const element = document.querySelector<HTMLElement>(
-      ".email-message-list .mantine-ScrollArea-viewport",
-    );
+    const element = messageListViewportRef.current;
     if (!element) return;
     if (
       nextPageToken &&
@@ -345,6 +375,7 @@ export default function EmailInboxPage() {
             <ActionIcon
               variant="tertiary"
               aria-label={t("email.settings", "E-Mail-Einstellungen")}
+              onClick={openSettings}
             >
               <SettingsOutlinedIcon fontSize="small" />
             </ActionIcon>
@@ -374,7 +405,7 @@ export default function EmailInboxPage() {
             >
               <span className="email-account-avatar">A</span>
               <span className="email-account-copy">
-                <strong>{accountEmail}</strong>
+                <strong>{displayName || accountEmail}</strong>
                 <span>{accountProvider}</span>
               </span>
               <span className="email-account-dot" />
@@ -465,6 +496,7 @@ export default function EmailInboxPage() {
           </div>
           <ScrollArea
             className="email-message-list"
+            viewportRef={messageListViewportRef}
             onScrollPositionChange={handleMessageListScroll}
           >
             {filteredMessages.length > 0 ? (
@@ -513,6 +545,12 @@ export default function EmailInboxPage() {
                 <span>
                   {t("email.noResultsHint", "Passe deinen Suchbegriff an.")}
                 </span>
+              </div>
+            )}
+            {loadingMore && (
+              <div className="email-loading-more" role="status" aria-live="polite">
+                <span className="email-loading-spinner" aria-hidden="true" />
+                <span>{t("email.loadingMore", "Weitere Nachrichten werden geladen ...")}</span>
               </div>
             )}
           </ScrollArea>
@@ -671,6 +709,33 @@ export default function EmailInboxPage() {
           </div>
         </div>
       )}
+
+      <Modal
+        opened={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title={t("email.settings", "E-Mail-Einstellungen")}
+        centered
+      >
+        <TextInput
+          label={t("email.displayName", "Anzeigename")}
+          description={t(
+            "email.displayNameHint",
+            "Dieser Name wird statt der E-Mail-Adresse im Postfach angezeigt.",
+          )}
+          value={draftDisplayName}
+          onChange={(event) => setDraftDisplayName(event.currentTarget.value)}
+          placeholder={t("email.displayNamePlaceholder", "z. B. Enrico Ludwig")}
+          autoFocus
+        />
+        <div className="email-settings-actions">
+          <Button variant="secondary" onClick={() => setSettingsOpen(false)}>
+            {t("email.cancel", "Abbrechen")}
+          </Button>
+          <Button onClick={saveSettings}>
+            {t("email.save", "Speichern")}
+          </Button>
+        </div>
+      </Modal>
     </main>
   );
 }
