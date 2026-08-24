@@ -76,18 +76,18 @@ function parseSender(rawSender: string): { name: string; address: string } {
 const DEMO_MESSAGES: MailMessage[] = [
   {
     id: "invoice-01",
-    sender: "Nordlicht GmbH",
-    address: "buchhaltung@nordlicht.example",
-    subject: "Rechnung 2026-0814",
+    sender: "Northlight Ltd.",
+    address: "billing@northlight.example",
+    subject: "Invoice 2026-0814",
     preview: "Attached is the invoice for the current billing period.",
-    date: "Heute, 09:42",
+    date: "Today, 09:42",
     unread: true,
-    labels: [],
+    labels: ["INBOX", "FINANCE"],
     hasAttachment: true,
     attachments: [
       {
         id: "invoice-pdf",
-        name: "Rechnung_2026-0814.pdf",
+        name: "Invoice_2026-0814.pdf",
         type: "PDF",
         mimeType: "application/pdf",
         size: "248 KB",
@@ -96,21 +96,21 @@ const DEMO_MESSAGES: MailMessage[] = [
   },
   {
     id: "contract-02",
-    sender: "Mara Hoffmann",
-    address: "mara.hoffmann@example.com",
-    subject: "Vertragsunterlagen zur Freigabe",
+    sender: "Mara Hoffman",
+    address: "mara.hoffman@example.com",
+    subject: "Contract documents for approval",
     preview:
       "The updated documents are attached. Please provide a brief response.",
-    date: "Gestern",
+    date: "Yesterday",
     hasAttachment: true,
-    labels: [],
+    labels: ["INBOX", "CONTRACTS"],
     attachments: [
       {
         id: "contract-pdf",
-        name: "Vertragsunterlagen.pdf",
+        name: "Contract_documents.pdf",
         type: "PDF",
         mimeType: "application/pdf",
-        size: "1,8 MB",
+        size: "1.8 MB",
       },
       {
         id: "terms-docx",
@@ -124,19 +124,28 @@ const DEMO_MESSAGES: MailMessage[] = [
   },
   {
     id: "meeting-03",
-    sender: "Projektteam",
-    address: "projektteam@example.com",
+    sender: "Project team",
+    address: "project-team@example.com",
     subject: "Next steps",
     preview:
       "Thank you for the discussion. The next steps are summarized below.",
-    date: "12. Aug.",
-    labels: [],
-    attachments: [],
+    date: "Aug 12",
+    labels: ["INBOX", "MEETINGS"],
+    hasAttachment: true,
+    attachments: [
+      {
+        id: "meeting-calendar",
+        name: "Next_steps.ics",
+        type: "ICS",
+        mimeType: "text/calendar",
+        size: "3 KB",
+      },
+    ],
   },
 ];
 
 const DEMO_ACCOUNT = {
-  email: "anna.beispiel@unternehmen.de",
+  email: "anna.example@company.test",
   provider: "Gmail" as Provider,
 };
 
@@ -269,7 +278,7 @@ export default function EmailInboxPage() {
             id: message.id,
             sender: sender.name,
             address: sender.address,
-            subject: message.subject || "(Ohne Betreff)",
+            subject: message.subject || "(No subject)",
             preview: message.preview,
             date: message.date,
             unread: message.unread,
@@ -399,7 +408,14 @@ export default function EmailInboxPage() {
     return messages.filter(
       (message) =>
         (normalizedQuery
-          ? [message.sender, message.address, message.subject, message.preview]
+          ? [
+              message.sender,
+              message.address,
+              message.subject,
+              message.preview,
+              ...message.labels,
+              ...message.attachments.map((attachment) => attachment.name),
+            ]
               .join(" ")
               .toLocaleLowerCase()
               .includes(normalizedQuery)
@@ -529,7 +545,7 @@ export default function EmailInboxPage() {
         <div className="email-page-header-actions">
           <span className="email-cache-status">
             <span className="email-status-dot" />
-            {t("email.cacheReady", "Lokaler Cache aktiv")}
+            {t("email.cacheReady", "Local cache active")}
           </span>
           <Tooltip label={t("email.refresh", "Refresh inbox")}>
             <ActionIcon
@@ -556,10 +572,10 @@ export default function EmailInboxPage() {
         <aside className="email-sidebar">
           <div className="email-sidebar-heading">
             <span>{t("email.accounts", "Accounts")}</span>
-            <Tooltip label={t("email.connectAccount", "Konto verbinden")}>
+            <Tooltip label={t("email.connectAccount", "Connect account")}>
               <ActionIcon
                 variant="tertiary"
-                aria-label={t("email.connectAccount", "Konto verbinden")}
+                aria-label={t("email.connectAccount", "Connect account")}
               onClick={() => setConnectDialogOpen(true)}
               >
                 <LinkIcon fontSize="small" />
@@ -583,7 +599,7 @@ export default function EmailInboxPage() {
             <div className="email-empty-account">
               <EmailOutlinedIcon />
               <strong>
-                {t("email.noAccount", "Noch kein Konto verbunden")}
+                {t("email.noAccount", "No account connected yet")}
               </strong>
               <span>
                 {t(
@@ -633,7 +649,7 @@ export default function EmailInboxPage() {
             <span>
               {t(
                 "email.cacheHint",
-                "Metadaten werden lokal zwischengespeichert.",
+                "Message metadata is cached locally.",
               )}
             </span>
           </div>
@@ -646,7 +662,7 @@ export default function EmailInboxPage() {
           <div className="email-column-toolbar">
             <div className="email-toolbar-top">
               <div>
-                <h2>{t("email.inbox", "Posteingang")}</h2>
+                <h2>{t("email.inbox", "Inbox")}</h2>
                 <span>
                   {filteredMessages.length} {t("email.messages", "messages")}
                 </span>
@@ -808,7 +824,7 @@ export default function EmailInboxPage() {
                         )
                       }
                     >
-                      {t("email.copySubject", "Betreff kopieren")}
+                      {t("email.copySubject", "Copy subject")}
                     </Menu.Item>
                     <Menu.Item
                       onClick={() =>
@@ -817,7 +833,7 @@ export default function EmailInboxPage() {
                         )
                       }
                     >
-                      {t("email.copySender", "Absender kopieren")}
+                      {t("email.copySender", "Copy sender")}
                     </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item onClick={refreshInbox}>
@@ -898,7 +914,7 @@ export default function EmailInboxPage() {
                             }
                           >
                             {downloadedAttachment === attachment.id
-                              ? t("email.queued", "Vorgemerkt")
+                              ? t("email.queued", "Queued")
                               : t("email.download", "Import")}
                           </Button>
                         </div>
