@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import {
   Badge,
   Divider,
+  Menu,
   Modal,
   ScrollArea,
+  Select,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -56,6 +58,17 @@ function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function parseSender(rawSender: string): { name: string; address: string } {
+  const match = rawSender.match(/^\s*["']?(.+?)["']?\s*<([^>]+)>\s*$/);
+  if (match) {
+    return { name: match[1].trim(), address: match[2].trim() };
+  }
+  return {
+    name: rawSender.trim().replace(/^["']|["']$/g, ""),
+    address: rawSender.trim(),
+  };
 }
 
 const DEMO_MESSAGES: MailMessage[] = [
@@ -142,6 +155,7 @@ export default function EmailInboxPage() {
   const [selectedFolder, setSelectedFolder] = useState<MailFolder>("inbox");
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const messageListViewportRef = useRef<HTMLDivElement>(null);
   const [selectedAccount, setSelectedAccount] = useState("work");
   const [messages, setMessages] = useState<MailMessage[]>([]);
@@ -149,6 +163,7 @@ export default function EmailInboxPage() {
     DEMO_MESSAGES[0].id,
   );
   const [query, setQuery] = useState("");
+  const [attachmentType, setAttachmentType] = useState<string | null>(null);
   const [downloadedAttachment, setDownloadedAttachment] = useState<
     string | null
   >(null);
@@ -229,10 +244,12 @@ export default function EmailInboxPage() {
       );
       const mappedMessages = data.messages
         .filter((message) => message.attachments.length > 0)
-        .map((message) => ({
-          id: message.id,
-          sender: message.sender.split(" <")[0] || message.sender,
-          address: message.sender.match(/<([^>]+)>/)?.[1] ?? message.sender,
+        .map((message) => {
+          const sender = parseSender(message.sender);
+          return {
+            id: message.id,
+            sender: sender.name,
+            address: sender.address,
           subject: message.subject || "(Ohne Betreff)",
           preview: message.preview,
           date: message.date,
@@ -245,7 +262,8 @@ export default function EmailInboxPage() {
             mimeType: attachment.mimeType,
             size: formatFileSize(attachment.size),
           })),
-        }));
+          };
+        });
       setMessages((current) =>
         pageToken ? [...current, ...mappedMessages] : mappedMessages,
       );
@@ -262,7 +280,14 @@ export default function EmailInboxPage() {
     setMessages([]);
     setNextPageToken(null);
     if (mailboxConfirmed) void loadMessages();
-  }, [mailboxConfirmed, selectedFolder]);
+  }, [mailboxConfirmed, selectedFolder, refreshVersion]);
+
+  const refreshInbox = () => {
+    setMessages([]);
+    setNextPageToken(null);
+    setLoadingMore(false);
+    setRefreshVersion((version) => version + 1);
+  };
 
   const handleMessageListScroll = (position: { x: number; y: number }) => {
     const element = messageListViewportRef.current;
@@ -276,20 +301,44 @@ export default function EmailInboxPage() {
     }
   };
 
+  const attachmentTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          messages.flatMap((message) =>
+            message.attachments.map((attachment) => attachment.type),
+          ),
+        ),
+      ).sort(),
+    [messages],
+  );
+
   const filteredMessages = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery) return messages;
+    if (!normalizedQuery && !attachmentType) return messages;
     return messages.filter((message) =>
-      [message.sender, message.address, message.subject, message.preview]
-        .join(" ")
-        .toLocaleLowerCase()
-        .includes(normalizedQuery),
+      (normalizedQuery
+        ? [message.sender, message.address, message.subject, message.preview]
+            .join(" ")
+            .toLocaleLowerCase()
+            .includes(normalizedQuery)
+        : true) &&
+      (attachmentType
+        ? message.attachments.some(
+            (attachment) => attachment.type === attachmentType,
+          )
+        : true),
     );
-  }, [messages, query]);
+  }, [attachmentType, messages, query]);
+
+  const unreadMessageCount = messages.filter((message) => message.unread).length;
 
   const selectedMessage =
     filteredMessages.find((message) => message.id === selectedMessageId) ??
     filteredMessages[0];
+  const selectedAttachments = selectedMessage?.attachments.filter(
+    (attachment) => !attachmentType || attachment.type === attachmentType,
+  );
 
   const connectAccount = async () => {
     const { data } = await apiClient.get<{ authorizationUrl: string }>(
@@ -361,6 +410,7 @@ export default function EmailInboxPage() {
             <ActionIcon
               variant="tertiary"
               aria-label={t("email.refresh", "Postfach aktualisieren")}
+              onClick={refreshInbox}
             >
               <RefreshIcon fontSize="small" />
             </ActionIcon>
@@ -429,9 +479,11 @@ export default function EmailInboxPage() {
           >
             <InboxOutlinedIcon fontSize="small" />
             <span>{t("email.inbox", "Posteingang")}</span>
-            <Badge size="sm" variant="light">
-              2
-            </Badge>
+            {unreadMessageCount > 0 && (
+              <Badge size="sm" variant="light">
+                {unreadMessageCount}
+              </Badge>
+            )}
           </button>
           <button
             className={`email-folder-row ${selectedFolder === "starred" ? "is-active" : ""}`}
@@ -486,6 +538,15 @@ export default function EmailInboxPage() {
                 "email.searchPlaceholder",
                 "Nachrichten durchsuchen",
               )}
+            />
+            <Select
+              className="email-type-filter"
+              clearable
+              data={attachmentTypes}
+              value={attachmentType}
+              onChange={setAttachmentType}
+              placeholder={t("email.fileTypeFilter", "Dateityp")}
+              aria-label={t("email.fileTypeFilter", "Dateityp filtern")}
             />
           </div>
           <ScrollArea
@@ -560,14 +621,40 @@ export default function EmailInboxPage() {
                 <span className="email-detail-label">
                   {t("email.message", "Nachricht")}
                 </span>
-                <Tooltip label={t("email.moreActions", "Weitere Aktionen")}>
-                  <ActionIcon
-                    variant="tertiary"
-                    aria-label={t("email.moreActions", "Weitere Aktionen")}
-                  >
-                    <MoreHorizIcon fontSize="small" />
-                  </ActionIcon>
-                </Tooltip>
+                <Menu shadow="md" width={220} position="bottom-end">
+                  <Menu.Target>
+                    <Tooltip label={t("email.moreActions", "Weitere Aktionen")}>
+                      <ActionIcon
+                        variant="tertiary"
+                        aria-label={t("email.moreActions", "Weitere Aktionen")}
+                      >
+                        <MoreHorizIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      onClick={() =>
+                        void navigator.clipboard.writeText(selectedMessage.subject)
+                      }
+                    >
+                      {t("email.copySubject", "Betreff kopieren")}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() =>
+                        void navigator.clipboard.writeText(
+                          `${selectedMessage.sender} <${selectedMessage.address}>`,
+                        )
+                      }
+                    >
+                      {t("email.copySender", "Absender kopieren")}
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item onClick={refreshInbox}>
+                      {t("email.refresh", "Postfach aktualisieren")}
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               </div>
               <ScrollArea className="email-detail-scroll">
                 <div className="email-detail-content">
@@ -600,13 +687,13 @@ export default function EmailInboxPage() {
                     )}
                   </p>
 
-                  {selectedMessage.attachments.length > 0 && (
+                  {selectedAttachments && selectedAttachments.length > 0 && (
                     <div className="email-attachments">
                       <div className="email-section-label">
                         <span>{t("email.attachments", "Anhänge")}</span>
-                        <span>{selectedMessage.attachments.length}</span>
+                        <span>{selectedAttachments.length}</span>
                       </div>
-                      {selectedMessage.attachments.map((attachment) => (
+                      {selectedAttachments.map((attachment) => (
                         <div
                           className="email-attachment-row"
                           key={attachment.id}

@@ -242,6 +242,9 @@
 .email-search {
   width: min(15rem, 52%);
 }
+.email-type-filter {
+  width: 8.5rem;
+}
 .email-message-list {
   height: calc(100% - 5.15rem);
 }
