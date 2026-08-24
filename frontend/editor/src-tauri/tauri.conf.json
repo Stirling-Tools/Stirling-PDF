@@ -29,14 +29,9 @@
     "publisher": "Stirling PDF Inc.",
     "targets": ["deb", "rpm", "appimage", "dmg", "app", "msi"],
     "icon": [
-      "icons/icon.png",
-      "icons/icon.icns",
-      "icons/icon.ico",
-      "icons/16x16.png",
-      "icons/32x32.png",
-      "icons/64x64.png",
-      "icons/128x128.png",
-      "icons/192x192.png"
+      "icons/windows/app.ico",
+      "icons/macos/app.icns",
+      "icons/macos/app-512.png"
     ],
     "resources": ["libs/*.jar", "runtime/jre/**/*"],
     "fileAssociations": [
