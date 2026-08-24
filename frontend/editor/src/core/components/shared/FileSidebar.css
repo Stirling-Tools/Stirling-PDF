@@ -49,17 +49,16 @@
   border-radius: 0;
 }
 
-/* ---- Brand header (logo / editor⇄processor switcher) ---- */
-.file-sidebar-brand {
+/* ---- Header row (collapse toggle) ---- */
+.file-sidebar-header {
   display: flex;
   align-items: center;
-  min-height: var(--nav-brand-h);
+  min-height: var(--nav-header-h);
   padding: 0 var(--nav-gutter);
   flex-shrink: 0;
 }
 
 .file-sidebar-collapse-toggle {
-  margin-left: auto;
   flex-shrink: 0;
 }
 

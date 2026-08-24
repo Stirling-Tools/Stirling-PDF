@@ -25,7 +25,6 @@ import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import { QuickNavRail } from "@app/components/shared/QuickNavRail";
-import { SidebarBrandHeader } from "@app/components/shared/SidebarBrandHeader";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
@@ -533,16 +532,13 @@ export default function HomePage() {
             className="flex-nowrap flex"
             bg="var(--c-bg)"
           >
-            {/* Left column: the brand spans the top row so the logo sits in the
-                true top-left corner, with the quick nav rail beginning beneath
-                it rather than pushing it inward. */}
+            {/* Left column: the quick nav rail and the sidebar side by side,
+                both reaching the top of the window. */}
             <div className="workspace-frame">
-              <SidebarBrandHeader
-                className="workspace-frame__brand"
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
+              <QuickNavRail onOpenSettings={() => setConfigModalOpen(true)} />
+              <MyFilesAwareFileSidebar
+                ref={quickAccessRef}
+                accountHoisted
                 toggleAriaLabel={
                   navigationState.workbench === "myFiles"
                     ? t("fileSidebar.leaveMyFiles", "Leave My Files")
@@ -553,13 +549,6 @@ export default function HomePage() {
                     <ArrowBackIcon />
                   ) : undefined
                 }
-                onToggleCollapse={handleSidebarToggle}
-              />
-              <QuickNavRail onOpenSettings={() => setConfigModalOpen(true)} />
-              <MyFilesAwareFileSidebar
-                ref={quickAccessRef}
-                brandHoisted
-                accountHoisted
                 active={navigationState.workbench === "myFiles"}
                 // /files always shows the rail collapsed - force it here so a
                 // deep-link/reload onto /files (no workbench transition) still

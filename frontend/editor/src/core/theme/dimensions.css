@@ -36,7 +36,7 @@
   --quicknav-rail-w: 2.75rem;
   /* The left column's shared geometry. Both apps (editor and processor) read
      these so their sidebars and brand rows cannot drift apart. */
-  --nav-brand-h: 3rem;
+  --nav-header-h: 3rem;
   --sidebar-w: 16.25rem;
   --sidebar-collapsed-w: var(--nav-rail-w);
 

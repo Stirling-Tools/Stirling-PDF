@@ -36,8 +36,8 @@
 .portal-sidebar__close {
   display: none;
   flex-shrink: 0;
-  /* Pushed to the trailing edge on its own: the only other thing in this row on
-     mobile is the brand, since collapsing is hidden at that width. */
+  /* Pushed to the trailing edge: it is the only control in this row on mobile,
+     since collapsing is hidden at that width. */
   margin-left: auto;
 }
 
@@ -121,8 +121,8 @@
   margin-inline: 0.375rem;
 }
 
-.portal-sidebar__logo {
-  height: var(--nav-brand-h);
+.portal-sidebar__header {
+  height: var(--nav-header-h);
   padding: 0 var(--nav-gutter);
   display: flex;
   align-items: center;
@@ -188,9 +188,8 @@
   margin: 0 0.625rem 0.75rem;
 }
 
-/* Inside the workspace frame the sidebar is a grid cell under the brand row, so
-   it must fill that row rather than the whole viewport - a 100vh sticky column
-   would overhang the frame by the brand row's height. The frame collapses to a
+/* Inside the workspace frame the sidebar fills the frame rather than the whole
+   viewport: a 100vh sticky column would overhang it. The frame collapses to a
    block under the mobile breakpoint, where the drawer's own fixed positioning
    takes over again. */
 .workspace-frame .portal-sidebar {

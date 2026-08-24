@@ -1,18 +1,15 @@
 import { useEffect, type ReactNode } from "react";
-import { useMediaQuery } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { ActionIcon } from "@app/ui";
-import { Sidebar, MOBILE_QUERY } from "@portal/components/Sidebar";
+import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
 import { useGoToEditor } from "@portal/hooks/useGoToEditor";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
-import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { BrandTile } from "@app/components/shared/BrandTile";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import "@app/components/layout/WorkspaceFrame.css";
 import {
   QuickNavRailContainer,
@@ -74,14 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     mobileNavOpen,
     closeMobileNav,
     openSettings,
-    sidebarCollapsed,
-    toggleSidebarCollapsed,
   } = useUI();
-  const isMobile = useMediaQuery(MOBILE_QUERY, false, {
-    getInitialValueInEffect: false,
-  });
-  // Collapse is a desktop affordance; on mobile the sidebar is a drawer.
-  const collapsed = sidebarCollapsed && !isMobile;
   const { pathname } = useLocation();
   const goToEditor = useGoToEditor();
 
@@ -180,36 +170,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      {/* Brand spans the top row so the logo sits in the true top-left corner,
-          with the quick nav rail beginning beneath it rather than pushing it
-          inward - the same frame the editor uses. */}
+      {/* The rail and the sidebar side by side, both reaching the top of the
+          window - the same frame the editor uses. */}
       <div className="workspace-frame">
-        <div className="workspace-frame__brand portal-sidebar__logo">
-          <BrandSwitcher
-            current="processor"
-            // Wrapped, not passed by reference: onSwitch hands over the target
-            // app id, which goToEditor would take as a tool path.
-            onSwitch={() => goToEditor()}
-            collapsed={collapsed}
-          />
-          <ActionIcon
-            variant="tertiary"
-            className="portal-sidebar__collapse"
-            aria-label={
-              collapsed
-                ? t("fileSidebar.expand", "Expand sidebar")
-                : t("fileSidebar.collapse", "Collapse sidebar")
-            }
-            onClick={toggleSidebarCollapsed}
-          >
-            <SidebarToggleIcon size={18} />
-          </ActionIcon>
-        </div>
         <QuickNavRailContainer
           groups={[apps, within]}
           onOpenSettings={() => openSettings()}
         />
-        <Sidebar brandHoisted />
+        <Sidebar />
       </div>
       {mobileNavOpen && (
         <div

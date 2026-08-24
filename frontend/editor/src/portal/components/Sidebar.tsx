@@ -1,7 +1,6 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon, NavItem, NavSurface } from "@app/ui";
-import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
@@ -29,16 +28,7 @@ const NAV_SECTIONS: NavGroup[] = [
 /** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
 export const MOBILE_QUERY = "(max-width: 48rem)";
 
-export interface SidebarProps {
-  /**
-   * The shell renders the brand and the collapse toggle itself, in its own
-   * top-left header row above the quick nav rail (see AppShell). Only the
-   * mobile drawer's close button stays here.
-   */
-  brandHoisted?: boolean;
-}
-
-export function Sidebar({ brandHoisted = false }: SidebarProps) {
+export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const {
     openSettings,
@@ -106,48 +96,32 @@ export function Sidebar({ brandHoisted = false }: SidebarProps) {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* Skipped entirely when the brand is hoisted into the workspace frame and
-          this is not the mobile drawer: the row would still reserve
-          --nav-brand-h, starting the nav 3rem below the quick nav rail beside
-          it. The drawer keeps it, because the hoisted row is hidden at that
-          width and the brand has to come from somewhere. */}
-      {(!brandHoisted || isMobile) && (
-        <div className="portal-sidebar__logo">
-          <BrandSwitcher
-            current="processor"
-            // Wrapped, not passed by reference: onSwitch hands over the target
-            // app id, which goToEditor would take as a tool path.
-            onSwitch={() => goToEditor()}
-            collapsed={collapsed}
-          />
+      {/* Header row: the collapse toggle on desktop, the drawer's close button on
+          mobile. Both need a home now that the sidebar reaches the top of the
+          window with no brand row above it. */}
+      <div className="portal-sidebar__header">
+        <ActionIcon
+          variant="tertiary"
+          className="portal-sidebar__collapse"
+          aria-label={
+            collapsed
+              ? t("fileSidebar.expand", "Expand sidebar")
+              : t("fileSidebar.collapse", "Collapse sidebar")
+          }
+          onClick={toggleSidebarCollapsed}
+        >
+          <SidebarToggleIcon size={18} />
+        </ActionIcon>
 
-          {/* Collapsing is a desktop affordance; the drawer is opened and closed
-              instead, so its header carries the brand and the close button. */}
-          {!brandHoisted && (
-            <ActionIcon
-              variant="tertiary"
-              className="portal-sidebar__collapse"
-              aria-label={
-                collapsed
-                  ? t("fileSidebar.expand", "Expand sidebar")
-                  : t("fileSidebar.collapse", "Collapse sidebar")
-              }
-              onClick={toggleSidebarCollapsed}
-            >
-              <SidebarToggleIcon size={18} />
-            </ActionIcon>
-          )}
-
-          <ActionIcon
-            variant="tertiary"
-            className="portal-sidebar__close"
-            aria-label={t("portal.shell.topbar.closeNav")}
-            onClick={closeMobileNav}
-          >
-            <CloseIcon size={18} />
-          </ActionIcon>
-        </div>
-      )}
+        <ActionIcon
+          variant="tertiary"
+          className="portal-sidebar__close"
+          aria-label={t("portal.shell.topbar.closeNav")}
+          onClick={closeMobileNav}
+        >
+          <CloseIcon size={18} />
+        </ActionIcon>
+      </div>
 
       <nav className="portal-sidebar__nav">
         {NAV_SECTIONS.map((section) => (

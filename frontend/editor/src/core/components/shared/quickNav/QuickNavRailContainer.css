@@ -29,11 +29,11 @@
 
 .quick-nav-rail-surface {
   height: 100%;
-  /* Block padding matches the sidebar boxes' own 0.25rem so rail icons and
-     sidebar rows share a baseline instead of the rail sitting proud of them.
-     None inline: the bar is exactly one target wide, so inline padding would
-     leave the buttons wider than the box holding them. */
-  padding: 0.25rem 0;
+  /* Block padding puts the first icon on the same baseline as the sidebar's
+     collapse toggle beside it, which sits centred in a taller header row. None
+     inline: the bar is exactly one target wide, so inline padding would leave
+     the buttons wider than the box holding them. */
+  padding: 0.375rem 0;
 }
 
 /* Portal's own sidebar becomes an off-canvas drawer under this breakpoint

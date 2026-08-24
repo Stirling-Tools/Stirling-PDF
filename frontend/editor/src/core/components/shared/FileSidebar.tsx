@@ -32,7 +32,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
-import { SidebarBrandHeader } from "@app/components/shared/SidebarBrandHeader";
+import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
@@ -98,8 +98,6 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
-  /** The workspace renders the brand header itself, above the quick nav rail. */
-  brandHoisted?: boolean;
   /**
    * The quick nav rail owns the account control, so the footer drops its account
    * row and keeps the rest (credits, plan, app switch).
@@ -162,7 +160,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       collapsed = false,
       onToggleCollapse,
       onOpenSettings,
-      brandHoisted = false,
       accountHoisted = false,
       onUploadFiles,
       onPickGoogleDriveFiles,
@@ -952,16 +949,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
         )}
         <div className="file-sidebar-inner">
-          {/* Omitted when the workspace hoists the brand into its own top-left
-              header row, above the quick nav rail (see HomePage). */}
-          {!brandHoisted && (
-            <SidebarBrandHeader
-              collapsed={collapsed}
-              onToggleCollapse={onToggleCollapse}
-              toggleAriaLabel={toggleAriaLabel}
-              toggleIcon={toggleIcon}
-            />
-          )}
+          <SidebarHeader
+            collapsed={collapsed}
+            onToggleCollapse={onToggleCollapse}
+            toggleAriaLabel={toggleAriaLabel}
+            toggleIcon={toggleIcon}
+          />
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
               search lives in the global super search (top bar), not here. */}
