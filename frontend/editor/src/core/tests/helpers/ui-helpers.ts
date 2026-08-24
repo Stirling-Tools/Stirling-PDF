@@ -153,11 +153,9 @@ export async function openSettings(page: Page): Promise<Locator> {
  */
 export async function closeSettings(page: Page): Promise<void> {
   const modal = page.locator(".mantine-Modal-content").first();
-  // A single click on the X can be swallowed when it lands during a re-render -
-  // the settings URL sync re-renders the tree under parallel-worker load - which
-  // leaves the modal open. Retry the close until the modal is actually gone
-  // instead of failing the spec on one dropped click (a genuinely broken close
-  // still fails: every retry misses and the modal stays visible past the cap).
+  // A click on the X can be swallowed by a re-render, leaving the modal open;
+  // retry until it's gone. A genuinely broken close still fails - every retry
+  // misses and the modal stays past the cap.
   await expect(async () => {
     if (await modal.isVisible().catch(() => false)) {
       await page

@@ -219,9 +219,8 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return false;
-    // Restoring the /settings URL on close is owned by the host's onClose
-    // (HomePage.handleCloseConfig) so both this modal and the saas override
-    // unwind the URL the same way. Doing it here too raced that single write.
+    // URL restore on close is owned by the host onClose so the modal and the
+    // saas override unwind the same way; doing it here too raced that write.
     onClose();
     return true;
   }, [confirmIfDirty, onClose]);

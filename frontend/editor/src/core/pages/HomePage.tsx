@@ -115,10 +115,9 @@ export default function HomePage() {
     return () => window.removeEventListener("appConfig:open", handler);
   }, []);
 
-  // Remember where the user was before settings opened, so close can restore
-  // that URL. Null when settings opened directly on a /settings URL (deep link,
-  // plan/upgrade redirect) - there's no prior in-app location, so close falls
-  // back to the editor root.
+  // Where the user was before settings opened, so close can restore it. Null
+  // when opened directly on a /settings URL (deep link) - close falls back to
+  // the editor root.
   const settingsOriginRef = useRef<string | null>(null);
   const wasConfigOpenRef = useRef(false);
   useEffect(() => {
@@ -131,20 +130,10 @@ export default function HomePage() {
   }, [configModalOpen, location.pathname]);
 
   const handleCloseConfig = useCallback(() => {
-    // Restore the pre-settings URL with a single synchronous replace, THEN drop
-    // the local open flag. Three subtleties, all proven to flake the e2e suite:
-    //   1. Restore the URL before clearing the flag. Moving the URL off
-    //      /settings first lets the URL->open effect above settle the modal
-    //      closed authoritatively; clearing the flag first left a window where a
-    //      late /settings location commit could re-open it.
-    //   2. Decide from window.location, NOT the router's useLocation(). Tab
-    //      switches update the URL bar synchronously (AppConfigModal's
-    //      switchSection uses replaceState) while React Router's location commit
-    //      is deferred, so under load location.pathname still reads the pre-open
-    //      path here - we'd skip the cleanup, then the deferred /settings commit
-    //      lands and re-opens the modal.
-    //   3. Replace to the origin rather than navigate(-1): webkit intermittently
-    //      dropped the async history.go(-1), leaving the URL on /settings/*.
+    // Restore the URL before clearing the flag, or a late /settings commit
+    // re-opens the modal. Read window.location, not useLocation: a tab switch
+    // updates the URL synchronously while the router's commit lags. Replace to
+    // the origin rather than navigate(-1), which webkit can drop.
     if (stripBasePath(window.location.pathname).startsWith("/settings")) {
       navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
     }
