@@ -331,7 +331,9 @@ function runOxlint(files) {
   try {
     // Invoked as `node <bin>` rather than through npx: spawning a .cmd shim on
     // Windows fails with EINVAL unless a shell is used, and a shell would mean
-    // quoting every path.
+    // quoting every path. It must also be the npm package rather than the
+    // standalone release binary, which accepts a jsPlugins config, skips loading
+    // it, and still reports success (oxc-project/oxc#25203).
     stdout = execFileSync(process.execPath, [OXLINT_BIN, "--config", OXLINT_CONFIG, "--format=json", ...files], {
       cwd: REPO,
       encoding: "utf8",
@@ -342,8 +344,7 @@ function runOxlint(files) {
     // oxlint exits non-zero whenever it reports something, which is the normal case.
     stdout = error.stdout ?? "";
     if (!stdout.trim()) {
-      warn(`oxlint failed on ${files.length} file(s): ${firstLine(error.stderr ?? error.message)}`);
-      return [];
+      die(`oxlint failed on ${files.length} file(s): ${firstLine(error.stderr ?? error.message)}`);
     }
   }
 
@@ -356,13 +357,20 @@ function firstLine(value) {
 
 function parseOxlint(stdout) {
   const start = stdout.indexOf("{");
-  if (start < 0) return [];
+  if (start < 0) die("oxlint produced no JSON report.");
   let report;
   try {
     report = JSON.parse(stdout.slice(start));
   } catch {
-    warn("could not parse oxlint JSON output; TS/TSX findings were dropped.");
-    return [];
+    die("could not parse oxlint JSON output.");
+  }
+
+  // JS plugins are alpha, and their documented failure mode is being skipped
+  // silently while oxlint still reports success (oxc-project/oxc#25203).
+  // number_of_rules is the report saying whether the plugin's rule was actually
+  // registered. Without this check a dead plugin reads exactly like clean code.
+  if ((report.number_of_rules ?? 0) < 1) {
+    die("oxlint loaded no rules, so the comment plugin did not run. Refusing to report a pass.");
   }
 
   return (report.diagnostics ?? []).flatMap((d) => {
@@ -431,6 +439,14 @@ function publish(findings, scope) {
 
 function warn(message) {
   process.stderr.write(`comment-lint: ${message}\n`);
+}
+
+// A gate that cannot run must not report a pass. Reserved for the engine being
+// broken, as opposed to absent: a missing oxlint install is handled by skipping
+// with a warning, so the hook stays usable before `task frontend:install`.
+function die(message) {
+  process.stderr.write(`comment-lint: ${message}\n`);
+  process.exit(2);
 }
 
 // The fixture corpus is the contract between the two engines: the same rule set

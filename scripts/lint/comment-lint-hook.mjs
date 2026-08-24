@@ -27,8 +27,15 @@ if (!file || !LINTABLE.test(file)) process.exit(0);
 let report;
 try {
   report = JSON.parse(run([CLI, "--since", "HEAD", "--json", file]));
-} catch {
-  // A broken hook must never stall the session, so any failure here is silent.
+} catch (error) {
+  // The linter exits 2 when its engine is broken rather than when it found
+  // something, which for the hook means it checked nothing. Say so once, as a
+  // non-blocking error, instead of looking indistinguishable from clean. Any
+  // other failure stays silent: a broken hook must not stall the session.
+  if (error.status === 2) {
+    process.stderr.write("comment-lint could not run, so comments in this file were not checked.\n");
+    process.exit(1);
+  }
   process.exit(0);
 }
 
