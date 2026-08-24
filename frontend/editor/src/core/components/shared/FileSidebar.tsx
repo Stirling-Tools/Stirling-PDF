@@ -1233,7 +1233,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       <Loader size="sm" color="var(--c-text-subtle)" />
                     </div>
                   ) : allFileStubs.length > 0 ? (
-                    <div className="file-sidebar-file-list">
+                    <div
+                      className="file-sidebar-file-list"
+                      role="tablist"
+                      aria-label={t("fileSidebar.files", "Files")}
+                    >
                       {fileGroups ? (
                         <>
                           {fileGroups.map((group) => {
