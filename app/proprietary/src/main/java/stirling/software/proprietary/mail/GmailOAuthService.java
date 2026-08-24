@@ -13,6 +13,7 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class GmailOAuthService {
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final Map<String, GmailConnection> connections = new ConcurrentHashMap<>();
 
     @Value("${mailbox.gmail.client-id:}")
     private String clientId;
@@ -106,6 +108,14 @@ public class GmailOAuthService {
         }
         JsonNode body = objectMapper.readTree(response.body());
         return new GmailProfile(body.path("email").asText(""), body.path("name").asText(""));
+    }
+
+    public void saveConnection(String username, GmailToken token, GmailProfile profile) {
+        connections.put(username, new GmailConnection(token, profile));
+    }
+
+    public GmailConnection getConnection(String username) {
+        return connections.get(username);
     }
 
     public List<GmailMessage> listMessages(GmailToken token)
@@ -238,4 +248,6 @@ public class GmailOAuthService {
     public record GmailAttachment(String id, String name, String mimeType, long size) {}
 
     public record GmailAttachmentData(byte[] data) {}
+
+    public record GmailConnection(GmailToken token, GmailProfile profile) {}
 }

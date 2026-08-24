@@ -276,7 +276,7 @@ export default function EmailInboxPage() {
           <ActionIcon
             variant="tertiary"
             aria-label={t("email.back", "Zurück")}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/editor")}
           >
             <ArrowBackIcon fontSize="small" />
           </ActionIcon>

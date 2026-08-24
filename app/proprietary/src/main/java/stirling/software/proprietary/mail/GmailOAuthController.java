@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.UserServiceInterface;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,9 +34,11 @@ public class GmailOAuthController {
     static final String REDIRECT_URI_SESSION_KEY = "stirling.gmail.oauth.redirect-uri";
     static final String TOKEN_SESSION_KEY = "stirling.gmail.oauth.token";
     static final String PROFILE_SESSION_KEY = "stirling.gmail.oauth.profile";
+    static final String USER_SESSION_KEY = "stirling.gmail.oauth.username";
 
     private final GmailOAuthService gmailOAuthService;
     private final ApplicationProperties applicationProperties;
+    private final UserServiceInterface userService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @GetMapping("/api/v1/email/gmail/connect")
@@ -44,6 +47,7 @@ public class GmailOAuthController {
         String state = randomState();
         HttpSession session = request.getSession(true);
         session.setAttribute(STATE_SESSION_KEY, state);
+        session.setAttribute(USER_SESSION_KEY, userService.getCurrentUsername());
         String redirectUri = gmailOAuthService.resolveRedirectUri(request);
         session.setAttribute(REDIRECT_URI_SESSION_KEY, redirectUri);
         log.info(
@@ -67,7 +71,12 @@ public class GmailOAuthController {
                         ? null
                         : (GmailOAuthService.GmailProfile)
                                 session.getAttribute(PROFILE_SESSION_KEY);
-        boolean tokenPresent = session != null && session.getAttribute(TOKEN_SESSION_KEY) != null;
+        GmailOAuthService.GmailConnection connection =
+                gmailOAuthService.getConnection(userService.getCurrentUsername());
+        if (profile == null && connection != null) profile = connection.profile();
+        boolean tokenPresent =
+                (session != null && session.getAttribute(TOKEN_SESSION_KEY) != null)
+                        || connection != null;
         ResponseEntity<?> response =
                 ResponseEntity.ok(
                         profile == null
@@ -123,6 +132,11 @@ public class GmailOAuthController {
                 session == null
                         ? null
                         : (GmailOAuthService.GmailToken) session.getAttribute(TOKEN_SESSION_KEY);
+        if (token == null) {
+            GmailOAuthService.GmailConnection connection =
+                    gmailOAuthService.getConnection(userService.getCurrentUsername());
+            token = connection == null ? null : connection.token();
+        }
         if (token == null) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.UNAUTHORIZED,
@@ -188,6 +202,10 @@ public class GmailOAuthController {
         session.removeAttribute(REDIRECT_URI_SESSION_KEY);
         session.setAttribute(TOKEN_SESSION_KEY, token);
         session.setAttribute(PROFILE_SESSION_KEY, profile);
+        String username = (String) session.getAttribute(USER_SESSION_KEY);
+        if (username != null && !username.isBlank()) {
+            gmailOAuthService.saveConnection(username, token, profile);
+        }
         String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
         String target =
                 frontendUrl == null || frontendUrl.isBlank()
