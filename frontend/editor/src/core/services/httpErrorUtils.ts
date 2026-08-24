@@ -25,7 +25,10 @@ function titleForStatus(status?: number): string {
   return "Request failed";
 }
 
-export function extractAxiosErrorMessage(error: any): {
+export function extractAxiosErrorMessage(
+  error: any,
+  decodedData?: unknown,
+): {
   title: string;
   body: string;
 } {
@@ -33,7 +36,10 @@ export function extractAxiosErrorMessage(error: any): {
     const status = error.response?.status;
     const _statusText = error.response?.statusText || "";
     let parsed: any = undefined;
-    const raw = error.response?.data;
+    // Tool POSTs use responseType "blob", so error.response.data is an unread
+    // Blob. Prefer the decoded body when the caller supplies it, otherwise the
+    // message falls back to the generic text and the server reason is lost.
+    const raw = decodedData !== undefined ? decodedData : error.response?.data;
     if (typeof raw === "string") {
       try {
         parsed = JSON.parse(raw);
