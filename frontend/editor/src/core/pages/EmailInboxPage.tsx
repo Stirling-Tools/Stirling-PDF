@@ -576,7 +576,7 @@ export default function EmailInboxPage() {
               <ActionIcon
                 variant="tertiary"
                 aria-label={t("email.connectAccount", "Connect account")}
-              onClick={() => setConnectDialogOpen(true)}
+                onClick={() => setConnectDialogOpen(true)}
               >
                 <LinkIcon fontSize="small" />
               </ActionIcon>
@@ -647,10 +647,7 @@ export default function EmailInboxPage() {
             </span>
             <strong>{t("email.syncTime", "4 minutes ago")}</strong>
             <span>
-              {t(
-                "email.cacheHint",
-                "Message metadata is cached locally.",
-              )}
+              {t("email.cacheHint", "Message metadata is cached locally.")}
             </span>
           </div>
         </aside>
