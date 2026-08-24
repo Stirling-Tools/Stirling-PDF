@@ -51,7 +51,12 @@ export interface QuickNavRailBaseProps {
   footer?: ReactNode;
 }
 
-function RailButton({
+/**
+ * One icon in the bar. Exported so the footer's own entries (the teams link)
+ * are the same control as the navigation groups above them, rather than a
+ * lookalike that drifts on hover, focus and disabled styling.
+ */
+export function RailButton({
   label,
   icon,
   kind,

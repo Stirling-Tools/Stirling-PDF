@@ -1,12 +1,15 @@
 /* Settings + avatar, pinned to the bottom of the bar. */
 
 .quick-nav-rail-account {
-  margin-top: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  /* The brand row at the top centres the mark in a --nav-header-h block, so the
+     gap above it is the gutter plus half that row's slack. Without matching it
+     here the bottom of the bar sits visibly tighter than the top. */
+  padding-bottom: 0.3125rem;
 }
 
 /* Wrapper the tooltip binds its handlers to; the disc itself is the Avatar. */

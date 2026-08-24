@@ -1,8 +1,8 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon, NavItem, NavSurface } from "@app/ui";
-import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
 import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton";
+import { Logo } from "@app/ui/Logo";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
@@ -97,16 +97,11 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* Header row: the brand lockup, the collapse toggle beside it, and the
-          drawer's close button on mobile. */}
+      {/* Header row: the "Stirling" wordmark, the collapse toggle beside it, and
+          the drawer's close button on mobile. The mark itself is at the top of the
+          quick nav rail, in the column to the left. */}
       <div className="portal-sidebar__header">
-        <BrandSwitcher
-          current="processor"
-          // Wrapped, not passed by reference: onSwitch hands over the target app
-          // id, which goToEditor would take as a tool path.
-          onSwitch={() => goToEditor()}
-          collapsed={collapsed}
-        />
+        {!collapsed && <Logo variant="textOnly" textHeight="1.3rem" />}
 
         <SidebarToggleButton
           collapsed={collapsed}

@@ -49,7 +49,7 @@
   border-radius: 0;
 }
 
-/* ---- Header row (brand lockup + collapse toggle) ---- */
+/* ---- Header row (wordmark + collapse toggle) ---- */
 .file-sidebar-header {
   display: flex;
   align-items: center;
@@ -63,11 +63,10 @@
   flex-shrink: 0;
 }
 
-/* Collapsed to an icon rail there is no room for the mark and the toggle side by
-   side, so they stack and the toggle gives up the trailing-edge push. */
+/* Collapsed the row holds only the toggle, so centre it in the rail rather than
+   pushing it to a trailing edge that is no longer there. */
 .file-sidebar[data-collapsed="true"] .file-sidebar-header {
-  flex-direction: column;
-  gap: 0.25rem;
+  justify-content: center;
   padding: 0;
 }
 .file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {

@@ -7,6 +7,9 @@
   flex-shrink: 0;
   box-sizing: border-box;
   background-color: var(--c-bg);
+  /* Brand mark above the bar, which takes the rest of the height. */
+  display: flex;
+  flex-direction: column;
   /* Logical, not `padding-left`/`right`: this is a flex item that flips to the
      far edge in RTL, where physical sides would mirror the wrong way. */
   padding-block: var(--nav-gutter);
@@ -24,8 +27,19 @@
   border-radius: 0;
 }
 
+/* Same height as the sidebar's header row beside it, so the mark and the wordmark
+   sit on one line across the two columns. */
+.quick-nav-rail-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--nav-header-h);
+  flex-shrink: 0;
+}
+
 .quick-nav-rail-surface {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   /* Block padding puts the first icon on the same baseline as the contents of
      the sidebar's header row beside it. None inline: the bar is exactly one
      target wide, so inline padding would leave the buttons wider than the box

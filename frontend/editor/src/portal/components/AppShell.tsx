@@ -190,6 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <QuickNavRailContainer
           groups={[apps, within]}
           onOpenSettings={() => openSettings()}
+          onOpenTeams={() => openSettings("teams")}
         />
         <Sidebar />
       </div>

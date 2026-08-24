@@ -72,6 +72,10 @@ export function QuickNavRailWithProcessor({
         [...within, ...tools],
       ]}
       onOpenSettings={onOpenSettings}
+      // Deep link rather than a modal call: /settings/<key> is how the editor
+      // opens its config modal at a section, and the modal reads the key back
+      // out of the URL.
+      onOpenTeams={() => navigate("/settings/teams")}
     />
   );
 }
