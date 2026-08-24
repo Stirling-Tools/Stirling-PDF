@@ -1,7 +1,10 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  background-color: var(--c-bg);
+  /* One solid panel in the surface colour, not a canvas holding floating cards:
+     the sections inside it flatten (see below) so the sidebar reads as a single
+     piece of chrome. */
+  background-color: var(--c-surface);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -35,6 +38,15 @@
   flex: 1;
   min-height: 0;
   gap: 0.5rem;
+}
+
+/* The sections are NavSurfaces so they can stand alone elsewhere; inside the
+   sidebar they're part of one panel, so the card treatment comes off. Two classes
+   deep to beat .sui-nav-surface rather than depend on stylesheet order. */
+.file-sidebar .sui-nav-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 /* ---- Brand header (logo / editor⇄processor switcher) ---- */

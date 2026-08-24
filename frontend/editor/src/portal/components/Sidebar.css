@@ -2,7 +2,9 @@
   width: var(--sidebar-w);
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
-  background: var(--c-bg);
+  /* Matches the editor's sidebar: one solid panel in the surface colour, with the
+     sections inside it flattened rather than drawn as cards. */
+  background: var(--c-surface);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -155,6 +157,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+}
+
+/* Sections are NavSurfaces for use elsewhere; in the sidebar they're part of one
+   panel. Two classes deep to beat .sui-nav-surface regardless of load order. */
+.portal-sidebar .sui-nav-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .portal-sidebar__section-label {

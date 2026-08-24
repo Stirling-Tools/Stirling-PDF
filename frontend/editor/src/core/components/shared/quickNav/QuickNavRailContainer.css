@@ -18,6 +18,15 @@
 
 /* One solid bar, full height. Groups inside it are separated by spacing, not by
    being split into separate boxes. */
+/* The rail reads as part of the canvas rather than a panel on top of it, so it
+   drops the surface treatment it inherits from NavSurface. Child selector to beat
+   .sui-nav-surface, which is a single class and would otherwise win on order. */
+.quick-nav-rail-container > .quick-nav-rail-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
 .quick-nav-rail-surface {
   height: 100%;
   /* Block padding matches the sidebar boxes' own 0.25rem so rail icons and

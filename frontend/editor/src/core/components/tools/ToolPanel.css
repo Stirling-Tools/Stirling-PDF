@@ -19,12 +19,13 @@
   user-select: none;
 }
 
+/* Full-height panel flush to the window edge, not a rounded card inset from it.
+   Keeps the class name: the layout still distinguishes this from the mobile and
+   fullscreen variants, which bring their own border. */
 .tool-panel--floating {
-  margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
-  height: calc(100vh - (var(--nav-gutter) * 2));
+  height: 100vh;
   background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-nav);
+  border-left: 1px solid var(--c-border-subtle);
 }
 
 .tool-panel__collapsed-strip {
