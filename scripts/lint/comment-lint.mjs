@@ -50,6 +50,12 @@ const FIXTURES_REL = "scripts/lint/fixtures/";
 const OXLINT_BIN = "frontend/node_modules/oxlint/bin/oxlint";
 const OXLINT_CONFIG = "frontend/oxlint.comments.config.ts";
 
+// Windows caps a command line at about 32k characters, and the tree holds ~2,900
+// TS/JS files, so passing them all at once is 188k and dies with ENAMETOOLONG.
+// The failure was silent: oxlint reported nothing and every frontend finding
+// vanished. Batching keeps each invocation well under the cap.
+const ARGV_BUDGET = 24_000;
+
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--")));
 const positional = argv.filter((a) => !a.startsWith("--") && !isFlagValue(a));
@@ -300,7 +306,27 @@ function lintTypeScript(files) {
     warn("frontend/node_modules/oxlint is missing, so TS/TSX was skipped. Run `task frontend:install`.");
     return [];
   }
+  return batch(files, ARGV_BUDGET).flatMap(runOxlint);
+}
 
+function batch(files, budget) {
+  const batches = [];
+  let current = [];
+  let size = 0;
+  for (const file of files) {
+    if (current.length > 0 && size + file.length + 1 > budget) {
+      batches.push(current);
+      current = [];
+      size = 0;
+    }
+    current.push(file);
+    size += file.length + 1;
+  }
+  if (current.length > 0) batches.push(current);
+  return batches;
+}
+
+function runOxlint(files) {
   let stdout;
   try {
     // Invoked as `node <bin>` rather than through npx: spawning a .cmd shim on
@@ -316,7 +342,7 @@ function lintTypeScript(files) {
     // oxlint exits non-zero whenever it reports something, which is the normal case.
     stdout = error.stdout ?? "";
     if (!stdout.trim()) {
-      warn(`oxlint failed: ${firstLine(error.stderr ?? error.message)}`);
+      warn(`oxlint failed on ${files.length} file(s): ${firstLine(error.stderr ?? error.message)}`);
       return [];
     }
   }
