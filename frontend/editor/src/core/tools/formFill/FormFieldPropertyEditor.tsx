@@ -65,6 +65,8 @@ export interface EditableFieldProps {
   defaultValue?: string;
   tooltip?: string;
   fontSize?: number;
+  optionGap?: number;
+  optionSize?: number;
   required?: boolean;
   readOnly?: boolean;
   multiline?: boolean;
@@ -294,6 +296,52 @@ export function FormFieldPropertyEditor({
           >
             {t("formFill.editor.addOption", "Add option")}
           </Button>
+
+          {value.type === "radio" && (
+            // The group fits the drawn box by default; these are for tightening it by hand.
+            <Group grow gap={6} align="flex-start">
+              <NumberInput
+                size="xs"
+                label={
+                  <LabelWithHelp
+                    text={t("formFill.editor.optionSize", "Option size")}
+                    help={t(
+                      "formFill.editor.optionSizeHelp",
+                      "Width and height of each button, in points. Leave blank to fit them to the box you drew.",
+                    )}
+                  />
+                }
+                value={value.optionSize ?? ""}
+                min={1}
+                max={144}
+                data-testid="form-option-size"
+                onChange={(v) =>
+                  onChange({
+                    optionSize: typeof v === "number" ? v : undefined,
+                  })
+                }
+              />
+              <NumberInput
+                size="xs"
+                label={
+                  <LabelWithHelp
+                    text={t("formFill.editor.optionGap", "Option spacing")}
+                    help={t(
+                      "formFill.editor.optionGapHelp",
+                      "Gap between buttons, in points. Leave blank to spread them evenly down the box.",
+                    )}
+                  />
+                }
+                value={value.optionGap ?? ""}
+                min={0}
+                max={144}
+                data-testid="form-option-gap"
+                onChange={(v) =>
+                  onChange({ optionGap: typeof v === "number" ? v : undefined })
+                }
+              />
+            </Group>
+          )}
         </Stack>
       )}
 
@@ -485,7 +533,8 @@ export function FormFieldPropertyEditor({
         </SwitchWithHelp>
       )}
 
-      {isFillable && (
+      {/* Read-only belongs to an existing field; one being drawn has nothing to protect yet. */}
+      {isFillable && allowTypeChange && (
         <SwitchWithHelp
           help={t(
             "formFill.editor.readOnlyHelp",

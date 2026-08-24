@@ -11,7 +11,7 @@ import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
  * responseType "blob" means an error's ProblemDetail arrives as a Blob, so read
  * the body to surface which field the backend refused.
  */
-async function serverMessage(err: unknown): Promise<string | null> {
+export async function serverMessage(err: unknown): Promise<string | null> {
   if (!isAxiosError(err)) return null;
   const data: unknown = err.response?.data;
   try {

@@ -112,6 +112,9 @@ export function FormFieldCreationOverlay({
   const fileMismatch =
     fileId != null && forFileId != null && fileId !== forFileId;
 
+  // Whether this gesture began with something selected; see handlePointerDown.
+  const startedSelectedRef = useRef(false);
+
   const localPoint = useCallback(
     (e: React.PointerEvent) => getLocalPoint(e, rootRef.current, rotation),
     [rotation],
@@ -124,12 +127,9 @@ export function FormFieldCreationOverlay({
       e.preventDefault();
       // Only start a drag on the bare overlay, never on a pending outline.
       if (e.target !== rootRef.current) return;
-      // With something selected, clicking away means "deselect", the way every editor behaves.
-      // The next click, with nothing selected, is the one that draws.
-      if (selectedFieldName) {
-        setSelectedField(null);
-        return;
-      }
+      // A click away from a selection means "deselect"; a drag always means "draw". Which one
+      // this is cannot be known until the pointer lifts, so start the drag either way.
+      startedSelectedRef.current = Boolean(selectedFieldName);
       rootRef.current?.setPointerCapture(e.pointerId);
       const p = localPoint(e);
       dragStartRef.current = p;
@@ -160,6 +160,7 @@ export function FormFieldCreationOverlay({
   // A cancelled gesture (system swipe, focus loss) must not leave a half-drawn rect behind.
   const cancelDrag = useCallback((e: React.PointerEvent) => {
     dragStartRef.current = null;
+    startedSelectedRef.current = false;
     setDragRect(null);
     setGuides([]);
     try {
@@ -186,7 +187,17 @@ export function FormFieldCreationOverlay({
       if (!current) return;
 
       const dragged =
-        current.width >= MIN_DRAG_PX && current.height >= MIN_DRAG_PX;
+        // Either axis is enough: requiring both threw away a deliberate thin drag, such as a
+        // signature line, and replaced it with a default box centred on the press point.
+        Math.max(current.width, current.height) >= MIN_DRAG_PX;
+
+      // A click that went nowhere only clears the selection it started with.
+      if (!dragged && startedSelectedRef.current) {
+        startedSelectedRef.current = false;
+        setSelectedField(null);
+        return;
+      }
+      startedSelectedRef.current = false;
 
       let pixelRect: PixelRect;
       if (dragged) {

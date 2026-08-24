@@ -42,6 +42,10 @@ export interface FormField {
   maxLength?: number | null;
   /** Pre-rendered appearance image for signed signature fields (data URL). */
   appearanceDataUrl?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
 }
 
 export type FormFieldType =
@@ -117,6 +121,10 @@ export interface NewFieldDefinition {
   maxLength?: number; // text only; >0 also makes it a comb field
   /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
   buttonAction?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
 }
 
 /**
@@ -144,6 +152,10 @@ export interface ModifyFieldDefinition {
   maxLength?: number; // text only; >0 also makes it a comb field
   /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
   buttonAction?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
 }
 
 /** A batch of field edits committed in one request via /api/v1/form/edit-fields. */

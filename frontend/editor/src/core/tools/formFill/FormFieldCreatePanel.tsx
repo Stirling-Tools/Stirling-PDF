@@ -14,7 +14,12 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import EditIcon from "@mui/icons-material/Edit";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { useViewer } from "@app/contexts/ViewerContext";
+import {
+  pendingSelectionName,
+  pendingIdFrom,
+} from "@app/tools/formFill/pendingSelection";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import {
@@ -59,20 +64,40 @@ export function FormFieldCreatePanel({
     removePendingField,
     commitNewFields,
     setPreviewing,
+    selectedFieldName,
+    setSelectedField,
   } = useFormFill();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { scrollActions } = useViewer();
+  const goToPage = (pageIndex: number) =>
+    scrollActions.scrollToPage(pageIndex + 1);
   const { committing, error, commit } = useFormCommit(onApplied);
 
   // Auto-expand the property editor of a freshly-drawn field so its settings
   // (especially options for choice/radio) are visible immediately.
   const prevCountRef = useRef(0);
+  const expandedRowRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (pendingFields.length > prevCountRef.current) {
       setExpandedId(pendingFields[pendingFields.length - 1].id);
     }
     prevCountRef.current = pendingFields.length;
   }, [pendingFields]);
+
+  // Clicking a box on the page should land you on its settings, not leave you hunting the list.
+  useEffect(() => {
+    const id = selectedFieldName ? pendingIdFrom(selectedFieldName) : null;
+    if (id) setExpandedId(id);
+  }, [selectedFieldName]);
+
+  // Newly drawn fields land at the bottom while the panel stays at the top, so their settings
+  // open somewhere the user cannot see.
+  useEffect(() => {
+    if (!expandedId) return;
+    expandedRowRef.current?.scrollIntoView({ block: "nearest" });
+  }, [expandedId]);
 
   const handleCommit = useCallback(() => {
     if (!currentFile || pendingFields.length === 0) return;
@@ -150,7 +175,18 @@ export function FormFieldCreatePanel({
             {pendingFields.map((pf) => {
               const expanded = expandedId === pf.id;
               return (
-                <Paper key={pf.id} withBorder p={6} radius="sm">
+                <Paper
+                  key={pf.id}
+                  withBorder
+                  p={6}
+                  radius="sm"
+                  ref={expanded ? expandedRowRef : undefined}
+                  data-testid={`form-pending-row-${pf.id}`}
+                  // The whole row opens its settings: hunting for the small pencil is a
+                  // needless step when the row is the thing you just clicked.
+                  onClick={() => setExpandedId(expanded ? null : pf.id)}
+                  style={{ cursor: "pointer" }}
+                >
                   <Group gap={6} wrap="nowrap" justify="space-between">
                     <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
                       <span
@@ -169,35 +205,61 @@ export function FormFieldCreatePanel({
                       </Text>
                     </Group>
                     <Group gap={2} wrap="nowrap">
-                      <ActionIcon
-                        size="sm"
-                        variant="tertiary"
-                        aria-label={t(
-                          "formFill.create.editField",
-                          "Edit field",
+                      <Tooltip
+                        label={t(
+                          "formFill.create.goToField",
+                          "Go to this field",
                         )}
-                        onClick={() => setExpandedId(expanded ? null : pf.id)}
-                        data-testid={`form-pending-edit-${pf.id}`}
+                        withArrow
                       >
-                        <EditIcon sx={{ fontSize: 16 }} />
-                      </ActionIcon>
-                      <ActionIcon
-                        size="sm"
-                        variant="tertiary"
-                        accent="danger"
-                        aria-label={t(
-                          "formFill.create.removeField",
-                          "Remove field",
-                        )}
-                        onClick={() => removePendingField(pf.id)}
-                        data-testid={`form-pending-remove-${pf.id}`}
+                        <ActionIcon
+                          size="sm"
+                          variant="tertiary"
+                          aria-label={t(
+                            "formFill.create.goToField",
+                            "Go to this field",
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedField(pendingSelectionName(pf.id));
+                            setExpandedId(pf.id);
+                            goToPage(pf.pageIndex);
+                          }}
+                          data-testid={`form-pending-goto-${pf.id}`}
+                        >
+                          <MyLocationIcon sx={{ fontSize: 16 }} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip
+                        label={t("formFill.create.removeField", "Remove field")}
+                        withArrow
                       >
-                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                      </ActionIcon>
+                        <ActionIcon
+                          size="sm"
+                          variant="tertiary"
+                          accent="danger"
+                          aria-label={t(
+                            "formFill.create.removeField",
+                            "Remove field",
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removePendingField(pf.id);
+                          }}
+                          data-testid={`form-pending-remove-${pf.id}`}
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Group>
                   </Group>
                   <Collapse in={expanded}>
-                    <div style={{ marginTop: 8 }}>
+                    {/* The row toggles on click, so the settings must not bubble into it or
+                        every field you touch closes the panel you are typing in. */}
+                    <div
+                      style={{ marginTop: 8 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <FormFieldPropertyEditor
                         value={pf}
                         onChange={(patch) =>

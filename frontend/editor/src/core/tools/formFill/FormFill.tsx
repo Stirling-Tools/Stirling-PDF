@@ -29,6 +29,7 @@ import {
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFieldShortcuts } from "@app/tools/formFill/useFieldShortcuts";
+import { serverMessage } from "@app/tools/formFill/useFormCommit";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
@@ -95,6 +96,9 @@ const FormFill = (_props: BaseToolProps) => {
     forFileId,
     commitNewFields,
     commitModifications,
+    setCreationType,
+    setSelectedField,
+    setPreviewing,
   } = useFormFill();
 
   const MODE_TABS: ModeTabDef[] = useMemo(
@@ -250,6 +254,15 @@ const FormFill = (_props: BaseToolProps) => {
 
   const isActive = selectedTool === "formFill";
 
+  // Arming lives in an app-level provider, so leaving the tool would otherwise keep the page
+  // in crosshair mode and stage fields for whatever the user opened next.
+  useEffect(() => {
+    if (isActive) return;
+    setCreationType(null);
+    setSelectedField(null);
+    setPreviewing(false);
+  }, [isActive, setCreationType, setSelectedField, setPreviewing]);
+
   useEffect(() => {
     if (formState.activeFieldName && activeFieldRef.current) {
       activeFieldRef.current.scrollIntoView({
@@ -289,10 +302,12 @@ const FormFill = (_props: BaseToolProps) => {
       const message =
         status === 413
           ? "File too large. Try reducing the PDF size first."
-          : status === 400
-            ? "Invalid form data. Please check all fields."
-            : (err instanceof Error ? err.message : undefined) ||
-              "Failed to save filled form";
+          : (await serverMessage(err)) ||
+            (status === 400
+              ? "Invalid form data. Please check all fields."
+              : undefined) ||
+            (err instanceof Error ? err.message : undefined) ||
+            "Failed to save filled form";
       setSaveError(message);
       console.error("[FormFill] Save failed:", err);
     } finally {
@@ -345,11 +360,19 @@ const FormFill = (_props: BaseToolProps) => {
       setPendingMode(null);
       if (next) setMode(next);
     } catch (err) {
+      // Swallowing this left the dialog open with no explanation when the backend refused a
+      // name, so the reason it gives has to reach the user.
+      setSaveError(
+        (await serverMessage(err)) ||
+          (err instanceof Error ? err.message : null) ||
+          t("formFill.applyFailed", "Could not apply the changes"),
+      );
+      setPendingMode(null);
       console.error("[FormFill] Could not apply before switching tabs:", err);
     } finally {
       setSwitching(false);
     }
-  }, [pendingMode, applyCurrentMode, setMode]);
+  }, [pendingMode, applyCurrentMode, setMode, t]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);

@@ -1054,7 +1054,7 @@ public class FormUtils {
         try {
             textField.setValue(value != null ? value : "");
             return;
-        } catch (IOException initial) {
+        } catch (IOException | RuntimeException initial) {
             log.debug(
                     "Primary fill failed for text field '{}': {}",
                     textField.getFullyQualifiedName(),
@@ -1652,7 +1652,7 @@ public class FormUtils {
 
             String nameProblem = renameProblem(lookupName, modification.name());
             if (nameProblem != null) {
-                log.warn("Rejecting rename of '{}': {}", lookupName, nameProblem);
+                log.warn("Rejecting rename of '{}': {}", sanitizeForLog(lookupName), nameProblem);
                 recordSkip(skipped, "modify", lookupName, nameProblem);
                 continue;
             }
@@ -1735,7 +1735,7 @@ public class FormUtils {
                 } catch (Exception e) {
                     log.debug(
                             "In-place modification failed for '{}', falling back to recreation: {}",
-                            lookupName,
+                            sanitizeForLog(lookupName),
                             e.getMessage());
                 }
             }
@@ -1811,12 +1811,12 @@ public class FormUtils {
 
                 log.debug(
                         "Successfully replaced field '{}' with type '{}'",
-                        lookupName,
+                        sanitizeForLog(lookupName),
                         resolvedType);
             } catch (Exception e) {
                 log.warn(
                         "Failed to modify form field '{}' to type '{}': {}",
-                        lookupName,
+                        sanitizeForLog(lookupName),
                         resolvedType,
                         e.getMessage(),
                         e);
@@ -1973,7 +1973,9 @@ public class FormUtils {
         if (modification.x() != null
                 || modification.y() != null
                 || modification.width() != null
-                || modification.height() != null) {
+                || modification.height() != null
+                || modification.optionGap() != null
+                || modification.optionSize() != null) {
             updateWidgetGeometry(document, field, modification, skipped);
         }
     }
@@ -1985,6 +1987,25 @@ public class FormUtils {
     /** A size PDFBox would write as "Infinity" or a zero-area box makes the field unusable. */
     private static boolean unusableSize(Float value) {
         return value != null && (!Float.isFinite(value) || value <= 0);
+    }
+
+    /** The rectangle enclosing every widget, or null when none has one. */
+    private static PDRectangle widgetBounds(List<PDAnnotationWidget> widgets) {
+        float minX = Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        boolean any = false;
+        for (PDAnnotationWidget widget : widgets) {
+            PDRectangle r = widget.getRectangle();
+            if (r == null) continue;
+            any = true;
+            minX = Math.min(minX, r.getLowerLeftX());
+            minY = Math.min(minY, r.getLowerLeftY());
+            maxX = Math.max(maxX, r.getUpperRightX());
+            maxY = Math.max(maxY, r.getUpperRightY());
+        }
+        return any ? new PDRectangle(minX, minY, maxX - minX, maxY - minY) : null;
     }
 
     private void updateWidgetGeometry(
@@ -2037,6 +2058,39 @@ public class FormUtils {
         float dy = newY - anchorRect.getLowerLeftY();
         Float newW = modification.width();
         Float newH = modification.height();
+
+        // Spacing and size are a property of the whole group, so an explicit change re-flows
+        // every option. Gated on those two: a plain drag sends widget 0's size, which would be
+        // mistaken for the group's height and collapse the stack.
+        if ((modification.optionGap() != null || modification.optionSize() != null)
+                && field instanceof PDRadioButton
+                && widgets.size() > 1) {
+            PDRectangle bounds = widgetBounds(widgets);
+            if (bounds != null) {
+                PDRectangle box =
+                        new PDRectangle(
+                                bounds.getLowerLeftX() + dx,
+                                bounds.getLowerLeftY() + dy,
+                                modification.width() != null
+                                        ? modification.width()
+                                        : bounds.getWidth(),
+                                modification.height() != null
+                                        ? modification.height()
+                                        : bounds.getHeight());
+                List<PDRectangle> reflowed =
+                        radioOptionRects(
+                                box,
+                                widgets.size(),
+                                modification.optionGap(),
+                                modification.optionSize());
+                List<String> groupStates = currentWidgetOnStates((PDButton) field);
+                for (int i = 0; i < widgets.size(); i++) {
+                    widgets.get(i).setRectangle(reflowed.get(i));
+                    rebuildWidgetAppearance(document, field, widgets.get(i), i, groupStates, true);
+                }
+                return;
+            }
+        }
 
         // Read the on-states off /AP /N before the strip: PDFBox derives a button's
         // value vocabulary from those keys, so a guessed state orphans /V.
@@ -2303,6 +2357,32 @@ public class FormUtils {
         addNewFields(document, definitions, null);
     }
 
+    /**
+     * A form with variable-text fields needs /DR and /DA; PDFBox refuses to set a value without
+     * them, and a PDF that never had a form has neither.
+     */
+    private void ensureAcroFormDefaults(PDAcroForm acroForm) {
+        if (acroForm == null) return;
+        try {
+            PDResources dr = acroForm.getDefaultResources();
+            if (dr == null) {
+                dr = new PDResources();
+                acroForm.setDefaultResources(dr);
+            }
+            String resourceName = "Helv";
+            COSName alias = dr.add(new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            if (alias != null && alias.getName() != null && !alias.getName().isBlank()) {
+                resourceName = alias.getName();
+            }
+            String da = acroForm.getDefaultAppearance();
+            if (da == null || da.isBlank()) {
+                acroForm.setDefaultAppearance("/" + resourceName + " 12 Tf 0 g");
+            }
+        } catch (Exception e) {
+            log.debug("Could not prepare AcroForm defaults: {}", e.getMessage());
+        }
+    }
+
     public void addNewFields(
             PDDocument document,
             List<NewFormFieldDefinition> definitions,
@@ -2326,6 +2406,7 @@ public class FormUtils {
             acroForm = new PDAcroForm(document);
             document.getDocumentCatalog().setAcroForm(acroForm);
         }
+        ensureAcroFormDefaults(acroForm);
 
         Set<String> existingNames = collectExistingFieldNames(acroForm);
         int pageCount = document.getNumberOfPages();
@@ -2356,7 +2437,19 @@ public class FormUtils {
                 // Clamped, so the field IS created; not a dropped edit and not reported as one.
                 pageIdx = Math.max(0, pageCount - 1);
             }
-            PDPage page = document.getPage(pageIdx);
+            PDPage page;
+            try {
+                page = document.getPage(pageIdx);
+            } catch (RuntimeException e) {
+                // getNumberOfPages() reports the raw /Count, which a broken /Pages tree can
+                // overstate, so the page may still not be there.
+                recordSkip(
+                        skipped,
+                        "add",
+                        definition.name(),
+                        "page " + (pageIdx + 1) + " could not be read from this PDF");
+                continue;
+            }
             PDRectangle cropBox = page.getCropBox();
 
             // CropBox-relative, lower-left-origin -> absolute PDF user space.
@@ -2384,10 +2477,15 @@ public class FormUtils {
                 } else {
                     FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(resolvedType);
                     if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
-                        log.warn(
-                                "Unsupported or non-creatable field type '{}'; defaulting to text",
-                                resolvedType);
-                        handler = FormFieldTypeSupport.TEXT;
+                        // Quietly making it a text field reported success for a field the
+                        // caller never asked for; say so instead.
+                        recordSkip(
+                                skipped,
+                                "add",
+                                uniqueName,
+                                "'" + resolvedType + "' fields cannot be created");
+                        existingNames.remove(uniqueName);
+                        continue;
                     }
                     createNewField(
                             handler, acroForm, page, rectangle, uniqueName, definition, options);
@@ -2396,7 +2494,7 @@ public class FormUtils {
             } catch (Exception e) {
                 log.warn(
                         "Failed to create field '{}' of type '{}': {}",
-                        uniqueName,
+                        sanitizeForLog(uniqueName),
                         resolvedType,
                         e.getMessage(),
                         e);
@@ -2466,9 +2564,10 @@ public class FormUtils {
     private List<String> currentWidgetOnStates(PDButton button) {
         List<String> exportValues = button.getExportValues();
         List<PDAnnotationWidget> widgets = button.getWidgets();
-        // A single-widget toggle with no /AP still knows its vocabulary from /V; inventing
-        // "Yes" there would orphan the value and leave the box permanently unticked.
-        String fromValue = widgets.size() == 1 ? nonOffValueName(button) : null;
+        // A checkbox's widgets all share one on-state, so /V names it however many there are.
+        // A radio's widgets each have their own, so /V identifies one and cannot stand in.
+        boolean sharedOnState = !(button instanceof PDRadioButton);
+        String fromValue = sharedOnState || widgets.size() == 1 ? nonOffValueName(button) : null;
         List<String> states = new ArrayList<>(widgets.size());
         for (int i = 0; i < widgets.size(); i++) {
             String state = normalAppearanceOnState(widgets.get(i));
@@ -2748,6 +2847,44 @@ public class FormUtils {
      * One widget per option stacked below {@code baseRect}, each keyed by its sanitized export
      * value so the group behaves as a single selectable field.
      */
+    /**
+     * Per-option widget rects laid out INSIDE the drawn box, which is the group's total extent.
+     * Stacking outside it made a three-option group three times taller than what was drawn.
+     */
+    public static List<PDRectangle> radioOptionRects(
+            PDRectangle box, int count, Float gapOverride, Float sizeOverride) {
+        List<PDRectangle> rects = new ArrayList<>();
+        int n = Math.max(1, count);
+        float h = box.getHeight();
+        float slot = h / n;
+
+        float size;
+        if (sizeOverride != null && sizeOverride > 0f) {
+            size = sizeOverride;
+        } else if (gapOverride != null && gapOverride >= 0f) {
+            size = (h - (n - 1) * gapOverride) / n;
+        } else {
+            // A quarter of each slot is breathing room, so the stack fills the drawn height.
+            size = slot * 0.75f;
+        }
+        // Square keeps the circle round; a wide box becomes a left-aligned column.
+        size = Math.max(1f, Math.min(size, box.getWidth()));
+
+        float gap;
+        if (gapOverride != null && gapOverride >= 0f) {
+            gap = gapOverride;
+        } else {
+            gap = n > 1 ? Math.max(0f, (h - n * size) / (n - 1)) : 0f;
+        }
+
+        float top = box.getLowerLeftY() + h;
+        for (int i = 0; i < n; i++) {
+            float y = top - (i + 1) * size - i * gap;
+            rects.add(new PDRectangle(box.getLowerLeftX(), y, size, size));
+        }
+        return rects;
+    }
+
     private void createRadioField(
             PDAcroForm acroForm,
             PDPage page,
@@ -2773,10 +2910,9 @@ public class FormUtils {
             radio.setReadOnly(true);
         }
 
-        float w = baseRect.getWidth();
-        float h = baseRect.getHeight();
-        float gap = Math.max(4f, h * 0.5f);
-        float topY = baseRect.getLowerLeftY();
+        List<PDRectangle> optionRects =
+                radioOptionRects(
+                        baseRect, values.size(), definition.optionGap(), definition.optionSize());
 
         List<PDAnnotationWidget> widgets = new ArrayList<>();
         List<String> exportValues = new ArrayList<>();
@@ -2785,9 +2921,7 @@ public class FormUtils {
             String onState = sanitizeOnState(values.get(i), i, usedStates);
             exportValues.add(onState);
 
-            // Stack downwards from the drawn rectangle.
-            float wy = topY - i * (h + gap);
-            PDRectangle rect = new PDRectangle(baseRect.getLowerLeftX(), wy, w, h);
+            PDRectangle rect = optionRects.get(i);
 
             PDAnnotationWidget widget = new PDAnnotationWidget();
             widget.setRectangle(rect);
@@ -3301,13 +3435,30 @@ public class FormUtils {
         if (name == null || name.isBlank()) {
             return null;
         }
+        if (name.chars().anyMatch(Character::isISOControl)) {
+            // A line break in a name would also forge a second line in every log it reaches.
+            return "Field name cannot contain line breaks or control characters.";
+        }
         if (name.indexOf('.') >= 0) {
             return "Field name '"
-                    + name
+                    + sanitizeForLog(name)
                     + "' cannot contain a period. PDF forms use '.' to separate a parent field"
                     + " from its children.";
         }
         return null;
+    }
+
+    /**
+     * A caller-supplied string made safe to log. Without this a name containing CR/LF writes an
+     * extra, attacker-chosen line into the log file (CWE-117).
+     */
+    public static String sanitizeForLog(String value) {
+        if (value == null) {
+            return null;
+        }
+        StringBuilder out = new StringBuilder(value.length());
+        value.chars().forEach(c -> out.append(Character.isISOControl(c) ? ' ' : (char) c));
+        return out.toString();
     }
 
     private PDField locateField(PDAcroForm acroForm, String name) {
@@ -3603,7 +3754,55 @@ public class FormUtils {
             Boolean readOnly,
             Boolean multiline,
             Integer maxLength,
-            String buttonAction) {}
+            String buttonAction,
+            /** Gap between radio options in points; derived from the drawn box when null. */
+            Float optionGap,
+            /** Radio option size in points; derived from the drawn box when null. */
+            Float optionSize) {
+
+        /** The shape before option layout was tunable; both extras default to derived. */
+        public NewFormFieldDefinition(
+                String name,
+                String label,
+                String type,
+                Integer pageIndex,
+                Float x,
+                Float y,
+                Float width,
+                Float height,
+                Boolean required,
+                Boolean multiSelect,
+                List<String> options,
+                String defaultValue,
+                String tooltip,
+                Float fontSize,
+                Boolean readOnly,
+                Boolean multiline,
+                Integer maxLength,
+                String buttonAction) {
+            this(
+                    name,
+                    label,
+                    type,
+                    pageIndex,
+                    x,
+                    y,
+                    width,
+                    height,
+                    required,
+                    multiSelect,
+                    options,
+                    defaultValue,
+                    tooltip,
+                    fontSize,
+                    readOnly,
+                    multiline,
+                    maxLength,
+                    buttonAction,
+                    null,
+                    null);
+        }
+    }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ModifyFormFieldDefinition(
@@ -3625,7 +3824,57 @@ public class FormUtils {
             Boolean readOnly,
             Boolean multiline,
             Integer maxLength,
-            String buttonAction) {}
+            String buttonAction,
+            /** Gap between radio options in points; leaves the existing layout alone when null. */
+            Float optionGap,
+            /** Radio option size in points; leaves the existing layout alone when null. */
+            Float optionSize) {
+
+        /** The shape before option layout was tunable; both extras default to unchanged. */
+        public ModifyFormFieldDefinition(
+                String targetName,
+                String name,
+                String label,
+                String type,
+                Integer pageIndex,
+                Float x,
+                Float y,
+                Float width,
+                Float height,
+                Boolean required,
+                Boolean multiSelect,
+                List<String> options,
+                String defaultValue,
+                String tooltip,
+                Float fontSize,
+                Boolean readOnly,
+                Boolean multiline,
+                Integer maxLength,
+                String buttonAction) {
+            this(
+                    targetName,
+                    name,
+                    label,
+                    type,
+                    pageIndex,
+                    x,
+                    y,
+                    width,
+                    height,
+                    required,
+                    multiSelect,
+                    options,
+                    defaultValue,
+                    tooltip,
+                    fontSize,
+                    readOnly,
+                    multiline,
+                    maxLength,
+                    buttonAction,
+                    null,
+                    null);
+        }
+    }
 
     /** A mixed batch of field edits applied in one request via {@link #applyFieldEdits}. */
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -31,6 +31,7 @@ import React, {
 } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { isAxiosError } from "axios";
+import { applyStagedGeometry } from "@app/tools/formFill/formCoordinateUtils";
 import type {
   FormField,
   FormFillState,
@@ -224,6 +225,8 @@ export interface FormFillContextValue {
   reset: () => void;
   /** Pre-computed map of page index to fields for performance */
   fieldsByPage: Map<number, FormField[]>;
+  /** fieldsByPage with staged moves, resizes, retypes and deletions already applied. */
+  effectiveFieldsByPage: Map<number, FormField[]>;
   /** Name of the currently active provider ('pdf-lib' | 'pdfbox') */
   activeProviderName: string;
   /**
@@ -910,6 +913,24 @@ export function FormFillProvider({
     return map;
   }, [state.fields]);
 
+  /**
+   * The fields as they would look once the staged edits are applied. Drawing from this keeps one
+   * visual per field that follows a drag, instead of a stale copy left at the old coordinates.
+   */
+  const effectiveFieldsByPage = useMemo(() => {
+    const map = new Map<number, FormField[]>();
+    const deleted = new Set(deletedFieldNames);
+    for (const field of state.fields) {
+      if (deleted.has(field.name)) continue;
+      const staged = modifiedFields[field.name];
+      const effective = staged ? applyStagedGeometry(field, staged) : field;
+      const pageIdx = effective.widgets?.[0]?.pageIndex ?? 0;
+      if (!map.has(pageIdx)) map.set(pageIdx, []);
+      map.get(pageIdx)!.push(effective);
+    }
+    return map;
+  }, [state.fields, modifiedFields, deletedFieldNames]);
+
   // Context value — does NOT depend on values, so keystrokes don't
   // trigger re-renders of all context consumers.
   const value = useMemo<FormFillContextValue>(
@@ -925,6 +946,7 @@ export function FormFillProvider({
       validateForm,
       reset,
       fieldsByPage,
+      effectiveFieldsByPage,
       activeProviderName: providerRef.current.name,
       setProviderMode,
       forFileId,
@@ -970,6 +992,7 @@ export function FormFillProvider({
       validateForm,
       reset,
       fieldsByPage,
+      effectiveFieldsByPage,
       providerMode,
       setProviderMode,
       forFileId,
@@ -1012,3 +1035,19 @@ export function FormFillProvider({
 }
 
 export default FormFillContext;
+
+/**
+ * Fields whose PDF-baked visuals (button and signature appearance bitmaps) no longer match the
+ * staged state. Those layers render from the un-edited file, so they must be hidden while editing
+ * or they leave a ghost at the original rect.
+ */
+export function useStaleBakedFieldNames(): Set<string> {
+  const { mode, modifiedFields, deletedFieldNames } = useFormFill();
+  return useMemo(() => {
+    if (mode === "fill") return new Set<string>();
+    return new Set<string>([
+      ...Object.keys(modifiedFields),
+      ...deletedFieldNames,
+    ]);
+  }, [mode, modifiedFields, deletedFieldNames]);
+}

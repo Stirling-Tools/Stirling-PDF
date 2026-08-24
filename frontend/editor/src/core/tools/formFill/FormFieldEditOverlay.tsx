@@ -17,6 +17,7 @@ import {
 import type { FormField } from "@app/tools/formFill/types";
 import {
   pixelsToBackendRect,
+  radioOptionRects,
   backendRectToPixels,
   widgetRectToPixels,
   clampPixelRect,
@@ -93,6 +94,101 @@ function handlePosition(h: HandleId, rect: PixelRect) {
     w: { x: rect.left, y: cy },
   };
   return map[h];
+}
+
+/**
+ * What a queued field will look like once applied. Without this a drawn box is empty, so the
+ * default text and a radio group's options are invisible until after saving.
+ */
+function PendingPreview({
+  field,
+  rect,
+}: {
+  field: FormField;
+  rect: PixelRect;
+}) {
+  // Blank entries are dropped server-side (sanitizeOptions), so counting them here would
+  // preview one more button than actually gets written.
+  const options = (field.options ?? [])
+    .map((o) => o?.trim() ?? "")
+    .filter((o) => o.length > 0);
+  if (field.type === "radio" && options.length > 0) {
+    // The drawn box is the whole group; radioOptionRects splits it exactly as the backend does.
+    const rows = radioOptionRects(
+      rect,
+      options.length,
+      field.optionGap,
+      field.optionSize,
+    );
+    return (
+      <>
+        {rows.map((row, i) => (
+          <div
+            key={`${options[i]}-${i}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: row.top,
+              width: rect.width,
+              height: row.size,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              style={{
+                width: row.size,
+                height: row.size,
+                borderRadius: "50%",
+                border: `1.5px solid ${FORM_COLORS.neutralBorder}`,
+                // Without this the border sits outside the width and each button renders 3px
+                // taller than its slot, so the stack overflows the box it was laid out in.
+                boxSizing: "border-box",
+                flex: "0 0 auto",
+              }}
+            />
+            <span
+              style={{
+                fontSize: Math.max(8, Math.min(12, row.size * 0.9)),
+                color: FORM_COLORS.neutralChip,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+              }}
+            >
+              {options[i]}
+            </span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  const sample =
+    field.value ||
+    (field.type === "combobox" || field.type === "listbox"
+      ? (options[0] ?? "")
+      : "");
+  if (!sample) return null;
+  return (
+    <span
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 4px",
+        fontSize: Math.min(12, Math.max(9, rect.height - 8)),
+        color: FORM_COLORS.neutralChip,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+    >
+      {sample}
+    </span>
+  );
 }
 
 export function FormFieldEditOverlay({
@@ -179,9 +275,9 @@ export function FormFieldEditOverlay({
         .map(
           (f): FormField => ({
             name: pendingSelectionName(f.id),
-            label: f.name,
+            label: f.label || f.name,
             type: f.type,
-            value: "",
+            value: f.defaultValue ?? "",
             options: f.options ?? null,
             displayOptions: null,
             required: f.required ?? false,
@@ -524,11 +620,19 @@ export function FormFieldEditOverlay({
                 top: rect.top,
                 width: rect.width,
                 height: rect.height,
-                border: `1px solid ${FORM_COLORS.neutralBorder}`,
+                // A radio group has no box of its own; its buttons are the whole visual, so a
+                // frame around them is chrome the finished PDF will not have.
+                border:
+                  field.type === "radio"
+                    ? undefined
+                    : `1px solid ${FORM_COLORS.neutralBorder}`,
                 borderRadius: 2,
                 boxSizing: "border-box",
               }}
-            />
+            >
+              {/* A preview of an empty rectangle is not a preview; draw what the field holds. */}
+              <PendingPreview field={field} rect={rect} />
+            </div>
           );
         })}
       </div>
@@ -580,12 +684,13 @@ export function FormFieldEditOverlay({
             onPointerDown={(e) => {
               if (isDeleted) return;
               e.stopPropagation();
-              const singleWidget = (field.widgets?.length ?? 0) === 1;
               // Select and start moving in one gesture; a click without movement
               // just selects, since endInteraction ignores a zero delta.
               if (field.name !== selectedFieldName)
                 setSelectedField(field.name);
-              if (singleWidget) beginInteraction(e, field, "move");
+              // Moving is safe for a group too: the backend applies the delta to every widget
+              // on the anchor page. Only resizing is still single-widget, so the handles stay off.
+              beginInteraction(e, field, "move");
             }}
             style={{
               position: "absolute",
@@ -593,11 +698,14 @@ export function FormFieldEditOverlay({
               top: rect.top,
               width: rect.width,
               height: rect.height,
-              border: isDeleted
+              // Outline, not border: a border indents the content box, which pushed the field
+              // preview inside it off by the border width and made the buttons overhang.
+              outline: isDeleted
                 ? `1.5px dashed ${FORM_COLORS.danger}`
                 : isSelected
                   ? `2px solid ${FORM_COLORS.accent}`
                   : `1.5px solid ${FORM_COLORS.neutralBorder}`,
+              outlineOffset: 0,
               background: isDeleted
                 ? FORM_COLORS.dangerFill
                 : isSelected
@@ -608,18 +716,14 @@ export function FormFieldEditOverlay({
               // Claim the gesture only where a drag can actually start, so touch users can
               // still pan the page over boxes that are not draggable.
               pointerEvents: "auto",
-              touchAction:
-                !isDeleted && (field.widgets?.length ?? 0) === 1
-                  ? "none"
-                  : "auto",
-              cursor: isDeleted
-                ? "not-allowed"
-                : (field.widgets?.length ?? 0) === 1
-                  ? "move"
-                  : "pointer",
+              touchAction: isDeleted ? "auto" : "none",
+              cursor: isDeleted ? "not-allowed" : "move",
               textDecoration: isDeleted ? "line-through" : undefined,
             }}
           >
+            {pendingIdFrom(field.name) && (
+              <PendingPreview field={field} rect={rect} />
+            )}
             <span
               style={{
                 position: "absolute",
@@ -637,6 +741,9 @@ export function FormFieldEditOverlay({
                 borderRadius: 2,
                 whiteSpace: "nowrap",
                 opacity: isSelected || isDeleted ? 1 : 0.75,
+                // The chip floats above its field, over blank page; it must never eat a
+                // press meant for the drawing surface underneath.
+                pointerEvents: "none",
               }}
             >
               {field.label || field.name}
