@@ -5,8 +5,12 @@ inputs:
     description: JDK major version
     required: false
     default: "25"
+  distribution:
+    description: Java distribution to use
+    required: false
+    default: temurin
   architecture:
-    description: Compatibility input for existing workflow call sites
+    description: Target architecture (x64 or arm64)
     required: false
     default: ""
 runs:
@@ -16,6 +20,7 @@ runs:
       shell: bash
       env:
         JAVA_VERSION: ${{ inputs.java-version }}
+        JAVA_DISTRIBUTION: ${{ inputs.distribution }}
         JAVA_ARCHITECTURE: ${{ inputs.architecture }}
         RUNNER_ARCHITECTURE: ${{ runner.arch }}
         RUNNER_OS_NAME: ${{ runner.os }}
@@ -25,6 +30,15 @@ runs:
           echo "This repository requires JDK 25; received ${JAVA_VERSION}" >&2
           exit 1
         fi
+
+        distribution="$(printf '%s' "${JAVA_DISTRIBUTION}" | tr '[:upper:]' '[:lower:]')"
+        case "${distribution}" in
+          temurin|microsoft) ;;
+          *)
+            echo "Unsupported Java distribution: ${JAVA_DISTRIBUTION}. Supported: temurin, microsoft" >&2
+            exit 1
+            ;;
+        esac
 
         architecture="${JAVA_ARCHITECTURE}"
         if [ -z "${architecture}" ]; then
@@ -54,7 +68,7 @@ runs:
             java_home="${JAVA_HOME}"
           fi
         fi
-        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ]; then
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ] && [ "${distribution}" = "temurin" ]; then
           java_home="$(arch -x86_64 /usr/libexec/java_home -v "${JAVA_VERSION}" 2>/dev/null || true)"
         fi
         if [ -n "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
@@ -65,7 +79,7 @@ runs:
             java_home=""
           fi
         fi
-        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ]; then
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ] && [ "${distribution}" = "temurin" ]; then
           jdk_version="25.0.3+9"
           jdk_archive="OpenJDK25U-jdk_x64_mac_hotspot_25.0.3_9.tar.gz"
           jdk_sha256="4c539a18b4d656960ff6766727e9ca546fc17f7a29714dba9e7b47bdcb37c447"
@@ -85,7 +99,7 @@ runs:
           java_home="$(find "${jdk_root}" -type d -path '*/Contents/Home' -print -quit)"
         fi
         if [ -z "${java_home}" ]; then
-          echo "JDK 25 is not installed on this runner (${java_home_variable} is missing)" >&2
+          echo "JDK ${JAVA_VERSION} (${distribution}, ${architecture}) is not installed on this runner (${java_home_variable} is missing)" >&2
           exit 1
         fi
 
@@ -100,4 +114,8 @@ runs:
         echo "JAVA_HOME=${java_home}" >> "${GITHUB_ENV}"
         echo "${java_home}/bin" >> "${GITHUB_PATH}"
         java -version 2>&1 | tee "${RUNNER_TEMP}/java-version.txt"
+        case "${distribution}" in
+          temurin) grep -Eiq "Temurin|Eclipse Adoptium" "${RUNNER_TEMP}/java-version.txt" ;;
+          microsoft) grep -Eiq "Microsoft" "${RUNNER_TEMP}/java-version.txt" ;;
+        esac
         grep -Eq "version \"${JAVA_VERSION}(\.|\")" "${RUNNER_TEMP}/java-version.txt"
