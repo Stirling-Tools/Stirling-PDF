@@ -80,6 +80,18 @@ public class PdfJsonFallbackFontService {
                     Map.entry("yahei", "fallback-noto-cjk"),
                     Map.entry("songti", "fallback-noto-cjk"),
                     Map.entry("heiti", "fallback-noto-cjk"),
+                    // Symbol and ZapfDingbats are two of the PDF standard 14 fonts, so a
+                    // document may reference them without embedding anything. They carry the
+                    // bullets, check marks, arrows and maths signs — the glyphs whose absence
+                    // is immediately visible. DejaVu Sans is already bundled and covers them:
+                    // Dingbats 174/192, Mathematical Operators 256/256, Arrows 112/112.
+                    Map.entry("symbol", "fallback-dejavu-sans"),
+                    Map.entry("symbolmt", "fallback-dejavu-sans"),
+                    Map.entry("zapfdingbats", "fallback-dejavu-sans"),
+                    Map.entry("dingbats", "fallback-dejavu-sans"),
+                    Map.entry("wingdings", "fallback-dejavu-sans"),
+                    // Noto Serif - generic serif fallback
+                    Map.entry("notoserif", "fallback-noto-serif"),
                     // Noto Sans - Google's universal font (use as last resort generic fallback)
                     Map.entry("noto", "fallback-noto-sans"),
                     Map.entry("notosans", "fallback-noto-sans"));
@@ -139,6 +151,33 @@ public class PdfJsonFallbackFontService {
                             new FallbackFontSpec(
                                     "classpath:/static/fonts/NotoSerifTibetan-Regular.ttf",
                                     "NotoSerifTibetan-Regular",
+                                    "ttf")),
+                    // Noto Serif family — the serif counterpart to the Noto Sans default.
+                    // Without it there was no generic serif fallback at all: an unembedded
+                    // serif face fell through to Noto Sans and came back sans-serif.
+                    Map.entry(
+                            "fallback-noto-serif",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSerif-Regular.ttf",
+                                    "NotoSerif-Regular",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-noto-serif-bold",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSerif-Bold.ttf",
+                                    "NotoSerif-Bold",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-noto-serif-italic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSerif-Italic.ttf",
+                                    "NotoSerif-Italic",
+                                    "ttf")),
+                    Map.entry(
+                            "fallback-noto-serif-bolditalic",
+                            new FallbackFontSpec(
+                                    "classpath:/static/fonts/NotoSerif-BoldItalic.ttf",
+                                    "NotoSerif-BoldItalic",
                                     "ttf")),
                     // Liberation Sans family
                     Map.entry(
@@ -518,11 +557,14 @@ public class PdfJsonFallbackFontService {
      *     available
      */
     private String applyWeightStyle(String baseFontId, boolean isBold, boolean isItalic) {
-        // Only apply weight/style to font families where we have the font files available
-        // Supported: Liberation (Sans/Serif/Mono), Noto Sans, DejaVu (Sans/Serif/Mono)
+        // Only apply weight/style to font families where we have the font files available.
+        // Supported: Liberation (Sans/Serif/Mono), Noto Sans, Noto Serif, DejaVu
+        // (Sans/Serif/Mono). A family missing from this list silently renders every weight
+        // as Regular — bold and italic disappear without an error.
         boolean isSupported =
                 baseFontId.startsWith("fallback-liberation-")
                         || "fallback-noto-sans".equals(baseFontId)
+                        || "fallback-noto-serif".equals(baseFontId)
                         || baseFontId.startsWith("fallback-dejavu-");
 
         if (!isSupported) {
@@ -553,6 +595,31 @@ public class PdfJsonFallbackFontService {
      */
     public String resolveFallbackFontId(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+
+        // Symbols, dingbats, arrows and maths signs go to DejaVu Sans, not to the Noto Sans
+        // default: DejaVu covers these blocks far more completely (Mathematical Operators
+        // 256/256, Arrows 112/112, Dingbats 174/192). These are the characters a Symbol or
+        // ZapfDingbats reference resolves to, and the ones users notice when they vanish.
+        if (block == Character.UnicodeBlock.DINGBATS
+                || block == Character.UnicodeBlock.MATHEMATICAL_OPERATORS
+                || block == Character.UnicodeBlock.SUPPLEMENTAL_MATHEMATICAL_OPERATORS
+                || block == Character.UnicodeBlock.MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A
+                || block == Character.UnicodeBlock.MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B
+                || block == Character.UnicodeBlock.MISCELLANEOUS_TECHNICAL
+                || block == Character.UnicodeBlock.MISCELLANEOUS_SYMBOLS
+                || block == Character.UnicodeBlock.MISCELLANEOUS_SYMBOLS_AND_ARROWS
+                || block == Character.UnicodeBlock.ARROWS
+                || block == Character.UnicodeBlock.SUPPLEMENTAL_ARROWS_A
+                || block == Character.UnicodeBlock.SUPPLEMENTAL_ARROWS_B
+                || block == Character.UnicodeBlock.GEOMETRIC_SHAPES
+                || block == Character.UnicodeBlock.BOX_DRAWING
+                || block == Character.UnicodeBlock.BLOCK_ELEMENTS) {
+            return "fallback-dejavu-sans";
+        }
+        // Greek is deliberately absent: a Greek letter as a maths symbol and a Greek letter in
+        // Greek prose share the same code points, and routing the block wholesale would send
+        // Greek-language documents to DejaVu instead of Noto Sans. The Symbol case is caught
+        // by the font name instead, which is the precise signal.
 
         // Bopomofo is primarily used in Taiwan for Traditional Chinese phonetic annotation
         if (block == Character.UnicodeBlock.BOPOMOFO

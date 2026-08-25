@@ -119,6 +119,13 @@ const hasBackendFallbackFont = (font: PdfJsonFont): boolean => {
     // Noto fonts
     "noto",
     "notosans",
+    "notoserif",
+    // Symbol and ZapfDingbats resolve to DejaVu Sans, which covers their blocks
+    // (Dingbats 174/192, Mathematical Operators 256/256, Arrows 112/112).
+    "symbol",
+    "zapfdingbats",
+    "dingbats",
+    "wingdings",
   ];
 
   return backendFonts.some((pattern) => {
