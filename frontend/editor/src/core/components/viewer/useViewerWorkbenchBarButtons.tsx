@@ -137,7 +137,6 @@ export function useViewerWorkbenchBarButtons(
     setIsRulerActive?.(true);
     if (isPanning) {
       viewer.panActions.disablePan();
-      setIsPanning(false);
     }
   }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
 
@@ -247,11 +246,7 @@ export function useViewerWorkbenchBarButtons(
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
-          setIsPanning((prev) => {
-            const next = !prev;
-            if (next && isRulerActive) setIsRulerActive?.(false);
-            return next;
-          });
+          if (!isPanning && isRulerActive) setIsRulerActive?.(false);
         },
       },
       {
@@ -267,7 +262,6 @@ export function useViewerWorkbenchBarButtons(
           setIsRulerActive?.(next);
           if (next && isPanning) {
             viewer.panActions.disablePan();
-            setIsPanning(false);
           }
         },
       },

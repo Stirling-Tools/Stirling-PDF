@@ -43,6 +43,16 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     };
   }, [setBridgeReady]);
 
+  useEffect(() => {
+    return () => {
+      try {
+        redactionProvides?.endRedact();
+      } catch {
+        /* document already torn down */
+      }
+    };
+  }, [redactionProvides]);
+
   // Sync EmbedPDF state to our context
   useEffect(() => {
     if (state) {

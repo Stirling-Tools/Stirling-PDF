@@ -334,15 +334,12 @@ test("text selection still works after toggling the pan tool off again", async (
   const firstPage = await loadSampleAndOpenViewer(page);
 
   // Toggling pan on then off should return the active mode to pointerMode.
-  const panButton = page
-    .locator('[aria-label="Pan"], [aria-label*="and tool" i]')
-    .first();
-  if (await panButton.count()) {
-    await panButton.click();
-    await page.waitForTimeout(200);
-    await panButton.click();
-    await page.waitForTimeout(200);
-  }
+  const panButton = page.getByRole("button", { name: "Pan Mode" }).first();
+  await expect(panButton).toBeVisible({ timeout: 10_000 });
+  await panButton.click();
+  await page.waitForTimeout(200);
+  await panButton.click();
+  await page.waitForTimeout(200);
 
   await dragSelectAcrossPage(page, firstPage);
 
