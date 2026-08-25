@@ -30,7 +30,7 @@ import org.testcontainers.utility.DockerImageName;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 
-// Real server. Unpooled writes churned ~50 new TCP connections/sec at 50 req/s, and
+// Real server. Backplane commands multiplex over one shared native connection, and
 // connections without CLIENT SETNAME show as name="" in every Valkey monitor.
 @Testcontainers
 @EnabledIf("isDockerAvailable")
@@ -79,12 +79,14 @@ class LiveValkeyPoolingTest {
     void factoryIsPooled() {
         assertTrue(
                 factory.getClientConfiguration() instanceof LettucePoolingClientConfiguration,
-                "pool.enabled=true must reach the factory, or dedicated connections churn TCP");
+                "pool.enabled=true must reach the factory; nothing else pins the pool wiring");
     }
 
     @Test
-    @DisplayName(WRITES + " job writes do not churn connections and do not grow the client count")
-    void writesDoNotChurnConnections() {
+    @DisplayName(WRITES + " job writes multiplex over the single shared native connection")
+    void writesMultiplexOverTheSharedNativeConnection() {
+        // Not a pooling proof: shareNativeConnection defaults true and no command queues, so
+        // nothing borrows from the pool. This pins the multiplexing, which pooling cannot change.
         long before = statLong("stats", "total_connections_received");
 
         ValkeyJobStore store = new ValkeyJobStore(template);
@@ -105,7 +107,7 @@ class LiveValkeyPoolingTest {
         long delta = statLong("stats", "total_connections_received") - before;
         assertTrue(
                 delta < 20,
-                "pooled writes must reuse connections; "
+                "backplane writes must reuse the shared connection; "
                         + WRITES
                         + " writes opened "
                         + delta
@@ -113,14 +115,14 @@ class LiveValkeyPoolingTest {
         long connected = statLong("clients", "connected_clients");
         assertTrue(
                 connected <= 6,
-                "connection count must stay bounded by the pool; connected_clients=" + connected);
+                "connection count must stay flat under write load; connected_clients=" + connected);
     }
 
     @Test
     @DisplayName(
             "every connection is attributable: CLIENT LIST shows stirling-<nodeId>, never \"\"")
     void everyConnectionIsNamed() {
-        // Force at least one write so the pool is warm before the CLIENT LIST snapshot.
+        // Force at least one write so the connection is live before the CLIENT LIST snapshot.
         template.opsForValue().set("pool:probe", "v", Duration.ofSeconds(30));
 
         List<RedisClientInfo> clients =

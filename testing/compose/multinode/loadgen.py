@@ -5,15 +5,15 @@ mixed sync/async so the Valkey backplane sees job, lock, rate-limit and cache tr
 import json
 import os
 import random
-import ssl
 import sys
 import threading
 import time
+import traceback
 import urllib.error
 import urllib.request
 import uuid
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_URL = os.environ.get("BASE_URL", "http://nginx:8080").rstrip("/")
 DURATION = int(os.environ.get("DURATION_SECONDS", "300"))
@@ -24,14 +24,19 @@ ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "stirling")
 ASYNC_RATIO = float(os.environ.get("ASYNC_RATIO", "0.35"))
 RAMP_SECONDS = int(os.environ.get("RAMP_SECONDS", "20"))
+REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT_SECONDS", "120"))
+# Above this share of failed requests the run exits non-zero, so CI cannot green on a broken stack.
+MAX_ERROR_RATE = float(os.environ.get("MAX_ERROR_RATE", "0.05"))
+# Grace for in-flight async polls after the clock runs out; bounds how far a run can overrun.
+POLL_GRACE_SECONDS = int(os.environ.get("POLL_GRACE_SECONDS", "30"))
 
-SSL_CTX = ssl.create_default_context()
-SSL_CTX.check_hostname = False
-SSL_CTX.verify_mode = ssl.CERT_NONE
+# Cheap plumbing calls: excluded from the PDF-operation rate so the headline number is comparable.
+NON_PDF_OPS = {"info/status", "job-poll"}
 
+run_started = 0.0
 stop_at = 0.0
 stats_lock = threading.Lock()
-stats = defaultdict(lambda: {"ok": 0, "err": 0, "ms": 0.0, "bytes": 0})
+stats = defaultdict(lambda: {"ok": 0, "err": 0, "lat": [], "bytes": 0})
 nodes_seen = defaultdict(int)
 errors = defaultdict(int)
 job_stats = {"submitted": 0, "completed": 0, "failed": 0, "sticky_410": 0}
@@ -68,7 +73,8 @@ def make_pdf(pages: int, filler_lines: int) -> bytes:
     offsets = []
     for idx, body in enumerate(objs, start=1):
         offsets.append(len(out))
-        out += f"{idx} 0 obj".encode() + body + b"endobj\n"
+        # Newlines around the body keep 'endstream' and 'endobj' from fusing into one token.
+        out += f"{idx} 0 obj\n".encode() + body + b"\nendobj\n"
 
     xref_at = len(out)
     out += f"xref\n0 {len(objs) + 1}\n".encode()
@@ -112,7 +118,7 @@ def encode_multipart(fields, files):
     return bytes(body), f"multipart/form-data; boundary={boundary}"
 
 
-def request(method, path, token=None, body=None, content_type=None, timeout=180):
+def request(method, path, token=None, body=None, content_type=None, timeout=REQUEST_TIMEOUT):
     url = path if path.startswith("http") else BASE_URL + path
     req = urllib.request.Request(url, data=body, method=method)
     if token:
@@ -120,7 +126,7 @@ def request(method, path, token=None, body=None, content_type=None, timeout=180)
     if content_type:
         req.add_header("Content-Type", content_type)
     try:
-        with urllib.request.urlopen(req, timeout=timeout, context=SSL_CTX) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, resp.read(), dict(resp.headers)
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read(), dict(exc.headers)
@@ -128,25 +134,42 @@ def request(method, path, token=None, body=None, content_type=None, timeout=180)
         return 0, str(exc).encode(), {}
 
 
-def record(op, status, elapsed_ms, size, headers):
+def budget(default):
+    """Clamp a timeout to what is left of the run so one hung call cannot outlive DURATION."""
+    return max(1.0, min(default, (stop_at + POLL_GRACE_SECONDS) - time.time()))
+
+
+def record(op, status, elapsed_ms, size, headers, ok=None):
+    # ok overrides the 2xx check for expected non-2xx replies (async 410 re-routes).
+    if ok is None:
+        ok = 200 <= status < 300
     with stats_lock:
         entry = stats[op]
-        if 200 <= status < 300:
+        if ok:
             entry["ok"] += 1
             entry["bytes"] += size
         else:
             entry["err"] += 1
             errors[f"{op} -> {status}"] += 1
-        entry["ms"] += elapsed_ms
+        entry["lat"].append(elapsed_ms)
         served = headers.get("X-Served-By")
         if served:
             nodes_seen[served] += 1
 
 
+def percentile(values, pct):
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    idx = min(len(ordered) - 1, int(round(pct / 100.0 * (len(ordered) - 1))))
+    return ordered[idx]
+
+
 # ---------------------------------------------------------------- auth
 def login(username, password):
     body = json.dumps({"username": username, "password": password}).encode()
-    status, data, _ = request("POST", "/api/v1/auth/login", body=body, content_type="application/json")
+    status, data, _ = request("POST", "/api/v1/auth/login", body=body,
+                              content_type="application/json", timeout=30)
     if status != 200:
         return None
     try:
@@ -241,7 +264,12 @@ WEIGHTS = [w for w, _, _ in WORKLOAD]
 def poll_job(job_id, token, deadline):
     """Poll until the job completes. A 410 means we hit a non-owner node; retry re-routes us."""
     while time.time() < deadline:
-        status, data, _ = request("GET", f"/api/v1/general/job/{job_id}", token=token, timeout=30)
+        started = time.time()
+        status, data, headers = request("GET", f"/api/v1/general/job/{job_id}", token=token,
+                                        timeout=budget(30))
+        # A 410 is an expected cross-node re-route, counted in job_stats rather than as an error.
+        record("job-poll", status, (time.time() - started) * 1000, len(data), headers,
+               ok=(status == 410 or 200 <= status < 300))
         if status == 410:
             with stats_lock:
                 job_stats["sticky_410"] += 1
@@ -263,7 +291,7 @@ def poll_job(job_id, token, deadline):
 def worker(worker_id, corpus, tokens):
     rng = random.Random(worker_id * 7919)
     # Stagger startup so all workers do not slam the LB in the same instant.
-    time.sleep(rng.uniform(0, RAMP_SECONDS))
+    time.sleep(max(0.0, min(rng.uniform(0, RAMP_SECONDS), stop_at - time.time())))
     while time.time() < stop_at:
         _, token = rng.choice(tokens)
         _, name, builder = rng.choices(WORKLOAD, weights=WEIGHTS, k=1)[0]
@@ -274,7 +302,8 @@ def worker(worker_id, corpus, tokens):
         body, content_type = encode_multipart(fields, files)
 
         started = time.time()
-        status, data, headers = request("POST", path, token=token, body=body, content_type=content_type)
+        status, data, headers = request("POST", path, token=token, body=body,
+                                        content_type=content_type, timeout=budget(REQUEST_TIMEOUT))
         elapsed = (time.time() - started) * 1000
         label = f"{name}{' (async)' if use_async else ''}"
         record(label, status, elapsed, len(data), headers)
@@ -287,7 +316,8 @@ def worker(worker_id, corpus, tokens):
             if job_id:
                 with stats_lock:
                     job_stats["submitted"] += 1
-                if poll_job(job_id, token, time.time() + 240):
+                deadline = min(time.time() + 240, stop_at + POLL_GRACE_SECONDS)
+                if poll_job(job_id, token, deadline):
                     with stats_lock:
                         job_stats["completed"] += 1
                 else:
@@ -295,48 +325,62 @@ def worker(worker_id, corpus, tokens):
                         job_stats["failed"] += 1
 
         # Cheap reads between jobs: extra request volume and node-registry reads.
-        if rng.random() < 0.3:
-            s, d, h = request("GET", "/api/v1/info/status", token=token, timeout=20)
-            record("info/status", s, 0, len(d), h)
+        if time.time() < stop_at and rng.random() < 0.3:
+            started = time.time()
+            s, d, h = request("GET", "/api/v1/info/status", token=token, timeout=budget(20))
+            record("info/status", s, (time.time() - started) * 1000, len(d), h)
 
 
 def progress_printer():
-    last = 0
+    last_ops = 0
     while time.time() < stop_at:
         time.sleep(15)
         with stats_lock:
             total = sum(v["ok"] + v["err"] for v in stats.values())
             ok = sum(v["ok"] for v in stats.values())
+            ops = sum(v["ok"] + v["err"] for op, v in stats.items() if op not in NON_PDF_OPS)
             mb = sum(v["bytes"] for v in stats.values()) / 1024 / 1024
             jobs = dict(job_stats)
         remaining = max(0, int(stop_at - time.time()))
-        rate = (total - last) / 15.0
-        last = total
+        rate = (ops - last_ops) / 15.0
+        last_ops = ops
         print(
-            f"    [{remaining:4d}s left] {total:6d} reqs  {ok:6d} ok  {rate:5.1f} req/s  "
+            f"    [{remaining:4d}s left] {total:6d} reqs  {ok:6d} ok  {rate:5.1f} pdf-op/s  "
             f"{mb:7.1f} MB down  async {jobs['completed']}/{jobs['submitted']}",
             flush=True,
         )
 
 
 def report():
-    print("\n" + "=" * 78)
+    """Print per-endpoint counts and latency percentiles. Returns (ok, err) totals."""
+    elapsed = max(0.001, time.time() - run_started)
+    with stats_lock:
+        snapshot = {op: dict(entry, lat=list(entry["lat"])) for op, entry in stats.items()}
+    print("\n" + "=" * 84)
     print(" LOAD TEST SUMMARY")
-    print("=" * 78)
-    print(f"{'operation':24s} {'ok':>7s} {'err':>6s} {'avg ms':>9s} {'MB down':>9s}")
-    print("-" * 78)
+    print("=" * 84)
+    print(f"{'operation':22s} {'ok':>7s} {'err':>6s} {'p50':>7s} {'p95':>7s} {'p99':>7s} "
+          f"{'req/s':>7s} {'MB':>7s}")
+    print("-" * 84)
     total_ok = total_err = 0
-    for op in sorted(stats):
-        entry = stats[op]
+    for op in sorted(snapshot):
+        entry = snapshot[op]
+        lat = entry["lat"]
         calls = entry["ok"] + entry["err"]
-        avg = entry["ms"] / calls if calls else 0
         total_ok += entry["ok"]
         total_err += entry["err"]
         print(
-            f"{op:24s} {entry['ok']:7d} {entry['err']:6d} {avg:9.0f} {entry['bytes'] / 1024 / 1024:9.1f}"
+            f"{op:22s} {entry['ok']:7d} {entry['err']:6d} {percentile(lat, 50):7.0f} "
+            f"{percentile(lat, 95):7.0f} {percentile(lat, 99):7.0f} {calls / elapsed:7.2f} "
+            f"{entry['bytes'] / 1024 / 1024:7.1f}"
         )
-    print("-" * 78)
-    print(f"{'TOTAL':24s} {total_ok:7d} {total_err:6d}")
+    print("-" * 84)
+    total = total_ok + total_err
+    print(f"{'TOTAL':22s} {total_ok:7d} {total_err:6d} {'':7s} {'':7s} {'':7s} "
+          f"{total / elapsed:7.2f}")
+    pdf_calls = sum(e["ok"] + e["err"] for op, e in snapshot.items() if op not in NON_PDF_OPS)
+    print(f"\n PDF operations only: {pdf_calls} calls, {pdf_calls / elapsed:.2f} op/s over "
+          f"{elapsed:.0f}s (health probes and job polls excluded).")
 
     print("\n Load-balancer spread (X-Served-By):")
     for node, count in sorted(nodes_seen.items(), key=lambda kv: -kv[1]):
@@ -350,7 +394,8 @@ def report():
         print("\n Top errors:")
         for key, count in sorted(errors.items(), key=lambda kv: -kv[1])[:15]:
             print(f"   {count:6d}  {key}")
-    print("=" * 78, flush=True)
+    print("=" * 84, flush=True)
+    return total_ok, total_err
 
 
 def wait_for_app():
@@ -365,7 +410,7 @@ def wait_for_app():
 
 
 def main():
-    global stop_at
+    global stop_at, run_started
     if not wait_for_app():
         print("app never came up", file=sys.stderr)
         return 1
@@ -376,7 +421,8 @@ def main():
         print("no logins succeeded - cannot generate authenticated load", file=sys.stderr)
         return 1
 
-    stop_at = time.time() + DURATION
+    run_started = time.time()
+    stop_at = run_started + DURATION
     print(
         f"\n==> Driving load for {DURATION}s: {CONCURRENCY} workers, "
         f"{len(tokens)} users, {int(ASYNC_RATIO * 100)}% async\n",
@@ -384,10 +430,29 @@ def main():
     )
     ticker = threading.Thread(target=progress_printer, daemon=True)
     ticker.start()
+    crashed = 0
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as pool:
-        for i in range(CONCURRENCY):
-            pool.submit(worker, i, corpus, tokens)
-    report()
+        futures = [pool.submit(worker, i, corpus, tokens) for i in range(CONCURRENCY)]
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception:
+                crashed += 1
+                traceback.print_exc()
+    total_ok, total_err = report()
+
+    total = total_ok + total_err
+    if crashed:
+        print(f"\n{crashed} worker(s) crashed - see the tracebacks above", file=sys.stderr)
+        return 1
+    if not total:
+        print("\nno requests were issued", file=sys.stderr)
+        return 1
+    err_rate = total_err / total
+    if err_rate > MAX_ERROR_RATE:
+        print(f"\nerror rate {err_rate:.1%} exceeds MAX_ERROR_RATE {MAX_ERROR_RATE:.1%}",
+              file=sys.stderr)
+        return 1
     return 0
 
 

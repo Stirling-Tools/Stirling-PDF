@@ -1,5 +1,5 @@
 #!/bin/sh
-# Seeds a running stack (teams, users, S3 connection + policy). Best-effort and idempotent-ish.
+# Seeds a running stack (teams, users, S3 connection + policy). Idempotent; exits non-zero if a create fails.
 # Auth uses the Bearer JWT from the login body, not a cookie - the global API key can't create teams.
 set -u
 
@@ -40,11 +40,23 @@ TOKEN=$(jq -r '.session.access_token' </tmp/login.json)
 
 auth() { curl -sS -H "Authorization: Bearer $TOKEN" "$@"; }
 
+errors=0
+fail_note() { errors=$((errors+1)); log "ERROR: $*"; }
+
+# The regression runner re-seeds an already-seeded stack, so every create is check-then-create by name.
+find_id_by_name() { # $1=list path  $2=name -> the existing id, or empty
+  auth "$BASE_URL$1" 2>/dev/null \
+    | jq -r --arg n "$2" '[.. | objects | select(.name? == $n) | .id?] | map(select(. != null)) | first // empty' 2>/dev/null
+}
+
 # --- teams -------------------------------------------------------------------
 for t in $TEAMS; do
   code=$(auth -o /dev/null -w '%{http_code}' -X POST "$BASE_URL/api/v1/team/create" \
     --data-urlencode "name=$t")
-  log "team '$t': HTTP $code"
+  case "$code" in
+    2*|409) log "team '$t': HTTP $code" ;;
+    *)      fail_note "team '$t': HTTP $code" ;;
+  esac
 done
 
 # Resolve team ids from the DB (no admin list endpoint self-hosted).
@@ -82,6 +94,7 @@ while [ "$n" -le "$USER_COUNT" ]; do
   n=$((n+1))
 done
 log "users created: $created (failed: $failed, requested: $USER_COUNT)"
+[ "$failed" -eq 0 ] || fail_note "$failed of $USER_COUNT user creates failed"
 
 # --- S3 connection -> the in-cluster MinIO 'policy-data' bucket ---------------
 conn_body=$(cat <<JSON
@@ -89,9 +102,15 @@ conn_body=$(cat <<JSON
  "config":{"bucket":"policy-data","region":"us-east-1","endpoint":"http://minio:9000","accessKeyId":"minioadmin","secretAccessKey":"minioadmin","pathStyleAccess":true}}
 JSON
 )
-conn_id=$(auth -X POST "$BASE_URL/api/v1/integrations" -H 'Content-Type: application/json' -d "$conn_body" \
-  | jq -r '.id // empty' 2>/dev/null)
-log "S3 connection id: ${conn_id:-<none>}"
+conn_id=$(find_id_by_name "/api/v1/integrations" "MinIO policy bucket")
+if [ -n "${conn_id:-}" ]; then
+  log "S3 connection already exists: id $conn_id"
+else
+  conn_id=$(auth -X POST "$BASE_URL/api/v1/integrations" -H 'Content-Type: application/json' -d "$conn_body" \
+    | jq -r '.id // empty' 2>/dev/null)
+  log "S3 connection id: ${conn_id:-<none>}"
+  [ -n "${conn_id:-}" ] || fail_note "S3 connection was not created"
+fi
 
 # --- a scheduled S3 -> compress -> S3 policy ---------------------------------
 if [ -n "${conn_id:-}" ]; then
@@ -100,9 +119,15 @@ if [ -n "${conn_id:-}" ]; then
  "options":{"connectionId":$conn_id,"prefix":"incoming/","mode":"consume"}}
 JSON
 )
-  src_id=$(auth -X POST "$BASE_URL/api/v1/sources" -H 'Content-Type: application/json' -d "$src_body" \
-    | jq -r '.id // empty' 2>/dev/null)
-  log "S3 source id: ${src_id:-<none>}"
+  src_id=$(find_id_by_name "/api/v1/sources" "Incoming S3")
+  if [ -n "${src_id:-}" ]; then
+    log "S3 source already exists: id $src_id"
+  else
+    src_id=$(auth -X POST "$BASE_URL/api/v1/sources" -H 'Content-Type: application/json' -d "$src_body" \
+      | jq -r '.id // empty' 2>/dev/null)
+    log "S3 source id: ${src_id:-<none>}"
+    [ -n "${src_id:-}" ] || fail_note "S3 source was not created"
+  fi
 
   if [ -n "${src_id:-}" ]; then
     pol_body=$(cat <<JSON
@@ -113,9 +138,18 @@ JSON
  "output":{"type":"s3","options":{"connectionId":$conn_id,"prefix":"processed/"}}}
 JSON
 )
-    code=$(auth -o /tmp/pol.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/policies" \
-      -H 'Content-Type: application/json' -d "$pol_body")
-    log "policy create: HTTP $code $( [ "$code" != 200 ] && head -c 160 /tmp/pol.json )"
+    pol_id=$(find_id_by_name "/api/v1/policies" "Compress incoming PDFs")
+    if [ -n "${pol_id:-}" ]; then
+      log "policy already exists: id $pol_id"
+    else
+      code=$(auth -o /tmp/pol.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/policies" \
+        -H 'Content-Type: application/json' -d "$pol_body")
+      log "policy create: HTTP $code $( [ "$code" != 200 ] && head -c 160 /tmp/pol.json )"
+      case "$code" in
+        2*|409) ;;
+        *)      fail_note "policy create: HTTP $code" ;;
+      esac
+    fi
   fi
 
   # --- webhook source + policy (only if this build has the webhook type) -----
@@ -124,14 +158,25 @@ JSON
  "options":{"connectionId":$conn_id,"mode":"consume"}}
 JSON
 )
-  wh=$(auth -o /tmp/wh.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/sources" \
-    -H 'Content-Type: application/json' -d "$wh_body")
-  if [ "$wh" = "200" ] || [ "$wh" = "201" ]; then
-    wh_url=$(jq -r '.options.webhookId // empty' </tmp/wh.json 2>/dev/null)
-    log "webhook source created (deliver to /api/v1/webhooks/$wh_url)"
+  wh_id=$(find_id_by_name "/api/v1/sources" "Partner webhook")
+  if [ -n "${wh_id:-}" ]; then
+    log "webhook source already exists: id $wh_id"
   else
-    log "webhook source not created (HTTP $wh) - expected on builds without the webhook branch"
+    wh=$(auth -o /tmp/wh.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/sources" \
+      -H 'Content-Type: application/json' -d "$wh_body")
+    if [ "$wh" = "200" ] || [ "$wh" = "201" ]; then
+      wh_url=$(jq -r '.options.webhookId // empty' </tmp/wh.json 2>/dev/null)
+      log "webhook source created (deliver to /api/v1/webhooks/$wh_url)"
+    else
+      # Not counted as an error: builds without the webhook branch legitimately reject this type.
+      log "webhook source not created (HTTP $wh) - expected on builds without the webhook branch"
+    fi
   fi
+fi
+
+if [ "$errors" -gt 0 ]; then
+  log "seed FAILED with $errors error(s)."
+  exit 1
 fi
 
 log "seed complete."

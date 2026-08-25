@@ -11,7 +11,8 @@ DOWN=0
 SEED=1
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --valkey)   VALKEY_TOPOLOGY="${2:-}"; shift 2 ;;
+    --valkey)   [ "$#" -ge 2 ] || { echo "--valkey needs a value (standalone|sentinel|cluster)"; exit 2; }
+                VALKEY_TOPOLOGY="$2"; shift 2 ;;
     --valkey=*) VALKEY_TOPOLOGY="${1#*=}"; shift ;;
     --down)     DOWN=1; shift ;;
     --no-seed)  SEED=0; shift ;;
@@ -22,10 +23,28 @@ done
 COMPOSE=$(compose_cmd_for_topology "$VALKEY_TOPOLOGY") \
   || { echo "Unknown --valkey topology '$VALKEY_TOPOLOGY' (expected standalone|sentinel|cluster)"; exit 2; }
 
+# Records which topology is live so switching overlays tears the old services down instead of
+# orphaning them (stale containers otherwise confuse validate-multinode-test.sh's detection).
+TOPOLOGY_MARKER="multinode/.active-topology"
+PREV_TOPOLOGY=""
+if [ -f "$TOPOLOGY_MARKER" ]; then
+  PREV_TOPOLOGY=$(tr -d '[:space:]' < "$TOPOLOGY_MARKER" 2>/dev/null || echo "")
+fi
+
 if [ "$DOWN" = "1" ]; then
   echo "Tearing down multi-node stack + volumes..."
   $COMPOSE --profile seed down -v --remove-orphans
+  rm -f "$TOPOLOGY_MARKER"
   exit 0
+fi
+
+if [ -n "$PREV_TOPOLOGY" ] && [ "$PREV_TOPOLOGY" != "$VALKEY_TOPOLOGY" ]; then
+  echo "==> Topology change ($PREV_TOPOLOGY -> $VALKEY_TOPOLOGY); tearing the old stack down first..."
+  PREV_COMPOSE=$(compose_cmd_for_topology "$PREV_TOPOLOGY") || PREV_COMPOSE=""
+  if [ -n "$PREV_COMPOSE" ]; then
+    $PREV_COMPOSE --profile seed down -v --remove-orphans || true
+  fi
+  rm -f "$TOPOLOGY_MARKER"
 fi
 
 # Cluster mode is licence-gated. Without a valid key the nodes fail the cluster licence gate at boot.
@@ -38,7 +57,8 @@ echo "==> Building the Stirling image (first run compiles the app; be patient)..
 $COMPOSE build
 
 echo "==> Starting Postgres + Valkey ($VALKEY_TOPOLOGY) + MinIO + 2 app nodes + nginx..."
-$COMPOSE up -d
+$COMPOSE up -d --remove-orphans
+printf '%s\n' "$VALKEY_TOPOLOGY" > "$TOPOLOGY_MARKER"
 
 echo "==> Waiting for both app nodes to report healthy..."
 for node in multinode-stirling-1 multinode-stirling-2; do

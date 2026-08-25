@@ -702,6 +702,110 @@ class ValkeyConnectionConfigurationTest {
             assertEquals(
                     "stirling-web-a", ValkeyConnectionConfiguration.resolveClientName(cluster));
         }
+
+        @Test
+        @DisplayName("off/none/disabled opt out of CLIENT SETNAME entirely")
+        void optOutValuesReturnNull() {
+            for (String optOut : List.of("off", "none", "disabled", "OFF", "  None  ")) {
+                Cluster cluster = new ApplicationProperties().getCluster();
+                cluster.getValkey().setClientName(optOut);
+                assertNull(
+                        ValkeyConnectionConfiguration.resolveClientName(cluster),
+                        "'" + optOut + "' must send no CLIENT SETNAME at all");
+            }
+        }
+
+        @Test
+        @DisplayName("a node id Valkey would reject in HELLO is sanitised, not passed through")
+        void unsafeNodeIdIsSanitised() {
+            // Valkey answers -ERR to a name with spaces and aborts the RESP3 handshake, so an
+            // unsanitised name refuses every connection against a healthy server.
+            Cluster cluster = new ApplicationProperties().getCluster();
+            cluster.getNode().setId("node 7\nweb\ttab");
+            assertEquals(
+                    "stirling-node-7-web-tab",
+                    ValkeyConnectionConfiguration.resolveClientName(cluster));
+        }
+
+        @Test
+        @DisplayName("an explicit clientName is sanitised the same way")
+        void unsafeExplicitNameIsSanitised() {
+            Cluster cluster = new ApplicationProperties().getCluster();
+            cluster.getValkey().setClientName("stirling web a");
+            assertEquals(
+                    "stirling-web-a", ValkeyConnectionConfiguration.resolveClientName(cluster));
+        }
+
+        @Test
+        @DisplayName("a safe name is returned byte-identical")
+        void safeNameIsUntouched() {
+            Cluster cluster = new ApplicationProperties().getCluster();
+            cluster.getValkey().setClientName("stirling-web_a.1:2");
+            assertEquals(
+                    "stirling-web_a.1:2", ValkeyConnectionConfiguration.resolveClientName(cluster));
+        }
+    }
+
+    @Nested
+    @DisplayName("guardIgnoredUrl()")
+    class GuardIgnoredUrl {
+
+        private Valkey withUrl(String url) {
+            Valkey v = new Valkey();
+            v.setUrl(url);
+            return v;
+        }
+
+        @Test
+        @DisplayName(
+                "a rediss:// url ignored by sentinel mode refuses boot rather than downgrading")
+        void redissIgnoredWithoutTlsThrows() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () ->
+                                    ValkeyConnectionConfiguration.guardIgnoredUrl(
+                                            withUrl("rediss://valkey:6379"),
+                                            ValkeyMode.SENTINEL,
+                                            false));
+            assertTrue(
+                    ex.getMessage().contains("rediss://"),
+                    "the operator must be told which setting silently dropped TLS");
+        }
+
+        @Test
+        @DisplayName("the same url is allowed once tls.enabled restores TLS")
+        void redissIgnoredWithTlsIsAllowed() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("rediss://valkey:6379"), ValkeyMode.CLUSTER, true);
+        }
+
+        @Test
+        @DisplayName("standalone reads the url, so it is never guarded")
+        void standaloneIsNeverGuarded() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("rediss://valkey:6379"), ValkeyMode.STANDALONE, false);
+        }
+
+        @Test
+        @DisplayName("a plaintext url carrying credentials warns but still boots")
+        void userInfoOnlyWarns() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("redis://user:pw@valkey:6379"), ValkeyMode.SENTINEL, false);
+        }
+
+        @Test
+        @DisplayName("an unparseable ignored url warns rather than failing boot")
+        void malformedUrlDoesNotThrow() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("redis://valkey:6379 with spaces"), ValkeyMode.CLUSTER, false);
+        }
+
+        @Test
+        @DisplayName("a blank url is nothing to guard")
+        void blankUrlIsIgnored() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(withUrl(""), ValkeyMode.CLUSTER, false);
+        }
     }
 
     @Nested

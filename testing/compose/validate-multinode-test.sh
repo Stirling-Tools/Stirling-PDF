@@ -20,7 +20,8 @@ detect_topology() {
   # cluster_enabled lives in INFO cluster, NOT in CLUSTER INFO (which only reports state/slots).
   if docker exec multinode-valkey valkey-cli info cluster 2>/dev/null | tr -d '\r' | grep -q '^cluster_enabled:1'; then
     echo cluster
-  elif docker inspect multinode-valkey-sentinel-1 >/dev/null 2>&1; then
+  # Must be a RUNNING sentinel: docker inspect also succeeds for a stopped leftover from a previous run.
+  elif [ -n "$(docker ps --filter name=multinode-valkey-sentinel-1 --filter status=running -q 2>/dev/null)" ]; then
     echo sentinel
   else
     echo standalone
@@ -115,19 +116,23 @@ fi
 echo "== 6. Every Valkey connection is attributable (CLIENT SETNAME) =="
 # Census every data node: one container carries a sixth of the connections in a 6-shard cluster.
 # Scoped to lib-name=Lettuce - valkey-cli and monitoring agents legitimately have no name.
-sampled=0; anon=0; all_names=""
+sampled=0; anon=0; lettuce=0; all_names=""
 for c in $VALKEY_NODES; do
   sampled=$((sampled+1))
   clients=$(docker exec "$c" valkey-cli client list 2>/dev/null | tr -d '\r' | grep 'lib-name=Lettuce')
+  lettuce=$(( lettuce + $(printf '%s\n' "$clients" | grep -c 'lib-name=Lettuce') ))
   anon=$(( anon + $(printf '%s\n' "$clients" | grep -c 'name= ') ))
   all_names="$all_names
 $(printf '%s\n' "$clients" | grep -o 'name=stirling-[^ ]*')"
 done
 named=$(printf '%s\n' "$all_names" | grep . | sort -u)
 distinct=$(printf '%s\n' "$named" | grep -c .)
-echo "  sampled $sampled Valkey node(s); app connection names: $(printf '%s' "$named" | paste -sd, -)"
+echo "  sampled $sampled Valkey node(s); $lettuce Lettuce connection(s); app connection names: $(printf '%s' "$named" | paste -sd, -)"
 if [ "$sampled" -lt 1 ]; then
   bad "no reachable Valkey container found - cannot census client names"
+elif [ "${lettuce:-0}" -eq 0 ]; then
+  # Population floor: with zero Lettuce clients the anon count is also zero and would falsely pass.
+  bad "no Lettuce connections found across $sampled node(s) - nothing to census (are the app nodes connected?)"
 else
   [ "${anon:-0}" -eq 0 ] && ok "no unnamed app connections across $sampled node(s) (all carry CLIENT SETNAME)" \
                           || bad "$anon Lettuce connection(s) have an empty name= - CLIENT SETNAME is not applied"
@@ -135,9 +140,9 @@ else
                               || bad "only ${distinct:-0} distinct stirling-* client name(s) (expected one per app node)"
 fi
 
-echo "== 7. Connection churn is bounded (pooling is on) =="
-# Job-creating traffic only: reads ride the shared native connection, job-store writes need a dedicated
-# one (~3 fresh connects per async job unpooled). Summed over all data nodes - a cluster spreads them.
+echo "== 7. Backplane traffic multiplexes over one shared connection =="
+# Job load must not open a stream of new connections: every backplane command rides the shared native
+# connection. This measures multiplexing, NOT whether the Lettuce pool is enabled.
 JOBS=200
 CHURN_BUDGET=50
 conns_total() {
@@ -150,9 +155,9 @@ conns_total() {
 }
 vk_count=$(printf '%s\n' "$VALKEY_NODES" | grep -c .)
 if [ -z "${jwt:-}" ]; then
-  skip "no JWT - cannot drive load to measure churn"
+  skip "no JWT - cannot drive load to measure connection growth"
 elif [ "${vk_count:-0}" -lt 1 ]; then
-  bad "no reachable Valkey container found - cannot measure connection churn"
+  bad "no reachable Valkey container found - cannot measure connection growth"
 else
   probe_pdf=$(mktemp -t mn-probe-XXXXXX.pdf 2>/dev/null || echo /tmp/mn-probe.pdf)
   printf '%%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\ntrailer<</Root 1 0 R>>\n%%%%EOF\n' > "$probe_pdf"
@@ -168,11 +173,11 @@ else
   delta=$(( ${after:-0} - ${before:-0} ))
   echo "  total_connections_received over $vk_count Valkey node(s): $before -> $after (delta $delta over $submitted/$JOBS async jobs)"
   if [ "$submitted" -lt 1 ]; then
-    bad "no async jobs were accepted - cannot measure connection churn"
+    bad "no async jobs were accepted - cannot measure connection growth"
   elif [ "$delta" -lt "$CHURN_BUDGET" ]; then
-    ok "only $delta new connections for $submitted async jobs - connections are pooled"
+    ok "only $delta new connections for $submitted async jobs - backplane multiplexes over the shared connection"
   else
-    bad "$delta new connections for $submitted async jobs - pooling looks disabled (expected < $CHURN_BUDGET)"
+    bad "$delta new connections for $submitted async jobs - a connection is opened per operation (expected < $CHURN_BUDGET)"
   fi
 fi
 

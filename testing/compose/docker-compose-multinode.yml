@@ -69,11 +69,11 @@ x-stirling-node: &stirling-node
     CLUSTER_VALKEY_URL: "redis://valkey:6379"
     # Named connections so CLIENT LIST attributes load per node in any Valkey monitor; overridden per node below.
     CLUSTER_VALKEY_CLIENTNAME: "stirling-node-base"
-    # Pooling is on by default in the app; pinned here so the test stack asserts a known pool size.
+    # Pinned to the shipped settings.yml.template defaults so the test stack exercises what users run.
     CLUSTER_VALKEY_POOL_ENABLED: "true"
     CLUSTER_VALKEY_POOL_MAXACTIVE: "16"
     CLUSTER_VALKEY_POOL_MAXIDLE: "16"
-    CLUSTER_VALKEY_POOL_MINIDLE: "4"
+    CLUSTER_VALKEY_POOL_MINIDLE: "0"
     CLUSTER_VALKEY_POOL_MAXWAITMILLIS: "2000"
     # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties, multinode/README.md).
 
@@ -174,6 +174,8 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-1"
+      # Pinned instead of the per-boot UUID default so tests can assert on registered node ids.
+      CLUSTER_NODE_ID: "multinode-1"
       CLUSTER_VALKEY_CLIENTNAME: "stirling-node-1"
 
   # ---- App node 2 -----------------------------------------------------------
@@ -184,6 +186,8 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-2"
+      # Pinned instead of the per-boot UUID default so tests can assert on registered node ids.
+      CLUSTER_NODE_ID: "multinode-2"
       CLUSTER_VALKEY_CLIENTNAME: "stirling-node-2"
 
   # ---- One-shot seeder: teams, ~40 users, S3 connection, policies -----------

@@ -24,10 +24,12 @@ import stirling.software.common.cluster.ClusterNode;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 
-// Opt-in, needs an external sentinel deployment. Env vars, prefix STIRLING_TEST_VALKEY_:
-// SENTINEL_NODES (required), SENTINEL_MASTER (default mymaster), SENTINEL_PASSWORD, PASSWORD.
+/**
+ * Opt-in, never runs in CI: needs STIRLING_TEST_VALKEY_SENTINEL_NODES (comma-separated host:port).
+ * Optional STIRLING_TEST_VALKEY_: SENTINEL_MASTER (default mymaster), SENTINEL_PASSWORD, PASSWORD.
+ */
 @EnabledIfEnvironmentVariable(named = "STIRLING_TEST_VALKEY_SENTINEL_NODES", matches = ".+")
-class LiveValkeySentinelModeTest {
+class LiveExternalSentinelTest {
 
     private static final String NODE_ID = "sentinel-node";
     private static final String RUN = UUID.randomUUID().toString().substring(0, 8);

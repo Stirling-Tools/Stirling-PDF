@@ -48,6 +48,12 @@ public class ValkeyConnectionConfiguration {
     private static final java.util.regex.Pattern NOPERM_COMMAND =
             java.util.regex.Pattern.compile("run the '([^']+)'");
 
+    /** Valkey rejects a client name outside printable ASCII, space included, during HELLO. */
+    private static final java.util.regex.Pattern UNSAFE_CLIENT_NAME =
+            java.util.regex.Pattern.compile("[^\\x21-\\x7e]");
+
+    private static final int BOOT_PROBE_ATTEMPTS = 10;
+
     private final ApplicationProperties applicationProperties;
 
     @Bean(destroyMethod = "destroy")
@@ -314,16 +320,31 @@ public class ValkeyConnectionConfiguration {
     }
 
     /**
-     * Blank = {@code stirling-} + node name. {@code off}/{@code none}/{@code disabled} returns
-     * null: Lettuce sends CLIENT SETNAME in the handshake, so a NOPERM there refuses all conns.
+     * Blank = {@code stirling-} + node name; off/none/disabled = null. A missing SETNAME ACL
+     * refuses nothing (RESP3 folds it into HELLO, RESP2 swallows it); a name Valkey rejects does.
      */
     static String resolveClientName(Cluster cluster) {
         String configured = cluster.getValkey().getClientName();
         if (!isSet(configured)) {
-            return "stirling-" + cluster.resolvedNodeName();
+            return sanitiseClientName("stirling-" + cluster.resolvedNodeName(), "cluster.node.id");
         }
         String trimmed = configured.trim();
-        return isClientNameOptOut(trimmed) ? null : trimmed;
+        return isClientNameOptOut(trimmed)
+                ? null
+                : sanitiseClientName(trimmed, "cluster.valkey.clientName");
+    }
+
+    private static String sanitiseClientName(String name, String source) {
+        String safe = UNSAFE_CLIENT_NAME.matcher(name).replaceAll("-");
+        if (!safe.equals(name)) {
+            log.warn(
+                    "Valkey client name from {} contains characters Valkey refuses in the"
+                            + " handshake; using '{}' instead of '{}'",
+                    source,
+                    safe,
+                    name);
+        }
+        return safe;
     }
 
     private static boolean isClientNameOptOut(String value) {
@@ -370,7 +391,9 @@ public class ValkeyConnectionConfiguration {
                 ("stirling:health:boot:" + (clientName == null ? "unnamed" : clientName))
                         .getBytes(StandardCharsets.UTF_8);
         RuntimeException last = null;
-        for (int attempt = 1; attempt <= 10; attempt++) {
+        int attempt = 0;
+        while (attempt < BOOT_PROBE_ATTEMPTS) {
+            attempt++;
             try {
                 RedisConnection conn = factory.getConnection();
                 try {
@@ -394,28 +417,38 @@ public class ValkeyConnectionConfiguration {
                 }
                 last = ex;
                 log.warn(
-                        "Valkey probe attempt {}/10 failed ({}, tls={}): {}",
+                        "Valkey probe attempt {}/{} failed ({}, tls={}): {}",
                         attempt,
+                        BOOT_PROBE_ATTEMPTS,
                         target,
                         tls,
                         ex.getMessage());
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException ie) {
+                    // Destroy first: an armed interrupt aborts Lettuce's shutdown await and
+                    // leaks the client resources.
+                    factory.destroy();
                     Thread.currentThread().interrupt();
-                    break;
+                    throw new IllegalStateException(
+                            unreachableMessage(attempt, target, tls, last), last);
                 }
             }
         }
         factory.destroy();
-        throw new IllegalStateException(
-                "Valkey unreachable at boot after 10 attempts ("
-                        + target
-                        + ", tls="
-                        + tls
-                        + "): "
-                        + (last == null ? "no detail" : last.getMessage()),
-                last);
+        throw new IllegalStateException(unreachableMessage(attempt, target, tls, last), last);
+    }
+
+    private static String unreachableMessage(
+            int attempts, String target, boolean tls, RuntimeException last) {
+        return "Valkey unreachable at boot after "
+                + attempts
+                + " attempts ("
+                + target
+                + ", tls="
+                + tls
+                + "): "
+                + (last == null ? "no detail" : last.getMessage());
     }
 
     /**
@@ -457,9 +490,8 @@ public class ValkeyConnectionConfiguration {
                 + ". The credentials were accepted; this ACL user is missing a command or key"
                 + " permission"
                 + (command == null ? "" : " - grant '+" + command + "'")
-                + ". The backplane needs the boot probe (EXISTS), read/write access to the"
-                + " 'stirling:*' keyspace, and 'client|setname' unless"
-                + " cluster.valkey.client-name is set to 'off'.";
+                + ". The backplane needs the boot probe (EXISTS) and read/write access to the"
+                + " 'stirling:*' keyspace.";
     }
 
     /** NOPERM only - a permitted-command/key problem, distinct from bad credentials. */

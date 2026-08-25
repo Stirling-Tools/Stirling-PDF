@@ -165,7 +165,7 @@ class ClusterConfigValidationTest {
         }
 
         @Test
-        @DisplayName("V9: pool.maxWaitMillis <= 0 is rejected (it would block forever)")
+        @DisplayName("V9: pool.maxWaitMillis <= 0 is rejected (0 fails borrows, negative blocks)")
         void poolMaxWaitMustBePositive() {
             Valkey v = validStandalone();
             v.getPool().setMaxWaitMillis(0);

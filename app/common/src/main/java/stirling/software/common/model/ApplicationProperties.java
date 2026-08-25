@@ -790,14 +790,14 @@ public class ApplicationProperties {
             @Data
             public static class Pool {
                 /**
-                 * Connection pooling for dedicated connections. On by default: without a pool every
-                 * blocking/transactional call opens and tears down a TCP connection.
+                 * Pooling for dedicated connections. Backplane traffic multiplexes over the shared
+                 * native connection, so the pool backs only that one connection today.
                  */
                 private boolean enabled = true;
 
                 /**
                  * Max pooled connections; at least 2, one is held by the shared native connection.
-                 * A hard ceiling - borrows past it fail after {@link #maxWaitMillis}, not queue.
+                 * Headroom for a future dedicated path - raising it changes no current throughput.
                  */
                 private int maxActive = 16;
 
@@ -811,8 +811,8 @@ public class ApplicationProperties {
                 private int minIdle = 0;
 
                 /**
-                 * Max wait for a pooled connection. Never set 0/negative: commons-pool2 treats that
-                 * as block-forever, which would defeat commandTimeoutMs.
+                 * Max wait for a pooled connection. Never 0/negative: negative blocks forever and
+                 * defeats commandTimeoutMs, 0 fails the borrow instantly once the pool is drained.
                  */
                 private long maxWaitMillis = 2000;
 

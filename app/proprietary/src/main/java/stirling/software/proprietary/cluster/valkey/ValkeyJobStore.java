@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -28,8 +30,8 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 
 /**
- * put() is NOT atomic across keys: hash+TTL is one Lua script, each index row a SET PX, so a torn
- * put() leaves stale index rows. Lua, not MULTI/WATCH: the cluster client rejects both.
+ * One hash per job plus a fileId to jobId index. Atomic on standalone/sentinel via one Lua script;
+ * on cluster those keys are cross-slot, so writes are separate and hash-first to keep tears benign.
  */
 @Component
 @RequiredArgsConstructor
@@ -58,7 +60,42 @@ public class ValkeyJobStore implements JobStore {
                             + " else return 0 end",
                     Long.class);
 
+    // Non-cluster put(): hash, TTL and index rows in one round trip, so no torn write.
+    // KEYS[1]=hash, KEYS[2..]=index rows; ARGV[1]=ttlMs, ARGV[2]=jobId, ARGV[3..]=fields.
+    private static final RedisScript<Long> PUT_ATOMIC =
+            new DefaultRedisScript<>(
+                    "redis.call('HSET', KEYS[1], unpack(ARGV, 3));"
+                            + " redis.call('PEXPIRE', KEYS[1], ARGV[1]);"
+                            + " for i = 2, #KEYS do"
+                            + " redis.call('SET', KEYS[i], ARGV[2], 'PX', ARGV[1]) end;"
+                            + " return 1",
+                    Long.class);
+
+    // Non-cluster delete(): hash read, DEL and the value-guarded index deletes in one round trip.
+    // ARGV[1]=jobId, ARGV[2]=index prefix; malformed fileIds JSON must not error the script.
+    private static final RedisScript<Long> DELETE_JOB_AND_INDEX =
+            new DefaultRedisScript<>(
+                    "local ids = redis.call('HGET', KEYS[1], 'fileIds');"
+                            + " redis.call('DEL', KEYS[1]);"
+                            + " if not ids then return 0 end;"
+                            + " local ok, decoded = pcall(cjson.decode, ids);"
+                            + " if not ok or type(decoded) ~= 'table' then return 0 end;"
+                            + " local n = 0;"
+                            + " for i = 1, #decoded do"
+                            + " if type(decoded[i]) == 'string' then"
+                            + " local k = ARGV[2] .. decoded[i];"
+                            + " if redis.call('GET', k) == ARGV[1] then"
+                            + " n = n + redis.call('DEL', k) end end end;"
+                            + " return n",
+                    Long.class);
+
     private final StringRedisTemplate template;
+
+    // Cluster rejects a script spanning the job key and its index keys: they hash to other slots.
+    private boolean isClusterAware() {
+        RedisConnectionFactory factory = template.getConnectionFactory();
+        return factory instanceof LettuceConnectionFactory lettuce && lettuce.isClusterAware();
+    }
 
     @Override
     public void put(JobStoreEntry entry, Duration ttl) {
@@ -95,20 +132,37 @@ public class ValkeyJobStore implements JobStore {
                 "resultMeta",
                 writeJson(entry.resultMeta() == null ? Map.of() : entry.resultMeta()));
 
-        // Index entries first: the surviving crash window then leaves "index points at a job not
-        // yet visible", which every caller already handles (findJobIdByFileId returns Optional).
+        List<String> indexKeys = new ArrayList<>();
         if (entry.fileIds() != null) {
             for (String fileId : entry.fileIds()) {
-                template.opsForValue().set(FILE_INDEX_PREFIX + fileId, entry.jobId(), ttl);
+                indexKeys.add(FILE_INDEX_PREFIX + fileId);
             }
         }
-        List<String> args = new ArrayList<>(1 + fields.size() * 2);
-        args.add(Long.toString(ttlMs));
+        List<String> fieldArgs = new ArrayList<>(fields.size() * 2);
         for (Map.Entry<String, String> f : fields.entrySet()) {
-            args.add(f.getKey());
-            args.add(f.getValue());
+            fieldArgs.add(f.getKey());
+            fieldArgs.add(f.getValue());
         }
+        if (!isClusterAware()) {
+            List<String> keys = new ArrayList<>(1 + indexKeys.size());
+            keys.add(key);
+            keys.addAll(indexKeys);
+            List<String> args = new ArrayList<>(2 + fieldArgs.size());
+            args.add(Long.toString(ttlMs));
+            args.add(entry.jobId());
+            args.addAll(fieldArgs);
+            template.execute(PUT_ATOMIC, keys, args.toArray());
+            return;
+        }
+        // Cluster only: hash first, so a torn write leaves an unindexed job rather than an index
+        // row pointing at a hash that does not exist.
+        List<String> args = new ArrayList<>(1 + fieldArgs.size());
+        args.add(Long.toString(ttlMs));
+        args.addAll(fieldArgs);
         template.execute(HSET_WITH_TTL, List.of(key), args.toArray());
+        for (String indexKey : indexKeys) {
+            template.opsForValue().set(indexKey, entry.jobId(), ttl);
+        }
     }
 
     @Override
@@ -117,12 +171,16 @@ public class ValkeyJobStore implements JobStore {
     }
 
     /**
-     * Not atomic: a concurrent put() for the same jobId can resurrect the hash after the DEL and
-     * leave its fileIds unindexed. Tolerated - dead path on Valkey (shouldRunLocalCleanup=false).
+     * Live path: /api/v1/general/jobs/cleanup and /api/v1/admin/job/cleanup?force=true, neither
+     * gated by shouldRunLocalCleanup(). One script except on cluster, where a put() can interleave.
      */
     @Override
     public void delete(String jobId) {
         String jobKey = JOB_PREFIX + jobId;
+        if (!isClusterAware()) {
+            template.execute(DELETE_JOB_AND_INDEX, List.of(jobKey), jobId, FILE_INDEX_PREFIX);
+            return;
+        }
         String fileIdsJson = (String) template.opsForHash().get(jobKey, "fileIds");
         template.delete(jobKey);
         if (fileIdsJson == null) {

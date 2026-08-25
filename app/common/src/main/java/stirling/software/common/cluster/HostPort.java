@@ -7,8 +7,8 @@ package stirling.software.common.cluster;
 public record HostPort(String host, int port) {
 
     /**
-     * The port is always explicit: a bare host would silently take a default and connect somewhere
-     * the operator never named. IPv6 literals must be bracketed ({@code [::1]:6379}).
+     * Port is always explicit: a bare host would silently connect somewhere the operator never
+     * named. IPv6 literals must be bracketed ({@code [::1]:6379}).
      *
      * @throws IllegalStateException naming {@code propertyName} and echoing {@code entry}
      */

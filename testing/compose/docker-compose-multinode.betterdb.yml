@@ -21,7 +21,8 @@ services:
       - --maxmemory-policy
       - "noeviction"
     ports:
-      - "6379:6379" # host access for valkey-cli inspection
+      # Loopback-only: this Valkey has no auth, so never expose it on all interfaces.
+      - "127.0.0.1:6379:6379" # host access for valkey-cli inspection
 
   # One-shot: BetterDB runs as UID 1001 and cannot write a root-owned volume.
   betterdb-init:
@@ -53,7 +54,8 @@ services:
       - stirling-multinode
 
   betterdb:
-    image: betterdb/monitor:latest
+    # Digest-pinned: this third-party image holds the stack's Postgres credentials, so no floating :latest.
+    image: betterdb/monitor:0.39.0-no-ai@sha256:630cf435a129f285ca2d877ea1686d9788a7c2cb346cb6e38a3d227034d294f6
     container_name: multinode-betterdb
     restart: unless-stopped
     depends_on:
@@ -82,7 +84,7 @@ services:
       # No phoning home from a local test stack.
       BETTERDB_TELEMETRY: "false"
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     volumes:
       - betterdb-data:/app/data
     # The image's own healthcheck probes "localhost", which resolves to ::1 while the server

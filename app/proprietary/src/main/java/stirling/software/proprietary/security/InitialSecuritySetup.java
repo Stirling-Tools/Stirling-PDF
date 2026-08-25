@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -59,11 +59,12 @@ public class InitialSecuritySetup {
     @PostConstruct
     public void init() {
         try {
+            boolean restoredFromBackup = importBackupIfNeeded();
             for (int attempt = 1; ; attempt++) {
                 try {
-                    runBootstrap();
+                    runBootstrap(restoredFromBackup);
                     return;
-                } catch (DataIntegrityViolationException e) {
+                } catch (DataAccessException e) {
                     if (attempt >= BOOTSTRAP_RACE_ATTEMPTS) {
                         throw e;
                     }
@@ -77,20 +78,27 @@ public class InitialSecuritySetup {
         } catch (IllegalArgumentException
                 | SQLException
                 | UnsupportedProviderException
-                | DataIntegrityViolationException e) {
+                | DataAccessException e) {
+            // Widened for diagnosis, not recovery: unrecoverable cases such as duplicate team rows
+            // (tracked separately) still just exhaust the attempts and exit here.
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
         }
     }
 
-    private void runBootstrap()
+    // Restoring a backup replays the whole schema, so it must run outside the retry loop.
+    private boolean importBackupIfNeeded() {
+        if (userService.hasUsers() || !databaseService.hasBackup()) {
+            return false;
+        }
+        databaseService.importDatabase();
+        return true;
+    }
+
+    private void runBootstrap(boolean restoredFromBackup)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!userService.hasUsers()) {
-            if (databaseService.hasBackup()) {
-                databaseService.importDatabase();
-            } else {
-                initializeAdminUser();
-            }
+        if (!restoredFromBackup && !userService.hasUsers()) {
+            initializeAdminUser();
         }
 
         configureJWTSettings();
@@ -139,8 +147,10 @@ public class InitialSecuritySetup {
             }
         }
 
-        userService.saveAll(usersWithoutTeam); // batch save
+        // A null team_id is the retry guard, so commit it last: syncMembership is idempotent and
+        // only needs the already-persisted team id, so a half-done pass is re-found and finished.
         usersWithoutTeam.forEach(teamMembershipService::syncMembership);
+        userService.saveAll(usersWithoutTeam); // batch save
         if (usersWithoutTeam != null && !usersWithoutTeam.isEmpty()) {
             log.info(
                     "Assigned {} user(s) without a team to the default team.",

@@ -12,9 +12,12 @@ from behave import given, then, when
 
 LB_URL = "http://localhost:8080"
 NODES = ["multinode-stirling-1", "multinode-stirling-2"]
+# Must match CLUSTER_NODE_ID in testing/compose/docker-compose-multinode.yml.
+NODE_IDS = ["multinode-1", "multinode-2"]
 PG = "multinode-postgres"
 MINIO = "multinode-minio"
-# The primary keeps this name in every Valkey topology (standalone, sentinel, cluster).
+# The container name is stable but its Valkey role is not (cluster shards, sentinel failover), so
+# every keyspace probe must fan out in cluster mode - see _backplane_keys.
 VALKEY = "multinode-valkey"
 BUCKET = "policy-data"
 SOURCE_PREFIX = "incoming/"
@@ -404,34 +407,70 @@ def step_run_visible_every(context):
 _NODE_PREFIX = re.compile(r"^[A-Za-z0-9_.\-]+:\d+:\s?")
 
 
+def _cluster_mode():
+    """True when this Valkey runs in cluster mode, so a plain KEYS would see one shard only."""
+    rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "info", "cluster"], timeout=30)
+    assert rc == 0, f"valkey INFO cluster failed: {err.strip() or out.strip()}"
+    return "cluster_enabled:1" in out
+
+
 def _backplane_keys():
     """Every stirling:* key in the backplane, whatever the Valkey topology."""
-    # A sharded cluster splits keys across masters, so KEYS on one node sees only its own slots.
-    # --cluster call fans out; it errors on a non-cluster server, hence the plain-KEYS fallback.
-    rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "--cluster", "call",
-                        "--cluster-only-masters", "127.0.0.1:6379", "keys", "stirling:*"],
-                       timeout=60)
-    if rc != 0:
+    if _cluster_mode():
+        # A fan-out failure must be loud: falling back to a single-shard KEYS would silently
+        # report a fraction of the keyspace and every downstream count would be wrong.
+        rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "--cluster", "call",
+                            "--cluster-only-masters", "127.0.0.1:6379", "keys", "stirling:*"],
+                           timeout=60)
+        assert rc == 0, f"valkey cluster fan-out failed: {err.strip() or out.strip()}"
+    else:
         rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "keys", "stirling:*"], timeout=30)
         assert rc == 0, f"valkey probe failed: {err.strip() or out.strip()}"
     return [k for k in (_NODE_PREFIX.sub("", ln.strip()) for ln in out.splitlines())
             if k.startswith("stirling:")]
 
 
+def _post_through_lb(context, count=3):
+    """POST through the LB; returns True if a node reported the X-Rate-Limit-Remaining header."""
+    if not getattr(context, "jwt_token", None):
+        _lb_login(context)
+    limited = False
+    for _ in range(count):
+        marker = uuid.uuid4().hex[:8]
+        r = requests.post(f"{LB_URL}/api/v1/general/rotate-pdf",
+                          headers={"Authorization": f"Bearer {context.jwt_token}"},
+                          files={"fileInput": (f"rl-{marker}.pdf", _pdf_bytes(marker),
+                                               "application/pdf")},
+                          data={"angle": 90}, timeout=60)
+        limited = limited or "X-Rate-Limit-Remaining" in r.headers
+    return limited
+
+
 @then("the rate-limit counter should be shared across nodes")
 def step_ratelimit_shared(context):
-    # In cluster mode the ValkeyRateLimitStore holds counters in Valkey; probe that a key exists.
-    keys = _backplane_keys()
-    assert keys, "no stirling:* keys in Valkey - rate-limit/backplane state is not shared"
+    # Heartbeat keys are always present, so only a stirling:rl: bucket created by real traffic
+    # proves the counters live in the backplane rather than per node.
+    if not _post_through_lb(context):
+        context.scenario.skip(
+            "rate limiting is not active on this stack (no X-Rate-Limit-Remaining header on a "
+            "POST through the LB), so no stirling:rl: bucket can exist - shared rate limiting is "
+            "unproven here, not proven")
+        return
+    buckets = [k for k in _backplane_keys() if k.startswith("stirling:rl:")]
+    assert buckets, (
+        "POSTs through the LB were rate limited but the backplane holds no stirling:rl: key - "
+        "the counters are per node, not shared")
 
 
 @then("every application node should be registered in the backplane")
 def step_nodes_registered(context):
-    # One stirling:nodes:<id> heartbeat hash per app node proves every node reached Valkey.
-    registered = [k for k in _backplane_keys() if k.startswith("stirling:nodes:")]
-    assert len(registered) >= len(NODES), (
-        f"expected >= {len(NODES)} stirling:nodes:* heartbeats, found {len(registered)}: "
-        f"{sorted(registered)}")
+    # Assert the exact node ids: counting keys lets a stale heartbeat from an earlier run stand in
+    # for a node that never registered.
+    keys = set(_backplane_keys())
+    missing = [nid for nid in NODE_IDS if f"stirling:nodes:{nid}" not in keys]
+    assert not missing, (
+        f"no stirling:nodes: heartbeat for {missing}; the backplane holds "
+        f"{sorted(k for k in keys if k.startswith('stirling:nodes:'))}")
 
 
 # --------------------------------------------------------------------------- failover

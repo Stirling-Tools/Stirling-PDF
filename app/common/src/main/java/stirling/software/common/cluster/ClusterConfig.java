@@ -143,6 +143,13 @@ public class ClusterConfig {
                             + valkey.getMaxRedirects()
                             + ".");
         }
+        // Lettuce rejects a non-positive refresh period with an opaque assertion at boot.
+        if (valkey.getTopologyRefreshMs() <= 0) {
+            throw new IllegalStateException(
+                    "cluster.valkey.topologyRefreshMs must be > 0 in cluster mode; got "
+                            + valkey.getTopologyRefreshMs()
+                            + ".");
+        }
     }
 
     private static void validateCommon(
@@ -159,8 +166,9 @@ public class ClusterConfig {
         }
         if (pool.isEnabled() && pool.getMaxWaitMillis() <= 0) {
             throw new IllegalStateException(
-                    "cluster.valkey.pool.maxWaitMillis must be > 0 (a non-positive value means"
-                            + " block forever, which defeats cluster.valkey.commandTimeoutMs); got "
+                    "cluster.valkey.pool.maxWaitMillis must be > 0 (a negative value blocks"
+                            + " forever, which defeats cluster.valkey.commandTimeoutMs, and 0"
+                            + " fails the borrow instantly once the pool is exhausted); got "
                             + pool.getMaxWaitMillis()
                             + ".");
         }
