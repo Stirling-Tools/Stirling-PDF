@@ -1,4 +1,5 @@
 {
+  "AaaTest.java": [],
   "allow.java": [],
   "clean.java": [],
   "clean.ts": [],
@@ -35,5 +36,8 @@
     "14:CMT002:error",
     "18:CMT002:error"
   ],
-  "strings.java": []
+  "strings.java": [],
+  "todos.java": [
+    "6:CMT009:warn"
+  ]
 }

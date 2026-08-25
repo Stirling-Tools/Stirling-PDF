@@ -49,6 +49,12 @@ Two tests before keeping a comment:
 
 A comment block over ~12 lines outside a file or type header is either prose that belongs in `devGuide/`, or a sign the code needs restructuring.
 
+A TODO needs an issue, not an owner: `// TODO(#1234): re-enable the gate once account syncing lands`. A username goes stale and means nothing to an outside contributor. If it is not worth an issue, it is not worth a TODO.
+
+A reference is supplementary, never load-bearing: the comment must survive deleting it. `// See #1234` is a dead end; `// saving first loses every annotation (#6865)` is not. Specs (`RFC 3161`) and CVEs outlast tickets, so prefer them when either applies.
+
+This is not a push for fewer comments. The linter only ever asks you to delete, because deletion is the half it can judge. Contract docs on anything a caller outside the file can reach are the half it cannot, and the half this codebase is short of.
+
 `task comment-lint` enforces the mechanical part of this on the lines you add, and runs inside `task pre-commit`. Full guidance, worked examples, and the rule list: @devGuide/CODE_COMMENTS.md
 
 ## Common Development Commands

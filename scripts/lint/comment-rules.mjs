@@ -24,6 +24,7 @@ export const RULES = {
   CMT006: { name: "block-too-long", severity: SEVERITY.WARN },
   CMT007: { name: "doc-restates-signature", severity: SEVERITY.WARN },
   CMT008: { name: "shouty-marker", severity: SEVERITY.WARN },
+  CMT009: { name: "unowned-todo", severity: SEVERITY.WARN },
 };
 
 export const MAX_BLOCK_LINES = 12;
@@ -59,7 +60,17 @@ export function identWords(text) {
 const PROSE_PUNCT = /[.;:?!]/;
 const MAX_RESTATE_WORDS = 6;
 
+// Arrange/Act/Assert and Given/When/Then label the shape of a test rather than
+// describe the line beneath, so they restate the code by this rule's letter and
+// carry real structure in practice. Every one of the 85 in this repo is a bare
+// marker, so the exemption is kept to that: the marker first, and nothing much
+// after it. `// Assert the cap is clamped to the tier maximum` is prose and
+// still judged on its merits.
+const TEST_STRUCTURE = /^(arrange|act|assert|given|when|then)\b/i;
+const MAX_MARKER_WORDS = 4;
+
 export function restatesCode(body, codeText) {
+  if (TEST_STRUCTURE.test(body.trim()) && body.trim().split(/\s+/).length <= MAX_MARKER_WORDS) return false;
   if (PROSE_PUNCT.test(body.replace(/\.$/, ""))) return false;
   const comment = contentWords(body);
   if (comment.length === 0 || comment.length > MAX_RESTATE_WORDS) return false;
@@ -185,6 +196,20 @@ export function isShouty(body, runText = body) {
   return SHOUTY.test(body.trim()) && !HAS_REFERENCE.test(runText);
 }
 
+// A TODO with no reference has nothing that will ever close it. 21 of the 25 in
+// this repo name neither an issue nor an owner, which makes them the one comment
+// category demonstrably rotting today. An owner is deliberately not accepted in
+// its place: a username goes stale when someone leaves and means nothing to an
+// outside contributor, while an issue outlives both.
+// Anchored at the start, so this catches a comment that *is* a TODO rather than
+// one that mentions the word. The rule text above tripped the unanchored version,
+// which was a fair warning about how it would read ordinary prose.
+const TODO_MARKER = /^(TODO|FIXME|HACK|XXX)\b/;
+
+export function isUnownedTodo(body, runText = body) {
+  return TODO_MARKER.test(body) && !HAS_REFERENCE.test(runText);
+}
+
 // `comment-lint-allow: CMT002` silences one rule, on the comment itself or on
 // the line above it. There is deliberately no form that disables every rule.
 const ALLOW = /comment-lint-allow:\s*((?:CMT\d{3})(?:\s*,\s*CMT\d{3})*)/gi;
@@ -228,6 +253,34 @@ export function isExcludedPath(file) {
   return EXCLUDED_PATHS.some((re) => re.test(normalised));
 }
 
+// Comment text reduced to what a reader would call "the same comment": trimmed,
+// whitespace collapsed, comment markers and decoration stripped. Both sides of
+// the pre-existing check normalise through here so indentation and marker style
+// cannot make an unchanged comment look new.
+export function normaliseComment(text) {
+  return String(text)
+    .replace(/^[\s{]*(\/\/+|\/\*+|#+|\*+)/gm, " ")
+    .replace(/\*+\/[\s}]*$/gm, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Every comment in a source file, normalised. Deliberately permissive and
+// language-agnostic: it only ever decides whether a finding is pre-existing, so
+// over-matching suppresses a duplicate comment and under-matching just reports
+// something the author can look at.
+export function commentBodiesOf(source) {
+  const bodies = new Set();
+  for (const raw of source.split(/\r?\n/)) {
+    const marker = /(\/\/+|\/\*+|^\s*\*+|#+)/.exec(raw);
+    if (!marker) continue;
+    const body = normaliseComment(raw.slice(marker.index));
+    if (body.length > 0) bodies.add(body);
+  }
+  return bodies;
+}
+
 export function ruleLabel(id) {
   return `${id} ${RULES[id].name}`;
 }
@@ -243,9 +296,12 @@ export function ruleLabel(id) {
 
 export function analyse({ lines, runs, isTestFile = false }) {
   const findings = [];
-  const report = (rule, line, column, detail) => {
+  // `body` is the comment's own text, kept alongside the formatted detail so the
+  // caller can ask whether this exact comment already existed before the change.
+  // That is what stops a reindent or a code move reporting comments nobody wrote.
+  const report = (rule, line, column, detail, body) => {
     if (isTestFile && SUPPRESSED_IN_TESTS.has(rule)) return;
-    findings.push({ rule, line, column, detail, severity: RULES[rule].severity });
+    findings.push({ rule, line, column, detail, body: normaliseComment(body ?? detail), severity: RULES[rule].severity });
   };
 
   for (const run of runs) {
@@ -254,12 +310,12 @@ export function analyse({ lines, runs, isTestFile = false }) {
     const allowed = allowedRules(runText + "\n" + precedingLine(lines, run.startLine));
 
     if (!allowed.has("CMT005") && isDeadCodeRun(bodies)) {
-      report("CMT005", run.startLine, run.lines[0].column, `${bodies.length} commented-out lines`);
+      report("CMT005", run.startLine, run.lines[0].column, `${bodies.length} commented-out lines`, runText);
       continue; // Every other rule would pile onto the same block of dead code.
     }
 
     if (!allowed.has("CMT006") && run.lines.length > MAX_BLOCK_LINES && run.startLine > FILE_HEADER_LINES) {
-      report("CMT006", run.startLine, run.lines[0].column, `${run.lines.length} lines, limit ${MAX_BLOCK_LINES}`);
+      report("CMT006", run.startLine, run.lines[0].column, `${run.lines.length} lines, limit ${MAX_BLOCK_LINES}`, runText);
     }
 
     const owner = run.kind === "line" ? "" : nextCodeLine(lines, run);
@@ -269,23 +325,27 @@ export function analyse({ lines, runs, isTestFile = false }) {
       if (body.length === 0) continue;
 
       if (!allowed.has("CMT002") && isBanner(body)) {
-        report("CMT002", entry.line, entry.column, truncate(body));
+        report("CMT002", entry.line, entry.column, truncate(body), body);
         continue;
       }
       if (!allowed.has("CMT003") && isStepNarration(body)) {
-        report("CMT003", entry.line, entry.column, truncate(body));
+        report("CMT003", entry.line, entry.column, truncate(body), body);
         continue;
       }
       if (!allowed.has("CMT004") && isDiffNarration(body)) {
-        report("CMT004", entry.line, entry.column, truncate(body));
+        report("CMT004", entry.line, entry.column, truncate(body), body);
         continue;
       }
       if (!allowed.has("CMT007") && docRestatesSignature(body, owner)) {
-        report("CMT007", entry.line, entry.column, truncate(body));
+        report("CMT007", entry.line, entry.column, truncate(body), body);
         continue;
       }
       if (!allowed.has("CMT008") && isShouty(body, runText)) {
-        report("CMT008", entry.line, entry.column, truncate(body));
+        report("CMT008", entry.line, entry.column, truncate(body), body);
+        continue;
+      }
+      if (!allowed.has("CMT009") && isUnownedTodo(body, runText)) {
+        report("CMT009", entry.line, entry.column, truncate(body), body);
         continue;
       }
     }
@@ -300,7 +360,7 @@ export function analyse({ lines, runs, isTestFile = false }) {
       const body = entry.body.trim();
       const code = nextCodeLine(lines, run);
       if (code && !isBanner(body) && restatesCode(body, code)) {
-        report("CMT001", entry.line, entry.column, `${truncate(body)}  ->  ${truncate(code)}`);
+        report("CMT001", entry.line, entry.column, `${truncate(body)}  ->  ${truncate(code)}`, body);
       }
     }
   }

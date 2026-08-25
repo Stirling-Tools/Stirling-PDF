@@ -26,7 +26,17 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { analyse, isExcludedPath, isGenerated, isTestPath, ruleLabel, RULES, SEVERITY } from "./comment-rules.mjs";
+import {
+  analyse,
+  commentBodiesOf,
+  normaliseComment,
+  isExcludedPath,
+  isGenerated,
+  isTestPath,
+  ruleLabel,
+  RULES,
+  SEVERITY,
+} from "./comment-rules.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -55,6 +65,12 @@ const OXLINT_CONFIG = "frontend/oxlint.comments.config.ts";
 // The failure was silent: oxlint reported nothing and every frontend finding
 // vanished. Batching keeps each invocation well under the cap.
 const ARGV_BUDGET = 24_000;
+
+// Memoised base-version comment text, keyed by ref:path. Declared up here with
+// the other module constants because the top-level run starts before the
+// function bodies below it are reached, and a `const` further down would
+// still be in its temporal dead zone.
+const baseComments = new Map();
 
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--")));
@@ -88,18 +104,23 @@ function resolveScope() {
   // Paths plus --since is how the editor hook asks about one file: lint it, but
   // only the lines this session actually wrote.
   if (paths.length > 0 && flags.has("--since")) {
-    return narrow(diffScope(["diff", "--unified=0", "--no-color", mergeBase(flagValue("--since"))]), paths);
+    const ref = mergeBase(flagValue("--since"));
+    return narrow(diffScope(["diff", "--unified=0", "--no-color", ref], ref), paths);
   }
   if (paths.length > 0) return { mode: "paths", files: paths, added: null };
 
-  if (flags.has("--since")) return diffScope(["diff", "--unified=0", "--no-color", mergeBase(flagValue("--since"))]);
+  if (flags.has("--since")) {
+    const ref = mergeBase(flagValue("--since"));
+    return diffScope(["diff", "--unified=0", "--no-color", ref], ref);
+  }
 
   // Always a working-tree comparison, never `--cached`. Findings are read from
   // the file on disk, so diffing the index instead would pair index line numbers
   // with working-tree content and silently mismatch once the two differ.
   // CI knows the target branch; a developer running this before a commit does not.
   const base = process.env.GITHUB_BASE_REF;
-  return diffScope(["diff", "--unified=0", "--no-color", mergeBase(base ? `origin/${base}` : "HEAD")]);
+  const ref = mergeBase(base ? `origin/${base}` : "HEAD");
+  return diffScope(["diff", "--unified=0", "--no-color", ref], ref);
 }
 
 function mergeBase(ref) {
@@ -111,7 +132,7 @@ function mergeBase(ref) {
   }
 }
 
-function diffScope(args) {
+function diffScope(args, base) {
   let diff;
   try {
     diff = git(args);
@@ -146,7 +167,7 @@ function diffScope(args) {
     added.set(file, allLinesOf(file));
   }
 
-  return { mode: "diff", files: [...added.keys()], added };
+  return { mode: "diff", files: [...added.keys()], added, base };
 }
 
 function untrackedFiles() {
@@ -163,7 +184,7 @@ function allLinesOf(file) {
 function narrow(scope, paths) {
   const wanted = new Set(paths);
   const added = new Map([...scope.added].filter(([file]) => wanted.has(file)));
-  return { mode: "diff", files: [...added.keys()], added };
+  return { mode: "diff", files: [...added.keys()], added, base: scope.base };
 }
 
 function trackedFiles() {
@@ -186,9 +207,48 @@ function collect(scope) {
   if (ts.length > 0) results.push(...lintTypeScript(ts));
 
   if (scope.added) {
-    return results.filter((r) => scope.added.get(r.file)?.has(r.line));
+    const onAddedLine = results.filter((r) => scope.added.get(r.file)?.has(r.line));
+    return onAddedLine.filter((r) => !existedAtBase(r, scope.base));
   }
   return results;
+}
+
+// git marks a reindented or moved line as added, so line membership alone reports
+// comments nobody wrote: a whitespace-only reformat of PageImageLocator.java
+// turned a pre-existing banner into a blocking error. A finding only counts if
+// its comment text is not already in the file at the base.
+//
+// Cost is one `git show` per file, memoised. The one thing it gets wrong is
+// adding a further copy of an already-duplicated comment, which it treats as
+// pre-existing. That is the right way round for a blocking rule.
+
+function existedAtBase(finding, base) {
+  if (!base) return false;
+  // Findings from the oxlint plugin arrive without their comment text, because
+  // they cross a process boundary as a message string. Recover it from the file
+  // on disk at the reported line, which is the same text the rule judged.
+  const body = finding.body ?? currentLineBody(finding);
+  if (!body) return false;
+  const key = `${base}:${finding.file}`;
+  if (!baseComments.has(key)) {
+    let source = "";
+    try {
+      source = git(["show", key]);
+    } catch {
+      // Not in the base at all, so the whole file is new.
+    }
+    baseComments.set(key, commentBodiesOf(source));
+  }
+  return baseComments.get(key).has(body);
+}
+
+function currentLineBody(finding) {
+  try {
+    const line = readFileSync(join(REPO, finding.file), "utf8").split(/\r?\n/)[finding.line - 1];
+    return line === undefined ? "" : normaliseComment(line);
+  } catch {
+    return "";
+  }
 }
 
 function isLintable(file) {

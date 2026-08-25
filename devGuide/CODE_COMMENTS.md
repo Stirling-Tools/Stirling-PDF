@@ -7,13 +7,26 @@ eventually contradict the code, and it dilutes the comments that matter.
 That single rule is the whole standard. The rest of this document is how to apply
 it, and what the linter checks.
 
+This is not a campaign to have fewer comments. Every rule the linter enforces is a
+deletion, because deletion is the half a pattern can judge; the half that matters
+more is the writing, and no linter will ask you for it. The contract docs below are
+the part this codebase is short of.
+
 ## The four jobs a comment can do
 
 **Contract.** What a caller must know that the signature cannot say:
 preconditions, invariants, units, ownership and lifetime, thread-safety, error
-semantics, side effects. Be generous here. This is the one category the codebase
-is short of, not long on. Goes on the type, method, or module as Javadoc, JSDoc,
-or a docstring.
+semantics, side effects. Goes on the type, method, or module as Javadoc, JSDoc, or
+a docstring.
+
+This is the one category the codebase is short of rather than long on, but "be
+generous" is not a checkable instruction, and taken alone it produces the padding
+`CMT007` flags. The bound is the surface, not the volume: **document the contract
+of everything a caller outside the file can reach, and nothing else.** Concretely,
+visible types and members in Java, the `@app/*` seams and exported hooks in
+TypeScript, modules and public functions in Python. Inside that surface, say
+whatever a caller genuinely needs. Outside it, a comment has to earn its place on
+the same terms as any other.
 
 ```java
 /**
@@ -31,8 +44,26 @@ Nothing there is recoverable from reading the method bodies. It states the
 ordering, the failure mode, and a deliberate gap in the threat model.
 
 **Why.** The non-obvious reason the code is shaped this way: the constraint it
-satisfies, the bug it avoids, the alternative that was rejected. Name the ticket,
-CVE, or spec when there is one.
+satisfies, the bug it avoids, the alternative that was rejected.
+
+Point at a source when there is one, and know how long each kind lasts. A **spec**
+is the best reference available and never moves: `RFC 3161`, `ISO 4217`, `RFC 9728
+section 3.1`. A **CVE or GHSA** is immutable too. A **ticket** is the weakest of
+the three, because it can be closed, moved or made private, so it must not be the
+only thing holding the comment up.
+
+That is the rule for all three, not just tickets: **a reference is supplementary,
+never load-bearing.** The comment has to survive deleting it. `// See #1234` is a
+dead end; the same fact with the reason first is not:
+
+```java
+// flatten() reads the annotation list that save() clears, so saving first loses
+// every annotation (#6865).
+document.flatten(annotations);
+```
+
+Delete the `(#6865)` and the comment still tells you everything you need. That is
+the test.
 
 ```java
 // whenComplete runs on the worker thread after the run finishes, so the
@@ -84,13 +115,32 @@ Two of these have a legitimate form worth knowing:
 A block longer than about 12 lines outside a file or type header is usually prose
 that belongs in `devGuide/`, or a sign the code needs restructuring.
 
+## TODOs
+
+A TODO needs something that will eventually close it, which means an issue:
+
+```java
+// TODO(#1234): re-enable the checkout gate once account syncing lands
+```
+
+An owner is not a substitute. A username goes stale the moment someone changes
+team and means nothing to an outside contributor, while an issue outlives both. If
+the work is not worth an issue, it is not worth a TODO, and the honest options are
+to do it now or leave the code as it is.
+
+This is the one comment category demonstrably rotting here today: of 25 TODO,
+FIXME and HACK comments in the tree, 21 name neither an issue nor an owner. Some
+are questions rather than tasks (`// TODO: why do this server side not client?`),
+which is a note to nobody. `CMT009` advises on new ones, at the point where
+opening the issue is cheapest.
+
 ## Per-language notes
 
-**Java.** Javadoc on visible types and members, per the Google Java Style guide
-this repo already formats to. Its &sect;7.3.1 exception applies: omit Javadoc on a
-self-explanatory member where there is genuinely nothing to add, but do not cite
-that to skip something a reader needs. Summary fragments are noun or verb phrases,
-not sentences beginning "This method returns".
+**Java.** Per the Google Java Style guide this repo already formats to. Its
+&sect;7.3.1 exception applies: omit Javadoc on a self-explanatory member where there
+is genuinely nothing to add, but do not cite that to skip something a reader needs.
+Summary fragments are noun or verb phrases, not sentences beginning "This method
+returns".
 
 **TypeScript.** JSDoc where a caller needs the contract, particularly on the
 `@app/*` seams, exported hooks, and anything crossing a layer boundary. Do not
@@ -149,17 +199,25 @@ thing; `task pre-commit:comment-lint:selftest` checks it.
 | --- | --- | --- |
 | `CMT001` | A comment whose words are all already in the code below it | blocks |
 | `CMT002` | Section banners and position markers | blocks |
-| `CMT005` | Three or more commented-out lines of code | blocks |
+| `CMT005` | Three or more consecutive commented-out lines of code | blocks |
 | `CMT003` | `Step N:` and `Then,` narration | advises |
 | `CMT004` | Comments about the change rather than the code | advises |
 | `CMT006` | A comment block over 12 lines outside a header | advises |
 | `CMT007` | Doc tags that restate the signature | advises |
 | `CMT008` | `IMPORTANT:` / `CRITICAL:` with nothing to point at | advises |
+| `CMT009` | A `TODO` / `FIXME` / `HACK` naming no issue or link | advises |
 
-Only three rules block, and which three was decided by running all eight over
-this repo. The other five each have a legitimate form that no pattern can
-distinguish from the bad one, and blocking those would teach people to delete good
-comments to get a build green.
+Only three rules block, and which three was decided by running them over this
+repo. The others each have a legitimate form that no pattern can distinguish from
+the bad one, and blocking those would teach people to delete good comments to get a
+build green.
+
+`CMT005` catches runs of three or more, so a single commented-out line passes. That
+is a deliberate trade against false positives on prose, and it means its low count
+is not evidence that the tree is free of dead code.
+
+Findings are scoped to comment *text* that is new, not just to lines git calls new.
+Reindenting or moving code does not resurface comments you did not write.
 
 Advisory findings print and never fail anything. Fix them when they are right.
 
