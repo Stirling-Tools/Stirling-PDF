@@ -3,6 +3,9 @@ import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { downloadFile } from "@app/services/downloadService";
+import { useFileContext } from "@app/contexts/FileContext";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import type { FileId } from "@app/types/file";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
 import { useDocumentLoader } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
@@ -52,6 +55,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   const [findOpen, setFindOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
+  // Set only when the document came from the workbench; a drag-dropped
+  // file has no fileId and can only be downloaded.
+  const sourceFileIdRef = useRef<FileId | null>(null);
+  const { consumeFiles, selectors } = useFileContext();
 
   useEditorTestGlobal(store);
   useUnsavedChangesGuard(state.dirty);
@@ -62,7 +69,11 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     icon: <DescriptionIcon fontSize="small" />,
     component: PageStage,
   });
-  useAutoLoadFile(load, setOpenedFileName);
+  const handleFileChosen = useCallback((name: string, fileId?: FileId) => {
+    setOpenedFileName(name);
+    sourceFileIdRef.current = fileId ?? null;
+  }, []);
+  useAutoLoadFile(load, handleFileChosen);
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
 
@@ -100,6 +111,25 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       // or failed save used to be reported to the user as a success.
       const result = await downloadFile({ data: blob, filename });
       if (result.cancelled) return;
+      // Also replace the workbench file, so the edit is visible to the rest of
+      // the app (tool chaining, versioning). Without this the editor is an
+      // island: running another tool afterwards would use the pre-edit file.
+      const sourceFileId = sourceFileIdRef.current;
+      if (sourceFileId) {
+        const parentStub = selectors.getStirlingFileStub(sourceFileId);
+        if (parentStub) {
+          const edited = new File([blob], filename, {
+            type: "application/pdf",
+          });
+          const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+            [edited],
+            parentStub,
+            "pdfTextEditor",
+          );
+          await consumeFiles([sourceFileId], stirlingFiles, stubs);
+          sourceFileIdRef.current = stubs[0]?.id ?? null;
+        }
+      }
       store.markSaved(exported);
     } catch (err) {
       // Surface the failure instead of silently dropping it - the user
@@ -108,7 +138,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     } finally {
       savingRef.current = false;
     }
-  }, [store, openedFileName]);
+  }, [store, openedFileName, consumeFiles, selectors]);
 
   const handleSave = useCallback(async () => {
     const doc = store.document;
@@ -401,6 +431,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   const onPickPdf = useCallback(
     (file: File) => {
       setOpenedFileName(file.name);
+      // Dropped/picked from disk: not a workbench file, so no write-back.
+      sourceFileIdRef.current = null;
       void load(file);
     },
     [load],
