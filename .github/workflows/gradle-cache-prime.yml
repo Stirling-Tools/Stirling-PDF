@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/.buildx-cache
-          key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
+          key: uv-${{ runner.os }}-${{ hashFiles(
                 'engine/pyproject.toml',
                 'engine/uv.lock'
               ) }}
@@ -41,6 +41,7 @@ jobs:
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
+          working-directory: "engine"
           enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
@@ -61,7 +62,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/uv-python-dir
-          key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
+          key: uv-${{ runner.os }}-${{ hashFiles(
                 'engine/pyproject.toml',
                 'engine/uv.lock'
               ) }}
