@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Menu, Tooltip } from "@mantine/core";
 import { ActionIcon, Button } from "@app/ui";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { isResolvableHere } from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import type {
@@ -102,6 +103,9 @@ export function NotificationItem({
       if (!spec) return false;
       return spec.available(context);
     },
+    // The withheld reason may come from an action this device cannot perform right now, but
+    // never from one this build could not have rendered at all.
+    (offer) => registry[offer.id] !== undefined,
   );
 
   const labelOf = (offer: NotificationActionOffer) =>
@@ -142,7 +146,7 @@ export function NotificationItem({
       await navigator.clipboard.writeText(notification.detail);
       setCopied(true);
     } catch {
-      // No clipboard permission, and the message is on screen and selectable anyway.
+      // No clipboard permission. Nothing worth an error of its own: the copy simply stays unoffered.
     }
   };
 
@@ -175,16 +179,19 @@ export function NotificationItem({
       {note && <span className="notification-bell__note">{note}</span>}
 
       {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
-          out of the way so a row of near-equal buttons never competes for the click. */}
-      {primary && (
+          out of the way so a row of near-equal buttons never competes for the click. The menu is not
+          gated on a button existing: a row with no runnable action still owns its error log. */}
+      {(primary || notification.detail) && (
         <span className="notification-bell__actions">
-          <ActionButton
-            variant="primary"
-            rowTitle={title}
-            label={labelOf(primary)}
-            busy={busy === primary.id}
-            onRun={() => void run(primary)}
-          />
+          {primary && (
+            <ActionButton
+              variant="primary"
+              rowTitle={title}
+              label={labelOf(primary)}
+              busy={busy === primary.id}
+              onRun={() => void run(primary)}
+            />
+          )}
           {secondary && (
             <ActionButton
               variant="secondary"
@@ -207,7 +214,7 @@ export function NotificationItem({
                     className="notification-bell__more"
                     aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
                   >
-                    <MoreIcon />
+                    <LocalIcon icon="more-horiz" width={14} height={14} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -275,27 +282,5 @@ function ActionButton({
     >
       {label}
     </Button>
-  );
-}
-
-const ICON_PROPS = {
-  width: 14,
-  height: 14,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-};
-
-function MoreIcon() {
-  return (
-    <svg {...ICON_PROPS} strokeWidth={2.5}>
-      <circle cx="5" cy="12" r="0.5" />
-      <circle cx="12" cy="12" r="0.5" />
-      <circle cx="19" cy="12" r="0.5" />
-    </svg>
   );
 }

@@ -34,7 +34,9 @@ export interface PromotedActions {
  *
  * Every offer the bell is given is one this client runs itself, so each is asked past
  * `canRenderClientAction`: whether this build knows the id, and whether this device can currently
- * perform it.
+ * perform it. `knowsAction` asks only the first half, and gates the withheld reason: an action this
+ * device cannot perform right now still explains the row, but one this build has never heard of
+ * cannot - a reason about a button that could never have been drawn is not this row's explanation.
  *
  * A dropped action leaves no hole, and a disabled one is dropped too: a button that can never work is
  * false hope. Its reason comes back instead, for the row to say in words.
@@ -42,6 +44,7 @@ export interface PromotedActions {
 export function promoteActions(
   offers: readonly NotificationActionOffer[],
   canRenderClientAction: (offer: NotificationActionOffer) => boolean,
+  knowsAction: (offer: NotificationActionOffer) => boolean,
 ): PromotedActions {
   const ranked = offers
     .map((offer, declaredAt) => ({ offer, declaredAt }))
@@ -55,8 +58,9 @@ export function promoteActions(
 
   // The best one withheld, so a row explains itself once rather than once per lost action.
   const withheldReasonKey =
-    ranked.find((offer) => !offer.enabled && offer.disabledReasonKey)
-      ?.disabledReasonKey ?? null;
+    ranked.find(
+      (offer) => !offer.enabled && offer.disabledReasonKey && knowsAction(offer),
+    )?.disabledReasonKey ?? null;
 
   const renderable = ranked.filter(
     (offer) => offer.enabled && canRenderClientAction(offer),

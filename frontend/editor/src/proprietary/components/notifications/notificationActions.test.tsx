@@ -15,7 +15,12 @@ import type { NotificationActionContext } from "@core/components/notifications/n
 
 const retryWithPassword = vi.fn();
 const unlockLocalDocument = vi.fn();
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
+  // The real stashMatchesKind: it is pure, and the guard it implements is part of
+  // what these tests exercise.
+  ...(await importOriginal<
+    typeof import("@app/services/notificationRetry")
+  >()),
   retryWithPassword: (...args: unknown[]) => retryWithPassword(...args),
   unlockLocalDocument: (...args: unknown[]) => unlockLocalDocument(...args),
 }));
@@ -144,6 +149,8 @@ function context(
       endpoint: "/api/v1/security/remove-password",
       params: {},
       fileIds: ["f-1"],
+      multiFile: false,
+      errorCode: "E004",
       recordedAt: 0,
     },
     ...overrides,
@@ -279,6 +286,8 @@ describe("useNotificationActions", () => {
           endpoint: "/api/v1/quarantine",
           params: {},
           fileIds: ["f-1"],
+          multiFile: false,
+          errorCode: "E004",
           recordedAt: 0,
         },
       }),
@@ -386,6 +395,8 @@ describe("useNotificationActions", () => {
     expect(retryWithPassword).toHaveBeenCalledWith(
       expect.objectContaining({ endpoint: "/api/v1/security/remove-password" }),
       "hunter2",
+      // The row's own document, so a single-file endpoint is not handed the whole batch.
+      "f-1",
     );
     expect(outcome).toEqual({ ok: false, message: "Wrong" });
   });
@@ -666,6 +677,8 @@ describe("retrying an attended policy run", () => {
           endpoint: "/api/v1/security/remove-password",
           params: {},
           fileIds: ["f-1"],
+          multiFile: false,
+          errorCode: "E004",
           recordedAt: 0,
         },
       }),

@@ -4,6 +4,7 @@ import {
   indexedDBManager,
   type DatabaseConfig,
 } from "@app/services/indexedDBManager";
+import { zipFileService } from "@app/services/zipFileService";
 import type { FileId } from "@app/types/file";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 
@@ -11,8 +12,9 @@ import type { ToolEndpoint } from "@app/types/toolApiTypes";
  * What the notification bell needs to offer "Retry" or "Decrypt and retry" on a
  * failure the editor reported. The server keeps none of it: the report drops the
  * operation and answers 204, so this lives here, keyed on the opaque `fileId` it was
- * filed against. Last-write-wins per fileId, matching the server's actor|kind|file
- * dedup: one file failing two operations is one incident with one retry button.
+ * filed against. Last-write-wins per fileId, which is narrower than the server's
+ * dedup (that one also keys on the failure kind): see {@link stashMatchesKind} for
+ * how a consumer tells whether the surviving stash belongs to a given row.
  */
 export interface RetryPayload {
   /** tool/endpoint identifier, e.g. "remove-password" */
@@ -22,7 +24,39 @@ export interface RetryPayload {
   /** the tool parameters as submitted */
   params: Record<string, unknown>;
   fileIds: string[];
+  /** Whether the endpoint takes the whole batch in one call, or one file per call. */
+  multiFile: boolean;
+  /** The failure's error code, so a stash can be matched to the row's kind. */
+  errorCode: string | null;
   recordedAt: number;
+}
+
+/**
+ * The error codes the named failure kinds claim, mirrored from the server's
+ * {@code FailureKind} declarations. Used only to tell whether the one stash a file
+ * carries belongs to a given row: the server keys incidents on kind as well as file,
+ * so one file can have two open rows while this stash holds only the newest failure.
+ */
+const KIND_ERROR_CODES: Record<string, string> = {
+  INPUT_PASSWORD_PROTECTED: "E004",
+};
+
+/**
+ * Whether a stashed failure is the one a row of this kind describes. A named kind
+ * owns exactly its claimed code; every other kind owns whatever no named kind
+ * claims. A stash written before {@code errorCode} existed matches nothing named,
+ * failing closed rather than retrying the wrong operation.
+ */
+export function stashMatchesKind(
+  kindId: string,
+  payload: RetryPayload,
+): boolean {
+  const claimed = KIND_ERROR_CODES[kindId];
+  if (claimed) return payload.errorCode === claimed;
+  return (
+    payload.errorCode === null ||
+    !Object.values(KIND_ERROR_CODES).includes(payload.errorCode)
+  );
 }
 
 /**
@@ -99,6 +133,10 @@ export async function loadRetryPayload(
     endpoint: record.endpoint,
     params: record.params ?? {},
     fileIds: record.fileIds ?? [fileId],
+    // Older records predate these fields; both defaults fail closed (one file per
+    // call, matching no named kind).
+    multiFile: record.multiFile ?? false,
+    errorCode: record.errorCode ?? null,
     recordedAt: record.recordedAt,
   };
 }
@@ -124,10 +162,21 @@ export interface RetryOutputFile {
   filename: string;
 }
 
+/**
+ * Why a retry could not run, for the component layer to word: the wording belongs
+ * up there, which has `t`. `serverMessage` means {@link PasswordRetryOutcome.message}
+ * carries the server's own words, which pass through untranslated on purpose.
+ */
+export type PasswordRetryFailure =
+  | "notRetryable"
+  | "fileMissing"
+  | "serverMessage";
+
 /** What a password-carrying call comes back with. `files` only ever on success. */
 export interface PasswordRetryOutcome {
   ok: boolean;
-  message?: string;
+  reason?: PasswordRetryFailure;
+  message?: string | null;
   files?: RetryOutputFile[];
 }
 
@@ -152,30 +201,34 @@ export async function unlockLocalDocument(
  * what it produced. The password is appended to a single request and then out of
  * scope: never stashed, never logged, never in the message returned here.
  *
+ * A single-file endpoint was called once per file by the original run, so the retry
+ * sends only `forFileId`, the document the row is about; a multi-file endpoint gets
+ * the whole stashed batch back, exactly as it was submitted.
+ *
  * `files` is returned rather than adopted because every file operation goes through
  * FileContext, which a service cannot reach.
  */
 export async function retryWithPassword(
   payload: RetryPayload,
   password: string,
+  forFileId: string | null = null,
 ): Promise<PasswordRetryOutcome> {
   if (!payload.endpoint) {
-    return { ok: false, message: "This operation cannot be retried." };
+    return { ok: false, reason: "notRetryable", message: null };
   }
 
-  return postWithPassword(
-    payload.endpoint,
-    payload.params,
-    payload.fileIds,
-    password,
-  );
+  const fileIds = payload.multiFile
+    ? payload.fileIds
+    : [forFileId && payload.fileIds.includes(forFileId) ? forFileId : payload.fileIds[0]];
+
+  return postWithPassword(payload.endpoint, payload.params, fileIds, password);
 }
 
 /** Shared by both callers above, so a password reaches the network from one place only. */
 async function postWithPassword(
   endpoint: string,
   params: Record<string, unknown>,
-  requestedFileIds: string[],
+  requestedFileIds: (string | null | undefined)[],
   password: string,
 ): Promise<PasswordRetryOutcome> {
   const fileIds = requestedFileIds.filter(isUsableId);
@@ -189,11 +242,7 @@ async function postWithPassword(
   // getStirlingFiles drops what it cannot find, so a short result means an input is
   // gone. Resolved rather than thrown: the caller shows this next to the notification.
   if (files.length === 0 || files.length !== fileIds.length) {
-    return {
-      ok: false,
-      message:
-        "This file is no longer stored in this browser, so it cannot be retried here.",
-    };
+    return { ok: false, reason: "fileMissing", message: null };
   }
 
   try {
@@ -204,16 +253,37 @@ async function postWithPassword(
     });
     return {
       ok: true,
-      files: [
-        {
-          blob: response.data,
-          filename: filenameOf(response.headers, files[0].name),
-        },
-      ],
+      files: await asOutputFiles(
+        response.data,
+        filenameOf(response.headers, files[0].name),
+      ),
     };
   } catch (error) {
-    return { ok: false, message: messageOf(error) };
+    return { ok: false, reason: "serverMessage", message: messageOf(error) };
   }
+}
+
+/**
+ * The response as adoptable documents. A multi-output run answers with a ZIP, which
+ * must not land in the workbench pretending to be one PDF, so it is unpacked here
+ * the same way the tool pipeline unpacks it.
+ */
+async function asOutputFiles(
+  blob: Blob,
+  filename: string,
+): Promise<RetryOutputFile[]> {
+  if (await zipFileService.isZipResponse(blob)) {
+    const extracted = await zipFileService.extractPdfFiles(
+      new File([blob], filename),
+    );
+    if (extracted.success && extracted.extractedFiles.length > 0) {
+      return extracted.extractedFiles.map((file) => ({
+        blob: file,
+        filename: file.name,
+      }));
+    }
+  }
+  return [{ blob, filename }];
 }
 
 /**
@@ -314,15 +384,16 @@ function prunedBelow(value: unknown, depth: number): unknown {
   return kept;
 }
 
-/** What the user saw. Never carries the password: it is not interpolated here. */
-function messageOf(error: unknown): string {
+/**
+ * What the server said, or null when it said nothing usable (the caller words that
+ * case itself). Never carries the password: it is not interpolated here.
+ */
+function messageOf(error: unknown): string | null {
   const response = (error as { response?: { data?: unknown } })?.response?.data;
   if (typeof response === "string" && response.trim() !== "") return response;
 
   const message = (error as { message?: unknown })?.message;
-  return typeof message === "string" && message.trim() !== ""
-    ? message
-    : "Retrying the operation failed.";
+  return typeof message === "string" && message.trim() !== "" ? message : null;
 }
 
 async function writeRecords(records: StoredRetryRecord[]): Promise<void> {

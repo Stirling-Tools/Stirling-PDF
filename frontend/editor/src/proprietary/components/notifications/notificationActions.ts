@@ -18,7 +18,9 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
 import {
   retryWithPassword,
+  stashMatchesKind,
   unlockLocalDocument,
+  type PasswordRetryOutcome,
   type RetryOutputFile,
   type RetryPayload,
 } from "@app/services/notificationRetry";
@@ -142,7 +144,11 @@ function retryTargetOf(context: NotificationActionContext): RetryTarget | null {
     };
   }
 
-  return retryPayload ? { kind: "tool", payload: retryPayload } : null;
+  // The stash is one record per file while the server keeps one incident per kind per
+  // file, so a stash written by a different kind's failure is not this row's to run.
+  return retryPayload && stashMatchesKind(notification.kindId, retryPayload)
+    ? { kind: "tool", payload: retryPayload }
+    : null;
 }
 
 /** The documents a password-carrying call produced, as files the workbench can take. */
@@ -311,6 +317,27 @@ export function useNotificationActions(): ClientActionRegistry {
     });
 
     /**
+     * A failed unlock in the reader's words. The service reports why and this layer words it,
+     * because the wording belongs where `t` lives; only the server's own message passes through.
+     */
+    const unlockFailure = (
+      outcome: PasswordRetryOutcome,
+    ): ClientActionOutcome => {
+      if (outcome.reason === "fileMissing") {
+        return {
+          ok: false,
+          message: t(
+            "notifications.notOnThisDevice",
+            "This document is not on this device, so it cannot be opened or retried here.",
+          ),
+        };
+      }
+      if (outcome.reason === "notRetryable") return unavailable();
+      // The server's own words, or nothing: the row falls back to its generic failure line.
+      return { ok: false, message: outcome.message ?? undefined };
+    };
+
+    /**
      * What a policy re-run amounted to, in the reader's terms. A rejection after the unlock reads
      * differently from one before it, so the reader is not left thinking their password was wrong.
      *
@@ -412,10 +439,14 @@ export function useNotificationActions(): ClientActionRegistry {
         // endpoint for a policy, since a locked input is fixed the same way whatever was reading it.
         const outcome =
           target.kind === "tool"
-            ? await retryWithPassword(target.payload, password)
+            ? await retryWithPassword(
+                target.payload,
+                password,
+                context.notification.fileId,
+              )
             : await unlockLocalDocument(target.policy.fileId, password);
         // A wrong password lands here, carrying the server's own words, which the row shows.
-        if (!outcome.ok) return outcome;
+        if (!outcome.ok) return unlockFailure(outcome);
 
         // It unlocked, so the user must end up holding it. A failed adoption fails the whole action:
         // claiming success and dropping the result leaves them nothing for the password they typed.
@@ -501,5 +532,5 @@ export function useNotificationActions(): ClientActionRegistry {
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
-  }, [canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
+  }, [aiEnabled, canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
 }

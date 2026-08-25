@@ -93,7 +93,8 @@ class NotificationResolveTest {
     @Test
     void theRowsOwnIdIsNotANotificationId() {
         // This mirror exists so no client has to strip the prefix, so an unprefixed id is
-        // refused rather than working by accident because there is only one source today.
+        // refused outright rather than left to work by accident for whichever source it
+        // would happen to reach.
         FileRunEvent event = given(FailureKind.UNKNOWN, ACTOR, "f-1");
 
         assertThat(statusOf(() -> controller.resolved(event.id())))

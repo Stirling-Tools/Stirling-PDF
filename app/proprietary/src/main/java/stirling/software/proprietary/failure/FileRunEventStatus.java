@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Disposition of one recorded failure. {@code RESOLVED} is declared but not set yet (it becomes
- * system-set later); the rollup already defines what a repeat means for it, which is to reopen.
+ * Disposition of one recorded failure. {@code RESOLVED} is system-set when a client reports its own
+ * retry worked, never dispatched as an action; a repeat reopens it.
  */
 public enum FileRunEventStatus {
     NEW(false),

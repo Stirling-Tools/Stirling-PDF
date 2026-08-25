@@ -94,10 +94,15 @@ const RUNNABLE = new Set([
 /** The predicate the bell supplies: a known id, on a device that can act on it. */
 const canRun = (action: NotificationActionOffer) => RUNNABLE.has(action.id);
 
+/** The build's knowledge alone, which is what gates a withheld reason. */
+const knowsAction = (action: NotificationActionOffer) =>
+  RUNNABLE.has(action.id);
+
 function promoted(list: NotificationActionOffer[]) {
   const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
     list,
     canRun,
+    knowsAction,
   );
   return {
     primary: primary?.id ?? null,
@@ -224,6 +229,7 @@ describe("promoteActions", () => {
     const { primary, secondary, overflow } = promoteActions(
       password("DECRYPT_AND_RETRY", "RETRY", "VIEW_FILE", "VIEW_IN_PROCESSOR"),
       inProcessor,
+      knowsAction,
     );
 
     expect(primary?.id).toBe("VIEW_IN_PROCESSOR");
@@ -238,6 +244,7 @@ describe("promoteActions", () => {
     const { primary, overflow, withheldReasonKey } = promoteActions(
       unknown("RETRY", "VIEW_FILE"),
       () => false,
+      knowsAction,
     );
 
     expect(primary).toBeNull();
@@ -258,8 +265,27 @@ describe("promoteActions", () => {
   });
 
   it("has nothing to promote when nothing survives", () => {
-    expect(promoteActions([], () => true)).toEqual({
+    expect(promoteActions([], () => true, () => true)).toEqual({
       primary: null,
+      secondary: null,
+      overflow: [],
+      withheldReasonKey: null,
+    });
+  });
+
+  it("never explains the row with an action this build has never heard of", () => {
+    // The server ships a new action, disabled with a reason, to a client that predates it.
+    // That client could never have drawn the button, so the reason is not its row's story.
+    const list = [
+      offer("QUARANTINE", "RESOLUTION", {
+        enabled: false,
+        disabledReasonKey: NO_DOCUMENT,
+      }),
+      ...unknown("VIEW_IN_PROCESSOR"),
+    ];
+
+    expect(promoted(list)).toEqual({
+      primary: "VIEW_IN_PROCESSOR",
       secondary: null,
       overflow: [],
       withheldReasonKey: null,

@@ -27,7 +27,11 @@ vi.mock("@app/hooks/useNotifications", () => ({
 }));
 
 const loadRetryPayload = vi.fn();
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
+  // The real stashMatchesKind: pure, and part of the behaviour under test.
+  ...(await importOriginal<
+    typeof import("@app/services/notificationRetry")
+  >()),
   loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
@@ -367,6 +371,74 @@ describe("useResolutionContinuation", () => {
 
     await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
     expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("does not resolve a file its batch run failed for", async () => {
+    // A batch can succeed for one input and fail for another without ever reaching the
+    // failure path. Being an input of a successful run proves nothing; producing an
+    // output does.
+    fetchNotifications.mockResolvedValue({
+      notifications: [toolRow()],
+      viewerReviewsTeam: false,
+    });
+    loadRetryPayload.mockResolvedValue({
+      operation: "compress",
+      endpoint: "/api/v1/misc/compress-pdf",
+      params: {},
+      fileIds: ["f-tool", "f-other"],
+      multiFile: false,
+      errorCode: null,
+      recordedAt: 0,
+    });
+
+    continuation()({
+      operation: "compress",
+      inputFileIds: ["f-tool", "f-other"],
+      // Only the other file produced an output; f-tool failed again, silently.
+      outputs: [
+        {
+          file: new File(["pdf"], "other.pdf"),
+          fileId: "f-other-out",
+          sourceFileId: "f-other",
+        },
+      ],
+    });
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+  });
+
+  it("does not resolve a row whose stash another kind's failure wrote", async () => {
+    // One stash per file, one incident per kind per file: the password failure's stash
+    // overwrote the compress one, so the compress row may not be resolved against it.
+    fetchNotifications.mockResolvedValue({
+      notifications: [toolRow()],
+      viewerReviewsTeam: false,
+    });
+    loadRetryPayload.mockResolvedValue({
+      operation: "removePassword",
+      endpoint: "/api/v1/security/remove-password",
+      params: {},
+      fileIds: ["f-tool"],
+      multiFile: false,
+      errorCode: "E004",
+      recordedAt: 0,
+    });
+
+    continuation()({
+      operation: "removePassword",
+      inputFileIds: ["f-tool"],
+      outputs: [
+        {
+          file: new File(["pdf"], "unlocked.pdf"),
+          fileId: "f-out",
+          sourceFileId: "f-tool",
+        },
+      ],
+    });
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
     expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 

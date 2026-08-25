@@ -22,12 +22,14 @@ import {
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
 import {
+  errorCodeOf,
   reportToolFailure,
   wasCancelled,
 } from "@app/services/failureReporting";
 import { stashRetryPayload } from "@app/services/notificationRetry";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
+import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -127,6 +129,7 @@ export const useToolOperation = <TParams>(
   const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
   const continueResolutions = useResolutionContinuation();
+  const notificationsAvailable = useNotificationsAvailable();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -646,16 +649,28 @@ export const useToolOperation = <TParams>(
 
         // Keep what a retry would need, since the report itself carries no
         // operation and answers 204. Gated on the reporter's own cancellation
-        // test so the two cannot disagree about what counts as a failure, and on
-        // there being an endpoint: a custom processor has nothing to re-submit to.
-        if (!wasCancelled(error) && runtimeEndpoint) {
-          void stashRetryPayload({
-            operation: config.operationType,
-            endpoint: runtimeEndpoint,
-            params: params as Record<string, unknown>,
-            fileIds: validFiles.map((file) => file.fileId),
-            recordedAt: Date.now(),
-          });
+        // test so the two cannot disagree about what counts as a failure; on the
+        // tool not being a custom processor, whose endpoint-specific request
+        // building a generic re-submission would bypass; and on this build having
+        // notifications at all, so a build with no bell does not fill a stash
+        // nothing can ever read.
+        if (
+          !wasCancelled(error) &&
+          runtimeEndpoint &&
+          config.toolType !== ToolType.custom &&
+          notificationsAvailable
+        ) {
+          void errorCodeOf(error).then((errorCode) =>
+            stashRetryPayload({
+              operation: config.operationType,
+              endpoint: runtimeEndpoint,
+              params: params as Record<string, unknown>,
+              fileIds: validFiles.map((file) => file.fileId),
+              multiFile: config.toolType === ToolType.multiFile,
+              errorCode,
+              recordedAt: Date.now(),
+            }),
+          );
         }
 
         const errorMessage =
@@ -686,6 +701,7 @@ export const useToolOperation = <TParams>(
       willUseCloud,
       checkCredits,
       continueResolutions,
+      notificationsAvailable,
     ],
   );
 

@@ -41,6 +41,8 @@ function payload(overrides: Partial<Record<string, unknown>> = {}) {
     endpoint: "/api/v1/security/remove-password",
     params: {},
     fileIds: ["f-1"],
+    multiFile: false,
+    errorCode: "E004",
     recordedAt: 1_000,
     ...overrides,
   } as Parameters<typeof stashRetryPayload>[0];
@@ -82,6 +84,8 @@ describe("the retry stash", () => {
       endpoint: "/api/v1/security/remove-password",
       params: { onlyPages: "1-3" },
       fileIds: ["f-1", "f-2"],
+      multiFile: false,
+      errorCode: "E004",
       recordedAt: 1_000,
     });
     // Every file in the run gets a record, so the bell can retry from any of them.
@@ -213,7 +217,8 @@ describe("retryWithPassword", () => {
     const result = await retryWithPassword(payload(), "hunter2");
 
     expect(result.ok).toBe(false);
-    expect(result.message).toBeTruthy();
+    // The reason, not words: the component layer owns the wording, having `t`.
+    expect(result.reason).toBe("fileMissing");
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -313,7 +318,7 @@ describe("unlockLocalDocument", () => {
     const result = await unlockLocalDocument("f-1", "hunter2");
 
     expect(result.ok).toBe(false);
-    expect(result.message).toBeTruthy();
+    expect(result.reason).toBe("fileMissing");
     expect(post).not.toHaveBeenCalled();
   });
 

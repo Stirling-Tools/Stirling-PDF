@@ -546,7 +546,12 @@ describe("NotificationBell", () => {
     expect(
       screen.queryByRole("button", { name: /VIEW_IN_PROCESSOR|VIEW_FILE/ }),
     ).toBeNull();
-    expect(document.querySelector(".notification-bell__actions")).toBeNull();
+    // The error log stays reachable: a row with nothing left to do still owns its detail.
+    expect(
+      screen.getByRole("button", {
+        name: "More options: Unrecognised failure",
+      }),
+    ).toBeTruthy();
   });
 
   it("asks for the password in the unlock modal before it retries", async () => {

@@ -17,7 +17,6 @@ import {
  * another one. It belongs on the server once notifications have a table of their own.
  */
 
-// TODO: read state is per-browser. Move it server-side when notifications get their own table.
 const POLL_INTERVAL_MS = 30_000;
 const SEEN_STORAGE_KEY = "stirling.notifications.readThroughAt";
 

@@ -6,7 +6,10 @@ import {
   reportNotificationResolved,
   type AppNotification,
 } from "@app/services/notifications";
-import { loadRetryPayload } from "@app/services/notificationRetry";
+import {
+  loadRetryPayload,
+  stashMatchesKind,
+} from "@app/services/notificationRetry";
 import { rechainPolicyOnDocument } from "@app/services/notificationPolicyRetry";
 import type {
   SucceededToolRun,
@@ -129,8 +132,15 @@ async function continueRow(
 
   // A tool failure: resolved when the operation that failed succeeds on the same document.
   if (!row.fileId) return false;
+  // Succeeded FOR THIS FILE: a batch can succeed for one input and fail for another
+  // without ever reaching the failure path, so being an input of a successful run is
+  // not enough - the file must have produced an output.
+  if (!outputFor(row.fileId, run)) return false;
   const stash = await loadRetryPayload(row.fileId);
   if (!stash || stash.operation !== run.operation) return false;
+  // One stash per file but one incident per kind per file: a stash another kind's
+  // failure wrote is not evidence about this row.
+  if (!stashMatchesKind(row.kindId, stash)) return false;
   if (!row.actions.some((a) => a.enabled && a.id === "RETRY")) return false;
   return reportNotificationResolved(row.id);
 }
