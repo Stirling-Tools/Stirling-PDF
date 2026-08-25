@@ -40,6 +40,17 @@ runs:
             ;;
         esac
 
+        java_home_is_valid() {
+          candidate="$1"
+          [ -x "${candidate}/bin/java" ] || return 1
+          version_output="$(${candidate}/bin/java -version 2>&1)"
+          printf '%s\n' "${version_output}" | grep -Eq "version \"${JAVA_VERSION}(\\.|\")" || return 1
+          case "${distribution}" in
+            temurin) printf '%s\n' "${version_output}" | grep -Eiq "Temurin|Eclipse Adoptium" ;;
+            microsoft) printf '%s\n' "${version_output}" | grep -Eiq "Microsoft" ;;
+          esac
+        }
+
         architecture="${JAVA_ARCHITECTURE}"
         if [ -z "${architecture}" ]; then
           architecture="${RUNNER_ARCHITECTURE}"
@@ -79,10 +90,19 @@ runs:
             java_home=""
           fi
         fi
-        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${architecture}" = "X64" ] && [ "${distribution}" = "temurin" ]; then
+        if [ -n "${java_home}" ] && ! java_home_is_valid "${java_home}"; then
+          echo "Ignoring ${java_home_variable}: it does not provide ${distribution} JDK ${JAVA_VERSION}" >&2
+          java_home=""
+        fi
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${distribution}" = "temurin" ] && { [ "${architecture}" = "X64" ] || [ "${architecture}" = "ARM64" ]; }; then
           jdk_version="25.0.3+9"
-          jdk_archive="OpenJDK25U-jdk_x64_mac_hotspot_25.0.3_9.tar.gz"
-          jdk_sha256="4c539a18b4d656960ff6766727e9ca546fc17f7a29714dba9e7b47bdcb37c447"
+          if [ "${architecture}" = "X64" ]; then
+            jdk_archive="OpenJDK25U-jdk_x64_mac_hotspot_25.0.3_9.tar.gz"
+            jdk_sha256="4c539a18b4d656960ff6766727e9ca546fc17f7a29714dba9e7b47bdcb37c447"
+          else
+            jdk_archive="OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.3_9.tar.gz"
+            jdk_sha256="7baab4d69a15554e119b86ff78d40e3fdc28819b5b322955c913cebfe3f6a37c"
+          fi
           jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}"
           archive_path="${jdk_root}/${jdk_archive}"
           mkdir -p "${jdk_root}"
