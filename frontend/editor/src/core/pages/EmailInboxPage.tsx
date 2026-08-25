@@ -155,11 +155,20 @@ export default function EmailInboxPage() {
   const { addFiles } = useFileHandler();
   const { fileStubs } = useAllFiles();
   const [searchParams, setSearchParams] = useSearchParams();
+  const gmailCallbackStatus = searchParams.get("gmail");
   const [accountConnected, setAccountConnected] = useState(
-    searchParams.get("gmail") === "connected",
+    gmailCallbackStatus === "connected",
   );
   const [connectDialogOpen, setConnectDialogOpen] = useState(
-    searchParams.get("gmail") !== "connected",
+    gmailCallbackStatus !== "connected",
+  );
+  const [connectionError, setConnectionError] = useState<string | null>(
+    gmailCallbackStatus === "not-allowed"
+      ? t(
+          "email.gmailNotAllowed",
+          "This Google account is not allowed to connect to this mailbox. Contact an administrator if you need access.",
+        )
+      : null,
   );
   const [accountEmail, setAccountEmail] = useState(DEMO_ACCOUNT.email);
   const [accountProvider, setAccountProvider] = useState<Provider>(
@@ -191,7 +200,7 @@ export default function EmailInboxPage() {
   const [downloadedAttachment, setDownloadedAttachment] = useState<
     string | null
   >(null);
-  const connectedFromCallback = searchParams.get("gmail") === "connected";
+  const connectedFromCallback = gmailCallbackStatus === "connected";
 
   useEffect(() => {
     const savedName = window.localStorage.getItem(
@@ -447,10 +456,20 @@ export default function EmailInboxPage() {
   );
 
   const connectAccount = async () => {
-    const { data } = await apiClient.get<{ authorizationUrl: string }>(
-      "/api/v1/email/gmail/connect",
-    );
-    window.location.assign(data.authorizationUrl);
+    setConnectionError(null);
+    try {
+      const { data } = await apiClient.get<{ authorizationUrl: string }>(
+        "/api/v1/email/gmail/connect",
+      );
+      window.location.assign(data.authorizationUrl);
+    } catch {
+      setConnectionError(
+        t(
+          "email.connectFailed",
+          "The Gmail connection could not be started. Please try again.",
+        ),
+      );
+    }
   };
 
   const disconnectAccount = async () => {
@@ -961,6 +980,11 @@ export default function EmailInboxPage() {
                 "Connect your email account to securely transfer attachments into your PDF workflow.",
               )}
             </p>
+            {connectionError && (
+              <div className="email-connect-error" role="alert">
+                {connectionError}
+              </div>
+            )}
             <div className="email-provider-actions">
               <Button
                 fullWidth

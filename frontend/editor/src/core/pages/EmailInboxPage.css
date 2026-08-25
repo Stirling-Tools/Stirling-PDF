@@ -568,6 +568,17 @@
   font-size: 0.82rem;
   line-height: 1.55;
 }
+.email-connect-error {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--c-danger) 55%, var(--c-border));
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
+  color: var(--c-danger);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: left;
+}
 .email-provider-actions {
   display: grid;
   gap: 0.55rem;

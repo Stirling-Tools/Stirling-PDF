@@ -1431,6 +1431,9 @@ public class ApplicationProperties {
             private String clientId = "";
             @ToString.Exclude private String clientSecret = "";
             private String redirectUri = "";
+
+            /** Google account emails allowed to connect to Gmail; empty means all accounts. */
+            private List<String> allowedEmails = new ArrayList<>();
         }
     }
 

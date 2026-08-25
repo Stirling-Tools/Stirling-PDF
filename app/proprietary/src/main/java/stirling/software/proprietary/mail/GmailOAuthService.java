@@ -17,13 +17,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.ApplicationProperties;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -42,6 +46,7 @@ public class GmailOAuthService {
 
     private final ObjectMapper objectMapper;
     private final GmailConnectionRepository connectionRepository;
+    private final ApplicationProperties applicationProperties;
     // Kept replaceable for deterministic tests; production uses the standard JDK client.
     private HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -115,6 +120,7 @@ public class GmailOAuthService {
     }
 
     public void saveConnection(String username, GmailToken token, GmailProfile profile) {
+        ensureEmailAllowed(profile.email());
         GmailConnectionEntity entity =
                 connectionRepository.findByUsername(username).orElseGet(GmailConnectionEntity::new);
         String refreshToken = token.refreshToken();
@@ -130,6 +136,30 @@ public class GmailOAuthService {
         entity.setEmail(profile.email());
         entity.setDisplayName(profile.name());
         connectionRepository.save(entity);
+    }
+
+    /**
+     * Ensures that only configured Google accounts can create or retain a mailbox connection. An
+     * empty allowlist intentionally permits every Google account.
+     */
+    void ensureEmailAllowed(String email) {
+        List<String> allowedEmails =
+                applicationProperties.getMailbox().getGmail().getAllowedEmails();
+        boolean allowAll =
+                allowedEmails == null
+                        || allowedEmails.stream()
+                                .allMatch(value -> value == null || value.isBlank());
+        boolean allowed =
+                allowAll
+                        || (email != null
+                                && allowedEmails.stream()
+                                        .filter(value -> value != null && !value.isBlank())
+                                        .map(String::trim)
+                                        .anyMatch(value -> value.equalsIgnoreCase(email.trim())));
+        if (!allowed) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "This Google account is not allowed to connect");
+        }
     }
 
     public GmailConnection getConnection(String username) {

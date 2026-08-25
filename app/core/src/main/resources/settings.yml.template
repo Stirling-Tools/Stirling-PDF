@@ -164,6 +164,7 @@ mailbox:
     client-id: "" # Google OAuth client ID
     client-secret: "" # Google OAuth client secret; do not commit a real secret
     redirect-uri: "" # Optional fixed public callback, e.g. https://pdf.example.com/api/v1/email/gmail/callback
+    allowed-emails: [] # Empty allows all Google accounts; otherwise only these accounts may connect
 
 legal:
   termsAndConditions: https://www.stirling.com/legal/terms-of-service # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder

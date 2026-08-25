@@ -29,6 +29,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.ApplicationProperties;
+
 import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,10 +41,14 @@ class GmailOAuthServiceTest {
     @Mock private HttpClient httpClient;
 
     private GmailOAuthService service;
+    private ApplicationProperties applicationProperties;
 
     @BeforeEach
     void setUp() {
-        service = new GmailOAuthService(new ObjectMapper(), connectionRepository);
+        applicationProperties = new ApplicationProperties();
+        service =
+                new GmailOAuthService(
+                        new ObjectMapper(), connectionRepository, applicationProperties);
         ReflectionTestUtils.setField(service, "httpClient", httpClient);
     }
 
@@ -137,6 +143,57 @@ class GmailOAuthServiceTest {
         assertThat(existing.getEmail()).isEqualTo("admin@example.com");
         assertThat(existing.getDisplayName()).isEqualTo("Admin");
         verify(connectionRepository).save(existing);
+    }
+
+    @Test
+    void allowsEveryGoogleAccountWhenLoginAllowlistIsEmpty() {
+        service.ensureEmailAllowed("anyone@example.com");
+    }
+
+    @Test
+    void allowsConfiguredGoogleAccountIgnoringCaseAndWhitespace() {
+        applicationProperties
+                .getMailbox()
+                .getGmail()
+                .setAllowedEmails(java.util.List.of(" admin@example.com "));
+
+        service.ensureEmailAllowed("ADMIN@EXAMPLE.COM");
+    }
+
+    @Test
+    void rejectsGoogleAccountOutsideLoginAllowlist() {
+        applicationProperties
+                .getMailbox()
+                .getGmail()
+                .setAllowedEmails(java.util.List.of("allowed@example.com"));
+
+        assertThatThrownBy(() -> service.ensureEmailAllowed("blocked@example.com"))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        error -> {
+                            ResponseStatusException exception = (ResponseStatusException) error;
+                            assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+                            assertThat(exception.getReason())
+                                    .isEqualTo("This Google account is not allowed to connect");
+                        });
+    }
+
+    @Test
+    void doesNotPersistConnectionForDisallowedGoogleAccount() {
+        applicationProperties
+                .getMailbox()
+                .getGmail()
+                .setAllowedEmails(java.util.List.of("allowed@example.com"));
+
+        assertThatThrownBy(
+                        () ->
+                                service.saveConnection(
+                                        "admin",
+                                        new GmailOAuthService.GmailToken("access", "refresh", 1L),
+                                        new GmailOAuthService.GmailProfile(
+                                                "blocked@example.com", "Blocked")))
+                .isInstanceOf(ResponseStatusException.class);
+        org.mockito.Mockito.verifyNoInteractions(connectionRepository);
     }
 
     @Test

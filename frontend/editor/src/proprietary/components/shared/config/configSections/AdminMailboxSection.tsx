@@ -15,6 +15,7 @@ interface GmailMailboxSettings {
   clientId?: string;
   clientSecret?: string;
   redirectUri?: string;
+  allowedEmails?: string[];
 }
 
 interface MailboxSettingsData {
@@ -46,6 +47,7 @@ export default function AdminMailboxSection() {
         "mailbox.gmail.clientId": current.gmail?.clientId ?? "",
         "mailbox.gmail.clientSecret": current.gmail?.clientSecret ?? "",
         "mailbox.gmail.redirectUri": current.gmail?.redirectUri ?? "",
+        "mailbox.gmail.allowedEmails": current.gmail?.allowedEmails ?? [],
       },
     }),
   });
@@ -157,6 +159,27 @@ export default function AdminMailboxSection() {
               value={gmail.redirectUri || ""}
               onChange={(event) =>
                 updateGmail({ redirectUri: event.currentTarget.value })
+              }
+              disabled={!loginEnabled}
+            />
+
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <span>Allowed Google account emails</span>
+                  <PendingBadge show={isFieldPending("gmail.allowedEmails")} />
+                </Group>
+              }
+              description="Leave empty to allow all Google accounts. Separate addresses with commas."
+              placeholder="user@example.com, admin@example.com"
+              value={(gmail.allowedEmails ?? []).join(", ")}
+              onChange={(event) =>
+                updateGmail({
+                  allowedEmails: event.currentTarget.value
+                    .split(",")
+                    .map((value) => value.trim())
+                    .filter(Boolean),
+                })
               }
               disabled={!loginEnabled}
             />

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -196,21 +197,33 @@ public class GmailOAuthController {
                     "Invalid Gmail OAuth callback: missing or expired code/state");
             return;
         }
-        GmailOAuthService.GmailToken token = gmailOAuthService.exchangeCode(code, redirectUri);
-        GmailOAuthService.GmailProfile profile = gmailOAuthService.getProfile(token);
-        session.removeAttribute(STATE_SESSION_KEY);
-        session.removeAttribute(REDIRECT_URI_SESSION_KEY);
-        session.setAttribute(PROFILE_SESSION_KEY, profile);
-        String username = (String) session.getAttribute(USER_SESSION_KEY);
-        if (username != null && !username.isBlank()) {
-            gmailOAuthService.saveConnection(username, token, profile);
+        try {
+            GmailOAuthService.GmailToken token = gmailOAuthService.exchangeCode(code, redirectUri);
+            GmailOAuthService.GmailProfile profile = gmailOAuthService.getProfile(token);
+            gmailOAuthService.ensureEmailAllowed(profile.email());
+            session.removeAttribute(STATE_SESSION_KEY);
+            session.removeAttribute(REDIRECT_URI_SESSION_KEY);
+            session.setAttribute(PROFILE_SESSION_KEY, profile);
+            String username = (String) session.getAttribute(USER_SESSION_KEY);
+            if (username != null && !username.isBlank()) {
+                gmailOAuthService.saveConnection(username, token, profile);
+            }
+            response.sendRedirect(frontendTarget("connected"));
+        } catch (ResponseStatusException exception) {
+            session.removeAttribute(STATE_SESSION_KEY);
+            session.removeAttribute(REDIRECT_URI_SESSION_KEY);
+            session.removeAttribute(PROFILE_SESSION_KEY);
+            log.warn("Gmail OAuth account rejected: {}", exception.getReason());
+            response.sendRedirect(frontendTarget("not-allowed"));
         }
+    }
+
+    private String frontendTarget(String status) {
         String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
-        String target =
-                frontendUrl == null || frontendUrl.isBlank()
-                        ? "/mail?gmail=connected"
-                        : frontendUrl.trim().replaceAll("/$", "") + "/mail?gmail=connected";
-        response.sendRedirect(target);
+        String path = "/mail?gmail=" + status;
+        return frontendUrl == null || frontendUrl.isBlank()
+                ? path
+                : frontendUrl.trim().replaceAll("/$", "") + path;
     }
 
     private String randomState() {
