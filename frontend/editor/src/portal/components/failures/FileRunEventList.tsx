@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton, StatusBadge } from "@app/ui";
+import { PORTAL_FAILURES_ANCHOR } from "@app/routes/portalBasename";
 import type { FileRunEvent, FailureSeverity } from "@portal/api/fileRunEvents";
 import {
   useFileRunEvents,
@@ -30,6 +32,15 @@ export function FileRunEventList() {
   const [busy, setBusy] = useState<{ id: string; action: string } | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const section = useRef<HTMLElement>(null);
+  const { hash, key } = useLocation();
+
+  // A fragment is only honoured on a real page load, not a client-side route change. Keyed on the
+  // navigation too: a second notification changes neither the path nor the hash.
+  useEffect(() => {
+    if (hash !== `#${PORTAL_FAILURES_ANCHOR}`) return;
+    section.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash, key]);
 
   // A build without the proprietary module has no such route, and a caller who is
   // not a team leader gets a 403. Both mean there is nothing to show.
@@ -122,7 +133,11 @@ export function FileRunEventList() {
   }
 
   return (
-    <section className="portal-failures">
+    <section
+      className="portal-failures"
+      id={PORTAL_FAILURES_ANCHOR}
+      ref={section}
+    >
       <h2 className="portal-failures__heading">
         {t("portal.failures.title", "Failures")}
       </h2>
