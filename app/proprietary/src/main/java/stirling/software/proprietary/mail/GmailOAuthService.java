@@ -42,7 +42,8 @@ public class GmailOAuthService {
 
     private final ObjectMapper objectMapper;
     private final GmailConnectionRepository connectionRepository;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    // Kept replaceable for deterministic tests; production uses the standard JDK client.
+    private HttpClient httpClient = HttpClient.newHttpClient();
 
     @Value("${mailbox.gmail.client-id:}")
     private String clientId;
@@ -390,7 +391,10 @@ public class GmailOAuthService {
     }
 
     private void requireConfigured() {
-        if (clientId.isBlank() || clientSecret.isBlank()) {
+        if (clientId == null
+                || clientId.isBlank()
+                || clientSecret == null
+                || clientSecret.isBlank()) {
             throw new IllegalStateException("Gmail OAuth is not configured on the server");
         }
     }
