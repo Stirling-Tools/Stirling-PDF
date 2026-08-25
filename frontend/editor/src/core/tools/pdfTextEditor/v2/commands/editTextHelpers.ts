@@ -140,8 +140,12 @@ export function charcodesResolveFully(
     } catch {
       ok = false;
     }
-    perFont.set(ch, ok);
-    if (!ok) return false;
+    // Only memoise a POSITIVE result. A miss here can simply mean the
+    // charcode cache was cold or the backend was briefly unreachable, and
+    // caching that as "this font cannot encode this character" made the
+    // failure permanent for the session.
+    if (ok) perFont.set(ch, true);
+    else return false;
   }
   return true;
 }

@@ -13,6 +13,7 @@ import type {
   MatchOptions,
   TextMatch,
 } from "@app/tools/pdfTextEditor/v2/util/textMatching";
+import { ensureAllPagesRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type {
   PageSnapshot,
@@ -59,6 +60,14 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Opening Find is a document-wide request, so pull in every page that lazy
+  // loading has not read yet. Yield first: the read is synchronous, and on a
+  // long document it would otherwise block before the bar has painted.
+  useEffect(() => {
+    const id = setTimeout(() => ensureAllPagesRead(store), 0);
+    return () => clearTimeout(id);
+  }, [store]);
 
   const options: MatchOptions = useMemo(
     () => ({ matchCase, wholeWord, ignoreAccents }),

@@ -240,10 +240,12 @@ function maybeAutoPrefetch(
               }
 
               // Stop the per-keystroke prefetch storm. resolve looks these
-              // chars up under the QUERIED font, not perCharFont.
+              // chars up under the QUERIED font, not perCharFont. Use the
+              // TTL'd null: this font was never actually asked, so a permanent
+              // null would kill the pair for the rest of the session.
               if (perCharFont !== fontPtr) {
                 for (const ch of fontChars) {
-                  charCache.set(cacheKey(fontPtr, ch), null);
+                  setTransientNull(cacheKey(fontPtr, ch));
                 }
               }
             }
