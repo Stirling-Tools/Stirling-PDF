@@ -145,7 +145,8 @@ class UserServiceTest {
             throws SQLException, UnsupportedProviderException {
         Team defaultTeam = new Team();
         defaultTeam.setName("Default");
-        when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findFirstByNameOrderByIdAsc("Default"))
+                .thenReturn(Optional.of(defaultTeam));
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -153,7 +154,7 @@ class UserServiceTest {
 
         User saved = userService.saveUserCore(request);
 
-        verify(teamRepository).findByName("Default");
+        verify(teamRepository).findFirstByNameOrderByIdAsc("Default");
         verify(teamRepository, never()).findById(anyLong());
         verify(databaseService).exportDatabase();
         assertEquals(defaultTeam, saved.getTeam(), "Default team should be applied");

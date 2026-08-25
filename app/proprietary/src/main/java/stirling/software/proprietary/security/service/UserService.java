@@ -474,11 +474,11 @@ public class UserService implements UserServiceInterface {
      */
     private Team getDefaultTeam() {
         return teamRepository
-                .findByName("Default")
+                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
                 .orElseGet(
                         () -> {
                             Team team = new Team();
-                            team.setName("Default");
+                            team.setName(TeamService.DEFAULT_TEAM_NAME);
                             return teamRepository.save(team);
                         });
     }

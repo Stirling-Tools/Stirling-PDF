@@ -97,7 +97,7 @@ class DefaultClassificationPolicySeederTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
         when(policyStore.findByTeam(1L)).thenReturn(List.of());
 
@@ -108,7 +108,8 @@ class DefaultClassificationPolicySeederTest {
 
     @Test
     void doesNotSeedOnStartupWhenThereIsNoDefaultTeam() {
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.empty());
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
+                .thenReturn(Optional.empty());
 
         seeder().seedDefaultTeamOnStartup();
 

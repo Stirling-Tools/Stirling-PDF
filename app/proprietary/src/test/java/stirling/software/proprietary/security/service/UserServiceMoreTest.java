@@ -258,7 +258,8 @@ class UserServiceMoreTest {
             User u = user("p");
             Team defaultTeam = new Team();
             defaultTeam.setName("Default");
-            when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
+            when(teamRepository.findFirstByNameOrderByIdAsc("Default"))
+                    .thenReturn(Optional.of(defaultTeam));
 
             userService.changeUserTeam(u, null);
 

@@ -17,24 +17,25 @@ public class TeamService {
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
     public Team getOrCreateDefaultTeam() {
-        return teamRepository
-                .findByName(DEFAULT_TEAM_NAME)
-                .orElseGet(
-                        () -> {
-                            Team defaultTeam = new Team();
-                            defaultTeam.setName(DEFAULT_TEAM_NAME);
-                            return teamRepository.save(defaultTeam);
-                        });
+        return getOrCreate(DEFAULT_TEAM_NAME);
     }
 
     public Team getOrCreateInternalTeam() {
+        return getOrCreate(INTERNAL_TEAM_NAME);
+    }
+
+    /**
+     * Lowest id wins, so peers that raced a cold shared DB into two same-named rows still agree.
+     * Duplicates cannot be prevented here: teams.name has no unique constraint, by design.
+     */
+    private Team getOrCreate(String name) {
         return teamRepository
-                .findByName(INTERNAL_TEAM_NAME)
+                .findFirstByNameOrderByIdAsc(name)
                 .orElseGet(
                         () -> {
-                            Team internalTeam = new Team();
-                            internalTeam.setName(INTERNAL_TEAM_NAME);
-                            return teamRepository.save(internalTeam);
+                            Team team = new Team();
+                            team.setName(name);
+                            return teamRepository.save(team);
                         });
     }
 }
