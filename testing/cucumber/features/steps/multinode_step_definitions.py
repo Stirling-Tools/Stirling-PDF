@@ -101,9 +101,11 @@ def _names_on_node(node, path, token):
 
 
 def _policy_body(name, source_ids=None, enabled=True):
+    # Must be the 'inputs' shape. Policy has no sourceIds field, so a legacy
+    # {sourceIds, trigger} body binds inputs=null and silently stores a policy referencing nothing.
     return json.dumps({
-        "name": name, "enabled": enabled, "trigger": None,
-        "sourceIds": source_ids or [],
+        "name": name, "enabled": enabled,
+        "inputs": [{"sourceId": sid, "trigger": None} for sid in (source_ids or [])],
         "steps": [{"operation": "/api/v1/misc/compress-pdf", "parameters": {}}],
         "output": {"type": "inline", "options": {}},
     })

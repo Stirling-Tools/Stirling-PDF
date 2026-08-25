@@ -146,10 +146,12 @@ JSON
   fi
 
   if [ -n "${src_id:-}" ]; then
+    # 'inputs', not the legacy {trigger, sourceIds}: Policy has no sourceIds field, so the old
+    # shape binds inputs=null and seeds a policy that watches nothing while still returning 200.
     pol_body=$(cat <<JSON
 {"name":"Compress incoming PDFs","enabled":true,
- "trigger":{"type":"schedule","options":{"schedule":{"type":"every","count":5,"unit":"MINUTES"}}},
- "sourceIds":["$src_id"],
+ "inputs":[{"sourceId":"$src_id",
+            "trigger":{"type":"schedule","options":{"schedule":{"type":"every","count":5,"unit":"MINUTES"}}}}],
  "steps":[{"operation":"/api/v1/misc/compress-pdf","parameters":{}}],
  "output":{"type":"s3","options":{"connectionId":$conn_id,"prefix":"processed/"}}}
 JSON
