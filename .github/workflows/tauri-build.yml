@@ -164,14 +164,29 @@ jobs:
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
+        if: inputs.use_shared_cache == false
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          workspaces: frontend/editor/src-tauri
+          workspaces: |
+            frontend/editor/src-tauri
+            frontend/editor/src-tauri/provisioner
+            frontend/editor/src-tauri/thumbnail-handler
           # Stable key shared across workflows so the nightly warmer.
           # rust-cache still appends OS + rustc + Cargo.lock.
           shared-key: tauri-${{ matrix.name }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
           # Save the dependency cache even if a later step fails
+          cache-on-failure: true
+
+      - name: Cache Rust build
+        if: inputs.use_shared_cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: |
+            frontend/editor/src-tauri
+            frontend/editor/src-tauri/provisioner
+            frontend/editor/src-tauri/thumbnail-handler
+          shared-key: tauri-v1-${{ matrix.name }}
           cache-on-failure: true
 
       - name: Restore cache Gradle User Home
