@@ -32,9 +32,13 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  /* Accent used as TEXT (links, toggles): a deeper hue that clears 4.5:1 on
+     light surfaces, where --c-primary itself does not. */
+  --c-accent-text: var(--p-blue-700);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
   /* Solid fills that carry a white label. Deeper than the --c-<tone> values
      above, which are picked for surfaces, borders and icons where the 3:1
@@ -66,6 +70,11 @@ html[data-app-theme="light"] {
   --c-success-subtle: color-mix(
     in srgb,
     var(--c-success) 10%,
+    var(--c-surface)
+  );
+  --c-warning-subtle: color-mix(
+    in srgb,
+    var(--c-warning) 10%,
     var(--c-surface)
   );
 
@@ -144,6 +153,8 @@ html[data-app-theme="midnight"] {
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
+  --c-accent-text: var(--p-blue-400);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
@@ -159,6 +170,7 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
@@ -361,6 +373,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
