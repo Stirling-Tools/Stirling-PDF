@@ -144,14 +144,6 @@ button.portal-source-modal__card:focus-visible {
   min-width: 0;
 }
 
-.portal-source-modal__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-}
-
 .portal-source-modal__footer-actions {
   display: flex;
   align-items: center;

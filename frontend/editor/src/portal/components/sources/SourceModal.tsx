@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
-  Checkbox,
   Collapsible,
   FormField,
   Input,
@@ -363,43 +362,36 @@ export function SourceModal({
     switch (stage) {
       case "configure":
         return (
-          <div className="portal-source-modal__footer">
-            <Checkbox
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              label={t("portal.sources.builder.enabled")}
-            />
-            <span className="portal-source-modal__footer-actions">
-              {isEdit && (
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  accent="danger"
-                  disabled={submitting}
-                  onClick={() => setStage("delete")}
-                >
-                  {t("portal.sources.builder.delete")}
-                </Button>
-              )}
+          <div className="portal-source-modal__footer-actions">
+            {isEdit && (
               <Button
                 variant="tertiary"
                 size="sm"
+                accent="danger"
                 disabled={submitting}
-                onClick={onClose}
+                onClick={() => setStage("delete")}
               >
-                {t("portal.sources.builder.cancel")}
+                {t("portal.sources.builder.delete")}
               </Button>
-              <Button
-                size="sm"
-                loading={submitting}
-                disabled={!canSave}
-                onClick={() => void save()}
-              >
-                {isEdit
-                  ? t("portal.sources.builder.save")
-                  : t("portal.sources.builder.create")}
-              </Button>
-            </span>
+            )}
+            <Button
+              variant="tertiary"
+              size="sm"
+              disabled={submitting}
+              onClick={onClose}
+            >
+              {t("portal.sources.builder.cancel")}
+            </Button>
+            <Button
+              size="sm"
+              loading={submitting}
+              disabled={!canSave}
+              onClick={() => void save()}
+            >
+              {isEdit
+                ? t("portal.sources.builder.save")
+                : t("portal.sources.builder.create")}
+            </Button>
           </div>
         );
       case "connection":

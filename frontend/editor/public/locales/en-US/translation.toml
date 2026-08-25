@@ -8692,7 +8692,6 @@ create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
-enabled = "Enabled"
 save = "Save changes"
 
 [portal.sources.builder.folderAccess]
