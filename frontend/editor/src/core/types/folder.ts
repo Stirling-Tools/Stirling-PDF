@@ -37,16 +37,44 @@ export const FOLDER_COLOR_PALETTE = [
 /** Members of {@link FOLDER_COLOR_PALETTE}. Use this rather than `string` to keep callers honest. */
 export type FolderPaletteColor = (typeof FOLDER_COLOR_PALETTE)[number];
 
+/**
+ * What kind of thing a folder is — three independent features that happen to
+ * share a shape, not variants of one:
+ *
+ * - `server`: a folder in app storage. Lives in the server's database, synced
+ *   down and cached in IndexedDB; needs login + storage to exist.
+ * - `virtual`: an organisation-only folder in this browser's IndexedDB. No
+ *   server involvement at all, so it works offline and on installs with
+ *   storage disabled.
+ * - `local`: a real directory on the machine, mounted read-through — the
+ *   filesystem is the source of truth and Stirling holds no copy of its
+ *   contents, only this record of where it is.
+ */
+export type FolderKind = "server" | "virtual" | "local";
+
 /** Persisted folder shape stored in IndexedDB. */
 export interface FolderRecord {
   id: FolderId;
+  /**
+   * Absent means `server`: kinds arrived after rows already existed in user
+   * databases and on the server wire, and every one of those is a server
+   * folder. Read through {@link folderKind} rather than directly.
+   */
+  kind?: FolderKind;
   name: string;
   parentFolderId: FolderId | null;
+  /** For `local` folders: the directory this record mounts. */
+  directory?: string;
   /** Hex colour - either a palette member or any custom hex from a future picker. */
   color?: string;
   icon?: string;
   createdAt: number;
   updatedAt: number;
+}
+
+/** The folder's kind. Absent means `server`: server DTOs and long-lived cached rows never carry one. */
+export function folderKind(folder: Pick<FolderRecord, "kind">): FolderKind {
+  return folder.kind ?? "server";
 }
 
 /**
@@ -80,6 +108,44 @@ export function parseFolderId(value: unknown): FolderId {
     throw new Error(`Invalid FolderId: ${String(value)}`);
   }
   return value as FolderId;
+}
+
+/**
+ * Subdirectories of a mounted folder are not stored anywhere — the directory
+ * is the record. Their ids encode the path, so a `/files/<id>` link survives
+ * a reload and the record can be rebuilt from the id alone.
+ */
+const DISK_FOLDER_ID_PREFIX = "disk:";
+
+export function diskFolderId(path: string): FolderId {
+  const bytes = new TextEncoder().encode(path);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  const b64 = btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+  return `${DISK_FOLDER_ID_PREFIX}${b64}` as FolderId;
+}
+
+export function isDiskFolderId(id: string): boolean {
+  return id.startsWith(DISK_FOLDER_ID_PREFIX);
+}
+
+/** The path a disk subfolder id encodes, or null for any other id. */
+export function diskFolderPath(id: string): string | null {
+  if (!isDiskFolderId(id)) return null;
+  const b64 = id
+    .slice(DISK_FOLDER_ID_PREFIX.length)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  try {
+    const binary = atob(b64);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return null;
+  }
 }
 
 export function createFolderId(): FolderId {

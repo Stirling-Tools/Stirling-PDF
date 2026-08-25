@@ -273,6 +273,13 @@ interface AddFileOptions {
   /** When true, marks every added stub as derivedFromTool so the policy
    *  auto-run skips it — used for policy outputs imported via addFiles. */
   derivedFromTool?: boolean;
+  /**
+   * The folder every added file is born into — membership set at creation,
+   * atomically with the stub, instead of a separate move that can fail after
+   * the file already landed somewhere else. See StirlingFileStub.folderId
+   * for what the value means per storage state.
+   */
+  folderId?: string;
 }
 
 /**
@@ -444,6 +451,9 @@ export async function addFiles(
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
       if (options.derivedFromTool) fileStub.derivedFromTool = true;
+      if (options.folderId) {
+        fileStub.folderId = options.folderId as StirlingFileStub["folderId"];
+      }
 
       // Early encryption detection for PDFs — set the flag before dispatch so the
       // viewer gate and modal queue pick it up immediately instead of after hydration
