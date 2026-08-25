@@ -183,7 +183,11 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 100 }]);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-cls",
+      [{ size: 100 }],
+      "file-1-v2",
+    );
   });
 
   it("chains classification onto an output that inherited an unsure verdict", async () => {
@@ -206,7 +210,11 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 100 }]);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-cls",
+      [{ size: 100 }],
+      "file-1-v2",
+    );
   });
 
   it("lets an inherited confident verdict stand — no engine call for the chained output", async () => {
@@ -227,10 +235,9 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(runStored).not.toHaveBeenCalledWith(
-      "backend-cls",
-      expect.anything(),
-    );
+    expect(
+      runStored.mock.calls.some(([backendId]) => backendId === "backend-cls"),
+    ).toBe(false);
   });
 
   it("still escalates after the local pass has recorded its own run for the file", async () => {
@@ -269,7 +276,11 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 100 }]);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-cls",
+      [{ size: 100 }],
+      "file-1-v2",
+    );
   });
 
   it("does not poll a browser-local run against the server", async () => {
@@ -315,11 +326,9 @@ describe("auto-run ordered chaining", () => {
       [{ size: 100 }],
       "file-1",
     );
-    expect(runStored).not.toHaveBeenCalledWith(
-      "backend-cls",
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(
+      runStored.mock.calls.some(([backendId]) => backendId === "backend-cls"),
+    ).toBe(false);
   });
 
   it("never dispatches on a file marked derivedFromTool", async () => {

@@ -120,7 +120,11 @@ describe("classification escalation (single-policy setup)", () => {
 
     await render();
 
-    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 1460 }]);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-cls",
+      [{ size: 1460 }],
+      "file-1",
+    );
   });
 
   it("leaves a confident local verdict alone (no engine call, no charge)", async () => {
