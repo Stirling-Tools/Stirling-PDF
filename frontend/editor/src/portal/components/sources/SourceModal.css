@@ -35,7 +35,7 @@
   cursor: pointer;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
-  background: var(--c-surface);
+  background: var(--c-surface-raised);
   font: inherit;
   color: inherit;
   transition:

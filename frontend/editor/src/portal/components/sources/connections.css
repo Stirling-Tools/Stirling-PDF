@@ -163,6 +163,7 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
+  background: var(--c-surface-raised);
 }
 
 .portal-conn-picker__card:hover {
