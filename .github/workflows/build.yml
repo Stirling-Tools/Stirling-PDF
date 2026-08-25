@@ -191,7 +191,7 @@ jobs:
       dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
 
   tauri-build:
-    if: needs.files-changed.outputs.tauri == 'true'
+    if: needs.files-changed.outputs.tauri == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read

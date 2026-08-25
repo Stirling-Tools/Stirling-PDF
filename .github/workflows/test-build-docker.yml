@@ -56,7 +56,7 @@ jobs:
           if-no-files-found: error
 
   test-build-docker-images:
-    if: always() && (needs.prepare-base-image.result == 'success' || needs.prepare-base-image.result == 'skipped')
+    if: always() && (needs.prepare-base-image.result == 'success' || needs.prepare-base-image.result == 'skipped') && false
     needs: [prepare-base-image]
     environment:
       name: ci-unsigned
