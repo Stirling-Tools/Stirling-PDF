@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import type { ToolId } from "@app/types/toolId";
 
 const disk = vi.hoisted(() => ({
   supported: true,
@@ -94,7 +95,7 @@ describe("pruneMissingRecentFiles", () => {
         id: "edited" as FileId,
         localFilePath: "C:/docs/gone.pdf",
         versionNumber: 3,
-        toolHistory: [{ toolId: "split" as any, timestamp: 1 }],
+        toolHistory: [{ toolId: "split" as ToolId, timestamp: 1 }],
       }),
     ];
     const result = await pruneMissingRecentFiles(stubs);

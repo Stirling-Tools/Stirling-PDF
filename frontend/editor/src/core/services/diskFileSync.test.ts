@@ -31,8 +31,11 @@ vi.mock("@app/services/fileStorage", () => ({
 
 const downloadFileWithPolicy = vi.hoisted(() =>
   vi.fn(
-    async (_request: Record<string, unknown>) =>
-      ({ savedPath: "C:/elsewhere/report.pdf" }) as any,
+    async (
+      _request: Record<string, unknown>,
+    ): Promise<{ savedPath?: string; cancelled?: boolean }> => ({
+      savedPath: "C:/elsewhere/report.pdf",
+    }),
   ),
 );
 vi.mock("@app/services/exportWithPolicy", () => ({ downloadFileWithPolicy }));

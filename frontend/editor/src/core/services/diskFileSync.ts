@@ -274,6 +274,19 @@ export async function saveOrphanAsCopy(
   }
 }
 
+/** The bit of i18next this module needs, if it has been initialised at all. */
+interface Translator {
+  t: (key: string, options?: Record<string, unknown>) => string;
+}
+
+function isTranslator(value: unknown): value is Translator {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as Translator).t === "function"
+  );
+}
+
 /**
  * Best-effort translation without a hard dependency on i18n being initialised —
  * this module runs from storage/hydration paths that have no React context. The
@@ -286,8 +299,8 @@ function translate(
   params?: Record<string, string>,
 ): string {
   try {
-    const i18next = (globalThis as Record<string, any>)?.i18next;
-    if (i18next && typeof i18next.t === "function") {
+    const i18next = (globalThis as Record<string, unknown>).i18next;
+    if (isTranslator(i18next)) {
       return i18next.t(key, { defaultValue, ...params });
     }
   } catch {

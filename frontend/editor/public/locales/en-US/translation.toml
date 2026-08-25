@@ -4102,6 +4102,12 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+
 [filesPage.empty]
 hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
 newFolderCta = "Create folder"
@@ -4188,12 +4194,6 @@ newFolderLabel = "New folder name"
 newFolderPlaceholder = "Folder name"
 newFolderToggle = "Create new folder…"
 title = "Move to folder"
-
-[filesPage.diskLink]
-conflict = "Disk changed"
-conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
-orphaned = "Not on disk"
-orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
 
 [filesPage.origin]
 all = "All sources"
