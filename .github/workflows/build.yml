@@ -234,7 +234,7 @@ jobs:
       use_shared_cache: true
 
   pre-commit:
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/pre_commit.yml
