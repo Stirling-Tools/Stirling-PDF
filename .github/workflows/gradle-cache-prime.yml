@@ -1,4 +1,4 @@
-name: Prime Gradle Cache
+name: Prime Cache
 
 on:
   workflow_call:
@@ -9,6 +9,72 @@ permissions:
   contents: read
 
 jobs:
+  unoserver-image-cache-prime:
+    environment:
+      name: ci-unsigned
+      deployment: false
+    name: Prime unoserver image cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Cache buildx (lookup-only)
+        id: cache-buildx-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/.buildx-cache
+          key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
+                'docker/unoserver/Dockerfile',
+                'docker/unoserver/fonts.conf',
+                'docker/unoserver/entrypoint.sh',
+                'docker/unoserver/healthcheck.sh',
+                '.dockerignore'
+              ) }}
+          lookup-only: true
+
+      - name: Set up QEMU
+        if: cache-buildx-restore
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+
+      - name: Set up Docker Buildx
+        if: cache-buildx-restore
+        id: buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build docker/unoserver/Dockerfile
+        if: cache-buildx-restore
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          cache-from: |
+            type=local,src=${{ runner.temp }}/.buildx-cache
+          cache-to: |
+            type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        if: cache-buildx-restore
+        name: Move cache
+        run: |
+          rm -rf ${{ runner.temp }}/.buildx-cache
+          mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
+
   gradle-cache-prime:
     environment:
       name: ci-unsigned
