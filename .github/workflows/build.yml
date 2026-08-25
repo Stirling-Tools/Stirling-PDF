@@ -255,7 +255,7 @@ jobs:
   # for whatever did record. Advisory only - intentionally NOT in
   # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
-    if: always()
+    if: ${{!cancelled()}}
     needs:
       - build
       - playwright-e2e-live

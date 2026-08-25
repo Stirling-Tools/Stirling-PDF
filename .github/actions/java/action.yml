@@ -103,7 +103,7 @@ runs:
             jdk_archive="OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.3_9.tar.gz"
             jdk_sha256="7baab4d69a15554e119b86ff78d40e3fdc28819b5b322955c913cebfe3f6a37c"
           fi
-          jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}"
+          jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}-${architecture}"
           archive_path="${jdk_root}/${jdk_archive}"
           mkdir -p "${jdk_root}"
           if [ ! -f "${archive_path}" ]; then
