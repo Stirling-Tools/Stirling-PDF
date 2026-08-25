@@ -1063,14 +1063,14 @@ export async function addStirlingFileStubs(
           clearTimeout(stall);
           return;
         }
-        if (diskSync.status === "conflict") {
-          // Record the divergence as state, not just a toast: the file list
-          // badge and the next open both need to know it is unresolved.
-          lifecycleManager.updateStirlingFileStub(
-            fileId,
-            { diskConflictAt: Date.now() },
-            stateRef,
-          );
+        // The divergence is recorded as state below, not here:
+        // updateStirlingFileStub drops updates for a file that is not in
+        // filesRef yet, so marking the conflict before the bytes are published
+        // silently loses it - and with it the badge that is the only lasting
+        // sign of an unresolved fork once the toast has gone.
+        const conflictAt =
+          diskSync.status === "conflict" ? Date.now() : undefined;
+        if (conflictAt) {
           notifyDiskConflict(
             stub.name,
             () =>
@@ -1130,7 +1130,13 @@ export async function addStirlingFileStubs(
           // with no trace leaves them unable to tell whose version they have.
           notifyDiskReloaded(stub.name);
         } else {
-          lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
+          // Safe to stamp the conflict now: the file is in filesRef, so this
+          // update is no longer dropped and reaches storage as well as the UI.
+          lifecycleManager.updateStirlingFileStub(
+            fileId,
+            conflictAt ? { diskConflictAt: conflictAt } : {},
+            stateRef,
+          );
         }
 
         const needsProcessing =
