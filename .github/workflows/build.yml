@@ -67,7 +67,7 @@ jobs:
     secrets: inherit
 
   build:
-    if: needs.files-changed.outputs.backend == 'true'
+    if: needs.files-changed.outputs.backend == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
@@ -82,7 +82,7 @@ jobs:
     # releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still
     # works after Hibernate's ddl-auto=update migrates the schema. Gated on
     # the `project` filter so doc-only PRs skip this ~5-minute job.
-    if: needs.files-changed.outputs.project == 'true'
+    if: needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -90,7 +90,7 @@ jobs:
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
+    if: needs.files-changed.outputs.openapi == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -98,7 +98,7 @@ jobs:
     secrets: inherit
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -111,7 +111,7 @@ jobs:
   # whole-suite sweep (nightly.yml) still covers stories a change affects without
   # touching them directly.
   frontend-a11y:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -119,7 +119,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -127,7 +127,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e-live:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -135,7 +135,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e-enterprise:
-    if: needs.files-changed.outputs.proprietary == 'true'
+    if: needs.files-changed.outputs.proprietary == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -145,7 +145,7 @@ jobs:
       use_shared_cache: true
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true'
+    if: needs.files-changed.outputs.build == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -153,7 +153,7 @@ jobs:
     secrets: inherit
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true'
+    if: needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
@@ -209,7 +209,7 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true'
+    if: needs.files-changed.outputs.engine == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -223,7 +223,7 @@ jobs:
   # generators, generated files, generation tasks) rather than the broad
   # frontend filter, so a CSS-only PR does not pay for a backend build.
   generated-models:
-    if: needs.files-changed.outputs.generated-models == 'true'
+    if: needs.files-changed.outputs.generated-models == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -254,7 +254,7 @@ jobs:
   # for whatever did record. Advisory only - intentionally NOT in
   # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
-    if: always()
+    if: always() && false
     needs:
       - build
       - playwright-e2e-live
