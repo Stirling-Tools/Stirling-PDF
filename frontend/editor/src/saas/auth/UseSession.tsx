@@ -22,7 +22,10 @@ import {
   getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
-import { suspendWorkbenchSession } from "@app/services/workbenchSession";
+import {
+  resumeWorkbenchSession,
+  suspendWorkbenchSession,
+} from "@app/services/workbenchSession";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
@@ -366,6 +369,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("[Auth Debug] Sign out error:", error);
         setError(error);
+        // The sign-out did not happen and the session stands, so keep recording:
+        // otherwise a still-signed-in user silently stops persisting their workbench.
+        resumeWorkbenchSession();
       } else {
         console.debug("[Auth Debug] Signed out successfully");
         setSession(null);
@@ -373,6 +379,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("[Auth Debug] Unexpected error during sign out:", err);
       setError(err as AuthError);
+      resumeWorkbenchSession();
     }
   };
 
