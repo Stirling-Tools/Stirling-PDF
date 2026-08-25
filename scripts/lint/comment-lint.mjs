@@ -17,8 +17,8 @@
 //                                        --quiet       ...saying nothing unless it fails
 //   node scripts/lint/comment-lint.mjs --json          machine-readable findings
 //
-// Exits non-zero only for a blocking rule on a line in scope. Advisory findings
-// are printed and never fail a build. --all never fails, because the tree still
+// Exits non-zero for any finding on a line in scope: every rule blocks, because a
+// warning is a finding nobody acts on. --all never fails, because the tree still
 // has a backlog; it is the mode for working through it.
 
 import { execFileSync } from "node:child_process";
@@ -35,7 +35,6 @@ import {
   isTestPath,
   ruleLabel,
   RULES,
-  SEVERITY,
 } from "./comment-rules.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -65,11 +64,17 @@ const OXLINT_CONFIG = "frontend/oxlint.comments.config.ts";
 // oxlint exits non-zero normally, so the error reads as "no findings".
 const ARGV_BUDGET = 24_000;
 
-// Memoised base-version comment text, keyed by ref:path. Declared up here with
-// the other module constants because the top-level run starts before the
-// function bodies below it are reached, and a `const` further down would
-// still be in its temporal dead zone.
+// Every module constant lives in this block. The top-level run below starts
+// before any function body is reached, so a `const` declared further down is
+// still in its temporal dead zone when the first call touches it.
 const baseComments = new Map();
+
+// A Java char literal, which is the only thing a single quote can legitimately
+// open: one character, or one escape. An apostrophe in prose never matches, so
+// `/** The approver's team ... */` keeps its closing delimiter. Without this the
+// apostrophe opened a literal that never closed, the `*/` was blanked away, and
+// the scanner read the next 47 lines of code as one comment.
+const CHAR_LITERAL = /^'(\\[btnfr'"\\0]|\\u[0-9a-fA-F]{4}|[^'\\])'/;
 
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--")));
@@ -374,9 +379,20 @@ function blankStrings(line, language) {
       if (ch === quote) quote = null;
       continue;
     }
-    if (ch === '"' || ch === "'") {
+    if (ch === '"') {
       quote = ch;
       out += ch;
+      continue;
+    }
+    if (ch === "'") {
+      const literal = CHAR_LITERAL.exec(line.slice(i));
+      if (!literal) {
+        // Prose, not a literal. Leave it alone.
+        out += ch;
+        continue;
+      }
+      out += `'${" ".repeat(literal[0].length - 2)}'`;
+      i += literal[0].length - 1;
       continue;
     }
     if (ch === "/" && line[i + 1] === "/") return out + line.slice(i);
@@ -458,9 +474,9 @@ function parseOxlint(stdout) {
   }
 
   return (report.diagnostics ?? []).flatMap((d) => {
-    const parsed = /^(CMT\d{3})\s+(\S+)(\s+\(advisory\))?:\s*(.*)$/.exec(d.message);
+    const parsed = /^(CMT\d{3})\s+(\S+):\s*(.*)$/.exec(d.message);
     if (!parsed) return [];
-    const [, rule, , advisory, detail] = parsed;
+    const [, rule, , detail] = parsed;
     const span = d.labels?.[0]?.span;
     return [
       {
@@ -469,7 +485,7 @@ function parseOxlint(stdout) {
         column: span?.column ?? 1,
         rule,
         detail,
-        severity: advisory ? SEVERITY.WARN : RULES[rule].severity,
+        severity: RULES[rule].severity,
       },
     ];
   });
@@ -480,9 +496,6 @@ function publish(findings, scope) {
     process.stdout.write(`${JSON.stringify({ mode: scope.mode, findings }, null, 2)}\n`);
     return 0;
   }
-
-  const blocking = findings.filter((f) => f.severity === SEVERITY.ERROR);
-  const advisory = findings.filter((f) => f.severity === SEVERITY.WARN);
 
   if (findings.length === 0) {
     process.stdout.write(`comment-lint: clean (${scope.files.length} file${scope.files.length === 1 ? "" : "s"} in scope)\n`);
@@ -498,20 +511,18 @@ function publish(findings, scope) {
   for (const [file, group] of [...byFile.entries()].sort()) {
     process.stdout.write(`\n${file}\n`);
     for (const f of group.sort((a, b) => a.line - b.line)) {
-      const tag = f.severity === SEVERITY.ERROR ? "error  " : "advisory";
-      process.stdout.write(`  ${tag} ${String(f.line).padStart(5)}  ${ruleLabel(f.rule)}  ${f.detail}\n`);
+      process.stdout.write(`  ${String(f.line).padStart(5)}  ${ruleLabel(f.rule)}  ${f.detail}\n`);
     }
   }
 
   process.stdout.write(
-    `\ncomment-lint: ${blocking.length} blocking, ${advisory.length} advisory, across ${byFile.size} file${byFile.size === 1 ? "" : "s"}\n`,
+    `\ncomment-lint: ${findings.length} finding${findings.length === 1 ? "" : "s"} across ${byFile.size} file${byFile.size === 1 ? "" : "s"}\n`,
   );
 
   if (scope.mode === "all") {
     process.stdout.write("Report-only mode: --all never fails, so the standing backlog can be worked through in chunks.\n");
     return 0;
   }
-  if (blocking.length === 0) return 0;
 
   process.stdout.write(
     "\nThe standard is devGuide/CODE_COMMENTS.md. A comment must carry information the\n" +

@@ -1,24 +1,24 @@
 {
   "AaaTest.java": [],
   "allow.java": [],
+  "apostrophes.java": [
+    "20:CMT001:error"
+  ],
   "clean.java": [],
   "clean.ts": [],
   "deadcode.java": [
     "5:CMT005:error"
   ],
   "docs.java": [
-    "6:CMT007:warn"
+    "6:CMT007:error"
   ],
   "narration.java": [
-    "6:CMT003:warn",
-    "9:CMT003:warn",
-    "12:CMT008:warn",
-    "15:CMT004:warn"
+    "6:CMT003:error",
+    "9:CMT003:error"
   ],
   "narration.tsx": [
-    "2:CMT003:warn",
-    "5:CMT004:warn",
-    "8:CMT008:warn",
+    "2:CMT003:error",
+    "5:CMT004:error",
     "13:CMT001:error"
   ],
   "restates.java": [
@@ -38,6 +38,6 @@
   ],
   "strings.java": [],
   "todos.java": [
-    "6:CMT009:warn"
+    "6:CMT009:error"
   ]
 }

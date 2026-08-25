@@ -156,7 +156,6 @@ tasks:
     # would leave the frontend silently unchecked on CI.
     deps: [":frontend:install"]
     cmds:
-      - node scripts/lint/comment-lint.mjs --selftest --quiet
       - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
 
   comment-lint:branch:
@@ -175,8 +174,31 @@ tasks:
       BASE: '{{.BASE | default "origin/main"}}'
     deps: [":frontend:install"]
     cmds:
-      - node scripts/lint/comment-lint.mjs --selftest --quiet
       - node scripts/lint/comment-lint.mjs --since {{.BASE}}
+
+  comment-lint:ci:
+    desc: "Comment gate as CI runs it: fixture corpus, then the diff"
+    summary: |
+      The corpus checks the rules themselves rather than the code under review, so
+      it belongs on CI and not on every local commit. Run this before changing a
+      rule, and let CI run it on every pull request.
+    deps: [":frontend:install"]
+    cmds:
+      - node scripts/lint/comment-lint.mjs --selftest
+      - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
+
+  comment-lint:hook:
+    desc: "Comment gate for one file, as the editor hook calls it"
+    summary: |
+      Scoped to a single file and to the lines that differ from HEAD, which is what
+      an editor hook wants: tell the author about what they just wrote, not about
+      the file's history. Set FILE to an absolute or repo-relative path.
+
+      Not in the frontend-install dependency chain on purpose. This runs on every
+      file write, so it stays as short as it can be; if oxlint is missing the TS
+      half warns and skips.
+    cmds:
+      - node scripts/lint/comment-lint.mjs --since HEAD --json {{.FILE}}
 
   comment-lint:all:
     desc: "Report every comment finding in the tree (never fails)"

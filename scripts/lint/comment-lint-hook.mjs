@@ -25,7 +25,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const CLI = resolve(HERE, "comment-lint.mjs");
+// Invoked through Task so the taskfile stays the one place that defines how the
+// linter is called. Costs roughly 350ms per edit over calling node directly,
+// because Task here is the npm-wrapped launcher rather than the Go binary.
+const TASK_NAME = "pre-commit:comment-lint:hook";
 const REPO = resolve(HERE, "..", "..");
 const LINTABLE = /\.(tsx?|mts|cts|mjs|cjs|jsx?|java|py)$/;
 const OFF = new Set(["0", "off", "false", "no"]);
@@ -38,7 +41,7 @@ if (!file || !LINTABLE.test(file)) process.exit(0);
 
 let report;
 try {
-  report = JSON.parse(run([CLI, "--since", "HEAD", "--json", file]));
+  report = JSON.parse(run(file));
 } catch (error) {
   // The linter exits 2 when its engine is broken rather than when it found
   // something, which for the hook means it checked nothing. Say so once, as a
@@ -72,9 +75,17 @@ function readStdin() {
   }
 }
 
-function run(args) {
+function run(file) {
+  const task = process.platform === "win32" ? "task.cmd" : "task";
   try {
-    return execFileSync(process.execPath, args, { cwd: REPO, encoding: "utf8", maxBuffer: 1 << 26 });
+    // --output=interleaved because the root Taskfile sets `output: prefixed`,
+    // which would prepend the task name to every line of the JSON.
+    return execFileSync(task, [TASK_NAME, `FILE=${file}`, "--silent", "--output=interleaved"], {
+      cwd: REPO,
+      encoding: "utf8",
+      maxBuffer: 1 << 26,
+      shell: process.platform === "win32",
+    });
   } catch (error) {
     // The CLI exits non-zero when it finds something, and still prints the JSON.
     if (error.stdout) return error.stdout;

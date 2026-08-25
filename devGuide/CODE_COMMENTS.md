@@ -141,31 +141,34 @@ contract is not obvious from the type.
 
 ## The linter
 
-Two tasks, differing only in what counts as new:
-
 ```bash
 task comment-lint          # what the working tree adds over HEAD
 task comment-lint:branch   # what the branch adds over origin/main (BASE=<ref> to change)
+task pre-commit:comment-lint:ci    # the fixture corpus, then the diff
 ```
 
-The first is the pre-commit question, so it reports nothing once you have
+`comment-lint` is the pre-commit question, so it reports nothing once you have
 committed; on a CI pull request it compares against the target branch via
-`GITHUB_BASE_REF`. The second is the review question. `task comment-lint` also runs
-inside `task pre-commit`, and the same rules run as a Claude Code `PostToolUse`
-hook so an agent sees findings on the file it just wrote.
+`GITHUB_BASE_REF`. `comment-lint:branch` is the review question. The corpus checks
+the rules themselves rather than the code under review, so it runs on CI and before
+a rule change, not on every local commit.
+
+`task comment-lint` also runs inside `task pre-commit`, and the same rules run as a
+Claude Code `PostToolUse` hook so an agent sees findings on the file it just wrote.
 
 Findings are scoped to comment text that is new, not to lines git calls new, so
 reindenting or moving code does not resurface comments you did not write.
 
-The rules and their severities are the `RULES` object in
+The rules are the `RULES` object in
 [`scripts/lint/comment-rules.mjs`](../scripts/lint/comment-rules.mjs); the exact
 condition for each is the predicate of the same name in that file, with the
-reasoning for its severity beside it. `CMT001`, `CMT002` and `CMT005` block;
-everything else advises and never fails a build.
+readings it deliberately excludes beside it.
 
-Only rules whose every finding is wrong-by-construction block. The rest have a
-legitimate form no pattern can separate from the bad one, and blocking those would
-teach people to delete good comments to get a build green.
+**Every rule blocks.** A rule that only warns is a rule nobody acts on. So a
+finding you believe is wrong is a bug in the rule, not something to live with:
+narrow the rule, or mark the line and say why. `CMT007` is Javadoc and JSDoc only,
+because Python's parameter docs live in docstrings and the scanner reads `#`
+comments.
 
 Two engines, one rule set. `.ts`/`.tsx`/`.mjs` go to an oxlint JS plugin, so
 comments come from the parser: a `//` inside a string is not a comment, and JSX

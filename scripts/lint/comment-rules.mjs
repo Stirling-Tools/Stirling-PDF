@@ -9,21 +9,19 @@
 
 export const SEVERITY = { ERROR: "error", WARN: "warn" };
 
-// A rule blocks only when every finding it can produce is wrong by construction:
-// a comment echoing its own next line, decoration, dead code. The rest have a
-// legitimate form no pattern separates from the bad one, so they advise. Blocking
-// those would teach people to delete good comments to get a build green. The
-// reason each one advises is on the rule itself.
+// Every rule blocks. A rule that only warns is a rule nobody acts on, so a
+// finding that turns out to be wrong is a bug in the rule: narrow it, or mark the
+// line with comment-lint-allow and say why. Each rule below carries the readings
+// it deliberately excludes, which is where to start when one misfires.
 export const RULES = {
   CMT001: { name: "restates-code", severity: SEVERITY.ERROR },
   CMT002: { name: "banner", severity: SEVERITY.ERROR },
   CMT005: { name: "dead-code", severity: SEVERITY.ERROR },
-  CMT003: { name: "step-narration", severity: SEVERITY.WARN },
-  CMT004: { name: "diff-narration", severity: SEVERITY.WARN },
-  CMT006: { name: "block-too-long", severity: SEVERITY.WARN },
-  CMT007: { name: "doc-restates-signature", severity: SEVERITY.WARN },
-  CMT008: { name: "shouty-marker", severity: SEVERITY.WARN },
-  CMT009: { name: "unowned-todo", severity: SEVERITY.WARN },
+  CMT003: { name: "step-narration", severity: SEVERITY.ERROR },
+  CMT004: { name: "diff-narration", severity: SEVERITY.ERROR },
+  CMT006: { name: "block-too-long", severity: SEVERITY.ERROR },
+  CMT007: { name: "doc-restates-signature", severity: SEVERITY.ERROR },
+  CMT009: { name: "unowned-todo", severity: SEVERITY.ERROR },
 };
 
 export const MAX_BLOCK_LINES = 12;
@@ -100,8 +98,10 @@ export function isBanner(body) {
 
 // A bare "1." is not narration: numbered lists are how a doc block enumerates
 // conditions or alternatives, and matching them buries the rule in false
-// positives. Only the explicit step form and sequencing adverbs qualify.
-const STEP = /^(step\s*\d+\b|(then|next|finally|afterwards|lastly)\s*[,:]\s+\S)/i;
+// positives. Only the explicit step form and sequencing adverbs qualify, and the
+// number needs a separator after it, so a wrapped line beginning "step 2 unmounts
+// + remounts the panel" reads as the prose it is.
+const STEP = /^(step\s*\d+(\.\d+)?\s*[:.)\-]|(then|next|finally|afterwards|lastly)\s*[,:]\s+\S)/i;
 
 export function isStepNarration(body) {
   return STEP.test(body.trim());
@@ -115,7 +115,7 @@ export function isStepNarration(body) {
 //   "left over from"   - "no cards left over from the unfiltered grid"
 const DIFF_NARRATION = new RegExp(
   "\\b((this|it|we|they|that) used to|used to (be|live|sit)" +
-    "|no longer (needed|required|used|necessary|relevant)" +
+    "|(this|it|that|which|the (class|method|field|code|file|module|palette|banner)) is no longer (needed|used)" +
     "|renamed from|was (previously|formerly) (called|named|known)" +
     "|instead of the old|has been (removed|replaced) )",
   "i",
@@ -158,6 +158,13 @@ const RETURN_TAG = /^@returns?\s+(.+)$/;
 
 // Description adds nothing when every word in it already appears in the thing
 // being described. `@param blob - The blob to download` is the canonical case.
+//
+// Javadoc and JSDoc only. Python's equivalents (`:param x:`, or a name under
+// `Args:`) live inside docstrings, and the line scanner reads `#` comments rather
+// than tracking triple-quoted strings, so it never sees them. Covering Python
+// means teaching the scanner docstrings first; no native linter fills the gap
+// either, since ruff's D-rules and Checkstyle's NonEmptyAtclauseDescription check
+// that a description exists rather than whether it says anything.
 export function docRestatesSignature(body, ownerName = "") {
   const t = body.trim();
   const param = PARAM_TAG.exec(t);
@@ -178,23 +185,18 @@ export function docRestatesSignature(body, ownerName = "") {
   return false;
 }
 
-// "Note:" is left out: it is an ordinary discourse marker. These are the shouted
-// ones, which are the AI tell.
-const SHOUTY = /^(important|critical|warning|attention|caution|beware)\s*[:!]/i;
-
-// A marker earns its shout if it points at something checkable.
-const HAS_REFERENCE = /(#\d+|https?:\/\/|CVE-\d|GHSA-|[A-Z]{2,}-\d+)/;
-
-export function isShouty(body, runText = body) {
-  return SHOUTY.test(body.trim()) && !HAS_REFERENCE.test(runText);
-}
-
 // A TODO with no reference has nothing that will ever close it. An owner is not
 // accepted in its place: a username goes stale when someone leaves and means
 // nothing to an outside contributor, while an issue outlives both.
+//
 // Anchored at the start, so this catches a comment that *is* a TODO rather than
 // prose that mentions the word.
 const TODO_MARKER = /^(TODO|FIXME|HACK|XXX)\b/;
+
+// What counts as something that will close it: an issue, a link, or a security
+// advisory. Checked across the whole comment run, so the reference can sit on a
+// continuation line.
+const HAS_REFERENCE = /(#\d+|https?:\/\/|CVE-\d|GHSA-|[A-Z]{2,}-\d+)/;
 
 export function isUnownedTodo(body, runText = body) {
   return TODO_MARKER.test(body) && !HAS_REFERENCE.test(runText);
@@ -304,7 +306,11 @@ export function analyse({ lines, runs, isTestFile = false }) {
       continue; // Every other rule would pile onto the same block of dead code.
     }
 
-    if (!allowed.has("CMT006") && run.lines.length > MAX_BLOCK_LINES && run.startLine > FILE_HEADER_LINES) {
+    // A doc block is exempt: the standard asks for thorough contracts, so capping
+    // their length would argue with itself. This judges runs of implementation
+    // comment, where an essay means the code needs restructuring.
+    const essay = run.kind !== "doc" && run.lines.length > MAX_BLOCK_LINES && run.startLine > FILE_HEADER_LINES;
+    if (!allowed.has("CMT006") && essay) {
       report("CMT006", run.startLine, run.lines[0].column, `${run.lines.length} lines, limit ${MAX_BLOCK_LINES}`, runText);
     }
 
@@ -328,10 +334,6 @@ export function analyse({ lines, runs, isTestFile = false }) {
       }
       if (!allowed.has("CMT007") && docRestatesSignature(body, owner)) {
         report("CMT007", entry.line, entry.column, truncate(body), body);
-        continue;
-      }
-      if (!allowed.has("CMT008") && isShouty(body, runText)) {
-        report("CMT008", entry.line, entry.column, truncate(body), body);
         continue;
       }
       if (!allowed.has("CMT009") && isUnownedTodo(body, runText)) {
