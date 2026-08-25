@@ -305,5 +305,7 @@ jobs:
         name: Move cache
         run: |
           ls -la ${{ runner.temp }}/
+          ls -la ${{ runner.temp }}/.buildx-cache
+          ls -la ${{ runner.temp }}/.buildx-cache-new
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
