@@ -14,6 +14,7 @@ import { Chip } from "@app/ui/Chip";
 import { TextInput } from "@app/components/shared/TextInput";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { isMacLike } from "@app/utils/hotkeys";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
   useSuperSearch,
   SuperSearchResult,
@@ -382,6 +383,7 @@ export default function SuperSearch({
     }
   };
 
+  const isMobile = useIsMobile();
   const shortcutHint = useMemo(() => (isMacLike() ? "⌘K" : "Ctrl+K"), []);
 
   const toggleScope = useCallback(
@@ -636,7 +638,11 @@ export default function SuperSearch({
           ref={inputRef}
           value={query}
           onChange={setQuery}
-          placeholder={t("superSearch.placeholder", "Search Stirling")}
+          placeholder={
+            isMobile
+              ? t("superSearch.placeholderShort", "Search")
+              : t("superSearch.placeholder", "Search Stirling")
+          }
           icon={
             <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
           }

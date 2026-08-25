@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -20,12 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
@@ -48,11 +50,13 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
  * engine to classify the document against the built-in label set, and stores the engine's JSON
  * answer — minus the transport-only {@code outcome} field — in the custom Info-dictionary key
- * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF. Not intended for direct
- * client use.
+ * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF.
+ *
+ * <p>Published in the API spec rather than hidden, so the tool-model generator emits it and a
+ * pipeline can name it as a step like any other tool. Classification is a thing a pipeline does,
+ * not a thing only the Classification policy may do.
  */
 @Slf4j
-@Hidden
 @RestController
 @RequestMapping("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
@@ -99,18 +103,30 @@ public class ClassifyLabelController {
     }
 
     @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // PDF in, the same PDF out with a verdict on it, so a chain can be checked across this step.
+    @ToolIO(accepts = ToolFormat.PDF, produces = ToolFormat.PDF)
     @Operation(
             summary = "Classify a PDF and label its metadata",
             description =
                     "Reads the first two and last two pages, classifies the document via the AI"
                             + " engine, and stores the result in the StirlingPDFClassification"
-                            + " metadata field. Dispatched by the Classification policy; not"
-                            + " intended for direct client use.")
+                            + " metadata field. A document that already carries a verdict is"
+                            + " passed through untouched unless reclassify=true.")
     public ResponseEntity<Resource> classifyAndLabel(
-            @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+            @RequestParam("fileInput") MultipartFile fileInput,
+            @RequestParam(value = "reclassify", defaultValue = "false") boolean reclassify)
+            throws IOException {
         aiFeatureGate.requireClassify();
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
+
+            if (!reclassify && isClassified(document)) {
+                // Classifying twice costs a second engine call and charges for it, and a document
+                // that already carries a verdict has nothing new to learn. A pipeline can run this
+                // step over a mixed batch without paying for the ones already done.
+                log.debug("[classify-and-label] {} already classified; passing through", fileName);
+                return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
+            }
 
             List<EngineLabel> allowed = resolveAllowedLabels();
             if (allowed.isEmpty()) {
@@ -133,6 +149,25 @@ public class ClassifyLabelController {
 
             return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
         }
+    }
+
+    /**
+     * Whether a verdict is already on the document.
+     *
+     * <p>This only reads back what a previous run of this step wrote. It is not a statement that
+     * the verdict is trustworthy: the key is ordinary PDF metadata that whoever supplied the file
+     * can set. Skipping the engine on the strength of it is safe because the cost of being wrong is
+     * a missing re-classification, not a wrong decision. Anything that makes a SECURITY decision
+     * from this field - routing a document somewhere on the strength of its label, say - must
+     * classify with {@code reclassify=true} rather than trust what arrived.
+     */
+    private static boolean isClassified(PDDocument document) {
+        PDDocumentInformation info = document.getDocumentInformation();
+        if (info == null) {
+            return false;
+        }
+        String existing = info.getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
+        return existing != null && !existing.isBlank();
     }
 
     private List<AiPageText> extractWindow(PDDocument document) throws IOException {

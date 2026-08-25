@@ -72,7 +72,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -134,7 +134,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -677,6 +677,17 @@ jobs:
             fi
           done
 
+      - name: Cleanup temporary files
+        if: always()
+        shell: bash
+        run: |
+          rm -f certificate.p12
+          rm -rf "$RUNNER_TEMP/msi-verify"
+          if [ "${{ matrix.platform }}" = "macos-15" ]; then
+            security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          fi
+        continue-on-error: true
+
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
@@ -692,7 +703,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -784,7 +795,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
