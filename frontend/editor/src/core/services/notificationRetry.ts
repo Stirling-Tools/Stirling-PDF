@@ -219,7 +219,11 @@ export async function retryWithPassword(
 
   const fileIds = payload.multiFile
     ? payload.fileIds
-    : [forFileId && payload.fileIds.includes(forFileId) ? forFileId : payload.fileIds[0]];
+    : [
+        forFileId && payload.fileIds.includes(forFileId)
+          ? forFileId
+          : payload.fileIds[0],
+      ];
 
   return postWithPassword(payload.endpoint, payload.params, fileIds, password);
 }

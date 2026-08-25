@@ -532,5 +532,13 @@ export function useNotificationActions(): ClientActionRegistry {
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
-  }, [aiEnabled, canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
+  }, [
+    aiEnabled,
+    canOpenHere,
+    openInWorkbench,
+    fileContext,
+    fileStore,
+    navigate,
+    t,
+  ]);
 }

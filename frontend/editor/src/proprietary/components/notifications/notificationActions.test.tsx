@@ -18,9 +18,7 @@ const unlockLocalDocument = vi.fn();
 vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
   // The real stashMatchesKind: it is pure, and the guard it implements is part of
   // what these tests exercise.
-  ...(await importOriginal<
-    typeof import("@app/services/notificationRetry")
-  >()),
+  ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
   retryWithPassword: (...args: unknown[]) => retryWithPassword(...args),
   unlockLocalDocument: (...args: unknown[]) => unlockLocalDocument(...args),
 }));

@@ -29,9 +29,7 @@ vi.mock("@app/hooks/useNotifications", () => ({
 const loadRetryPayload = vi.fn();
 vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
   // The real stashMatchesKind: pure, and part of the behaviour under test.
-  ...(await importOriginal<
-    typeof import("@app/services/notificationRetry")
-  >()),
+  ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
   loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
@@ -45,9 +43,8 @@ vi.mock("@app/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
 
-const { useResolutionContinuation } = await import(
-  "@app/hooks/tools/shared/useResolutionContinuation"
-);
+const { useResolutionContinuation } =
+  await import("@app/hooks/tools/shared/useResolutionContinuation");
 
 function offer(
   id: string,
@@ -105,7 +102,9 @@ function toolRow(overrides: Partial<AppNotification> = {}): AppNotification {
   });
 }
 
-function unlockRun(overrides: Partial<SucceededToolRun> = {}): SucceededToolRun {
+function unlockRun(
+  overrides: Partial<SucceededToolRun> = {},
+): SucceededToolRun {
   return {
     operation: "removePassword",
     inputFileIds: ["f-locked"],

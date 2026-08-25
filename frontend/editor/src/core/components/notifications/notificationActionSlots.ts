@@ -59,7 +59,8 @@ export function promoteActions(
   // The best one withheld, so a row explains itself once rather than once per lost action.
   const withheldReasonKey =
     ranked.find(
-      (offer) => !offer.enabled && offer.disabledReasonKey && knowsAction(offer),
+      (offer) =>
+        !offer.enabled && offer.disabledReasonKey && knowsAction(offer),
     )?.disabledReasonKey ?? null;
 
   const renderable = ranked.filter(

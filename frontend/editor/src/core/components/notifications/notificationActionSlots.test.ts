@@ -265,7 +265,13 @@ describe("promoteActions", () => {
   });
 
   it("has nothing to promote when nothing survives", () => {
-    expect(promoteActions([], () => true, () => true)).toEqual({
+    expect(
+      promoteActions(
+        [],
+        () => true,
+        () => true,
+      ),
+    ).toEqual({
       primary: null,
       secondary: null,
       overflow: [],
