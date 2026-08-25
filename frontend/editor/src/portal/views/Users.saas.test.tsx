@@ -138,7 +138,7 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     await screen.findByText("sam.lee@acme.com");
     const panel = screen
       .getByText("Pending invitations")
-      .closest("section") as HTMLElement;
+      .closest("table") as HTMLElement;
     fireEvent.click(within(panel).getByRole("button", { name: "Cancel" }));
     // Confirm dialog -> DELETE /invitations/{id} -> refetch drops the invite.
     fireEvent.click(

@@ -39,7 +39,7 @@ jobs:
       pr_ref: ${{ steps.resolve.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -122,7 +122,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -495,7 +495,10 @@ jobs:
             });
 
   cleanup-v2-deployment:
-    environment: pr-preview
+    # Tearing a preview down is not a deployment - no deployment object.
+    environment:
+      name: pr-preview
+      deployment: false
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
@@ -505,7 +508,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -590,5 +593,5 @@ jobs:
       - name: Cleanup temporary files
         if: always()
         run: |
-          rm -f ../private.key
+          rm -f ../private.key docker-compose.yml storybook.tgz
         continue-on-error: true

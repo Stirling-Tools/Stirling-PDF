@@ -1,5 +1,0 @@
-workspace = "stirling-tools/stirling-pdf"
-
-[adapters.docker]
-tag = "stirling-docker-v2-backend"
-metadata-hints = ["tool=oci", "image=v2-backend"]

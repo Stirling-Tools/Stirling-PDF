@@ -7,7 +7,7 @@ ARG TARGETPLATFORM
 # Stage 1: Build and strip Calibre
 FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.4.0
+ARG CALIBRE_VERSION=9.13.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
       libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
       libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0 \
-      poppler-utils; \
+      poppler-utils tzdata; \
     rm -rf /var/lib/apt/lists/*; \
     \
     case "$(uname -m)" in \
@@ -218,8 +218,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Keep iso639.calibre_msgpack (required)
     # Keep only en-US.pak from qtwebengine_locales (required for WebEngine)
     rm -rf /opt/calibre/lib/qt6/translations; \
-    find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
-    find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+    if [ -d /opt/calibre/translations ]; then \
+      find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} + 2>/dev/null || true; \
+      if [ -d /opt/calibre/translations/qtwebengine_locales ]; then \
+        find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+      fi; \
+    fi; \
     if [ -d /opt/calibre/resources/localization ]; then \
       rm -rf /opt/calibre/resources/localization/locales.zip \
              /opt/calibre/resources/localization/stats.calibre_msgpack \
@@ -311,7 +315,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 FROM native-build-base AS gs-build
 ARG TARGETPLATFORM
 ARG ENABLE_CCACHE=false
-ARG GS_VERSION=10.06.0
+ARG GS_VERSION=10.07.1
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
@@ -338,8 +342,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 FROM native-build-base AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG ENABLE_CCACHE=false
-ARG QPDF_VERSION=12.3.2
-ARG IM_VERSION=7.1.2-13
+ARG QPDF_VERSION=12.4.0
+ARG IM_VERSION=7.1.2-29
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
@@ -385,7 +389,7 @@ RUN mkdir -p /magick-export/usr/bin \
 # Stage 4: Build Python venv
 FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS python-venv-build
 ARG TARGETPLATFORM
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -394,7 +398,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
-    /opt/venv/bin/pip install --prefer-binary --only-binary=:all: \
+    /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
       cryptography \
       "unoserver==${UNOSERVER_VERSION}" && \
@@ -417,7 +421,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
