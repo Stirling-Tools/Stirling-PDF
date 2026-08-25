@@ -183,6 +183,14 @@ jobs:
             --tag stirling-pdf-embedded:pr-test \
             .
 
+      - name: Cache Docker layers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       # PRs that did NOT change the base use the buildx container builder
       # (multi-platform + gha cache) against the published base image.
       - name: Build ${{ matrix.docker-rev }}
@@ -194,7 +202,9 @@ jobs:
           file: ./${{ matrix.docker-rev }}
           push: false
           # cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-from: type=local,src=${{ runner.temp }}/.buildx-cache
           # cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
+          cache-to: type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
@@ -212,6 +222,15 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        if: always()
+        name: Move cache
+        run: |
+          rm -rf ${{ runner.temp }}/.buildx-cache
+          mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
 
   test-build-unoserver-image:
     runs-on: ubuntu-latest
