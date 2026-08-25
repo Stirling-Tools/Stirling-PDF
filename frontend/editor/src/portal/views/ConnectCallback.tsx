@@ -6,6 +6,9 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Modal } from "@app/ui";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import "@portal/theme/base.css";
@@ -24,6 +27,7 @@ import "@portal/views/ConnectCallback.css";
 /** Where the SaaS approval page sends the admin back to. */
 function ConnectCallbackContent() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [state, setState] = useState<ConnectCallbackState>("working");
   const [sessionRestored, setSessionRestored] = useState(false);
   const nonceRef = useRef<string | null>(null);
@@ -66,16 +70,30 @@ function ConnectCallbackContent() {
       if (accessToken && refreshToken) {
         try {
           const supabase = ensureSaasSupabase();
-          if (supabase) {
+          // Logged, not swallowed: silently this resurfaces later as "session
+          // expired" on the usage page, with nothing tying it back here.
+          if (!supabase) {
+            console.warn(
+              "[account-link] no Supabase client: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY are not set for this build",
+            );
+          } else {
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
-            if (!error) setSessionRestored(true);
+            if (error) {
+              console.warn("[account-link] setSession failed:", error.message);
+            } else {
+              setSessionRestored(true);
+            }
           }
-        } catch {
-          // A failed session hand-off must not stop the link from completing.
+        } catch (e) {
+          console.warn("[account-link] session hand-off threw:", e);
         }
+      } else {
+        console.warn(
+          "[account-link] callback carried no tokens; the approval page had no session to pass",
+        );
       }
       await finish(nonce);
     })();
@@ -101,13 +119,26 @@ function ConnectCallbackContent() {
       .catch(() => setState("retry"));
   }, [state, finish]);
 
+  // Back to the portal, where the admin started, rather than the editor root.
+  const done = () => navigate(PORTAL_BASENAME, { replace: true });
+
   return (
-    <ConnectCallbackView
-      state={state}
-      sessionRestored={sessionRestored}
-      onRetry={onRetry}
-      onDone={() => navigate("/", { replace: true })}
-    />
+    <Modal
+      open
+      onClose={done}
+      width="md"
+      title={t(
+        "portal.accountLink.connect.callback.modalTitle",
+        "Connecting this server",
+      )}
+    >
+      <ConnectCallbackView
+        state={state}
+        sessionRestored={sessionRestored}
+        onRetry={onRetry}
+        onDone={done}
+      />
+    </Modal>
   );
 }
 

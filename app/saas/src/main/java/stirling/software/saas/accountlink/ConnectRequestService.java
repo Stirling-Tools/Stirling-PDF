@@ -24,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class ConnectRequestService {
 
-    /** Long enough for the approver to sign in, pick the right account and read the origin. */
-    static final int LIFETIME_MINUTES = 15;
+    /**
+     * Long enough for the approver to sign in, pick the right account and read the origin. Sized
+     * for the slowest real route: signing up, waiting for a confirmation email, and coming back.
+     */
+    static final int LIFETIME_MINUTES = 30;
 
     /** Creating a request needs no authentication, so the only brake is per-source volume. */
     static final int MAX_REQUESTS_PER_IP = 10;

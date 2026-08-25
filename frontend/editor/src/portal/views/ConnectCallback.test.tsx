@@ -130,10 +130,12 @@ describe("ConnectCallback", () => {
       teamId: null,
     });
 
-    const { getByRole } = renderPage();
+    const { getAllByRole } = renderPage();
 
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(1));
-    act(() => getByRole("button").click());
+    // Last button, not the only one: the modal shell contributes a close button.
+    const buttons = getAllByRole("button");
+    act(() => buttons[buttons.length - 1].click());
 
     // Retries the existing handshake; starting a new one would waste the
     // approval a human just gave.

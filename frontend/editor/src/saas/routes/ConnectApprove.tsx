@@ -5,6 +5,10 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { withBasePath } from "@app/constants/app";
+import {
+  clearPendingConnect,
+  rememberPendingConnect,
+} from "@app/routes/pendingConnect";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import {
@@ -18,6 +22,11 @@ import "@app/routes/connect.css";
 interface ApproveResponse {
   callbackUrl: string;
   nonce: string;
+}
+
+/** Wider than the view renders: only PENDING is still actionable. */
+interface ConnectLookup extends PendingConnect {
+  status: "PENDING" | "APPROVED" | "DENIED" | "CONSUMED";
 }
 
 /** Approve a self-hosted server's request to connect to a team. */
@@ -36,6 +45,12 @@ export default function ConnectApprove() {
 
   useDocumentMeta({ title: t("connect.meta.title", "Connect a server") });
 
+  // On arrival, not only when signed out: an approver who is already signed in can
+  // still be sent away to re-authenticate, and needs the same way back.
+  useEffect(() => {
+    if (requestId) rememberPendingConnect(requestId);
+  }, [requestId]);
+
   useEffect(() => {
     if (loading || session) return;
     const next = `/link${requestId ? `?request=${encodeURIComponent(requestId)}` : ""}`;
@@ -53,12 +68,20 @@ export default function ConnectApprove() {
     }
     void (async () => {
       try {
-        const res = await apiClient.get<PendingConnect>(
+        const res = await apiClient.get<ConnectLookup>(
           `/api/v1/account-link/connect/${encodeURIComponent(requestId)}`,
         );
+        // Approving a settled request fails server-side, so offering the form again
+        // would only produce a dead end.
+        if (res.data.status !== "PENDING") {
+          clearPendingConnect();
+          setPhase(res.data.status === "DENIED" ? "declined" : "notFound");
+          return;
+        }
         setPending(res.data);
         setPhase("confirm");
       } catch {
+        clearPendingConnect();
         setPhase("notFound");
       }
     })();
@@ -73,10 +96,12 @@ export default function ConnectApprove() {
       try {
         if (!approve) {
           await apiClient.post(`${path}/deny`);
+          clearPendingConnect();
           setPhase("declined");
           return;
         }
         const res = await apiClient.post<ApproveResponse>(`${path}/approve`);
+        clearPendingConnect();
         setPhase("redirecting");
         window.location.replace(returnUrl(res.data, session));
       } catch {

@@ -11,6 +11,7 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
+import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
@@ -111,6 +112,7 @@ export default function App() {
               >
                 <AppLayout>
                   <NonAuthBootstraps />
+                  <ResumePendingConnect />
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />

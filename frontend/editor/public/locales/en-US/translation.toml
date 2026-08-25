@@ -3240,7 +3240,7 @@ enterEmailConfirm = "To confirm deletion, please type your email address ({{emai
 guestDescription = "You are signed in as a guest. Consider upgrading your account above."
 label = "Overview"
 manageAccountPreferences = "Manage your account preferences"
-signedInAs = "Signed in as"
+signedInAs = "Account"
 title = "Account Settings"
 
 [config.account.profilePicture]
@@ -3356,20 +3356,19 @@ loading = "Checking this request."
 redirecting = "Returning you to your server."
 
 [connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
 approve = "Connect server"
-consequence = "Approving signs you in on that server and lets it use your team's plan. Do not approve an address you do not recognise."
 deny = "Decline"
 lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
-nameLabel = "Name it reported"
 originLabel = "Address"
-signedInAs = "You are signed in as"
+signedInAs = "Signed in as"
 switchAccount = "Use a different account"
 title = "Connect this server?"
 unknownAccount = "an unknown account"
 
 [connect.confirm.insecure]
 body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
-title = "Not an encrypted address"
+label = "Not an encrypted address"
 
 [connect.declined]
 body = "Nothing was connected. You can close this page."
@@ -6372,6 +6371,8 @@ title = "SaaS login not configured"
 
 [portal.accountLink.connect.callback]
 continue = "Continue"
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+modalTitle = "Connecting this server"
 retry = "Try again"
 signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
 working = "Finishing the connection."

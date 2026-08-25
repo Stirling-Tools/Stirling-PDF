@@ -56,6 +56,17 @@ export function ConnectCallbackView({
             "This server is connected to your Stirling account.",
           )}
         </Banner>
+        {/* The inverse of the failure note below: the link took but the sign-in did
+            not, which otherwise only shows up later as "session expired" on a page
+            that gives no hint the two are related. */}
+        {sessionRestored ? null : (
+          <p className="portal-connect-callback__note">
+            {t(
+              "portal.accountLink.connect.callback.linkedNotSignedIn",
+              "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in.",
+            )}
+          </p>
+        )}
         <Button variant="primary" onClick={onDone}>
           {t("portal.accountLink.connect.callback.continue", "Continue")}
         </Button>
