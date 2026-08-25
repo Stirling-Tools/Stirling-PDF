@@ -6,3 +6,7 @@ export async function fetchUsers(): Promise<UserSummary[]> {
   // A proxy can answer 200 with an HTML login page; callers assume an array.
   return Array.isArray(response.data) ? response.data : [];
 }
+
+export async function name(params: UserSummary) {
+  return params;
+}
