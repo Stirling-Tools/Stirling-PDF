@@ -231,6 +231,14 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
+      - name: Cache Docker layers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Build docker/unoserver/Dockerfile
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -239,8 +247,12 @@ jobs:
           file: ./docker/unoserver/Dockerfile
           push: false
           load: true
-          cache-from: type=gha,scope=stirling-unoserver
-          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          cache-from: |
+            type=gha,scope=stirling-unoserver
+            type=local,src=${{ runner.temp }}/.buildx-cache
+          cache-to: |
+            type=gha,mode=max,scope=stirling-unoserver
+            type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
           platforms: linux/amd64
           tags: stirling-unoserver:pr-test
           provenance: false
@@ -267,3 +279,11 @@ jobs:
           docker logs unoserver-smoke || true
           docker rm -f unoserver-smoke || true
           exit 1
+
+      - # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+        name: Move cache
+        run: |
+          rm -rf ${{ runner.temp }}/.buildx-cache
+          mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
