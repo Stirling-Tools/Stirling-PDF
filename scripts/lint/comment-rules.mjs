@@ -9,12 +9,11 @@
 
 export const SEVERITY = { ERROR: "error", WARN: "warn" };
 
-// Only three rules block, and which three was decided by measuring all eight
-// against this repo. CMT001/002/005 fire on things that are always wrong: a
-// comment echoing its own next line, decoration, dead code. The other five each
-// have a legitimate form no pattern can tell from the bad one, so blocking them
-// would teach people to delete good comments. devGuide/CODE_COMMENTS.md has the
-// cases.
+// A rule blocks only when every finding it can produce is wrong by construction:
+// a comment echoing its own next line, decoration, dead code. The rest have a
+// legitimate form no pattern separates from the bad one, so they advise. Blocking
+// those would teach people to delete good comments to get a build green. The
+// reason each one advises is on the rule itself.
 export const RULES = {
   CMT001: { name: "restates-code", severity: SEVERITY.ERROR },
   CMT002: { name: "banner", severity: SEVERITY.ERROR },
@@ -61,11 +60,9 @@ const PROSE_PUNCT = /[.;:?!]/;
 const MAX_RESTATE_WORDS = 6;
 
 // Arrange/Act/Assert and Given/When/Then label the shape of a test rather than
-// describe the line beneath, so they restate the code by this rule's letter and
-// carry real structure in practice. Every one of the 85 in this repo is a bare
-// marker, so the exemption is kept to that: the marker first, and nothing much
-// after it. `// Assert the cap is clamped to the tier maximum` is prose and
-// still judged on its merits.
+// describe the line beneath. Exempt only as a bare marker, so
+// `// Assert the cap is clamped to the tier maximum` is prose and judged on its
+// merits.
 const TEST_STRUCTURE = /^(arrange|act|assert|given|when|then)\b/i;
 const MAX_MARKER_WORDS = 4;
 
@@ -102,24 +99,20 @@ export function isBanner(body) {
 }
 
 // A bare "1." is not narration: numbered lists are how a doc block enumerates
-// conditions or alternatives, and the rule fired on 277 of those before this was
-// narrowed. Only the explicit step form and sequencing adverbs are left, and
-// those read as narration wherever they appear.
+// conditions or alternatives, and matching them buries the rule in false
+// positives. Only the explicit step form and sequencing adverbs qualify.
 const STEP = /^(step\s*\d+\b|(then|next|finally|afterwards|lastly)\s*[,:]\s+\S)/i;
 
 export function isStepNarration(body) {
   return STEP.test(body.trim());
 }
 
-// Deliberately narrow, and narrowed twice after measuring against the tree.
-//
-// Excluded on purpose, each after a false positive on a real file:
-//   "used to" alone       - "Used to clamp the live line" means "is used to"
-//   "used to call"        - same, "Used to call Supabase edge functions"
-//   "previously" alone    - "re-show even if previously dismissed" is runtime state
-//   "was called"          - collides with "verify getSession was called"
-//   "left over from"      - "no cards left over from the unfiltered grid"
-//   "kept for backwards…" - that is a legitimate why, not a changelog
+// Only phrases that can be talking about the code's own past. Excluded because
+// each has an innocent reading that fires constantly:
+//   "used to" alone    - "Used to clamp the live line" means "is used to"
+//   "previously" alone - "re-show even if previously dismissed" is runtime state
+//   "was called"       - collides with "verify getSession was called"
+//   "left over from"   - "no cards left over from the unfiltered grid"
 const DIFF_NARRATION = new RegExp(
   "\\b((this|it|we|they|that) used to|used to (be|live|sit)" +
     "|no longer (needed|required|used|necessary|relevant)" +
@@ -185,8 +178,8 @@ export function docRestatesSignature(body, ownerName = "") {
   return false;
 }
 
-// "Note:" is left out: it is an ordinary discourse marker and flagging 37 of
-// them bought nothing. These are the shouted ones, which are the AI tell.
+// "Note:" is left out: it is an ordinary discourse marker. These are the shouted
+// ones, which are the AI tell.
 const SHOUTY = /^(important|critical|warning|attention|caution|beware)\s*[:!]/i;
 
 // A marker earns its shout if it points at something checkable.
@@ -196,14 +189,11 @@ export function isShouty(body, runText = body) {
   return SHOUTY.test(body.trim()) && !HAS_REFERENCE.test(runText);
 }
 
-// A TODO with no reference has nothing that will ever close it. 21 of the 25 in
-// this repo name neither an issue nor an owner, which makes them the one comment
-// category demonstrably rotting today. An owner is deliberately not accepted in
-// its place: a username goes stale when someone leaves and means nothing to an
-// outside contributor, while an issue outlives both.
+// A TODO with no reference has nothing that will ever close it. An owner is not
+// accepted in its place: a username goes stale when someone leaves and means
+// nothing to an outside contributor, while an issue outlives both.
 // Anchored at the start, so this catches a comment that *is* a TODO rather than
-// one that mentions the word. The rule text above tripped the unanchored version,
-// which was a fair warning about how it would read ordinary prose.
+// prose that mentions the word.
 const TODO_MARKER = /^(TODO|FIXME|HACK|XXX)\b/;
 
 export function isUnownedTodo(body, runText = body) {

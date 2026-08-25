@@ -60,10 +60,9 @@ const FIXTURES_REL = "scripts/lint/fixtures/";
 const OXLINT_BIN = "frontend/node_modules/oxlint/bin/oxlint";
 const OXLINT_CONFIG = "frontend/oxlint.comments.config.ts";
 
-// Windows caps a command line at about 32k characters, and the tree holds ~2,900
-// TS/JS files, so passing them all at once is 188k and dies with ENAMETOOLONG.
-// The failure was silent: oxlint reported nothing and every frontend finding
-// vanished. Batching keeps each invocation well under the cap.
+// Windows caps a command line near 32k characters, which a whole-tree file list
+// exceeds by a wide margin. Unbatched it dies with ENAMETOOLONG, and silently:
+// oxlint exits non-zero normally, so the error reads as "no findings".
 const ARGV_BUDGET = 24_000;
 
 // Memoised base-version comment text, keyed by ref:path. Declared up here with
@@ -214,13 +213,12 @@ function collect(scope) {
 }
 
 // git marks a reindented or moved line as added, so line membership alone reports
-// comments nobody wrote: a whitespace-only reformat of PageImageLocator.java
-// turned a pre-existing banner into a blocking error. A finding only counts if
-// its comment text is not already in the file at the base.
+// comments nobody wrote. A finding only counts if its comment text is not already
+// in the file at the base.
 //
-// Cost is one `git show` per file, memoised. The one thing it gets wrong is
-// adding a further copy of an already-duplicated comment, which it treats as
-// pre-existing. That is the right way round for a blocking rule.
+// Cost is one `git show` per file, memoised. It gets one case wrong: adding a
+// further copy of an already-duplicated comment reads as pre-existing. That is the
+// right way round for a blocking rule.
 
 function existedAtBase(finding, base) {
   if (!base) return false;
