@@ -304,5 +304,6 @@ jobs:
         # https://github.com/moby/buildkit/issues/1896
         name: Move cache
         run: |
+          ls -la ${{ runner.temp }}/
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
