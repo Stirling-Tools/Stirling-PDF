@@ -1651,6 +1651,7 @@ export default function FileManagerView() {
               currentTab={currentTab}
               searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
+              onActionError={folders.setError}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}

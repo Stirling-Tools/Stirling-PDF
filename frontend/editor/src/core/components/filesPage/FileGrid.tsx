@@ -5,6 +5,7 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -21,7 +22,6 @@ import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
-import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
@@ -108,6 +108,51 @@ interface FileGridProps {
   onEmptyCreateFolder?: () => void;
   /** Non-null disables the New folder CTA with this reason as tooltip. */
   newFolderDisabledReason?: string | null;
+  /**
+   * Where a failed drop reports its message. A prop rather than the folder
+   * context so the grid renders without a FolderProvider (its tests do), and
+   * so no item needs a context subscription that memoization would then fight.
+   */
+  onActionError?: (message: string) => void;
+}
+
+/**
+ * One stable dispatch object shared by every card and row. The grid's
+ * callback props change identity on every parent render, and per-item
+ * closures would too — either defeats React.memo and turns each selection
+ * click or landed thumbnail into a full-list re-render. Items call these
+ * with their own id/record instead; the ref always sees the current props,
+ * so behavior stays live while identity stays fixed. Selection-aware
+ * behavior (drag payloads, multi-move) lives here too, so items never hold
+ * the selection Set — whose identity changes on every click — as a prop.
+ */
+interface FileGridActions {
+  selectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
+  openFolder: (id: FolderId) => void;
+  openFile: (file: StirlingFileStub) => void;
+  renameFolder: (folder: FolderRecord) => void;
+  deleteFolder: (folder: FolderRecord) => void;
+  changeFolderAppearance: (
+    folderId: FolderId,
+    appearance: { color?: string; icon?: string | null },
+  ) => void;
+  /**
+   * Failures surface here, not in the item: the memoized folder items would
+   * otherwise each need the folder context for its error banner, and one
+   * context subscription inside an item undoes what the memo buys.
+   */
+  dropFilesOnFolder: (fileIds: FileId[], target: FolderId) => void;
+  dropFolderOnFolder: (folderId: FolderId, target: FolderId) => void;
+  removeFile: (id: FileId) => void;
+  /** Move this file — or the whole selection when it is part of one. */
+  requestMoveFile: (id: FileId) => void;
+  /** Drag payload for this file — or the whole selection when selected. */
+  fileDragPayload: (id: FileId) => string;
+  saveToServer: (file: StirlingFileStub) => void;
+  versionHistory: (file: StirlingFileStub) => void;
+  downloadFile: (file: StirlingFileStub) => void;
+  renameFile: (file: StirlingFileStub) => void;
+  duplicateFile: (file: StirlingFileStub) => void;
 }
 
 export function FileGrid(props: FileGridProps & { loading?: boolean }) {
@@ -122,6 +167,74 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     onEmptyCreateFolder,
     newFolderDisabledReason,
   } = props;
+
+  const latest = useRef(props);
+  latest.current = props;
+  const { t } = useTranslation();
+  const translateRef = useRef(t);
+  translateRef.current = t;
+  // One subscription for the whole grid: every row calling the badge hook
+  // would rebuild the full badge map per row on any file or run change. The
+  // hook keeps per-file array identity stable across rebuilds, so memoized
+  // items re-render only when their own badges change.
+  const policyBadges = usePolicyFileBadges();
+  const actions = useMemo<FileGridActions>(() => {
+    const reportDrop = (err: unknown, label: string) => {
+      console.error(`[FileGrid] ${label}`, err);
+      const translate = translateRef.current;
+      latest.current.onActionError?.(
+        err instanceof Error
+          ? translate("filesPage.error.actionFailedDetail", {
+              action: label,
+              message: err.message,
+              defaultValue: `Could not ${label}: ${err.message}`,
+            })
+          : translate("filesPage.error.actionFailed", {
+              action: label,
+              defaultValue: `Could not ${label}.`,
+            }),
+      );
+    };
+    return {
+      selectFile: (id, shiftKey, ctrlKey) =>
+        latest.current.onSelectFile(id, shiftKey, ctrlKey),
+      openFolder: (id) => latest.current.onOpenFolder(id),
+      openFile: (file) => latest.current.onOpenFile(file),
+      renameFolder: (folder) => latest.current.onRenameFolder(folder),
+      deleteFolder: (folder) => latest.current.onDeleteFolder(folder),
+      changeFolderAppearance: (folderId, appearance) =>
+        latest.current.onChangeFolderAppearance(folderId, appearance),
+      dropFilesOnFolder: (fileIds, target) => {
+        Promise.resolve(latest.current.onMoveFiles(fileIds, target)).catch(
+          (err) => reportDrop(err, "move files into folder"),
+        );
+      },
+      dropFolderOnFolder: (folderId, target) => {
+        Promise.resolve(latest.current.onMoveFolder(folderId, target)).catch(
+          (err) => reportDrop(err, "move folder"),
+        );
+      },
+      removeFile: (id) => latest.current.onRemoveFiles([id]),
+      requestMoveFile: (id) => {
+        const selected = latest.current.selectedFileIds;
+        latest.current.onPromptMoveFiles(
+          selected.has(id) ? Array.from(selected) : [id],
+        );
+      },
+      fileDragPayload: (id) => {
+        const selected = latest.current.selectedFileIds;
+        return serialiseFilesPageDragPayload({
+          kind: "files",
+          fileIds: selected.has(id) ? Array.from(selected) : [id],
+        });
+      },
+      saveToServer: (file) => latest.current.onSaveToServer?.(file),
+      versionHistory: (file) => latest.current.onVersionHistory?.(file),
+      downloadFile: (file) => latest.current.onDownloadFile?.(file),
+      renameFile: (file) => latest.current.onRenameFile?.(file),
+      duplicateFile: (file) => latest.current.onDuplicateFile?.(file),
+    };
+  }, []);
 
   if (loading && entries.length === 0) {
     return <SkeletonGrid viewMode={viewMode} />;
@@ -144,7 +257,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     if (viewMode === "list" && searchActive) {
       return (
         <>
-          <ListView {...props} />
+          <ListView {...props} actions={actions} policyBadges={policyBadges} />
           {emptyState}
         </>
       );
@@ -153,9 +266,11 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }
 
   if (viewMode === "list") {
-    return <ListView {...props} />;
+    return (
+      <ListView {...props} actions={actions} policyBadges={policyBadges} />
+    );
   }
-  return <GridView {...props} />;
+  return <GridView {...props} actions={actions} policyBadges={policyBadges} />;
 }
 
 function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
@@ -375,21 +490,23 @@ function EmptyState({
   );
 }
 
-function GridView(props: FileGridProps) {
-  const {
-    entries,
-    selectedFileIds,
-    activeWorkspaceFileIds,
-    onSelectFile,
-    onOpenFolder,
-    onOpenFile,
-    onMoveFiles,
-    onMoveFolder,
-    onRenameFolder,
-    onDeleteFolder,
-    onChangeFolderAppearance,
-  } = props;
-  const menuHandlersFor = useFileMenuHandlers(props);
+function GridView({
+  entries,
+  selectedFileIds,
+  activeWorkspaceFileIds,
+  onSaveToServer,
+  onVersionHistory,
+  onDownloadFile,
+  onRenameFile,
+  onDuplicateFile,
+  saveToServerDisabledReason,
+  serverReachable,
+  actions,
+  policyBadges,
+}: FileGridProps & {
+  actions: FileGridActions;
+  policyBadges: Map<string, FileItemPolicyRef[]>;
+}) {
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
@@ -400,17 +517,8 @@ function GridView(props: FileGridProps) {
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
-              selectedFileIds={selectedFileIds}
-              onOpen={() => onOpenFolder(entry.folder!.id)}
-              onRename={() => onRenameFolder(entry.folder!)}
-              onDelete={() => onDeleteFolder(entry.folder!)}
-              onChangeAppearance={(appearance) =>
-                onChangeFolderAppearance(entry.folder!.id, appearance)
-              }
-              onMoveFiles={(fileIds) => onMoveFiles(fileIds, entry.folder!.id)}
-              onMoveFolder={(folderId) =>
-                onMoveFolder(folderId, entry.folder!.id)
-              }
+              serverReachable={serverReachable ?? false}
+              actions={actions}
             />
           );
         }
@@ -424,13 +532,15 @@ function GridView(props: FileGridProps) {
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              selectedFileIds={selectedFileIds}
               multiSelectActive={selectedFileIds.size >= 2}
-              onClick={(e) =>
-                onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
-              }
-              onDoubleClick={() => onOpenFile(entry.file!)}
-              {...menuHandlersFor(entry.file)}
+              downloadAvailable={Boolean(onDownloadFile)}
+              renameAvailable={Boolean(onRenameFile)}
+              duplicateAvailable={Boolean(onDuplicateFile)}
+              saveToServerAvailable={Boolean(onSaveToServer)}
+              versionHistoryAvailable={Boolean(onVersionHistory)}
+              saveToServerDisabledReason={saveToServerDisabledReason}
+              badges={policyBadges.get(entry.file.id) ?? NO_BADGES}
+              actions={actions}
             />
           );
         }
@@ -445,58 +555,33 @@ interface FolderCardProps {
   fileCount: number;
   /** Subtitle for search results outside current folder. */
   parentPath?: string;
-  selectedFileIds: Set<FileId>;
-  onOpen: () => void;
-  onRename: () => void;
-  onDelete: () => void;
-  onChangeAppearance: (appearance: {
-    color?: string;
-    icon?: string | null;
-  }) => void;
-  onMoveFiles: (fileIds: FileId[]) => void | Promise<void>;
-  onMoveFolder: (folderId: FolderId) => void | Promise<void>;
+  serverReachable: boolean;
+  actions: FileGridActions;
 }
 
-function FolderCard({
+const FolderCard = React.memo(function FolderCard({
   folder,
   fileCount,
   parentPath,
-  onOpen,
-  onRename,
-  onDelete,
-  onChangeAppearance,
-  onMoveFiles,
-  onMoveFolder,
+  serverReachable,
+  actions,
 }: FolderCardProps) {
   const { t } = useTranslation();
-  const { serverReachable, setError } = useFolders();
+  const onOpen = () => actions.openFolder(folder.id);
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
   );
-  const surfaceDrop = (err: unknown, label: string) => {
-    console.error(`[FolderCard] ${label}`, err);
-    setError(
-      err instanceof Error
-        ? `Could not ${label}: ${err.message}`
-        : `Could not ${label}.`,
-    );
-  };
   const kebabRef = useRef<HTMLButtonElement>(null);
   const { handlers: dropHandlers, isOver: isDropTarget } = useDropTarget({
     dragType: FILES_PAGE_DRAG_TYPE,
     onDrop: (e) => {
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
-      // Surface rejections instead of silent no-op on IDB failures.
       if (payload.kind === "files") {
-        Promise.resolve(onMoveFiles(payload.fileIds)).catch((err) =>
-          surfaceDrop(err, "move files into folder"),
-        );
+        actions.dropFilesOnFolder(payload.fileIds, folder.id);
       } else if (payload.kind === "folder") {
-        Promise.resolve(onMoveFolder(payload.folderId)).catch((err) =>
-          surfaceDrop(err, "move folder"),
-        );
+        actions.dropFolderOnFolder(payload.folderId, folder.id);
       }
     },
   });
@@ -517,9 +602,7 @@ function FolderCard({
         e.dataTransfer.effectAllowed = "move";
       }}
       {...dropHandlers}
-      className={`files-page-card is-folder${
-        isDropTarget ? " is-drop-target" : ""
-      }`}
+      className={`files-page-card is-folder${isDropTarget ? " is-drop-target" : ""}`}
       onDoubleClick={onOpen}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -579,7 +662,7 @@ function FolderCard({
             </Menu.Item>
             <Menu.Item
               leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
+              onClick={() => actions.renameFolder(folder)}
               disabled={!serverReachable}
               title={!serverReachable ? offlineHint : undefined}
             >
@@ -591,14 +674,16 @@ function FolderCard({
             </Menu.Label>
             <FolderAppearancePicker
               folder={folder}
-              onChange={onChangeAppearance}
+              onChange={(appearance) =>
+                actions.changeFolderAppearance(folder.id, appearance)
+              }
               disabled={!serverReachable}
             />
             <Menu.Divider />
             <Menu.Item
               color="red"
               leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
+              onClick={() => actions.deleteFolder(folder)}
               disabled={!serverReachable}
               title={!serverReachable ? offlineHint : undefined}
             >
@@ -609,50 +694,47 @@ function FolderCard({
       </div>
     </div>
   );
-}
+});
 
-/** Shield badges for the policies that have run on a file. */
-function PolicyBadges({ fileId }: { fileId: string }) {
-  const badges = usePolicyFileBadges().get(fileId) ?? [];
-  return <PolicyBadgeRow policies={badges} />;
-}
+/** Stable empty value so badge-less rows keep identical props across renders. */
+const NO_BADGES: FileItemPolicyRef[] = [];
 
 /** Per-file actions. Shared verbatim by the grid card and the list row, and
  *  kept in step with the file sidebar's kebab so both surfaces offer the same. */
 interface FileActionsMenuProps {
   file: StirlingFileStub;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
-  onOpen: () => void;
-  onMove: () => void;
-  onRemove: () => void;
-  onDownload?: () => void;
-  onRename?: () => void;
-  onDuplicate?: () => void;
-  onSaveToServer?: () => void;
-  onVersionHistory?: () => void;
+  /** Download / rename / duplicate menu items offered. */
+  downloadAvailable: boolean;
+  renameAvailable: boolean;
+  duplicateAvailable: boolean;
+  /** Kebab Save to server offered; only fires when file is local-only. */
+  saveToServerAvailable: boolean;
+  /** Version-history menu item offered; shown only when file has >1 version. */
+  versionHistoryAvailable: boolean;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
+  actions: FileGridActions;
 }
 
 function FileActionsMenu({
   file,
   triggerRef,
-  onOpen,
-  onMove,
-  onRemove,
-  onDownload,
-  onRename,
-  onDuplicate,
-  onSaveToServer,
-  onVersionHistory,
+  downloadAvailable,
+  renameAvailable,
+  duplicateAvailable,
+  saveToServerAvailable,
+  versionHistoryAvailable,
   saveToServerDisabledReason,
+  actions,
 }: FileActionsMenuProps) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const DownloadIcon = useFileActionIcons().download;
   const showSaveToServer =
-    Boolean(onSaveToServer) && file.remoteStorageId == null;
+    saveToServerAvailable && file.remoteStorageId == null;
   const showVersionHistory =
-    Boolean(onVersionHistory) && (file.versionNumber ?? 1) > 1;
+    versionHistoryAvailable && (file.versionNumber ?? 1) > 1;
   return (
     <Menu shadow="md" position="bottom-end" withinPortal width={220}>
       <Menu.Target>
@@ -672,7 +754,7 @@ function FileActionsMenu({
           leftSection={<OpenInNewIcon fontSize="small" />}
           onClick={(e) => {
             e.stopPropagation();
-            onOpen();
+            actions.openFile(file);
           }}
         >
           {t("filesPage.addToWorkspace", "Add to workspace")}
@@ -682,44 +764,46 @@ function FileActionsMenu({
           leftSection={<DriveFileMoveIcon fontSize="small" />}
           onClick={(e) => {
             e.stopPropagation();
-            onMove();
+            actions.requestMoveFile(file.id);
           }}
           data-testid="file-menu-move-to"
         >
           {t("filesPage.moveTo", "Move to…")}
         </Menu.Item>
 
-        {(onDownload || onRename || onDuplicate) && <Menu.Divider />}
-        {onDownload && (
+        {(downloadAvailable || renameAvailable || duplicateAvailable) && (
+          <Menu.Divider />
+        )}
+        {downloadAvailable && (
           <Menu.Item
             leftSection={<DownloadIcon fontSize="small" />}
             onClick={(e) => {
               e.stopPropagation();
-              onDownload();
+              actions.downloadFile(file);
             }}
             data-testid="file-menu-download"
           >
             {terminology.download}
           </Menu.Item>
         )}
-        {onRename && (
+        {renameAvailable && (
           <Menu.Item
             leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
             onClick={(e) => {
               e.stopPropagation();
-              onRename();
+              actions.renameFile(file);
             }}
             data-testid="file-menu-rename"
           >
             {t("filesPage.rename", "Rename")}
           </Menu.Item>
         )}
-        {onDuplicate && (
+        {duplicateAvailable && (
           <Menu.Item
             leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
             onClick={(e) => {
               e.stopPropagation();
-              onDuplicate();
+              actions.duplicateFile(file);
             }}
             data-testid="file-menu-duplicate"
           >
@@ -730,7 +814,7 @@ function FileActionsMenu({
         {(showSaveToServer || showVersionHistory) && <Menu.Divider />}
         {/* Per-file Save to server; shown for local-only files. When
             storage is off it stays visible but disabled with a tooltip. */}
-        {showSaveToServer && onSaveToServer && (
+        {showSaveToServer && (
           <Tooltip
             label={saveToServerDisabledReason}
             disabled={!saveToServerDisabledReason}
@@ -744,7 +828,7 @@ function FileActionsMenu({
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={(e) => {
                 e.stopPropagation();
-                onSaveToServer();
+                actions.saveToServer(file);
               }}
               style={
                 saveToServerDisabledReason
@@ -756,12 +840,12 @@ function FileActionsMenu({
             </Menu.Item>
           </Tooltip>
         )}
-        {showVersionHistory && onVersionHistory && (
+        {showVersionHistory && (
           <Menu.Item
             leftSection={<HistoryIcon fontSize="small" />}
             onClick={(e) => {
               e.stopPropagation();
-              onVersionHistory();
+              actions.versionHistory(file);
             }}
           >
             {t("filesPage.versionHistory", "Version history")}
@@ -774,7 +858,7 @@ function FileActionsMenu({
           leftSection={<DeleteIcon fontSize="small" />}
           onClick={(e) => {
             e.stopPropagation();
-            onRemove();
+            actions.removeFile(file.id);
           }}
         >
           {t("filesPage.remove", "Delete")}
@@ -784,77 +868,42 @@ function FileActionsMenu({
   );
 }
 
-/** Binds one file's kebab handlers, so grid and list wire them identically. */
-function useFileMenuHandlers(
-  props: FileGridProps,
-): (file: StirlingFileStub) => FileMenuHandlers {
-  const {
-    selectedFileIds,
-    onRemoveFiles,
-    onPromptMoveFiles,
-    onSaveToServer,
-    onVersionHistory,
-    onDownloadFile,
-    onRenameFile,
-    onDuplicateFile,
-    saveToServerDisabledReason,
-  } = props;
-  return (file: StirlingFileStub) => ({
-    onRemove: () => onRemoveFiles([file.id]),
-    // A move acts on the whole selection when this file is part of it.
-    onMove: () =>
-      onPromptMoveFiles(
-        selectedFileIds.has(file.id) ? Array.from(selectedFileIds) : [file.id],
-      ),
-    onDownload: onDownloadFile ? () => onDownloadFile(file) : undefined,
-    onRename: onRenameFile ? () => onRenameFile(file) : undefined,
-    onDuplicate: onDuplicateFile ? () => onDuplicateFile(file) : undefined,
-    onSaveToServer: onSaveToServer ? () => onSaveToServer(file) : undefined,
-    onVersionHistory: onVersionHistory
-      ? () => onVersionHistory(file)
-      : undefined,
-    saveToServerDisabledReason,
-  });
-}
-
-/** Per-file kebab handlers, shared by the card and row wrappers. */
-interface FileMenuHandlers {
-  onRemove: () => void;
-  onMove: () => void;
-  onDownload?: () => void;
-  onRename?: () => void;
-  onDuplicate?: () => void;
-  /** Kebab Save to server; only fires when file is local-only. */
-  onSaveToServer?: () => void;
-  /** Open the version-history modal; shown only when file has >1 version. */
-  onVersionHistory?: () => void;
-  /** When set, the kebab Save to server is disabled with this tooltip. */
-  saveToServerDisabledReason?: string | null;
-}
-
-interface FileCardProps extends FileMenuHandlers {
+interface FileCardProps {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
   /** Subtitle for search results outside current folder. */
   parentPath?: string;
-  selectedFileIds: Set<FileId>;
   /** Shows the checkbox once 2+ files are selected. */
   multiSelectActive: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  onDoubleClick: () => void;
+  /** Download / rename / duplicate menu items offered. */
+  downloadAvailable: boolean;
+  renameAvailable: boolean;
+  duplicateAvailable: boolean;
+  /** Kebab Save to server offered; only fires when file is local-only. */
+  saveToServerAvailable: boolean;
+  /** Version-history menu item offered; shown only when file has >1 version. */
+  versionHistoryAvailable: boolean;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
+  badges: FileItemPolicyRef[];
+  actions: FileGridActions;
 }
 
-function FileCard({
+const FileCard = React.memo(function FileCard({
   file,
   parentPath,
   isSelected,
   isInWorkspace,
-  selectedFileIds,
   multiSelectActive,
-  onClick,
-  onDoubleClick,
-  ...menuHandlers
+  downloadAvailable,
+  renameAvailable,
+  duplicateAvailable,
+  saveToServerAvailable,
+  versionHistoryAvailable,
+  saveToServerDisabledReason,
+  badges,
+  actions,
 }: FileCardProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -864,16 +913,25 @@ function FileCard({
     [file.lastModified],
   );
 
+  const onClick = useCallback(
+    (e: React.MouseEvent) =>
+      actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey),
+    [actions, file.id],
+  );
+  const onDoubleClick = useCallback(
+    () => actions.openFile(file),
+    [actions, file],
+  );
+
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      const fileIds = isSelected ? Array.from(selectedFileIds) : [file.id];
       e.dataTransfer.setData(
         FILES_PAGE_DRAG_TYPE,
-        serialiseFilesPageDragPayload({ kind: "files", fileIds }),
+        actions.fileDragPayload(file.id),
       );
       e.dataTransfer.effectAllowed = "move";
     },
-    [file.id, isSelected, selectedFileIds],
+    [actions, file.id],
   );
 
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
@@ -908,9 +966,7 @@ function FileCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") onDoubleClick();
       }}
-      className={`files-page-card${isSelected ? " is-selected" : ""}${
-        isInWorkspace ? " is-in-workspace" : ""
-      }`}
+      className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
     >
       {isInWorkspace && (
         <span
@@ -931,14 +987,9 @@ function FileCard({
           <Checkbox
             checked={isSelected}
             onClick={(e) => {
-              // Synthesise ctrl-click so parent takes the toggle branch.
+              // Ctrl-click semantics: toggle this file in/out of the selection.
               e.stopPropagation();
-              onClick({
-                ...e,
-                shiftKey: false,
-                ctrlKey: true,
-                metaKey: true,
-              });
+              actions.selectFile(file.id, false, true);
             }}
             onChange={() => {
               /* handled by onClick */
@@ -982,44 +1033,48 @@ function FileCard({
             ·
           </span>
           <span>{fileDate}</span>
-          <PolicyBadges fileId={file.id} />
+          <PolicyBadgeRow policies={badges} />
         </div>
       </div>
       <div className="files-page-card-actions">
         <FileActionsMenu
           file={file}
           triggerRef={kebabRef}
-          onOpen={onDoubleClick}
-          {...menuHandlers}
+          downloadAvailable={downloadAvailable}
+          renameAvailable={renameAvailable}
+          duplicateAvailable={duplicateAvailable}
+          saveToServerAvailable={saveToServerAvailable}
+          versionHistoryAvailable={versionHistoryAvailable}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          actions={actions}
         />
       </div>
     </div>
   );
-}
+});
 
-function ListView(
-  props: FileGridProps & {
-    sortMode?: FilesPageSortMode;
-    onChangeSortMode?: (next: FilesPageSortMode) => void;
-  },
-) {
-  const {
-    entries,
-    selectedFileIds,
-    activeWorkspaceFileIds,
-    onSelectFile,
-    onSetSelection,
-    onOpenFolder,
-    onOpenFile,
-    onMoveFiles,
-    onMoveFolder,
-    onRenameFolder,
-    onDeleteFolder,
-    onChangeFolderAppearance,
-    sortMode,
-    onChangeSortMode,
-  } = props;
-  const menuHandlersFor = useFileMenuHandlers(props);
+function ListView({
+  entries,
+  selectedFileIds,
+  activeWorkspaceFileIds,
+  onSetSelection,
+  onSaveToServer,
+  onVersionHistory,
+  onDownloadFile,
+  onRenameFile,
+  onDuplicateFile,
+  saveToServerDisabledReason,
+  sortMode,
+  onChangeSortMode,
+  serverReachable,
+  actions,
+  policyBadges,
+}: FileGridProps & {
+  sortMode?: FilesPageSortMode;
+  onChangeSortMode?: (next: FilesPageSortMode) => void;
+  actions: FileGridActions;
+  policyBadges: Map<string, FileItemPolicyRef[]>;
+}) {
   const { t } = useTranslation();
 
   // Tri-state header checkbox state - computed from current entries.
@@ -1116,16 +1171,8 @@ function ListView(
               folder={entry.folder}
               fileCount={entry.folderFileCount ?? 0}
               parentPath={entry.parentPath}
-              onOpen={() => onOpenFolder(entry.folder!.id)}
-              onRename={() => onRenameFolder(entry.folder!)}
-              onDelete={() => onDeleteFolder(entry.folder!)}
-              onChangeAppearance={(appearance) =>
-                onChangeFolderAppearance(entry.folder!.id, appearance)
-              }
-              onDropFiles={(fileIds) => onMoveFiles(fileIds, entry.folder!.id)}
-              onDropFolder={(folderId) =>
-                onMoveFolder(folderId, entry.folder!.id)
-              }
+              serverReachable={serverReachable ?? false}
+              actions={actions}
             />
           );
         }
@@ -1139,13 +1186,15 @@ function ListView(
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
               }
-              selectedFileIds={selectedFileIds}
               multiSelectActive={selectedFileIds.size >= 2}
-              onClick={(e) =>
-                onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
-              }
-              onOpen={() => onOpenFile(entry.file!)}
-              {...menuHandlersFor(entry.file)}
+              downloadAvailable={Boolean(onDownloadFile)}
+              renameAvailable={Boolean(onRenameFile)}
+              duplicateAvailable={Boolean(onDuplicateFile)}
+              saveToServerAvailable={Boolean(onSaveToServer)}
+              versionHistoryAvailable={Boolean(onVersionHistory)}
+              saveToServerDisabledReason={saveToServerDisabledReason}
+              badges={policyBadges.get(entry.file.id) ?? NO_BADGES}
+              actions={actions}
             />
           );
         }
@@ -1159,49 +1208,23 @@ interface FolderRowProps {
   folder: FolderRecord;
   fileCount: number;
   parentPath?: string;
-  onOpen: () => void;
-  onRename: () => void;
-  onDelete: () => void;
-  onChangeAppearance: (appearance: {
-    color?: string;
-    icon?: string | null;
-  }) => void;
-  onDropFiles: (fileIds: FileId[]) => void | Promise<void>;
-  onDropFolder: (folderId: FolderId) => void | Promise<void>;
+  serverReachable: boolean;
+  actions: FileGridActions;
 }
 
-function FolderRow({
+const FolderRow = React.memo(function FolderRow({
   folder,
   fileCount,
   parentPath,
-  onOpen,
-  onRename,
-  onDelete,
-  onChangeAppearance,
-  onDropFiles,
-  onDropFolder,
+  serverReachable,
+  actions,
 }: FolderRowProps) {
   const { t } = useTranslation();
-  const { serverReachable, setError } = useFolders();
+  const onOpen = () => actions.openFolder(folder.id);
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
   );
-  const surfaceDrop = (err: unknown, label: string) => {
-    console.error(`[FolderRow] ${label}`, err);
-    setError(
-      err instanceof Error
-        ? t("filesPage.error.actionFailedDetail", {
-            action: label,
-            message: err.message,
-            defaultValue: `Could not ${label}: ${err.message}`,
-          })
-        : t("filesPage.error.actionFailed", {
-            action: label,
-            defaultValue: `Could not ${label}.`,
-          }),
-    );
-  };
   const kebabRef = useRef<HTMLButtonElement>(null);
   const { handlers: dropHandlers, isOver: isDropTarget } = useDropTarget({
     dragType: FILES_PAGE_DRAG_TYPE,
@@ -1209,16 +1232,13 @@ function FolderRow({
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
       if (payload.kind === "files") {
-        Promise.resolve(onDropFiles(payload.fileIds)).catch((err) =>
-          surfaceDrop(err, "move files into folder"),
-        );
+        actions.dropFilesOnFolder(payload.fileIds, folder.id);
       } else if (payload.kind === "folder") {
-        Promise.resolve(onDropFolder(payload.folderId)).catch((err) =>
-          surfaceDrop(err, "move folder"),
-        );
+        actions.dropFolderOnFolder(payload.folderId, folder.id);
       }
     },
   });
+
   return (
     <div
       role="row"
@@ -1310,7 +1330,7 @@ function FolderRow({
             </Menu.Item>
             <Menu.Item
               leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
+              onClick={() => actions.renameFolder(folder)}
               disabled={!serverReachable}
               title={!serverReachable ? offlineHint : undefined}
             >
@@ -1322,14 +1342,16 @@ function FolderRow({
             </Menu.Label>
             <FolderAppearancePicker
               folder={folder}
-              onChange={onChangeAppearance}
+              onChange={(appearance) =>
+                actions.changeFolderAppearance(folder.id, appearance)
+              }
               disabled={!serverReachable}
             />
             <Menu.Divider />
             <Menu.Item
               color="red"
               leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
+              onClick={() => actions.deleteFolder(folder)}
               disabled={!serverReachable}
               title={!serverReachable ? offlineHint : undefined}
             >
@@ -1340,30 +1362,43 @@ function FolderRow({
       </span>
     </div>
   );
-}
+});
 
-interface FileRowProps extends FileMenuHandlers {
+interface FileRowProps {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
   parentPath?: string;
-  selectedFileIds: Set<FileId>;
   /** Shows the checkbox once 2+ files are selected. */
   multiSelectActive: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  onOpen: () => void;
+  /** Download / rename / duplicate menu items offered. */
+  downloadAvailable: boolean;
+  renameAvailable: boolean;
+  duplicateAvailable: boolean;
+  /** Kebab Save to server offered; only fires when file is local-only. */
+  saveToServerAvailable: boolean;
+  /** Version-history menu item offered; shown only when file has >1 version. */
+  versionHistoryAvailable: boolean;
+  /** When set, the kebab Save to server is disabled with this tooltip. */
+  saveToServerDisabledReason?: string | null;
+  badges: FileItemPolicyRef[];
+  actions: FileGridActions;
 }
 
-function FileRow({
+const FileRow = React.memo(function FileRow({
   file,
   isSelected,
   isInWorkspace,
   parentPath,
-  selectedFileIds,
   multiSelectActive,
-  onClick,
-  onOpen,
-  ...menuHandlers
+  downloadAvailable,
+  renameAvailable,
+  duplicateAvailable,
+  saveToServerAvailable,
+  versionHistoryAvailable,
+  saveToServerDisabledReason,
+  badges,
+  actions,
 }: FileRowProps) {
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1378,6 +1413,9 @@ function FileRow({
     file.size,
     file.thumbnailUrl,
   );
+  const onClick = (e: React.MouseEvent) =>
+    actions.selectFile(file.id, e.shiftKey, e.metaKey || e.ctrlKey);
+  const onOpen = () => actions.openFile(file);
   return (
     <div
       role="row"
@@ -1385,10 +1423,9 @@ function FileRow({
       tabIndex={0}
       draggable
       onDragStart={(e) => {
-        const fileIds = isSelected ? Array.from(selectedFileIds) : [file.id];
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
-          serialiseFilesPageDragPayload({ kind: "files", fileIds }),
+          actions.fileDragPayload(file.id),
         );
         e.dataTransfer.effectAllowed = "move";
       }}
@@ -1402,9 +1439,7 @@ function FileRow({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      className={`files-page-list-row${isSelected ? " is-selected" : ""}${
-        isInWorkspace ? " is-in-workspace" : ""
-      }`}
+      className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}`}
     >
       {/* Each direct child is a gridcell: a role="row" may only own cells, so the
           checkbox and the actions menu have to sit inside one.
@@ -1419,12 +1454,7 @@ function FileRow({
             onClick={(e) => {
               // Toggle this file in/out of the selection without modifier keys.
               e.stopPropagation();
-              onClick({
-                ...e,
-                shiftKey: false,
-                ctrlKey: true,
-                metaKey: true,
-              });
+              actions.selectFile(file.id, false, true);
             }}
             onChange={() => {
               /* handled by onClick */
@@ -1491,7 +1521,7 @@ function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
-        <PolicyBadges fileId={file.id} />
+        <PolicyBadgeRow policies={badges} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
@@ -1506,13 +1536,18 @@ function FileRow({
         <FileActionsMenu
           file={file}
           triggerRef={kebabRef}
-          onOpen={onOpen}
-          {...menuHandlers}
+          downloadAvailable={downloadAvailable}
+          renameAvailable={renameAvailable}
+          duplicateAvailable={duplicateAvailable}
+          saveToServerAvailable={saveToServerAvailable}
+          versionHistoryAvailable={versionHistoryAvailable}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          actions={actions}
         />
       </span>
     </div>
   );
-}
+});
 
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };

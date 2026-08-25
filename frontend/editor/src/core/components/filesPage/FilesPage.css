@@ -333,6 +333,9 @@
   grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
   gap: 0.5rem;
   align-items: center;
+  /* Same offscreen skip as .files-page-card. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3rem;
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--c-border-subtle);
   cursor: pointer;
@@ -385,6 +388,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  /* Offscreen cards skip layout and paint — a 500-entry folder only pays
+     for the rows in view. The intrinsic size stands in for unrendered
+     cards so the scrollbar doesn't jump (auto: measured size once seen). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 13rem;
   background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.85rem;
