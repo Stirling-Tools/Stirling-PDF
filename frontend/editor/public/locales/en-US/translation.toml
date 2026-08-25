@@ -3577,7 +3577,12 @@ useDiskVersion = "Use disk version"
 
 [desktopFileLink.conflict]
 body = "\"{{name}}\" changed on disk, but you have unsaved changes here. Your version is being kept - saving will overwrite the file on disk."
+hint = "Keeping your changes overwrites the file on disk when you next save."
+keepMine = "Keep my changes"
+prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
+remaining = "{{count}} more to review"
 title = "File changed on disk"
+useDisk = "Use the disk version"
 
 [desktopFileLink.missing]
 body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."

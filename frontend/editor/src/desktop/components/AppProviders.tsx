@@ -4,6 +4,7 @@ import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -358,6 +359,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
+          <DiskConflictHost />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
           <DesktopOnboardingModal />

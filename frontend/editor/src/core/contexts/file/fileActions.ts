@@ -33,12 +33,12 @@ import {
   diskBaseline,
   loadDiskVersion,
   notifyFileVanished,
-  notifyDiskConflict,
   notifyDiskReloaded,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
 } from "@app/services/diskFileSync";
 import { getDiskFileState } from "@app/services/desktopFileLink";
+import { requestDiskConflictChoice } from "@app/services/diskConflictPrompt";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -884,10 +884,12 @@ export async function resyncFilesFromDisk(
         { diskConflictAt: Date.now() },
         stateRef,
       );
-      notifyDiskConflict(
-        stub.name,
-        () => void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
-      );
+      requestDiskConflictChoice({
+        fileId,
+        name: stub.name,
+        onUseDisk: () =>
+          void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+      });
       continue;
     }
 
@@ -1058,11 +1060,12 @@ export async function addStirlingFileStubs(
         const conflictAt =
           diskSync.status === "conflict" ? Date.now() : undefined;
         if (conflictAt) {
-          notifyDiskConflict(
-            stub.name,
-            () =>
+          requestDiskConflictChoice({
+            fileId,
+            name: stub.name,
+            onUseDisk: () =>
               void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
-          );
+          });
         }
 
         // Live bytes from disk win over the stored copy.
