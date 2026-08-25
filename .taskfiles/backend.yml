@@ -84,6 +84,8 @@ tasks:
           AIENGINE_URL: '{{.AIENGINE_URL}}'
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+          APP_BASE_URL: '{{.APP_BASE_URL}}'
+          BASE_PATH: '{{.BASE_PATH}}'
 
   staging:saas:
     desc: "Start SaaS backend against the shared v3 staging project"
@@ -95,10 +97,53 @@ tasks:
           AIENGINE_URL: '{{.AIENGINE_URL}}'
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+          APP_BASE_URL: '{{.APP_BASE_URL}}'
+          BASE_PATH: '{{.BASE_PATH}}'
+
+  dev:linked:
+    desc: "Self-hosted backend linked to a locally running SaaS backend (see task linked:*)"
+    dotenv: ['app/.env.proprietary.local', 'app/.env.proprietary']
+    ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      SAAS_BASE_URL: '{{.SAAS_BASE_URL | default "http://localhost:8081"}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
+      # `env:` outranks dotenv, so a stale .env.proprietary.local cannot override these.
+      STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
+      STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: '{{.SAAS_BASE_URL}}'
+    cmds:
+      - 'echo ">> self-hosted :{{.PORT}} linking to SaaS at {{.SAAS_BASE_URL}}"'
+      # The two backends run different STIRLING_FLAVOURs, which are different Gradle
+      # project graphs sharing one build/ tree. Waiting avoids overlapping builds; it
+      # does not make the sharing safe, so avoid rebuilding one while the other runs.
+      - cmd: |
+          n=0
+          while [ "$n" -lt 150 ]; do
+            if curl -s -m 2 "{{.SAAS_BASE_URL}}" >/dev/null 2>&1; then
+              echo ">> SaaS backend is up, starting self-hosted"
+              break
+            fi
+            n=$((n + 1))
+            {{if eq OS "windows"}}powershell -NoProfile -Command "Start-Sleep -Seconds 2"{{else}}sleep 2{{end}}
+          done
+          if [ "$n" -ge 150 ]; then
+            echo ">> SaaS backend never answered; starting anyway"
+          fi
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun"
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:bootRun
+        platforms: [linux, darwin]
 
   _run:saas:
     internal: true
-    dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    # The frontend files are here only for RUN_SUBPATH, which the authorize URL needs.
+    # Last, because dotenv is set-if-absent: app/* still decides everything else.
+    dotenv:
+      - 'app/.env.saas.local'
+      - 'app/.env.saas'
+      - 'frontend/editor/.env.saas.local'
+      - 'frontend/editor/.env.saas'
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
@@ -111,12 +156,29 @@ tasks:
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
+      # Empty is the same as unset: the property defaults to empty and is blank-checked.
+      APP_BASE_URL: '{{.APP_BASE_URL | default ""}}'
+      # Relocates configs/pipeline/logs, for a second backend in the same directory.
+      # Empty is the same as unset: the reader blank-checks it.
+      BASE_PATH: '{{.BASE_PATH | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
       STIRLING_FLAVOR: saas
+      STIRLING_BASE_PATH: '{{.BASE_PATH}}'
       AIENGINE_URL: '{{.AIENGINE_URL}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+      # Appends RUN_SUBPATH: the approval page is at <base>/link, so a subpath build
+      # serves it at <base>/app/link. An explicit value still wins.
+      STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL:
+        sh: |
+          if [ -n "${STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL:-}" ]; then
+            echo "${STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL}"
+          elif [ -n "{{.APP_BASE_URL}}" ] && [ -n "${RUN_SUBPATH:-}" ]; then
+            echo "{{.APP_BASE_URL}}/${RUN_SUBPATH}"
+          else
+            echo "{{.APP_BASE_URL}}"
+          fi
     cmds:
       # PROFILE_ARGS is empty when PROFILES=none, i.e. the bare `saas` profile
       # against SAAS_DB_* (production).
