@@ -908,7 +908,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       return null;
     }
     const r = resolved.result;
-    if (r && r.coverage === text.length && r.charcodes.length === text.length) {
+    // Code points, not UTF-16 units: the resolver counts per code point,
+    // so an astral char (emoji, CJK Ext-B) never matched text.length.
+    const cpLen = [...text].length;
+    if (r && r.coverage === cpLen && r.charcodes.length === cpLen) {
       const ok = setCharcodesOn(m, ptr, r.charcodes);
       emitCharcodeEvent({
         timestamp: 0,
@@ -1026,7 +1029,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         charcodes: resolved.result.charcodes,
       });
     }
-    if (allOk && perChar.length === opts.text.length) {
+    if (allOk && perChar.length === [...opts.text].length) {
       // Per-char emit: one text object per char, each with its OWN font.
       const ptrs: number[] = [];
       let cursor = opts.x;
@@ -1088,7 +1091,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         // with a known-good pair from the backend resolver cache.
         perCharBranchPtrs.add(ptr);
       }
-      if (ptrs.length === opts.text.length) return withRotation(ptrs);
+      if (ptrs.length === [...opts.text].length) return withRotation(ptrs);
       // Any other incomplete outcome: destroy the partial emit before the
       // fall-through path re-renders the word.
       for (const p of ptrs) {

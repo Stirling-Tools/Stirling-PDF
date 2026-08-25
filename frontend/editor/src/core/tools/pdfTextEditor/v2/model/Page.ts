@@ -96,7 +96,15 @@ export class Page {
     if (!this.needsGenerateContent) return;
     this.needsGenerateContent = false;
     this.regenerated = true;
-    m.FPDFPage_GenerateContent(this.pagePtr);
+    // PDFium reports regeneration failure by RETURN VALUE, not by throwing.
+    // Discarding it let a page that regenerated to nothing serialize its stale
+    // pre-edit stream while the UI reported a clean save. Throwing routes it
+    // into PdfiumSave's failedPages guard, which aborts the save.
+    if (!m.FPDFPage_GenerateContent(this.pagePtr)) {
+      throw new Error(
+        `FPDFPage_GenerateContent failed for page ${this.index + 1}`,
+      );
+    }
   }
 
   findRun(id: string): TextRun | undefined {

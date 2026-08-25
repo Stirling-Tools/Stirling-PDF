@@ -158,7 +158,7 @@ export function tryResolveCharcodes(
   const r = activeResolver();
   if (r) {
     const result = r.resolve(font, text, ctx);
-    if (result && result.coverage === text.length) {
+    if (result && result.coverage === [...text].length) {
       return { strategy: r.name, result };
     }
     // Active resolver (e.g. backend with a cold cache) did not fully cover the
@@ -166,7 +166,7 @@ export function tryResolveCharcodes(
     if (allowContentStreamFallback && r.name !== "content-stream") {
       const cs = resolvers["content-stream"];
       const csResult = cs?.resolve(font, text, ctx);
-      if (csResult && csResult.coverage === text.length) {
+      if (csResult && csResult.coverage === [...text].length) {
         return { strategy: "content-stream", result: csResult };
       }
     }
@@ -177,7 +177,7 @@ export function tryResolveCharcodes(
   if (allowContentStreamFallback) {
     const cs = resolvers["content-stream"];
     const csResult = cs?.resolve(font, text, ctx);
-    if (csResult && csResult.coverage === text.length) {
+    if (csResult && csResult.coverage === [...text].length) {
       return { strategy: "content-stream", result: csResult };
     }
   }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
-import { downloadBlob } from "@app/utils/downloadUtils";
+import { downloadFile } from "@app/services/downloadService";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
 import { useDocumentLoader } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
@@ -96,7 +96,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         store.document,
         openedFileName,
       );
-      downloadBlob(blob, filename);
+      // Await the write: downloadBlob() is fire-and-forget, so a cancelled
+      // or failed save used to be reported to the user as a success.
+      const result = await downloadFile({ data: blob, filename });
+      if (result.cancelled) return;
       store.markSaved(exported);
     } catch (err) {
       // Surface the failure instead of silently dropping it - the user

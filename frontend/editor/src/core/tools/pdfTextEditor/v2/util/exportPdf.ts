@@ -13,8 +13,11 @@ export async function exportToBlob(
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
-  const regenerated = doc.regeneratedPages();
+  // Must be read AFTER serialize: serialize is what marks pages regenerated,
+  // so reading first always yielded an empty list and silently skipped the
+  // shading repair on the first save after an edit.
   let bytes = PdfiumSave.serialize(doc, { incremental });
+  const regenerated = doc.regeneratedPages();
 
   if (regenerated.length > 0 && doc.openedBytes.length > 0) {
     try {
