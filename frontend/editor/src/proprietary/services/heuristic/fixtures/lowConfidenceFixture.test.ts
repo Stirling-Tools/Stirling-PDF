@@ -4,8 +4,8 @@
  * returns something OTHER than "high" for it - a rules change that made it confident would
  * silently turn the manual test into a no-op.
  *
- * The text below is verbatim pdf.js output for that file; regenerate the PDF with
- * `scripts/make-low-confidence-test-pdf.py` if either is edited.
+ * The text below is verbatim pdf.js output for that file, so a failure here means the PDF and
+ * these expectations have drifted apart - re-extract before changing either.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import {
