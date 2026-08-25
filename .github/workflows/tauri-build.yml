@@ -178,7 +178,7 @@ jobs:
           # Save the dependency cache even if a later step fails
           cache-on-failure: true
 
-      - name: Cache Rust build No. 3
+      - name: Cache Rust build No. 4
         if: inputs.use_shared_cache
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
