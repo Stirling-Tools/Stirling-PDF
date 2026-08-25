@@ -1,6 +1,7 @@
 name: Prime Cache
 
 on:
+  workflow_dispatch:
   workflow_call:
   push:
     branches: ["main"]
