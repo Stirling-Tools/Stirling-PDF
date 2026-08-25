@@ -17,7 +17,8 @@ export interface WorkbenchSession {
   /** Which view was on screen. Absent for a record written before this was tracked. */
   workbench?: string;
   activeFileId?: string;
-  /** Who the workbench belonged to, so the next person to use this tab does not inherit it. */
+  /** Fingerprint of who the workbench belonged to, so the next person in this tab does not
+   *  inherit it. Never the account id itself - see {@link fingerprintOwner}. */
   userId?: string | null;
 }
 
@@ -86,6 +87,32 @@ export function writeWorkbenchSession(session: WorkbenchSession): void {
     // survive and restore an older workbench - drop it, so the failure is "no restore" instead.
     clearWorkbenchSession();
   }
+}
+
+/**
+ * A one-way fingerprint of the signed-in user. Owners are only ever compared, never read back, so
+ * the account id itself never needs to reach storage. Falls back to a non-cryptographic digest
+ * where SubtleCrypto is absent (a self-hosted instance served over plain http): the fingerprint
+ * only has to tell two accounts sharing one tab apart, and the files it gates are reachable from
+ * My Files regardless, since IndexedDB is per-origin.
+ */
+export async function fingerprintOwner(userId: string): Promise<string> {
+  if (globalThis.crypto?.subtle) {
+    const digest = await globalThis.crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(userId),
+    );
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .slice(0, 32);
+  }
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < userId.length; i++) {
+    hash ^= userId.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `fnv-${hash.toString(16)}`;
 }
 
 /** Drop the record: on sign-out, and whenever it would otherwise be restored for the wrong person. */

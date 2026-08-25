@@ -21,6 +21,7 @@ import { WORKBENCH_SESSION_RESTORE } from "@app/constants/featureFlags";
 import {
   beginRestoredView,
   clearWorkbenchSession,
+  fingerprintOwner,
   resumeWorkbenchSession,
   endRestoredView,
   isSeedableView,
@@ -117,6 +118,23 @@ export function WorkbenchSessionPersistence() {
   // records nothing and restores nothing - otherwise signing out rebuilds it on the login screen.
   const onAuthRoute = isAuthRoute(useLocation().pathname);
   const userId = user?.id != null ? String(user.id) : null;
+  // Fingerprinted, never stored raw - see fingerprintOwner. Computed asynchronously, so writes
+  // hold off until it lands rather than stamping the record "nobody's" and then failing its own
+  // ownership check.
+  const [owner, setOwner] = useState<string | null>(null);
+  useEffect(() => {
+    if (userId == null) {
+      setOwner(null);
+      return;
+    }
+    let cancelled = false;
+    void fingerprintOwner(userId).then((fingerprint) => {
+      if (!cancelled) setOwner(fingerprint);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
   const { t } = useTranslation();
   // Captured before the writer below can overwrite it with the empty boot state.
   const [saved] = useState(readWorkbenchSession);
@@ -126,6 +144,9 @@ export function WorkbenchSessionPersistence() {
 
   const write = useCallback(() => {
     if (!store || !restoreSettled.current) return;
+    // A known identity whose fingerprint has not landed yet: wait, do not stamp it as nobody's.
+    if (userId != null && owner == null) return;
+    if (userId != null && owner == null) return;
     const state = store.getState();
     const toOriginal = (id: FileId): string | null => {
       const stub = state.files.byId[id];
@@ -138,12 +159,12 @@ export function WorkbenchSessionPersistence() {
         .map(toOriginal)
         .filter(isPresent),
       workbench,
-      userId,
+      userId: owner,
       activeFileId: activeFileId
         ? (toOriginal(activeFileId as FileId) ?? undefined)
         : undefined,
     });
-  }, [store, workbench, activeFileId, userId]);
+  }, [store, workbench, activeFileId, userId, owner]);
 
   // Read by the file subscription, which must not resubscribe on every view change.
   const writeRef = useRef(write);
@@ -176,14 +197,6 @@ export function WorkbenchSessionPersistence() {
     if (authLoading) return;
     restoreStarted.current = true;
 
-    // A tab can outlive a sign-out (the logout clears it, but a 401 bounce or an expiry does not),
-    // and the next person to sign in here must not open the last person's documents.
-    if (saved && (saved.userId ?? null) !== userId) {
-      clearWorkbenchSession();
-      restoreSettled.current = true;
-      return;
-    }
-
     const nothingToDo =
       !WORKBENCH_SESSION_RESTORE ||
       !store ||
@@ -196,6 +209,16 @@ export function WorkbenchSessionPersistence() {
     }
 
     void (async () => {
+      // A tab can outlive a sign-out (the logout clears it, but a 401 bounce or an expiry does
+      // not), and the next person to sign in here must not open the last person's documents.
+      const currentOwner =
+        userId == null ? null : await fingerprintOwner(userId);
+      if ((saved.userId ?? null) !== currentOwner) {
+        clearWorkbenchSession();
+        restoreSettled.current = true;
+        return;
+      }
+
       // Held while the files land: they are added one at a time, and each landing re-runs the
       // default-view heuristic, which must not overwrite the recorded view mid-restore.
       let held: number | null = null;

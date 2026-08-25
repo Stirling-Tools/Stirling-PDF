@@ -37,6 +37,7 @@ vi.mock("@app/contexts/ViewerContext", () => ({
 }));
 
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
+import { fingerprintOwner } from "@app/services/workbenchSession";
 import {
   FileStoreContext,
   FileActionsContext,
@@ -96,6 +97,25 @@ function mount(store: ReturnType<typeof makeStore>) {
 }
 
 beforeEach(() => {
+  // The shared setup stubs crypto.subtle.digest to one constant for every input, so every account
+  // would fingerprint alike - and ownership is exactly what these tests are about.
+  vi.spyOn(globalThis.crypto.subtle, "digest").mockImplementation(
+    async (_algorithm: AlgorithmIdentifier, data: BufferSource) => {
+      const bytes = ArrayBuffer.isView(data)
+        ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength)
+        : new Uint8Array(data);
+      let hash = 0x811c9dc5;
+      for (const byte of bytes) {
+        hash = Math.imul(hash ^ byte, 0x01000193) >>> 0;
+      }
+      const out = new Uint8Array(32);
+      for (let i = 0; i < out.length; i++) {
+        hash = Math.imul(hash ^ i, 0x01000193) >>> 0;
+        out[i] = hash & 0xff;
+      }
+      return out.buffer;
+    },
+  );
   sessionStorage.clear();
   vi.clearAllMocks();
   actions.addStirlingFileStubs.mockResolvedValue([]);
@@ -242,19 +262,20 @@ describe("restore", () => {
 });
 
 describe("whose workbench it is", () => {
-  const record = (userId: string | null) =>
+  // Records hold a fingerprint of the owner, never the account id.
+  const record = async (userId: string | null) =>
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,
         fileIds: ["root-a"],
         selectedFileIds: [],
-        userId,
+        userId: userId == null ? null : await fingerprintOwner(userId),
       }),
     );
 
   it("does not open one user's workbench for the next person in the tab", async () => {
-    record("user-a");
+    await record("user-a");
     mocks.authUser = { id: "user-b" };
     mocks.getLeafStirlingFileStubs.mockResolvedValue([
       stub("root-a", "root-a"),
@@ -264,12 +285,15 @@ describe("whose workbench it is", () => {
 
     await act(async () => {});
     expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
-    // And the record is gone, so it cannot resurface later in the session.
-    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+    // The record is theirs now - the previous person's files are gone from it, so they cannot
+    // resurface later in the session.
+    const taken = JSON.parse(sessionStorage.getItem(SESSION_KEY)!);
+    expect(taken.fileIds).toEqual([]);
+    expect(taken.userId).toBe(await fingerprintOwner("user-b"));
   });
 
   it("reopens it for the user who left it", async () => {
-    record("user-a");
+    await record("user-a");
     mocks.authUser = { id: "user-a" };
     mocks.getLeafStirlingFileStubs.mockResolvedValue([
       stub("root-a", "root-a"),
@@ -283,7 +307,7 @@ describe("whose workbench it is", () => {
   });
 
   it("waits for the session before deciding", async () => {
-    record("user-a");
+    await record("user-a");
     mocks.authUser = null;
     mocks.authLoading = true;
     mocks.getLeafStirlingFileStubs.mockResolvedValue([
@@ -323,7 +347,7 @@ describe("a lost session that comes back", () => {
         v: 2,
         fileIds: ["root-a"],
         selectedFileIds: [],
-        userId: "user-a",
+        userId: await fingerprintOwner("user-a"),
       }),
     );
     mocks.authUser = { id: "user-a" };
@@ -340,6 +364,8 @@ describe("a lost session that comes back", () => {
     // ...and once the identity is back, the workbench is still being recorded.
     mocks.authUser = { id: "user-a" };
     rerenderWith(view, store);
+    // Let the fingerprint land: writes hold off while a known identity has none yet.
+    await act(async () => {});
     store.state.files.ids = ["f2" as never];
     store.state.files.byId = { f2: stub("f2", "root-b") } as never;
     act(() => store.notify());
