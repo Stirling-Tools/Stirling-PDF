@@ -1,7 +1,7 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs `task frontend:check:all` and uploads the 
+# change. Runs `task frontend:check:all` and uploads the
 # coverage + dist artifacts for downstream jobs.
 on:
   workflow_call:
@@ -105,11 +105,24 @@ jobs:
                 comment_id: existing.id,
               });
             }
+
+      - name: Cache uv
+        if: always()
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/.uv-python-dir
+          key: uv-${{ runner.os }}-${{ hashFiles(
+                'engine/pyproject.toml',
+                'engine/uv.lock'
+              ) }}
+          lookup-only: true
+
       - name: Install uv
         if: always()
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          enable-cache: true
+          working-directory: "engine"
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock

@@ -52,14 +52,24 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
+      - name: Cache uv
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/.uv-python-dir
+          key: uv-${{ runner.os }}-${{ hashFiles(
+                'engine/pyproject.toml',
+                'engine/uv.lock'
+              ) }}
+          lookup-only: true
+
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          enable-cache: true
+          working-directory: "engine"
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-          cache-suffix: sync-files
 
       - name: Install Python dependencies
         run: |
