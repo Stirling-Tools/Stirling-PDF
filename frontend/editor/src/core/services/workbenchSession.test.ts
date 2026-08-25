@@ -135,9 +135,9 @@ describe("record hygiene", () => {
     expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
-  it("refuses to rewrite a signed-in workbench as anonymous", () => {
-    // Every sign-out path ends in a teardown flush with no user attached - including the ones
-    // that never call suspend (SaaS signs out straight from the settings modal).
+  it("keeps the owner when the identity is momentarily unknown", () => {
+    // A sign-out teardown and a failed /auth/me both write with no user attached. Losing the
+    // owner here would make the record unrestorable for the person it belongs to.
     writeWorkbenchSession({
       fileIds: ["a", "b"],
       selectedFileIds: [],
@@ -150,7 +150,7 @@ describe("record hygiene", () => {
       userId: null,
     });
 
-    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(readWorkbenchSession()?.userId).toBe("user-a");
   });
 
   it("still records for a genuinely anonymous session", () => {

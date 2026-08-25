@@ -71,17 +71,15 @@ export function resumeWorkbenchSession(): void {
 
 export function writeWorkbenchSession(session: WorkbenchSession): void {
   if (writesSuspended) return;
-  // A workbench recorded by a signed-in user must never be rewritten as anonymous. That write is
-  // the teardown that follows a sign-out, and keeping its result would hand the workbench to
-  // whoever signs in next. Catches every sign-out path, not just the ones that call suspend.
-  if (session.userId == null && readWorkbenchSession()?.userId != null) {
-    clearWorkbenchSession();
-    return;
-  }
   try {
+    // Never downgrade a known owner to "nobody". Signing out and a failed identity check both
+    // read as no user, and dropping the owner would either hand the workbench to whoever signs
+    // in next or lose it for the person it belongs to. Keeping the owner leaves the restore's
+    // ownership check to decide, which it does with a settled identity.
+    const owner = session.userId ?? readWorkbenchSession()?.userId ?? null;
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ ...session, v: SESSION_VERSION }),
+      JSON.stringify({ ...session, userId: owner, v: SESSION_VERSION }),
     );
   } catch {
     // Storage refused (quota, privacy mode). setItem is atomic, so the PREVIOUS record would

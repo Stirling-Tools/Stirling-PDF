@@ -138,24 +138,19 @@ export default function HomePage() {
   // Sync the /files* URL into the workbench state so the file manager view
   // takes over the workbench area when the user lands on it. This is the
   // only state-of-truth for the active workbench, so keep the URL pinned.
-  // Only a real navigation away from /files is "leaving": on mount this effect would otherwise
-  // pick a default from files that have not hydrated yet, overwriting a view someone else restored.
-  const wasOnFilesRef = useRef(location.pathname.startsWith("/files"));
   useEffect(() => {
-    const onFiles = location.pathname.startsWith("/files");
-    const leftFiles = wasOnFilesRef.current && !onFiles;
-    wasOnFilesRef.current = onFiles;
-
-    if (onFiles) {
+    if (location.pathname.startsWith("/files")) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
     } else if (
-      leftFiles &&
       navigationState.workbench === "myFiles" &&
       !isApplyingRestoredView()
     ) {
-      // Leaving the file manager - drop back to a sensible default.
+      // The URL no longer supports the file manager - drop back to a sensible default. Stays a
+      // state check rather than a transition one: HomePage remounts without NavigationContext
+      // (a share link, a login bounce), and the view has to be corrected on arrival too.
+      // Skipped mid-restore, which is reopening a recorded view onto files still loading.
       actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
     }
   }, [

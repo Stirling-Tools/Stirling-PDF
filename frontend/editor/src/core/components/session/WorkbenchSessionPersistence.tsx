@@ -22,7 +22,6 @@ import {
   beginRestoredView,
   clearWorkbenchSession,
   resumeWorkbenchSession,
-  suspendWorkbenchSession,
   endRestoredView,
   isSeedableView,
   originalIdOf,
@@ -169,17 +168,6 @@ export function WorkbenchSessionPersistence() {
 
   // Changing view touches no file state, so the subscription above never sees it.
   useEffect(() => write(), [write]);
-
-  // Signing out is the one event that must drop the record, and it happens through many different
-  // buttons (SaaS signs out straight from the settings modal, and a session can simply expire), so
-  // watch the identity itself rather than trying to catch every caller.
-  const previousUserId = useRef<string | null | undefined>(undefined);
-  useEffect(() => {
-    if (authLoading) return;
-    const previous = previousUserId.current;
-    previousUserId.current = userId;
-    if (previous != null && userId == null) suspendWorkbenchSession();
-  }, [authLoading, userId]);
 
   useEffect(() => {
     if (restoreStarted.current) return;

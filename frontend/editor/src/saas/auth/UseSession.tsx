@@ -22,6 +22,7 @@ import {
   getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
+import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
@@ -355,6 +356,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setError(null);
+      // Signing out is deliberate, unlike an identity check that merely failed: drop the
+      // workbench record here and stop recording, so the teardown that follows cannot
+      // write it back for whoever signs in next.
+      suspendWorkbenchSession();
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {

@@ -299,15 +299,11 @@ describe("whose workbench it is", () => {
   });
 });
 
-describe("signing out", () => {
-  it("drops the workbench when the identity goes away, whichever button did it", async () => {
-    mocks.authUser = { id: "user-a" };
-    const store = makeStore([stub("f1", "f1")]);
-    const view = mount(store);
-    await act(async () => {});
-
-    // Any sign-out path: the settings modal, an expiry, a 401 - all end here.
-    mocks.authUser = null;
+describe("a lost session that comes back", () => {
+  const rerenderWith = (
+    view: ReturnType<typeof mount>,
+    store: ReturnType<typeof makeStore>,
+  ) =>
     view.rerender(
       <FileStoreContext.Provider value={store as never}>
         <FileActionsContext.Provider
@@ -317,12 +313,40 @@ describe("signing out", () => {
         </FileActionsContext.Provider>
       </FileStoreContext.Provider>,
     );
+
+  it("survives a blip on the identity check", async () => {
+    // A failed /auth/me - flaky wifi, a backend redeploy, a refreshSession() that did not land -
+    // briefly reads as nobody signed in. It must not be mistaken for signing out.
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: ["root-a"],
+        selectedFileIds: [],
+        userId: "user-a",
+      }),
+    );
+    mocks.authUser = { id: "user-a" };
+    const store = makeStore([stub("f1", "f1")]);
+    const view = mount(store);
     await act(async () => {});
 
-    // ...and the teardown flush that follows must not put it back.
+    mocks.authUser = null;
+    rerenderWith(view, store);
+    await act(async () => {});
+
+    expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull();
+
+    // ...and once the identity is back, the workbench is still being recorded.
+    mocks.authUser = { id: "user-a" };
+    rerenderWith(view, store);
+    store.state.files.ids = ["f2" as never];
+    store.state.files.byId = { f2: stub("f2", "root-b") } as never;
     act(() => store.notify());
     view.unmount();
-    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+      "root-b",
+    ]);
   });
 });
 
