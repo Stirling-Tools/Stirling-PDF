@@ -1,14 +1,8 @@
 import { useRef, useEffect } from "react";
-import { Modal, Text, Group, Stack, rem } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { IconBadge } from "@app/ui/IconBadge";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { useTranslation } from "react-i18next";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import { Z_INDEX_TOAST } from "@app/styles/zIndex";
+import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 
 const NavigationWarningModal = () => {
-  const { t } = useTranslation();
   const {
     showNavigationWarning,
     hasUnsavedChanges,
@@ -77,79 +71,13 @@ const NavigationWarningModal = () => {
   }
 
   return (
-    <Modal
+    <UnsavedChangesDialog
       opened={showNavigationWarning}
-      onClose={handleKeepWorking}
-      centered
-      size={rem(400)}
-      radius="lg"
-      padding="xl"
-      withCloseButton={false}
-      overlayProps={{ blur: 4, opacity: 0.4 }}
-      transitionProps={{ transition: "pop", duration: 140 }}
-      closeOnClickOutside={true}
-      closeOnEscape={true}
-      zIndex={Z_INDEX_TOAST}
-    >
-      <Modal.Title className="sr-only">
-        {t("unsavedChangesTitle", "Unsaved changes")}
-      </Modal.Title>
-      <Stack align="center" gap="md">
-        <IconBadge accent="amber" size="md">
-          <WarningAmberRoundedIcon style={{ fontSize: 22 }} />
-        </IconBadge>
-
-        <Stack gap={4} ta="center">
-          <Text fw={600} size="lg">
-            {t("unsavedChangesTitle", "Unsaved changes")}
-          </Text>
-          <Text size="sm" c="var(--c-text-muted)" lh={1.5}>
-            {t(
-              "unsavedChangesBody",
-              "You have unsaved changes to your PDF. Are you sure you want to leave?",
-            )}
-          </Text>
-        </Stack>
-
-        <Stack gap="sm" w="100%" mt="xs">
-          {hasApply && (
-            <Button
-              fullWidth
-              variant="primary"
-              onClick={handleApplyAndContinue}
-            >
-              {t("applyAndContinue", "Save & Leave")}
-            </Button>
-          )}
-          {hasExport && (
-            <Button
-              fullWidth
-              variant="primary"
-              onClick={handleExportAndContinue}
-            >
-              {t("exportAndContinue", "Export & Leave")}
-            </Button>
-          )}
-          <Group grow gap="sm" wrap="nowrap">
-            <Button
-              variant="secondary"
-              accent="neutral"
-              data-autofocus
-              onClick={handleKeepWorking}
-            >
-              {t("keepWorking", "Keep Working")}
-            </Button>
-            <Button
-              variant="secondary"
-              accent="danger"
-              onClick={handleDiscardChanges}
-            >
-              {t("discardChanges", "Discard & Leave")}
-            </Button>
-          </Group>
-        </Stack>
-      </Stack>
-    </Modal>
+      onKeepWorking={handleKeepWorking}
+      onDiscard={handleDiscardChanges}
+      onSave={hasApply ? handleApplyAndContinue : undefined}
+      onExport={hasExport ? handleExportAndContinue : undefined}
+    />
   );
 };
 

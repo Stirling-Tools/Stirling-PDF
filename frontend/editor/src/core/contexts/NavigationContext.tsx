@@ -135,7 +135,11 @@ export interface NavigationContextActionsValue {
 const NavigationStateContext = createContext<
   NavigationContextStateValue | undefined
 >(undefined);
-const NavigationActionsContext = createContext<
+/**
+ * Exported like {@link FileActionsContext}: a component mounting in both shells must ask whether
+ * these exist, and {@link useNavigationActions} throws when they do not.
+ */
+export const NavigationActionsContext = createContext<
   NavigationContextActionsValue | undefined
 >(undefined);
 
