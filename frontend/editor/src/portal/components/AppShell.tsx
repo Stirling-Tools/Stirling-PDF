@@ -8,6 +8,7 @@ import { useUI } from "@portal/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
 import "@portal/components/AppShell.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -89,6 +90,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="portal-shell__main">
         <MobileTopbar />
         <PortalSearchBar />
+        <div className="portal-shell__notifications">
+          <NotificationBell />
+        </div>
         <main className="portal-shell__view">{children}</main>
       </div>
     </div>

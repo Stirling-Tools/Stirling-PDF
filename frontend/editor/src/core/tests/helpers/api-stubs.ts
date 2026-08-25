@@ -274,10 +274,10 @@ export async function mockAppApis(
     route.fulfill({ json: [] }),
   );
 
-  // Teams (SaaS / proprietary): landing routes may fetch current user teams.
-  // Return an empty list so stubbed runs stay console-clean without hitting absent backend.
-  await page.route("**/api/v1/team/my", (route: Route) =>
-    route.fulfill({ json: [] }),
+  // The bell polls this on load. The hook swallows the failure, but the browser still logs the
+  // request, which the console-hygiene guard counts.
+  await page.route("**/api/v1/notifications*", (route: Route) =>
+    route.fulfill({ json: { notifications: [] } }),
   );
 }
 
