@@ -15,7 +15,7 @@
   /* Set our own font: the modal portals to <body>, so it can't inherit the
      app's font through the DOM (the portal's .portal-scope isn't an ancestor). */
   font-family: var(--font-sans);
-  background: var(--c-surface);
+  background: var(--c-modal-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-xl);
   box-shadow:
