@@ -148,7 +148,7 @@ jobs:
               per_page: 100
             });
 
-            const v2Comments = comments.filter(comment => 
+            const v2Comments = comments.filter(comment =>
               comment.body.includes('🚀 **Auto-deploying V2 version**') ||
               comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
               comment.body.includes('❌ **V2 Auto-deployment failed**')
@@ -240,8 +240,8 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
+          # cache-from: type=gha,scope=stirling-pdf-latest
+          # cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha

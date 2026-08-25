@@ -193,8 +193,8 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha,scope=${{ matrix.cache-scope }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
+          # cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          # cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}

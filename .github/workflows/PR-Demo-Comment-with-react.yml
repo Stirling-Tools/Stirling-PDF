@@ -241,8 +241,8 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
+          # cache-from: type=gha,scope=stirling-pdf-latest
+          # cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
@@ -256,8 +256,8 @@ jobs:
           context: .
           file: ./engine/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-engine
-          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
+          # cache-from: type=gha,scope=stirling-pdf-engine
+          # cache-to: type=gha,mode=max,scope=stirling-pdf-engine
           tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 
