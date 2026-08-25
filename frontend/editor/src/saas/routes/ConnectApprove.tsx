@@ -53,10 +53,10 @@ export default function ConnectApprove() {
 
   useEffect(() => {
     if (loading || session) return;
+    // No basename: every consumer of `next` reaches it through navigate(), which
+    // applies the basename itself, so carrying it here yields /app/app/link.
     const next = `/link${requestId ? `?request=${encodeURIComponent(requestId)}` : ""}`;
-    navigate(`/login?next=${encodeURIComponent(withBasePath(next))}`, {
-      replace: true,
-    });
+    navigate(`/login?next=${encodeURIComponent(next)}`, { replace: true });
   }, [loading, session, requestId, navigate]);
 
   useEffect(() => {

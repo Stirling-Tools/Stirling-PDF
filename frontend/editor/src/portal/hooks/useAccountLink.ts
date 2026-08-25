@@ -16,6 +16,8 @@ export interface UseAccountLink {
   error: string | null;
   /** Unlink this instance. */
   unlink: () => Promise<void>;
+  /** Re-read the status, for when something outside this hook changed it. */
+  refresh: () => Promise<void>;
 }
 
 export function useAccountLink(): UseAccountLink {
@@ -24,24 +26,20 @@ export function useAccountLink(): UseAccountLink {
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Read the current link status on mount.
-  useEffect(() => {
-    let cancelled = false;
-    void fetchStatus()
-      .then((s) => {
-        if (!cancelled) {
-          setStatus(s);
-          // A linked instance is at least linked-free; subscription comes from the wallet.
-          if (s.linked) applyLinkFacts(true, false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setStatus({ linked: false, name: null });
-      });
-    return () => {
-      cancelled = true;
-    };
+  const refresh = useCallback(async () => {
+    try {
+      const s = await fetchStatus();
+      setStatus(s);
+      // A linked instance is at least linked-free; subscription comes from the wallet.
+      if (s.linked) applyLinkFacts(true, false);
+    } catch {
+      setStatus({ linked: false, name: null });
+    }
   }, [applyLinkFacts]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const unlink = useCallback(async () => {
     setPhase("linking");
@@ -63,5 +61,6 @@ export function useAccountLink(): UseAccountLink {
     phase,
     error,
     unlink,
+    refresh,
   };
 }

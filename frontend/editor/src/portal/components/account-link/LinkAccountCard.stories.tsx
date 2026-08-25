@@ -11,6 +11,7 @@ const base: UseAccountLink = {
   error: null,
 
   unlink: async () => {},
+  refresh: async () => {},
 };
 
 const meta: Meta<typeof LinkAccountCard> = {

@@ -3,6 +3,7 @@ import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
 import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
+import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCallbackHost";
 import { PortalChrome } from "@portal/components/PortalChrome";
 
 /** The one and only account-link modal. */
@@ -26,6 +27,7 @@ export function PortalProviders() {
           <AccountLinkProvider>
             <PortalChrome />
             <LinkModalHost />
+            <ConnectCallbackHost />
           </AccountLinkProvider>
         </UIProvider>
       </TierProvider>
