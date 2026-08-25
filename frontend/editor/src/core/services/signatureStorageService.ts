@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "@app/services/apiClient";
 import type { SavedSignature } from "@app/types/signature";
 import { readResponseHeader } from "@app/services/shareBundleUtils";
@@ -54,14 +55,17 @@ class SignatureStorageService {
         supportsBackend: true,
         storageType: "backend",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       // Check if it's an HTTP error with status code
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+      if (status === 401 || status === 403) {
         // Backend exists but needs auth - gracefully fall back to localStorage
         console.log(
           "[SignatureStorage] Backend signature API requires authentication, using localStorage",
         );
-      } else if (error?.response?.status === 404) {
+      } else if (status === 404) {
         // Endpoint doesn't exist (not running proprietary mode)
         console.log(
           "[SignatureStorage] Backend signature API not available (not in proprietary mode), using localStorage",
