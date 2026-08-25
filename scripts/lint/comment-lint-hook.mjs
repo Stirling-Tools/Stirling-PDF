@@ -9,6 +9,15 @@
 // Scoped to lines that differ from HEAD, so editing an old file does not dredge
 // up the standing backlog. Advisory findings are silent here; nagging on every
 // keystroke is how a hook gets turned off.
+//
+// To turn it off, set COMMENT_LINT_HOOK=0. Claude Code has no way to disable one
+// hook (only disableAllHooks, which turns off everyone's), so the opt-out lives
+// here instead. Per developer, in .claude/settings.local.json:
+//
+//   { "env": { "COMMENT_LINT_HOOK": "0" } }
+//
+// The commit-time gate still applies either way, so opting out costs you the
+// early warning, not the check.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -19,6 +28,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CLI = resolve(HERE, "comment-lint.mjs");
 const REPO = resolve(HERE, "..", "..");
 const LINTABLE = /\.(tsx?|mts|cts|mjs|cjs|jsx?|java|py)$/;
+const OFF = new Set(["0", "off", "false", "no"]);
+
+if (OFF.has((process.env.COMMENT_LINT_HOOK ?? "").toLowerCase())) process.exit(0);
 
 const payload = readStdin();
 const file = payload?.tool_input?.file_path;

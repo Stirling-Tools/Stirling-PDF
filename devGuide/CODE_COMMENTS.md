@@ -123,6 +123,17 @@ runs it verbosely when you want to see it.
 get it, and the same rules run as a Claude Code `PostToolUse` hook so an agent sees
 findings on the file it just wrote.
 
+The hook is configured in the committed `.claude/settings.json`. Personal Claude
+config belongs in `.claude/settings.local.json`, which stays git-ignored, and hook
+entries from the two merge rather than replacing each other, so your own hooks keep
+running. To turn this one off, put `{ "env": { "COMMENT_LINT_HOOK": "0" } }` in your
+local settings; the commit-time gate still applies, so you lose the early warning
+rather than the check.
+
+If you already had a hand-written `.claude/settings.json` before this landed, save a
+copy first. That path used to be git-ignored, and git overwrites an ignored file
+without warning when a commit starts tracking it.
+
 Two engines, one rule set (`scripts/lint/comment-rules.mjs`):
 
 - **`.ts` / `.tsx`** go to an oxlint JS plugin, so comments come from the parser.
