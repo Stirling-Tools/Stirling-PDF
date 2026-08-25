@@ -8,9 +8,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
@@ -121,6 +125,36 @@ class FormUtilsAddFieldsTest {
             assertTrue(
                     fields.get(0) instanceof PDTextField,
                     "signature areas are written as fillable text fields");
+        }
+    }
+
+    @Test
+    void checkboxFieldsGetVisibleAppearanceStreams() throws IOException {
+        // refreshAppearances() never builds /AP for the button family, so addFields must draw
+        // them itself; without that a detected checkbox is silently invisible in viewers.
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(new PDRectangle(612, 792)));
+
+            FormUtils.addFields(doc, List.of(def("checkbox", 0, 100f, 650f, 15f, 15f)));
+
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            PDCheckBox checkbox = (PDCheckBox) form.getFieldTree().iterator().next();
+            PDAnnotationWidget widget = checkbox.getWidgets().get(0);
+
+            PDAppearanceDictionary appearance = widget.getAppearance();
+            assertNotNull(appearance, "checkbox widget must carry an appearance dictionary");
+            PDAppearanceEntry normal = appearance.getNormalAppearance();
+            assertNotNull(normal, "checkbox needs a normal appearance");
+            assertTrue(normal.isSubDictionary(), "checkbox /AP /N holds per-state streams");
+            boolean hasOnState =
+                    normal.getSubDictionary().keySet().stream()
+                            .anyMatch(name -> !COSName.Off.equals(name));
+            assertTrue(hasOnState, "an on-state appearance stream must exist");
+
+            String onValue = checkbox.getOnValue();
+            assertTrue(
+                    onValue != null && !onValue.isBlank() && !"Off".equals(onValue),
+                    "PDFBox reads the on-state from /AP /N; got '" + onValue + "'");
         }
     }
 

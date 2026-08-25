@@ -25,6 +25,9 @@ import {
 const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
 const STATUS_URL = "/api/v1/form/form-detection-model/status";
 
+// Sentinel thrown by the processor; mapped to a translated message in getErrorMessage.
+export const NO_LOCAL_MODEL_ERROR = "NO_LOCAL_MODEL";
+
 export const buildAutoFormDetectionFormData = (
   parameters: AutoFormDetectionParameters,
   file: File,
@@ -131,7 +134,7 @@ async function processAutoFormDetection(
       // device, so a slow device waits rather than silently uploading, and a missing or stale model
       // is an error rather than a reason to upload.
       if (!activeEntry) {
-        throw new Error("NO_LOCAL_MODEL");
+        throw new Error(NO_LOCAL_MODEL_ERROR);
       }
       return { files: [await browserDetect(parameters, file, activeEntry)] };
     }
@@ -189,13 +192,23 @@ export const autoFormDetectionOperationConfig = {
 export const useAutoFormDetectionOperation = () => {
   const { t } = useTranslation();
 
+  const standardHandler = createStandardErrorHandler(
+    t(
+      "autoFormDetection.error.failed",
+      "An error occurred while detecting form fields.",
+    ),
+  );
+
   return useToolOperation<AutoFormDetectionParameters>({
     ...autoFormDetectionOperationConfig,
-    getErrorMessage: createStandardErrorHandler(
-      t(
-        "autoFormDetection.error.failed",
-        "An error occurred while detecting form fields.",
-      ),
-    ),
+    getErrorMessage: (error: unknown) => {
+      if (error instanceof Error && error.message === NO_LOCAL_MODEL_ERROR) {
+        return t(
+          "autoFormDetection.error.noLocalModel",
+          "Detection is set to run only in your browser, but no AI model is active. An admin needs to install and activate a model first.",
+        );
+      }
+      return standardHandler(error);
+    },
   });
 };

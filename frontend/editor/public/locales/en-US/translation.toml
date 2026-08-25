@@ -2122,6 +2122,7 @@ text = "Text fields"
 
 [autoFormDetection.error]
 failed = "An error occurred while detecting form fields."
+noLocalModel = "Detection is set to run only in your browser, but no AI model is active. An admin needs to install and activate a model first."
 
 [autoFormDetection.progress]
 analyzing = "Analyzing page {{page}} of {{pageCount}}..."
