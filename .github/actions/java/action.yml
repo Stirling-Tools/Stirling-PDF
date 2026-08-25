@@ -24,6 +24,12 @@ runs:
         JAVA_ARCHITECTURE: ${{ inputs.architecture }}
         RUNNER_ARCHITECTURE: ${{ runner.arch }}
         RUNNER_OS_NAME: ${{ runner.os }}
+        TEMURIN_VERSION: 25.0.4+7
+        TEMURIN_RELEASE_TAG: jdk-25.0.4%2B7
+        TEMURIN_X64_ARCHIVE: OpenJDK25U-jdk_x64_mac_hotspot_25.0.4_7.tar.gz
+        TEMURIN_X64_SHA256: a5ac9c46dad47ac06df35e36d096913195d8da1f3f71918828bcc2cfe33869b7
+        TEMURIN_ARM64_ARCHIVE: OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.4_7.tar.gz
+        TEMURIN_ARM64_SHA256: 5a101c54abf5a9f16c0f70d8c38ba99e6567c1ba213378f0bb04497284f051bd
       run: |
         set -euo pipefail
         if [ "${JAVA_VERSION}" != "25" ]; then
@@ -95,13 +101,13 @@ runs:
           java_home=""
         fi
         if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ] && [ "${distribution}" = "temurin" ] && { [ "${architecture}" = "X64" ] || [ "${architecture}" = "ARM64" ]; }; then
-          jdk_version="25.0.3+9"
+          jdk_version="${TEMURIN_VERSION}"
           if [ "${architecture}" = "X64" ]; then
-            jdk_archive="OpenJDK25U-jdk_x64_mac_hotspot_25.0.3_9.tar.gz"
-            jdk_sha256="4c539a18b4d656960ff6766727e9ca546fc17f7a29714dba9e7b47bdcb37c447"
+            jdk_archive="${TEMURIN_X64_ARCHIVE}"
+            jdk_sha256="${TEMURIN_X64_SHA256}"
           else
-            jdk_archive="OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.3_9.tar.gz"
-            jdk_sha256="7baab4d69a15554e119b86ff78d40e3fdc28819b5b322955c913cebfe3f6a37c"
+            jdk_archive="${TEMURIN_ARM64_ARCHIVE}"
+            jdk_sha256="${TEMURIN_ARM64_SHA256}"
           fi
           jdk_root="${RUNNER_TEMP}/stirling-temurin-${jdk_version}-${architecture}"
           archive_path="${jdk_root}/${jdk_archive}"
@@ -109,7 +115,7 @@ runs:
           if [ ! -f "${archive_path}" ]; then
             curl --fail --location --retry 3 --retry-delay 2 \
               --output "${archive_path}" \
-              "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3%2B9/${jdk_archive}"
+              "https://github.com/adoptium/temurin25-binaries/releases/download/${TEMURIN_RELEASE_TAG}/${jdk_archive}"
           fi
           printf '%s  %s\n' "${jdk_sha256}" "${archive_path}" | shasum -a 256 -c -
           if [ ! -x "${jdk_root}/Contents/Home/bin/jlink" ]; then
