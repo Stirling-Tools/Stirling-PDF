@@ -127,9 +127,8 @@ describe("pruneMissingRecentFiles", () => {
   });
 
   it("keeps a version-history root even though it looks like a passthrough", async () => {
-    // v1 opened from disk, then a tool ran on it: still v1 with no tool history
-    // of its own, so it reads as pristine - but later versions point at it and
-    // deleting it takes "revert to original" with them.
+    // A v1 root has no tool history of its own so it reads as pristine, but later
+    // versions point at it: deleting it takes "revert to original" with them.
     const stubs = [
       stub({
         id: "root" as FileId,

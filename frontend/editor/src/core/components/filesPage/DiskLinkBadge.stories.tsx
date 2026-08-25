@@ -3,11 +3,8 @@ import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
-/**
- * The badge only renders for the two states that need attention, so the healthy
- * and never-on-disk cases are here too - they must stay invisible, and a story
- * is the cheapest way to keep that honest.
- */
+/** The healthy and never-on-disk cases are here because they must render nothing;
+ *  a story is the cheapest way to keep that honest. */
 const meta: Meta<typeof DiskLinkBadge> = {
   title: "FilesPage/DiskLinkBadge",
   component: DiskLinkBadge,

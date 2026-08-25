@@ -496,9 +496,8 @@ export async function addFiles(
               `[FileActions] ✓ Found localFilePath: ${localFilePath}`,
             );
           fileStub.localFilePath = localFilePath;
-          // Record what the file looked like on disk as we read it. Without this
-          // baseline the next open has nothing to compare against and re-reads
-          // the file needlessly.
+          // Baseline what disk held at read time; without it the next open has
+          // nothing to compare against and re-reads the file needlessly.
           const state = await getDiskFileState(localFilePath);
           if (state.exists) {
             fileStub.diskSyncedSize = state.size;
@@ -816,11 +815,8 @@ export async function undoConsumeFiles(
  * Action factory functions
  */
 
-/**
- * Take the disk version of a file we are in conflict with, discarding the
- * unsaved in-app edits that were shadowing it. Runs only from the "Use disk
- * version" action on the conflict toast.
- */
+/** Take the disk version of a conflicted file, discarding the unsaved in-app
+ *  edits shadowing it. Only reachable from the conflict toast's action. */
 async function useDiskVersion(
   stub: StirlingFileStub,
   stateRef: React.MutableRefObject<FileContextState>,
@@ -851,12 +847,8 @@ async function useDiskVersion(
   );
 }
 
-/**
- * Re-check specific open files against disk, in response to the watcher seeing
- * their folder change. Same three outcomes as the open path - gone, moved on,
- * diverged - but reached while the file is sitting on screen, which is the case
- * the list-build and open-time checks cannot cover.
- */
+/** Re-check open files against disk when the watcher sees their folder change:
+ *  the on-screen case that list-build and open-time checks cannot cover. */
 export async function resyncFilesFromDisk(
   fileIds: FileId[],
   stateRef: React.MutableRefObject<FileContextState>,
@@ -1046,14 +1038,12 @@ export async function addStirlingFileStubs(
             ),
           STALLED_LOAD_MS,
         );
-        // A desktop file is only a cache of the real file on disk, so reconcile
-        // against disk BEFORE serving it - otherwise an external edit is invisible
-        // and a deleted file still opens. Only linked files pay for this.
+        // A desktop file only caches disk, so reconcile BEFORE serving it, or
+        // external edits stay invisible and deleted files still open.
         const diskSync = await syncLinkedFileFromDisk(stub);
         if (diskSync.status === "missing") {
-          // The list-time prune missed it: the file was deleted between the list
-          // being drawn and this open. Say so and take it out rather than serving
-          // a copy of a file the user has deleted.
+          // Deleted between the list being drawn and this open; remove it rather
+          // than serving a copy of a file the user deleted.
           console.warn(
             `[Hydration] ${stub.name} (${fileId}) no longer exists at ${stub.localFilePath}; removing it`,
           );
@@ -1063,11 +1053,8 @@ export async function addStirlingFileStubs(
           clearTimeout(stall);
           return;
         }
-        // The divergence is recorded as state below, not here:
-        // updateStirlingFileStub drops updates for a file that is not in
-        // filesRef yet, so marking the conflict before the bytes are published
-        // silently loses it - and with it the badge that is the only lasting
-        // sign of an unresolved fork once the toast has gone.
+        // Stamped as state below, not here: updateStirlingFileStub drops updates
+        // for files not yet in filesRef, silently losing the conflict badge.
         const conflictAt =
           diskSync.status === "conflict" ? Date.now() : undefined;
         if (conflictAt) {
@@ -1096,10 +1083,8 @@ export async function addStirlingFileStubs(
 
         filesRef.current.set(fileId, stirlingFile);
 
-        // filesRef is a ref, so the selectors gating the workbench only see the
-        // file once something dispatches. Parsing it can't be a precondition.
-        // Must follow the filesRef write: updateStirlingFileStub drops updates
-        // for a file it cannot find there.
+        // Workbench selectors only see the file once something dispatches; must
+        // follow the filesRef write or the update is dropped.
         if (diskSync.status === "updated") {
           const { file, state } = diskSync;
           const reloadedAt = Date.now();

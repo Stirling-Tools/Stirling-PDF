@@ -8,22 +8,11 @@ import {
 } from "@app/services/diskFileSync";
 import type { DetachedOpenFile } from "@app/services/pruneMissingRecentFiles";
 
-/**
- * Shared wiring for the two places that reconcile the file list against disk
- * (the files page and the recent-files list).
- *
- * Both used to hand `pruneMissingRecentFiles` a bare toast callback, which left
- * the detach applied in IndexedDB and in the list they render, but NOT in the
- * workbench. Every save path - Ctrl+S, the workbench save buttons, the exit
- * warning - reads the workbench stub, so an open file whose original had been
- * deleted went on quietly writing itself back to the deleted path instead of
- * asking for a new location. That only came right after a reload.
- */
+// Shared reconcile wiring for the files page and the recent-files list: the detach
+// must reach the workbench stub too, or saves keep writing to the deleted path.
 
-/**
- * Both list builders can be in flight at once, and each would report the same
- * loss. Ids are remembered briefly so the user is told once.
- */
+// Both list builders can be in flight at once; ids are remembered briefly so the
+// same loss is reported once.
 const RECENTLY_REPORTED_MS = 5000;
 const reportedAt = new Map<FileId, number>();
 
@@ -53,9 +42,8 @@ export function useDiskLinkReconcile() {
 
   const onOpenFilesDetached = useCallback(
     (files: DetachedOpenFile[]) => {
-      // Cut the link in the workbench too, so the save paths stop pointing at a
-      // file that is not there. This is the part that makes Ctrl+S become
-      // Save As in the session it happened, rather than after a restart.
+      // Cut the link in the workbench too, so Ctrl+S becomes Save As in this
+      // session rather than only after a restart.
       files.forEach((file) =>
         actions.updateStirlingFileStub(file.id, detachedFields(file.path)),
       );

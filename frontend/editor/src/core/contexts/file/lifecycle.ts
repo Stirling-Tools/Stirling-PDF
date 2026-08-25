@@ -12,14 +12,8 @@ import {
 
 const DEBUG = process.env.NODE_ENV === "development";
 
-/**
- * Stub fields describing the link to a file on disk. Every other stub field is
- * either already persisted at store time or is runtime-only display state, but
- * these are edited long after the record was written - a save stamps
- * `localFilePath`/`isDirty`, a disk re-read stamps the baseline - and if they
- * stay in memory the link dies on reload and the app silently falls back to its
- * stale copy. So updates touching them are mirrored into IndexedDB.
- */
+// Disk-link fields are stamped long after the record was stored, so updates to
+// them are mirrored into IndexedDB - in memory only, the link dies on reload.
 const DISK_LINK_FIELDS = [
   "localFilePath",
   "isDirty",

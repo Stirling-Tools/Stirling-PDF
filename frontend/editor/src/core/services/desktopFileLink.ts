@@ -1,6 +1,5 @@
-// Seam for keeping desktop files 1:1 with the real file on disk.
-// Non-desktop builds resolve to this no-op default via the @app alias order,
-// so web/SaaS keep their IndexedDB copy as the only source of truth.
+// Seam for keeping desktop files 1:1 with disk. Non-desktop builds get this
+// no-op via @app alias order, so web/SaaS keep IndexedDB as sole truth.
 
 /** On-disk state of a linked file. Mirrors the Rust `DiskFileState`. */
 export interface DiskFileState {

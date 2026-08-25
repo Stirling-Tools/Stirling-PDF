@@ -7,18 +7,8 @@ import {
 } from "@app/services/desktopFileLink";
 import { fileStorage } from "@app/services/fileStorage";
 
-/**
- * Keeps a desktop file 1:1 with the real file on disk.
- *
- * A file opened from disk is copied into IndexedDB so the workbench has bytes to
- * work with, but that copy is a cache, not the truth. Left alone it drifts: edit
- * the PDF in another app and Stirling would keep serving the stale copy forever,
- * and delete it and Stirling would keep offering a file that no longer exists.
- * Every read of a linked file goes through here so disk stays authoritative.
- *
- * No-op off the desktop app, where there is no disk path and the stored copy IS
- * the only copy.
- */
+// Keeps desktop files 1:1 with disk: the stored copy is a cache, not truth, so
+// every read re-checks disk. No-op off desktop, where the copy is the truth.
 
 /** What a linked file's disk state means for the copy we are holding. */
 export type DiskSyncOutcome =
@@ -33,12 +23,8 @@ export type DiskSyncOutcome =
   /** Disk moved on and we had nothing unsaved, so these are the live bytes. */
   | { status: "updated"; file: File; state: DiskFileState };
 
-/**
- * How a file stands relative to its disk original. Derived rather than stored so
- * there is one answer to "is this backed by a real file" for every surface that
- * asks - badge, save shortcut, exit warning - instead of each re-deriving it
- * from a different subset of the fields.
- */
+/** How a file stands relative to its disk original. Derived rather than stored
+ *  so every surface gets the same answer instead of re-deriving it. */
 export type DiskLinkState =
   /** Never came from disk: a web upload, or a tool output. */
   | "none"
@@ -61,14 +47,8 @@ export function diskLinkState(
   return stub.orphanedFilePath ? "orphaned" : "none";
 }
 
-/**
- * Did the disk file move on since we last read it?
- *
- * A record with no baseline predates disk sync (or was written by a build that
- * did not stamp one), so we cannot prove its copy is current - re-read it once
- * and let the read stamp a baseline. Size alone settles it when the platform
- * gives us no mtime.
- */
+/** Did disk change since our last read? No baseline means we cannot prove the
+ *  copy is current, so re-read once; size settles it when mtime is missing. */
 export function hasDiskChanged(
   stub: Pick<StirlingFileStub, "diskSyncedSize" | "diskSyncedModifiedMs">,
   state: DiskFileState,
@@ -91,12 +71,8 @@ export function diskBaseline(
   };
 }
 
-/**
- * The stub fields that mark a file as having lost its disk original. Applied
- * both in storage and in the workbench so every surface agrees: the file list
- * badge, and - the part that actually matters - the save paths, which read the
- * in-memory stub and would otherwise keep writing to the deleted path.
- */
+/** Fields marking a file as having lost its disk original. Applied in storage
+ *  and the workbench so save paths stop writing to the deleted path. */
 export function detachedFields(
   path: string | undefined,
 ): Pick<
@@ -116,14 +92,8 @@ export function detachedFields(
   };
 }
 
-/**
- * Compare a linked stub against its file on disk and, when the disk copy has
- * moved on, read the live bytes.
- *
- * Unsaved in-app edits always win: we report a conflict rather than overwriting
- * work the user has not saved. An unreadable file (locked by another process,
- * permissions) reports `unchanged` so the stored copy still opens.
- */
+/** Compare a linked stub against disk and read live bytes when it moved on.
+ *  Unsaved edits win (conflict); an unreadable file reports unchanged. */
 export async function syncLinkedFileFromDisk(
   stub: StirlingFileStub,
 ): Promise<DiskSyncOutcome> {
@@ -146,12 +116,8 @@ export async function syncLinkedFileFromDisk(
   return { status: "updated", file, state };
 }
 
-/**
- * Read the disk version of a file we are in conflict with, discarding the
- * unsaved in-app edits that were shadowing it. Only ever called from the
- * "Use disk version" action, never automatically - losing unsaved work has to
- * be something the user asked for.
- */
+/** Read the disk version, discarding unsaved in-app edits. Only from the "Use
+ *  disk version" action - losing unsaved work must be the user's choice. */
 export async function loadDiskVersion(
   stub: StirlingFileStub,
 ): Promise<{ file: File; state: DiskFileState } | null> {
@@ -167,14 +133,8 @@ export async function loadDiskVersion(
   return { file, state };
 }
 
-/**
- * Replace a record's stored bytes with what we just read from disk and stamp the
- * new baseline, so the next session starts from the current file.
- *
- * The cached page metadata and thumbnail describe the old bytes, so both are
- * cleared and regenerate on demand - keeping them would show the previous
- * document's pages under the new file.
- */
+/** Replace stored bytes with the disk read and re-stamp the baseline. Cached
+ *  metadata and thumbnail describe the old bytes, so both are cleared. */
 export async function persistDiskUpdate(
   fileId: FileId,
   file: File,
@@ -197,14 +157,8 @@ export async function persistDiskUpdate(
   });
 }
 
-/**
- * After the app writes a file back to its disk path, the file on disk IS the
- * copy we hold, so re-stamp the baseline. Skipping this leaves the next open
- * believing the file changed externally and re-reading it for nothing.
- *
- * Returns the new baseline so the caller can also update the in-memory stub, or
- * null when there is nothing to stamp.
- */
+/** After a write-back, disk IS our copy, so re-stamp the baseline or the next
+ *  open re-reads for nothing. Returns the new baseline, or null if none. */
 export async function refreshDiskBaselineAfterSave(
   fileId: FileId,
   path: string,
@@ -231,14 +185,8 @@ export async function deleteVanishedFile(fileId: FileId): Promise<void> {
   }
 }
 
-/**
- * Write an orphaned file somewhere new, then re-link it there. This is what the
- * "Save as…" action on the deleted-on-disk toast runs: the user is told the
- * original is gone, and the toast can act on it rather than leaving them to
- * find the save command and discover the file picker for themselves.
- *
- * Returns the new path, or null if the user cancelled or the save failed.
- */
+/** Write an orphaned file somewhere new and re-link it; backs the toast's
+ *  "Save as…" action. Returns the new path, or null if cancelled or failed. */
 export async function saveOrphanAsCopy(
   stub: StirlingFileStub,
 ): Promise<{ path: string; updates: Partial<StirlingFileStub> } | null> {
@@ -287,12 +235,8 @@ function isTranslator(value: unknown): value is Translator {
   );
 }
 
-/**
- * Best-effort translation without a hard dependency on i18n being initialised —
- * this module runs from storage/hydration paths that have no React context. The
- * English default is already interpolated, so an untranslated toast still reads
- * correctly. Mirrors the approach in specialErrorToasts.
- */
+/** Best-effort translation: runs from hydration paths with no i18n context,
+ *  and the English default is already interpolated. */
 function translate(
   key: string,
   defaultValue: string,
@@ -319,25 +263,16 @@ interface ToastSpec {
   buttonCallback?: () => void;
 }
 
-/**
- * Toast lazily. This module sits on the hydration path, and the toast barrel
- * pulls in the whole icon set - importing it eagerly cost every file open ~3s of
- * module load for a notification that almost never fires.
- */
+/** Lazy: this sits on the hydration path and the toast barrel pulls in the
+ *  whole icon set, costing ~3s of module load per file open. */
 function toast({ alertType = "warning", ...options }: ToastSpec): void {
   void import("@app/components/toast")
     .then(({ alert }) => alert({ alertType, expandable: false, ...options }))
     .catch((error) => console.error("[diskFileSync] toast failed:", error));
 }
 
-/**
- * Tell the user a file they were opening no longer exists. This is the race the
- * list-time prune cannot catch: the file was there when the list was drawn and
- * was deleted before they clicked it.
- *
- * Nothing to offer here: the file is gone and its copy went with it, so this
- * one stays a plain notice.
- */
+/** Tell the user a file they were opening is gone - the race the list-time
+ *  prune cannot catch. Nothing to offer, so it stays a plain notice. */
 export function notifyFileVanished(name: string): void {
   toast({
     title: translate("desktopFileLink.missing.title", "File no longer exists"),
@@ -350,16 +285,8 @@ export function notifyFileVanished(name: string): void {
   });
 }
 
-/**
- * Tell the user a file they still have open has been deleted on disk. It stays
- * open and keeps its contents, but it is no longer backed by anything, so the
- * next save has to go somewhere new.
- *
- * This is an unresolved decision, not an event, so the toast stays until it is
- * dealt with and carries the action that deals with it. Telling someone to save
- * without saying they will be asked for a new location makes the file picker
- * read as an error.
- */
+/** An open file lost its disk original - an unresolved decision, not an event,
+ *  so the toast persists and says saving will ask for a new location. */
 export function notifyOpenFileDeleted(
   names: string[],
   onSaveAs?: () => void,
@@ -386,13 +313,8 @@ export function notifyOpenFileDeleted(
   });
 }
 
-/**
- * Tell the user their unsaved edits are shadowing a newer file on disk.
- *
- * Keeping theirs is the safe default and is what already happened, so the
- * action offered is the reversal. Announcing a fork with no way to resolve it
- * leaves the user to work out for themselves which version they are looking at.
- */
+/** Unsaved edits are shadowing a newer disk file. Keeping theirs already
+ *  happened, so the action offered is the reversal, not a fork with no exit. */
 export function notifyDiskConflict(name: string, onUseDisk?: () => void): void {
   toast({
     title: translate("desktopFileLink.conflict.title", "File changed on disk"),
@@ -414,12 +336,8 @@ export function notifyDiskConflict(name: string, onUseDisk?: () => void): void {
   });
 }
 
-/**
- * Say that an external edit was picked up. Silently swapping the bytes is the
- * right default - it is what "the file on disk is the truth" means - but doing
- * it with no trace at all leaves someone who did not expect the change unable
- * to tell whose version is on screen.
- */
+/** Say an external edit was picked up: swapping bytes silently is right, but
+ *  with no trace nobody can tell whose version is on screen. */
 export function notifyDiskReloaded(name: string): void {
   toast({
     alertType: "neutral",

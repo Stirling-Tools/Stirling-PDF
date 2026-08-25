@@ -6,20 +6,8 @@ import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { diskLinkState } from "@app/services/diskFileSync";
 
-/**
- * Says whether a file is still backed by its original on disk.
- *
- * Losing that link, or diverging from it, is a lasting state, but the only
- * thing that ever announced it was a toast - so a few seconds after it happened
- * there was no way to tell an orphaned file from a healthy one, and the file
- * would still look saved while Ctrl+S was quietly about to ask for a new
- * location. This is that state, kept on screen.
- *
- * Nothing is shown for the two ordinary cases - a healthy link, and a file that
- * never came from disk - so the badge only ever appears when something needs
- * attention. `FileOriginBadge` sits next to this and answers a different
- * question (local vs server storage), not this one.
- */
+/** Keeps a lost or diverged disk link on screen, where only a transient toast said so.
+ *  Silent when healthy or never from disk, so it always means trouble. */
 interface DiskLinkBadgeProps {
   file: StirlingFileStub;
   /** Icon-only, for dense rows. */
@@ -70,10 +58,8 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
 
   return (
     <Tooltip label={config.tooltip} withinPortal multiline maw={300}>
-      {/* Compact is icon-only, so it needs a name of its own - and aria-label
-          is prohibited on a bare span, hence role="img". With the label
-          visible the text already names it, and a second aria-label would
-          only shadow it. */}
+      {/* Icon-only needs its own name, but aria-label is prohibited on a bare
+          span, hence role="img". With the label visible it would shadow the text. */}
       <span
         style={badgeStyle}
         {...(compact ? { role: "img", "aria-label": config.label } : {})}

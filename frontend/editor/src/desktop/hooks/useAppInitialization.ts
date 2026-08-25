@@ -81,10 +81,8 @@ export function useAppInitialization(): void {
           );
 
           const addedFiles = await addFiles(filesArray, { selectFiles: true });
-          // addFiles has already stored the records, so the path is stamped after
-          // the fact - updateStirlingFileStub mirrors it into IndexedDB so the
-          // link survives a restart. The baseline goes with it, otherwise the
-          // next open reads the file back as if it had changed externally.
+          // Path is stamped after addFiles stores records, so the link survives restart.
+          // The baseline goes too, or the next open sees a false external change.
           await Promise.all(
             addedFiles.map(async (file) => {
               const localFilePath = quickKeyToPath.get(file.quickKey);

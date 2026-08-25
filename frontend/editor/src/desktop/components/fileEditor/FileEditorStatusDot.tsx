@@ -11,9 +11,8 @@ interface FileEditorStatusDotProps {
 export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
   const { t } = useTranslation();
 
-  // An orphaned file used to read as plain "not saved to disk" - the same thing
-  // a brand-new file says - so a document whose original had been deleted
-  // underneath the user was indistinguishable from one never saved.
+  // Orphaned needs its own case: it used to read "not saved to disk", making a
+  // deleted original indistinguishable from a file never saved.
   const { label, color } = (() => {
     switch (diskLinkState(file)) {
       case "orphaned":

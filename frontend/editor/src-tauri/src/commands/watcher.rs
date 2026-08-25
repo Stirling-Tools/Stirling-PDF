@@ -6,13 +6,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter};
 
-// Live watch over the files the workbench currently has linked to disk, so an
-// external edit or delete is noticed as it happens rather than at the next list
-// build. Without this the app only reconciles when something asks it to, which
-// leaves a stale document on screen for as long as the user leaves it open.
-//
-// Directories are watched rather than files: most editors save by writing a
-// temp file and renaming over the target, which drops a file-level watch.
+// Watches linked files live so an external edit or delete does not sit stale on screen.
+// Directories, not files: editors save by rename, which drops a file-level watch.
 
 /// The watcher itself. Dropping it stops delivery, so it is parked here.
 static WATCHER: Mutex<Option<RecommendedWatcher>> = Mutex::new(None);

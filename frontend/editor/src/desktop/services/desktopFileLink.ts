@@ -1,9 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { DiskFileState } from "@core/services/desktopFileLink";
 
-// Desktop implementation of the file-link seam. Overrides the core no-op in
-// desktop builds (see @app alias order) so a file opened from disk stays 1:1
-// with the real file rather than drifting from its IndexedDB copy.
+// Desktop side of the file-link seam; overrides the core no-op via @app alias
+// order so disk-opened files stay 1:1 instead of drifting from IndexedDB.
 
 export type { DiskFileState };
 
@@ -37,11 +36,8 @@ export async function pathExistsOnDisk(path: string): Promise<boolean> {
   }
 }
 
-/**
- * Watch the given linked files for external changes. Replaces any previous
- * watch set; an empty list stops watching. Failure is non-fatal - detection
- * falls back to the checks made at list-build and open time.
- */
+/** Replaces the watch set; empty list stops watching. Failure is non-fatal -
+ * list-build and open-time checks still catch changes. */
 export async function watchDiskPaths(paths: string[]): Promise<void> {
   if (!isTauri()) return;
   try {
@@ -69,11 +65,8 @@ export async function onDiskFilesChanged(
   }
 }
 
-/**
- * Read the live bytes of a linked file. Returns null when the file is gone or
- * unreadable so callers can fall back to the stored copy rather than showing an
- * empty document.
- */
+/** Live bytes of a linked file, or null when gone/unreadable so callers fall
+ * back to the stored copy instead of showing an empty document. */
 export async function readFileFromDisk(
   path: string,
 ): Promise<ArrayBuffer | null> {
@@ -81,9 +74,8 @@ export async function readFileFromDisk(
   try {
     const { readFile } = await import("@tauri-apps/plugin-fs");
     const bytes = await readFile(path);
-    // readFile usually hands back a tightly-packed buffer; use it directly
-    // instead of slicing, which would copy the whole file (a transient 2x
-    // memory spike on large PDFs). Only slice a view over a larger buffer.
+    // Use a tightly-packed buffer directly; slicing copies the whole file
+    // (2x memory spike on large PDFs). Only slice a view over a larger buffer.
     return bytes.byteOffset === 0 &&
       bytes.byteLength === bytes.buffer.byteLength
       ? bytes.buffer

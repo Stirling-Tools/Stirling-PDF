@@ -5,15 +5,8 @@ import type {
 } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
-/**
- * A conflict has to be recorded on the stub, not just toasted.
- *
- * `updateStirlingFileStub` silently drops updates for a file that is not in
- * `filesRef` yet, so marking the conflict at the point it is detected - before
- * the bytes are published - loses it. Nothing failed visibly: the toast still
- * appeared, and only the badge (the one lasting sign of an unresolved fork)
- * quietly never showed. Pin the ordering.
- */
+// updateStirlingFileStub drops updates for a file not yet in filesRef, so marking
+// the conflict before the bytes are published loses the badge with no visible failure.
 
 const diskState = vi.hoisted(() => ({
   state: { exists: true, size: 999, modifiedMs: 9_000 },
@@ -51,7 +44,8 @@ const dirtyLinkedStub = (): StirlingFileStub =>
 
 beforeEach(() => {
   getStirlingFile.mockImplementation(
-    async () => new File(["%PDF-1.7"], "report.pdf", { type: "application/pdf" }),
+    async () =>
+      new File(["%PDF-1.7"], "report.pdf", { type: "application/pdf" }),
   );
 });
 
@@ -98,9 +92,9 @@ describe("a disk conflict is recorded on the stub, not just toasted", () => {
   test("diskConflictAt survives the filesRef ordering guard", async () => {
     const updates = await hydrate();
     await vi.waitFor(() =>
-      expect(
-        updates.some((u) => typeof u.diskConflictAt === "number"),
-      ).toBe(true),
+      expect(updates.some((u) => typeof u.diskConflictAt === "number")).toBe(
+        true,
+      ),
     );
   });
 });

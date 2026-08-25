@@ -54,9 +54,8 @@ export interface StirlingFileStub extends BaseFileMetadata {
   // one of them, which is how a stale stored copy is spotted without hashing.
   diskSyncedSize?: number;
   diskSyncedModifiedMs?: number;
-  // The path this file used to be backed by, kept when the original is deleted.
-  // Losing the link is a lasting state, not a moment - the badge reads this so
-  // it can keep saying "not on disk" long after the toast about it has gone.
+  // Path this file used to be backed by, kept when the original is deleted so
+  // the badge keeps saying "not on disk" long after the toast has gone.
   orphanedFilePath?: string;
   // Epoch ms of an unresolved divergence: disk moved on while we held unsaved
   // edits, so two real versions exist and the user has not picked one yet.
@@ -386,10 +385,7 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
-  /**
-   * Re-check open files against their disk originals (desktop file watcher).
-   * No-op for files with no disk link.
-   */
+  /** Re-check open files against their disk originals (desktop file watcher); no-op without a disk link. */
   resyncFilesFromDisk: (fileIds: FileId[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;

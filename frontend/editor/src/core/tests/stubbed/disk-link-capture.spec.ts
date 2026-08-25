@@ -1,26 +1,12 @@
-// oxlint-disable typescript/no-explicit-any -- this file impersonates Tauri's
-// untyped `window.__TAURI_INTERNALS__` bridge; typing the shim would mean
-// re-declaring Tauri's private IPC surface for no benefit.
+// oxlint-disable typescript/no-explicit-any -- impersonates Tauri's untyped
+// `__TAURI_INTERNALS__` bridge; typing it would re-declare Tauri's private IPC.
 import { test } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 
-/**
- * CAPTURE HARNESS - not a regression test.
- *
- * Drives the real desktop disk-linking code in a browser by standing up a fake
- * Tauri IPC layer over an in-memory disk, then screenshots each state for the
- * walkthrough. Needs the dev server in DESKTOP mode, because
- * `desktopFileLinkingSupported` is only true when `@app/services/desktopFileLink`
- * resolves to the desktop implementation:
- *
- *   npx vite --mode desktop --port 5173 --strictPort
- *   SHOT_DIR=<dir> npx playwright test zz-disk-link-capture --project=stubbed
- *
- * Without SHOT_DIR it still runs (and so still proves the flows work) but
- * writes nothing.
- */
+/** Capture harness, not a regression test: fakes Tauri IPC over an in-memory disk.
+ *  Needs `vite --mode desktop` (for desktopFileLinkingSupported) and SHOT_DIR set. */
 
 const SHOT_DIR = process.env.SHOT_DIR;
 // Playwright runs from the editor dir, so this is stable without __dirname
@@ -57,9 +43,8 @@ async function installTauri(page: Page) {
   await page.addInitScript(() => {
     const w = window as any;
     w.isTauri = true;
-    // The init script re-runs on every navigation, so the virtual disk lives in
-    // sessionStorage - otherwise a reload would silently empty it and every
-    // scenario would look like "the file was deleted".
+    // Init script re-runs on every navigation, so the disk lives in sessionStorage -
+    // a reload would otherwise empty it and make every file look deleted.
     w.__disk = JSON.parse(sessionStorage.getItem("__disk") || "{}");
     w.__saveDisk = () =>
       sessionStorage.setItem("__disk", JSON.stringify(w.__disk));
@@ -74,9 +59,8 @@ async function installTauri(page: Page) {
         : { exists: false, size: 0, modifiedMs: 0 };
     };
 
-    // The desktop build sends every API call through tauri-plugin-http, not
-    // window.fetch, so Playwright's page.route() stubs would never see them.
-    // Delegating to the browser's fetch puts them back on the intercepted path.
+    // Desktop API calls go through tauri-plugin-http, not window.fetch, so
+    // page.route() never sees them; delegating to fetch restores interception.
     const httpReqs: Record<number, any> = {};
     const httpRes: Record<number, { body: Uint8Array; read: boolean }> = {};
     let nextRid = 1;
@@ -294,11 +278,8 @@ async function shoot(page: Page, name: string, theme: string) {
   console.log(`  shot ${name}_${theme}`);
 }
 
-/**
- * Double-click the named card to load it into the workbench, then wait for the
- * app to actually leave the file list - without this the capture can fire while
- * the open is still in flight and show an empty workbench.
- */
+/** Double-click a card into the workbench and wait for the open to finish -
+ *  capturing mid-flight shows an empty workbench. */
 async function openCard(page: Page, name: string) {
   // Scope to the grid card: a bare text match also hits the library rail on the
   // left, which navigates without loading the file into the workbench.
@@ -328,11 +309,8 @@ async function gotoFiles(page: Page) {
   await page.waitForTimeout(800);
 }
 
-/**
- * Put the world into a known state: disk contents, stored records, then a full
- * navigation so the app re-reads IndexedDB from cold. Always ends on the file
- * list with any onboarding dismissed.
- */
+/** Stage disk contents and stored records, then navigate so the app re-reads
+ *  IndexedDB cold. Always ends on the file list with onboarding dismissed. */
 async function stage(
   page: Page,
   disk: Record<string, DiskEntry>,
