@@ -49,7 +49,8 @@ import org.junit.jupiter.api.Test;
  *       redirects unmappable ones to LiberationSans).
  * </ol>
  */
-@Disabled("Diagnostic probe: dumps PDFBox font encoding tables to stdout and asserts nothing. Kept for font debugging; run manually.")
+@Disabled(
+        "Diagnostic probe: dumps PDFBox font encoding tables to stdout and asserts nothing. Kept for font debugging; run manually.")
 public class PdfBoxFontEncodingProbeTest {
 
     private static final Path PROJECT_ROOT =

@@ -49,7 +49,8 @@ import org.junit.jupiter.api.Test;
  * <p>Not a real regression test - run with --tests SamplePdfFontDumpTest -i to see the stdout
  * output.
  */
-@Disabled("Diagnostic probe: dumps Sample.pdf font internals to stdout and asserts nothing. Kept for font debugging; run manually.")
+@Disabled(
+        "Diagnostic probe: dumps Sample.pdf font internals to stdout and asserts nothing. Kept for font debugging; run manually.")
 public class SamplePdfFontDumpTest {
 
     private static final Path SAMPLE =
