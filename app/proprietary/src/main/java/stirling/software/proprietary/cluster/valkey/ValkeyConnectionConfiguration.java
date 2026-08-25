@@ -145,12 +145,22 @@ public class ValkeyConnectionConfiguration {
                             + " cluster.valkey.username/password (and sentinel.password) instead",
                     mode);
         }
+        int database = databaseOrZero(uri.getPath());
+        if (database != 0) {
+            log.warn(
+                    "cluster.valkey.url selects database {} but mode={} ignores the url - this"
+                            + " deployment will use database 0",
+                    database,
+                    mode);
+        }
     }
 
     static RedisStandaloneConfiguration standaloneConfiguration(
             Endpoint endpoint, String username, String password) {
         RedisStandaloneConfiguration cfg =
                 new RedisStandaloneConfiguration(endpoint.host(), endpoint.port());
+        // The database is the only isolation between two deployments sharing one Valkey.
+        cfg.setDatabase(endpoint.database());
         applyAuth(cfg, username, password);
         return cfg;
     }
@@ -197,30 +207,38 @@ public class ValkeyConnectionConfiguration {
     }
 
     /** Parsed connection endpoint; username/password are null when absent. */
-    record Endpoint(String host, int port, boolean tls, String username, String password) {}
+    record Endpoint(
+            String host, int port, boolean tls, String username, String password, int database) {}
 
     /**
      * Reserved chars in the password ({@code @ : / # ?}) must be percent-encoded - {@link URI}
      * otherwise parses them structurally (e.g. {@code #} starts the fragment).
      */
-    static Endpoint parseUrl(String url) {
-        if (url == null || url.isBlank()) {
+    static Endpoint parseUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
             throw new IllegalStateException("cluster.valkey.url must be set when backplane=valkey");
         }
+        // A .env line or YAML block scalar leaves a trailing newline that URI rejects.
+        String url = rawUrl.trim();
         URI uri;
         try {
             uri = new URI(url);
         } catch (URISyntaxException ex) {
+            // Never attach ex: its own message echoes the url, credentials included.
             throw new IllegalStateException(
-                    "cluster.valkey.url is not a valid URI: " + url + " (" + ex.getMessage() + ")",
-                    ex);
+                    "cluster.valkey.url is not a valid URI: "
+                            + redactUserInfo(url)
+                            + " ("
+                            + ex.getReason()
+                            + (ex.getIndex() >= 0 ? " at index " + ex.getIndex() : "")
+                            + ")");
         }
         String host = uri.getHost();
         if (host == null || host.isBlank()) {
             throw new IllegalStateException(
                     "cluster.valkey.url has no host: "
-                            + url
-                            + " (expected redis://[user:password@]host[:port])");
+                            + redactUserInfo(url)
+                            + " (expected redis://[user:password@]host[:port][/database])");
         }
         boolean tls = "rediss".equalsIgnoreCase(uri.getScheme());
         int port = uri.getPort() <= 0 ? 6379 : uri.getPort();
@@ -236,7 +254,69 @@ public class ValkeyConnectionConfiguration {
                 password = parts[0];
             }
         }
-        return new Endpoint(host, port, tls, username, password);
+        int database;
+        try {
+            database = parseDatabaseSegment(uri.getPath());
+        } catch (NumberFormatException ex) {
+            throw new IllegalStateException(
+                    "cluster.valkey.url has an invalid database index: "
+                            + redactUserInfo(url)
+                            + " (the path must be a non-negative integer, e.g."
+                            + " redis://valkey:6379/2)");
+        }
+        return new Endpoint(host, port, tls, username, password, database);
+    }
+
+    /**
+     * Spring Boot's {@code spring.data.redis.url} reads the path as the database index, so an
+     * operator copying that syntax must not be silently downgraded to database 0.
+     */
+    private static int parseDatabaseSegment(String path) {
+        if (path == null || path.isBlank() || "/".equals(path)) {
+            return 0;
+        }
+        int database = Integer.parseInt(path.startsWith("/") ? path.substring(1) : path);
+        if (database < 0) {
+            throw new NumberFormatException("negative database index " + database);
+        }
+        return database;
+    }
+
+    /** Lenient variant: the ignored-url guard must never fail boot over an unused database. */
+    private static int databaseOrZero(String path) {
+        try {
+            return parseDatabaseSegment(path);
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    /**
+     * Masks {@code user:password@} so a url can be named in an error. Bounded to the authority: an
+     * unbounded lastIndexOf('@') would mangle {@code redis://valkey:6379/0?tag=a@b}.
+     */
+    static String redactUserInfo(String url) {
+        if (url == null) {
+            return null;
+        }
+        int slashes = url.indexOf("//");
+        if (slashes < 0) {
+            return url;
+        }
+        int start = slashes + 2;
+        int end = url.length();
+        for (int i = start; i < url.length(); i++) {
+            char c = url.charAt(i);
+            if (c == '/' || c == '?' || c == '#') {
+                end = i;
+                break;
+            }
+        }
+        int at = end == start ? -1 : url.lastIndexOf('@', end - 1);
+        if (at < start) {
+            return url;
+        }
+        return url.substring(0, start) + "****" + url.substring(at);
     }
 
     /**
@@ -365,7 +445,12 @@ public class ValkeyConnectionConfiguration {
 
     static String describeTarget(Valkey.ValkeyMode mode, Endpoint endpoint, Valkey valkey) {
         return switch (mode) {
-            case STANDALONE -> endpoint.host() + ":" + endpoint.port();
+            // Database only when non-zero: the boot log stays host:port for the common case.
+            case STANDALONE ->
+                    endpoint.host()
+                            + ":"
+                            + endpoint.port()
+                            + (endpoint.database() == 0 ? "" : "/" + endpoint.database());
             case SENTINEL ->
                     "sentinels="
                             + String.join(",", valkey.getSentinel().getNodes())

@@ -1,5 +1,6 @@
 package stirling.software.common.cluster;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,6 +13,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
@@ -19,10 +25,19 @@ import stirling.software.common.model.ApplicationProperties.Cluster.Valkey;
 
 class ClusterConfigValidationTest {
 
+    /** Stand-ins for the shared AutomaticallyGenerated values every node must be given. */
+    private static final String SHARED_KEY = "11111111-1111-1111-1111-111111111111";
+
+    private static final String SHARED_UUID = "22222222-2222-2222-2222-222222222222";
+
+    private static ClusterConfig config(ApplicationProperties props) {
+        return new ClusterConfig(props, SHARED_KEY, SHARED_UUID);
+    }
+
     @Test
     void validationPassesWhenDisabled() {
         ApplicationProperties props = new ApplicationProperties();
-        ClusterConfig config = new ClusterConfig(props);
+        ClusterConfig config = config(props);
         assertDoesNotThrow(() -> invokeValidate(config));
     }
 
@@ -32,7 +47,7 @@ class ClusterConfigValidationTest {
         Cluster cluster = props.getCluster();
         cluster.setEnabled(true);
         cluster.setBackplane("valkey");
-        ClusterConfig config = new ClusterConfig(props);
+        ClusterConfig config = config(props);
         assertThrows(IllegalStateException.class, () -> invokeValidate(config));
     }
 
@@ -44,7 +59,7 @@ class ClusterConfigValidationTest {
         cluster.setEnabled(true);
         cluster.setBackplane("valkey");
         cluster.getValkey().setUrl("redis://localhost:6379");
-        ClusterConfig config = new ClusterConfig(props);
+        ClusterConfig config = config(props);
         assertDoesNotThrow(() -> invokeValidate(config));
     }
 
@@ -54,7 +69,7 @@ class ClusterConfigValidationTest {
         Cluster cluster = props.getCluster();
         cluster.setEnabled(true);
         cluster.setBackplane("inprocess");
-        ClusterConfig config = new ClusterConfig(props);
+        ClusterConfig config = config(props);
         assertDoesNotThrow(() -> invokeValidate(config));
     }
 
@@ -265,12 +280,12 @@ class ClusterConfigValidationTest {
         }
 
         private void assertPasses() {
-            ClusterConfig config = new ClusterConfig(props);
+            ClusterConfig config = config(props);
             assertDoesNotThrow(() -> invokeValidate(config));
         }
 
         private void assertMessage(String... expectedSubstrings) {
-            ClusterConfig config = new ClusterConfig(props);
+            ClusterConfig config = config(props);
             IllegalStateException ex =
                     assertThrows(IllegalStateException.class, () -> invokeValidate(config));
             for (String expected : expectedSubstrings) {
@@ -327,7 +342,7 @@ class ClusterConfigValidationTest {
             v.setUrl("redis://valkey:6379");
             v.setPool(null);
             v.setTls(null);
-            ClusterConfig config = new ClusterConfig(props);
+            ClusterConfig config = config(props);
             assertDoesNotThrow(() -> invokeValidate(config));
         }
 
@@ -339,12 +354,162 @@ class ClusterConfigValidationTest {
         }
 
         private void assertMessage(String expected) {
-            ClusterConfig config = new ClusterConfig(props);
+            ClusterConfig config = config(props);
             IllegalStateException ex =
                     assertThrows(IllegalStateException.class, () -> invokeValidate(config));
             assertTrue(
                     ex.getMessage().contains(expected),
                     "message must contain '" + expected + "'; got: " + ex.getMessage());
+        }
+    }
+
+    /** AutomaticallyGenerated.key/.UUID feed metadata encryption and licence seat HMACs. */
+    @Nested
+    @DisplayName("shared AutomaticallyGenerated key/UUID guard")
+    class SharedCryptoMaterial {
+
+        private ApplicationProperties props;
+
+        @Test
+        @DisplayName("an unset key is rejected and names the env var to set")
+        void missingKeyRejected() {
+            enabled("valkey");
+            assertMessage(
+                    new ClusterConfig(props, "", SHARED_UUID),
+                    "AutomaticallyGenerated.key",
+                    "same UUID on every node",
+                    "AUTOMATICALLYGENERATED_KEY");
+        }
+
+        @Test
+        @DisplayName("an unset UUID is rejected even when the key is set")
+        void missingUuidRejected() {
+            enabled("valkey");
+            assertMessage(
+                    new ClusterConfig(props, SHARED_KEY, null),
+                    "AutomaticallyGenerated.UUID",
+                    "AUTOMATICALLYGENERATED_UUID");
+        }
+
+        @Test
+        @DisplayName("the settings.yml.template placeholder is rejected: InitialSetup replaces it")
+        void nonUuidPlaceholderRejected() {
+            enabled("valkey");
+            assertMessage(
+                    new ClusterConfig(props, "example", "example"),
+                    "AutomaticallyGenerated.key",
+                    "must be a UUID");
+        }
+
+        @Test
+        @DisplayName("the guard also applies to backplane=inprocess")
+        void inProcessBackplaneAlsoGuarded() {
+            enabled("inprocess");
+            assertMessage(new ClusterConfig(props, "", ""), "AutomaticallyGenerated.key");
+        }
+
+        @Test
+        @DisplayName("two explicit UUIDs pass")
+        void explicitSharedValuesPass() {
+            enabled("valkey");
+            props.getCluster().getValkey().setUrl("redis://valkey:6379");
+            assertDoesNotThrow(() -> invokeValidate(config(props)));
+        }
+
+        @Test
+        @DisplayName("cluster.enabled=false never requires the shared values")
+        void disabledClusterSkipsGuard() {
+            enabled("valkey");
+            props.getCluster().setEnabled(false);
+            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, "", "")));
+        }
+
+        @Test
+        @DisplayName("the pre-bean guard reads the same rule as the @PostConstruct one")
+        void staticGuardMatchesPostConstructGuard() {
+            assertDoesNotThrow(() -> ClusterConfig.validateSharedCryptoMaterial(false, "", ""));
+            assertDoesNotThrow(
+                    () ->
+                            ClusterConfig.validateSharedCryptoMaterial(
+                                    true, SHARED_KEY, SHARED_UUID));
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> ClusterConfig.validateSharedCryptoMaterial(true, SHARED_KEY, ""));
+        }
+
+        private void enabled(String backplane) {
+            props = new ApplicationProperties();
+            props.getCluster().setEnabled(true);
+            props.getCluster().setBackplane(backplane);
+        }
+
+        private void assertMessage(ClusterConfig config, String... expectedSubstrings) {
+            IllegalStateException ex =
+                    assertThrows(IllegalStateException.class, () -> invokeValidate(config));
+            for (String expected : expectedSubstrings) {
+                assertTrue(
+                        ex.getMessage().contains(expected),
+                        "message must contain '" + expected + "'; got: " + ex.getMessage());
+            }
+        }
+    }
+
+    /** The guard must abort the context before InitialSetup's @PostConstruct can generate one. */
+    @Nested
+    @DisplayName("pre-bean shared key/UUID guard")
+    class SharedCryptoMaterialBootGuard {
+
+        private final ApplicationContextRunner runner =
+                new ApplicationContextRunner()
+                        .withConfiguration(
+                                AutoConfigurations.of(PropertyPlaceholderAutoConfiguration.class))
+                        .withUserConfiguration(TestAppPropertiesConfig.class, ClusterConfig.class)
+                        .withPropertyValues("cluster.enabled=true", "cluster.backplane=inprocess");
+
+        @Test
+        @DisplayName("boot fails before any bean is created when the shared values are missing")
+        void bootFailsWhenSharedValuesMissing() {
+            runner.withUserConfiguration(StubInitialSetupConfig.class)
+                    .run(
+                            context ->
+                                    assertThat(context)
+                                            .getFailure()
+                                            .hasMessageContaining("AutomaticallyGenerated.key")
+                                            .hasMessageContaining("AUTOMATICALLYGENERATED_KEY"));
+        }
+
+        @Test
+        @DisplayName("boot succeeds once both values are configured")
+        void bootSucceedsWhenSharedValuesConfigured() {
+            runner.withUserConfiguration(StubInitialSetupConfig.class)
+                    .withPropertyValues(
+                            "AutomaticallyGenerated.key=" + SHARED_KEY,
+                            "AutomaticallyGenerated.UUID=" + SHARED_UUID)
+                    .run(context -> assertThat(context).hasNotFailed());
+        }
+
+        @Test
+        @DisplayName("no InitialSetup in the context means nothing mints a per-node UUID")
+        void guardSkippedWithoutInitialSetup() {
+            runner.run(context -> assertThat(context).hasNotFailed());
+        }
+    }
+
+    /** Defaults-only bean: the production class loads YAML in {@code @PostConstruct}. */
+    @Configuration
+    static class TestAppPropertiesConfig {
+        @Bean
+        ApplicationProperties applicationProperties() {
+            return new ApplicationProperties();
+        }
+    }
+
+    /** Stands in for :core's InitialSetup, which the guard keys off by bean name. */
+    @Configuration
+    static class StubInitialSetupConfig {
+        @Bean(name = "initialSetup")
+        Object initialSetup() {
+            return new Object();
         }
     }
 

@@ -1,19 +1,22 @@
 package stirling.software.common.cluster;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import jakarta.annotation.PostConstruct;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
+import stirling.software.common.util.GeneralUtils;
 
 /** Validates cluster config consistency. All guards are skipped when cluster.enabled=false. */
 @Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class ClusterConfig {
 
     private static final String MISSING_URL_MESSAGE =
@@ -21,7 +24,64 @@ public class ClusterConfig {
                     + " cluster.valkey.url to be set (e.g."
                     + " redis://valkey:6379).";
 
+    private static final String SHARED_SECRET_MESSAGE_SUFFIX =
+            " must be set to the same UUID on every node when cluster.enabled=true (env"
+                    + " AUTOMATICALLYGENERATED_KEY and AUTOMATICALLYGENERATED_UUID). Otherwise every"
+                    + " node mints its own at first boot, so workflow metadata encrypted on one"
+                    + " node cannot be decrypted on another and licence seat signatures do not"
+                    + " verify across nodes. The value must be a UUID; anything else (the shipped"
+                    + " 'example' placeholder included) is replaced by a per-node random UUID.";
+
+    /** Default bean name of stirling.software.SPDF.config.InitialSetup, which lives in :core. */
+    private static final String INITIAL_SETUP_BEAN = "initialSetup";
+
     private final ApplicationProperties applicationProperties;
+    private final String automaticallyGeneratedKey;
+    private final String automaticallyGeneratedUuid;
+
+    // Read from config, not from ApplicationProperties: InitialSetup overwrites the bound values
+    // with per-node UUIDs in its own @PostConstruct, which would defeat the guard below.
+    public ClusterConfig(
+            ApplicationProperties applicationProperties,
+            @Value("${AutomaticallyGenerated.key:}") String automaticallyGeneratedKey,
+            @Value("${AutomaticallyGenerated.UUID:}") String automaticallyGeneratedUuid) {
+        this.applicationProperties = applicationProperties;
+        this.automaticallyGeneratedKey = automaticallyGeneratedKey;
+        this.automaticallyGeneratedUuid = automaticallyGeneratedUuid;
+    }
+
+    // InitialSetup's @PostConstruct usually wins the race against ours and would persist a
+    // per-node UUID before we can refuse; a BeanFactoryPostProcessor runs before either of them.
+    @Bean
+    static BeanFactoryPostProcessor clusterSharedSecretGuard(Environment environment) {
+        return beanFactory -> {
+            // InitialSetup is the only thing that mints per-node UUIDs; without it there is
+            // nothing to pre-empt, and slice tests that wire ClusterConfig alone stay usable.
+            if (!beanFactory.containsBeanDefinition(INITIAL_SETUP_BEAN)) {
+                return;
+            }
+            validateSharedCryptoMaterial(
+                    environment.getProperty("cluster.enabled", Boolean.class, false),
+                    environment.getProperty("AutomaticallyGenerated.key", ""),
+                    environment.getProperty("AutomaticallyGenerated.UUID", ""));
+        };
+    }
+
+    /** Cluster nodes derive metadata encryption and licence HMAC keys from these two values. */
+    static void validateSharedCryptoMaterial(boolean clusterEnabled, String key, String uuid) {
+        if (!clusterEnabled) {
+            return;
+        }
+        requireSharedUuid("AutomaticallyGenerated.key", key);
+        requireSharedUuid("AutomaticallyGenerated.UUID", uuid);
+    }
+
+    // InitialSetup replaces any non-UUID value, so only a valid UUID survives startup unchanged.
+    private static void requireSharedUuid(String property, String value) {
+        if (!GeneralUtils.isValidUUID(value)) {
+            throw new IllegalStateException(property + SHARED_SECRET_MESSAGE_SUFFIX);
+        }
+    }
 
     @PostConstruct
     void validate() {
@@ -29,6 +89,7 @@ public class ClusterConfig {
         if (!cluster.isEnabled()) {
             return;
         }
+        validateSharedCryptoMaterial(true, automaticallyGeneratedKey, automaticallyGeneratedUuid);
         String backplane = cluster.getBackplane();
         if ("valkey".equalsIgnoreCase(backplane)) {
             // getValkey() re-seeds a null block, so an absent 'valkey:' reads as a missing url.

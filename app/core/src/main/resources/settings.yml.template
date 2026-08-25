@@ -329,9 +329,11 @@ metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
 # Automatically Generated Settings (Do Not Edit Directly)
+# Generated on first boot and written back here. In a cluster EVERY node must carry the SAME key and
+# UUID (env: AUTOMATICALLYGENERATED_KEY / AUTOMATICALLYGENERATED_UUID) or nodes cannot read each other's data.
 AutomaticallyGenerated:
-  key: example
-  UUID: example
+  key: example # AES key for stored metadata. Differs per node = one node cannot decrypt another's rows.
+  UUID: example # Part of the licence-seat HMAC. Differs per node = peers reject each other's seat count.
   appVersion: 0.35.0
 
 processExecutor:
@@ -463,7 +465,9 @@ cluster:
   # The Valkey/Redis server every Stirling PDF node shares.
   valkey:
     mode: "" # 'standalone' | 'sentinel' | 'cluster'. Blank = inferred from whichever block below is filled in.
-    url: "" # e.g. 'redis://valkey:6379'. STANDALONE ONLY - sentinel and cluster ignore it, so a 'rediss://' url there refuses to boot unless tls.enabled is true.
+    url: "" # e.g. 'redis://valkey:6379', optionally '/2' to pick a database. STANDALONE ONLY - sentinel and cluster ignore it, so a 'rediss://' url there refuses to boot unless tls.enabled is true.
+    # Two Stirling deployments sharing one Valkey MUST use different database indexes: there is no key
+    # prefix, so on the same index they merge each other's node registries and cross-route job traffic.
     username: "" # Valkey ACL user. Overrides any user in 'url'.
     password: "" # Valkey password. Overrides any password in 'url'. Never logged.
     commandTimeoutMs: 2000 # Per-command timeout, so a slow Valkey cannot stall request threads.

@@ -510,7 +510,7 @@ class ValkeyConnectionConfigurationTest {
         void hostPortAndCredentials() {
             RedisStandaloneConfiguration cfg =
                     ValkeyConnectionConfiguration.standaloneConfiguration(
-                            new Endpoint("valkey", 6380, false, null, null), "alice", "s3cret");
+                            new Endpoint("valkey", 6380, false, null, null, 0), "alice", "s3cret");
             assertEquals("valkey", cfg.getHostName());
             assertEquals(6380, cfg.getPort());
             assertEquals("alice", cfg.getUsername());
@@ -518,11 +518,23 @@ class ValkeyConnectionConfigurationTest {
         }
 
         @Test
+        @DisplayName("the parsed database index reaches the connection configuration")
+        void databaseIsApplied() {
+            RedisStandaloneConfiguration cfg =
+                    ValkeyConnectionConfiguration.standaloneConfiguration(
+                            new Endpoint("valkey", 6379, false, null, null, 3), null, null);
+            assertEquals(
+                    3,
+                    cfg.getDatabase(),
+                    "database 0 for every deployment merges their node registries");
+        }
+
+        @Test
         @DisplayName("null credentials leave the configuration unauthenticated")
         void nullCredentialsLeaveNoAuth() {
             RedisStandaloneConfiguration cfg =
                     ValkeyConnectionConfiguration.standaloneConfiguration(
-                            new Endpoint("valkey", 6379, false, "from-url", "from-url-pw"),
+                            new Endpoint("valkey", 6379, false, "from-url", "from-url-pw", 0),
                             null,
                             null);
             assertNull(cfg.getUsername());
@@ -802,6 +814,15 @@ class ValkeyConnectionConfigurationTest {
         }
 
         @Test
+        @DisplayName("a database index in an ignored url warns but still boots")
+        void databaseInIgnoredUrlOnlyWarns() {
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("redis://valkey:6379/2"), ValkeyMode.CLUSTER, false);
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("redis://valkey:6379/notadb"), ValkeyMode.SENTINEL, false);
+        }
+
+        @Test
         @DisplayName("a blank url is nothing to guard")
         void blankUrlIsIgnored() {
             ValkeyConnectionConfiguration.guardIgnoredUrl(withUrl(""), ValkeyMode.CLUSTER, false);
@@ -819,7 +840,18 @@ class ValkeyConnectionConfigurationTest {
                     "valkey:6379",
                     ValkeyConnectionConfiguration.describeTarget(
                             ValkeyMode.STANDALONE,
-                            new Endpoint("valkey", 6379, false, null, null),
+                            new Endpoint("valkey", 6379, false, null, null, 0),
+                            new Valkey()));
+        }
+
+        @Test
+        @DisplayName("a non-zero database is surfaced so the boot log shows the isolation")
+        void standaloneWithDatabase() {
+            assertEquals(
+                    "valkey:6379/2",
+                    ValkeyConnectionConfiguration.describeTarget(
+                            ValkeyMode.STANDALONE,
+                            new Endpoint("valkey", 6379, false, null, null, 2),
                             new Valkey()));
         }
 
@@ -1012,6 +1044,101 @@ class ValkeyConnectionConfigurationTest {
                             () -> ValkeyConnectionConfiguration.parseUrl("redis://ho st:6379"));
             assertTrue(ex.getMessage().contains("not a valid URI"));
             assertTrue(ex.getMessage().contains("redis://ho st:6379"));
+        }
+
+        @Test
+        @DisplayName("a trailing newline is trimmed, not rejected (.env / YAML block scalar)")
+        void trailingNewlineIsTrimmed() {
+            Endpoint e = ValkeyConnectionConfiguration.parseUrl("redis://valkey:6380\n");
+            assertEquals("valkey", e.host());
+            assertEquals(6380, e.port());
+        }
+
+        @Test
+        @DisplayName("surrounding whitespace is trimmed too")
+        void surroundingWhitespaceIsTrimmed() {
+            assertEquals(
+                    "valkey",
+                    ValkeyConnectionConfiguration.parseUrl("  redis://valkey:6379  ").host());
+        }
+
+        @Test
+        @DisplayName("credentials never reach the invalid-URI message")
+        void invalidUriRedactsCredentials() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () ->
+                                    ValkeyConnectionConfiguration.parseUrl(
+                                            "redis://user:hunter2@ho st:6379"));
+            assertFalse(
+                    ex.getMessage().contains("hunter2"),
+                    "the password must never be logged; got: " + ex.getMessage());
+            assertNull(ex.getCause(), "the URISyntaxException message repeats the raw url");
+            assertTrue(ex.getMessage().contains("redis://****@ho st:6379"));
+        }
+
+        @Test
+        @DisplayName("credentials never reach the no-host message")
+        void noHostRedactsCredentials() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () ->
+                                    ValkeyConnectionConfiguration.parseUrl(
+                                            "redis://user:hunter2@host:notaport"));
+            assertTrue(ex.getMessage().contains("has no host"));
+            assertFalse(
+                    ex.getMessage().contains("hunter2"),
+                    "the password must never be logged; got: " + ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("an '@' in the query is not treated as userinfo when redacting")
+        void redactionIsBoundedToTheAuthority() {
+            assertEquals(
+                    "redis://valkey:6379/0?tag=a@b",
+                    ValkeyConnectionConfiguration.redactUserInfo("redis://valkey:6379/0?tag=a@b"));
+            assertEquals(
+                    "redis://****@valkey:6379/0?tag=a@b",
+                    ValkeyConnectionConfiguration.redactUserInfo(
+                            "redis://user:pw@valkey:6379/0?tag=a@b"));
+        }
+
+        @Test
+        @DisplayName("the path segment selects the database index")
+        void pathSelectsDatabase() {
+            assertEquals(
+                    2,
+                    ValkeyConnectionConfiguration.parseUrl("redis://valkey:6379/2").database(),
+                    "spring.data.redis.url honours the path, so operators expect this to");
+        }
+
+        @Test
+        @DisplayName("an absent path and a bare '/' both mean database 0")
+        void absentPathIsDatabaseZero() {
+            assertEquals(
+                    0, ValkeyConnectionConfiguration.parseUrl("redis://valkey:6379").database());
+            assertEquals(
+                    0, ValkeyConnectionConfiguration.parseUrl("redis://valkey:6379/").database());
+        }
+
+        @Test
+        @DisplayName("a non-numeric or negative database index is rejected, credentials redacted")
+        void invalidDatabaseIsRejected() {
+            IllegalStateException ex =
+                    assertThrows(
+                            IllegalStateException.class,
+                            () ->
+                                    ValkeyConnectionConfiguration.parseUrl(
+                                            "redis://user:hunter2@valkey:6379/notadb"));
+            assertTrue(
+                    ex.getMessage().contains("invalid database index"),
+                    "message must name the problem; got: " + ex.getMessage());
+            assertFalse(ex.getMessage().contains("hunter2"));
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> ValkeyConnectionConfiguration.parseUrl("redis://valkey:6379/-1"));
         }
     }
 }

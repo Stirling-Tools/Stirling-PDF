@@ -109,7 +109,7 @@ public class MetadataEncryptionService {
 
     /**
      * Reverses {@link #encryptBytes}. Also accepts legacy values stored as plain Base64 before
-     * encryption was introduced — {@link #decrypt} returns those unchanged, so they still decode.
+     * encryption was introduced - {@link #decrypt} returns those unchanged, so they still decode.
      */
     public byte[] decryptBytes(String stored) {
         if (stored == null) {
@@ -124,7 +124,7 @@ public class MetadataEncryptionService {
         String rawKey = applicationProperties.getAutomaticallyGenerated().getKey();
         if (rawKey == null || rawKey.isBlank()) {
             throw new IllegalStateException(
-                    "AutomaticallyGenerated.key is not initialised — cannot derive encryption key");
+                    "AutomaticallyGenerated.key is not initialised - cannot derive encryption key");
         }
         // SHA-256 of the raw key gives a stable 32-byte AES-256 key
         byte[] hash =
