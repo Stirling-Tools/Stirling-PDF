@@ -10,7 +10,11 @@ vi.mock("@app/services/policyApi", () => ({
 }));
 
 /** A stored policy in the shape the backend returns. */
-const policy = (id: string, categoryId?: string, sources?: string[]) => ({
+const policy = (
+  id: string,
+  categoryId?: string,
+  editor?: { allowed: boolean; runOn?: "upload" | "export" },
+) => ({
   id,
   name: id,
   enabled: true,
@@ -18,12 +22,13 @@ const policy = (id: string, categoryId?: string, sources?: string[]) => ({
   steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
   output: {
     type: "inline",
-    options: {
-      ...(categoryId ? { categoryId } : {}),
-      ...(sources ? { sources } : {}),
-    },
+    options: { ...(categoryId ? { categoryId } : {}) },
   },
   outputIds: [],
+  editor: {
+    allowed: editor?.allowed ?? false,
+    runOn: editor?.runOn ?? ("upload" as const),
+  },
 });
 
 /** Decode one stored policy and project it onto the state the editor reads. */
@@ -39,7 +44,7 @@ describe("fetchPoliciesByCategory", () => {
 
   it("keys a catalogue policy by its category", async () => {
     listPolicies.mockResolvedValue([
-      policy("pol-1", "classification", ["editor"]),
+      policy("pol-1", "classification", { allowed: true }),
     ]);
 
     const map = await fetchPoliciesByCategory();
@@ -60,7 +65,7 @@ describe("fetchPoliciesByCategory", () => {
 
   it("carries both kinds at once without either displacing the other", async () => {
     listPolicies.mockResolvedValue([
-      policy("pol-1", "classification", ["editor"]),
+      policy("pol-1", "classification", { allowed: true }),
       policy("pol-adhoc"),
     ]);
 
@@ -71,7 +76,7 @@ describe("fetchPoliciesByCategory", () => {
 
   it("records run order from the list, which is the team's order", async () => {
     listPolicies.mockResolvedValue([
-      policy("pol-1", "security", ["editor"]),
+      policy("pol-1", "security", { allowed: true }),
       policy("pol-adhoc"),
     ]);
 
@@ -85,18 +90,19 @@ describe("fetchPoliciesByCategory", () => {
 describe("decodedToState — runsOnEditor", () => {
   beforeEach(() => listPolicies.mockReset());
 
-  it("runs a catalogue tile that nobody has narrowed yet", async () => {
-    // Blank on a tile means "not yet scoped", which has always meant every source.
-    const state = await stateOf(policy("pol-1", "security"), "security");
+  it("runs a catalogue tile that opted into the editor", async () => {
+    const state = await stateOf(
+      policy("pol-1", "security", { allowed: true }),
+      "security",
+    );
 
     expect(state.runsOnEditor).toBe(true);
   });
 
-  it("does not run a catalogue tile narrowed to another source", async () => {
-    const state = await stateOf(
-      policy("pol-1", "security", ["s3-archive"]),
-      "security",
-    );
+  // Participation is the policy's own flag now, so a tile that never opted in does not run in the
+  // editor just because nobody narrowed its scope.
+  it("does not run a catalogue tile that never opted in", async () => {
+    const state = await stateOf(policy("pol-1", "security"), "security");
 
     expect(state.runsOnEditor).toBe(false);
   });
@@ -111,7 +117,7 @@ describe("decodedToState — runsOnEditor", () => {
 
   it("runs a builder pipeline that names the editor outright", async () => {
     const state = await stateOf(
-      policy("pol-adhoc", undefined, ["editor"]),
+      policy("pol-adhoc", undefined, { allowed: true }),
       "pol-adhoc",
     );
 

@@ -165,8 +165,6 @@ export function usePolicyAutoRun(): void {
             s.configured &&
             s.status === "active" &&
             s.backendId &&
-            // Resolved at decode: blank sources mean different things for a catalogue tile
-            // and for a builder pipeline (see runsOnEditor in policyBackend).
             s.runsOnEditor &&
             (s.runOn ?? "upload") === "upload" &&
             // An escalation-only policy has nothing to do with no engine to escalate to.
@@ -377,6 +375,7 @@ export function usePolicyAutoRun(): void {
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        policyName: policies[run.categoryId]?.name,
         updateStirlingFileStub,
         bumpRevision,
         outputMode,
@@ -427,6 +426,8 @@ interface ImportContext {
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
+  /** The policy's name, shown in version history instead of the generic "automate" tool. */
+  policyName?: string;
   /** Rename rule. Empty → keep the input's filename. */
   outputName: string;
   /** Rename position around the base filename; defaults to "suffix" when absent. */
@@ -744,6 +745,7 @@ async function importOutputs(
       files,
       parentStub,
       "automate",
+      ctx.policyName,
     );
     // Transitive provenance for the PERSISTED record, mirroring what the
     // CONSUME_FILES reducer computes for workspace state: the output derives

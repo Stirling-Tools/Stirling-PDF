@@ -813,7 +813,7 @@ describe("PipelineBuilder", () => {
     expect(screen.getByText("source-modal:src-1")).toBeInTheDocument();
   });
 
-  it("saves an editor pipeline as run-on-upload metadata, not as a wire input", async () => {
+  it("saves an editor pipeline as its own flag, not as a wire input", async () => {
     fetchSources.mockResolvedValue({
       kpis: [],
       sources: [SOURCE, EDITOR_SOURCE],
@@ -830,11 +830,10 @@ describe("PipelineBuilder", () => {
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     const body = savePipeline.mock.calls[0][0];
-    // The editor is virtual: nothing sweeps it server-side, so it is recorded in the options the
-    // editor reads rather than as an input the backend would try to pull from.
+    // The editor is virtual: nothing sweeps it server-side, so it is recorded as the policy's own
+    // editor flag rather than as an input the backend would try to pull from.
     expect(body.inputs).toEqual([]);
-    expect(body.output.options.sources).toEqual(["editor"]);
-    expect(body.output.options.runOn).toBe("upload");
+    expect(body.editor).toEqual({ allowed: true, runOn: "upload" });
     // And it needs no destination - results land back in the workspace the file came from.
     expect(body.outputIds).toEqual([]);
   });

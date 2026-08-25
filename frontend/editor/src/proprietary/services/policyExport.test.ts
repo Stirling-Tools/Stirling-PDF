@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
 
-/**
- * Which policies export-time enforcement picks up. The interesting case is a builder-made
- * pipeline: blank sources mean "everywhere" for a catalogue tile but "not the editor" for a
- * pipeline, so the choice has to come from runsOnEditor rather than from the raw source list.
- */
+// Which policies export-time enforcement picks up: the policy's own editor flag, not its scope.
 
 const loadPolicies = vi.fn<() => PoliciesByCategory>();
 vi.mock("@app/services/policyStorage", () => ({
@@ -15,7 +11,12 @@ vi.mock("@app/services/policyStorage", () => ({
 const runStoredPolicy = vi.fn(async (_id: string) => "run-1");
 vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: (id: string) => runStoredPolicy(id),
-  getPolicyRun: async () => ({ status: "COMPLETED", outputs: [] }),
+  // One output, so a run completes rather than throwing "produced no output" - which would abort
+  // the per-file policy loop after the first policy and hide the order under test.
+  getPolicyRun: async () => ({
+    status: "COMPLETED",
+    outputs: [{ fileId: "out-1", fileName: "doc.pdf" }],
+  }),
   downloadPolicyOutput: async () => new Blob(),
   resolvePolicyRunTarget: () => "local",
 }));
@@ -102,5 +103,27 @@ describe("export-time policy selection", () => {
     await enforceExportPolicies([pdf()], ["file-1"]);
 
     expect(runStoredPolicy).toHaveBeenCalledWith("backend-security");
+  });
+
+  it("enforces in the team's run order, not object order", async () => {
+    loadPolicies.mockReturnValue({
+      second: exportPolicy({
+        runsOnEditor: true,
+        backendId: "backend-second",
+        order: 1,
+      }),
+      first: exportPolicy({
+        runsOnEditor: true,
+        backendId: "backend-first",
+        order: 0,
+      }),
+    } as unknown as PoliciesByCategory);
+
+    await enforceExportPolicies([pdf()], ["file-1"]);
+
+    expect(runStoredPolicy.mock.calls.map(([id]) => id)).toEqual([
+      "backend-first",
+      "backend-second",
+    ]);
   });
 });

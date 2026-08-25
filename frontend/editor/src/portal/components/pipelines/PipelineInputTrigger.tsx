@@ -1,9 +1,9 @@
-/**
- * When a pipeline's input fires. A swept source is scheduled or triggered server-side; the editor
- * is client-driven and instead runs as each file passes through, so the two get different controls.
- */
+// Swept sources are scheduled or triggered server-side; the editor runs client-side as each file
+// passes through, so the two get different controls.
 
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mantine/core";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { FormField, Input, Select } from "@app/ui";
 
 export type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
@@ -13,10 +13,7 @@ const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
 
 /** Empty trigger type = manual-only (no automatic trigger). */
 export const MANUAL = "";
-/**
- * Sentinel for the manual choice: Mantine's Select reads an empty string as "no selection", so the
- * option needs a real value. Mapped to/from {@link MANUAL} at this component's edges.
- */
+/** Sentinel for manual: Mantine's Select reads "" as no selection. Maps to {@link MANUAL}. */
 export const MANUAL_OPTION = "manual";
 
 /** One input row in the builder: a source paired with its own trigger config. */
@@ -52,11 +49,23 @@ export function PipelineInputTrigger({
     const label = t("portal.pipelines.builder.runOn", "Runs on");
     return (
       <FormField
-        label={label}
-        helperText={t(
-          "portal.pipelines.builder.runOnHelper",
-          "Editor pipelines run in the browser as each file passes through - there is no server-side sweep to schedule.",
-        )}
+        label={
+          <Tooltip
+            label={t(
+              "portal.pipelines.builder.runOnTooltip",
+              "Choose when this pipeline runs on your files: when you add them, or when you export them.",
+            )}
+            position="right"
+            withinPortal
+            multiline
+            w={260}
+          >
+            <span className="portal-builder__label-hint">
+              {label}
+              <InfoOutlinedIcon style={{ fontSize: "0.875rem" }} />
+            </span>
+          </Tooltip>
+        }
       >
         <Select
           inputSize="sm"

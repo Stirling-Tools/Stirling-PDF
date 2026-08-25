@@ -2,11 +2,7 @@ import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-/**
- * PR #7581: a pipeline built on the Pipelines page can be set to run on the editor.
- * It has no catalogue category, so it must reach the auto-run by naming "editor" in
- * its sources - and a swept pipeline (blank sources) must NOT be mistaken for one.
- */
+// A pipeline reaches the editor auto-run through its own editor flag; a swept one must not.
 
 test.use({ autoGoto: false });
 
@@ -16,7 +12,7 @@ const SAMPLE = path.join(
 );
 
 /** A builder-made pipeline: no categoryId, one harmless step. */
-function builderPipeline(options: Record<string, unknown>) {
+function builderPipeline(editor: { allowed: boolean; runOn: string }) {
   return {
     id: "builder-pipeline-1",
     name: "Flatten everything",
@@ -25,7 +21,8 @@ function builderPipeline(options: Record<string, unknown>) {
     trigger: null,
     sourceIds: [],
     steps: [{ operation: "/api/v1/misc/flatten", parameters: {} }],
-    output: { type: "inline", options: { mode: "new_version", ...options } },
+    output: { type: "inline", options: { mode: "new_version" } },
+    editor,
     teamId: 1,
   };
 }
@@ -48,7 +45,7 @@ test("an editor pipeline set to run on upload dispatches when a file is added", 
 }) => {
   const dispatched = await armed(
     page,
-    builderPipeline({ sources: ["editor"], runOn: "upload" }),
+    builderPipeline({ allowed: true, runOn: "upload" }),
   );
 
   await page.goto("/editor", { waitUntil: "domcontentloaded" });
@@ -59,12 +56,10 @@ test("an editor pipeline set to run on upload dispatches when a file is added", 
     .toContain("/api/v1/policies/builder-pipeline-1/run");
 });
 
-test("a swept pipeline (blank sources) never runs on editor upload", async ({
-  page,
-}) => {
+test("a swept pipeline never runs on editor upload", async ({ page }) => {
   const dispatched = await armed(
     page,
-    builderPipeline({ sources: [], runOn: "upload" }),
+    builderPipeline({ allowed: false, runOn: "upload" }),
   );
 
   await page.goto("/editor", { waitUntil: "domcontentloaded" });
@@ -79,7 +74,7 @@ test("an editor pipeline set to run on export does not fire on upload", async ({
 }) => {
   const dispatched = await armed(
     page,
-    builderPipeline({ sources: ["editor"], runOn: "export" }),
+    builderPipeline({ allowed: true, runOn: "export" }),
   );
 
   await page.goto("/editor", { waitUntil: "domcontentloaded" });

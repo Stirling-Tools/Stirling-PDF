@@ -65,9 +65,8 @@ export function loadPolicies(): PoliciesByCategory {
     if (merged.order == null) merged.order = index;
     out[cat.id] = merged;
   });
-  // Builder-made pipelines key by their own id, so the catalogue walk above misses them. They only
-  // ever arrive from the backend reconcile, so they are carried through as stored - seeding them
-  // with a tile's defaults would mark them built-in and put them on the editor uninvited.
+  // Builder pipelines key by their own id, so the walk above misses them. Carried through as
+  // stored: a tile's defaults would mark them built-in and put them on the editor uninvited.
   for (const [key, state] of Object.entries(parsed)) {
     if (!out[key] && state) out[key] = state as PolicyState;
   }
@@ -122,6 +121,26 @@ export function reorderPolicies(
     if (next[id]) next[id] = { ...next[id], order: index };
   });
   persist(next);
+  return next;
+}
+
+/**
+ * Drop cached entries entirely (no default seeded back). For builder pipelines the backend has
+ * deleted: keyed by their own id, they have no built-in category to fall back to, so a left-behind
+ * entry keeps a dead backendId that the auto-run still tries to dispatch. Built-in categories are
+ * never forgotten - they reseed on the next read anyway.
+ */
+export function forgetPolicies(ids: string[]): PoliciesByCategory {
+  const current = loadPolicies();
+  const catalogIds = new Set(loadPolicyCatalog().categories.map((c) => c.id));
+  const next: PoliciesByCategory = { ...current };
+  let removed = false;
+  for (const id of ids) {
+    if (catalogIds.has(id) || !(id in next)) continue;
+    delete next[id];
+    removed = true;
+  }
+  if (removed) persist(next);
   return next;
 }
 

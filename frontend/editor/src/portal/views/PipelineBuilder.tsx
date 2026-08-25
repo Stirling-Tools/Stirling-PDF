@@ -224,10 +224,8 @@ export function PipelineBuilder() {
     async () => await fetchTriggers(),
     [],
   );
-  // The editor is a built-in, client-driven source: picking it means the pipeline runs in the
-  // browser as each file is uploaded or exported, rather than being swept server-side. It is a
-  // legitimate input, so it is offered - but it never becomes a wire input (see save), and it is
-  // not writable, so isWritableSource keeps it out of the destinations below.
+  // Includes the virtual editor source: a valid input, but never a wire input (see save) and not
+  // writable, so isWritableSource keeps it out of the destinations below.
   const availableSources = useMemo<SourceView[]>(
     () => sourcesState.data?.sources ?? [],
     [sourcesState.data],
@@ -348,16 +346,13 @@ export function PipelineBuilder() {
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
     // An editor pipeline has no wire input; it is recognised by its recorded sources.
-    const storedOptions = (policy?.output?.options ?? {}) as {
-      sources?: string[];
-      runOn?: string;
-    };
     const editorSourceId = (sourcesState.data?.sources ?? []).find(
       (source) => source.type === EDITOR_SOURCE_TYPE,
     )?.id;
-    setRunOn(storedOptions.runOn === "export" ? "export" : "upload");
+    setRunOn(policy?.editor?.runOn === "export" ? "export" : "upload");
     const stored = policy?.inputs[0];
-    if (storedOptions.sources?.includes("editor") && editorSourceId) {
+    const seedsEditor = Boolean(policy?.editor?.allowed && editorSourceId);
+    if (seedsEditor && editorSourceId) {
       setInput({ ...blankInput(), sourceId: editorSourceId });
     } else if (stored) {
       const trigger = parseTrigger(stored.trigger);
@@ -373,7 +368,7 @@ export function PipelineBuilder() {
     setSteps(
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
-    setOutputIds(policy?.outputIds ?? []);
+    setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded, sourcesState.data]);
 
@@ -421,8 +416,8 @@ export function PipelineBuilder() {
   // Changing the source may make the current trigger incompatible (folder-watch on a non-folder);
   // drop it back to manual when that happens so the row can't hold an invalid pairing.
   function changeInputSource(sourceId: string) {
+    const type = sourceType(sourceId);
     setInput((current) => {
-      const type = sourceType(sourceId);
       const trigger = triggers.find((tr) => tr.type === current.triggerType);
       const keepTrigger =
         current.triggerType === MANUAL ||
@@ -433,6 +428,11 @@ export function PipelineBuilder() {
         triggerType: keepTrigger ? current.triggerType : MANUAL,
       };
     });
+    // The editor hands results back to the workspace, so it has no destination to choose.
+    if (type === EDITOR_SOURCE_TYPE) {
+      setOutputIds([]);
+      setOutputAsked(false);
+    }
   }
 
   /** Put an end on the chain and open it, so the click that asks for it also offers the choice. */
@@ -681,8 +681,7 @@ export function PipelineBuilder() {
     input.triggerType !== "schedule" ||
     Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
-  // Nor does it need a destination: its results land back in the workspace the file came from,
-  // which is the whole point of running there rather than sweeping a folder.
+  // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
@@ -800,20 +799,13 @@ export function PipelineBuilder() {
           ? []
           : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
         steps: await serializeStepsForSave(),
-        // Destinations are the referenced saved sources; the inline output field is
-        // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-        output: {
-          ...(policyState.data?.output ?? { type: "inline", options: {} }),
-          options: {
-            ...(policyState.data?.output?.options ?? {}),
-            // Written only for an editor pipeline: the auto-run holds a pipeline to explicit
-            // metadata, so a swept one must not claim the editor by leaving these behind.
-            ...(isEditorInput
-              ? { sources: ["editor"], runOn }
-              : { sources: [], runOn: undefined }),
-          },
-        },
-        outputIds,
+        // Destinations are the referenced saved sources; the inline output is preserved as-is
+        // or defaults to inline.
+        output: policyState.data?.output ?? { type: "inline", options: {} },
+        editor: { allowed: isEditorInput, runOn },
+        // An editor pipeline delivers back into the workspace. A stored destination would send the
+        // run to a folder or bucket instead, leaving the editor's copy untouched.
+        outputIds: isEditorInput ? [] : outputIds,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -1072,6 +1064,11 @@ export function PipelineBuilder() {
 
   /** How this input fires, in a few words, for the input node's summary line. */
   function triggerSummary(): string {
+    // The editor has no trigger to schedule; it fires as each file passes through.
+    if (isEditorInput)
+      return runOn === "export"
+        ? t("portal.pipelines.builder.runOnExport", "Every export")
+        : t("portal.pipelines.builder.runOnUpload", "Every upload");
     if (input.triggerType === MANUAL)
       return t("portal.pipelines.composer.triggerManual");
     if (input.triggerType === "schedule")
@@ -1184,7 +1181,7 @@ export function PipelineBuilder() {
                     variant="tertiary"
                     className="portal-builder__source-edit"
                     aria-label={t("portal.pipelines.composer.editSource")}
-                    disabled={input.sourceId === ""}
+                    disabled={input.sourceId === "" || isEditorInput}
                     onClick={() =>
                       setSourceModal({ open: true, sourceId: input.sourceId })
                     }
@@ -1214,6 +1211,17 @@ export function PipelineBuilder() {
             {t("portal.sources.actions.connectSource")}
           </Button>
         </>
+      );
+    }
+
+    if (selected === "output" && isEditorInput) {
+      return (
+        <p className="portal-builder__muted">
+          {t(
+            "portal.pipelines.builder.editorDestinationHelp",
+            "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them.",
+          )}
+        </p>
       );
     }
 
@@ -1326,16 +1334,28 @@ export function PipelineBuilder() {
                 : null
             }
             output={
-              outputAsked || outputValid
+              isEditorInput
                 ? {
-                    label:
-                      chosenDestination?.name ??
-                      t("portal.pipelines.builder.chooseDestination"),
-                    warning: outputValid
-                      ? undefined
-                      : t("portal.pipelines.builder.needsDestination"),
+                    label: t(
+                      "portal.pipelines.builder.editorDestination",
+                      "Editor",
+                    ),
+                    detail: t(
+                      "portal.pipelines.builder.editorDestinationDetail",
+                      "Replaces the file you ran it on",
+                    ),
+                    fixed: true,
                   }
-                : null
+                : outputAsked || outputValid
+                  ? {
+                      label:
+                        chosenDestination?.name ??
+                        t("portal.pipelines.builder.chooseDestination"),
+                      warning: outputValid
+                        ? undefined
+                        : t("portal.pipelines.builder.needsDestination"),
+                    }
+                  : null
             }
             steps={graphSteps}
             selected={selected}

@@ -120,6 +120,8 @@ export interface PolicyState {
   status: PolicyStatus;
   /** Selected sources (ids from POLICY_SOURCES). */
   sources: string[];
+  /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
+  name?: string;
   /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
   runsOnEditor?: boolean;
   /** When non-empty, narrows the policy to these document types. */

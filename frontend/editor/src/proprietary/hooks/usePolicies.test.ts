@@ -154,8 +154,8 @@ describe("usePolicies", () => {
     expect(result.current.policies.ingestion.folderId).toBeTruthy();
   });
 
-  // A pipeline built on the Pipelines page has no category tile. The reconcile used to walk only
-  // the catalogue, so one set to run on the editor never reached the map the auto-run iterates.
+  // A builder pipeline has no category tile, so the reconcile must key it by id to reach the map
+  // the auto-run iterates.
   it("reconciles a builder pipeline that has no category", async () => {
     api.store.set("be-pipeline", {
       id: "be-pipeline",
@@ -163,8 +163,9 @@ describe("usePolicies", () => {
       enabled: true,
       inputs: [],
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
-      output: { type: "inline", options: { sources: ["editor"] } },
+      output: { type: "inline", options: {} },
       outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
     } as unknown as { id: string });
 
     const { result } = renderHook(() => usePolicies());
@@ -178,7 +179,7 @@ describe("usePolicies", () => {
     expect(pipeline.isDefault).toBe(false);
   });
 
-  it("does not put a builder pipeline on the editor unless it names it", async () => {
+  it("does not put a builder pipeline on the editor unless it opts in", async () => {
     api.store.set("be-s3", {
       id: "be-s3",
       name: "S3 sweep",
@@ -195,5 +196,33 @@ describe("usePolicies", () => {
       expect(result.current.policies["be-s3"]?.configured).toBe(true),
     );
     expect(result.current.policies["be-s3"].runsOnEditor).toBe(false);
+  });
+
+  // Deleting a pipeline on the Pipelines page leaves its cached entry behind. It still satisfies
+  // every auto-run condition but its backendId is dead, so the dispatch fails, the run never
+  // completes, and every policy behind it in the chain is skipped on every upload.
+  it("forgets a builder pipeline the backend no longer has", async () => {
+    localStorage.setItem(
+      "stirling-policies-state",
+      JSON.stringify({
+        "be-deleted": {
+          configured: true,
+          status: "active",
+          backendId: "be-deleted",
+          sources: ["editor"],
+          runsOnEditor: true,
+          runOn: "upload",
+          isDefault: false,
+        },
+      }),
+    );
+
+    const { result } = renderHook(() => usePolicies());
+
+    await waitFor(() =>
+      expect(result.current.policies["be-deleted"]).toBeUndefined(),
+    );
+    // A catalogue tile is never forgotten: it reseeds from the catalogue.
+    expect(result.current.policies.security).toBeDefined();
   });
 });
