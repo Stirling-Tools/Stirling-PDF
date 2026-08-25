@@ -50,14 +50,6 @@ jobs:
       - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         run: uv sync --project engine --locked
 
-      - # Temp fix
-        if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-        name: Move cache
-        run: |
-          ls -la ${{ runner.temp }}
-          rm -rf ${{ runner.temp }}/uv-python-dir
-          mv ${{ runner.temp }}/uv-python-dir-new ${{ runner.temp }}/uv-python-dir
-
       - name: Save cache uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
