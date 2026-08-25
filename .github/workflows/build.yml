@@ -167,7 +167,7 @@ jobs:
 
   test-build-docker-images:
     if: |
-      always() &&
+      !cancelled() &&
       github.event_name == 'pull_request' &&
       needs.files-changed.outputs.project == 'true' &&
       contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) &&
