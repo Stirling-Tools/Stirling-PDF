@@ -126,13 +126,17 @@ async function processAutoFormDetection(
       (c) => c.id === status.activeModelId,
     );
 
-    if (mode === "server" || !activeEntry) {
-      return { files: [await serverDetect(parameters, file)] };
-    }
     if (mode === "browser") {
       // Strict: no budget and no fallback. The point of this mode is that the PDF never leaves the
-      // device, so a slow device waits rather than silently uploading.
+      // device, so a slow device waits rather than silently uploading, and a missing or stale model
+      // is an error rather than a reason to upload.
+      if (!activeEntry) {
+        throw new Error("NO_LOCAL_MODEL");
+      }
       return { files: [await browserDetect(parameters, file, activeEntry)] };
+    }
+    if (mode === "server" || !activeEntry) {
+      return { files: [await serverDetect(parameters, file)] };
     }
 
     // auto: prefer the device. Keeping detection local spares the backend from running every page

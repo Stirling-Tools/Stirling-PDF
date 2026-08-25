@@ -1044,6 +1044,7 @@ public class FormUtils {
 
         int pageCount = document.getNumberOfPages();
         List<PDField> createdFields = new ArrayList<>();
+        List<Map.Entry<String, NewFormFieldDefinition>> createdButtons = new ArrayList<>();
         for (NewFormFieldDefinition definition : definitions) {
             Integer pageIndex = definition.pageIndex();
             if (pageIndex == null
@@ -1092,12 +1093,14 @@ public class FormUtils {
                 PDField created = acroForm.getField(uniqueName);
                 if (created != null) {
                     createdFields.add(created);
+                    createdButtons.add(Map.entry(uniqueName, definition));
                 }
             } catch (Exception e) {
                 log.warn("Failed to create detected field '{}': {}", uniqueName, e.getMessage());
             }
         }
 
+        applyButtonAppearances(document, acroForm, createdButtons);
         // Refresh only what we added; regenerating pre-existing fields could alter their look.
         ensureAppearances(acroForm, createdFields, priorNeedAppearances);
     }
