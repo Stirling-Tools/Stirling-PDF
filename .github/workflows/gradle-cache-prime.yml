@@ -32,7 +32,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/.buildx-cache
           key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
-                'engine/pyproject.toml'
+                'engine/pyproject.toml',
                 'engine/uv.lock'
               ) }}
           lookup-only: true
@@ -53,17 +53,14 @@ jobs:
           rm -rf ${{ runner.temp }}/setup-uv-cache
           mv ${{ runner.temp }}/setup-uv-cache-new ${{ runner.temp }}/setup-uv-cache
 
-      - name: Save cache Gradle User Home
+      - name: Save cache uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/setup-uv-cache
           key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
-                'docker/unoserver/Dockerfile',
-                'docker/unoserver/fonts.conf',
-                'docker/unoserver/entrypoint.sh',
-                'docker/unoserver/healthcheck.sh',
-                '.dockerignore'
+                'engine/pyproject.toml',
+                'engine/uv.lock'
               ) }}
   unoserver-image-cache-prime:
     environment:
@@ -131,7 +128,7 @@ jobs:
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache-new ${{ runner.temp }}/.buildx-cache
 
-      - name: Save cache Gradle User Home
+      - name: Save cache buildx
         if: steps.cache-buildx-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
