@@ -6,6 +6,8 @@ import fs from "node:fs";
 
 /** Walkthrough capture for the Auto Form Detection feature. Not for CI. */
 
+test.skip(!!process.env.CI, "capture-only spec; not for CI");
+
 const SHOT_DIR =
   process.env.SHOT_DIR ??
   path.join(import.meta.dirname, "../../../../screenshots/auto-form-detection");

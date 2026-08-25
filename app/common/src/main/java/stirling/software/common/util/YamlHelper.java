@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -377,6 +378,9 @@ public class YamlHelper {
                         StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            } catch (FileSystemException e) {
+                // Bind-mounted files (docker) reject rename with EBUSY; write in place
+                Files.writeString(target, content);
             }
         } finally {
             Files.deleteIfExists(tmp);
