@@ -1,4 +1,4 @@
-name: Prime Cache
+name: Prime Gradle Cache
 
 on:
   workflow_dispatch:
