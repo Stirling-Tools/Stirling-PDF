@@ -70,7 +70,9 @@ team_count=$#
 log "seedable team ids:$seed_team_ids (count=$team_count)"
 
 # --- users: spread across teams, first two are admins ------------------------
-created=0; failed=0
+# The licence caps seats, so USER_COUNT is a target, not a promise: hitting the cap stops the
+# loop and is reported, not counted as a failure. Every other rejection stays fatal.
+created=0; failed=0; capped=""
 n=1
 while [ "$n" -le "$USER_COUNT" ]; do
   uname=$(printf "user%02d@stirling.test" "$n")
@@ -86,13 +88,27 @@ while [ "$n" -le "$USER_COUNT" ]; do
     ${team_id:+--data-urlencode "teamId=$team_id"} \
     --data-urlencode "authType=WEB" \
     --data-urlencode "forceChange=false")
+  body=$(cat /tmp/user.json)
   case "$code" in
     200|201) created=$((created+1));;
     409)     log "user $uname already exists";;
-    *)       failed=$((failed+1)); [ "$failed" -le 3 ] && log "user $uname failed HTTP $code: $(cat /tmp/user.json)";;
+    *)
+      case "$body" in
+        *"Maximum number of users reached"*|*"Available slots"*)
+          capped="$body"
+          break
+          ;;
+      esac
+      failed=$((failed+1))
+      [ "$failed" -le 3 ] && log "user $uname failed HTTP $code: $body"
+      ;;
   esac
   n=$((n+1))
 done
+if [ -n "$capped" ]; then
+  log "user seats exhausted after $created create(s); licence caps this stack below USER_COUNT=$USER_COUNT"
+  log "  server said: $capped"
+fi
 log "users created: $created (failed: $failed, requested: $USER_COUNT)"
 [ "$failed" -eq 0 ] || fail_note "$failed of $USER_COUNT user creates failed"
 
