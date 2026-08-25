@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Base64;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -245,6 +246,25 @@ class PdfJsonFallbackFontServiceTest {
                     PdfJsonFallbackFontService.FALLBACK_FONT_TIBETAN_ID,
                     service.resolveFallbackFontId(0x0F40));
         }
+
+        @Test
+        @DisplayName("Dingbats, arrows and maths operators resolve to DejaVu Sans")
+        void symbolBlocksResolveToDejaVuSans() {
+            // U+2713 check mark (Dingbats), U+2192 rightwards arrow, U+2211 n-ary summation.
+            assertEquals("fallback-dejavu-sans", service.resolveFallbackFontId(0x2713));
+            assertEquals("fallback-dejavu-sans", service.resolveFallbackFontId(0x2192));
+            assertEquals("fallback-dejavu-sans", service.resolveFallbackFontId(0x2211));
+        }
+
+        @Test
+        @DisplayName("Greek stays on Noto Sans; only the Symbol font name routes it to DejaVu")
+        void greekStaysOnNotoSans() {
+            // U+03B1 (α) is shared by Greek prose and maths usage, so the code point alone
+            // must not decide.
+            assertEquals(
+                    PdfJsonFallbackFontService.FALLBACK_FONT_ID,
+                    service.resolveFallbackFontId(0x03B1));
+        }
     }
 
     @Nested
@@ -328,6 +348,28 @@ class PdfJsonFallbackFontServiceTest {
             assertEquals(
                     "fallback-dejavu-serif-italic",
                     service.resolveFallbackFontId("DejaVuSerif-Italic", 'A'));
+        }
+
+        @Test
+        @DisplayName("Symbol and ZapfDingbats (standard 14, often unembedded) map to DejaVu Sans")
+        void standardSymbolFontsMapToDejaVuSans() {
+            assertEquals("fallback-dejavu-sans", service.resolveFallbackFontId("Symbol", 0x03B1));
+            assertEquals(
+                    "fallback-dejavu-sans", service.resolveFallbackFontId("ZapfDingbats", 0x2713));
+            assertEquals(
+                    "fallback-dejavu-sans", service.resolveFallbackFontId("ABCDEF+SymbolMT", 'A'));
+        }
+
+        @Test
+        @DisplayName("Noto Serif maps to its own family and keeps weight and style")
+        void notoSerifKeepsWeightAndStyle() {
+            assertEquals("fallback-noto-serif", service.resolveFallbackFontId("NotoSerif", 'A'));
+            assertEquals(
+                    "fallback-noto-serif-bold",
+                    service.resolveFallbackFontId("NotoSerif-Bold", 'A'));
+            assertEquals(
+                    "fallback-noto-serif-bolditalic",
+                    service.resolveFallbackFontId("NotoSerif-BoldItalic", 'A'));
         }
 
         @Test
@@ -495,6 +537,22 @@ class PdfJsonFallbackFontServiceTest {
                             IOException.class,
                             () -> service.buildFallbackFontModel("does-not-exist"));
             assertTrue(ex.getMessage().contains("Unknown fallback font id"));
+        }
+
+        @Test
+        @DisplayName("Noto Serif is bundled in all four styles")
+        void notoSerifStylesAreBundled() throws IOException {
+            List<String> ids =
+                    List.of(
+                            "fallback-noto-serif",
+                            "fallback-noto-serif-bold",
+                            "fallback-noto-serif-italic",
+                            "fallback-noto-serif-bolditalic");
+            for (String id : ids) {
+                PdfJsonFont model = service.buildFallbackFontModel(id);
+                assertEquals("ttf", model.getProgramFormat(), id);
+                assertTrue(Base64.getDecoder().decode(model.getProgram()).length > 0, id);
+            }
         }
 
         @Test
