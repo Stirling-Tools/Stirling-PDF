@@ -23,7 +23,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -174,13 +174,18 @@ function untrackedFiles() {
 }
 
 function allLinesOf(file) {
-  const path = join(REPO, file);
-  if (!existsSync(path)) return new Set();
+  const path = insideRepo(file);
+  if (!path || !existsSync(path)) return new Set();
   const total = readFileSync(path, "utf8").split(/\r?\n/).length;
   return new Set(Array.from({ length: total }, (_, i) => i + 1));
 }
 
 function narrow(scope, paths) {
+  // A diff that could not be resolved already returned a degraded scope with no
+  // added map. Pass it straight through: an empty map here would read as a clean
+  // pass rather than as a run that checked nothing.
+  if (!scope.added) return scope;
+
   const wanted = new Set(paths);
   const added = new Map([...scope.added].filter(([file]) => wanted.has(file)));
   return { mode: "diff", files: [...added.keys()], added, base: scope.base };
@@ -196,6 +201,15 @@ function toRepoPath(path) {
 
 function collect(scope) {
   const selected = scope.files.map((f) => f.replace(/\\/g, "/")).filter(isLintable);
+
+  // A path named on the command line and then dropped has to be said out loud.
+  // Reporting "clean" for a file this never opened is the failure mode the rest
+  // of this script works to avoid.
+  if (scope.mode === "paths") {
+    for (const file of scope.files) {
+      if (!selected.includes(file.replace(/\\/g, "/"))) warn(`skipped ${file}: not a lintable file inside the repo.`);
+    }
+  }
   const results = [];
 
   for (const file of selected.filter((f) => JAVA.test(f) || PYTHON.test(f))) {
@@ -242,25 +256,37 @@ function existedAtBase(finding, base) {
 
 function currentLineBody(finding) {
   try {
-    const line = readFileSync(join(REPO, finding.file), "utf8").split(/\r?\n/)[finding.line - 1];
+    const line = readFileSync(insideRepo(finding.file), "utf8").split(/\r?\n/)[finding.line - 1];
     return line === undefined ? "" : normaliseComment(line);
   } catch {
     return "";
   }
 }
 
+// Everything this tool reads is named by git or by a developer on the command
+// line, so a path outside the repo is a mistake rather than an attack. Resolving
+// through here keeps the contract true: git show and git diff cannot answer for a
+// path outside the work tree, so escaping it only produces confusing output.
+function insideRepo(file) {
+  const target = resolve(REPO, file);
+  const rel = relative(REPO, target);
+  if (rel.length === 0 || rel.startsWith("..") || isAbsolute(rel)) return "";
+  return target;
+}
+
 function isLintable(file) {
+  if (!insideRepo(file)) return false;
   if (isExcludedPath(file)) return false;
 
   // The corpus is deliberately full of findings. Only the selftest reads it,
   // and it does so by path rather than through this filter.
   if (file.startsWith(FIXTURES_REL)) return false;
   if (!JAVA.test(file) && !PYTHON.test(file) && !TYPESCRIPT.test(file)) return false;
-  return existsSync(join(REPO, file));
+  return existsSync(insideRepo(file));
 }
 
 function lintLineBased(file) {
-  const source = readFileSync(join(REPO, file), "utf8");
+  const source = readFileSync(insideRepo(file), "utf8");
   if (isGenerated(source)) return [];
   const lines = source.split(/\r?\n/);
   const runs = readRuns(lines, PYTHON.test(file) ? "py" : "java");
