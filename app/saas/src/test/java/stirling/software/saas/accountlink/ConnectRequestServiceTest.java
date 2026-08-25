@@ -105,6 +105,13 @@ class ConnectRequestServiceTest {
     }
 
     @Test
+    void create_namesTheSecretWhenTheSecretIsWhatIsMissing() {
+        assertThat(service.create(null, CALLBACK, NONCE, "  ", null).rejection())
+                .isEqualTo(CreateRejection.BAD_SECRET);
+        verify(repo, never()).save(any());
+    }
+
+    @Test
     void create_isCappedPerSourceAddress() {
         when(repo.countByRequesterIpAndCreatedAtAfter(anyString(), any()))
                 .thenReturn((long) ConnectRequestService.MAX_REQUESTS_PER_IP);

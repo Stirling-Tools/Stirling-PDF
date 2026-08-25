@@ -126,6 +126,7 @@ public class ConnectController {
                 case BAD_CALLBACK ->
                         ResponseEntity.badRequest().body(Map.of("error", "BAD_CALLBACK"));
                 case BAD_NONCE -> ResponseEntity.badRequest().body(Map.of("error", "BAD_NONCE"));
+                case BAD_SECRET -> ResponseEntity.badRequest().body(Map.of("error", "BAD_SECRET"));
                 // A credential was offered and did not authenticate. Same answer as any other bad
                 // credential, and deliberately not distinguishable from "revoked".
                 case NOT_LINKED ->

@@ -52,6 +52,7 @@ public class ConnectRequestService {
     public enum CreateRejection {
         BAD_CALLBACK,
         BAD_NONCE,
+        BAD_SECRET,
         RATE_LIMITED,
         /**
          * A re-authentication was asked for by something that could not prove it is a linked
@@ -141,7 +142,7 @@ public class ConnectRequestService {
             return CreateResult.rejected(CreateRejection.BAD_NONCE);
         }
         if (claimSecret == null || claimSecret.isBlank()) {
-            return CreateResult.rejected(CreateRejection.BAD_NONCE);
+            return CreateResult.rejected(CreateRejection.BAD_SECRET);
         }
         Optional<URI> parsed = validateCallback(callbackUrl);
         if (parsed.isEmpty()) {
