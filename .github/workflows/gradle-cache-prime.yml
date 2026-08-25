@@ -53,14 +53,14 @@ jobs:
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         name: Move cache
         run: |
-          rm -rf ${{ runner.temp }}/setup-uv-cache
-          mv ${{ runner.temp }}/setup-uv-cache-new ${{ runner.temp }}/setup-uv-cache
+          rm -rf ${{ runner.temp }}/uv-python-dir
+          mv ${{ runner.temp }}/uv-python-dir-new ${{ runner.temp }}/uv-python-dir
 
       - name: Save cache uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ${{ runner.temp }}/setup-uv-cache
+          path: ${{ runner.temp }}/uv-python-dir
           key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
                 'engine/pyproject.toml',
                 'engine/uv.lock'
