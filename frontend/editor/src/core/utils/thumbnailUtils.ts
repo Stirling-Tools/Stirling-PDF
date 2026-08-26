@@ -31,6 +31,12 @@ export function calculateScaleFromFileSize(fileSize: number): number {
 /** PDFium error code 4 = password required (encrypted PDF). */
 const PDFIUM_ERR_PASSWORD = 4;
 
+/** Callers still get a placeholder, but log the cause: an empty thumbnail is
+ *  indistinguishable from "no raster preview", so an outage hides as a nicety. */
+function reportThumbnailFailure(file: File, error: unknown): void {
+  console.warn(`Thumbnail generation failed for ${file.name}:`, error);
+}
+
 /** PDFs at or above this size never get a full-buffer client-side parse
  * (renderer OOM) - only the linearized-prefix attempt below. */
 export const LARGE_PDF_PARSE_LIMIT = 100 * 1024 * 1024;
@@ -262,7 +268,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
         const fullArrayBuffer = await file.arrayBuffer();
         return await generatePDFThumbnail(fullArrayBuffer, scale);
       } catch (error) {
-        console.warn(`PDF processing failed for ${file.name}:`, error);
+        reportThumbnailFailure(file, error);
         return "";
       }
     }
@@ -314,7 +320,8 @@ export async function generateThumbnailWithMetadata(
         pageRotations: result.pageRotations,
         pageDimensions: result.pageDimensions,
       };
-    } catch {
+    } catch (error) {
+      reportThumbnailFailure(file, error);
       return { thumbnail: "", pageCount: 0 };
     }
   }
@@ -344,7 +351,8 @@ export async function generateThumbnailWithMetadata(
       pageRotations: result.pageRotations,
       pageDimensions: result.pageDimensions,
     };
-  } catch {
+  } catch (error) {
+    reportThumbnailFailure(file, error);
     return { thumbnail: "", pageCount: 1 };
   }
 }
@@ -389,7 +397,8 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
       unrotated: toPublic(pair.unrotated),
       rotated: toPublic(pair.rotated),
     };
-  } catch {
+  } catch (error) {
+    reportThumbnailFailure(file, error);
     return {
       unrotated: { thumbnail: "", pageCount: 0 },
       rotated: { thumbnail: "", pageCount: 0 },

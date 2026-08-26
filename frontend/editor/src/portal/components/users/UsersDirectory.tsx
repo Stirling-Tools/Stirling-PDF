@@ -1,8 +1,16 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu } from "@mantine/core";
-import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
-import { Avatar, Chip, Select } from "@app/ui";
+import {
+  Avatar,
+  type CellAction,
+  type CellCap,
+  type CellLabel,
+  type CellMenuItem,
+  column,
+  DataTable,
+  type DataTableColumn,
+  type DataTableGroup,
+} from "@app/ui";
 import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
@@ -11,7 +19,6 @@ import {
   buildDirectory,
   type TeamGroup,
 } from "@portal/components/users/directory";
-import "@portal/views/Users.css";
 
 /** Collapse a group's rows past this many, behind a "Show all" expander. */
 const COLLAPSED_LIMIT = 8;
@@ -42,23 +49,17 @@ interface UsersDirectoryProps {
   // Team actions (the team-header kebab).
   onRenameTeam: (team: TeamGroup) => void;
   onDeleteTeam: (team: TeamGroup) => void;
-  /**
-   * Show the "Approves policy" capability chip on org owners. Off in the live
-   * app (no backend for it yet); on in Storybook to document the intended design.
-   */
+  /** Show the "Approves policy" capability on org owners (Storybook design doc). */
   showApprover?: boolean;
-  /**
-   * Show the Guests group + the "Guest" role option. Off in the live app (the
-   * Guest concept is parked); on in Storybook to document the intended design.
-   */
+  /** Show the Guests group + the "Guest" role option (Storybook design doc). */
   showGuests?: boolean;
 }
 
 /**
- * The people roster, grouped like the org chart: Organization owners, then each
- * team (with its leader), each row carrying capability chips, a role selector,
- * and a kebab of admin actions. Long groups collapse behind a "Show all" so big
- * orgs stay scannable.
+ * The people roster on the shared DataTable: grouped like the org chart
+ * (Organization owners, then each team, then guests), each row carrying its
+ * capability chips, a role selector, and a kebab of admin actions. Long groups
+ * collapse behind a "Show all".
  */
 export function UsersDirectory({
   members,
@@ -84,7 +85,6 @@ export function UsersDirectory({
 }: UsersDirectoryProps) {
   const { t } = useTranslation();
   const dir = useMemo(() => buildDirectory(members, teams), [members, teams]);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const nameByUsername = useMemo(() => {
     const m = new Map<string, string>();
@@ -94,392 +94,338 @@ export function UsersDirectory({
     return m;
   }, [members]);
 
-  const roleOptions: { value: RoleId; label: string }[] = [
-    // No SaaS user is ever ROLE_ADMIN, so the Org Owner option is dropped there.
-    ...(capabilities.adminRole
-      ? [
-          {
-            value: "admin" as RoleId,
-            label: t("users.role.orgOwner", "Org Owner"),
-          },
-        ]
-      : []),
-    { value: "team_owner", label: t("users.role.teamOwner", "Team Owner") },
-    { value: "member", label: t("users.role.member", "Member") },
-    ...(showGuests
-      ? [{ value: "guest" as RoleId, label: t("users.role.guest", "Guest") }]
-      : []),
-  ];
+  const roleOptions = useMemo(
+    () => [
+      // No SaaS user is ever ROLE_ADMIN, so the Org Owner option is dropped there.
+      ...(capabilities.adminRole
+        ? [
+            {
+              value: "admin" as RoleId,
+              label: t("users.role.orgOwner", "Org Owner"),
+            },
+          ]
+        : []),
+      {
+        value: "team_owner" as RoleId,
+        label: t("users.role.teamOwner", "Team Owner"),
+      },
+      { value: "member" as RoleId, label: t("users.role.member", "Member") },
+      ...(showGuests
+        ? [{ value: "guest" as RoleId, label: t("users.role.guest", "Guest") }]
+        : []),
+    ],
+    [capabilities.adminRole, showGuests, t],
+  );
 
-  function toggleExpand(key: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const columns = useMemo<DataTableColumn<Member>[]>(() => {
+    function rowKebab(m: Member): CellAction {
+      const removeLabel =
+        capabilities.removeScope === "team"
+          ? t("users.action.removeTeam", "Remove from team")
+          : t("users.action.remove", "Remove from org");
+      const items: CellMenuItem[] = [];
+      if (capabilities.resetPassword) {
+        items.push({
+          label: t("users.action.resetPw", "Reset password"),
+          disabled: m.isSelf,
+          onClick: () => onResetPassword(m),
+        });
+      }
+      if (capabilities.moveTeam) {
+        items.push({
+          label: t("users.action.move", "Move to team"),
+          onClick: () => onMoveToTeam(m),
+        });
+      }
+      if (capabilities.suspend) {
+        items.push({
+          label:
+            m.status === "suspended"
+              ? t("users.action.reinstate", "Reinstate")
+              : t("users.action.suspend", "Suspend"),
+          disabled: m.isSelf,
+          onClick: () => onToggleEnabled(m),
+        });
+      }
+      if (capabilities.unlock && m.locked) {
+        items.push({
+          label: t("users.action.unlock", "Unlock account"),
+          onClick: () => onUnlock(m),
+        });
+      }
+      if (capabilities.resetMfa && m.mfaEnabled) {
+        items.push({
+          label: t("users.action.disableMfa", "Reset MFA"),
+          disabled: m.isSelf,
+          onClick: () => onDisableMfa(m),
+        });
+      }
+      items.push({
+        label: removeLabel,
+        tone: "danger",
+        disabled: m.isSelf,
+        onClick: () => onRemove(m),
+        dividerBefore: items.length > 0,
+      });
+      return {
+        label: t("users.rowActions", "Actions for {{name}}", { name: m.name }),
+        glyph: "kebab",
+        iconOnly: true,
+        menu: items,
+      };
+    }
 
-  function ownerNames(owners: string[]): string {
-    return owners.map((u) => nameByUsername.get(u) ?? u).join(", ");
-  }
-
-  // A team whose name/membership is managed by the system - no rename/delete.
-  // SaaS personal teams (isPersonal) reject rename/delete at the backend too.
-  function isManagedTeam(team: TeamGroup): boolean {
-    return SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
-  }
-
-  // Whether the team-header kebab has any actions (else it isn't rendered).
-  function teamKebabHasItems(team: TeamGroup): boolean {
-    return (
-      capabilities.manageGrants ||
-      (!isManagedTeam(team) &&
-        (capabilities.renameTeam || capabilities.deleteTeam))
-    );
-  }
-
-  // Whether any action sits above the "Remove" item (so we render a divider).
-  function rowKebabHasUpperActions(m: Member): boolean {
-    return (
-      capabilities.resetPassword ||
-      capabilities.moveTeam ||
-      capabilities.suspend ||
-      (capabilities.unlock && !!m.locked) ||
-      (capabilities.resetMfa && !!m.mfaEnabled)
-    );
-  }
-
-  function rowKebab(m: Member) {
-    // Both flavors have a backed remove now: org-delete (self-hosted) or
-    // team-remove (SaaS, via SaasTeamController's remove-member endpoint), so the
-    // kebab always carries at least the remove action.
-    const removeLabel =
-      capabilities.removeScope === "team"
-        ? t("users.action.removeTeam", "Remove from team")
-        : t("users.action.remove", "Remove from org");
-    return (
-      <Menu position="bottom-end" withinPortal shadow="md" width={210}>
-        <Menu.Target>
-          <button
-            type="button"
-            className="portal-users__row-kebab"
-            aria-label={t("users.rowActions", "Actions for {{name}}", {
-              name: m.name,
-            })}
-          >
-            ⋯
-          </button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {capabilities.resetPassword && (
-            <Menu.Item disabled={m.isSelf} onClick={() => onResetPassword(m)}>
-              {t("users.action.resetPw", "Reset password")}
-            </Menu.Item>
-          )}
-          {capabilities.moveTeam && (
-            <Menu.Item onClick={() => onMoveToTeam(m)}>
-              {t("users.action.move", "Move to team")}
-            </Menu.Item>
-          )}
-          {capabilities.suspend && (
-            <Menu.Item disabled={m.isSelf} onClick={() => onToggleEnabled(m)}>
-              {m.status === "suspended"
-                ? t("users.action.reinstate", "Reinstate")
-                : t("users.action.suspend", "Suspend")}
-            </Menu.Item>
-          )}
-          {capabilities.unlock && m.locked && (
-            <Menu.Item onClick={() => onUnlock(m)}>
-              {t("users.action.unlock", "Unlock account")}
-            </Menu.Item>
-          )}
-          {capabilities.resetMfa && m.mfaEnabled && (
-            <Menu.Item disabled={m.isSelf} onClick={() => onDisableMfa(m)}>
-              {t("users.action.disableMfa", "Reset MFA")}
-            </Menu.Item>
-          )}
-          {rowKebabHasUpperActions(m) && <Menu.Divider />}
-          <Menu.Item
-            color="red"
-            disabled={m.isSelf}
-            onClick={() => onRemove(m)}
-          >
-            {removeLabel}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    );
-  }
-
-  function renderRow(m: Member) {
-    const access = m.portalAccess ?? "none";
-    return (
-      <div className="portal-users__row" key={m.id}>
-        <div className="portal-users__row-main">
+    const cols: DataTableColumn<Member>[] = [
+      column.entity({
+        key: "person",
+        header: t("users.columns.person", "Person"),
+        icon: (m) => (
           <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
-          <div className="portal-users__row-id">
-            <span className="portal-users__row-name">
-              {m.name}
-              {m.isSelf && (
-                <span className="portal-users__row-you">
-                  {" "}
-                  {t("users.you", "(you)")}
-                </span>
-              )}
-              {m.status === "suspended" && (
-                <Chip
-                  accent="danger"
-                  size="sm"
-                  className="portal-users__row-tag"
-                >
-                  {t("users.suspended", "Suspended")}
-                </Chip>
-              )}
-              {m.locked && (
-                <Chip
-                  accent="warning"
-                  size="sm"
-                  className="portal-users__row-tag"
-                >
-                  {t("users.locked", "Locked")}
-                </Chip>
-              )}
-            </span>
-            {m.email !== m.name && (
-              <span className="portal-users__row-email">{m.email}</span>
-            )}
-          </div>
-        </div>
+        ),
+        primary: (m) => m.name,
+        suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
+      }),
+      column.muted({
+        key: "email",
+        header: t("users.columns.email", "Email"),
+        // Blank when the name already is the email (no separate display name).
+        get: (m) => (m.email !== m.name ? m.email : undefined),
+      }),
+      column.labels({
+        key: "status",
+        header: t("users.columns.status", "Status"),
+        get: (m) => {
+          const out: CellLabel[] = [];
+          if (m.status === "suspended") {
+            out.push({
+              label: t("users.suspended", "Suspended"),
+              accent: "danger",
+            });
+          }
+          if (m.locked) {
+            out.push({ label: t("users.locked", "Locked"), accent: "warning" });
+          }
+          return out;
+        },
+      }),
+      column.caps({
+        key: "capabilities",
+        header: t("users.columns.capabilities", "Capabilities"),
+        get: (m) => {
+          const access = m.portalAccess ?? "none";
+          const out: CellCap[] = [
+            { label: t("users.cap.editor", "Editor"), accent: "neutral" },
+          ];
+          if (access === "granted") {
+            out.push({
+              label: t("users.cap.processor", "Processor"),
+              accent: "default",
+              onRemove: capabilities.manageGrants
+                ? () => onRevokeProcessor(m)
+                : undefined,
+            });
+          } else if (access !== "none") {
+            out.push({
+              label: t("users.cap.processor", "Processor"),
+              accent: "default",
+            });
+          } else if (capabilities.manageGrants) {
+            out.push({
+              label: t("users.cap.addProcessor", "+ Processor"),
+              accent: "neutral",
+              dashed: true,
+              onClick: () => onGrantProcessor(m),
+            });
+          }
+          if (showApprover && m.role === "admin") {
+            out.push({
+              label: t("users.cap.approver", "Approves policy"),
+              accent: "success",
+            });
+          }
+          return out;
+        },
+      }),
+      column.muted({
+        key: "lastActive",
+        header: t("users.lastActive", "Last active"),
+        get: (m) => m.lastActive,
+      }),
+    ];
 
-        <div className="portal-users__caps">
-          <Chip accent="neutral" size="sm">
-            {t("users.cap.editor", "Editor")}
-          </Chip>
-          {access === "granted" ? (
-            <Chip
-              accent="default"
-              size="sm"
-              onRemove={
-                capabilities.manageGrants
-                  ? () => onRevokeProcessor(m)
-                  : undefined
-              }
-            >
-              {t("users.cap.processor", "Processor")}
-            </Chip>
-          ) : access !== "none" ? (
-            // admin / team-owner role / inherited from a team-wide grant
-            <Chip accent="default" size="sm">
-              {t("users.cap.processor", "Processor")}
-            </Chip>
-          ) : capabilities.manageGrants ? (
-            <Chip
-              accent="neutral"
-              size="sm"
-              dashed
-              onClick={() => onGrantProcessor(m)}
-            >
-              {t("users.cap.addProcessor", "+ Processor")}
-            </Chip>
-          ) : null}
-          {showApprover && m.role === "admin" && (
-            <Chip
-              accent="success"
-              size="sm"
-              leadingIcon={<span aria-hidden>✓</span>}
-            >
-              {t("users.cap.approver", "Approves policy")}
-            </Chip>
-          )}
-        </div>
+    if (capabilities.changeRole) {
+      cols.push(
+        column.select({
+          key: "role",
+          header: t("users.columns.role", "Role"),
+          get: (m) => ({
+            value: m.role,
+            options: roleOptions,
+            ariaLabel: t("users.roleFor", "Role for {{name}}", {
+              name: m.name,
+            }),
+            disabled: m.isSelf,
+          }),
+          onChange: (m, value) => onChangeRole(m, (value ?? m.role) as RoleId),
+        }),
+      );
+    }
 
-        <span
-          className="portal-users__row-active"
-          title={t("users.lastActive", "Last active")}
-        >
-          {m.lastActive}
-        </span>
+    cols.push(column.actions({ key: "actions", get: (m) => [rowKebab(m)] }));
+    return cols;
+  }, [
+    t,
+    capabilities,
+    roleOptions,
+    showApprover,
+    onChangeRole,
+    onGrantProcessor,
+    onRevokeProcessor,
+    onResetPassword,
+    onMoveToTeam,
+    onToggleEnabled,
+    onUnlock,
+    onDisableMfa,
+    onRemove,
+  ]);
 
-        {capabilities.changeRole && (
-          <div className="portal-users__row-role">
-            <Select
-              aria-label={t("users.roleFor", "Role for {{name}}", {
-                name: m.name,
-              })}
-              options={roleOptions}
-              value={m.role}
-              disabled={m.isSelf}
-              onChange={(value) => onChangeRole(m, (value ?? m.role) as RoleId)}
-            />
-          </div>
-        )}
+  const groups = useMemo<DataTableGroup<Member>[]>(() => {
+    function ownerNames(owners: string[]): string {
+      return owners.map((u) => nameByUsername.get(u) ?? u).join(", ");
+    }
+    // A team whose name/membership is system-managed - no rename/delete.
+    function isManagedTeam(team: TeamGroup): boolean {
+      return SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
+    }
+    function teamKebabHasItems(team: TeamGroup): boolean {
+      return (
+        capabilities.manageGrants ||
+        (!isManagedTeam(team) &&
+          (capabilities.renameTeam || capabilities.deleteTeam))
+      );
+    }
+    function teamActions(team: TeamGroup): CellAction[] {
+      const acts: CellAction[] = [
+        {
+          label: t("users.group.addToTeam", "Add to team"),
+          onClick: () => onAddToTeam(team),
+        },
+      ];
+      if (teamKebabHasItems(team)) {
+        const items: CellMenuItem[] = [];
+        if (capabilities.manageGrants) {
+          items.push(
+            processorTeamIds.has(team.id)
+              ? {
+                  label: t(
+                    "users.team.revokeProcessor",
+                    "Revoke Processor from team",
+                  ),
+                  onClick: () => onRevokeTeamProcessor(team),
+                }
+              : {
+                  label: t(
+                    "users.team.grantProcessor",
+                    "Grant Processor to team",
+                  ),
+                  onClick: () => onGrantTeamProcessor(team),
+                },
+          );
+        }
+        if (!isManagedTeam(team)) {
+          const divider = capabilities.manageGrants;
+          if (capabilities.renameTeam) {
+            items.push({
+              label: t("users.action.rename", "Rename team"),
+              onClick: () => onRenameTeam(team),
+              dividerBefore: divider,
+            });
+          }
+          if (capabilities.deleteTeam) {
+            items.push({
+              label: t("users.action.deleteTeam", "Delete team"),
+              tone: "danger",
+              onClick: () => onDeleteTeam(team),
+              dividerBefore: divider && !capabilities.renameTeam,
+            });
+          }
+        }
+        acts.push({
+          label: t("users.teamActions", "Team actions"),
+          glyph: "kebab",
+          iconOnly: true,
+          menu: items,
+        });
+      }
+      return acts;
+    }
 
-        {rowKebab(m)}
-      </div>
-    );
-  }
-
-  /** Rows for a group, collapsing past COLLAPSED_LIMIT behind a toggle. */
-  function renderMembers(list: Member[], key: string) {
-    const isOpen = expanded.has(key);
-    const overflow = list.length > COLLAPSED_LIMIT;
-    const shown = overflow && !isOpen ? list.slice(0, COLLAPSED_LIMIT) : list;
-    return (
-      <>
-        {shown.map(renderRow)}
-        {overflow && (
-          <button
-            type="button"
-            className="portal-users__show-more"
-            onClick={() => toggleExpand(key)}
-          >
-            {isOpen
-              ? t("users.showLess", "Show less")
-              : t("users.showAll", "Show all {{count}}", {
-                  count: list.length,
-                })}
-          </button>
-        )}
-      </>
-    );
-  }
+    const gs: DataTableGroup<Member>[] = [];
+    if (capabilities.orgGroup && dir.organization.length > 0) {
+      gs.push({
+        key: "org",
+        title: t("users.group.org", "Organization"),
+        meta: t("users.group.owners", "{{count}} owner", {
+          count: dir.organization.length,
+        }),
+        rows: dir.organization,
+        collapseAfter: COLLAPSED_LIMIT,
+      });
+    }
+    for (const team of dir.teams) {
+      const led =
+        team.owners.length > 0
+          ? ` · ${t("users.group.ledBy", "led by {{owner}}", {
+              owner: ownerNames(team.owners),
+            })}`
+          : "";
+      gs.push({
+        key: `team-${team.id}`,
+        title: t("users.group.team", "{{name}} team", { name: team.name }),
+        meta:
+          t("users.group.teamMeta", "{{count}} people", {
+            count: team.members.length,
+          }) + led,
+        actions: teamActions(team),
+        rows: team.members,
+        collapseAfter: COLLAPSED_LIMIT,
+      });
+    }
+    if (showGuests && dir.guests.length > 0) {
+      gs.push({
+        key: "guests",
+        title: t("users.group.guests", "Guests"),
+        meta: t("users.group.guestCount", "{{count}} guest", {
+          count: dir.guests.length,
+        }),
+        rows: dir.guests,
+        collapseAfter: COLLAPSED_LIMIT,
+      });
+    }
+    return gs;
+  }, [
+    t,
+    dir,
+    nameByUsername,
+    capabilities,
+    showGuests,
+    processorTeamIds,
+    onAddToTeam,
+    onGrantTeamProcessor,
+    onRevokeTeamProcessor,
+    onRenameTeam,
+    onDeleteTeam,
+  ]);
 
   return (
-    <div className="portal-users__directory">
-      {/* Organization (a single-org deployment only; SaaS has no org). */}
-      {capabilities.orgGroup && dir.organization.length > 0 && (
-        <section className="portal-users__group">
-          <header className="portal-users__group-head">
-            <div className="portal-users__group-title">
-              <strong>{t("users.group.org", "Organization")}</strong>
-              <span className="portal-users__group-desc">
-                {t(
-                  "users.group.orgDesc",
-                  "Owners with org-wide authority and policy approval",
-                )}
-              </span>
-            </div>
-            <span className="portal-users__group-count">
-              {t("users.group.owners", "{{count}} owner", {
-                count: dir.organization.length,
-              })}
-            </span>
-          </header>
-          {renderMembers(dir.organization, "org")}
-        </section>
-      )}
-
-      {/* Teams */}
-      {dir.teams.map((team) => (
-        <section className="portal-users__group" key={team.id}>
-          <header className="portal-users__group-head">
-            <div className="portal-users__group-title">
-              <strong>
-                {t("users.group.team", "{{name}} team", { name: team.name })}
-              </strong>
-              <span className="portal-users__group-desc">
-                {t("users.group.teamMeta", "{{count}} people", {
-                  count: team.members.length,
-                })}
-                {team.owners.length > 0 &&
-                  ` · ${t("users.group.ledBy", "led by {{owner}}", {
-                    owner: ownerNames(team.owners),
-                  })}`}
-              </span>
-            </div>
-            <div className="portal-users__group-actions">
-              <button
-                type="button"
-                className="portal-users__group-action"
-                onClick={() => onAddToTeam(team)}
-              >
-                <PersonAddAltRounded sx={{ fontSize: 15 }} />
-                {t("users.group.addToTeam", "Add to team")}
-              </button>
-              {teamKebabHasItems(team) && (
-                <Menu
-                  position="bottom-end"
-                  withinPortal
-                  shadow="md"
-                  width={210}
-                >
-                  <Menu.Target>
-                    <button
-                      type="button"
-                      className="portal-users__row-kebab"
-                      aria-label={t("users.teamActions", "Team actions")}
-                    >
-                      ⋯
-                    </button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    {capabilities.manageGrants &&
-                      (processorTeamIds.has(team.id) ? (
-                        <Menu.Item onClick={() => onRevokeTeamProcessor(team)}>
-                          {t(
-                            "users.team.revokeProcessor",
-                            "Revoke Processor from team",
-                          )}
-                        </Menu.Item>
-                      ) : (
-                        <Menu.Item onClick={() => onGrantTeamProcessor(team)}>
-                          {t(
-                            "users.team.grantProcessor",
-                            "Grant Processor to team",
-                          )}
-                        </Menu.Item>
-                      ))}
-                    {!isManagedTeam(team) &&
-                      (capabilities.renameTeam || capabilities.deleteTeam) && (
-                        <>
-                          {capabilities.manageGrants && <Menu.Divider />}
-                          {capabilities.renameTeam && (
-                            <Menu.Item onClick={() => onRenameTeam(team)}>
-                              {t("users.action.rename", "Rename team")}
-                            </Menu.Item>
-                          )}
-                          {capabilities.deleteTeam && (
-                            <Menu.Item
-                              color="red"
-                              onClick={() => onDeleteTeam(team)}
-                            >
-                              {t("users.action.deleteTeam", "Delete team")}
-                            </Menu.Item>
-                          )}
-                        </>
-                      )}
-                  </Menu.Dropdown>
-                </Menu>
-              )}
-            </div>
-          </header>
-          {renderMembers(team.members, `team-${team.id}`)}
-        </section>
-      ))}
-
-      {/* Guests (parked in the live app; shown when showGuests is set). */}
-      {showGuests && dir.guests.length > 0 && (
-        <section className="portal-users__group">
-          <header className="portal-users__group-head">
-            <div className="portal-users__group-title">
-              <strong>{t("users.group.guests", "Guests")}</strong>
-              <span className="portal-users__group-desc">
-                {t(
-                  "users.group.guestsDesc",
-                  "External collaborators, scoped to what you shared. Editor only.",
-                )}
-              </span>
-            </div>
-            <span className="portal-users__group-count">
-              {t("users.group.guestCount", "{{count}} guest", {
-                count: dir.guests.length,
-              })}
-            </span>
-          </header>
-          {renderMembers(dir.guests, "guests")}
-        </section>
-      )}
-    </div>
+    <DataTable<Member>
+      columns={columns}
+      groups={groups}
+      rowKey={(m) => String(m.id)}
+      collapseLabels={{
+        showAll: (count) => t("users.showAll", "Show all {{count}}", { count }),
+        showLess: t("users.showLess", "Show less"),
+      }}
+    />
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -75,30 +75,58 @@ export function Policies() {
   // is configured so a fresh workspace doesn't show a row of zeros.
   const hasPolicies = !!data && data.summary.active + data.summary.paused > 0;
 
-  const displayCatalogue: CatalogueEntry[] =
-    catalogue.length > 0
-      ? catalogue
-      : POLICY_CATEGORIES.map((cat) => ({
-          category: cat,
-          config: POLICY_CONFIG[cat.id] ?? {
-            summary: "",
-            rules: [],
-            scopeLabel: "",
-            fields: [],
-            defaultOperations: [],
-          },
-          policy: null,
-        }));
+  const displayCatalogue: CatalogueEntry[] = useMemo(
+    () =>
+      catalogue.length > 0
+        ? catalogue
+        : POLICY_CATEGORIES.map((cat) => ({
+            category: cat,
+            config: POLICY_CONFIG[cat.id] ?? {
+              summary: "",
+              rules: [],
+              scopeLabel: "",
+              fields: [],
+              defaultOperations: [],
+            },
+            policy: null,
+          })),
+    [catalogue],
+  );
 
-  function openEntry(entry: CatalogueEntry) {
-    // Block setup of an AI-required policy until the engine is confirmed on (so a
-    // click during the app-config load can't open a wizard for a disabled
-    // feature); a configured policy stays openable so it can be paused/deleted.
-    if (entry.category.requiresAiEngine && !aiEngineEnabled && !entry.policy)
-      return;
-    if (entry.policy) setDetail(entry);
-    else setWizard(entry);
-  }
+  const openEntry = useCallback(
+    (entry: CatalogueEntry) => {
+      // Block setup of an AI-required policy until the engine is confirmed on (so a
+      // click during the app-config load can't open a wizard for a disabled
+      // feature); a configured policy stays openable so it can be paused/deleted.
+      if (entry.category.requiresAiEngine && !aiEngineEnabled && !entry.policy)
+        return;
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    },
+    [aiEngineEnabled],
+  );
+
+  // Open a category passed as ?category=<id> (deep link from the super
+  // search), then strip the param so back/reload doesn't re-open it. Waits for
+  // the AI-engine flag too: openEntry refuses AI-gated categories until the
+  // flag is confirmed, and stripping the param before that decision would
+  // drop the deep link silently.
+  useEffect(() => {
+    const categoryId = searchParams.get("category");
+    if (categoryId === null || loading || aiEngineLoading) return;
+    const entry = displayCatalogue.find((e) => e.category.id === categoryId);
+    if (entry) openEntry(entry);
+    const next = new URLSearchParams(searchParams);
+    next.delete("category");
+    setSearchParams(next, { replace: true });
+  }, [
+    searchParams,
+    setSearchParams,
+    loading,
+    aiEngineLoading,
+    displayCatalogue,
+    openEntry,
+  ]);
 
   async function handleSubmit(
     entry: CatalogueEntry,

@@ -11,6 +11,8 @@ updates:
       - "/app/common"
       - "/app/core"
       - "/app/proprietary"
+      - "/app/saas"
+      - "/buildSrc"
     schedule:
       interval: "weekly"
     cooldown:
@@ -63,6 +65,7 @@ updates:
     directories:
       - /devTools
       - /frontend
+      - /testing/compose/mcp-client-check
     schedule:
       interval: "weekly"
     cooldown:
@@ -91,6 +94,13 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+      typescript:
+        patterns:
+          - "typescript"
+          - "@typescript/*"
       vite:
         patterns:
           - "vite"
@@ -168,14 +178,6 @@ updates:
         patterns:
           - "tokio"
           - "tokio-*"
-
-  - package-ecosystem: pip
-    directory: /testing/cucumber
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    rebase-strategy: "auto"
 
   - package-ecosystem: "uv"
     directory: "/engine"

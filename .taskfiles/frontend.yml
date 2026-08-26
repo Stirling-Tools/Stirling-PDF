@@ -5,6 +5,14 @@ version: '3'
 # mode flag) or use `--project editor/...` for tsc — so the editor lives
 # under frontend/editor/ without each task needing a cd.
 
+vars:
+  # Dev-only browser-tab label so concurrent worktrees are distinguishable. Only
+  # the worktree folder basename (e.g. "wt1") is exposed — never the full path,
+  # hostname, or user. Dropped from production builds.
+  DEV_LABEL:
+    sh: >-
+      {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+
 tasks:
   install:
     desc: "Install dependencies"
@@ -80,15 +88,51 @@ tasks:
       OPEN: '{{.OPEN | default ""}}'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
-      # Dev-only browser-tab label so concurrent worktrees are distinguishable.
-      # Only the worktree folder basename (e.g. "wt1") is exposed — never the
-      # full path, hostname, or user. Consumed at dev-serve time by vite.config
-      # and dropped from production builds.
-      STIRLING_DEV_LABEL:
-        sh: >-
-          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+
+  # Separate from dev:_run rather than a flag on it: Task sets an `env:` key even
+  # when its value resolves to empty, and Vite treats an empty process.env VITE_* as
+  # authoritative over the committed editor/.env, so folding these in blanks Supabase
+  # config for the core, proprietary and desktop dev servers.
+  dev:_run:saas:
+    internal: true
+    ignore_error: true
+    # The backend's own env files, so both halves target one project. Paths are
+    # relative to this taskfile's dir, `frontend`.
+    dotenv: ['../app/.env.saas.local', '../app/.env.saas']
+    vars:
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
+      SAAS_ENV: '{{.SAAS_ENV}}'
+      # A real process.env VITE_* beats a committed .env in Vite (loadEnv applies
+      # process.env last), which is what lets this override editor/.env.
+      #
+      # These must stay `sh:`, not Go templates: dotenv values are visible to Task's
+      # embedded shell but not to templates, where {{.SAAS_DEV_PROJECT_REF}} is
+      # always empty.
+      VITE_SUPABASE_URL:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) ref="${SAAS_STAGING_PROJECT_REF:?set it in app/.env.saas.local}" ;;
+            *)       ref="${SAAS_DEV_PROJECT_REF:?set it in app/.env.saas.local, or run task staging:saas}" ;;
+          esac
+          echo "https://${ref}.supabase.co"
+      VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+          esac
+    cmds:
+      - 'echo ">> frontend Supabase target: $VITE_SUPABASE_URL"'
+      - npx vite editor --mode saas --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
     desc: "Start frontend dev server"
@@ -111,13 +155,23 @@ tasks:
         vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
-    desc: "Start frontend dev server in SaaS mode"
+    desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
     deps:
       - task: prepare
         vars: { MODE: saas }
+    vars:
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+      # prod routes to the plain runner, which sets no VITE_SUPABASE_* and so leaves
+      # the committed editor/.env alone.
+      RUNNER: '{{if eq .SAAS_ENV "prod"}}dev:_run{{else}}dev:_run:saas{{end}}'
     cmds:
-      - task: dev:_run
-        vars: { MODE: saas, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+      - task: '{{.RUNNER}}'
+        vars:
+          MODE: saas
+          PORT: '{{.PORT}}'
+          BACKEND_URL: '{{.BACKEND_URL}}'
+          OPEN: '{{.OPEN}}'
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
@@ -210,14 +264,25 @@ tasks:
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
-  storybook:a11y:
-    desc: "a11y regression gate over every story, light and dark: fail only on NEW axe violations"
+  storybook:a11y:light:
+    desc: "a11y gate over every story in light mode"
     deps: [prepare, storybook:browser]
     cmds:
-      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
-      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+
+  storybook:a11y:dark:
+    desc: "a11y gate over every story in dark mode"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:
+    desc: "a11y gate over every story, light and dark"
+    cmds:
+      - task: storybook:a11y:light
+      - task: storybook:a11y:dark
 
   storybook:a11y:changed:
     desc: "a11y gate over the stories this branch affects (default base origin/main)"
@@ -233,7 +298,6 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    deps: [prepare, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
@@ -244,10 +308,10 @@ tasks:
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          node .storybook/a11y-scan.mjs {{.CHANGED}}
-          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
-          SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CHANGED}}
-          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+          rc=0
+          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          exit $rc
 
   storybook:a11y:record:
     desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
@@ -311,13 +375,13 @@ tasks:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx oxfmt --write .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx oxfmt --check .
 
   fix:
     desc: "Auto-fix lint and format"
@@ -490,6 +554,7 @@ tasks:
     deps: [install, ":backend:swagger"]
     cmds:
       - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
+      - task: format
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
@@ -499,9 +564,9 @@ tasks:
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
-    deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
+      - task: tool-models
+      - git diff --exit-code -- editor/src/core/types/toolApiTypes.ts editor/src/core/types/toolIO.ts
 
   licenses:generate:
     desc: "Generate frontend license report"

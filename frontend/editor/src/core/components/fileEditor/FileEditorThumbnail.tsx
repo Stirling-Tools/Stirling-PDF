@@ -300,6 +300,10 @@ const FileEditorThumbnail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const policyEnforcing = policies.some((p) => p.enforcing);
+  // The overlay swallows clicks, so a run that never settles would leave the card
+  // unusable with no way out. Dismissible, like the viewer's; resets per run.
+  const [enforcingDismissed, setEnforcingDismissed] = useState(false);
+  if (!policyEnforcing && enforcingDismissed) setEnforcingDismissed(false);
   // The policy currently enforcing, so the overlay's icon/spinner match that
   // policy's badge instead of a fixed blue.
   const enforcingPolicy = policies.find((p) => p.enforcing);
@@ -548,8 +552,9 @@ const FileEditorThumbnail = ({
 
               {/* Policy enforcement overlay — shown while any policy is in-flight */}
               <PolicyEnforcingOverlay
-                enforcing={policyEnforcing}
+                enforcing={policyEnforcing && !enforcingDismissed}
                 zIndex={2}
+                onDismiss={() => setEnforcingDismissed(true)}
                 accentVar={enforcingPolicy?.accentColor}
                 categoryId={enforcingPolicy?.id}
               />

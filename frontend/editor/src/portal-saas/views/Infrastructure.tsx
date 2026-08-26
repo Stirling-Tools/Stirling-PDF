@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, type TabItem } from "@app/ui";
+import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
 import "@portal/views/Infrastructure.css";
@@ -21,6 +22,8 @@ type InfraTab =
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("api-keys");
+  // Audit is Enterprise-only; disabled (greyed, inert) for non-enterprise tenants.
+  const auditEnabled = useEnterpriseEnabled().enabled;
 
   const comingSoon = (labelKey: string) => (
     <>
@@ -33,7 +36,11 @@ export function Infrastructure() {
 
   const tabs: TabItem<InfraTab>[] = [
     { key: "api-keys", label: t("portal.infrastructure.tabs.apiKeys") },
-    { key: "audit", label: t("portal.infrastructure.tabs.audit") },
+    {
+      key: "audit",
+      label: t("portal.infrastructure.tabs.audit"),
+      disabled: !auditEnabled,
+    },
     {
       key: "deployments",
       label: comingSoon("portal.infrastructure.tabs.deployments"),

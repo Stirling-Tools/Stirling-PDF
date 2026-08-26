@@ -42,6 +42,7 @@ export function LoginLandingSetting() {
   return (
     <Paper withBorder p="md" radius="md">
       <div
+        id="setting-login-landing"
         style={{
           display: "flex",
           alignItems: "center",

@@ -124,7 +124,7 @@ export function useViewerWorkbenchBarButtons(
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
-  const formFillLabel = t("workbenchBar.formFill", "Fill Form");
+  const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
@@ -209,7 +209,11 @@ export function useViewerWorkbenchBarButtons(
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon icon="search" width="1rem" height="1rem" />
+                    <LocalIcon
+                      icon="find-in-page-rounded"
+                      width="1.25rem"
+                      height="1.25rem"
+                    />
                   </ActionIcon>
                 </div>
               </Popover.Target>

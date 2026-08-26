@@ -1,4 +1,4 @@
-// frontend/src/services/httpErrorHandler.ts
+// frontend/editor/src/core/services/httpErrorHandler.ts
 import { alert } from "@app/components/toast";
 import {
   broadcastErroredFiles,
@@ -6,6 +6,7 @@ import {
   normalizeAxiosErrorData,
 } from "@app/services/errorUtils";
 import { showSpecialErrorToast } from "@app/services/specialErrorToasts";
+import axios from "axios";
 import { handleSaaSError } from "@app/services/saasErrorInterceptor";
 import {
   clampText,
@@ -95,15 +96,16 @@ if (typeof window !== "undefined") {
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
-export async function handleHttpError(error: any): Promise<boolean> {
-  const skipAuthRedirect = error?.config?.skipAuthRedirect === true;
+export async function handleHttpError(error: unknown): Promise<boolean> {
+  const axiosError = axios.isAxiosError(error) ? error : undefined;
+  const skipAuthRedirect = axiosError?.config?.skipAuthRedirect === true;
   // Check if this error should skip the global toast (component will handle it)
-  if (error?.config?.suppressErrorToast === true) {
+  if (axiosError?.config?.suppressErrorToast === true) {
     return false; // Don't show global toast, but continue rejection
   }
 
   // Handle 401 authentication errors
-  const status: number | undefined = error?.response?.status;
+  const status: number | undefined = axiosError?.response?.status;
   if (status === 401) {
     const pathname = window.location.pathname;
 
@@ -119,7 +121,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
       if (loginRedirectRecentlyFired()) {
         console.warn(
           "[httpErrorHandler] 401 redirect already fired moments ago — suppressing repeat to avoid a login loop:",
-          error?.config?.url,
+          axiosError?.config?.url,
         );
         return true;
       }
@@ -151,7 +153,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
   const { title, body } = extractAxiosErrorMessage(error);
 
   // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
-  const raw = error?.response?.data as any;
+  const raw = axiosError?.response?.data;
   let normalized: unknown = raw;
   try {
     normalized = await normalizeAxiosErrorData(raw);
@@ -170,7 +172,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
   }
 
   // 2) Generic-vs-special dedupe by endpoint
-  const url: string | undefined = error?.config?.url;
+  const url: string | undefined = axiosError?.config?.url;
   const now = Date.now();
   const isSpecial =
     status === 422 ||

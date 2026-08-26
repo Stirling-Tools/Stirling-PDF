@@ -8,7 +8,7 @@ import {
   usePolicyRuns,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
-import { isClassificationCategory } from "@app/data/policyCategories";
+import { isClassificationCategory } from "@app/data/classificationPolicy";
 import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
 
 type SignatureOverlayPassThrough = Pick<
