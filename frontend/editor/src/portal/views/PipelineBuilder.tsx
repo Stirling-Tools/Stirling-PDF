@@ -5,7 +5,6 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import {
   ActionIcon,
   Banner,
@@ -15,7 +14,6 @@ import {
   Modal,
   Select,
   Spinner,
-  ToggleSwitch,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
@@ -1383,6 +1381,9 @@ export function PipelineBuilder() {
           onNameChange={setName}
           icon={icon}
           onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          onBackToSimple={simpleEntry ? backToSimple : undefined}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1403,6 +1404,9 @@ export function PipelineBuilder() {
           onNameChange={setName}
           icon={icon}
           onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          onBackToSimple={simpleEntry ? backToSimple : undefined}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}
@@ -1433,29 +1437,6 @@ export function PipelineBuilder() {
           })}
         />
       )}
-
-      <div className="portal-builder__policybar">
-        <ToggleSwitch
-          size="sm"
-          checked={required}
-          onChange={setRequired}
-          label={t("portal.pipelines.builder.required.label")}
-        />
-        <span className="portal-builder__muted">
-          {t("portal.pipelines.builder.required.desc")}
-        </span>
-        {simpleEntry && (
-          <Button
-            variant="tertiary"
-            size="sm"
-            style={{ marginLeft: "auto" }}
-            onClick={backToSimple}
-            leftSection={<UndoRoundedIcon style={{ fontSize: "1.05rem" }} />}
-          >
-            {t("portal.pipelines.builder.backToSimple")}
-          </Button>
-        )}
-      </div>
 
       <div className="portal-builder__grid">
         <div className="portal-builder__canvas">

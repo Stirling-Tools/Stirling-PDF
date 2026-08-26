@@ -218,18 +218,6 @@
   margin: 0;
 }
 
-/* Policy-level controls above the graph: the Required toggle and the back-to-simple escape hatch. */
-.portal-builder__policybar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  margin-bottom: 1rem;
-  background: var(--c-bg-raised);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md, 0.5rem);
-}
-
 /* The space-between button row shared by the builder's modal footers. */
 .portal-builder__composer-footer {
   display: flex;

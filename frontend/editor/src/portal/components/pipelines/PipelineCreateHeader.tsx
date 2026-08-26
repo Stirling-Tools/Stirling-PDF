@@ -3,6 +3,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { ActionIcon, Button, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
+import { PipelinePolicyControls } from "@portal/components/pipelines/PipelinePolicyControls";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
 
 export interface PipelineCreateHeaderProps {
@@ -11,6 +12,10 @@ export interface PipelineCreateHeaderProps {
   /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
   icon: string;
   onIconChange: (key: string) => void;
+  /** Org-mandated policy toggle + return-to-simple, shown in the actions row. */
+  required: boolean;
+  onRequiredChange: (required: boolean) => void;
+  onBackToSimple?: () => void;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -34,6 +39,9 @@ export function PipelineCreateHeader({
   onNameChange,
   icon,
   onIconChange,
+  required,
+  onRequiredChange,
+  onBackToSimple,
   canSave,
   blockers,
   saving,
@@ -66,6 +74,12 @@ export function PipelineCreateHeader({
       />
 
       <div className="portal-pipeline-create-header__actions">
+        <PipelinePolicyControls
+          required={required}
+          onRequiredChange={onRequiredChange}
+          onBackToSimple={onBackToSimple}
+        />
+
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the
             wrapper is what the pointer lands on. */}
         <PipelineBlockerTooltip

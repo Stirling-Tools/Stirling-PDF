@@ -11,6 +11,7 @@ import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
+import { PipelinePolicyControls } from "@portal/components/pipelines/PipelinePolicyControls";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
@@ -19,6 +20,10 @@ export interface PipelineEditHeaderProps {
   /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
   icon: string;
   onIconChange: (key: string) => void;
+  /** Org-mandated policy toggle + return-to-simple, shown in the actions row. */
+  required: boolean;
+  onRequiredChange: (required: boolean) => void;
+  onBackToSimple?: () => void;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -55,6 +60,9 @@ export function PipelineEditHeader({
   onNameChange,
   icon,
   onIconChange,
+  required,
+  onRequiredChange,
+  onBackToSimple,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -153,6 +161,12 @@ export function PipelineEditHeader({
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
+        <PipelinePolicyControls
+          required={required}
+          onRequiredChange={onRequiredChange}
+          onBackToSimple={onBackToSimple}
+        />
+
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
             start while the other is committing, or the two writes race and the loser's version wins. */}
         <Button
