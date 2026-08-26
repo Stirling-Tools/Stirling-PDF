@@ -699,9 +699,9 @@ compute_dynamic_memory() {
 
   if [ "$mem_mb" -le 0 ] 2>/dev/null; then
     # Cannot detect memory; use safe defaults
-    DYNAMIC_INITIAL_RAM_PCT=10
-    DYNAMIC_MAX_RAM_PCT=75
-    DYNAMIC_MAX_METASPACE=256
+    DYNAMIC_INITIAL_RAM_PCT=2
+    DYNAMIC_MAX_RAM_PCT=70
+    DYNAMIC_MAX_METASPACE=512
     return
   fi
 
@@ -716,24 +716,24 @@ compute_dynamic_memory() {
   if [ "$mem_mb" -le 512 ]; then
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=55
-    DYNAMIC_MAX_METASPACE=96
+    DYNAMIC_MAX_METASPACE=256
   elif [ "$mem_mb" -le 1024 ]; then
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=60
-    DYNAMIC_MAX_METASPACE=128
+    DYNAMIC_MAX_METASPACE=384
   elif [ "$mem_mb" -le 2048 ]; then
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=65
-    DYNAMIC_MAX_METASPACE=192
+    DYNAMIC_MAX_METASPACE=512
   elif [ "$mem_mb" -le 4096 ]; then
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
-    DYNAMIC_MAX_METASPACE=256
+    DYNAMIC_MAX_METASPACE=512
   else
     # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
     DYNAMIC_INITIAL_RAM_PCT=2
     DYNAMIC_MAX_RAM_PCT=70
-    DYNAMIC_MAX_METASPACE=256
+    DYNAMIC_MAX_METASPACE=768
   fi
 
   log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
