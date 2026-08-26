@@ -3969,6 +3969,7 @@ back = "ཕྱིར་ལོག"
 backToFolder = "{{folder}} ལ་ཕྱིར་ལོག"
 backToMyFiles = "ངའི་ཡིག་ཆར་ཕྱིར་ལོག"
 breadcrumbs = "སྣོད་ཁུངས་ལམ"
+bulkActions = "བྱ་སྤྱོད།"
 cancel = "འདོར"
 classification = "རིགས་དབྱེ"
 clearSelection = "འདེམས་བཤོལ"
@@ -4142,6 +4143,11 @@ totalSize = "སྤྱི་ཆེ་ཆུང"
 type = "རིགས"
 versionHistory = "པར་གཞིའི་འགྲོ་ལམ"
 
+[filesPage.filters]
+activeCount = "འཚག་ཆས་{{count}} སྤྱོད་བཞིན།"
+clearAll = "འཚག་ཆས་ཚང་མ་གསལ་བཟོ།"
+label = "འཚག་ཆས།"
+
 [filesPage.folderName]
 cancel = "འདོར"
 error = "སྣོད་འགེངས་སྲུངས་མ་ཐུབ། བསྐྱར་འདོད།"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "ཡིག་ཆ་རིམ་སྒྲིག"
 modifiedAsc = "དུས་རྙིང་བ་སོང་མ"
 modifiedDesc = "ཉེ་ཆར་སྔོན"
 nameAsc = "མིང A→Z"
@@ -4305,11 +4312,14 @@ issues = "གྷི་ཊི་ཧབ།"
 [formFill]
 allSaved = "ཚང་མ་ཉར་ཚགས་བྱས་ཟིན"
 analyzingFields = "Analysing form fields..."
+applyFailed = "བཟོ་བཅོས་ལག་བསྟར་བྱ་མ་ཐུབ།"
 extractCsvError = "CSV ཕྱིར་འདོན་མ་ཐུབ"
 extractXlsxError = "XLSX ཕྱིར་འདོན་མ་ཐུབ"
 filled = "filled"
 flattenAfterFilling = "བཀངས་རྗེས་རྡོག་བཟོ"
+goToPage = "ཤོག་ངོས་འདིར་སྐྱོད།"
 noFields = "No fillable form fields found in this PDF."
+page = "ཤོག་ངོས།"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "དགོས"
@@ -4318,7 +4328,82 @@ rescanFields = "ས་ཁོངས་བསྐྱར་ཞིབ"
 rescanFormFields = "ཐོ་འགོད་ས་ཁོངས་བསྐྱར་ཞིབ"
 save = "སྲུངས"
 saveShortcut = "Ctrl+S སྤྱད་ནས་ཉར་ཚགས"
+skippedEdits_one = "བཟོ་བཅོས་1 ལག་བསྟར་བྱ་མ་ཐུབ།"
+skippedEdits_other = "བཟོ་བཅོས་{{count}} ལག་བསྟར་བྱ་མ་ཐུབ།"
+skippedEditsTruncated = "ད་དུང་{{count}} ཐོ་འགོད་བྱས་མེད།"
 unsavedChanges = "ཉར་ཚགས་མ་བྱས་པའི་འགྱུར་བ"
+
+[formFill.create]
+commit = "PDF ལ་{{count}} ཡིག་ཚན་ཁ་སྣོན་བྱེད།"
+empty = "ད་དུང་ཡིག་ཚན་བྲིས་མེད།"
+failed = "ཡིག་ཚན་ཁ་སྣོན་བྱ་མ་ཐུབ།"
+goToField = "ཡིག་ཚན་འདིར་སྐྱོད།"
+hint = "ཡིག་ཚན་རིགས་ཤིག་འདེམས་ནས་དེ་ཤོག་ངོས་སུ་བྲིས།"
+placing = "ཤོག་ངོས་སུ་{{type}} ཡིག་ཚན་བྲིས། མཚམས་འཇོག་པར་Esc མནན།"
+preview = "སྔོན་ལྟ་བྱེད་པར་མནན་ནས་འཛིན།"
+previewHelp = "རྩོམ་སྒྲིག་གི་མཐའ་ཐིག་མེད་པར་ཁ་སྣོན་བྱས་རྗེས་ཡིག་ཚན་ཇི་ལྟར་མངོན་པ་ལྟ་བར་མནན་ནས་འཛིན།"
+removeField = "ཡིག་ཚན་སུབ།"
+
+[formFill.editor]
+action = "མཐེབ་གནོན་བྱ་སྤྱོད།"
+actionHelp = "མཐེབ་གནོན་ལ་གནོན་སྐབས་ཅི་བྱེད་པ།"
+actionNone = "མེད།"
+actionPrint = "པར་འདེབས།"
+actionReset = "འགེངས་ཤོག་སླར་སྒྲིག"
+actionSubmit = "URL ལ་སྤྲོད།"
+actionUri = "URL ཁ་ཕྱེ།"
+actionUrl = "URL"
+actionUrlHelp = "མཐེབ་གནོན་གྱིས་ཁ་ཕྱེ་བའམ་སྤྲོད་སའི་ཁ་བྱང་།"
+addOption = "གདམ་གསེས་ཁ་སྣོན།"
+caption = "མཐེབ་གནོན་ཁ་བྱང་།"
+captionHelp = "མཐེབ་གནོན་ངོས་སུ་པར་འདེབས་བྱེད་པའི་ཡི་གེ།"
+defaultValue = "སྔོན་སྒྲིག་རིན་ཐང་།"
+defaultValueHelp = "སུ་ཞིག་གིས་འགེངས་མ་བྱས་གོང་ཡིག་ཚན་ནང་ཡོད་པ། ཡིག་ཚན་སྟོང་པར་འཇོག་དགོས་ན་སྟོང་པར་བཞག"
+fontSize = "ཡིག་གཟུགས་ཆེ་ཆུང་།"
+fontSizeHelp = "ཡིག་ཚན་ནང་གི་ཡི་གེའི་ཆེ་ཆུང་། ཀློག་ཆས་ཀྱིས་འཚམ་པར་ཆེ་ཆུང་སྒྲིག་པར་སྟོང་པར་བཞག"
+label = "ཤོ་བྱང་།"
+labelHelp = "འགེངས་ཤོག་འགེངས་མཁན་ལ་མངོན་པའི་ཚིག སྟོང་པར་བཞག་ན་ཡིག་ཚན་མིང་ལ་ཕྱིར་ལོག་བྱེད།"
+maxLength = "རིང་ཚད་མཐོ་ཤོས། (comb)"
+maxLengthHelp = "ཡིག་འབྲུ་ག་ཚོད་ཤོང་བ་ཚད་འཛིན་བྱེད་པ་དང་། དེ་དག་བར་སྟོང་མཉམ་པའི་སྒམ་ལྟར་བྲིས་ཡོད།"
+multiline = "ཐིག་ཕྲེང་མང་པོ།"
+multilineHelp = "ཡིག་ཕྲེང་གཅིག་ལས་མང་བའི་ཡི་གེ་འཇུག་ཆོག་པ་དང་། ཡིག་ཚན་གྱི་མཐའ་ལ་སླེབས་ན་ཕྲེང་བརྗེ་བྱེད།"
+multiSelect = "གདམ་གསེས་མང་པོ་འདེམས་ཆོག"
+multiSelectHelp = "གདམ་གསེས་གཅིག་ལས་མང་བ་དུས་གཅིག་ཏུ་འདེམས་ཆོག"
+name = "ཡིག་ཚན་མིང་།"
+nameHelp = "ཡིག་ཚན་གྱི་ནང་ཁུལ་མིང་། གཞི་གྲངས་ཕྱིར་འདོན་ནམ་མ་ལག་གཞན་ནས་འགེངས་ཤོག་འགེངས་སྐབས་སྤྱོད་པས། དེ་ཁྱད་འཕགས་དང་བར་སྟོང་མེད་པར་ཉར།"
+optionGap = "གདམ་གསེས་བར་སྟོང་།"
+optionGapHelp = "མཐེབ་གནོན་བར་གྱི་བར་སྟོང་། ཚེག་ཐིག་གིས་ཚད་འཇལ། སྒམ་ནང་དུ་འོག་ཕྱོགས་སུ་མཉམ་པར་བཀྲམ་པར་སྟོང་པར་བཞག"
+optionPlaceholder = "གདམ་གསེས་{{n}}"
+options = "གདམ་གསེས།"
+optionsEmpty = "ཉུང་མཐར་གདམ་གསེས་གཅིག་ཁ་སྣོན་བྱེད།"
+optionsHelp = "ཐོ་ཡིག་ནང་སྤྲོད་པའི་གདམ་གསེས་རྣམས། རེ་རེ་འབྲི་བ་ལྟར་ཉར་ཚགས་བྱེད་པས། ཐུང་ཞིང་ཁ་གསལ་པོར་ཉར།"
+optionSize = "གདམ་གསེས་ཆེ་ཆུང་།"
+optionSizeHelp = "མཐེབ་གནོན་རེ་རེའི་ཞེང་ཚད་དང་མཐོ་ཚད། ཚེག་ཐིག་གིས་ཚད་འཇལ། ཁྱེད་ཀྱིས་བྲིས་པའི་སྒམ་ལ་འཚམ་པར་སྟོང་པར་བཞག"
+readOnly = "ཀློག་ཙམ།"
+readOnlyHelp = "རིན་ཐང་ཞིག་སྟོན་ཡང་སུ་ཞིག་གིས་ཀྱང་རྩོམ་སྒྲིག་བྱ་མི་ཆོག"
+removeOption = "གདམ་གསེས་སུབ།"
+required = "ངེས་པར་དགོས་པ།"
+requiredHelp = "ཡིག་ཚན་འདི་མ་བཀང་བར་འགེངས་ཤོག་སྤྲོད་མི་ཆོག"
+signatureNote = "ཚབ་འཇོག་ས་ཙམ་ཡིན་ - འདིར་མིང་རྟགས་མི་འགོད། ཡིག་ཆར་མིང་རྟགས་འགོད་སྐབས་PDF མིང་རྟགས་འགོད་ཆས་(Adobe Acrobat, མིང་རྟགས་ཞབས་ཞུ་སོགས་) ཀྱིས་ས་འདིར་མིང་རྟགས་འཇོག་པའི་མཚོན་རྟགས་ཡིན།"
+tooltip = "སྣེ་སྟོན།"
+tooltipHelp = "PDF ཀློག་ཆས་ནང་མི་ཞིག་གིས་ཡིག་ཚན་སྟེང་ཙིག་རྟགས་འཇོག་སྐབས་མངོན་པའི་སྣེ་སྟོན།"
+type = "རིགས།"
+typeHelp = "འདི་ཡིག་ཚན་རིགས་གང་ཡིན་པ། དེ་བསྒྱུར་ན་ཡིག་ཚན་སླར་བཟོ་བྱེད་པས། ད་ལྟའི་རིན་ཐང་མུ་མཐུད་འཁྱེར་མི་ཐུབ།"
+
+[formFill.mode]
+create = "གསར་བཟོ།"
+fill = "འགེངས།"
+label = "འགེངས་ཤོག་རྩོམ་སྒྲིག་རྣམ་པ།"
+modify = "བཟོ་བཅོས།"
+
+[formFill.modify]
+commit = "བཟོ་བཅོས་{{count}} ཉར།"
+delete = "སུབ།"
+empty = "PDF འདིར་ད་དུང་འགེངས་ཤོག་ཡིག་ཚན་མེད།"
+failed = "བཟོ་བཅོས་ཉར་མ་ཐུབ།"
+groupSizeHint = "གདམ་གསེས་ཆེ་ཆུང་སྤྱོད།"
+hint = "ཡིག་ཚན་ཞིག་འདེམས་ནས་ཁྱད་ཆོས་རྩོམ་སྒྲིག་བྱེད་པའམ། ཤོག་ངོས་སུ་འདྲུད་པ། ཡང་ན་སུབ།"
+restore = "སླར་གསོ།"
 
 [formFill.sidebar]
 close = "ཟུར་ཚན་ཁ་རྒྱག"
@@ -4584,6 +4669,10 @@ title = "མེ་ཊ་ཌ་ཏ་བསྒྱུར་བ།"
 desc = "ཡིག་ཆའི་ཚད་བཀག་དང་ཆོག་མཆན་བསྒྱུར་བ།"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "འཕོ་འགྱུར།"
+
+[home.classify]
+desc = "ཡིག་ཆ་འདི་རིགས་གང་ཡིན་པ་ངོས་འཛིན་བྱས་ནས་ཤོ་བྱང་སྦྱོར།"
+title = "རིགས་དབྱེ།"
 
 [home.compare]
 desc = "PDFཡིག་ཆ་2ཀྱི་ཁྱད་པར་བསྡུར་བ་དང་བསྡུར་བ།"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "ཡར་ཞུ་བྱ་རྒྱུ་མེད།"
+handoffUnavailable = "བཤར་ཆས་འདིས་སྒྲིག་སྦྱོར་ཆས་ནས་ཡིག་ཆ་རྩོམ་སྒྲིག་ཆས་ལ་སྤྲོད་དུ་མི་འཇུག དེའི་ཚབ་ཏུ་རྩོམ་སྒྲིག་ཆས་ནས་ཁ་ཕྱེ།"
+noDocumentLinked = "ཕམ་ཉེས་འདི་ཡིག་ཆ་དམིགས་བསལ་ཞིག་དང་སྦྲེལ་མེད་པས། འདིར་ཁ་ཕྱེ་རྒྱུ་མེད།"
+notOnThisDevice = "ཡིག་ཆ་འདི་སྒྲིག་ཆས་འདིར་མེད་པས། འདིར་ཁ་ཕྱེ་མི་ཐུབ།"
+occurrences = "ཐེངས་{{count}}"
+open = "བརྡ་ཐོ་ཁ་ཕྱེ།"
+title = "བརྡ་ཐོ།"
+unread = "ཀློག་མེད།"
+
+[notifications.action]
+failed = "དེ་ལས་མ་ཐུབ། ཅུང་ཙམ་རྗེས་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+unavailable = "བརྡ་ཐོ་འདིར་སྤྱོད་མི་རུང་།"
+
+[notifications.detail]
+copied = "འདྲ་བཤུས་བྱས་ཟིན།"
+copy = "ནོར་འཁྲུལ་འདྲ་བཤུས།"
+less = "ཉུང་ཙམ་སྟོན།"
+more = "འཕྲིན་ཐུང་ཆ་ཚང་སྟོན།"
+
+[notifications.section]
+earlier = "སྔོན་མ།"
+new = "གསར་པ།"
 
 [oauth.error]
 message = "བདེན་དཔང་དེ་གྲུབ་འབྲས་ཐོབ་མེད། ཁྱོད་ཀྱིས་སྒེའུ་ཁུང་འདི་ཁ་རྒྱག་ནས་བསྐྱར་དུ་ཚོད་ལྟ་བྱེད་ཐུབ།"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "རིན་མེད PDFs {{allowance}} ནས་སྤྱད་པ་"
 capSuffix_other = "རིན་མེད PDFs {{allowance}} ནས་སྤྱད་པ་"
 eyebrow = "སྒྲིག་གཅོད་ཆས་ཚོད་སྤྱོད་"
-statusLabel_one = "{{remaining}} ལྷག་"
-statusLabel_other = "{{remaining}} ལྷག་"
+statusLabel_one = "{{used}} སྤྱད་ཟིན།"
+statusLabel_other = "{{used}} སྤྱད་ཟིན།"
 sub = "PDF རྩོམ་སྒྲིག་ཆས་རིན་མེད་སྤྱོད། PDFs རང་འགུལ་སྒྲིག་གཅོད་ལ་དངུལ་སྤྲོད།"
 title_one = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད་"
 title_other = "PDFs {{allowance}} རིན་མེད་སྒྲིག་གཅོད་"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "ཡིག་ཆ་ལྟ།"
+viewInProcessor = "སྒྲིག་སྦྱོར་ཆས་ནང་ལྟ།"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "ཕམ་ཉེས་འདི་ཡིག་ཆ་དམིགས་བསལ་ཞིག་ལ་ཟིན་ཐོ་བཀོད་མེད་པས། འདིར་ཁ་ཕྱེ་རྒྱུ་མེད།"
+unattended = "ཡིག་ཆ་འདི་ཡིག་ཁུག སྣོད། ཡང་ན་webhook ནས་བཏང་བས། དེ་ཁ་ཕྱེ་བར་སུའི་བཤར་ཆས་ཀྱང་ཉར་མེད།"
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "ཁུངས"
 connectSource = "ཁུངས་འབྲེལ་མཐུད"
 
 [portal.sources.builder]
+advanced = "མཐོ་རིམ།"
 back = "ཁུངས་ལ་ཕྱིར་ལོག"
+backToSource = "འབྱུང་ཁུངས་སྒྲིག་འགོད་ལ་ཕྱིར་ལོག"
 backToTypes = "ཁུངས་རིགས་ཚང་མ"
 cancel = "འདོར"
 chooseHint = "ཡིག་ཆ་གང་ནས་ཡོང་བ་འདེམས། སྐྱ་མདོག་གི connectors རྣམས་འོང་བཞིན་པ་ཡིན།"
@@ -8726,7 +8845,6 @@ create = "ཁུངས་བཟོ"
 createTitle = "ཁུངས་ཞིག་འབྲེལ་མཐུད"
 delete = "སུབ"
 editTitle = "ཁུངས་རྩོམ་སྒྲིག"
-enabled = "ནུས་ཡོད"
 save = "འགྱུར་བ་ཉར"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: ཡིག་ཆ་རེ་རེ་ཐེངས་གཅི
 snapshot = "Snapshot: འཁོར་རེར་ཡིག་སྣོད་སླར་ཀློག"
 
 [portal.sources.networkFields.recursive]
+helperText = "ཁྱེད་ཀྱི་ཡིག་ཆ་ནང་སྦས་ཡིག་ཁུག་ཏུ་སྒྲིག་ཡོད་ན། ཡན་ལག་ཡིག་ཁུག་ཚུད་པར་བྱེད་པའམ། རིམ་པ་གོང་མ་ཁོ་ན་ལ་ལྟ་ཞིབ་བྱེད།"
 label = "ཡིག་སྣོད་གཏིང་ཚད"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "ཆེ་ཆུང་། ཚེས་གྲངས་དང་ནང་�
 stat = "ཆེ་ཆུང་དང་བཟོ་བཅོས་ཚེས་གྲངས"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "སྒྲིག་སྦྱོར་བྱས་རྗེས་མ་ཡིག་ཆ་རང་སར་འཇོག་མིན། མ་ཡིག་ཆ་རང་སར་བཞག་ན། pipeline གྱིས་རྗེས་མ་འབྱུང་ཁུངས་བཤེར་སྐབས་དེ་ཡང་བསྐྱར་སྒྲིག་སྦྱོར་བྱེད།"
 label = "ཀློག་སྟངས"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: ཡིག་ཆ་རེ་རེ་ཐེངས་གཅི
 snapshot = "Snapshot: འཁོར་རེར་ཡིག་སྣོད་སླར་ཀློག"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "ཁྱེད་ཀྱི་ཡིག་ཆ་ནང་སྦས་ཡིག་ཁུག་ཏུ་སྒྲིག་ཡོད་ན། ཡན་ལག་ཡིག་ཁུག་ཚུད་པར་བྱེད་པའམ། རིམ་པ་གོང་མ་ཁོ་ན་ལ་ལྟ་ཞིབ་བྱེད།"
 label = "ཡིག་སྣོད་གཏིང་ཚད"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "ཁྱེད་ཀྱི Stirling-PDF ཞབས་ཞ
 expired = "ཁྱེད་རང་གི་ཚོགས་ཐུན་དུས་ཚོད་རྫོགས་ཡོད། ཤོག་བུ་གསར་བཟོ་བྱས་ནས་བསྐྱར་དུ་ཚོད་ལྟ་གནང་རོགས།"
 
 [settings]
+backToSections = "སྒྲིག་འགོད་ཚང་མ།"
 close = "ཁ་རྒྱག"
+title = "སྒྲིག་འགོད།"
 
 [settings.ai]
 documents = "ཡིག་ཆ་ & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "འཚོལ།"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "འཚོལ་ཞིབ་ལག་ཆ།"
 
 [toolPicker.subcategories]
 advancedFormatting = "ཡར་ཐོན་རྣམ་གཞག་བཟོ་བ།"
+ai = "AI"
 automation = "རང་འགུལ་ཅན།"
 developerTools = "གོང་འཕེལ་གཏོང་མཁན་གྱི་ལག་ཆ།"
 documentReview = "ཡིག་ཆ་བསྐྱར་ཞིབ།"
@@ -11335,8 +11460,11 @@ columnDefault = "གྲལ་ཐིག {{index}}"
 convertToPdf = "PDF ལ་བསྒྱུར"
 csvStats = "{{rows}} གྲལ · {{columns}} སྟར · {{size}}"
 emptyFile = "ཡིག་ཆ་སྟོང་"
+htmlHidePreview = "སྔོན་ལྟ་སྦས།"
 htmlPreview = "HTML སྔོན་ལྟ"
+htmlPreviewMobileHidden = "HTML ཤོག་ངོས་རྣམས་ཅོག་ངོས་ཞེང་ཚད་ལ་བཀོད་སྒྲིག་བྱས་པས། འདིར་སྔོན་ལྟ་སྔོན་སྒྲིག་གིས་སྒོ་བརྒྱབ་ཡོད།"
 htmlPreviewWarning = "HTML སྔོན་ལྟ — ཕྱི་ཐོན་ཁུངས་ཚུད་མི་སྲིད · {{size}}"
+htmlShowPreview = "གང་ལྟར་སྔོན་ལྟ་སྟོན།"
 invalidJson = "JSON ནུས་མེད — ནང་དོར་ཐོག་མངོན"
 lineNumbers = "ཕྲེང་གྲངས"
 loading = "སྒྲུབ་བརྒྱབ..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF ཕྱིར་འདྲེན"
 exportSelected = "འདེམས་ཟིན་པའི་ཤོག་ངོས་ཕྱིར་འདྲེན"
 formFill = "རྣམ་གཞག་ཁ་སྐོང་"
 hideToolbar = "Hide toolbar"
+moreActions = "བྱ་སྤྱོད་མང་བ།"
 multiTool = "སྣ་ཚོགས་ལག་ཆས"
 panMode = "སྤོ་བཤུད་ཐབས་ལམ"
 print = "PDF དཔར་བསྐྲུན"
@@ -11703,6 +11832,8 @@ selectAll = "ཚང་མ་འདེམས"
 selectByNumber = "ཤོག་ངོས་གྲངས་ཀྱིས་འདེམས"
 selectLanguage = "སྐད་ཡིག་འདེམས"
 share = "མཉམ་སྤྱོད"
+showAllTools = "ལག་ཆ་ཚང་མ་སྟོན།"
+showFewerTools = "ལག་ཆ་ཚང་བརྡར་འགྲིལ།"
 showToolbar = "Show toolbar"
 toggleAnnotations = "མཆན་བཀོད་མཐོང་རུང་བ་བསྒྱུར"
 toggleAttachments = "ཟུང་འདྲེན་བསྒྱུར"
