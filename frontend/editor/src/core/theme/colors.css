@@ -9,7 +9,7 @@ html[data-app-theme="light"] {
   --c-bg-raised: var(--p-white);
   --c-surface: var(--p-snow);
   --c-surface-raised: var(--p-white);
-  --c-surface-sunken: var(--p-c-f4f2ed);
+  --c-surface-sunken: var(--p-c-f0f0f0);
   --c-input-bg: var(--p-white);
   --c-modal-surface: var(--p-white);
   --c-hover: var(--p-gray-50);
@@ -204,11 +204,8 @@ html[data-app-theme="custom"] {
   --c-bg-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
   --c-surface: color-mix(in srgb, var(--c-primary) 3%, var(--p-snow));
   --c-surface-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
-  --c-surface-sunken: color-mix(
-    in srgb,
-    var(--c-primary) 4%,
-    var(--p-c-f4f2ed)
-  );
+  /* Neutral recess: no accent mix, so the sunken well stays a plain grey (not cold, not cream). */
+  --c-surface-sunken: var(--p-c-f0f0f0);
   --c-input-bg: color-mix(in srgb, var(--c-primary) 2%, var(--p-white));
   --c-hover: color-mix(in srgb, var(--c-primary) 9%, var(--p-gray-50));
   --c-active: color-mix(in srgb, var(--c-primary) 13%, var(--p-gray-100));
@@ -357,11 +354,8 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
     var(--c-primary) 9%,
     var(--p-zinc-775)
   );
-  --c-surface-sunken: color-mix(
-    in srgb,
-    var(--c-primary) 8%,
-    var(--p-c-100f0e)
-  );
+  /* Neutral recess (see light): no accent mix, so the sunken well stays a plain near-black. */
+  --c-surface-sunken: var(--p-c-100f0e);
   --c-input-bg: var(--c-surface);
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
@@ -412,7 +406,7 @@ html[data-app-theme="custom"][data-accent="default"] {
   --c-bg-raised: var(--p-white);
   --c-surface: var(--p-snow);
   --c-surface-raised: var(--p-white);
-  --c-surface-sunken: var(--p-c-f4f2ed);
+  --c-surface-sunken: var(--p-c-f0f0f0);
   --c-input-bg: var(--p-white);
   --c-hover: var(--p-gray-50);
   --c-active: var(--p-gray-100);
