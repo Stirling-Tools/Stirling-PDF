@@ -32,15 +32,16 @@ jobs:
         with:
           path: ${{ runner.temp }}/.uv-python-dir
           key: uv-${{ runner.os }}-${{ hashFiles(
-                'engine/pyproject.toml',
-                'engine/uv.lock'
-              ) }}
+            'engine/pyproject.toml',
+            'engine/uv.lock'
+            ) }}
           lookup-only: true
 
       - name: Install uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
+          version: "0.12.6"
           working-directory: "engine"
           enable-cache: false
           cache-dependency-glob: |
@@ -56,9 +57,9 @@ jobs:
         with:
           path: ${{ runner.temp }}/uv-python-dir
           key: uv-${{ runner.os }}-${{ hashFiles(
-                'engine/pyproject.toml',
-                'engine/uv.lock'
-              ) }}
+            'engine/pyproject.toml',
+            'engine/uv.lock'
+            ) }}
   unoserver-image-cache-prime:
     environment:
       name: ci-unsigned
@@ -81,12 +82,12 @@ jobs:
         with:
           path: ${{ runner.temp }}/.buildx-cache
           key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
-                'docker/unoserver/Dockerfile',
-                'docker/unoserver/fonts.conf',
-                'docker/unoserver/entrypoint.sh',
-                'docker/unoserver/healthcheck.sh',
-                '.dockerignore'
-              ) }}
+            'docker/unoserver/Dockerfile',
+            'docker/unoserver/fonts.conf',
+            'docker/unoserver/entrypoint.sh',
+            'docker/unoserver/healthcheck.sh',
+            '.dockerignore'
+            ) }}
           lookup-only: true
 
       - name: Set up QEMU
@@ -131,12 +132,12 @@ jobs:
         with:
           path: ${{ runner.temp }}/.buildx-cache
           key: test-build-unoserver-image-${{ runner.os }}-${{ hashFiles(
-                'docker/unoserver/Dockerfile',
-                'docker/unoserver/fonts.conf',
-                'docker/unoserver/entrypoint.sh',
-                'docker/unoserver/healthcheck.sh',
-                '.dockerignore'
-              ) }}
+            'docker/unoserver/Dockerfile',
+            'docker/unoserver/fonts.conf',
+            'docker/unoserver/entrypoint.sh',
+            'docker/unoserver/healthcheck.sh',
+            '.dockerignore'
+            ) }}
 
   gradle-cache-prime:
     environment:
