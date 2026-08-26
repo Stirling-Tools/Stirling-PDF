@@ -29,6 +29,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { stripBasePath } from "@app/constants/app";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -43,6 +44,15 @@ import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
+const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
+
+function readSwipeHintSeen(): boolean {
+  try {
+    return window.localStorage.getItem(SWIPE_HINT_SEEN_STORAGE_KEY) === "true";
+  } catch {
+    return true;
+  }
+}
 
 function readPersistedSidebarCollapsed(): boolean {
   try {
@@ -114,11 +124,30 @@ export default function HomePage() {
     return () => window.removeEventListener("appConfig:open", handler);
   }, []);
 
-  // AppConfigModal already unwinds the /settings entry it pushed. Navigating
-  // here too raced that pop with a second history write on the same close.
+  // Where the user was before settings opened, so close can restore it. Null
+  // when opened directly on a /settings URL (deep link) - close falls back to
+  // the editor root.
+  const settingsOriginRef = useRef<string | null>(null);
+  const wasConfigOpenRef = useRef(false);
+  useEffect(() => {
+    if (configModalOpen && !wasConfigOpenRef.current) {
+      settingsOriginRef.current = location.pathname.startsWith("/settings")
+        ? null
+        : location.pathname;
+    }
+    wasConfigOpenRef.current = configModalOpen;
+  }, [configModalOpen, location.pathname]);
+
   const handleCloseConfig = useCallback(() => {
+    // Restore the URL before clearing the flag, or a late /settings commit
+    // re-opens the modal. Read window.location, not useLocation: a tab switch
+    // updates the URL synchronously while the router's commit lags. Replace to
+    // the origin rather than navigate(-1), which webkit can drop.
+    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
+      navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
+    }
     setConfigModalOpen(false);
-  }, []);
+  }, [navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -180,6 +209,9 @@ export default function HomePage() {
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
       }
+      if (isMobile) {
+        setActiveMobileView("workbench");
+      }
     }
 
     prevFileCountRef.current = currentCount;
@@ -189,6 +221,7 @@ export default function HomePage() {
     setActiveFileIndex,
     selectedToolKey,
     navigationState.workbench,
+    isMobile,
   ]);
 
   const hideToolPanel =
@@ -200,9 +233,43 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  const handleSelectMobileView = useCallback((view: MobileView) => {
-    setActiveMobileView(view);
+  const [showSwipeHint, setShowSwipeHint] = useState(
+    () => !readSwipeHintSeen(),
+  );
+  const dismissSwipeHint = useCallback(() => {
+    setShowSwipeHint((shown) => {
+      if (shown) {
+        try {
+          window.localStorage.setItem(SWIPE_HINT_SEEN_STORAGE_KEY, "true");
+        } catch {
+          // private mode / quota: silently no-op
+        }
+      }
+      return false;
+    });
   }, []);
+
+  useEffect(() => {
+    if (!isMobile || !isTouch || !showSwipeHint) return;
+    const timer = window.setTimeout(dismissSwipeHint, 8000);
+    return () => window.clearTimeout(timer);
+  }, [isMobile, isTouch, showSwipeHint, dismissSwipeHint]);
+
+  const handleSelectMobileView = useCallback(
+    (view: MobileView) => {
+      setActiveMobileView(view);
+      dismissSwipeHint();
+    },
+    [dismissSwipeHint],
+  );
+
+  // The /files URL pins the workbench to myFiles, so changing view while the
+  // file manager is open does nothing until we navigate off it. Desktop leaves
+  // via the sidebar's back arrow; mobile renders no sidebar, so without this the
+  // bottom bar could not get out of My Files at all.
+  const leaveMyFiles = useCallback(() => {
+    if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
+  }, [navigationState.workbench, navigate]);
 
   useEffect(() => {
     if (isMobile) {
@@ -249,9 +316,10 @@ export default function HomePage() {
         const threshold = offsetWidth / 2;
         const nextView: MobileView =
           scrollLeft >= threshold ? "workbench" : "tools";
-        setActiveMobileView((current) =>
-          current === nextView ? current : nextView,
-        );
+        setActiveMobileView((current) => {
+          if (current !== nextView) dismissSwipeHint();
+          return current === nextView ? current : nextView;
+        });
       });
     };
 
@@ -263,7 +331,7 @@ export default function HomePage() {
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isMobile]);
+  }, [isMobile, dismissSwipeHint]);
 
   // Automatically switch to workbench when read mode or multiTool is activated in mobile
   useEffect(() => {
@@ -330,14 +398,9 @@ export default function HomePage() {
               other route. */}
             {navigationState.workbench !== "myFiles" && (
               <div className="mobile-toggle">
-                <div className="mobile-header">
-                  <div className="mobile-brand">
-                    <LogoIcon className="mobile-brand-icon" />
-                    <Wordmark
-                      alt={brandAltText}
-                      className="mobile-brand-text"
-                    />
-                  </div>
+                <div className="mobile-brand">
+                  <LogoIcon className="mobile-brand-icon" />
+                  <Wordmark alt={brandAltText} className="mobile-brand-text" />
                 </div>
                 <div
                   className="mobile-toggle-buttons"
@@ -366,14 +429,6 @@ export default function HomePage() {
                     {t("home.mobile.workspace", "Workspace")}
                   </button>
                 </div>
-                {isTouch && (
-                  <span className="mobile-toggle-hint">
-                    {t(
-                      "home.mobile.swipeHint",
-                      "Swipe left or right to switch views",
-                    )}
-                  </span>
-                )}
               </div>
             )}
             {navigationState.workbench === "myFiles" ? (
@@ -387,34 +442,44 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-              <div ref={sliderRef} className="mobile-slider">
-                <div
-                  className="mobile-slide"
-                  aria-label={t(
-                    "home.mobile.toolsSlide",
-                    "Tool selection panel",
-                  )}
-                >
-                  <div className="mobile-slide-content">
-                    <RightSidebar />
+              <div className="mobile-slider-wrap">
+                <div ref={sliderRef} className="mobile-slider">
+                  <div
+                    className="mobile-slide"
+                    aria-label={t(
+                      "home.mobile.toolsSlide",
+                      "Tool selection panel",
+                    )}
+                  >
+                    <div className="mobile-slide-content">
+                      <RightSidebar />
+                    </div>
                   </div>
-                </div>
-                <div
-                  className="mobile-slide"
-                  aria-label={t(
-                    "home.mobile.workbenchSlide",
-                    "Workspace panel",
-                  )}
-                >
-                  <div className="mobile-slide-content">
-                    <div
-                      className="flex-1 min-h-0 flex"
-                      style={{ minWidth: 0 }}
-                    >
-                      <Workbench />
+                  <div
+                    className="mobile-slide"
+                    aria-label={t(
+                      "home.mobile.workbenchSlide",
+                      "Workspace panel",
+                    )}
+                  >
+                    <div className="mobile-slide-content">
+                      <div
+                        className="flex-1 min-h-0 flex"
+                        style={{ minWidth: 0 }}
+                      >
+                        <Workbench />
+                      </div>
                     </div>
                   </div>
                 </div>
+                {isTouch && showSwipeHint && (
+                  <span className="mobile-swipe-hint" aria-hidden="true">
+                    {t(
+                      "home.mobile.swipeHint",
+                      "Swipe left or right to switch views",
+                    )}
+                  </span>
+                )}
               </div>
             )}
             <div className="mobile-bottom-bar">
@@ -423,6 +488,7 @@ export default function HomePage() {
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
+                  leaveMyFiles();
                   handleBackToTools();
                   if (isMobile) {
                     setActiveMobileView("tools");
@@ -440,6 +506,7 @@ export default function HomePage() {
                   className="mobile-bottom-button"
                   aria-label={t("quickAccess.automate", "Automate")}
                   onClick={() => {
+                    leaveMyFiles();
                     handleToolSelect("automate");
                     if (isMobile) {
                       setActiveMobileView("tools");

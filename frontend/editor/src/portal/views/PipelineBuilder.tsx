@@ -17,14 +17,17 @@ import {
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
+  activeFileFields,
+  assetRef,
   deserializeToolStep,
+  extractStepFiles,
   getExecutableTools,
   newWorkingToolStep,
   serializeToolStep,
   stepNeedsConfiguring,
-  stepRequiresUpload,
   updateWorkingStepParams,
   type ExecutableTool,
+  type SupportingFileBindings,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import {
@@ -48,13 +51,20 @@ import {
   runPipelineTest,
   savePipeline,
   triggerPipeline,
+  type PipelineStep,
   type Policy,
   type PolicyRunView,
   type RunOutputFile,
+  type TestRunAsset,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
+import {
+  listPipelineAssets,
+  uploadPipelineAsset,
+  type PolicyAsset,
+} from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
@@ -206,6 +216,17 @@ export function PipelineBuilder() {
     () => getExecutableTools(allTools),
     [allTools],
   );
+
+  // Stored supporting files from earlier saves, so a reopened step can label its bindings by name.
+  const assetsState = useAsync<PolicyAsset[]>(
+    async () => await listPipelineAssets(),
+    [],
+  );
+  const assetNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const asset of assetsState.data ?? []) map[asset.id] = asset.fileName;
+    return map;
+  }, [assetsState.data]);
 
   const policyState = useAsync<Policy | null>(
     async () => (id ? await fetchPipeline(id) : null),
@@ -486,6 +507,21 @@ export function PipelineBuilder() {
     );
   }
 
+  /** Drop a step's stored supporting-file binding for one field (the chip's remove action). */
+  function clearStepBinding(index: number, field: string) {
+    setSteps((current) =>
+      current.map((step, i) => {
+        if (i !== index || !step.fileParameters) return step;
+        const next = { ...step.fileParameters };
+        delete next[field];
+        return {
+          ...step,
+          fileParameters: Object.keys(next).length > 0 ? next : undefined,
+        };
+      }),
+    );
+  }
+
   function stepLabel(step: WorkingToolStep): string {
     // An integration step's endpoint is the same for every vendor, so the raw path would read
     // "External api call" for all of them. Name it by the operation instead.
@@ -511,11 +547,6 @@ export function PipelineBuilder() {
     if (isIntegrationStep(step)) return <BrandMark id="api" size={17} />;
     return step.toolId ? allTools[step.toolId]?.icon : undefined;
   }
-
-  // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
-  // policy, so a later run would send null for that field (see stepRequiresUpload).
-  const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
-  const hasUploadSteps = uploadStepLabels.length > 0;
 
   // A step still missing a choice - an integration with no operation or account, a tool whose
   // mandatory parameters are unset - would fail at run time with a raw backend rejection, so block
@@ -601,11 +632,30 @@ export function PipelineBuilder() {
   // seeding, so leaving the builder can prompt to save or discard. `enabled` is deliberately left
   // out: in edit it is toggled and persisted at once (never an unsaved edit), and in create it is
   // chosen at submit - so it can never be the thing that makes the form dirty.
+  // Per-step dirty signature: the serialized step plus a stable identity (name/size/mtime) of its
+  // fresh file picks - a raw File JSON-stringifies to `{}`, so serializeToolStep (which excludes
+  // Files) can't see a file added or swapped. Memoized on the steps because it probes each tool's
+  // buildFormData; without this it would re-run for every step on any render (e.g. each keystroke in
+  // the name field). Stored bindings are covered by the serialized step.
+  const stepSnapshot = useMemo(
+    () =>
+      steps.map((step) => {
+        const files: Record<string, string[]> = {};
+        for (const [field, picks] of Object.entries(
+          extractStepFiles(step, allTools),
+        )) {
+          files[field] = picks.map(
+            (file) => `${file.name}:${file.size}:${file.lastModified}`,
+          );
+        }
+        return { step: serializeToolStep(step, allTools), files };
+      }),
+    [steps, allTools],
+  );
   const snapshot = JSON.stringify({
     name: name.trim(),
     input,
-    steps: steps.map((step) => serializeToolStep(step, allTools)),
-    uploads: steps.map(stepRequiresUpload),
+    steps: stepSnapshot,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -639,12 +689,6 @@ export function PipelineBuilder() {
         tools: unconfiguredStepLabels.join(", "),
       }),
     );
-  if (hasUploadSteps)
-    blockers.push(
-      t("portal.pipelines.builder.blocker.upload", {
-        tools: uploadStepLabels.join(", "),
-      }),
-    );
   if (hasIncompatibleSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.incompatible", {
@@ -667,23 +711,84 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
+  /**
+   * The active supporting-file fields of a step, each paired with its fresh in-memory pick(s) and its
+   * stored `asset:<id>` binding (either may be absent). The single source both saving and test-running
+   * read, so the two agree on which fields are active and how a binding is chosen; they differ only in
+   * how a fresh pick is emitted - uploaded as an asset vs. sent inline.
+   */
+  function stepFileFields(
+    step: WorkingToolStep,
+  ): { field: string; fresh: File[] | null; stored: string | null }[] {
+    const fresh = extractStepFiles(step, allTools);
+    const stored = step.fileParameters ?? {};
+    const fields = activeFileFields(step, allTools) ?? Object.keys(stored);
+    return fields.map((field) => ({
+      field,
+      fresh: fresh[field] ?? null,
+      stored: stored[field] ?? null,
+    }));
+  }
+
+  /** A wire step, attaching fileParameters only when it has any. */
+  function toWireStep(
+    operation: string,
+    parameters: Record<string, unknown>,
+    bindings: SupportingFileBindings,
+  ): PipelineStep {
+    return Object.keys(bindings).length > 0
+      ? { operation, parameters, fileParameters: bindings }
+      : { operation, parameters };
+  }
+
+  /**
+   * The wire steps for saving: scalar params from serialization, plus supporting-file bindings. A
+   * fresh pick is uploaded to the asset store (the save-time validator rejects a policy that binds an
+   * asset id that doesn't yet exist); a stored binding the tool still uses is kept when the user
+   * didn't replace it. Uploads run in parallel; any abandoned by a later failure are GC'd server-side.
+   */
+  async function serializeStepsForSave(): Promise<PipelineStep[]> {
+    return Promise.all(
+      steps.map(async (step) => {
+        const { operation, parameters } = serializeToolStep(step, allTools);
+        const entries = await Promise.all(
+          stepFileFields(step).map(async ({ field, fresh, stored }) => {
+            if (fresh?.length) {
+              const ids = await Promise.all(
+                fresh.map((file) =>
+                  uploadPipelineAsset(file).then((a) => a.id),
+                ),
+              );
+              return [field, assetRef(ids)] as const;
+            }
+            return stored ? ([field, stored] as const) : null;
+          }),
+        );
+        const bindings: SupportingFileBindings = Object.fromEntries(
+          entries.filter((e): e is readonly [string, string] => e !== null),
+        );
+        return toWireStep(operation, parameters, bindings);
+      }),
+    );
+  }
+
   async function save(destination: string, enabledOverride?: boolean) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const policy: Policy = {
-      id: policyState.data?.id ?? undefined,
-      name: name.trim(),
-      enabled: enabledOverride ?? enabled,
-      // The wire shape stays a list; canSave guarantees the one input has a source.
-      inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
-      steps: steps.map((step) => serializeToolStep(step, allTools)),
-      // Destinations are the referenced saved sources; the inline output field is
-      // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-      output: policyState.data?.output ?? { type: "inline", options: {} },
-      outputIds,
-    };
     try {
+      const policy: Policy = {
+        id: policyState.data?.id ?? undefined,
+        name: name.trim(),
+        enabled: enabledOverride ?? enabled,
+        // The wire shape stays a list; canSave guarantees the one input has a source.
+        inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+        steps: await serializeStepsForSave(),
+        // Destinations are the referenced saved sources; the inline output field is
+        // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
+        output: policyState.data?.output ?? { type: "inline", options: {} },
+        outputIds,
+      };
       await savePipeline(policy);
       await invalidatePipelines();
       navigate(destination);
@@ -742,6 +847,32 @@ export function PipelineBuilder() {
   }
 
   /**
+   * The steps + inline supporting files for a test run. A fresh (in-memory) pick rides along as a
+   * keyed `assets[i]` under a per-step run key; a stored file keeps its `asset:<id>` binding, which
+   * the backend resolves from the pipeline's saved policy (passed as policyId) - no re-fetch needed.
+   */
+  function buildTestSteps(): { steps: PipelineStep[]; assets: TestRunAsset[] } {
+    const assets: TestRunAsset[] = [];
+    const outSteps = steps.map((step, i) => {
+      const { operation, parameters } = serializeToolStep(step, allTools);
+      const bindings: SupportingFileBindings = {};
+      for (const { field, fresh, stored } of stepFileFields(step)) {
+        if (fresh?.length) {
+          // In-memory pick: inline the bytes under a run key.
+          const key = `s${i}_${field}`;
+          bindings[field] = key;
+          for (const file of fresh) assets.push({ key, file });
+        } else if (stored) {
+          // Already an asset: keep its ref for the backend to resolve from the saved policy.
+          bindings[field] = stored;
+        }
+      }
+      return toWireStep(operation, parameters, bindings);
+    });
+    return { steps: outSteps, assets };
+  }
+
+  /**
    * Run the steps as they stand against one uploaded file. Output is forced inline so nothing
    * reaches the pipeline's real destination, and the pipeline need not be saved first - this is
    * how the chain gets checked while it is still being built.
@@ -752,13 +883,17 @@ export function PipelineBuilder() {
     setTestRun(null);
     setRunResult(null);
     try {
+      const { steps: testSteps, assets } = buildTestSteps();
       const { runId } = await runPipelineTest(
         {
           name: name.trim() || t("portal.pipelines.builder.testRun"),
-          steps: steps.map((step) => serializeToolStep(step, allTools)),
+          steps: testSteps,
           output: { type: "inline", options: {} },
         },
         file,
+        assets,
+        // Lets the backend resolve any stored `asset:<id>` refs from this saved policy.
+        policyState.data?.id,
       );
       const final = await awaitRun(runId, (view) => {
         if (mounted.current) setTestRun(view);
@@ -934,8 +1069,6 @@ export function PipelineBuilder() {
         return t("portal.pipelines.builder.chooseAccount");
       return undefined;
     }
-    if (stepRequiresUpload(step))
-      return t("portal.pipelines.builder.needsUpload");
     if (stepNeedsConfiguring(step, allTools))
       return t("portal.pipelines.builder.needsConfiguring");
     return undefined;
@@ -1120,6 +1253,8 @@ export function PipelineBuilder() {
           step={selectedStep}
           registry={allTools}
           onChange={(params) => updateStepParams(chosenSteps[0], params)}
+          assetNames={assetNames}
+          onClearBinding={(field) => clearStepBinding(chosenSteps[0], field)}
         />
       );
     }
@@ -1174,14 +1309,6 @@ export function PipelineBuilder() {
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
         <Banner tone={runResult.tone} description={runResult.text} />
-      )}
-      {hasUploadSteps && (
-        <Banner
-          tone="warning"
-          description={t("portal.pipelines.builder.uploadUnsupported", {
-            tools: uploadStepLabels.join(", "),
-          })}
-        />
       )}
       {hasUnconfiguredSteps && (
         <Banner

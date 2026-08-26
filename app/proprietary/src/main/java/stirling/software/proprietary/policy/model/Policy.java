@@ -104,6 +104,11 @@ public record Policy(
                 id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId, origin);
     }
 
+    /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
+    public Policy withOwner(String newOwner) {
+        return new Policy(id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId);
+    }
+
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
         return new Policy(
