@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.springframework.stereotype.Service;
@@ -110,12 +111,18 @@ class ManualRedactionService {
         for (Integer pageNumber : pageNumbers) {
             PDPage page = allPages.get(pageNumber);
 
+            // A fully redacted page keeps nothing, so drop its annotations and resources and
+            // OVERWRITE the content stream. Appending a filled rect only hides the page: the
+            // text underneath stays in the content stream and is still extractable.
+            PDRectangle box = page.getBBox();
+            page.setAnnotations(Collections.emptyList());
+            page.setResources(new PDResources());
+
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                            document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
                 contentStream.setNonStrokingColor(redactColor);
 
-                PDRectangle box = page.getBBox();
                 contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
                 contentStream.fill();
             }
