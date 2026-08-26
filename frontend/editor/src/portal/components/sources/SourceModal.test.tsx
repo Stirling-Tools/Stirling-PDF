@@ -83,7 +83,7 @@ describe("SourceModal", () => {
 
     // Stage 1: pick the folder connector, then fill name + directory.
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -115,7 +115,7 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -140,7 +140,7 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
       target: { value: "Claims intake" },
     });
     fireEvent.change(
@@ -160,7 +160,7 @@ describe("SourceModal", () => {
   it("gates the s3 type on a chosen connection", async () => {
     renderModal();
     fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
       target: { value: "Bucket source" },
     });
     expect(
@@ -181,7 +181,7 @@ describe("SourceModal", () => {
     const { onClose } = renderModal();
 
     fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
-    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
       target: { value: "Partner uploads" },
     });
     fireEvent.click(screen.getByText("portal.sources.builder.create"));
@@ -254,7 +254,7 @@ describe("SourceModal", () => {
     fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
     // Still on the type stage: no configure form appeared.
     expect(
-      screen.queryByLabelText(/portal\.integrations\.typedName/),
+      screen.queryByLabelText(/portal\.sources\.wizard\.name/),
     ).not.toBeInTheDocument();
     expect(
       screen.getAllByText("portal.sources.builder.comingSoon").length,

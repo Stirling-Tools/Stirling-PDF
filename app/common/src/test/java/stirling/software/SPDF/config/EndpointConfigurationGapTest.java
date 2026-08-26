@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 /**
  * Unit tests for {@link EndpointConfiguration}. The class wires up its endpoint/group registry in
@@ -32,7 +33,14 @@ class EndpointConfigurationGapTest {
      * Construct an EndpointConfiguration with the given pro flag and current applicationProperties.
      */
     private EndpointConfiguration build(boolean runningProOrHigher) {
-        return new EndpointConfiguration(applicationProperties, runningProOrHigher);
+        return build(runningProOrHigher, null);
+    }
+
+    /** The PDF/UA service is only present in proprietary builds, so it is injected separately. */
+    private EndpointConfiguration build(
+            boolean runningProOrHigher, PdfaLevelAServiceInterface pdfaLevelAService) {
+        return new EndpointConfiguration(
+                applicationProperties, runningProOrHigher, pdfaLevelAService);
     }
 
     /** Default config: not pro, no removals, url-to-pdf disabled (default System flag is false). */
@@ -174,6 +182,28 @@ class EndpointConfigurationGapTest {
             config.disableEndpoint("merge-pdfs");
             // non-api path: key resolution returns null, so the uri itself is used as the key
             assertFalse(config.isEndpointEnabledForUri("merge-pdfs"));
+        }
+    }
+
+    @Nested
+    @DisplayName("PDF/UA availability")
+    class PdfUaTests {
+
+        @Test
+        @DisplayName("the PDF/UA endpoints are off when the proprietary tagger is absent")
+        void disabledWithoutTagger() {
+            EndpointConfiguration config = build(false, null);
+            assertFalse(config.isEndpointEnabled("pdf-to-ua"));
+            assertFalse(config.isEndpointEnabled("accessibility-report"));
+        }
+
+        @Test
+        @DisplayName("they are on once the tagger is on the classpath")
+        void enabledWithTagger() {
+            EndpointConfiguration config =
+                    build(false, (pdfBytes, part, language, title, alsoDeclareUa) -> null);
+            assertTrue(config.isEndpointEnabled("pdf-to-ua"));
+            assertTrue(config.isEndpointEnabled("accessibility-report"));
         }
     }
 
