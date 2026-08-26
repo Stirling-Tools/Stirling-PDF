@@ -69,13 +69,6 @@ export function Pipelines() {
   const hasPipelines = pipelines.length > 0;
   const showEmpty = !listLoading && pipelines.length === 0;
 
-  // The gallery is the on-ramp: only suggested policies NOT yet set up (incl. "coming soon"). Once a
-  // policy is configured it lives in the list below, so it never appears in both places.
-  const galleryEntries = useMemo(
-    () => (catalogueData?.catalogue ?? []).filter((e) => e.policy === null),
-    [catalogueData],
-  );
-
   const isLocked = useCallback(
     (entry: CatalogueEntry): boolean =>
       entry.category.requiresAiEngine === true &&
@@ -83,6 +76,18 @@ export function Pipelines() {
       !aiEngineLoading,
     [aiEngineEnabled, aiEngineLoading],
   );
+
+  // The gallery is the on-ramp: only suggested policies NOT yet set up (once configured a policy
+  // lives in the list below). Templates the user can set up now sort first; coming-soon / AI-locked
+  // ones stay, shown disabled, at the end (a stable sort keeps each group in its original order).
+  const galleryEntries = useMemo(() => {
+    const entries = (catalogueData?.catalogue ?? []).filter(
+      (e) => e.policy === null,
+    );
+    const usable = (e: CatalogueEntry) =>
+      !e.category.comingSoon && !isLocked(e);
+    return [...entries].sort((a, b) => Number(usable(b)) - Number(usable(a)));
+  }, [catalogueData, isLocked]);
 
   // Pipelines and policies share a backend, and Home/onboarding read the same caches, so refresh all
   // three: the overview list, the catalogue list, and runs.

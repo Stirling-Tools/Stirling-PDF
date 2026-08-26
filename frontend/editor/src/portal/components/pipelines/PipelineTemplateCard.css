@@ -6,9 +6,20 @@
   height: 12rem;
 }
 
+/* Disabled cards recede onto the standard sunken surface, and reinforce it with ink: the accent
+   icon chip flattens to a muted glyph and every label drops to muted, so the card reads clearly
+   greyed against the usable ones. */
 .portal-pipelines__template-card--locked {
-  /* Recede via surface + ink rather than opacity, which would fade text below the contrast floor. */
   background: var(--c-surface-sunken);
+}
+
+.portal-pipelines__template-card--locked .portal-pipelines__template-icon {
+  background: transparent;
+  color: var(--c-text-muted);
+}
+
+.portal-pipelines__template-card--locked .portal-pipelines__template-title,
+.portal-pipelines__template-card--locked .portal-pipelines__template-blurb {
   color: var(--c-text-muted);
 }
 
@@ -21,11 +32,6 @@
   border-radius: var(--radius-md);
   background: var(--c-primary-subtle);
   color: var(--c-accent-fg, var(--c-primary));
-}
-
-.portal-pipelines__template-card--locked .portal-pipelines__template-icon {
-  background: var(--c-surface-raised);
-  color: var(--c-text-muted);
 }
 
 .portal-pipelines__template-title {
@@ -61,4 +67,14 @@
   font-size: 0.8125rem;
   font-weight: 620;
   color: var(--c-accent-fg, var(--c-primary));
+}
+
+/* The disabled card's foot: sits where the CTA does, but muted - the reason it can't be set up. */
+.portal-pipelines__template-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
 }

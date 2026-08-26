@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import { Card, Chip } from "@app/ui";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Card } from "@app/ui";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import "@portal/components/pipelines/PipelineTemplateCard.css";
@@ -18,8 +19,8 @@ interface PipelineTemplateCardProps {
 /**
  * A template in the Pipelines gallery: a ready-made starting point that opens the simple, guided
  * setup. Vertical card (icon, title, blurb, a "Set up" affordance) so the gallery reads as a set of
- * choices, distinct from the pipelines table below. Locked/coming-soon templates show a chip and
- * don't open.
+ * choices, distinct from the pipelines table below.
+ *
  */
 export function PipelineTemplateCard({
   entry,
@@ -60,18 +61,17 @@ export function PipelineTemplateCard({
       <h3 className="portal-pipelines__template-title">{t(category.label)}</h3>
       <p className="portal-pipelines__template-blurb">{t(category.desc)}</p>
 
-      {comingSoon ? (
-        <Chip accent="neutral" size="sm">
-          {t("portal.policies.card.comingSoon")}
-        </Chip>
-      ) : locked ? (
-        <Chip accent="neutral" size="sm">
-          {lockedLabel ?? t("portal.policies.card.requiresAiEngine")}
-        </Chip>
-      ) : (
+      {openable ? (
         <span className="portal-pipelines__template-cta">
           {t("portal.pipelines.templates.setUp")}
           <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
+        </span>
+      ) : (
+        <span className="portal-pipelines__template-note">
+          <LockOutlinedIcon style={{ fontSize: "0.95rem" }} />
+          {comingSoon
+            ? t("portal.policies.card.comingSoon")
+            : (lockedLabel ?? t("portal.policies.card.requiresAiEngine"))}
         </span>
       )}
     </Card>
