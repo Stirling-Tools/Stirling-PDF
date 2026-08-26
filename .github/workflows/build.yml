@@ -209,7 +209,7 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true' && false
+    if: needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
     permissions:
       contents: read
