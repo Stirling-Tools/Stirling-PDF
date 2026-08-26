@@ -18,11 +18,11 @@ dependencies {
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
     api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:3.0.1'
+    api 'org.snakeyaml:snakeyaml-engine:3.1.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.2.0'
-    api 'org.simplejavamail:outlook-module:9.2.0' // MSG file support
+    api 'org.simplejavamail:simple-java-mail:9.3.2'
+    api 'org.simplejavamail:outlook-module:9.3.2' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 

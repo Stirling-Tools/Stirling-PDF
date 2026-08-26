@@ -3,7 +3,11 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
-import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
+import {
+  TOOL_FILE_FIELDS,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
 
@@ -46,6 +50,39 @@ export interface CustomProcessorResult {
 }
 
 /**
+ * The parameter keys that carry a supporting file - a `File` or `File[]` value the tool sends
+ * beyond its primary document. Derived from the tool's own parameter type, so a file field can only
+ * ever be declared against a param that genuinely holds a file.
+ */
+export type FileParamKey<TParams> = {
+  [K in keyof TParams]-?: NonNullable<TParams[K]> extends File | File[]
+    ? K
+    : never;
+}[keyof TParams] &
+  string;
+
+/**
+ * The backend multipart file fields an endpoint accepts, from the generated {@link TOOL_FILE_FIELDS}
+ * (which the spec derives from the Java MultipartFile params). `never` for an endpoint that takes no
+ * supporting files. This is what makes a rename override's `field` a checked name, not a free string.
+ */
+export type BackendFileField<TEndpoint> =
+  TEndpoint extends keyof typeof TOOL_FILE_FIELDS
+    ? (typeof TOOL_FILE_FIELDS)[TEndpoint][number]
+    : never;
+
+/**
+ * A remap for the rare case where a tool's frontend file param has a different name from the backend
+ * field it is sent under. Both sides are checked: `field` must be one of the endpoint's generated
+ * backend file fields, and `param` a real file param of the tool. Same-name fields need no entry -
+ * they are derived from {@link TOOL_FILE_FIELDS} directly.
+ */
+export interface FileParamOverride<TParams, TEndpoint> {
+  field: BackendFileField<TEndpoint>;
+  param: FileParamKey<TParams>;
+}
+
+/**
  * Configuration for tool operations defining processing behavior and API integration.
  *
  * Supports three patterns:
@@ -78,6 +115,14 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * Rename overrides for supporting-file params. The set of a tool's file fields is derived from the
+   * generated {@link TOOL_FILE_FIELDS} (spec-sourced), keyed by the backend field name; declare an
+   * override only when a backend field maps to a differently-named frontend param, so a step composer
+   * can bind the stored file to the right param. Omitted by the common case where field == param.
+   */
+  fileParamOverrides?: readonly FileParamOverride<TParams, TEndpoint>[];
 
   /**
    * Whether these parameters are complete enough to run. The same predicate a tool gives

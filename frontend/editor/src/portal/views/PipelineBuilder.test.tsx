@@ -43,6 +43,13 @@ vi.mock("@portal/api/pipelines", () => ({
   fetchRun: (runId: string) => fetchRun(runId),
 }));
 
+const uploadPipelineAsset = vi.fn();
+const listPipelineAssets = vi.fn();
+vi.mock("@portal/api/pipelineAssets", () => ({
+  uploadPipelineAsset: (file: File) => uploadPipelineAsset(file),
+  listPipelineAssets: () => listPipelineAssets(),
+}));
+
 const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
@@ -149,8 +156,21 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       toolType: 0,
       endpoint: "/api/v1/misc/compress-pdf",
       defaultParameters: {},
-      buildFormData: () => new FormData(),
-      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      // Sends the supporting file under a named field, like a real file tool, so the upload path
+      // has a field to bind. The scalar mapper drops the File (files never ride in parameters).
+      buildFormData: (params: Record<string, unknown>, file: File | File[]) => {
+        const fd = new FormData();
+        fd.append("fileInput", Array.isArray(file) ? file[0] : file);
+        if (params.watermarkImage instanceof File) {
+          fd.append("watermarkImage", params.watermarkImage);
+        }
+        return fd;
+      },
+      toApiParams: (params: Record<string, unknown>) => {
+        const scalars = { ...params };
+        delete scalars.watermarkImage;
+        return scalars;
+      },
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
@@ -203,10 +223,32 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
       fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
     },
   } as unknown as ToolRegistryEntry;
+  // A tool whose buildFormData throws, so it can't be probed: exercises the "activeFileFields is
+  // null" path where a reopened step's stored binding must be kept, not dropped.
+  const sign = {
+    name: "Sign",
+    icon: null,
+    component: null,
+    description: "",
+    categoryId: "recommendedTools",
+    subcategoryId: "general",
+    operationConfig: {
+      operationType: "certSign",
+      toolType: 0,
+      endpoint: "/api/v1/security/cert-sign",
+      defaultParameters: {},
+      buildFormData: () => {
+        throw new Error("cannot build");
+      },
+      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
+    },
+  } as unknown as ToolRegistryEntry;
   const allTools = {
     compress,
     extractImages,
     ocr,
+    sign,
   } as unknown as ToolRegistryCatalog["allTools"];
   const catalog: ToolRegistryCatalog = {
     regularTools: allTools,
@@ -288,6 +330,16 @@ describe("PipelineBuilder", () => {
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
     createIntegration.mockReset();
+    uploadPipelineAsset.mockReset();
+    uploadPipelineAsset.mockResolvedValue({
+      id: "ast-1",
+      fileName: "logo.png",
+      contentType: "image/png",
+      size: 1,
+      createdAt: 0,
+    });
+    listPipelineAssets.mockReset();
+    listPipelineAssets.mockResolvedValue([]);
   });
 
   // The settings of a node are reached by selecting it in the graph, so every helper below opens
@@ -456,7 +508,7 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.builder.needsSource"),
     ).toBeInTheDocument();
-    // Still nothing chosen, so the pipeline cannot be saved.
+    // Still nothing chosen, so the pipeline cannot be created.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
@@ -601,15 +653,15 @@ describe("PipelineBuilder", () => {
         target: { value: "Needs both" },
       },
     );
-    const saveButton = () =>
+    const createButton = () =>
       screen.getByText("portal.pipelines.composer.create").closest("button");
 
     // Name only: blocked (no source, no destination).
-    expect(saveButton()).toBeDisabled();
+    expect(createButton()).toBeDisabled();
 
     // An input with a source but still no destination: blocked.
     await pickInputSource("Claims intake");
-    expect(saveButton()).toBeDisabled();
+    expect(createButton()).toBeDisabled();
 
     // Both chosen: allowed, and both are sent.
     await pickDestination();
@@ -782,21 +834,23 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
   });
 
-  it("clears processed history from the header and confirms", async () => {
+  it("reprocesses the source: clears the processed record, runs, and reports", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
     await openTray();
     fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
 
+    // It forgets what was processed, then triggers a run so those files go through now.
     await waitFor(() =>
       expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
     );
+    await waitFor(() => expect(triggerPipeline).toHaveBeenCalledWith("plc-1"));
     expect(
-      await screen.findByText("portal.pipelines.run.historyCleared"),
+      await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
   });
 
-  it("blocks saving a step that needs an uploaded file", async () => {
+  it("uploads a step's supporting file and saves it as an asset binding", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(
@@ -808,15 +862,65 @@ describe("PipelineBuilder", () => {
       },
     );
     await addTool("Compress");
-    // The tool's settings upload a file, which a stored pipeline can't persist yet.
+    // The tool's settings attach a supporting file.
     fireEvent.click(await screen.findByText("upload logo"));
 
-    expect(
-      await screen.findByText("portal.pipelines.builder.uploadUnsupported"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("portal.pipelines.composer.create").closest("button"),
-    ).toBeDisabled();
+    await pickInputSource("Claims intake");
+    await pickDestination();
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    // The file is uploaded to the asset store first, then the policy is saved binding that asset.
+    await waitFor(() => expect(uploadPipelineAsset).toHaveBeenCalledTimes(1));
+    expect(uploadPipelineAsset.mock.calls[0][0]).toBeInstanceOf(File);
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        steps: [
+          expect.objectContaining({
+            operation: "/api/v1/misc/compress-pdf",
+            fileParameters: { watermarkImage: "asset:ast-1" },
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("keeps a step's stored file binding on save when the tool can't be probed", async () => {
+    // buildFormData throws for `sign`, so activeFileFields is null. The stored binding must survive
+    // the save unchanged - dropping it would let the server GC the user's uploaded file - and no
+    // re-upload should happen.
+    fetchPipeline.mockResolvedValue({
+      id: "plc-sign",
+      name: "Signed",
+      enabled: true,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [
+        {
+          operation: "/api/v1/security/cert-sign",
+          parameters: {},
+          fileParameters: { certFile: "asset:x" },
+        },
+      ],
+      output: { type: "inline", options: {} },
+      outputIds: ["src-1"],
+    });
+    renderBuilder("/processor/pipelines/plc-sign");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        steps: [
+          expect.objectContaining({
+            operation: "/api/v1/security/cert-sign",
+            fileParameters: { certFile: "asset:x" },
+          }),
+        ],
+      }),
+    );
+    expect(uploadPipelineAsset).not.toHaveBeenCalled();
   });
 
   it("blocks saving an integration step with no account chosen", async () => {
@@ -846,10 +950,51 @@ describe("PipelineBuilder", () => {
   it("deletes an existing pipeline after confirmation", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
+    // Delete is a rare, destructive action, so it lives behind the overflow tray.
+    await openTray();
     fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
     fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
 
     await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith("plc-1"));
+    expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("pauses a live pipeline at once, in place, and re-saves the persisted policy", async () => {
+    renderBuilder("/processor/pipelines/plc-1");
+
+    // POLICY.enabled is true, so the toggle offers to pause it.
+    fireEvent.click(await screen.findByText("portal.pipelines.builder.pause"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "plc-1", enabled: false }),
+    );
+    // It acts in place: the builder stays open and the control now offers to activate again.
+    expect(
+      await screen.findByText("portal.pipelines.builder.activate"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("pipelines list")).not.toBeInTheDocument();
+  });
+
+  it("creates a paused pipeline when Create paused is chosen", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Paused draft" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Claims intake");
+    await pickDestination();
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.createPaused"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Paused draft", enabled: false }),
+    );
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
@@ -864,7 +1009,7 @@ describe("PipelineBuilder", () => {
         target: { value: "Draft" },
       },
     );
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(
       await screen.findByText("portal.pipelines.builder.unsavedTitle"),
@@ -928,7 +1073,7 @@ describe("PipelineBuilder", () => {
     await screen.findByRole("textbox", {
       name: "portal.pipelines.composer.name",
     });
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });

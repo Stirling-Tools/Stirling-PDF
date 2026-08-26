@@ -28,6 +28,8 @@ final class FormPayloadParser {
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>>
             MODIFY_FIELD_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<FormUtils.NewFormFieldDefinition>> NEW_FIELD_LIST_TYPE =
+            new TypeReference<>() {};
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
 
     private FormPayloadParser() {}
@@ -92,6 +94,43 @@ final class FormPayloadParser {
             return List.of();
         }
         return objectMapper.readValue(json, MODIFY_FIELD_LIST_TYPE);
+    }
+
+    static List<FormUtils.NewFormFieldDefinition> parseNewFieldDefinitions(
+            ObjectMapper objectMapper, String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        return objectMapper.readValue(json, NEW_FIELD_LIST_TYPE);
+    }
+
+    /**
+     * Parses a combined edit batch: {@code {"add":[...],"modify":[...],"delete":[...]}}. Each
+     * section is optional. The delete section accepts the same shapes as {@link #parseNameList}.
+     */
+    static FormUtils.FieldEditBatch parseFieldEdits(ObjectMapper objectMapper, String json) {
+        if (json == null || json.isBlank()) {
+            return new FormUtils.FieldEditBatch(List.of(), List.of(), List.of());
+        }
+        final JsonNode root = objectMapper.readTree(json);
+        List<FormUtils.NewFormFieldDefinition> adds = List.of();
+        List<FormUtils.ModifyFormFieldDefinition> modifies = List.of();
+        List<String> deletes = List.of();
+        if (root != null && root.isObject()) {
+            final JsonNode addNode = root.get("add");
+            if (addNode != null && addNode.isArray()) {
+                adds = objectMapper.readValue(addNode.toString(), NEW_FIELD_LIST_TYPE);
+            }
+            final JsonNode modifyNode = root.get("modify");
+            if (modifyNode != null && modifyNode.isArray()) {
+                modifies = objectMapper.readValue(modifyNode.toString(), MODIFY_FIELD_LIST_TYPE);
+            }
+            final JsonNode deleteNode = root.get("delete");
+            if (deleteNode != null && !deleteNode.isNull()) {
+                deletes = parseNameList(objectMapper, deleteNode.toString());
+            }
+        }
+        return new FormUtils.FieldEditBatch(adds, modifies, deletes);
     }
 
     static List<String> parseNameList(ObjectMapper objectMapper, String json) {

@@ -15,6 +15,7 @@ import {
 } from "@portal/components/icons";
 import { warmCalendly } from "@portal/components/procurement/CalendlyInline";
 import { openApiUrl } from "@portal/api/externalUrl";
+import "@portal/theme/surface.css";
 import "@portal/views/Procurement.css";
 
 /** What each stage asks of the buyer, read out in the stage sentence. */
@@ -114,7 +115,7 @@ export function DealStatusHero({
   const nextStage = FLOW_JOURNEY[currentIdx + 1];
 
   return (
-    <div className="portal-hero">
+    <div className="portal-surface portal-hero">
       <div className="portal-hero__top">
         <div className="portal-hero__ident">
           <span className="portal-hero__eyebrow">

@@ -14,6 +14,7 @@ export {
   docCapForMoney,
   formatPeriodDate,
   meterState,
+  remainingMeter,
   PREPAID_MONTHS_GRANTED,
   PREPAID_MONTHS_PAID,
   PDFS_PER_USER_MONTH,

@@ -14,6 +14,11 @@ jobs:
   playwright-e2e:
     name: playwright-e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    # The image already contains the Playwright browsers and all Linux
+    # dependencies. This keeps the matrix for per-browser reporting while
+    # avoiding three concurrent `playwright install --with-deps` runs.
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
     strategy:
       # One browser breaking must not mask a failure in another - report all.
       fail-fast: false
@@ -27,7 +32,7 @@ jobs:
             project: stubbed-webkit
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -40,15 +45,23 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
-      - name: Install Playwright (${{ matrix.browser }})
-        run: task e2e:install -- ${{ matrix.browser }}
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
       - name: Run stubbed E2E tests (${{ matrix.browser }})
         env:
+          # The official Playwright image expects its browser runtime under
+          # the root home directory. Keep this scoped to Playwright and use a
+          # neutral Docker config path so Docker does not read /root/.docker.
+          HOME: /root
+          DOCKER_CONFIG: /tmp/playwright-docker-config
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
+          NPM_CONFIG_PREFER_OFFLINE: "true"
+          NPM_CONFIG_FETCH_RETRIES: "5"
+          NPM_CONFIG_FETCH_RETRY_FACTOR: "2"
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
         run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=3
       - name: Flag flaky tests
         # Runs regardless of the test outcome: a flaky test (passed on retry)

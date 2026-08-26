@@ -4,7 +4,7 @@ import { AppLayout } from "@app/components/AppLayout";
 import { BannerProvider, useBanner } from "@app/contexts/BannerContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 
 const meta = {
   title: "Components/AppLayout",
@@ -49,7 +49,7 @@ function BannerSetter() {
   const { setBanner } = useBanner();
   useEffect(() => {
     setBanner(
-      <InfoBanner
+      <AppBanner
         icon="info-rounded"
         title="Heads up"
         message="This workspace is running in offline mode."

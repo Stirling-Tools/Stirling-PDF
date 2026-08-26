@@ -169,6 +169,31 @@
   color: var(--c-text);
 }
 
+/* On mobile the "Tools" tab sits directly above this panel, so the heading
+   just repeats it. The header stays for its actions, but shrinks to fit them -
+   at the desktop 52px it would read as an empty band once the title is gone. */
+@media (max-width: 64rem) {
+  .tool-panel__compact-title {
+    display: none;
+  }
+  .tool-panel__compact-header {
+    min-height: 44px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* In-panel tool filter. Aligned with .tool-picker__compact's inline padding so
+   the field lines up with the tool rows underneath it. */
+.tool-panel__search {
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0;
+}
+
+.tool-panel__search .search-input-container {
+  margin: 0;
+}
+
 .tool-panel__compact-header-actions {
   display: flex;
   align-items: center;

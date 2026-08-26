@@ -634,7 +634,7 @@ const CODE_EXEMPT_PATH = [
   // PDF rendering/drawing surfaces that legitimately carry colour literals —
   // scoped to specific tool paths, not a blanket "pdf" substring (which used to
   // exempt most of the app in a PDF product).
-  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
+  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors|formFieldColors/,
   /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
   /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
@@ -642,7 +642,6 @@ const CODE_EXEMPT_PATH = [
   /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
-  /UpgradeBanner|AdminPlanSection/,
   // Stories are checked like app code; colour-as-data lines opt out with
   // `theme-allow-color`.
   /\.test\.[jt]sx?$|\/types\//,

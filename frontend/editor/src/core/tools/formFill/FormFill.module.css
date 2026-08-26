@@ -1,57 +1,77 @@
+/* No height:100% / overflow here: the tool lives inside ToolPanel's ScrollArea, and
+   either one would make the sticky chrome below pin to a box that never scrolls. */
 .root {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   background: transparent;
 }
 
+/* Sticky, not flex-pinned: the tool renders inside ToolPanel's ScrollArea, whose
+   display:table viewport makes height:100% resolve to content height. */
 .modeTabs {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   border-bottom: 1px solid var(--c-border, var(--mantine-color-default-border));
-  background: transparent;
+  background: var(--c-bg-raised, var(--mantine-color-body));
   padding: 0.25rem;
 }
 
-.segmentedRoot {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-radius: var(--radius-sm) !important;
-}
-
-:global([data-mantine-color-scheme="dark"]) .segmentedRoot {
-  background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.segmentedIndicator {
-  background-color: var(--mantine-color-blue-filled) !important;
-  box-shadow: var(--shadow-sm) !important;
-  border-radius: var(--radius-sm) !important;
-}
-
+/* The shared SegmentedControl sizes its label box for one line and hides the overflow,
+   so the stacked icon-over-text tabs need that box opened up (see .modeTabs overrides). */
 .segmentedLabel {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 0.125rem;
   padding: 0.125rem 0;
-  min-height: 2.25rem;
+  min-width: 0;
+  width: 100%;
 }
 
+/* Equal-width segments that can shrink, so a long translation truncates inside its
+   own tab instead of pushing the others off the edge. */
+/* Mantine's size="xs" writes height:26px as an INLINE style, which would clip the
+   taller stacked tabs; only !important can outrank it. */
+.modeTabs :global(.sui-seg.mantine-SegmentedControl-root) {
+  height: auto !important;
+}
+
+.modeTabs :global(.mantine-SegmentedControl-control) {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+
+.modeTabs :global(.mantine-SegmentedControl-label) {
+  min-width: 0;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+/* Colour inherited: the shared SegmentedControl flips the active segment's text,
+   so setting it here would leave the label unreadable on the accent fill. */
 .segmentedInnerLabel {
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--c-text-subtle);
-  transition: color 0.15s ease;
+  color: inherit;
   line-height: 1;
+  /* Longer translations must ellipsise inside their segment; the control clips at
+     18px so they cannot wrap, and unconstrained they push the other tabs off. */
+  min-width: 0;
+  align-self: stretch;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .modeTabIcon {
   font-size: 1rem !important;
-  margin-bottom: 0.125rem;
-  opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .header {
@@ -82,6 +102,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Pinned footer. Sticky for the same reason as .modeTabs, and opaque so the list
+   scrolls underneath it rather than showing through. */
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 1rem;
+  background: var(--c-bg-raised, var(--mantine-color-body));
+  border-top: 1px solid var(--c-border, var(--mantine-color-default-border));
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
 }
 
 .primaryActions {
@@ -126,7 +160,6 @@
 
 .fieldList {
   flex: 1;
-  overflow: hidden;
   background: transparent;
 }
 
