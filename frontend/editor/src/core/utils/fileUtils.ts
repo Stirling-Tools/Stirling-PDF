@@ -74,6 +74,17 @@ export function getFilenameWithoutExtension(
 }
 
 /**
+ * Splits a filename into its base and extension, keeping the dot on the
+ * extension so `base + extension` round-trips. A name with no extension (or a
+ * leading-dot name like ".env") gets an empty extension.
+ * @example splitFileName('report.pdf') // ['report', '.pdf']
+ */
+export function splitFileName(name: string): [string, string] {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+}
+
+/**
  * Checks if a file is a PDF based on extension and MIME type
  * @param file - File or file-like object with name and type properties
  * @returns true if the file appears to be a PDF

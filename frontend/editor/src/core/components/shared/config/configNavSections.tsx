@@ -44,7 +44,7 @@ export const useConfigNavSections = (
           key: "general",
           label: t("settings.general.title", "General"),
           icon: "settings-rounded",
-          component: <GeneralSection />,
+          component: <GeneralSection hideTitle />,
         },
         {
           key: "hotkeys",
@@ -112,7 +112,7 @@ export const createConfigNavSections = (
           key: "general",
           label: "General",
           icon: "settings-rounded",
-          component: <GeneralSection />,
+          component: <GeneralSection hideTitle />,
         },
         {
           key: "hotkeys",
