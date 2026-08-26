@@ -99,7 +99,7 @@ export function useClientSideClassification(): void {
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
           const verdict = await classifyStub(
-            stub.id as FileId,
+            stub.id,
             stub.name,
             stub.size ?? 0,
           );
@@ -108,11 +108,11 @@ export function useClientSideClassification(): void {
           if (verdict == null) continue;
           // Deliver unconditionally - a re-render must never discard a computed
           // (and already metered) result. Writes are idempotent.
-          updateStirlingFileStub(stub.id as FileId, {
+          updateStirlingFileStub(stub.id, {
             classificationLabels: verdict.labels,
             classificationConfidence: verdict.confidence,
           });
-          const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
+          const ok = await fileStorage.updateFileMetadata(stub.id, {
             classificationLabels: verdict.labels,
             classificationConfidence: verdict.confidence,
           });
