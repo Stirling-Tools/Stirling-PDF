@@ -3969,6 +3969,7 @@ back = "Atrás"
 backToFolder = "Volver a {{folder}}"
 backToMyFiles = "Volver a Mis archivos"
 breadcrumbs = "Ruta de carpeta"
+bulkActions = "Acciones"
 cancel = "Cancelar"
 classification = "Clasificación"
 clearSelection = "Borrar selección"
@@ -4142,6 +4143,11 @@ totalSize = "Tamaño total"
 type = "Tipo"
 versionHistory = "Evolución de versiones"
 
+[filesPage.filters]
+activeCount = "{{count}} filtros activos"
+clearAll = "Borrar filtros"
+label = "Filtros"
+
 [filesPage.folderName]
 cancel = "Cancelar"
 error = "No se pudo guardar la carpeta. Vuelve a intentarlo."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Ordenar archivos"
 modifiedAsc = "Más antiguos primero"
 modifiedDesc = "Más recientes primero"
 nameAsc = "Nombre A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Todo guardado"
 analyzingFields = "Analysing form fields..."
+applyFailed = "No se pudieron aplicar los cambios"
 extractCsvError = "No se pudo extraer CSV"
 extractXlsxError = "No se pudo extraer XLSX"
 filled = "filled"
 flattenAfterFilling = "Aplanar después de rellenar"
+goToPage = "Ir a esta página"
 noFields = "No fillable form fields found in this PDF."
+page = "Página"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "oblig."
@@ -4318,7 +4328,82 @@ rescanFields = "Volver a escanear campos"
 rescanFormFields = "Volver a escanear campos del formulario"
 save = "Guardar"
 saveShortcut = "Ctrl+S para guardar"
+skippedEdits_one = "No se pudo aplicar 1 cambio:"
+skippedEdits_other = "No se pudieron aplicar {{count}} cambios:"
+skippedEditsTruncated = "{{count}} más no mostrados."
 unsavedChanges = "Cambios sin guardar"
+
+[formFill.create]
+commit = "Añadir {{count}} campo(s) al PDF"
+empty = "Aún no se han dibujado campos."
+failed = "No se pudieron añadir los campos"
+goToField = "Ir a este campo"
+hint = "Elige un tipo de campo y luego dibújalo en la página."
+placing = "Dibuja un campo {{type}} en la página. Pulsa Esc para detener."
+preview = "Mantener para previsualizar"
+previewHelp = "Mantén pulsado para ver cómo quedarán los campos una vez añadidos, sin los contornos de edición."
+removeField = "Eliminar campo"
+
+[formFill.editor]
+action = "Acción del botón"
+actionHelp = "Lo que hace el botón al hacer clic."
+actionNone = "Ninguna"
+actionPrint = "Imprimir"
+actionReset = "Restablecer formulario"
+actionSubmit = "Enviar a URL"
+actionUri = "Abrir URL"
+actionUrl = "URL"
+actionUrlHelp = "La dirección que abre el botón o a la que envía."
+addOption = "Añadir opción"
+caption = "Texto del botón"
+captionHelp = "El texto impreso en la cara del botón."
+defaultValue = "Valor predeterminado"
+defaultValueHelp = "Lo que contiene el campo antes de que alguien lo rellene. Déjalo en blanco para un campo vacío."
+fontSize = "Tamaño de fuente"
+fontSizeHelp = "Tamaño del texto dentro del campo. Déjalo en blanco para que el lector lo ajuste al espacio disponible."
+label = "Etiqueta"
+labelHelp = "El texto que se muestra a quien rellena el formulario. Déjalo en blanco para usar el nombre del campo."
+maxLength = "Longitud máxima (comb)"
+maxLengthHelp = "Limita cuántos caracteres caben, dibujados como cajas espaciadas uniformemente."
+multiline = "Multilínea"
+multilineHelp = "Permite más de una línea de texto y ajusta el texto al borde del campo."
+multiSelect = "Permitir selección múltiple"
+multiSelectHelp = "Permite elegir más de una opción a la vez."
+name = "Nombre del campo"
+nameHelp = "El nombre interno del campo. Se utiliza al exportar datos o rellenar el formulario desde otro sistema, así que mantenlo único y sin espacios."
+optionGap = "Espaciado entre opciones"
+optionGapHelp = "Separación entre botones, en puntos. Déjalo en blanco para distribuirlos uniformemente por la caja."
+optionPlaceholder = "Opción {{n}}"
+options = "Opciones"
+optionsEmpty = "Añade al menos una opción."
+optionsHelp = "Las opciones ofrecidas en la lista. Cada una se almacena tal como se escribe, así que mantenlas cortas y distintas."
+optionSize = "Tamaño de opción"
+optionSizeHelp = "Anchura y altura de cada botón, en puntos. Déjalo en blanco para ajustarlos a la caja que dibujaste."
+readOnly = "Solo lectura"
+readOnlyHelp = "Muestra un valor pero impide que nadie lo edite."
+removeOption = "Eliminar opción"
+required = "Obligatorio"
+requiredHelp = "El formulario no se puede enviar hasta que este campo esté rellenado."
+signatureNote = "Solo marcador de posición: aquí no se firma. Marca dónde va una firma para que un firmante de PDF (Adobe Acrobat, un servicio de firma, etc.) coloque la firma en este lugar cuando se firme el documento."
+tooltip = "Información sobre herramientas"
+tooltipHelp = "La pista que se muestra cuando alguien pasa el cursor sobre el campo en un lector de PDF."
+type = "Tipo"
+typeHelp = "Qué tipo de campo es este. Cambiarlo reconstruye el campo, por lo que su valor actual no se conserva."
+
+[formFill.mode]
+create = "Crear"
+fill = "Rellenar"
+label = "Modo del editor de formularios"
+modify = "Modificar"
+
+[formFill.modify]
+commit = "Guardar {{count}} cambio(s)"
+delete = "Eliminar"
+empty = "Este PDF aún no tiene campos de formulario."
+failed = "No se pudieron guardar los cambios"
+groupSizeHint = "Usar tamaño de opción"
+hint = "Selecciona un campo para editar sus propiedades, arrástralo en la página o elimínalo."
+restore = "Restaurar"
 
 [formFill.sidebar]
 close = "Cerrar barra lateral"
@@ -4584,6 +4669,10 @@ title = "Cambiar metadatos"
 desc = "Modificar restricciones y permisos del documento"
 tags = "permisos,restricciones,derechos,control de acceso,permitir,denegar,impresión,copia,edición,modificar permisos,ajustes de seguridad,derechos de usuario"
 title = "Cambiar permisos"
+
+[home.classify]
+desc = "Identifica qué tipo de documento es y etiquétalo."
+title = "Clasificar"
 
 [home.compare]
 desc = "Comparar y mostrar las diferencias entre 2 documentos PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nada que notificar."
+handoffUnavailable = "Este navegador no permitirá que el procesador pase el documento al editor. Ábrelo desde el editor en su lugar."
+noDocumentLinked = "Este fallo no está vinculado a un documento específico, así que no hay nada que abrir aquí."
+notOnThisDevice = "Este documento no está en este dispositivo, así que no se puede abrir aquí."
+occurrences = "{{count}} veces"
+open = "Notificaciones"
+title = "Notificaciones"
+unread = "No leídas"
+
+[notifications.action]
+failed = "Eso no ha funcionado. Inténtalo de nuevo en un momento."
+unavailable = "No disponible para esta notificación."
+
+[notifications.detail]
+copied = "Copiado"
+copy = "Copiar error"
+less = "Mostrar menos"
+more = "Mostrar mensaje completo"
+
+[notifications.section]
+earlier = "Anteriores"
+new = "Nuevas"
 
 [oauth.error]
 message = "La autenticación no se realizó correctamente. Puede cerrar esta ventana e intentarlo de nuevo."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "de {{allowance}} PDFs gratuitos usados"
 capSuffix_other = "de {{allowance}} PDFs gratuitos usados"
 eyebrow = "Prueba de Processor"
-statusLabel_one = "queda {{remaining}}"
-statusLabel_other = "quedan {{remaining}}"
+statusLabel_one = "{{used}} usado"
+statusLabel_other = "{{used}} usados"
 sub = "Usa el Editor PDF gratis. Paga para procesar PDFs automáticamente."
 title_one = "Procesa {{allowance}} PDFs gratis"
 title_other = "Procesa {{allowance}} PDFs gratis"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Ver archivo"
+viewInProcessor = "Ver en el procesador"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Este fallo no se registró en un documento específico, así que no hay nada que abrir aquí."
+unattended = "Este archivo fue enviado por una carpeta, bucket o webhook, así que ningún navegador lo conserva para abrirlo."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Fuentes"
 connectSource = "Conectar fuente"
 
 [portal.sources.builder]
+advanced = "Avanzado"
 back = "Volver a orígenes"
+backToSource = "Volver a la configuración de la fuente"
 backToTypes = "Todos los tipos de origen"
 cancel = "Cancelar"
 chooseHint = "Elige de dónde proceden los documentos. Los conectores atenuados están en camino."
@@ -8726,7 +8845,6 @@ create = "Crear origen"
 createTitle = "Conectar un origen"
 delete = "Eliminar"
 editTitle = "Editar origen"
-enabled = "Habilitado"
 save = "Guardar cambios"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consumir: procesar cada archivo una vez"
 snapshot = "Instantánea: volver a leer la carpeta en cada ejecución"
 
 [portal.sources.networkFields.recursive]
+helperText = "Incluye subcarpetas si tus archivos están organizados en carpetas anidadas, o vigila solo el nivel superior."
 label = "Profundidad de carpeta"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Tamaño, fecha y comprobación de contenido"
 stat = "Tamaño y fecha de modificación"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Indica si se debe dejar el archivo original en su lugar después de procesarlo. Si el archivo original se deja en su lugar, se volverá a procesar la próxima vez que la canalización analice la fuente."
 label = "Modo de lectura"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consumir: procesar cada archivo una vez"
 snapshot = "Instantánea: volver a leer la carpeta en cada ejecución"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Incluye subcarpetas si tus archivos están organizados en carpetas anidadas, o vigila solo el nivel superior."
 label = "Profundidad de carpeta"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Tu servidor Stirling-PDF está sin conexión y \"{{en
 expired = "Su sesión ha caducado. Actualice la página e inténtelo de nuevo."
 
 [settings]
+backToSections = "Todos los ajustes"
 close = "Cerrar"
+title = "Ajustes"
 
 [settings.ai]
 documents = "Documentos y RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Buscar"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Buscar herramientas..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Formato Avanzado"
+ai = "IA"
 automation = "Automatización"
 developerTools = "Herramientas de Desarrollo"
 documentReview = "Revisión de Documentos"
@@ -11335,8 +11460,11 @@ columnDefault = "Columna {{index}}"
 convertToPdf = "Convertir a PDF"
 csvStats = "{{rows}} filas · {{columns}} columnas · {{size}}"
 emptyFile = "Archivo vacío"
+htmlHidePreview = "Ocultar vista previa"
 htmlPreview = "Vista previa de HTML"
+htmlPreviewMobileHidden = "Las páginas HTML están diseñadas para anchos de escritorio, así que la vista previa está desactivada aquí de forma predeterminada."
 htmlPreviewWarning = "Vista previa de HTML — los recursos externos pueden no cargarse · {{size}}"
+htmlShowPreview = "Mostrar vista previa de todos modos"
 invalidJson = "JSON no válido — mostrando contenido sin procesar"
 lineNumbers = "Números de línea"
 loading = "Cargando..."
@@ -11683,6 +11811,7 @@ exportAll = "Exportar PDF"
 exportSelected = "Exportar páginas seleccionadas"
 formFill = "Rellenar formulario"
 hideToolbar = "Hide toolbar"
+moreActions = "Más acciones"
 multiTool = "Multiherramienta"
 panMode = "Modo desplazar"
 print = "Imprimir PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Seleccionar todo"
 selectByNumber = "Seleccionar por números de página"
 selectLanguage = "Seleccionar idioma"
 share = "Compartir"
+showAllTools = "Mostrar todas las herramientas"
+showFewerTools = "Contraer barra de herramientas"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Alternar visibilidad de las anotaciones"
 toggleAttachments = "Alternar adjuntos"
