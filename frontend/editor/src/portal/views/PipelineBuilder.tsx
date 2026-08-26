@@ -794,7 +794,7 @@ export function PipelineBuilder() {
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
-        // sweeps it - so it is recorded in the output options the editor reads, not as a wire input.
+        // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
         inputs: isEditorInput
           ? []
           : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
