@@ -41,7 +41,7 @@ false = "Faux"
 fileNotSavedToDisk = "Non enregistré sur le disque"
 fileSavedToDisk = "Fichier enregistré sur le disque"
 fileSelected = "Sélectionné : {{filename}}"
-filesSelected = "fichiers sélectionnés"
+filesSelected = "{{count}} fichiers"
 font = "Police"
 fontSizeTooltip = "Taille du texte du numéro de page en points. Une valeur plus élevée crée un texte plus grand."
 fontTypeTooltip = "Famille de police pour les numéros de page. Choisissez selon le style de votre document."
@@ -3969,6 +3969,7 @@ back = "Retour"
 backToFolder = "Retour à {{folder}}"
 backToMyFiles = "Retour à Mes fichiers"
 breadcrumbs = "Chemin du dossier"
+bulkActions = "Actions"
 cancel = "Annuler"
 classification = "Classification"
 clearSelection = "Effacer la sélection"
@@ -4142,6 +4143,11 @@ totalSize = "Taille totale"
 type = "Type"
 versionHistory = "Parcours de version"
 
+[filesPage.filters]
+activeCount = "{{count}} filtres actifs"
+clearAll = "Effacer les filtres"
+label = "Filtres"
+
 [filesPage.folderName]
 cancel = "Annuler"
 error = "Impossible d’enregistrer le dossier. Réessayez."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Trier les fichiers"
 modifiedAsc = "Plus ancien d’abord"
 modifiedDesc = "Plus récent d’abord"
 nameAsc = "Nom A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Tout est enregistré"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Impossible d’appliquer les modifications"
 extractCsvError = "Échec de l’extraction du CSV"
 extractXlsxError = "Échec de l’extraction du XLSX"
 filled = "filled"
 flattenAfterFilling = "Aplatir après remplissage"
+goToPage = "Accéder à cette page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl."
@@ -4318,7 +4328,82 @@ rescanFields = "Réanalyser les champs"
 rescanFormFields = "Réanalyser les champs du formulaire"
 save = "Enregistrer"
 saveShortcut = "Ctrl+S pour enregistrer"
+skippedEdits_one = "1 modification n’a pas pu être appliquée :"
+skippedEdits_other = "{{count}} modifications n’ont pas pu être appliquées :"
+skippedEditsTruncated = "{{count}} autres non répertoriées."
 unsavedChanges = "Modifications non enregistrées"
+
+[formFill.create]
+commit = "Ajouter {{count}} champ(s) au PDF"
+empty = "Aucun champ n’a encore été dessiné."
+failed = "Échec de l’ajout des champs"
+goToField = "Accéder à ce champ"
+hint = "Choisissez un type de champ, puis dessinez-le sur la page."
+placing = "Dessinez un champ {{type}} sur la page. Appuyez sur Échap pour arrêter."
+preview = "Maintenir pour prévisualiser"
+previewHelp = "Maintenez pour voir les champs tels qu’ils apparaîtront une fois ajoutés, sans les contours de modification."
+removeField = "Supprimer le champ"
+
+[formFill.editor]
+action = "Action du bouton"
+actionHelp = "Ce que fait le bouton lorsqu’on clique dessus."
+actionNone = "Aucune"
+actionPrint = "Imprimer"
+actionReset = "Réinitialiser le formulaire"
+actionSubmit = "Envoyer à l’URL"
+actionUri = "Ouvrir l’URL"
+actionUrl = "URL"
+actionUrlHelp = "L’adresse que le bouton ouvre ou à laquelle il envoie les données."
+addOption = "Ajouter une option"
+caption = "Libellé du bouton"
+captionHelp = "Le texte affiché sur le bouton."
+defaultValue = "Valeur par défaut"
+defaultValueHelp = "Ce que le champ contient avant d’être rempli. Laissez vide pour un champ vide."
+fontSize = "Taille de police"
+fontSizeHelp = "Taille du texte dans le champ. Laissez vide pour permettre au lecteur PDF de l’ajuster."
+label = "Libellé"
+labelHelp = "Le texte affiché à la personne qui remplit le formulaire. Laissez-le vide pour utiliser le nom du champ par défaut."
+maxLength = "Longueur max. (peigne)"
+maxLengthHelp = "Limite le nombre de caractères qui tiennent, affichés sous forme de cases régulièrement espacées."
+multiline = "Multiligne"
+multilineHelp = "Autorise plusieurs lignes de texte et le renvoi à la ligne au bord du champ."
+multiSelect = "Autoriser la sélection multiple"
+multiSelectHelp = "Permet de choisir plusieurs options à la fois."
+name = "Nom du champ"
+nameHelp = "Le nom interne du champ. Utilisé lors de l’exportation de données ou du remplissage du formulaire depuis un autre système ; gardez-le donc unique et sans espaces."
+optionGap = "Espacement des options"
+optionGapHelp = "Écart entre les boutons, en points. Laissez vide pour les répartir uniformément dans la zone."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Ajoutez au moins une option."
+optionsHelp = "Les choix proposés dans la liste. Chacun est enregistré tel qu’il est saisi ; veillez donc à ce qu’ils soient courts et distincts."
+optionSize = "Taille des options"
+optionSizeHelp = "Largeur et hauteur de chaque bouton, en points. Laissez vide pour les adapter à la zone que vous avez dessinée."
+readOnly = "Lecture seule"
+readOnlyHelp = "Affiche une valeur, mais empêche toute modification."
+removeOption = "Supprimer l’option"
+required = "Obligatoire"
+requiredHelp = "Le formulaire ne peut pas être envoyé tant que ce champ n’est pas rempli."
+signatureNote = "Espace réservé uniquement - vous ne signez pas ici. Il indique l’emplacement d’une signature afin qu’un outil de signature PDF (Adobe Acrobat, un service de signature, etc.) place la signature à cet endroit lorsque le document est signé."
+tooltip = "Infobulle"
+tooltipHelp = "L’indication affichée lorsqu’une personne survole le champ dans un lecteur PDF."
+type = "Type"
+typeHelp = "Le type de champ. Le modifier reconstruit le champ, sa valeur actuelle n’est donc pas conservée."
+
+[formFill.mode]
+create = "Créer"
+fill = "Remplir"
+label = "Mode de l’éditeur de formulaire"
+modify = "Modifier"
+
+[formFill.modify]
+commit = "Enregistrer {{count}} modification(s)"
+delete = "Supprimer"
+empty = "Ce PDF ne contient pas encore de champs de formulaire."
+failed = "Échec de l’enregistrement des modifications"
+groupSizeHint = "Utiliser la taille des options"
+hint = "Sélectionnez un champ pour modifier ses propriétés, faites-le glisser sur la page ou supprimez-le."
+restore = "Restaurer"
 
 [formFill.sidebar]
 close = "Fermer la barre latérale"
@@ -4584,6 +4669,10 @@ title = "Modifier les métadonnées"
 desc = "Modifier les restrictions et permissions du document"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Modifier les permissions"
+
+[home.classify]
+desc = "Identifiez le type de document dont il s’agit et étiquetez-le."
+title = "Classer"
 
 [home.compare]
 desc = "Comparez et visualisez les différences entre deux PDF."
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Rien à signaler."
+handoffUnavailable = "Ce navigateur ne permettra pas au processeur de transmettre le document à l’éditeur. Ouvrez-le plutôt depuis l’éditeur."
+noDocumentLinked = "Cet échec n’est pas lié à un document spécifique, il n’y a donc rien à ouvrir ici."
+notOnThisDevice = "Ce document n’est pas sur cet appareil, il ne peut donc pas être ouvert ici."
+occurrences = "{{count}} fois"
+open = "Notifications"
+title = "Notifications"
+unread = "Non lues"
+
+[notifications.action]
+failed = "Cela n’a pas fonctionné. Réessayez dans un instant."
+unavailable = "Non disponible pour cette notification."
+
+[notifications.detail]
+copied = "Copié"
+copy = "Copier l’erreur"
+less = "Afficher moins"
+more = "Afficher le message complet"
+
+[notifications.section]
+earlier = "Plus tôt"
+new = "Nouvelles"
 
 [oauth.error]
 message = "L'authentification n'a pas abouti. Vous pouvez fermer cette fenêtre et réessayer."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "sur {{allowance}} PDF gratuits utilisés"
 capSuffix_other = "sur {{allowance}} PDF gratuits utilisés"
 eyebrow = "Essai Processor"
-statusLabel_one = "{{remaining}} restant"
-statusLabel_other = "{{remaining}} restants"
+statusLabel_one = "{{used}} utilisé"
+statusLabel_other = "{{used}} utilisés"
 sub = "Utilisez l’éditeur PDF gratuitement. Payez pour traiter les PDF automatiquement."
 title_one = "Traitez {{allowance}} PDF gratuitement"
 title_other = "Traitez {{allowance}} PDF gratuitement"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Afficher le fichier"
+viewInProcessor = "Afficher dans le processeur"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Cet échec n’a pas été enregistré pour un document spécifique, il n’y a donc rien à ouvrir ici."
+unattended = "Ce fichier a été fourni par un dossier, un bucket ou un webhook, aucun navigateur d’utilisateur ne le conserve donc pour l’ouvrir."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Sources"
 connectSource = "Connecter une source"
 
 [portal.sources.builder]
+advanced = "Avancé"
 back = "Retour aux sources"
+backToSource = "Retour à la configuration de la source"
 backToTypes = "Tous les types de sources"
 cancel = "Annuler"
 chooseHint = "Choisissez d’où viennent les documents. Les connecteurs grisés arrivent bientôt."
@@ -8726,7 +8845,6 @@ create = "Créer une source"
 createTitle = "Connecter une source"
 delete = "Supprimer"
 editTitle = "Modifier la source"
-enabled = "Activé"
 save = "Enregistrer les modifications"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consommer : traiter chaque fichier une seule fois"
 snapshot = "Instantané : relire le dossier à chaque exécution"
 
 [portal.sources.networkFields.recursive]
+helperText = "Incluez les sous-dossiers si vos fichiers sont organisés dans des dossiers imbriqués, ou surveillez uniquement le niveau supérieur."
 label = "Profondeur du dossier"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Vérification de la taille, de la date et du contenu"
 stat = "Taille et date de modification"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Indique s’il faut laisser le fichier original en place après son traitement. Si le fichier original est laissé en place, il sera retraité la prochaine fois que le pipeline analysera la source."
 label = "Mode de lecture"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consommer : traiter chaque fichier une fois"
 snapshot = "Instantané : relire le dossier à chaque exécution"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Incluez les sous-dossiers si vos fichiers sont organisés dans des dossiers imbriqués, ou surveillez uniquement le niveau supérieur."
 label = "Profondeur du dossier"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 expired = "Votre session a expiré. Veuillez recharger la page et réessayer."
 
 [settings]
+backToSections = "Tous les paramètres"
 close = "Fermer"
+title = "Paramètres"
 
 [settings.ai]
 documents = "Documents et RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Rechercher"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Rechercher des outils…"
 
 [toolPicker.subcategories]
 advancedFormatting = "Mise en forme avancée"
+ai = "IA"
 automation = "Automatisation"
 developerTools = "Outils développeur"
 documentReview = "Révision de document"
@@ -11335,8 +11460,11 @@ columnDefault = "Colonne {{index}}"
 convertToPdf = "Convertir en PDF"
 csvStats = "{{rows}} lignes · {{columns}} colonnes · {{size}}"
 emptyFile = "Fichier vide"
+htmlHidePreview = "Masquer l’aperçu"
 htmlPreview = "Aperçu HTML"
+htmlPreviewMobileHidden = "Les pages HTML sont conçues pour des largeurs d’écran de bureau, l’aperçu est donc désactivé par défaut ici."
 htmlPreviewWarning = "Aperçu HTML — les ressources externes peuvent ne pas se charger · {{size}}"
+htmlShowPreview = "Afficher quand même l’aperçu"
 invalidJson = "JSON invalide — affichage du contenu brut"
 lineNumbers = "Numéros de ligne"
 loading = "Chargement…"
@@ -11683,6 +11811,7 @@ exportAll = "Exporter le PDF"
 exportSelected = "Exporter les pages sélectionnées"
 formFill = "Remplir le formulaire"
 hideToolbar = "Hide toolbar"
+moreActions = "Plus d’actions"
 multiTool = "Outil multifonction"
 panMode = "Mode panoramique"
 print = "Imprimer le PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Tout sélectionner"
 selectByNumber = "Sélectionner par numéros de pages"
 selectLanguage = "Sélectionner la langue"
 share = "Partager"
+showAllTools = "Afficher tous les outils"
+showFewerTools = "Réduire la barre d’outils"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Basculer la visibilité des annotations"
 toggleAttachments = "Basculer les pièces jointes"

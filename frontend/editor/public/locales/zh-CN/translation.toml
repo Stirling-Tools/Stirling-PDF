@@ -41,7 +41,7 @@ false = "错"
 fileNotSavedToDisk = "未保存到磁盘"
 fileSavedToDisk = "文件已保存到磁盘"
 fileSelected = "已选：{{filename}}"
-filesSelected = "选中的文件"
+filesSelected = "{{count}} 个文件"
 font = "字体"
 fontSizeTooltip = "页码文本的点数大小。数值越大文字越大。"
 fontTypeTooltip = "页码的字体族。根据文档风格选择。"
@@ -3969,6 +3969,7 @@ back = "返回"
 backToFolder = "返回 {{folder}}"
 backToMyFiles = "返回“我的文件”"
 breadcrumbs = "文件夹路径"
+bulkActions = "操作"
 cancel = "取消"
 classification = "分类"
 clearSelection = "清除选择"
@@ -4142,6 +4143,11 @@ totalSize = "总大小"
 type = "类型"
 versionHistory = "版本历程"
 
+[filesPage.filters]
+activeCount = "{{count}} 个筛选器已启用"
+clearAll = "清除筛选器"
+label = "筛选器"
+
 [filesPage.folderName]
 cancel = "取消"
 error = "无法保存文件夹。请重试。"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "文件排序"
 modifiedAsc = "最早优先"
 modifiedDesc = "最新优先"
 nameAsc = "名称 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "全部已保存"
 analyzingFields = "Analysing form fields..."
+applyFailed = "无法应用更改"
 extractCsvError = "提取 CSV 失败"
 extractXlsxError = "提取 XLSX 失败"
 filled = "filled"
 flattenAfterFilling = "填写后扁平化"
+goToPage = "转到此页面"
 noFields = "No fillable form fields found in this PDF."
+page = "页面"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "必填"
@@ -4318,7 +4328,82 @@ rescanFields = "重新扫描字段"
 rescanFormFields = "重新扫描表单字段"
 save = "保存"
 saveShortcut = "按 Ctrl+S 保存"
+skippedEdits_one = "无法应用 1 项更改："
+skippedEdits_other = "无法应用 {{count}} 项更改："
+skippedEditsTruncated = "还有 {{count}} 项未列出。"
 unsavedChanges = "未保存的更改"
+
+[formFill.create]
+commit = "将 {{count}} 个字段添加到 PDF"
+empty = "尚未绘制任何字段。"
+failed = "添加字段失败"
+goToField = "转到此字段"
+hint = "选择字段类型，然后在页面上绘制。"
+placing = "在页面上绘制一个 {{type}} 字段。按 Esc 停止。"
+preview = "按住预览"
+previewHelp = "按住可查看字段添加后的外观，不显示编辑轮廓。"
+removeField = "移除字段"
+
+[formFill.editor]
+action = "按钮操作"
+actionHelp = "点击按钮时执行的操作。"
+actionNone = "无"
+actionPrint = "打印"
+actionReset = "重置表单"
+actionSubmit = "提交到 URL"
+actionUri = "打开 URL"
+actionUrl = "URL"
+actionUrlHelp = "按钮打开或提交到的地址。"
+addOption = "添加选项"
+caption = "按钮标题"
+captionHelp = "显示在按钮表面上的文本。"
+defaultValue = "默认值"
+defaultValueHelp = "在任何人填写之前字段包含的内容。留空表示空字段。"
+fontSize = "字体大小"
+fontSizeHelp = "字段内的文本大小。留空可让阅读器自动调整到合适大小。"
+label = "标签"
+labelHelp = "显示给填写表单者的文字。留空则回退为字段名称。"
+maxLength = "最大长度（分格）"
+maxLengthHelp = "限制可容纳的字符数，并绘制为等距方框。"
+multiline = "多行"
+multilineHelp = "允许多行文本，并在字段边缘自动换行。"
+multiSelect = "允许多选"
+multiSelectHelp = "允许一次选择多个选项。"
+name = "字段名称"
+nameHelp = "字段的内部名称。用于导出数据或从其他系统填写表单，因此请保持唯一且不要包含空格。"
+optionGap = "选项间距"
+optionGapHelp = "按钮之间的间距，以点为单位。留空可使其在框内向下均匀分布。"
+optionPlaceholder = "选项 {{n}}"
+options = "选项"
+optionsEmpty = "至少添加一个选项。"
+optionsHelp = "列表中提供的选择。每一项都会按输入内容存储，因此请保持简短且彼此不同。"
+optionSize = "选项大小"
+optionSizeHelp = "每个按钮的宽度和高度，以点为单位。留空可使其适应你绘制的框。"
+readOnly = "只读"
+readOnlyHelp = "显示值，但阻止任何人编辑。"
+removeOption = "移除选项"
+required = "必填"
+requiredHelp = "在填写此字段之前，表单无法提交。"
+signatureNote = "仅为占位符 - 你不在这里签名。它标记签名应放置的位置，以便 PDF 签名工具（Adobe Acrobat、签名服务等）在文档签名时将签名放在此处。"
+tooltip = "工具提示"
+tooltipHelp = "当有人在 PDF 阅读器中悬停字段时显示的提示。"
+type = "类型"
+typeHelp = "此字段的类型。更改它会重建字段，因此当前值不会保留。"
+
+[formFill.mode]
+create = "创建"
+fill = "填写"
+label = "表单编辑器模式"
+modify = "修改"
+
+[formFill.modify]
+commit = "保存 {{count}} 项更改"
+delete = "删除"
+empty = "此 PDF 尚无表单字段。"
+failed = "保存更改失败"
+groupSizeHint = "使用选项大小"
+hint = "选择字段以编辑其属性，在页面上拖动它，或将其删除。"
+restore = "恢复"
 
 [formFill.sidebar]
 close = "关闭侧边栏"
@@ -4584,6 +4669,10 @@ title = "更改元数据"
 desc = "更改文档限制与权限"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "更改权限"
+
+[home.classify]
+desc = "识别此文档的类型并为其添加标签。"
+title = "分类"
 
 [home.compare]
 desc = "比较并显示两个 PDF 文档之间的差异"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "没有可报告的内容。"
+handoffUnavailable = "此浏览器不允许处理器将文档传递给编辑器。请改为从编辑器中打开。"
+noDocumentLinked = "此失败未关联到特定文档，因此这里没有可打开的内容。"
+notOnThisDevice = "此文档不在此设备上，因此无法在这里打开。"
+occurrences = "{{count}} 次"
+open = "通知"
+title = "通知"
+unread = "未读"
+
+[notifications.action]
+failed = "操作未成功。请稍后重试。"
+unavailable = "此通知不支持此操作。"
+
+[notifications.detail]
+copied = "已复制"
+copy = "复制错误"
+less = "显示较少"
+more = "显示完整消息"
+
+[notifications.section]
+earlier = "较早"
+new = "新通知"
 
 [oauth.error]
 message = "认证未成功。您可以关闭此窗口后重试。"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 个免费 PDFs 中的额度"
 capSuffix_other = "已使用 {{allowance}} 个免费 PDFs 中的额度"
 eyebrow = "Processor 试用"
-statusLabel_one = "剩余 {{remaining}}"
-statusLabel_other = "剩余 {{remaining}}"
+statusLabel_one = "已使用 {{used}}"
+statusLabel_other = "已使用 {{used}}"
 sub = "免费使用 PDF 编辑器。自动处理 PDFs 按需付费。"
 title_one = "免费处理 {{allowance}} 个 PDFs"
 title_other = "免费处理 {{allowance}} 个 PDFs"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "查看文件"
+viewInProcessor = "在处理器中查看"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "此失败未记录到特定文档，因此这里没有可打开的内容。"
+unattended = "此文件由文件夹、存储桶或 webhook 提供，因此没有任何人的浏览器持有它以供打开。"
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "源"
 connectSource = "连接源"
 
 [portal.sources.builder]
+advanced = "高级"
 back = "返回源"
+backToSource = "返回源设置"
 backToTypes = "所有源类型"
 cancel = "取消"
 chooseHint = "选择文档来源。灰显的连接器即将推出。"
@@ -8726,7 +8845,6 @@ create = "创建源"
 createTitle = "连接源"
 delete = "删除"
 editTitle = "编辑源"
-enabled = "已启用"
 save = "保存更改"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume：每个文件只处理一次"
 snapshot = "Snapshot：每次运行重新读取文件夹"
 
 [portal.sources.networkFields.recursive]
+helperText = "如果文件整理在嵌套文件夹中，请包含子文件夹；或仅监视顶层。"
 label = "文件夹深度"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "大小、日期和内容检查"
 stat = "大小和修改日期"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "处理完成后是否将原始文件留在原处。如果原始文件留在原处，则下次管道扫描源时会再次处理它。"
 label = "读取模式"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "消费：每个文件只处理一次"
 snapshot = "快照：每次运行都重新读取文件夹"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "如果文件整理在嵌套文件夹中，请包含子文件夹；或仅监视顶层。"
 label = "文件夹深度"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "您的 Stirling-PDF 服务器处于离线状态，且
 expired = "您的会话已过期。请刷新页面并重试。"
 
 [settings]
+backToSections = "所有设置"
 close = "关闭"
+title = "设置"
 
 [settings.ai]
 documents = "文档与 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "搜索"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "搜索工具…"
 
 [toolPicker.subcategories]
 advancedFormatting = "高级排版"
+ai = "AI"
 automation = "自动化"
 developerTools = "开发者工具"
 documentReview = "文档审阅"
@@ -11335,8 +11460,11 @@ columnDefault = "列 {{index}}"
 convertToPdf = "转换为 PDF"
 csvStats = "{{rows}} 行 · {{columns}} 列 · {{size}}"
 emptyFile = "空文件"
+htmlHidePreview = "隐藏预览"
 htmlPreview = "HTML 预览"
+htmlPreviewMobileHidden = "HTML 页面按桌面宽度布局，因此此处默认关闭预览。"
 htmlPreviewWarning = "HTML 预览 — 外部资源可能无法加载 · {{size}}"
+htmlShowPreview = "仍然显示预览"
 invalidJson = "无效的 JSON — 显示原始内容"
 lineNumbers = "行号"
 loading = "正在加载..."
@@ -11683,6 +11811,7 @@ exportAll = "导出 PDF"
 exportSelected = "导出所选页面"
 formFill = "填写表单"
 hideToolbar = "Hide toolbar"
+moreActions = "更多操作"
 multiTool = "多功能工具"
 panMode = "平移模式"
 print = "打印 PDF"
@@ -11703,6 +11832,8 @@ selectAll = "全选"
 selectByNumber = "按页码选择"
 selectLanguage = "选择语言"
 share = "共享"
+showAllTools = "显示所有工具"
+showFewerTools = "收起工具栏"
 showToolbar = "Show toolbar"
 toggleAnnotations = "切换注释显示"
 toggleAttachments = "切换附件"

@@ -3969,6 +3969,7 @@ back = "Back"
 backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to My Files"
 breadcrumbs = "Folder path"
+bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
 clearSelection = "Clear selection"
@@ -4142,6 +4143,11 @@ totalSize = "Total size"
 type = "Type"
 versionHistory = "Version journey"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "Cancel"
 error = "Could not save folder. Try again."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "Oldest first"
 modifiedDesc = "Recent first"
 nameAsc = "Name A→Z"
@@ -4305,12 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "All saved"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 exportAs = "Export data as"
 exportAsFormat = "Export as {{format}}"
 extractCsvError = "Failed to extract CSV"
 extractXlsxError = "Failed to extract XLSX"
 filled = "filled"
 flattenAfterFilling = "Flatten after filling"
+goToPage = "Go to this page"
 importData = "Import form data"
 importError = "Failed to import form data"
 importSkipped_one = "{{count}} field is not in this PDF: {{names}}"
@@ -4320,6 +4329,7 @@ importSuccess_one = "Imported {{count}} field from {{format}}"
 importSuccess_other = "Imported {{count}} fields from {{format}}"
 importTooltip = "Import values from an Acrobat XFDF or FDF export"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "req"
@@ -4328,7 +4338,82 @@ rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
 saveShortcut = "Ctrl+S to save"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "Close sidebar"
@@ -4594,6 +4679,10 @@ title = "Change Metadata"
 desc = "Change document restrictions and permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
@@ -5107,6 +5196,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
@@ -6745,8 +6858,8 @@ barAria = "Free PDFs used"
 capSuffix_one = "of {{allowance}} free PDFs used"
 capSuffix_other = "of {{allowance}} free PDFs used"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} left"
-statusLabel_other = "{{remaining}} left"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
 title_one = "Process {{allowance}} PDFs free"
 title_other = "Process {{allowance}} PDFs free"
@@ -7427,6 +7540,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7438,6 +7553,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8726,7 +8843,9 @@ title = "Sources"
 connectSource = "Connect source"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Back to sources"
+backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
@@ -8736,7 +8855,6 @@ create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
-enabled = "Enabled"
 save = "Save changes"
 
 [portal.sources.builder.folderAccess]
@@ -8773,6 +8891,7 @@ consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.networkFields.recursive.options]
@@ -8826,6 +8945,7 @@ hash = "Size, date and content check"
 stat = "Size and date modified"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8833,6 +8953,7 @@ consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9706,7 +9827,9 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 expired = "Your session has expired. Please refresh the page and try again."
 
 [settings]
+backToSections = "All settings"
 close = "Close"
+title = "Settings"
 
 [settings.ai]
 documents = "Documents & RAG"
@@ -10645,6 +10768,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10841,6 +10965,7 @@ searchPlaceholder = "Search tools..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Advanced Formatting"
+ai = "AI"
 automation = "Automation"
 developerTools = "Developer Tools"
 documentReview = "Document Review"
@@ -11345,8 +11470,11 @@ columnDefault = "Column {{index}}"
 convertToPdf = "Convert to PDF"
 csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
 emptyFile = "Empty file"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML preview"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML preview - external resources may not load · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "Invalid JSON - showing raw content"
 lineNumbers = "Line numbers"
 loading = "Loading..."
@@ -11693,6 +11821,7 @@ exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
 formFill = "Fill Form"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -11713,6 +11842,8 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
 share = "Share"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"

@@ -41,7 +41,7 @@ false = "เท็จ"
 fileNotSavedToDisk = "ยังไม่ได้บันทึกลงดิสก์"
 fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้ว"
 fileSelected = "ที่เลือก: {{filename}}"
-filesSelected = "ไฟล์ที่เลือก"
+filesSelected = "{{count}} ไฟล์"
 font = "ฟอนต์"
 fontSizeTooltip = "ขนาดข้อความหมายเลขหน้าเป็นหน่วยพอยต์ ตัวเลขใหญ่ทำให้ข้อความใหญ่ขึ้น"
 fontTypeTooltip = "ตระกูลฟอนต์สำหรับหมายเลขหน้า เลือกให้เหมาะกับสไตล์เอกสารของคุณ"
@@ -3969,6 +3969,7 @@ back = "ย้อนกลับ"
 backToFolder = "ย้อนกลับไปยัง {{folder}}"
 backToMyFiles = "ย้อนกลับไปยังไฟล์ของฉัน"
 breadcrumbs = "เส้นทางโฟลเดอร์"
+bulkActions = "การดำเนินการ"
 cancel = "ยกเลิก"
 classification = "การจัดประเภท"
 clearSelection = "ล้างการเลือก"
@@ -4142,6 +4143,11 @@ totalSize = "ขนาดรวม"
 type = "ชนิด"
 versionHistory = "เส้นทางเวอร์ชัน"
 
+[filesPage.filters]
+activeCount = "มีตัวกรองที่ใช้งานอยู่ {{count}} รายการ"
+clearAll = "ล้างตัวกรอง"
+label = "ตัวกรอง"
+
 [filesPage.folderName]
 cancel = "ยกเลิก"
 error = "ไม่สามารถบันทึกโฟลเดอร์ได้ โปรดลองอีกครั้ง."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "จัดเรียงไฟล์"
 modifiedAsc = "เก่าสุดก่อน"
 modifiedDesc = "ล่าสุดก่อน"
 nameAsc = "ชื่อ A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "บันทึกทั้งหมดแล้ว"
 analyzingFields = "Analysing form fields..."
+applyFailed = "ไม่สามารถใช้การเปลี่ยนแปลงได้"
 extractCsvError = "ดึง CSV ไม่สำเร็จ"
 extractXlsxError = "ดึง XLSX ไม่สำเร็จ"
 filled = "filled"
 flattenAfterFilling = "ทำให้แบนหลังจากกรอก"
+goToPage = "ไปที่หน้านี้"
 noFields = "No fillable form fields found in this PDF."
+page = "หน้า"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "จำเป็น"
@@ -4318,7 +4328,82 @@ rescanFields = "สแกนฟิลด์อีกครั้ง"
 rescanFormFields = "สแกนฟิลด์ฟอร์มอีกครั้ง"
 save = "บันทึก"
 saveShortcut = "Ctrl+S เพื่อบันทึก"
+skippedEdits_one = "ไม่สามารถใช้การเปลี่ยนแปลง 1 รายการ:"
+skippedEdits_other = "ไม่สามารถใช้การเปลี่ยนแปลง {{count}} รายการ:"
+skippedEditsTruncated = "มีอีก {{count}} รายการที่ไม่ได้แสดง"
 unsavedChanges = "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
+
+[formFill.create]
+commit = "เพิ่มฟิลด์ {{count}} ฟิลด์ลงใน PDF"
+empty = "ยังไม่ได้วาดฟิลด์ใด ๆ"
+failed = "เพิ่มฟิลด์ไม่สำเร็จ"
+goToField = "ไปที่ฟิลด์นี้"
+hint = "เลือกประเภทฟิลด์ แล้ววาดบนหน้า"
+placing = "วาดฟิลด์ {{type}} บนหน้า กด Esc เพื่อหยุด"
+preview = "กดค้างเพื่อดูตัวอย่าง"
+previewHelp = "กดค้างเพื่อดูว่าฟิลด์จะมีลักษณะอย่างไรหลังจากเพิ่มแล้ว โดยไม่มีเส้นกรอบการแก้ไข"
+removeField = "ลบฟิลด์"
+
+[formFill.editor]
+action = "การทำงานของปุ่ม"
+actionHelp = "สิ่งที่ปุ่มทำเมื่อถูกคลิก"
+actionNone = "ไม่มี"
+actionPrint = "พิมพ์"
+actionReset = "รีเซ็ตฟอร์ม"
+actionSubmit = "ส่งไปยัง URL"
+actionUri = "เปิด URL"
+actionUrl = "URL"
+actionUrlHelp = "ที่อยู่ที่ปุ่มจะเปิดหรือส่งไป"
+addOption = "เพิ่มตัวเลือก"
+caption = "คำบรรยายบนปุ่ม"
+captionHelp = "ข้อความที่พิมพ์บนหน้าปุ่ม"
+defaultValue = "ค่าเริ่มต้น"
+defaultValueHelp = "สิ่งที่ฟิลด์มีอยู่ก่อนที่ใครจะกรอก เว้นว่างไว้สำหรับฟิลด์ว่าง"
+fontSize = "ขนาดฟอนต์"
+fontSizeHelp = "ขนาดข้อความภายในฟิลด์ เว้นว่างไว้เพื่อให้โปรแกรมอ่านปรับขนาดให้พอดี"
+label = "ป้ายกำกับ"
+labelHelp = "ข้อความที่แสดงให้ผู้กรอกฟอร์มเห็น เว้นว่างไว้เพื่อใช้ชื่อฟิลด์แทน"
+maxLength = "ความยาวสูงสุด (comb)"
+maxLengthHelp = "จำกัดจำนวนอักขระที่ใส่ได้ โดยวาดเป็นช่องที่เว้นระยะเท่ากัน"
+multiline = "หลายบรรทัด"
+multilineHelp = "อนุญาตให้มีข้อความมากกว่าหนึ่งบรรทัดและตัดบรรทัดที่ขอบฟิลด์"
+multiSelect = "อนุญาตให้เลือกหลายรายการ"
+multiSelectHelp = "ให้เลือกตัวเลือกได้มากกว่าหนึ่งรายการพร้อมกัน"
+name = "ชื่อฟิลด์"
+nameHelp = "ชื่อภายในของฟิลด์ ใช้เมื่อส่งออกข้อมูลหรือกรอกฟอร์มจากระบบอื่น ดังนั้นควรไม่ซ้ำกันและไม่มีช่องว่าง"
+optionGap = "ระยะห่างตัวเลือก"
+optionGapHelp = "ระยะห่างระหว่างปุ่ม หน่วยเป็นพอยต์ เว้นว่างไว้เพื่อกระจายให้เท่ากันตามแนวตั้งในกล่อง"
+optionPlaceholder = "ตัวเลือก {{n}}"
+options = "ตัวเลือก"
+optionsEmpty = "เพิ่มอย่างน้อยหนึ่งตัวเลือก"
+optionsHelp = "ตัวเลือกที่มีให้ในรายการ แต่ละรายการจะถูกเก็บตามที่พิมพ์ ดังนั้นควรทำให้สั้นและแตกต่างกัน"
+optionSize = "ขนาดตัวเลือก"
+optionSizeHelp = "ความกว้างและความสูงของแต่ละปุ่ม หน่วยเป็นพอยต์ เว้นว่างไว้เพื่อปรับให้พอดีกับกล่องที่คุณวาด"
+readOnly = "อ่านอย่างเดียว"
+readOnlyHelp = "แสดงค่าแต่ไม่ให้ใครแก้ไขได้"
+removeOption = "ลบตัวเลือก"
+required = "จำเป็น"
+requiredHelp = "ไม่สามารถส่งฟอร์มได้จนกว่าจะกรอกฟิลด์นี้"
+signatureNote = "เป็นเพียงตัวยึดตำแหน่ง - คุณไม่ได้ลงชื่อที่นี่ ใช้ระบุตำแหน่งของลายเซ็นเพื่อให้ตัวลงนาม PDF (Adobe Acrobat, บริการลงนาม ฯลฯ) วางลายเซ็นไว้ตรงจุดนี้เมื่อมีการลงนามเอกสาร"
+tooltip = "Tooltip"
+tooltipHelp = "คำแนะนำที่แสดงเมื่อมีคนวางเมาส์เหนือฟิลด์ในโปรแกรมอ่าน PDF"
+type = "ประเภท"
+typeHelp = "ชนิดของฟิลด์นี้ การเปลี่ยนจะสร้างฟิลด์ใหม่ ดังนั้นค่าปัจจุบันจะไม่ถูกถ่ายโอนไป"
+
+[formFill.mode]
+create = "สร้าง"
+fill = "กรอก"
+label = "โหมดตัวแก้ไขฟอร์ม"
+modify = "แก้ไข"
+
+[formFill.modify]
+commit = "บันทึกการเปลี่ยนแปลง {{count}} รายการ"
+delete = "ลบ"
+empty = "PDF นี้ยังไม่มีฟิลด์ฟอร์ม"
+failed = "บันทึกการเปลี่ยนแปลงไม่สำเร็จ"
+groupSizeHint = "ใช้ขนาดตัวเลือก"
+hint = "เลือกฟิลด์เพื่อแก้ไขคุณสมบัติ ลากบนหน้า หรือลบฟิลด์นั้น"
+restore = "คืนค่า"
 
 [formFill.sidebar]
 close = "ปิดแถบด้านข้าง"
@@ -4584,6 +4669,10 @@ title = "เปลี่ยนข้อมูลเมตา"
 desc = "เปลี่ยนข้อจำกัดและสิทธิ์ของเอกสาร"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "เปลี่ยนสิทธิ์"
+
+[home.classify]
+desc = "ระบุว่าเอกสารนี้เป็นชนิดใดและติดแท็ก"
+title = "จำแนกประเภท"
 
 [home.compare]
 desc = "เปรียบเทียบและแสดงความแตกต่างระหว่างเอกสาร PDF สองฉบับ"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "ไม่มีอะไรต้องรายงาน"
+handoffUnavailable = "เบราว์เซอร์นี้ไม่อนุญาตให้ตัวประมวลผลส่งเอกสารไปยังตัวแก้ไข โปรดเปิดจากตัวแก้ไขแทน"
+noDocumentLinked = "ความล้มเหลวนี้ไม่ได้เชื่อมโยงกับเอกสารเฉพาะ จึงไม่มีอะไรให้เปิดที่นี่"
+notOnThisDevice = "เอกสารนี้ไม่ได้อยู่บนอุปกรณ์นี้ จึงไม่สามารถเปิดที่นี่ได้"
+occurrences = "{{count}} ครั้ง"
+open = "การแจ้งเตือน"
+title = "การแจ้งเตือน"
+unread = "ยังไม่ได้อ่าน"
+
+[notifications.action]
+failed = "ไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+unavailable = "ไม่พร้อมใช้งานสำหรับการแจ้งเตือนนี้"
+
+[notifications.detail]
+copied = "คัดลอกแล้ว"
+copy = "คัดลอกข้อผิดพลาด"
+less = "แสดงน้อยลง"
+more = "แสดงข้อความทั้งหมด"
+
+[notifications.section]
+earlier = "ก่อนหน้านี้"
+new = "ใหม่"
 
 [oauth.error]
 message = "การยืนยันตัวตนไม่สำเร็จ คุณสามารถปิดหน้าต่างนี้และลองอีกครั้ง"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
 capSuffix_other = "จาก {{allowance}} PDFs ฟรีถูกใช้แล้ว"
 eyebrow = "ทดลองใช้ Processor"
-statusLabel_one = "เหลือ {{remaining}}"
-statusLabel_other = "เหลือ {{remaining}}"
+statusLabel_one = "ใช้ไปแล้ว {{used}}"
+statusLabel_other = "ใช้ไปแล้ว {{used}}"
 sub = "ใช้ PDF Editor ได้ฟรี จ่ายเพื่อประมวลผล PDFs อัตโนมัติ"
 title_one = "ประมวลผล {{allowance}} PDFs ฟรี"
 title_other = "ประมวลผล {{allowance}} PDFs ฟรี"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "ดูไฟล์"
+viewInProcessor = "ดูในตัวประมวลผล"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "ความล้มเหลวนี้ไม่ได้ถูกบันทึกกับเอกสารเฉพาะ จึงไม่มีอะไรให้เปิดที่นี่"
+unattended = "ไฟล์นี้ถูกป้อนมาจากโฟลเดอร์, bucket หรือ webhook จึงไม่มีเบราว์เซอร์ของใครเก็บไฟล์ไว้เพื่อเปิด"
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "แหล่งที่มา"
 connectSource = "เชื่อมต่อแหล่งที่มา"
 
 [portal.sources.builder]
+advanced = "ขั้นสูง"
 back = "กลับไปยังแหล่งที่มา"
+backToSource = "กลับไปที่การตั้งค่าแหล่งที่มา"
 backToTypes = "ประเภทแหล่งที่มาทั้งหมด"
 cancel = "ยกเลิก"
 chooseHint = "เลือกแหล่งที่มาของเอกสาร คอนเน็กเตอร์ที่เป็นสีเทากำลังจะมา"
@@ -8726,7 +8845,6 @@ create = "สร้างแหล่งที่มา"
 createTitle = "เชื่อมต่อแหล่งที่มา"
 delete = "ลบ"
 editTitle = "แก้ไขแหล่งที่มา"
-enabled = "เปิดใช้งาน"
 save = "บันทึกการเปลี่ยนแปลง"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: ประมวลผลแต่ละไฟล์ครั
 snapshot = "Snapshot: อ่านโฟลเดอร์ซ้ำทุกครั้งที่รัน"
 
 [portal.sources.networkFields.recursive]
+helperText = "รวมโฟลเดอร์ย่อยหากไฟล์ของคุณถูกจัดไว้ในโฟลเดอร์ซ้อนกัน หรือเฝ้าดูเฉพาะระดับบนสุด"
 label = "ความลึกของโฟลเดอร์"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "ขนาด วันที่ และการตรวจสอบ�
 stat = "ขนาดและวันที่แก้ไข"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "กำหนดว่าจะทิ้งไฟล์ต้นฉบับไว้ที่เดิมหลังจากประมวลผลแล้วหรือไม่ หากทิ้งไฟล์ต้นฉบับไว้ที่เดิม ไฟล์จะถูกประมวลผลใหม่ในครั้งถัดไปที่ pipeline สแกนแหล่งที่มา"
 label = "โหมดการอ่าน"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: ประมวลผลแต่ละไฟล์ครั
 snapshot = "Snapshot: อ่านโฟลเดอร์ใหม่ทุกครั้งที่เรียกใช้"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "รวมโฟลเดอร์ย่อยหากไฟล์ของคุณถูกจัดไว้ในโฟลเดอร์ซ้อนกัน หรือเฝ้าดูเฉพาะระดับบนสุด"
 label = "ความลึกของโฟลเดอร์"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "เซิร์ฟเวอร์ Stirling-PDF ขอ
 expired = "สถานะของคุณในระบบหมดอายุ กรุณารีเฟรชหน้าและลองใหม่อีกครั้ง"
 
 [settings]
+backToSections = "การตั้งค่าทั้งหมด"
 close = "ปิด"
+title = "การตั้งค่า"
 
 [settings.ai]
 documents = "เอกสารและ RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "ค้นหา"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "ค้นหาเครื่องมือ..."
 
 [toolPicker.subcategories]
 advancedFormatting = "การจัดรูปแบบขั้นสูง"
+ai = "AI"
 automation = "การทำงานอัตโนมัติ"
 developerTools = "เครื่องมือสำหรับนักพัฒนา"
 documentReview = "การทบทวนเอกสาร"
@@ -11335,8 +11460,11 @@ columnDefault = "คอลัมน์ {{index}}"
 convertToPdf = "แปลงเป็น PDF"
 csvStats = "{{rows}} แถว · {{columns}} คอลัมน์ · {{size}}"
 emptyFile = "ไฟล์ว่างเปล่า"
+htmlHidePreview = "ซ่อนตัวอย่าง"
 htmlPreview = "ตัวอย่าง HTML"
+htmlPreviewMobileHidden = "หน้า HTML ถูกจัดวางสำหรับความกว้างของเดสก์ท็อป ดังนั้นตัวอย่างจึงปิดไว้เป็นค่าเริ่มต้นที่นี่"
 htmlPreviewWarning = "ตัวอย่าง HTML — อาจไม่โหลดทรัพยากรภายนอก · {{size}}"
+htmlShowPreview = "แสดงตัวอย่างต่อไป"
 invalidJson = "JSON ไม่ถูกต้อง — แสดงเนื้อหาดิบ"
 lineNumbers = "หมายเลขบรรทัด"
 loading = "กำลังโหลด..."
@@ -11683,6 +11811,7 @@ exportAll = "ส่งออก PDF"
 exportSelected = "ส่งออกหน้าที่เลือก"
 formFill = "กรอกแบบฟอร์ม"
 hideToolbar = "Hide toolbar"
+moreActions = "การดำเนินการเพิ่มเติม"
 multiTool = "เครื่องมือหลายฟังก์ชัน"
 panMode = "โหมดเลื่อน"
 print = "พิมพ์ PDF"
@@ -11703,6 +11832,8 @@ selectAll = "เลือกทั้งหมด"
 selectByNumber = "เลือกตามหมายเลขหน้า"
 selectLanguage = "เลือกภาษา"
 share = "แชร์"
+showAllTools = "แสดงเครื่องมือทั้งหมด"
+showFewerTools = "ยุบแถบเครื่องมือ"
 showToolbar = "Show toolbar"
 toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
 toggleAttachments = "สลับไฟล์แนบ"
