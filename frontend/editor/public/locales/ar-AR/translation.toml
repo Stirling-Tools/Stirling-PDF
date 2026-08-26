@@ -41,7 +41,7 @@ false = "خطأ"
 fileNotSavedToDisk = "لم يُحفَظ على القرص"
 fileSavedToDisk = "تم حفظ الملف على القرص"
 fileSelected = "المحدد: {{filename}}"
-filesSelected = "الملفات المحددة"
+filesSelected = "{{count}} ملفات"
 font = "الخط"
 fontSizeTooltip = "حجم نص رقم الصفحة بالنقاط. الأرقام الأكبر تنتج نصًا أكبر."
 fontTypeTooltip = "عائلة الخط لأرقام الصفحات. اختر بناءً على نمط مستندك."
@@ -3969,6 +3969,7 @@ back = "رجوع"
 backToFolder = "الرجوع إلى {{folder}}"
 backToMyFiles = "الرجوع إلى ملفاتي"
 breadcrumbs = "مسار المجلد"
+bulkActions = "الإجراءات"
 cancel = "إلغاء"
 classification = "التصنيف"
 clearSelection = "مسح التحديد"
@@ -4142,6 +4143,11 @@ totalSize = "الحجم الإجمالي"
 type = "النوع"
 versionHistory = "رحلة الإصدارات"
 
+[filesPage.filters]
+activeCount = "{{count}} عوامل تصفية نشطة"
+clearAll = "مسح عوامل التصفية"
+label = "عوامل التصفية"
+
 [filesPage.folderName]
 cancel = "إلغاء"
 error = "تعذّر حفظ المجلد. حاول مرة أخرى."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "فرز الملفات"
 modifiedAsc = "الأقدم أولاً"
 modifiedDesc = "الأحدث أولاً"
 nameAsc = "الاسم A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "تم حفظ الكل"
 analyzingFields = "Analysing form fields..."
+applyFailed = "تعذّر تطبيق التغييرات"
 extractCsvError = "فشل استخراج CSV"
 extractXlsxError = "فشل استخراج XLSX"
 filled = "filled"
 flattenAfterFilling = "تسطيح بعد التعبئة"
+goToPage = "الانتقال إلى هذه الصفحة"
 noFields = "No fillable form fields found in this PDF."
+page = "الصفحة"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "مطلوب"
@@ -4318,7 +4328,82 @@ rescanFields = "إعادة فحص الحقول"
 rescanFormFields = "إعادة فحص حقول النموذج"
 save = "حفظ"
 saveShortcut = "Ctrl+S للحفظ"
+skippedEdits_one = "تعذّر تطبيق تغيير واحد:"
+skippedEdits_other = "تعذّر تطبيق {{count}} تغييرات:"
+skippedEditsTruncated = "{{count}} إضافية غير مدرجة."
 unsavedChanges = "تغييرات غير محفوظة"
+
+[formFill.create]
+commit = "إضافة {{count}} من الحقول إلى PDF"
+empty = "لم يتم رسم أي حقول بعد."
+failed = "فشل في إضافة الحقول"
+goToField = "الانتقال إلى هذا الحقل"
+hint = "اختر نوع الحقل، ثم ارسمه على الصفحة."
+placing = "ارسم حقل {{type}} على الصفحة. اضغط على Esc للتوقف."
+preview = "اضغط مطولًا للمعاينة"
+previewHelp = "اضغط مطولًا لرؤية الحقول كما ستبدو بعد إضافتها، دون حدود التحرير."
+removeField = "إزالة الحقل"
+
+[formFill.editor]
+action = "إجراء الزر"
+actionHelp = "ما يفعله الزر عند النقر عليه."
+actionNone = "لا شيء"
+actionPrint = "طباعة"
+actionReset = "إعادة تعيين النموذج"
+actionSubmit = "إرسال إلى URL"
+actionUri = "فتح URL"
+actionUrl = "URL"
+actionUrlHelp = "العنوان الذي يفتحه الزر أو يرسل إليه."
+addOption = "إضافة خيار"
+caption = "نص الزر"
+captionHelp = "النص المطبوع على واجهة الزر."
+defaultValue = "القيمة الافتراضية"
+defaultValueHelp = "ما يحتويه الحقل قبل أن يملأه أي شخص. اتركه فارغًا لحقل فارغ."
+fontSize = "حجم الخط"
+fontSizeHelp = "حجم النص داخل الحقل. اتركه فارغًا للسماح للقارئ بتغيير حجمه ليناسب المساحة."
+label = "التسمية"
+labelHelp = "النص المعروض لمن يملأ النموذج. اتركه فارغًا للرجوع إلى اسم الحقل."
+maxLength = "الحد الأقصى للطول (comb)"
+maxLengthHelp = "يحدد عدد الأحرف التي يمكن احتواؤها، مع رسمها كمربعات متباعدة بالتساوي."
+multiline = "متعدد الأسطر"
+multilineHelp = "يسمح بأكثر من سطر واحد من النص ويلتف عند حافة الحقل."
+multiSelect = "السماح بتحديد متعدد"
+multiSelectHelp = "يسمح باختيار أكثر من خيار واحد في الوقت نفسه."
+name = "اسم الحقل"
+nameHelp = "الاسم الداخلي للحقل. يُستخدم عند تصدير البيانات أو ملء النموذج من نظام آخر، لذا اجعله فريدًا وخاليًا من المسافات."
+optionGap = "تباعد الخيارات"
+optionGapHelp = "المسافة بين الأزرار، بالنقاط. اتركها فارغة لتوزيعها بالتساوي على طول المربع."
+optionPlaceholder = "الخيار {{n}}"
+options = "الخيارات"
+optionsEmpty = "أضف خيارًا واحدًا على الأقل."
+optionsHelp = "الاختيارات المعروضة في القائمة. يتم تخزين كل اختيار كما كُتب، لذا اجعلها قصيرة ومميزة."
+optionSize = "حجم الخيار"
+optionSizeHelp = "عرض وارتفاع كل زر، بالنقاط. اتركه فارغًا لملاءمتها مع المربع الذي رسمته."
+readOnly = "للقراءة فقط"
+readOnlyHelp = "يعرض قيمة لكنه يمنع أي شخص من تعديلها."
+removeOption = "إزالة الخيار"
+required = "مطلوب"
+requiredHelp = "لا يمكن إرسال النموذج حتى يتم ملء هذا الحقل."
+signatureNote = "عنصر نائب فقط - لا توقّع هنا. إنه يحدد مكان وجود التوقيع حتى يضع موقّع PDF (Adobe Acrobat، خدمة توقيع، وما إلى ذلك) التوقيع في هذا الموضع عند توقيع المستند."
+tooltip = "تلميح"
+tooltipHelp = "التلميح المعروض عندما يمرر شخص المؤشر فوق الحقل في قارئ PDF."
+type = "النوع"
+typeHelp = "نوع هذا الحقل. يؤدي تغييره إلى إعادة إنشاء الحقل، لذا لن يتم نقل قيمته الحالية."
+
+[formFill.mode]
+create = "إنشاء"
+fill = "ملء"
+label = "وضع محرر النماذج"
+modify = "تعديل"
+
+[formFill.modify]
+commit = "حفظ {{count}} من التغييرات"
+delete = "حذف"
+empty = "لا يحتوي ملف PDF هذا على أي حقول نموذج بعد."
+failed = "فشل في حفظ التغييرات"
+groupSizeHint = "استخدم حجم الخيار"
+hint = "حدد حقلًا لتعديل خصائصه، أو اسحبه على الصفحة، أو احذفه."
+restore = "استعادة"
 
 [formFill.sidebar]
 close = "إغلاق الشريط الجانبي"
@@ -4584,6 +4669,10 @@ title = "تغيير البيانات الوصفية"
 desc = "تغيير قيود المستند وأذوناته"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "تغيير الأذونات"
+
+[home.classify]
+desc = "تحديد نوع هذا المستند ووضع علامة عليه."
+title = "تصنيف"
 
 [home.compare]
 desc = "يقارن ويظهر الاختلافات بين مستندين PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "لا يوجد ما يمكن الإبلاغ عنه."
+handoffUnavailable = "لن يسمح هذا المتصفح للمعالج بتمرير المستند إلى المحرر. افتحه من المحرر بدلًا من ذلك."
+noDocumentLinked = "هذا الفشل غير مرتبط بمستند محدد، لذا لا يوجد ما يمكن فتحه هنا."
+notOnThisDevice = "هذا المستند غير موجود على هذا الجهاز، لذا لا يمكن فتحه هنا."
+occurrences = "{{count}} مرات"
+open = "الإشعارات"
+title = "الإشعارات"
+unread = "غير مقروء"
+
+[notifications.action]
+failed = "لم ينجح ذلك. حاول مرة أخرى بعد قليل."
+unavailable = "غير متاح لهذا الإشعار."
+
+[notifications.detail]
+copied = "تم النسخ"
+copy = "نسخ الخطأ"
+less = "عرض أقل"
+more = "عرض الرسالة كاملة"
+
+[notifications.section]
+earlier = "سابقًا"
+new = "جديد"
 
 [oauth.error]
 message = "لم تتم المصادقة بنجاح. يمكنك إغلاق هذه النافذة والمحاولة مجدداً."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "من {{allowance}} ملفات PDF مجانية مستخدمة"
 capSuffix_other = "من {{allowance}} ملفات PDF مجانية مستخدمة"
 eyebrow = "تجربة Processor"
-statusLabel_one = "متبقٍ {{remaining}}"
-statusLabel_other = "متبقٍ {{remaining}}"
+statusLabel_one = "تم استخدام {{used}}"
+statusLabel_other = "تم استخدام {{used}}"
 sub = "استخدم محرر PDF مجانًا. ادفع لمعالجة ملفات PDF تلقائيًا."
 title_one = "عالِج {{allowance}} ملف PDF مجانًا"
 title_other = "عالِج {{allowance}} ملفات PDF مجانًا"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "عرض الملف"
+viewInProcessor = "عرض في المعالج"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "لم يتم تسجيل هذا الفشل مقابل مستند محدد، لذا لا يوجد شيء هنا لفتحه."
+unattended = "تم إدخال هذا الملف بواسطة مجلد أو حاوية أو webhook، لذا لا يحتفظ به متصفح أي شخص لفتحه."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "المصادر"
 connectSource = "توصيل مصدر"
 
 [portal.sources.builder]
+advanced = "متقدم"
 back = "العودة إلى المصادر"
+backToSource = "العودة إلى إعداد المصدر"
 backToTypes = "كل أنواع المصادر"
 cancel = "إلغاء"
 chooseHint = "اختر من أين تأتي المستندات. الموصلات باللون الرمادي قادمة قريبًا."
@@ -8726,7 +8845,6 @@ create = "إنشاء مصدر"
 createTitle = "اتصال بمصدر"
 delete = "حذف"
 editTitle = "تعديل المصدر"
-enabled = "مفعل"
 save = "حفظ التغييرات"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "استهلاك: معالجة كل ملف مرة واحدة"
 snapshot = "لقطة: إعادة قراءة المجلد في كل تشغيل"
 
 [portal.sources.networkFields.recursive]
+helperText = "قم بتضمين المجلدات الفرعية إذا كانت ملفاتك منظمة داخل مجلدات متداخلة، أو راقب المستوى الأعلى فقط."
 label = "عمق المجلد"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "الحجم والتاريخ والتحقق من المحتوى"
 stat = "الحجم وتاريخ التعديل"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "ما إذا كان سيتم ترك الملف الأصلي في مكانه بعد معالجته. إذا تُرك الملف الأصلي في مكانه، فستتم إعادة معالجته في المرة التالية التي يفحص فيها مسار المعالجة المصدر."
 label = "وضع القراءة"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "استهلاك: معالجة كل ملف مرة واحدة"
 snapshot = "لقطة: إعادة قراءة المجلد في كل تشغيل"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "قم بتضمين المجلدات الفرعية إذا كانت ملفاتك منظمة داخل مجلدات متداخلة، أو راقب المستوى الأعلى فقط."
 label = "عمق المجلد"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "خادم Stirling-PDF الخاص بك غير متصل
 expired = "لقد انتهت جلستك. يرجى تحديث الصفحة والمحاولة مرة أخرى"
 
 [settings]
+backToSections = "كل الإعدادات"
 close = "إغلاق"
+title = "الإعدادات"
 
 [settings.ai]
 documents = "المستندات و RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "بحث"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "ابحث عن الأدوات..."
 
 [toolPicker.subcategories]
 advancedFormatting = "تنسيق متقدم"
+ai = "AI"
 automation = "أتمتة"
 developerTools = "أدوات المطوّر"
 documentReview = "مراجعة المستند"
@@ -11335,8 +11460,11 @@ columnDefault = "العمود {{index}}"
 convertToPdf = "التحويل إلى PDF"
 csvStats = "{{rows}} صفوف · {{columns}} أعمدة · {{size}}"
 emptyFile = "ملف فارغ"
+htmlHidePreview = "إخفاء المعاينة"
 htmlPreview = "معاينة HTML"
+htmlPreviewMobileHidden = "تم تصميم صفحات HTML لعرض سطح المكتب، لذلك تكون المعاينة معطلة افتراضيًا هنا."
 htmlPreviewWarning = "معاينة HTML — قد لا يتم تحميل الموارد الخارجية · {{size}}"
+htmlShowPreview = "إظهار المعاينة على أي حال"
 invalidJson = "JSON غير صالح — عرض المحتوى الخام"
 lineNumbers = "أرقام الأسطر"
 loading = "جارٍ التحميل..."
@@ -11683,6 +11811,7 @@ exportAll = "تصدير PDF"
 exportSelected = "تصدير الصفحات المحددة"
 formFill = "تعبئة النموذج"
 hideToolbar = "Hide toolbar"
+moreActions = "مزيد من الإجراءات"
 multiTool = "الأداة المتعددة"
 panMode = "وضع التحريك"
 print = "طباعة PDF"
@@ -11703,6 +11832,8 @@ selectAll = "تحديد الكل"
 selectByNumber = "تحديد حسب أرقام الصفحات"
 selectLanguage = "اختر اللغة"
 share = "مشاركة"
+showAllTools = "إظهار كل الأدوات"
+showFewerTools = "طي شريط الأدوات"
 showToolbar = "Show toolbar"
 toggleAnnotations = "تبديل ظهور الشروح"
 toggleAttachments = "تبديل عرض المرفقات"
