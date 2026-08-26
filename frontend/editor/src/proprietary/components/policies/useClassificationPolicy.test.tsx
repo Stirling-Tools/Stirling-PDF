@@ -1,5 +1,6 @@
-// Delivery guarantees of the client-side classification hook, driving the real
-// policyRunStore and mocking only IO (storage, the heuristic engine, the meter).
+// The Classification policy hook: classifies each settled document locally and escalates an unsure
+// verdict to the AI engine itself. Drives the real policyRunStore and mocks only IO (storage, the
+// heuristic engine, the meter, the shared dispatch primitive).
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
@@ -16,6 +17,8 @@ interface TestStub {
   classificationLabels?: string[];
 }
 
+const aiEnabled = vi.hoisted(() => ({ value: false }));
+
 const mocks = vi.hoisted(() => ({
   workspace: [] as Array<{
     id: string;
@@ -31,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   updateFileMetadata: vi.fn(async (_id: string, _updates: unknown) => true),
   classify: vi.fn(),
   meter: vi.fn(),
+  runPolicyOnFile: vi.fn(),
 }));
 
 vi.mock("@app/contexts/AppConfigContext", () => ({
@@ -40,7 +44,10 @@ vi.mock("@app/hooks/useClassificationEnabled", () => ({
   useClassificationEnabled: () => true,
 }));
 vi.mock("@app/hooks/useAiEngineEnabled", () => ({
-  useAiEngineEnabled: () => false,
+  useAiEngineEnabled: () => aiEnabled.value,
+}));
+vi.mock("@app/services/policyDispatch", () => ({
+  runPolicyOnFile: (...args: unknown[]) => mocks.runPolicyOnFile(...args),
 }));
 vi.mock("@app/hooks/usePolicies", () => ({
   usePolicies: () => ({
@@ -78,10 +85,7 @@ vi.mock("@app/services/classificationMeter", () => ({
   meterClassificationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
-import {
-  useClientSideClassification,
-  LOCAL_METER_CATEGORY,
-} from "@app/components/policies/useClientSideClassification";
+import { useClassificationPolicy } from "@app/components/policies/useClassificationPolicy";
 
 // Run idle callbacks immediately so batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
@@ -99,7 +103,7 @@ const stub = (id: string, extra: Partial<TestStub> = {}): TestStub => ({
 
 const fakeFile = (id: string) => new File([id], `${id}.pdf`);
 
-describe("useClientSideClassification delivery", () => {
+describe("useClassificationPolicy delivery", () => {
   beforeEach(() => {
     localStorage.clear();
     resetPolicyRuns();
@@ -114,6 +118,9 @@ describe("useClientSideClassification delivery", () => {
       fakeFile(id),
     );
     mocks.classify.mockReset();
+    aiEnabled.value = false;
+    mocks.runPolicyOnFile.mockReset();
+    mocks.runPolicyOnFile.mockResolvedValue(undefined);
   });
 
   it("classifies pending uploads, writes labels, and meters once per file", async () => {
@@ -122,7 +129,7 @@ describe("useClientSideClassification delivery", () => {
       labels: [file.name.startsWith("a") ? "invoice" : "resume"],
     }));
 
-    renderHook(() => useClientSideClassification());
+    renderHook(() => useClassificationPolicy());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledTimes(2),
@@ -145,7 +152,7 @@ describe("useClientSideClassification delivery", () => {
     );
     mocks.workspace = [stub("a")];
 
-    const { rerender } = renderHook(() => useClientSideClassification());
+    const { rerender } = renderHook(() => useClassificationPolicy());
     await waitFor(() => expect(mocks.classify).toHaveBeenCalledTimes(1));
 
     // A new upload mid-classify re-fires the effect and cancels the in-flight
@@ -173,7 +180,7 @@ describe("useClientSideClassification delivery", () => {
     mocks.workspace = [stub("plain")];
     mocks.classify.mockResolvedValue({ labels: [] });
 
-    renderHook(() => useClientSideClassification());
+    renderHook(() => useClassificationPolicy());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("plain", {
@@ -185,13 +192,12 @@ describe("useClientSideClassification delivery", () => {
   });
 
   it("heals a previously-dispatched file whose result was lost, without re-metering", async () => {
-    // A past session classified + metered this file but the delivery was lost. The marker is the
-    // local-meter key, NOT the classification dispatch key - that one belongs to the server run.
-    markDispatched(LOCAL_METER_CATEGORY, "lost");
+    // A past session classified + metered this file but the delivery was lost.
+    markDispatched("classification", "lost");
     mocks.workspace = [stub("lost")];
     mocks.classify.mockResolvedValue({ labels: ["bank-statement"] });
 
-    renderHook(() => useClientSideClassification());
+    renderHook(() => useClassificationPolicy());
 
     await waitFor(() =>
       expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("lost", {
@@ -208,7 +214,7 @@ describe("useClientSideClassification delivery", () => {
     mocks.workspace = [stub("corrupt")];
     mocks.classify.mockRejectedValue(new Error("bad pdf"));
 
-    renderHook(() => useClientSideClassification());
+    renderHook(() => useClassificationPolicy());
 
     await waitFor(() =>
       expect(warn).toHaveBeenCalledWith(
@@ -230,7 +236,7 @@ describe("useClientSideClassification delivery", () => {
     mocks.workspace = [stub("early")];
     mocks.classify.mockResolvedValue({ labels: ["invoice"] });
 
-    const { rerender } = renderHook(() => useClientSideClassification());
+    const { rerender } = renderHook(() => useClassificationPolicy());
     await new Promise((r) => setTimeout(r, 50));
     expect(mocks.classify).not.toHaveBeenCalled();
 
@@ -251,10 +257,68 @@ describe("useClientSideClassification delivery", () => {
       stub("verdict", { classificationLabels: [] }),
     ];
 
-    renderHook(() => useClientSideClassification());
+    renderHook(() => useClassificationPolicy());
 
     // Nothing to classify; give the (immediate) idle path a beat to prove it.
     await new Promise((r) => setTimeout(r, 50));
     expect(mocks.classify).not.toHaveBeenCalled();
+  });
+
+  it("escalates an unsure local verdict to the AI engine itself", async () => {
+    aiEnabled.value = true;
+    mocks.workspace = [stub("a")];
+    mocks.classify.mockResolvedValue({ labels: ["invoice"], confidence: "low" });
+
+    renderHook(() => useClassificationPolicy());
+
+    await waitFor(() =>
+      expect(mocks.runPolicyOnFile).toHaveBeenCalledWith(
+        "classification",
+        "backend-classification",
+        "a",
+        "a.pdf",
+        false, // an upload, not a chained output
+      ),
+    );
+    // The local verdict is still delivered before escalation.
+    expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
+      classificationLabels: ["invoice"],
+      classificationConfidence: "low",
+    });
+  });
+
+  it("lets a confident local verdict stand without asking the AI", async () => {
+    aiEnabled.value = true;
+    mocks.workspace = [stub("a")];
+    mocks.classify.mockResolvedValue({
+      labels: ["invoice"],
+      confidence: "high",
+    });
+
+    renderHook(() => useClassificationPolicy());
+
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
+        classificationLabels: ["invoice"],
+        classificationConfidence: "high",
+      }),
+    );
+    expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
+  });
+
+  it("never escalates when the AI engine is off, however unsure the verdict", async () => {
+    aiEnabled.value = false;
+    mocks.workspace = [stub("a")];
+    mocks.classify.mockResolvedValue({ labels: ["invoice"], confidence: "none" });
+
+    renderHook(() => useClassificationPolicy());
+
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("a", {
+        classificationLabels: ["invoice"],
+        classificationConfidence: "none",
+      }),
+    );
+    expect(mocks.runPolicyOnFile).not.toHaveBeenCalled();
   });
 });

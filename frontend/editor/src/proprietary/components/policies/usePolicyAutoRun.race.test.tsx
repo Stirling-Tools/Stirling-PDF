@@ -36,11 +36,6 @@ const mocks = vi.hoisted(() => ({
   bumpRevision: vi.fn(),
 }));
 
-// Classification chains server-side only when the AI engine is on (else it runs
-// client-side); this race is in the server import path, so force the engine on.
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
-  useAiEngineEnabled: () => true,
-}));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
@@ -94,6 +89,8 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   usePolicyRuns,
   resetPolicyRuns,
+  recordRunStart,
+  updateRun,
 } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
@@ -141,6 +138,26 @@ beforeEach(() => {
     currentStep: 1,
     stepCount: 1,
     error: null,
+    outputs: [{ fileId: "backend-out-0", fileName: "doc.pdf" }],
+  });
+
+  // Classification now dispatches its own AI run (see useClassificationPolicy); this suite exercises
+  // the auto-run engine's generic import/label-stamping path, so seed a completed classification run
+  // for it to pick up rather than driving a dispatch.
+  recordRunStart({
+    runId: "run-0",
+    categoryId: "classification",
+    fileId: "file-0",
+    fileName: "doc.pdf",
+    fileSize: 100,
+    target: "saas",
+    status: "PENDING",
+    outputs: [],
+    error: null,
+    startedAt: 0,
+  });
+  updateRun("run-0", {
+    status: "COMPLETED",
     outputs: [{ fileId: "backend-out-0", fileName: "doc.pdf" }],
   });
 });

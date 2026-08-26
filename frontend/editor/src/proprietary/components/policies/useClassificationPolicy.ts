@@ -1,26 +1,30 @@
-// The Classification policy's first pass: every upload is labelled locally before the AI is asked.
-// The confidence reported here decides whether the AI is asked at all - see usePolicyAutoRun.
-
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
 import { meterClassificationRun } from "@app/services/classificationMeter";
+import { runPolicyOnFile } from "@app/services/policyDispatch";
 import {
   isDispatched,
   markDispatched,
   recordRunStart,
   updateRun,
+  usePolicyRuns,
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { HeuristicConfidence } from "@app/services/heuristic/types";
-import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
+import {
+  CLASSIFICATION_CATEGORY_ID,
+  localVerdictNeedsEscalation,
+  orderedRewritingCategories,
+} from "@app/data/classificationPolicy";
 
 /**
  * Dispatch-store key namespace for "this file's local pass has been metered". Deliberately NOT the
@@ -48,15 +52,21 @@ function isClassificationDebug(): boolean {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function useClientSideClassification(): void {
+export function useClassificationPolicy(): void {
   const { fileStubs } = useAllFiles();
   const { updateStirlingFileStub } = useFileManagement();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const classificationEnabled = useClassificationEnabled();
-  // Still waited on: a verdict written before app-config lands would be acted on by the
-  // escalation decision before it knows whether the AI engine is even available.
+  const aiEnabled = useAiEngineEnabled();
+  // Still waited on: a verdict written before app-config lands would be escalated before it knows
+  // whether the AI engine is even available.
   const { loading: configLoading } = useAppConfig();
+  const runs = usePolicyRuns();
+  // Read inside the effect without re-firing it every status poll; the effect keys off the file list
+  // and the settled-outputs signal below instead.
+  const runsRef = useRef(runs);
+  runsRef.current = runs;
   // Files claimed this session, keyed id+lastModified so a new version is retried once. A claim is
   // taken synchronously right before classifying, so overlapping batches never double-classify.
   const claimed = useRef<Set<string>>(new Set());
@@ -66,28 +76,62 @@ export function useClientSideClassification(): void {
   // TODO: keyed on the Classification CATEGORY, so a pipeline that merely contains a classify
   // step gets no local pass - suppressing one step of a chain is not expressible today.
   const policy = policies[CLASSIFICATION_CATEGORY_ID];
-  // Only when the admin has an active Classification policy - the same gate the AI path uses.
+  const backendId = policy?.backendId;
+  // Only when the admin has an active Classification policy - the same gate the file-producing
+  // policies use in the auto-run engine.
   const active = Boolean(
     policy?.configured &&
     policy.status === "active" &&
-    policy.backendId &&
+    backendId &&
     policy.runsOnEditor,
   );
 
+  // The file-producing policies whose chain classification waits behind: it runs on the last one's
+  // output, not on an upload a rewrite is about to change. Empty means classification runs on uploads.
+  const rewriters = useMemo(
+    () => orderedRewritingCategories(policies),
+    [policies],
+  );
+  const lastRewriter = rewriters.at(-1);
+
+  // A stable key of the final (last-rewriter) output ids, so the effect re-runs when a chain settles
+  // a new document but not on every unrelated status poll.
+  const settledOutputsKey = useMemo(() => {
+    if (!lastRewriter) return "";
+    return runs
+      .filter((r) => r.categoryId === lastRewriter && r.status === "COMPLETED")
+      .flatMap((r) => r.outputFileIds ?? [])
+      .sort()
+      .join(",");
+  }, [runs, lastRewriter]);
+
   useEffect(() => {
-    // Runs whether or not the AI engine is on: it is the first pass either way, not a fallback.
+    // Runs whether or not the AI engine is on: the local pass is the first pass either way. Escalation
+    // below is what needs the engine.
     if (configLoading || !classificationEnabled || !active) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>
       `${s.id as string}:${s.lastModified ?? 0}`;
-    // null labels = never delivered, retried here; [] = definitive no-label verdict.
+    // A document is ours to classify once no rewrite will change it: an upload when nothing rewrites,
+    // or the output of the last rewriter in a chain (identified by that run, so an upload a rewrite is
+    // about to change is never picked up early).
+    const isSettledLeaf = (s: StirlingFileStub): boolean => {
+      if (!lastRewriter) return !s.derivedFromTool;
+      return runsRef.current.some(
+        (r) =>
+          r.categoryId === lastRewriter &&
+          r.status === "COMPLETED" &&
+          (r.outputFileIds ?? []).includes(s.id as string),
+      );
+    };
+    // null labels = never classified, retried here; [] = definitive no-label verdict.
     const pending = fileStubs
       .filter(
         (s) =>
-          !s.derivedFromTool &&
           s.classificationLabels == null &&
-          !claimed.current.has(claimKey(s)),
+          !claimed.current.has(claimKey(s)) &&
+          isSettledLeaf(s),
       )
       .slice(0, CLASSIFY_BATCH);
     if (pending.length === 0) return;
@@ -107,7 +151,7 @@ export function useClientSideClassification(): void {
             stub.name,
             stub.size ?? 0,
           );
-          // Bytes never landed (file removed mid-wait): leave undelivered so a
+          // Bytes never landed (file removed mid-wait): leave unclassified so a
           // reload (or new version) retries; the claim stops churn this session.
           if (verdict == null) continue;
           // Deliver unconditionally - a re-render must never discard a computed
@@ -121,6 +165,23 @@ export function useClientSideClassification(): void {
             classificationConfidence: verdict.confidence,
           });
           if (ok) wrote = true;
+          // Escalate an unsure verdict to the AI engine, which overwrites it. A chained output jumps
+          // the dispatch queue so a file mid-flow finishes before new uploads start.
+          if (
+            aiEnabled &&
+            backendId &&
+            localVerdictNeedsEscalation(verdict.confidence)
+          ) {
+            void runPolicyOnFile(
+              CLASSIFICATION_CATEGORY_ID,
+              backendId,
+              stub.id,
+              stub.name,
+              Boolean(stub.derivedFromTool),
+            ).catch(() => {
+              // Backstop: runPolicyOnFile handles its own failures.
+            });
+          }
         }
         if (wrote) bumpRevision();
         // Drain the next batch; the terminal pass finds nothing pending and stops.
@@ -134,8 +195,12 @@ export function useClientSideClassification(): void {
   }, [
     fileStubs,
     active,
+    aiEnabled,
+    backendId,
     classificationEnabled,
     configLoading,
+    lastRewriter,
+    settledOutputsKey,
     updateStirlingFileStub,
     bumpRevision,
     tick,
