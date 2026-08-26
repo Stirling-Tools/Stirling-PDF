@@ -3,6 +3,7 @@ import {
   currencySymbol,
   docCapForMoney,
   formatMinor,
+  formatMoneyMajor,
   formatPeriodDate,
   meterState,
 } from "@app/billing";
@@ -83,6 +84,13 @@ describe("formatMinor", () => {
 
   it("keeps up to 3 fraction digits so sub-cent rates don't round to $0", () => {
     expect(formatMinor(0.5, "usd")).toContain("0.005");
+  });
+});
+
+describe("formatMoneyMajor", () => {
+  it("formats major units with standard thousand separators and symbol", () => {
+    expect(formatMoneyMajor(1000, "usd")).toBe("$1,000");
+    expect(formatMoneyMajor(500, "eur")).toBe("€500");
   });
 });
 

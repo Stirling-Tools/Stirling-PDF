@@ -126,6 +126,10 @@ export interface MockAppApiOptions {
     username?: string;
     email?: string;
     roles?: string[];
+    /** Spring role string (e.g. "ROLE_ADMIN") — drives `isAdmin` in the auth seam. */
+    role?: string;
+    /** Portal (Processor) access flag — gates the super search's Processor lanes. */
+    portalAccess?: boolean;
   } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
@@ -268,6 +272,12 @@ export async function mockAppApis(
   // console error fails the page's no-unexpected-output guard.
   await page.route("**/api/v1/policies/runs", (route: Route) =>
     route.fulfill({ json: [] }),
+  );
+
+  // The bell polls this on load. The hook swallows the failure, but the browser still logs the
+  // request, which the console-hygiene guard counts.
+  await page.route("**/api/v1/notifications*", (route: Route) =>
+    route.fulfill({ json: { notifications: [] } }),
   );
 }
 

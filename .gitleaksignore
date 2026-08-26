@@ -27,3 +27,8 @@ app/core/src/main/java/stirling/software/SPDF/pdf/signature/CreateSignatureBase.
 # Supabase publishable key (public by design, RLS-protected) used as a CI fallback
 # default in the tauri-build workflow when the GitHub secret is unset - not a real secret.
 .github/workflows/tauri-build.yml:generic-api-key:402
+
+# Staging Supabase publishable key (public by design). Ignored here rather than with an
+# inline gitleaks:allow because a trailing comment in a .properties file is part of the
+# value, so the pragma would end up inside the key.
+app/saas/src/main/resources/application-staging.properties:generic-api-key:16
