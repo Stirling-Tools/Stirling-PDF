@@ -8866,7 +8866,9 @@ title = "Sources"
 connectSource = "Connect source"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Back to sources"
+backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
@@ -8876,7 +8878,6 @@ create = "Create source"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
-enabled = "Enabled"
 save = "Save changes"
 
 [portal.sources.builder.folderAccess]
@@ -8896,23 +8897,24 @@ total = "Connections"
 unused = "Unused"
 
 [portal.sources.networkFields.connection]
-helperText = "The stored connection with the server address and credentials. Reused by every source that references it."
+helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."
 label = "Connection"
 
 [portal.sources.networkFields.directory]
-helperText = "Folder on the server to poll, relative to the login home or share root. Leave blank for the root."
+helperText = "The folder on the server to watch, relative to the login home or share root."
 label = "Folder"
-placeholder = "incoming/"
+placeholder = "Login home or share root"
 
 [portal.sources.networkFields.mode]
-helperText = "Consume removes each file from the server once every policy has processed it."
-label = "Read mode"
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
 
 [portal.sources.networkFields.mode.options]
-consume = "Consume: process each file once"
-snapshot = "Snapshot: re-read the folder every run"
+consume = "Delete the file"
+snapshot = "Leave it in place"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.networkFields.recursive.options]
@@ -8953,26 +8955,28 @@ description = "Watch a directory on the server for new documents."
 label = "Folder"
 
 [portal.sources.types.folder.fields.directory]
-helperText = "Absolute path Stirling watches for files to process."
-label = "Directory path"
+helperText = "The absolute path to the folder to watch for new files."
+label = "Folder"
 placeholder = "/data/incoming"
 
 [portal.sources.types.folder.fields.identity]
-helperText = "Content check reads each changed file, so renames and touches that don't alter content are not reprocessed."
+helperText = "Using the file contents for change detection is slower but more accurate."
 label = "Change detection"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "Size, date and content check"
-stat = "Size and date modified"
+hash = "File Metadata & Content"
+stat = "File Metadata"
 
 [portal.sources.types.folder.fields.mode]
-label = "Read mode"
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
 
 [portal.sources.types.folder.fields.mode.options]
-consume = "Consume: process each file once"
-snapshot = "Snapshot: re-read the folder every run"
+consume = "Delete the file"
+snapshot = "Leave it in place"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9000,21 +9004,21 @@ description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
 
 [portal.sources.types.s3.fields.connection]
-helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+helperText = "The saved connection with the bucket and credentials. Shared by every source and pipeline output that uses it."
 label = "Connection"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Consume removes each object from the bucket once every policy has processed it."
-label = "Read mode"
+helperText = "Whether to leave the original object in place after it has been processed. If the original object is left in place, it will be re-processed next time the pipeline scans the source."
+label = "After processing"
 
 [portal.sources.types.s3.fields.mode.options]
-consume = "Consume: process each object once"
-snapshot = "Snapshot: re-read the bucket every run"
+consume = "Delete the object"
+snapshot = "Leave it in place"
 
 [portal.sources.types.s3.fields.prefix]
-helperText = "Only objects whose keys start with this prefix are processed."
-label = "Key prefix"
-placeholder = "incoming/"
+helperText = "The folder (key prefix) within the bucket to watch."
+label = "Folder"
+placeholder = "Whole bucket"
 
 [portal.sources.types.sftp]
 description = "Poll an SFTP drop folder for new documents."

@@ -29,6 +29,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { stripBasePath } from "@app/constants/app";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -123,12 +124,30 @@ export default function HomePage() {
     return () => window.removeEventListener("appConfig:open", handler);
   }, []);
 
-  const handleCloseConfig = useCallback(() => {
-    setConfigModalOpen(false);
-    if (location.pathname.startsWith("/settings")) {
-      navigate(EDITOR_BASENAME, { replace: true });
+  // Where the user was before settings opened, so close can restore it. Null
+  // when opened directly on a /settings URL (deep link) - close falls back to
+  // the editor root.
+  const settingsOriginRef = useRef<string | null>(null);
+  const wasConfigOpenRef = useRef(false);
+  useEffect(() => {
+    if (configModalOpen && !wasConfigOpenRef.current) {
+      settingsOriginRef.current = location.pathname.startsWith("/settings")
+        ? null
+        : location.pathname;
     }
-  }, [location.pathname, navigate]);
+    wasConfigOpenRef.current = configModalOpen;
+  }, [configModalOpen, location.pathname]);
+
+  const handleCloseConfig = useCallback(() => {
+    // Restore the URL before clearing the flag, or a late /settings commit
+    // re-opens the modal. Read window.location, not useLocation: a tab switch
+    // updates the URL synchronously while the router's commit lags. Replace to
+    // the origin rather than navigate(-1), which webkit can drop.
+    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
+      navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
+    }
+    setConfigModalOpen(false);
+  }, [navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
