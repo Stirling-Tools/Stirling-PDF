@@ -26,12 +26,6 @@ import {
   orderedRewritingCategories,
 } from "@app/data/classificationPolicy";
 
-/**
- * Dispatch-store key namespace for "this file's local pass has been metered". Deliberately NOT the
- * Classification category id: that key is the server escalation's own guard, so metering under it
- * would tell the auto-run the policy had already run and kill the escalation entirely.
- */
-export const LOCAL_METER_CATEGORY = `${CLASSIFICATION_CATEGORY_ID}:local-meter`;
 /** Files classified per idle pass, so a large library drains over several ticks. */
 const CLASSIFY_BATCH = 3;
 /** How long to wait for an upload's bytes to land in IndexedDB (20 × 250ms ≈ 5s).
@@ -147,7 +141,7 @@ export function useClassificationPolicy(): void {
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
           const verdict = await classifyStub(
-            stub.id,
+            stub.id as FileId,
             stub.name,
             stub.size ?? 0,
           );
@@ -156,11 +150,11 @@ export function useClassificationPolicy(): void {
           if (verdict == null) continue;
           // Deliver unconditionally - a re-render must never discard a computed
           // (and already metered) result. Writes are idempotent.
-          updateStirlingFileStub(stub.id, {
+          updateStirlingFileStub(stub.id as FileId, {
             classificationLabels: verdict.labels,
             classificationConfidence: verdict.confidence,
           });
-          const ok = await fileStorage.updateFileMetadata(stub.id, {
+          const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
             classificationLabels: verdict.labels,
             classificationConfidence: verdict.confidence,
           });
@@ -230,7 +224,9 @@ async function classifyStub(
   // A local run is still a billable policy run, so it belongs in the activity feed; recorded only
   // once the bytes are in hand, so a file whose bytes never land leaves no phantom row.
 
-  const alreadyMetered = isDispatched(LOCAL_METER_CATEGORY, fileId);
+  // Read before recordRunStart, which takes the dispatch key itself and would otherwise always
+  // answer "already dispatched", silently stopping metering.
+  const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
   const runId = `local-${CLASSIFICATION_CATEGORY_ID}-${fileId}-${Date.now()}`;
   recordRunStart({
     runId,
@@ -239,8 +235,7 @@ async function classifyStub(
     fileName,
     fileSize,
     target: "local",
-    // Ran here, not on a backend: nothing to poll, and it must not claim the classification
-    // dispatch key - that key is what the server escalation checks before running.
+    // The heuristic ran in the browser - there is no server run to poll (see the poll effect).
     browserLocal: true,
     status: "RUNNING",
     outputs: [],
@@ -271,7 +266,7 @@ async function classifyStub(
         labels,
       });
     }
-    markDispatched(LOCAL_METER_CATEGORY, fileId);
+    markDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
     // Labels, no output file - the same settle shape the server-run classification uses.
     updateRun(runId, {
       status: "COMPLETED",

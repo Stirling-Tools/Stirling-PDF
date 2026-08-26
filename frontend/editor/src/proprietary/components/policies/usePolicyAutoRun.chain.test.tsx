@@ -59,12 +59,14 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   updateRun,
+  getRun,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
-import { runStoredPolicy } from "@app/services/policyApi";
+import { runStoredPolicy, getPolicyRun } from "@app/services/policyApi";
 import { fileStorage } from "@app/services/fileStorage";
 
 const runStored = vi.mocked(runStoredPolicy);
+const getRunStatus = vi.mocked(getPolicyRun);
 const getFile = vi.mocked(fileStorage.getStirlingFile);
 
 /** Reset the shared file list between tests without swapping the array identity. */
@@ -175,5 +177,54 @@ describe("auto-run ordered chaining", () => {
     });
 
     expect(runStored).not.toHaveBeenCalled();
+  });
+
+  it("never polls a browser-local run (no server behind it) so its success can't 404 to FAILED", async () => {
+    getRunStatus.mockResolvedValue({
+      runId: "srv-1",
+      policyId: null,
+      status: "COMPLETED",
+      currentStep: 1,
+      stepCount: 1,
+      error: null,
+      outputs: [],
+    } as never);
+    // A browser-local heuristic run and a real server run, both left in flight.
+    recordRunStart({
+      runId: "local-1",
+      categoryId: "classification",
+      fileId: "f1",
+      fileName: "d.pdf",
+      fileSize: 1,
+      target: "local",
+      browserLocal: true,
+      status: "RUNNING",
+      outputs: [],
+      error: null,
+      startedAt: 0,
+    });
+    recordRunStart({
+      runId: "srv-1",
+      categoryId: "security",
+      fileId: "f2",
+      fileName: "d.pdf",
+      fileSize: 1,
+      target: "saas",
+      status: "RUNNING",
+      outputs: [],
+      error: null,
+      startedAt: 0,
+    });
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(700); // past the first poll (500ms)
+    });
+
+    const polled = getRunStatus.mock.calls.map((c) => c[0]);
+    expect(polled).toContain("srv-1"); // the server run is polled…
+    expect(polled).not.toContain("local-1"); // …the browser-local one never is
+    // And its success is left intact, not flipped to FAILED by a 404 streak.
+    expect(getRun("local-1")?.status).toBe("RUNNING");
   });
 });

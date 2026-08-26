@@ -278,10 +278,16 @@ export function usePolicyAutoRun(): void {
     }
   }, [runs, policies, orderedUploadCategories]);
 
-  // Poll each in-flight run to a terminal state.
+  // Poll each in-flight run to a terminal state. A browser-local run (the classification heuristic's
+  // first pass) has no server run behind it, so polling it 404s and would flip its success to FAILED.
   useEffect(() => {
     for (const run of runs) {
-      if (isTerminal(run.status) || polling.current.has(run.runId)) continue;
+      if (
+        run.browserLocal ||
+        isTerminal(run.status) ||
+        polling.current.has(run.runId)
+      )
+        continue;
       polling.current.add(run.runId);
       void poll(run.runId, onRunFinished).finally(() =>
         polling.current.delete(run.runId),
