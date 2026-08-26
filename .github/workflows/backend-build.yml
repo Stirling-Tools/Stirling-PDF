@@ -195,29 +195,29 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
-      - name: Cache uv
-        if: always() && matrix.flavor == 'saas'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ${{ runner.temp }}/uv-python-dir
-            ${{ runner.temp }}/setup-uv-cache
-          key: uv-${{ runner.os }}-${{ hashFiles(
-            'engine/pyproject.toml',
-            'engine/uv.lock'
-            ) }}
-          lookup-only: true
+      # - name: Cache uv
+      #   if: always() && matrix.flavor == 'saas'
+      #   uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      #   with:
+      #     path: |
+      #       ${{ runner.temp }}/uv-python-dir
+      #       ${{ runner.temp }}/setup-uv-cache
+      #     key: uv-${{ runner.os }}-${{ hashFiles(
+      #       'engine/pyproject.toml',
+      #       'engine/uv.lock'
+      #       ) }}
+      #     lookup-only: true
 
       - name: Install uv
         if: always() && matrix.flavor == 'saas'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.12.6"
-          working-directory: "engine"
+          # working-directory: "engine"
           enable-cache: false
-          cache-dependency-glob: |
-            engine/pyproject.toml
-            engine/uv.lock
+          # cache-dependency-glob: |
+          #   engine/pyproject.toml
+          #   engine/uv.lock
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict

@@ -40,7 +40,7 @@ jobs:
       #     lookup-only: true
 
       - name: Install uv
-        if: steps.cache-uv-restore.outputs.cache-hit != 'true'
+        # if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.12.6"
