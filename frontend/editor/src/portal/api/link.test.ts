@@ -77,8 +77,6 @@ describe("api/link — local backend (this instance)", () => {
     expect(usage.totalUnsyncedUnits).toBeGreaterThanOrEqual(0);
   });
 
-  // The "forwards the SaaS JWT in the link body" test is gone with POST /link. Nothing sends a user
-  // token to the local backend any more, which is the point of the connect handshake.
 });
 
 describe("api/link — SaaS backend (team-wide)", () => {
