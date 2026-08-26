@@ -47,6 +47,14 @@ export interface PolicyRunRecord {
   retrying?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
+  /**
+   * Ran in the browser (the local classification heuristic), not on a backend. Such a run has no
+   * server-side status to poll, and - crucially - must NOT claim the (policy, file) dispatch key:
+   * it is the first pass, not the policy's run, so claiming it would suppress the server run the
+   * verdict may still need to escalate to. Distinct from {@link target}, which says which BACKEND
+   * holds a real run's outputs.
+   */
+  browserLocal?: boolean;
 }
 
 /** Statuses of a run that is still executing (not yet settled). */
@@ -234,11 +242,15 @@ export function recordRunStart(record: PolicyRunRecord) {
   const waveStartedAt = state.runs.some(isRunInFlight)
     ? state.waveStartedAt
     : record.startedAt;
+  // A browser-local run is the first pass, not the policy's run: claiming the dispatch key here
+  // would permanently suppress the server run its verdict may still need to escalate to.
+  const claimsDispatch = !record.browserLocal;
   state = {
     runs: capRuns([record, ...state.runs]),
-    dispatched: state.dispatched.includes(key)
-      ? state.dispatched
-      : [...state.dispatched, key],
+    dispatched:
+      !claimsDispatch || state.dispatched.includes(key)
+        ? state.dispatched
+        : [...state.dispatched, key],
     waveStartedAt,
   };
   emit();
