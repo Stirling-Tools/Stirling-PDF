@@ -22,6 +22,7 @@ import {
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
 import { reportToolFailure } from "@app/services/failureReporting";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -606,11 +607,12 @@ export const useToolOperation = <TParams>(
 
         // Report it so a leader sees the failure too, then carry on with the user's
         // own error handling. Fire-and-forget: the reporter swallows its own errors.
+        // Chained, not fired alongside: the re-read must happen after the row exists.
         void reportToolFailure({
           operation: config.operationType,
           error,
           fileIds: validFiles.map((file) => file.fileId),
-        });
+        }).then(refreshNotificationsNow);
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);

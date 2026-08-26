@@ -43,6 +43,7 @@ import {
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
+import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
@@ -782,8 +783,8 @@ const EmbedPdfViewerContent = ({
         handleFormApply(blob);
       }
     };
-    window.addEventListener("formfill:apply", handler);
-    return () => window.removeEventListener("formfill:apply", handler);
+    window.addEventListener(FORM_APPLY_EVENT, handler);
+    return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
   }, [handleFormApply]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
@@ -1237,6 +1238,7 @@ const EmbedPdfViewerContent = ({
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
+              formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef as React.RefObject<any>}
               annotationApiRef={annotationApiRef as React.RefObject<any>}
