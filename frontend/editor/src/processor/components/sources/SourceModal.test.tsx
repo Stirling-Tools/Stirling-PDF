@@ -82,12 +82,9 @@ describe("SourceModal", () => {
 
     // Stage 1: pick the folder connector, then fill name + directory.
     fireEvent.click(screen.getByText("processor.sources.types.folder.label"));
-    fireEvent.change(
-      screen.getByLabelText(/processor\.integrations\.typedName/),
-      {
-        target: { value: "Claims intake" },
-      },
-    );
+    fireEvent.change(screen.getByLabelText(/processor\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
     fireEvent.change(
       screen.getByLabelText(
         /processor\.sources\.types\.folder\.fields\.directory\.label/,
@@ -117,12 +114,9 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("processor.sources.types.folder.label"));
-    fireEvent.change(
-      screen.getByLabelText(/processor\.integrations\.typedName/),
-      {
-        target: { value: "Claims intake" },
-      },
-    );
+    fireEvent.change(screen.getByLabelText(/processor\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
     fireEvent.change(
       screen.getByLabelText(
         /processor\.sources\.types\.folder\.fields\.directory\.label/,
@@ -145,12 +139,9 @@ describe("SourceModal", () => {
     renderModal();
 
     fireEvent.click(screen.getByText("processor.sources.types.folder.label"));
-    fireEvent.change(
-      screen.getByLabelText(/processor\.integrations\.typedName/),
-      {
-        target: { value: "Claims intake" },
-      },
-    );
+    fireEvent.change(screen.getByLabelText(/processor\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
     fireEvent.change(
       screen.getByLabelText(
         /processor\.sources\.types\.folder\.fields\.directory\.label/,
@@ -168,12 +159,9 @@ describe("SourceModal", () => {
   it("gates the s3 type on a chosen connection", async () => {
     renderModal();
     fireEvent.click(screen.getByText("processor.sources.types.s3.label"));
-    fireEvent.change(
-      screen.getByLabelText(/processor\.integrations\.typedName/),
-      {
-        target: { value: "Bucket source" },
-      },
-    );
+    fireEvent.change(screen.getByLabelText(/processor\.sources\.wizard\.name/), {
+      target: { value: "Bucket source" },
+    });
     expect(
       await screen.findByText(
         "processor.sources.types.s3.fields.connection.label",
@@ -192,12 +180,9 @@ describe("SourceModal", () => {
     const { onClose } = renderModal();
 
     fireEvent.click(screen.getByText("processor.sources.types.webhook.label"));
-    fireEvent.change(
-      screen.getByLabelText(/processor\.integrations\.typedName/),
-      {
-        target: { value: "Partner uploads" },
-      },
-    );
+    fireEvent.change(screen.getByLabelText(/processor\.sources\.wizard\.name/), {
+      target: { value: "Partner uploads" },
+    });
     fireEvent.click(screen.getByText("processor.sources.builder.create"));
 
     await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
@@ -273,7 +258,7 @@ describe("SourceModal", () => {
     );
     // Still on the type stage: no configure form appeared.
     expect(
-      screen.queryByLabelText(/processor\.integrations\.typedName/),
+      screen.queryByLabelText(/processor\.sources\.wizard\.name/),
     ).not.toBeInTheDocument();
     expect(
       screen.getAllByText("processor.sources.builder.comingSoon").length,

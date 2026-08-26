@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 vi.mock("react-i18next", () => ({
@@ -7,6 +7,12 @@ vi.mock("react-i18next", () => ({
     i18n: { changeLanguage: vi.fn() },
   }),
 }));
+
+const enterprise = { enabled: true, loading: false };
+vi.mock("@processor/hooks/useEnterpriseEnabled", () => ({
+  useEnterpriseEnabled: () => enterprise,
+}));
+
 // Stub the live tab panels so the test doesn't pull their data dependencies.
 vi.mock("@processor/components/infrastructure/ApiKeysTab", () => ({
   ApiKeysTab: () => <div data-testid="api-keys-tab" />,
@@ -18,6 +24,11 @@ vi.mock("@processor/components/infrastructure/AuditTab", () => ({
 import { Infrastructure } from "@processor/views/Infrastructure";
 
 describe("Infrastructure (SaaS)", () => {
+  beforeEach(() => {
+    enterprise.enabled = true;
+    enterprise.loading = false;
+  });
+
   it("defaults to the live API keys tab and drops the manage-editor button", () => {
     render(<Infrastructure />);
     expect(screen.getByTestId("api-keys-tab")).toBeInTheDocument();
@@ -40,5 +51,15 @@ describe("Infrastructure (SaaS)", () => {
         name: /processor.infrastructure.tabs.apiKeys/,
       }),
     ).toBeEnabled();
+  });
+
+  it("disables the audit tab for non-enterprise tenants", () => {
+    enterprise.enabled = false;
+    render(<Infrastructure />);
+    expect(
+      screen.getByRole("button", {
+        name: /processor.infrastructure.tabs.audit/,
+      }),
+    ).toBeDisabled();
   });
 });

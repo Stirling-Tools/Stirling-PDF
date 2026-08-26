@@ -4,12 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-start;
-}
-
-.processor-sources__connection-picker .sui-select,
-.processor-sources__connection-picker > div:first-child {
-  align-self: stretch;
 }
 
 .processor-sources__connection-create-actions {
@@ -169,6 +163,7 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
+  background: var(--c-surface-raised);
 }
 
 .processor-conn-picker__card:hover {

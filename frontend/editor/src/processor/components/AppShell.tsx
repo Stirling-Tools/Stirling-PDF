@@ -8,6 +8,7 @@ import { useUI } from "@processor/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@processor/components/icons";
 import { Logo } from "@app/ui/Logo";
 import "@processor/components/AppShell.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -89,6 +90,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="processor-shell__main">
         <MobileTopbar />
         <ProcessorSearchBar />
+        <div className="processor-shell__notifications">
+          <NotificationBell />
+        </div>
         <main className="processor-shell__view">{children}</main>
       </div>
     </div>

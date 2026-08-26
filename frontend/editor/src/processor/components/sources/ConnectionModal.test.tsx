@@ -272,7 +272,7 @@ describe("ConnectionModal", () => {
     ).toBeNull();
   });
 
-  it("picking a vendor opens its form, and the back link returns to the grid", async () => {
+  it("picking a vendor opens its form, and the header back arrow returns to the grid", async () => {
     render(wrap(<ConnectionModal open onClose={vi.fn()} onSaved={vi.fn()} />));
 
     await userEvent.click(
@@ -291,7 +291,7 @@ describe("ConnectionModal", () => {
     );
 
     await userEvent.click(
-      screen.getByText("processor.connections.picker2.back"),
+      screen.getByRole("button", { name: "processor.connections.picker2.back" }),
     );
     await waitFor(() =>
       expect(
