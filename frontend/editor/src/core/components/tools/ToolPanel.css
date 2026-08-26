@@ -183,6 +183,17 @@
   }
 }
 
+/* In-panel tool filter. Aligned with .tool-picker__compact's inline padding so
+   the field lines up with the tool rows underneath it. */
+.tool-panel__search {
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0;
+}
+
+.tool-panel__search .search-input-container {
+  margin: 0;
+}
+
 .tool-panel__compact-header-actions {
   display: flex;
   align-items: center;
