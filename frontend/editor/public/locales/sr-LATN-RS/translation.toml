@@ -41,7 +41,7 @@ false = "Netačno"
 fileNotSavedToDisk = "Nije sačuvano na disk"
 fileSavedToDisk = "Fajl je sačuvan na disk"
 fileSelected = "Izabrano: {{filename}}"
-filesSelected = "odabrani fajlovi"
+filesSelected = "{{count}} fajlova"
 font = "Font"
 fontSizeTooltip = "Veličina teksta broja stranice u tačkama. Veće vrednosti daju veći tekst."
 fontTypeTooltip = "Porodica fonta za brojeve stranica. Izaberite prema stilu dokumenta."
@@ -3969,6 +3969,7 @@ back = "Nazad"
 backToFolder = "Nazad na {{folder}}"
 backToMyFiles = "Nazad na Moje fajlove"
 breadcrumbs = "Putanja fascikle"
+bulkActions = "Radnje"
 cancel = "Otkaži"
 classification = "Klasifikacija"
 clearSelection = "Poništi izbor"
@@ -4142,6 +4143,11 @@ totalSize = "Ukupna veličina"
 type = "Tip"
 versionHistory = "Istorija verzija"
 
+[filesPage.filters]
+activeCount = "{{count}} filtera aktivno"
+clearAll = "Obriši filtere"
+label = "Filteri"
+
 [filesPage.folderName]
 cancel = "Otkaži"
 error = "Nije moguće sačuvati fasciklu. Pokušajte ponovo."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sortiraj datoteke"
 modifiedAsc = "Najstarije prvo"
 modifiedDesc = "Najnovije prvo"
 nameAsc = "Naziv A→Š"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Sve je sačuvano"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Nije moguće primeniti izmene"
 extractCsvError = "Izdvajanje CSV-a nije uspelo"
 extractXlsxError = "Izdvajanje XLSX-a nije uspelo"
 filled = "filled"
 flattenAfterFilling = "Zapečati nakon popunjavanja"
+goToPage = "Idi na ovu stranicu"
 noFields = "No fillable form fields found in this PDF."
+page = "Stranica"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obav"
@@ -4318,7 +4328,82 @@ rescanFields = "Ponovo skeniraj polja"
 rescanFormFields = "Ponovo skeniraj polja obrasca"
 save = "Sačuvaj"
 saveShortcut = "Ctrl+S za čuvanje"
+skippedEdits_one = "1 izmena nije mogla biti primenjena:"
+skippedEdits_other = "{{count}} izmena nije moglo biti primenjeno:"
+skippedEditsTruncated = "Još {{count}} nije navedeno."
 unsavedChanges = "Nesačuvane promene"
+
+[formFill.create]
+commit = "Dodaj {{count}} polje(a) u PDF"
+empty = "Još nema nacrtanih polja."
+failed = "Dodavanje polja nije uspelo"
+goToField = "Idi na ovo polje"
+hint = "Izaberi tip polja, zatim ga nacrtaj na stranici."
+placing = "Nacrtaj polje tipa {{type}} na stranici. Pritisni Esc za zaustavljanje."
+preview = "Drži za pregled"
+previewHelp = "Drži da vidiš kako će polja izgledati kada budu dodata, bez okvira za uređivanje."
+removeField = "Ukloni polje"
+
+[formFill.editor]
+action = "Radnja dugmeta"
+actionHelp = "Šta dugme radi kada se klikne."
+actionNone = "Ništa"
+actionPrint = "Štampaj"
+actionReset = "Resetuj obrazac"
+actionSubmit = "Pošalji na URL"
+actionUri = "Otvori URL"
+actionUrl = "URL"
+actionUrlHelp = "Adresa koju dugme otvara ili na koju šalje."
+addOption = "Dodaj opciju"
+caption = "Natpis dugmeta"
+captionHelp = "Tekst odštampan na površini dugmeta."
+defaultValue = "Podrazumevana vrednost"
+defaultValueHelp = "Šta polje sadrži pre nego što ga neko popuni. Ostavi prazno za prazno polje."
+fontSize = "Veličina fonta"
+fontSizeHelp = "Veličina teksta unutar polja. Ostavi prazno da čitač prilagodi veličinu da stane."
+label = "Oznaka"
+labelHelp = "Tekst prikazan osobi koja popunjava obrazac. Ostavi prazno da se koristi naziv polja."
+maxLength = "Maksimalna dužina (comb)"
+maxLengthHelp = "Ograničava koliko karaktera staje, nacrtano kao ravnomerno razmaknuti okviri."
+multiline = "Više redova"
+multilineHelp = "Omogućava više od jednog reda teksta i prelama na ivici polja."
+multiSelect = "Dozvoli višestruki izbor"
+multiSelectHelp = "Omogućava izbor više od jedne opcije odjednom."
+name = "Naziv polja"
+nameHelp = "Interni naziv polja. Koristi se pri izvozu podataka ili popunjavanju obrasca iz drugog sistema, zato neka bude jedinstven i bez razmaka."
+optionGap = "Razmak opcija"
+optionGapHelp = "Razmak između dugmadi, u tačkama. Ostavi prazno da se ravnomerno rasporede niz okvir."
+optionPlaceholder = "Opcija {{n}}"
+options = "Opcije"
+optionsEmpty = "Dodaj najmanje jednu opciju."
+optionsHelp = "Izbori ponuđeni na listi. Svaki se čuva onako kako je unet, zato neka budu kratki i različiti."
+optionSize = "Veličina opcije"
+optionSizeHelp = "Širina i visina svakog dugmeta, u tačkama. Ostavi prazno da se prilagode okviru koji si nacrtao."
+readOnly = "Samo za čitanje"
+readOnlyHelp = "Prikazuje vrednost, ali sprečava bilo koga da je uređuje."
+removeOption = "Ukloni opciju"
+required = "Obavezno"
+requiredHelp = "Obrazac se ne može poslati dok ovo polje ne bude popunjeno."
+signatureNote = "Samo čuvar mesta - ovde se ne potpisuje. Označava gde potpis treba da bude, tako da PDF potpisnik (Adobe Acrobat, usluga potpisivanja itd.) postavi potpis na ovo mesto kada se dokument potpiše."
+tooltip = "Tooltip"
+tooltipHelp = "Savet prikazan kada neko pređe pokazivačem preko polja u PDF čitaču."
+type = "Tip"
+typeHelp = "Koja je vrsta ovog polja. Promena ponovo kreira polje, pa se njegova trenutna vrednost ne prenosi."
+
+[formFill.mode]
+create = "Kreiraj"
+fill = "Popuni"
+label = "Režim uređivača obrazaca"
+modify = "Izmeni"
+
+[formFill.modify]
+commit = "Sačuvaj {{count}} izmenu(a)"
+delete = "Obriši"
+empty = "Ovaj PDF još nema polja obrasca."
+failed = "Čuvanje izmena nije uspelo"
+groupSizeHint = "Koristi veličinu opcije"
+hint = "Izaberi polje da urediš njegova svojstva, prevuci ga na stranici ili ga obriši."
+restore = "Vrati"
 
 [formFill.sidebar]
 close = "Zatvori bočnu traku"
@@ -4584,6 +4669,10 @@ title = "Promena metapodataka"
 desc = "Promenite ograničenja dokumenta i dozvole"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Promeni dozvole"
+
+[home.classify]
+desc = "Prepoznaj koja je ovo vrsta dokumenta i označi ga."
+title = "Klasifikuj"
 
 [home.compare]
 desc = "Upoređuje i prikazuje razlike između 2 PDF dokumenata"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nema ničega za prijavu."
+handoffUnavailable = "Ovaj pregledač neće dozvoliti procesoru da prosledi dokument uređivaču. Umesto toga, otvori ga iz uređivača."
+noDocumentLinked = "Ovaj neuspeh nije povezan sa određenim dokumentom, pa ovde nema ničega za otvaranje."
+notOnThisDevice = "Ovaj dokument nije na ovom uređaju, pa se ovde ne može otvoriti."
+occurrences = "{{count}} puta"
+open = "Obaveštenja"
+title = "Obaveštenja"
+unread = "Nepročitano"
+
+[notifications.action]
+failed = "To nije uspelo. Pokušaj ponovo za trenutak."
+unavailable = "Nije dostupno za ovo obaveštenje."
+
+[notifications.detail]
+copied = "Kopirano"
+copy = "Kopiraj grešku"
+less = "Prikaži manje"
+more = "Prikaži celu poruku"
+
+[notifications.section]
+earlier = "Ranije"
+new = "Novo"
 
 [oauth.error]
 message = "Autentikacija nije uspela. Možete zatvoriti ovaj prozor i pokušati ponovo."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "od {{allowance}} besplatnih PDF dokumenata iskorišćeno"
 capSuffix_other = "od {{allowance}} besplatnih PDF dokumenata iskorišćeno"
 eyebrow = "Processor probni period"
-statusLabel_one = "{{remaining}} preostao"
-statusLabel_other = "{{remaining}} preostalo"
+statusLabel_one = "{{used}} iskorišćen"
+statusLabel_other = "{{used}} iskorišćeno"
 sub = "Koristite PDF Editor besplatno. Platite za automatsku obradu PDF dokumenata."
 title_one = "Obradite {{allowance}} PDF dokumenata besplatno"
 title_other = "Obradite {{allowance}} PDF dokumenata besplatno"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Prikaži datoteku"
+viewInProcessor = "Prikaži u procesoru"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Ovaj neuspeh nije zabeležen za određeni dokument, pa ovde nema ničega za otvaranje."
+unattended = "Ova datoteka je prosleđena iz fascikle, bucket-a ili webhook-a, pa je ničiji pregledač ne drži za otvaranje."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Izvori"
 connectSource = "Poveži izvor"
 
 [portal.sources.builder]
+advanced = "Napredno"
 back = "Nazad na izvore"
+backToSource = "Nazad na podešavanje izvora"
 backToTypes = "Svi tipovi izvora"
 cancel = "Otkaži"
 chooseHint = "Izaberite odakle dokumenti dolaze. Zasivljeni konektori stižu uskoro."
@@ -8726,7 +8845,6 @@ create = "Kreiraj izvor"
 createTitle = "Poveži izvor"
 delete = "Izbriši"
 editTitle = "Uredi izvor"
-enabled = "Omogućeno"
 save = "Sačuvaj izmene"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Obrada jednom: obradi svaku datoteku jednom"
 snapshot = "Snimak: ponovo pročitaj fasciklu pri svakom pokretanju"
 
 [portal.sources.networkFields.recursive]
+helperText = "Uključi potfascikle ako su datoteke organizovane u ugnežđene fascikle, ili prati samo najviši nivo."
 label = "Dubina fascikle"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Provera veličine, datuma i sadržaja"
 stat = "Veličina i datum izmene"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Da li ostaviti originalnu datoteku na mestu nakon obrade. Ako originalna datoteka ostane na mestu, biće ponovo obrađena sledeći put kada pipeline skenira izvor."
 label = "Režim čitanja"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Potroši: obradi svaku datoteku jednom"
 snapshot = "Snapshot: ponovo pročitaj fasciklu pri svakom pokretanju"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Uključi potfascikle ako su datoteke organizovane u ugnežđene fascikle, ili prati samo najviši nivo."
 label = "Dubina fascikle"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Vaš Stirling-PDF server je van mreže i \"{{endpoint
 expired = "Istekla ti je sesija. Osveži stranicu i pokušaj ponovo."
 
 [settings]
+backToSections = "Sva podešavanja"
 close = "Zatvori"
+title = "Podešavanja"
 
 [settings.ai]
 documents = "Dokumenti i RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Pretraga"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Pretraži alate..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Napredno formatiranje"
+ai = "AI"
 automation = "Automatizacija"
 developerTools = "Alati za programere"
 documentReview = "Pregled dokumenta"
@@ -11335,8 +11460,11 @@ columnDefault = "Kolona {{index}}"
 convertToPdf = "Konvertuj u PDF"
 csvStats = "{{rows}} redova · {{columns}} kolona · {{size}}"
 emptyFile = "Prazna datoteka"
+htmlHidePreview = "Sakrij pregled"
 htmlPreview = "HTML pregled"
+htmlPreviewMobileHidden = "HTML stranice su raspoređene za širine desktopa, pa je pregled ovde podrazumevano isključen."
 htmlPreviewWarning = "HTML pregled — spoljašnji resursi možda neće biti učitani · {{size}}"
+htmlShowPreview = "Ipak prikaži pregled"
 invalidJson = "Nevažeći JSON — prikaz sirovog sadržaja"
 lineNumbers = "Brojevi linija"
 loading = "Učitavanje..."
@@ -11683,6 +11811,7 @@ exportAll = "Izvezi PDF"
 exportSelected = "Izvezi izabrane stranice"
 formFill = "Popuni obrazac"
 hideToolbar = "Hide toolbar"
+moreActions = "Još radnji"
 multiTool = "Višenamenski alat"
 panMode = "Režim pomeranja"
 print = "Štampaj PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Izaberi sve"
 selectByNumber = "Izaberi po brojevima stranica"
 selectLanguage = "Izaberi jezik"
 share = "Podeli"
+showAllTools = "Prikaži sve alate"
+showFewerTools = "Skupi traku sa alatkama"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Uključi/isključi vidljivost anotacija"
 toggleAttachments = "Uključi/isključi priloge"
