@@ -149,6 +149,9 @@ class ToolDiscovery:
         "/api/v1/misc/add-image",
         "/api/v1/misc/add-attachments",
         "/api/v1/general/overlay-pdfs",
+        # 5. Server maintenance, not a document operation: releases finished jobs and
+        #    their stored files. Nothing an edit agent should ever call on its own.
+        "/api/v1/general/jobs/cleanup",
     )
 
     def _is_excluded(self, path: str) -> bool:

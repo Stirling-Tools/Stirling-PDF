@@ -1,13 +1,16 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { Modal, Text } from "@mantine/core";
+import { Group, Modal, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { useMediaQuery } from "@mantine/hooks";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
+import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsMobileNavHeader";
+import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { consumePendingSettingsNav } from "@app/utils/appSettings";
@@ -31,6 +34,8 @@ interface AppConfigModalProps {
   urlSync?: boolean;
   /** Section to land on when opening (used by non-URL hosts like the portal). */
   initialSection?: NavKey | null;
+  /** Accepted for interface parity with the core shell; this shell ignores it. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the saas registry sections. */
   extraSections?: ConfigNavSection[];
   /** Registry section keys to drop, for hosts a section can't run in. */
@@ -44,12 +49,13 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   extraSections,
   hiddenSectionKeys,
 }) => {
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useIsMobile();
 
   const { signOut, user } = useAuth();
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
+  const [mobilePane, setMobilePane] = useState<"nav" | "content">("nav");
   const [notice, setNotice] = useState<string | null>(null);
   const location = useLocation();
 
@@ -58,7 +64,10 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   // Consume any section stashed by openAppSettings on mount to land on it.
   useEffect(() => {
     const pending = consumePendingSettingsNav();
-    if (pending) setActive(pending);
+    if (pending) {
+      setActive(pending);
+      setMobilePane("content");
+    }
   }, []);
 
   // Check if user can access billing features (non-anonymous users only)
@@ -68,6 +77,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
         setActive(detail.key);
+        setMobilePane("content");
       }
     };
     window.addEventListener("appConfig:navigate", handler as EventListener);
@@ -88,6 +98,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
     if (!opened) return;
     if (initialSection) {
       setActive(initialSection);
+      setMobilePane("content");
       return;
     }
     const match = stripBasePath(location.pathname).match(
@@ -95,6 +106,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
     );
     if (match) {
       setActive(match[1] as NavKey);
+      setMobilePane("content");
+    } else {
+      setMobilePane("nav");
     }
   }, [opened, initialSection, location.pathname]);
 
@@ -223,34 +237,43 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
             className={`modal-nav ${isMobile ? "mobile" : ""}`}
             style={{
               background: colors.navBg,
-              borderRight: `1px solid ${colors.headerBorder}`,
+              ...(isMobile
+                ? { display: mobilePane === "nav" ? undefined : "none" }
+                : { borderRight: `1px solid ${colors.headerBorder}` }),
             }}
           >
+            <SettingsMobileNavHeader
+              show={isMobile}
+              onClose={onClose}
+              background={colors.navBg}
+              borderColor={colors.headerBorder}
+            />
             <div className="modal-nav-scroll">
               {configNavSections.map((section) => (
                 <div key={section.title} className="modal-nav-section">
-                  {!isMobile && (
-                    <Text
-                      size="xs"
-                      fw={600}
-                      c={colors.sectionTitle}
-                      style={{ textTransform: "uppercase", letterSpacing: 0.4 }}
-                    >
-                      {section.title}
-                    </Text>
-                  )}
+                  <Text
+                    size="xs"
+                    fw={600}
+                    c={colors.sectionTitle}
+                    style={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+                  >
+                    {section.title}
+                  </Text>
                   <div className="modal-nav-section-items">
                     {section.items.map((item) => {
                       const isActive = active === item.key;
                       const color = isActive
                         ? colors.navItemActive
                         : colors.navItem;
-                      const iconSize = isMobile ? 28 : 18;
+                      const iconSize = 18;
                       return (
                         <div
                           key={item.key}
                           data-tour={`admin-${item.key}-nav`}
-                          onClick={() => setActive(item.key)}
+                          onClick={() => {
+                            setActive(item.key);
+                            setMobilePane("content");
+                          }}
                           className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
                           style={{
                             background: isActive
@@ -262,13 +285,17 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                             icon={item.icon}
                             width={iconSize}
                             height={iconSize}
-                            style={{ color }}
+                            style={{ color, flexShrink: 0 }}
                           />
-                          {!isMobile && (
-                            <Text size="sm" fw={500} style={{ color }}>
-                              {item.label}
-                            </Text>
-                          )}
+                          <Text
+                            size="sm"
+                            fw={500}
+                            truncate
+                            style={{ color, minWidth: 0, flex: 1 }}
+                          >
+                            {item.label}
+                          </Text>
+                          <SettingsNavChevron show={isMobile} />
                         </div>
                       );
                     })}
@@ -279,7 +306,14 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
           </div>
 
           {/* Right content */}
-          <div className="modal-content">
+          <div
+            className="modal-content"
+            style={
+              isMobile && mobilePane !== "content"
+                ? { display: "none" }
+                : undefined
+            }
+          >
             <div className="modal-content-scroll">
               {/* Sticky header with section title and small close button */}
               <div
@@ -289,20 +323,26 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                   borderBottom: `1px solid ${colors.headerBorder}`,
                 }}
               >
-                <Text fw={700} size="lg">
-                  {activeLabel}
-                  {active === "plan" && notice ? (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontWeight: 600,
-                        color: "var(--mantine-color-yellow-7)",
-                      }}
-                    >
-                      – {notice}
-                    </span>
-                  ) : null}
-                </Text>
+                <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+                  <SettingsMobileBackButton
+                    show={isMobile}
+                    onClick={() => setMobilePane("nav")}
+                  />
+                  <Text fw={700} size="lg" truncate>
+                    {activeLabel}
+                    {active === "plan" && notice ? (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontWeight: 600,
+                          color: "var(--mantine-color-yellow-7)",
+                        }}
+                      >
+                        – {notice}
+                      </span>
+                    ) : null}
+                  </Text>
+                </Group>
                 <ActionIcon
                   variant="tertiary"
                   onClick={onClose}

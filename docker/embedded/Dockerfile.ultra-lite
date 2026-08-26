@@ -1,11 +1,13 @@
+# syntax=docker/dockerfile:1
+
 # Stirling-PDF Dockerfile - Ultra-lite version with embedded frontend
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.6.1-jdk25@sha256:e8aeffb8197b17151ce24607811f60e91125f0018f7a3b08dc504ba9168a9c4f AS build
+FROM gradle:9.7.1-jdk25@sha256:d868117760a7c92214705f47ed173116a5d13e58d68702f974ff30acd062737e AS build
 
 # Install Node.js and npm for frontend build
-ARG TASK_VERSION=3.49.1
+ARG TASK_VERSION=3.52.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
@@ -36,7 +38,8 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-RUN ./gradlew dependencies --no-daemon || true
+RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+    ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
@@ -46,7 +49,9 @@ COPY . .
 ARG BUILD_PORTAL=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
+    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+    JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
@@ -57,7 +62,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
 
 # Stage 2: Runtime image
 # glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
-FROM eclipse-temurin:25-jre-noble@sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
