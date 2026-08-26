@@ -166,9 +166,12 @@ readings it deliberately excludes beside it.
 
 **Every rule blocks.** A rule that only warns is a rule nobody acts on. So a
 finding you believe is wrong is a bug in the rule, not something to live with:
-narrow the rule, or mark the line and say why. `CMT007` is Javadoc and JSDoc only,
-because Python's parameter docs live in docstrings and the scanner reads `#`
-comments.
+narrow the rule, or mark the line and say why.
+
+Every comment form the repo writes is covered: `//` and `/* */`, Javadoc and JSDoc,
+JSX comments, `#`, and Python docstrings. `CMT007` reads all three parameter
+conventions in use here, Javadoc/JSDoc `@param`, Sphinx `:param name:` and Google
+`name: description` under `Args:`.
 
 Two engines, one rule set. `.ts`/`.tsx`/`.mjs` go to an oxlint JS plugin, so
 comments come from the parser: a `//` inside a string is not a comment, and JSX

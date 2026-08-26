@@ -12,6 +12,11 @@
   "docs.java": [
     "6:CMT007:error"
   ],
+  "docstrings.py": [
+    "8:CMT007:error",
+    "21:CMT007:error",
+    "34:CMT001:error"
+  ],
   "narration.java": [
     "6:CMT003:error",
     "9:CMT003:error"
@@ -37,6 +42,9 @@
     "18:CMT002:error"
   ],
   "strings.java": [],
+  "templates.py": [
+    "22:CMT001:error"
+  ],
   "todos.java": [
     "6:CMT009:error"
   ]

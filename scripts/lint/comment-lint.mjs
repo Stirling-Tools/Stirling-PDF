@@ -76,6 +76,10 @@ const baseComments = new Map();
 // the scanner read the next 47 lines of code as one comment.
 const CHAR_LITERAL = /^'(\\[btnfr'"\\0]|\\u[0-9a-fA-F]{4}|[^'\\])'/;
 
+// A docstring opens the line, optionally behind a string prefix. Anything with
+// code in front of the quotes is a value, not documentation.
+const DOCSTRING_OPEN = /^[rbuf]{0,2}("""|''')/;
+
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith("--")));
 const positional = argv.filter((a) => !a.startsWith("--") && !isFlagValue(a));
@@ -109,7 +113,7 @@ function resolveScope() {
   // only the lines this session actually wrote.
   if (paths.length > 0 && flags.has("--since")) {
     const ref = mergeBase(flagValue("--since"));
-    return narrow(diffScope(["diff", "--unified=0", "--no-color", ref], ref), paths);
+    return narrow(diffScope(["diff", "--unified=0", "--no-color", ref, "--", ...paths], ref, paths), paths);
   }
   if (paths.length > 0) return { mode: "paths", files: paths, added: null };
 
@@ -136,7 +140,7 @@ function mergeBase(ref) {
   }
 }
 
-function diffScope(args, base) {
+function diffScope(args, base, paths = null) {
   let diff;
   try {
     diff = git(args);
@@ -165,8 +169,10 @@ function diffScope(args, base) {
   }
 
   // git diff never mentions an untracked file, so a brand new one would be waved
-  // through entirely. Every line of one is new.
-  for (const file of untrackedFiles()) {
+  // through entirely. Every line of one is new. Listing every untracked file in
+  // the repo costs about as much as the diff, so when the caller already named the
+  // paths, only those are asked about.
+  for (const file of untrackedFiles(paths)) {
     if (added.has(file)) continue;
     added.set(file, allLinesOf(file));
   }
@@ -174,8 +180,10 @@ function diffScope(args, base) {
   return { mode: "diff", files: [...added.keys()], added, base };
 }
 
-function untrackedFiles() {
-  return git(["ls-files", "--others", "--exclude-standard"]).split("\n").filter(Boolean);
+function untrackedFiles(paths = null) {
+  const args = ["ls-files", "--others", "--exclude-standard"];
+  if (paths) args.push("--", ...paths);
+  return git(args).split("\n").filter(Boolean);
 }
 
 function allLinesOf(file) {
@@ -305,6 +313,7 @@ function readRuns(lines, language) {
   const runs = [];
   let current = null;
   let inBlock = false;
+  let docstring = null;
 
   const push = (index, column, body, kind) => {
     const line = index + 1;
@@ -333,8 +342,30 @@ function readRuns(lines, language) {
       continue;
     }
     if (language === "py") {
-      if (trimmed.startsWith("#")) push(i, column, raw.trim().replace(/^#+/, ""), "line");
-      else current = null;
+      // Every triple-quoted string is tracked, not just the documenting ones.
+      // A template assigned to a constant opens mid-line and so is not
+      // documentation, but its closing delimiter sits alone on a line and reads
+      // exactly like an opener. Ignoring those strings desynchronised the
+      // scanner for the rest of the file, and 35 lines of ordinary code were
+      // reported as commented-out.
+      if (docstring) {
+        if (docstring.isDoc) push(i, column, stripDocstringDelimiters(raw), "doc");
+        else current = null;
+        if (raw.includes(docstring.delimiter)) docstring = null;
+        continue;
+      }
+      if (trimmed.startsWith("#")) {
+        push(i, column, raw.trim().replace(/^#+/, ""), "line");
+        continue;
+      }
+      const quoted = tripleQuoted(trimmed);
+      if (quoted) {
+        if (quoted.isDoc) push(i, column, stripDocstringDelimiters(raw), "doc");
+        else current = null;
+        if (!quoted.closes) docstring = quoted;
+        continue;
+      }
+      current = null;
       continue;
     }
     if (trimmed.startsWith("/*")) {
@@ -350,6 +381,33 @@ function readRuns(lines, language) {
   }
 
   return runs;
+}
+
+// The prose inside a docstring line, with the triple quotes and any string
+// prefix taken off so the rules see what a reader sees.
+// Where a triple-quoted string starts on this line, and whether it counts as
+// documentation. It documents when the quotes open the line, allowing a string
+// prefix; a template assigned to a constant opens mid-line and is data, and
+// reading JSON as prose would judge its keys as comments. An odd number of
+// delimiters means the string continues onto the next line.
+function tripleQuoted(trimmed) {
+  const found = /("""|''')/.exec(trimmed);
+  if (!found) return null;
+  const delimiter = found[1];
+  const occurrences = trimmed.split(delimiter).length - 1;
+  return {
+    delimiter,
+    isDoc: DOCSTRING_OPEN.test(trimmed),
+    closes: occurrences % 2 === 0,
+  };
+}
+
+function stripDocstringDelimiters(raw) {
+  return raw
+    .trim()
+    .replace(/^[rbuf]{0,2}("""|''')/, "")
+    .replace(/("""|''')\s*$/, "")
+    .trim();
 }
 
 function stripDocPrefix(raw) {

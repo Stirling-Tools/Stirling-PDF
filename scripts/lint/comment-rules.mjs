@@ -6,6 +6,9 @@
 //
 // The standard these rules enforce is devGuide/CODE_COMMENTS.md. Changing a rule
 // here without changing that document leaves the repo with two answers.
+//
+// Between them the engines read every comment form the repo writes: // and /* */,
+// Javadoc and JSDoc, JSX comments, # and Python docstrings.
 
 export const SEVERITY = { ERROR: "error", WARN: "warn" };
 
@@ -153,36 +156,50 @@ export function isDeadCodeRun(bodies) {
   return codeish / bodies.length >= DEAD_CODE_SHARE;
 }
 
+// Every documented-parameter form this repo writes, so the rule is not quietly
+// Javadoc-only:
+//   Javadoc / JSDoc   @param blob The blob to download
+//   Sphinx            :param blob: The blob to download
+//   Google docstring  blob: The blob to download        (under an Args: heading)
+// NumPy style is deliberately absent: it splits the name and the description
+// across two lines, and there is one instance of it in the tree.
 const PARAM_TAG = /^@param\s+(?:\{[^}]*\}\s+)?([\w$.]+)\s*-?\s*(.+)$/;
+const SPHINX_PARAM = /^:(?:param|arg|key)\s+(?:\S+\s+)?([\w.]+)\s*:\s*(.+)$/;
+const GOOGLE_PARAM = /^([a-z_][\w]*)\s*(?:\([^)]*\))?\s*:\s*(.+)$/;
+
 const RETURN_TAG = /^@returns?\s+(.+)$/;
+const SPHINX_RETURN = /^:returns?\s*:\s*(.+)$/;
 
 // Description adds nothing when every word in it already appears in the thing
 // being described. `@param blob - The blob to download` is the canonical case.
 //
-// Javadoc and JSDoc only. Python's equivalents (`:param x:`, or a name under
-// `Args:`) live inside docstrings, and the line scanner reads `#` comments rather
-// than tracking triple-quoted strings, so it never sees them. Covering Python
-// means teaching the scanner docstrings first; no native linter fills the gap
-// either, since ruff's D-rules and Checkstyle's NonEmptyAtclauseDescription check
-// that a description exists rather than whether it says anything.
+// No native linter covers this. eslint-plugin-jsdoc's require-param-description,
+// Checkstyle's NonEmptyAtclauseDescription and ruff's D-rules all check that a
+// description exists, not whether it says anything.
 export function docRestatesSignature(body, ownerName = "") {
   const t = body.trim();
-  const param = PARAM_TAG.exec(t);
-  if (param) {
-    const [, name, description] = param;
-    const words = contentWords(description);
-    if (words.length === 0 || words.length > 5) return false;
-    const known = identWords(name);
-    return known.length > 0 && words.every((w) => known.some((k) => k.startsWith(w) || w.startsWith(k)));
+
+  for (const pattern of [PARAM_TAG, SPHINX_PARAM, GOOGLE_PARAM]) {
+    const match = pattern.exec(t);
+    if (!match) continue;
+    const [, name, description] = match;
+    // Google form is just `name: description`, which also matches ordinary prose
+    // containing a colon. Require the description to be short and unpunctuated so
+    // "Note: the cap is clamped" is not read as a parameter called "note".
+    if (pattern === GOOGLE_PARAM && /[.;,]/.test(description)) return false;
+    return addsNothing(description, name, 5);
   }
-  const returns = RETURN_TAG.exec(t);
-  if (returns && ownerName) {
-    const words = contentWords(returns[1]);
-    if (words.length === 0 || words.length > 4) return false;
-    const known = identWords(ownerName);
-    return known.length > 0 && words.every((w) => known.some((k) => k.startsWith(w) || w.startsWith(k)));
-  }
+
+  const returns = RETURN_TAG.exec(t) ?? SPHINX_RETURN.exec(t);
+  if (returns && ownerName) return addsNothing(returns[1], ownerName, 4);
   return false;
+}
+
+function addsNothing(description, subject, limit) {
+  const words = contentWords(description);
+  if (words.length === 0 || words.length > limit) return false;
+  const known = identWords(subject);
+  return known.length > 0 && words.every((w) => known.some((k) => k.startsWith(w) || w.startsWith(k)));
 }
 
 // A TODO with no reference has nothing that will ever close it. An owner is not
