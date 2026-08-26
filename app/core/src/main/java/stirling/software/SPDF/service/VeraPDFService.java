@@ -285,6 +285,8 @@ public class VeraPDFService {
             }
         }
 
+        // Never force PDF/UA here - it flags every ordinary document as non-compliant and doubles
+        // verify cost; /accessibility-report checks PDF/UA on demand.
         if (!hasPdfaDeclaration) {
             results.add(createNoPdfaDeclarationResult());
         }
