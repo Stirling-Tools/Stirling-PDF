@@ -22,6 +22,12 @@ import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { HeuristicConfidence } from "@app/services/heuristic/types";
 import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
 
+/**
+ * Dispatch-store key namespace for "this file's local pass has been metered". Deliberately NOT the
+ * Classification category id: that key is the server escalation's own guard, so metering under it
+ * would tell the auto-run the policy had already run and kill the escalation entirely.
+ */
+export const LOCAL_METER_CATEGORY = `${CLASSIFICATION_CATEGORY_ID}:local-meter`;
 /** Files classified per idle pass, so a large library drains over several ticks. */
 const CLASSIFY_BATCH = 3;
 /** How long to wait for an upload's bytes to land in IndexedDB (20 × 250ms ≈ 5s).
@@ -161,9 +167,7 @@ async function classifyStub(
   // A local run is still a billable policy run, so it belongs in the activity feed; recorded only
   // once the bytes are in hand, so a file whose bytes never land leaves no phantom row.
 
-  // Read before recordRunStart, which takes the dispatch key itself and would otherwise always
-  // answer "already dispatched", silently stopping metering.
-  const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
+  const alreadyMetered = isDispatched(LOCAL_METER_CATEGORY, fileId);
   const runId = `local-${CLASSIFICATION_CATEGORY_ID}-${fileId}-${Date.now()}`;
   recordRunStart({
     runId,
@@ -172,6 +176,9 @@ async function classifyStub(
     fileName,
     fileSize,
     target: "local",
+    // Ran here, not on a backend: nothing to poll, and it must not claim the classification
+    // dispatch key - that key is what the server escalation checks before running.
+    browserLocal: true,
     status: "RUNNING",
     outputs: [],
     error: null,
@@ -201,7 +208,7 @@ async function classifyStub(
         labels,
       });
     }
-    markDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
+    markDispatched(LOCAL_METER_CATEGORY, fileId);
     // Labels, no output file - the same settle shape the server-run classification uses.
     updateRun(runId, {
       status: "COMPLETED",
