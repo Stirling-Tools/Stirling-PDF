@@ -10,6 +10,7 @@ import {
   useFileContext,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import i18n from "@app/i18n";
 import {
@@ -241,6 +242,8 @@ export function usePolicyAutoRun(): void {
           dispatchKey(finished.categoryId, finished.fileId),
         );
       }
+      // Read now rather than leaving them a poll interval to hear about their own upload.
+      if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
@@ -881,7 +884,9 @@ async function runPolicyOnFile(
   await acquireDispatchSlot(priority);
   try {
     const target = resolvePolicyRunTarget();
-    const runId = await runStoredPolicy(backendId, [file]);
+    // Recorded against a document this browser can resolve. One file per run, which is the only
+    // shape the server keeps a reference for.
+    const runId = await runStoredPolicy(backendId, [file], fileId);
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,

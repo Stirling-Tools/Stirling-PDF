@@ -41,7 +41,7 @@ false = "거짓"
 fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
 fileSavedToDisk = "파일이 디스크에 저장되었습니다"
 fileSelected = "선택됨: {{filename}}"
-filesSelected = "개의 파일이 선택됨"
+filesSelected = "{{count}}개 파일"
 font = "글꼴"
 fontSizeTooltip = "페이지 번호 텍스트의 포인트 크기입니다. 숫자가 클수록 텍스트가 커집니다."
 fontTypeTooltip = "페이지 번호에 사용할 글꼴 계열입니다. 문서 스타일에 맞게 선택하세요."
@@ -3969,6 +3969,7 @@ back = "뒤로"
 backToFolder = "{{folder}}로 돌아가기"
 backToMyFiles = "내 파일로 돌아가기"
 breadcrumbs = "폴더 경로"
+bulkActions = "작업"
 cancel = "취소"
 classification = "분류"
 clearSelection = "선택 해제"
@@ -4142,6 +4143,11 @@ totalSize = "총 크기"
 type = "유형"
 versionHistory = "버전 기록"
 
+[filesPage.filters]
+activeCount = "{{count}}개 필터 활성화됨"
+clearAll = "필터 지우기"
+label = "필터"
+
 [filesPage.folderName]
 cancel = "취소"
 error = "폴더를 저장할 수 없습니다. 다시 시도하세요."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "파일 정렬"
 modifiedAsc = "오래된 순"
 modifiedDesc = "최신 순"
 nameAsc = "이름 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "모두 저장됨"
 analyzingFields = "Analysing form fields..."
+applyFailed = "변경 사항을 적용할 수 없습니다"
 extractCsvError = "CSV 추출 실패"
 extractXlsxError = "XLSX 추출 실패"
 filled = "filled"
 flattenAfterFilling = "채운 후 평면화"
+goToPage = "이 페이지로 이동"
 noFields = "No fillable form fields found in this PDF."
+page = "페이지"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "필수"
@@ -4318,7 +4328,82 @@ rescanFields = "필드 재검색"
 rescanFormFields = "양식 필드 재검색"
 save = "저장"
 saveShortcut = "저장하려면 Ctrl+S"
+skippedEdits_one = "1개 변경 사항을 적용할 수 없습니다:"
+skippedEdits_other = "{{count}}개 변경 사항을 적용할 수 없습니다:"
+skippedEditsTruncated = "{{count}}개가 더 있으며 목록에 표시되지 않았습니다."
 unsavedChanges = "저장되지 않은 변경 사항"
+
+[formFill.create]
+commit = "{{count}}개 필드를 PDF에 추가"
+empty = "아직 그린 필드가 없습니다."
+failed = "필드 추가 실패"
+goToField = "이 필드로 이동"
+hint = "필드 유형을 선택한 다음 페이지에 그리세요."
+placing = "페이지에 {{type}} 필드를 그리세요. 중지하려면 Esc를 누르세요."
+preview = "길게 눌러 미리보기"
+previewHelp = "편집 윤곽선 없이 추가된 후의 필드 모양을 보려면 길게 누르세요."
+removeField = "필드 제거"
+
+[formFill.editor]
+action = "버튼 동작"
+actionHelp = "버튼을 클릭했을 때 수행할 동작입니다."
+actionNone = "없음"
+actionPrint = "인쇄"
+actionReset = "양식 재설정"
+actionSubmit = "URL로 제출"
+actionUri = "URL 열기"
+actionUrl = "URL"
+actionUrlHelp = "버튼이 열거나 제출할 주소입니다."
+addOption = "옵션 추가"
+caption = "버튼 캡션"
+captionHelp = "버튼 표면에 표시될 텍스트입니다."
+defaultValue = "기본값"
+defaultValueHelp = "누군가 입력하기 전에 필드에 포함될 내용입니다. 빈 필드로 두려면 비워 두세요."
+fontSize = "글꼴 크기"
+fontSizeHelp = "필드 안의 텍스트 크기입니다. 리더가 맞게 크기를 조정하도록 하려면 비워 두세요."
+label = "레이블"
+labelHelp = "양식을 작성하는 사람에게 표시될 문구입니다. 비워 두면 필드 이름으로 대체됩니다."
+maxLength = "최대 길이(콤)"
+maxLengthHelp = "들어갈 문자 수를 제한하며, 균등한 간격의 상자로 그려집니다."
+multiline = "여러 줄"
+multilineHelp = "두 줄 이상의 텍스트를 허용하고 필드 가장자리에서 줄 바꿈합니다."
+multiSelect = "다중 선택 허용"
+multiSelectHelp = "한 번에 둘 이상의 옵션을 선택할 수 있습니다."
+name = "필드 이름"
+nameHelp = "필드의 내부 이름입니다. 데이터를 내보내거나 다른 시스템에서 양식을 작성할 때 사용되므로, 고유하고 공백이 없도록 유지하세요."
+optionGap = "옵션 간격"
+optionGapHelp = "버튼 사이의 간격(포인트)입니다. 상자 아래로 균등하게 배치하려면 비워 두세요."
+optionPlaceholder = "옵션 {{n}}"
+options = "옵션"
+optionsEmpty = "하나 이상의 옵션을 추가하세요."
+optionsHelp = "목록에 제공되는 선택지입니다. 각 항목은 입력한 그대로 저장되므로, 짧고 구별되게 유지하세요."
+optionSize = "옵션 크기"
+optionSizeHelp = "각 버튼의 너비와 높이(포인트)입니다. 그린 상자에 맞추려면 비워 두세요."
+readOnly = "읽기 전용"
+readOnlyHelp = "값을 표시하지만 아무도 편집할 수 없게 합니다."
+removeOption = "옵션 제거"
+required = "필수"
+requiredHelp = "이 필드를 입력해야 양식을 제출할 수 있습니다."
+signatureNote = "자리 표시자 전용 - 여기서 서명하지 않습니다. PDF 서명자(Adobe Acrobat, 서명 서비스 등)가 문서에 서명할 때 이 위치에 서명을 배치하도록 서명이 들어갈 위치를 표시합니다."
+tooltip = "툴팁"
+tooltipHelp = "PDF 리더에서 누군가 필드 위에 마우스를 올렸을 때 표시되는 힌트입니다."
+type = "유형"
+typeHelp = "이 필드의 종류입니다. 변경하면 필드가 다시 생성되므로 현재 값은 유지되지 않습니다."
+
+[formFill.mode]
+create = "생성"
+fill = "채우기"
+label = "양식 편집기 모드"
+modify = "수정"
+
+[formFill.modify]
+commit = "{{count}}개 변경 사항 저장"
+delete = "삭제"
+empty = "이 PDF에는 아직 양식 필드가 없습니다."
+failed = "변경 사항 저장 실패"
+groupSizeHint = "옵션 크기 사용"
+hint = "필드를 선택하여 속성을 편집하거나, 페이지에서 드래그하거나, 삭제하세요."
+restore = "복원"
 
 [formFill.sidebar]
 close = "사이드바 닫기"
@@ -4584,6 +4669,10 @@ title = "메타데이터 변경"
 desc = "문서 제한 및 권한 변경"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "권한 변경"
+
+[home.classify]
+desc = "이 문서의 종류를 식별하고 태그를 지정합니다."
+title = "분류"
 
 [home.compare]
 desc = "2개의 PDF 문서를 비교하고 차이점을 보여줍니다"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "보고할 내용이 없습니다."
+handoffUnavailable = "이 브라우저는 처리기가 문서를 편집기로 전달하는 것을 허용하지 않습니다. 대신 편집기에서 여세요."
+noDocumentLinked = "이 실패는 특정 문서와 연결되어 있지 않아 여기서 열 항목이 없습니다."
+notOnThisDevice = "이 문서는 이 장치에 없으므로 여기서 열 수 없습니다."
+occurrences = "{{count}}회"
+open = "알림"
+title = "알림"
+unread = "읽지 않음"
+
+[notifications.action]
+failed = "작동하지 않았습니다. 잠시 후 다시 시도하세요."
+unavailable = "이 알림에는 사용할 수 없습니다."
+
+[notifications.detail]
+copied = "복사됨"
+copy = "오류 복사"
+less = "간단히 보기"
+more = "전체 메시지 표시"
+
+[notifications.section]
+earlier = "이전"
+new = "새 알림"
 
 [oauth.error]
 message = "인증에 성공하지 못했습니다. 이 창을 닫고 다시 시도하세요."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "무료 PDFs {{allowance}}개 중 사용됨"
 capSuffix_other = "무료 PDFs {{allowance}}개 중 사용됨"
 eyebrow = "Processor 평가판"
-statusLabel_one = "{{remaining}} 남음"
-statusLabel_other = "{{remaining}} 남음"
+statusLabel_one = "{{used}} 사용됨"
+statusLabel_other = "{{used}} 사용됨"
 sub = "PDF Editor는 무료로 사용하세요. PDF 자동 처리에는 비용이 부과됩니다."
 title_one = "PDF {{allowance}}개 무료 처리"
 title_other = "PDF {{allowance}}개 무료 처리"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "파일 보기"
+viewInProcessor = "처리기에서 보기"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "이 실패는 특정 문서에 대해 기록되지 않았으므로 여기서 열 항목이 없습니다."
+unattended = "이 파일은 폴더, 버킷 또는 webhook을 통해 전달되었으므로, 열기 위해 보관 중인 브라우저가 없습니다."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "소스"
 connectSource = "소스 연결"
 
 [portal.sources.builder]
+advanced = "고급"
 back = "소스로 돌아가기"
+backToSource = "소스 설정으로 돌아가기"
 backToTypes = "모든 소스 유형"
 cancel = "취소"
 chooseHint = "문서가 어디에서 오는지 선택하세요. 회색으로 표시된 커넥터는 곧 제공됩니다."
@@ -8726,7 +8845,6 @@ create = "소스 생성"
 createTitle = "소스 연결"
 delete = "삭제"
 editTitle = "소스 편집"
-enabled = "활성화됨"
 save = "변경 사항 저장"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.networkFields.recursive]
+helperText = "파일이 중첩된 폴더로 구성되어 있으면 하위 폴더를 포함하고, 아니면 최상위 수준만 감시하세요."
 label = "폴더 깊이"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "크기, 날짜 및 콘텐츠 검사"
 stat = "크기 및 수정 날짜"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "처리된 후 원본 파일을 그대로 둘지 여부입니다. 원본 파일을 그대로 두면 다음에 파이프라인이 소스를 스캔할 때 다시 처리됩니다."
 label = "읽기 모드"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "파일이 중첩된 폴더로 구성되어 있으면 하위 폴더를 포함하고, 아니면 최상위 수준만 감시하세요."
 label = "폴더 깊이"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Stirling-PDF 서버가 오프라인이며 로컬 백�
 expired = "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요."
 
 [settings]
+backToSections = "모든 설정"
 close = "닫기"
+title = "설정"
 
 [settings.ai]
 documents = "문서 및 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "검색"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "도구 검색..."
 
 [toolPicker.subcategories]
 advancedFormatting = "고급 서식"
+ai = "AI"
 automation = "자동화"
 developerTools = "개발자 도구"
 documentReview = "문서 검토"
@@ -11335,8 +11460,11 @@ columnDefault = "열 {{index}}"
 convertToPdf = "PDF로 변환"
 csvStats = "{{rows}}행 · {{columns}}열 · {{size}}"
 emptyFile = "빈 파일"
+htmlHidePreview = "미리보기 숨기기"
 htmlPreview = "HTML 미리보기"
+htmlPreviewMobileHidden = "HTML 페이지는 데스크톱 너비에 맞게 배치되므로 여기서는 미리보기가 기본적으로 꺼져 있습니다."
 htmlPreviewWarning = "HTML 미리보기 — 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
+htmlShowPreview = "그래도 미리보기 표시"
 invalidJson = "잘못된 JSON — 원본 내용을 표시합니다"
 lineNumbers = "줄 번호"
 loading = "로딩 중..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF 내보내기"
 exportSelected = "선택한 페이지 내보내기"
 formFill = "양식 채우기"
 hideToolbar = "Hide toolbar"
+moreActions = "추가 작업"
 multiTool = "멀티 도구"
 panMode = "이동 모드"
 print = "PDF 인쇄"
@@ -11703,6 +11832,8 @@ selectAll = "모두 선택"
 selectByNumber = "페이지 번호로 선택"
 selectLanguage = "언어 선택"
 share = "공유"
+showAllTools = "모든 도구 표시"
+showFewerTools = "도구 모음 접기"
 showToolbar = "Show toolbar"
 toggleAnnotations = "주석 표시 전환"
 toggleAttachments = "첨부 파일 표시 전환"
