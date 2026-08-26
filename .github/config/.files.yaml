@@ -4,6 +4,7 @@
 # instead of matching only the project filter.
 ci: &ci
   - .github/workflows/build.yml
+  - .github/workflows/gradle-cache-prime.yml
   - .github/config/.files.yaml
 
 build: &build

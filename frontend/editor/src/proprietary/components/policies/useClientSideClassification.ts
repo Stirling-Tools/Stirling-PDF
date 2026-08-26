@@ -1,5 +1,5 @@
-// With the AI engine off, the Classification policy runs here in the browser:
-// each upload is labelled by the heuristic engine and metered for billing parity.
+// The Classification policy's first pass: every upload is labelled locally before the AI is asked.
+// The confidence reported here decides whether the AI is asked at all - see usePolicyAutoRun.
 
 import { useEffect, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
@@ -7,7 +7,6 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
@@ -15,12 +14,14 @@ import { meterClassificationRun } from "@app/services/classificationMeter";
 import {
   isDispatched,
   markDispatched,
+  recordRunStart,
+  updateRun,
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { HeuristicConfidence } from "@app/services/heuristic/types";
+import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
 
-/** The category id of the Classification policy (see policyDefinitions). */
-const CLASSIFICATION_CATEGORY = "classification";
 /** Files classified per idle pass, so a large library drains over several ticks. */
 const CLASSIFY_BATCH = 3;
 /** How long to wait for an upload's bytes to land in IndexedDB (20 × 250ms ≈ 5s).
@@ -47,9 +48,8 @@ export function useClientSideClassification(): void {
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const classificationEnabled = useClassificationEnabled();
-  const aiEnabled = useAiEngineEnabled();
-  // While app-config loads, aiEnabled reads false even on AI-on tenants; classifying
-  // in that window would double-run (and double-bill) files the server also labels.
+  // Still waited on: a verdict written before app-config lands would be acted on by the
+  // escalation decision before it knows whether the AI engine is even available.
   const { loading: configLoading } = useAppConfig();
   // Files claimed this session, keyed id+lastModified so a new version is retried once. A claim is
   // taken synchronously right before classifying, so overlapping batches never double-classify.
@@ -57,7 +57,9 @@ export function useClientSideClassification(): void {
   // Bumped after each batch to drain the next one.
   const [tick, setTick] = useState(0);
 
-  const policy = policies[CLASSIFICATION_CATEGORY];
+  // TODO: keyed on the Classification CATEGORY, so a pipeline that merely contains a classify
+  // step gets no local pass - suppressing one step of a chain is not expressible today.
+  const policy = policies[CLASSIFICATION_CATEGORY_ID];
   // Only when the admin has an active Classification policy - the same gate the AI path uses.
   const active = Boolean(
     policy?.configured &&
@@ -69,7 +71,8 @@ export function useClientSideClassification(): void {
   );
 
   useEffect(() => {
-    if (configLoading || !classificationEnabled || aiEnabled || !active) {
+    // Runs whether or not the AI engine is on: it is the first pass either way, not a fallback.
+    if (configLoading || !classificationEnabled || !active) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>
@@ -95,17 +98,23 @@ export function useClientSideClassification(): void {
           // Re-validate at execution time - another batch may have claimed it since.
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
-          const labels = await classifyStub(stub.id as FileId, stub.name);
+          const verdict = await classifyStub(
+            stub.id as FileId,
+            stub.name,
+            stub.size ?? 0,
+          );
           // Bytes never landed (file removed mid-wait): leave undelivered so a
           // reload (or new version) retries; the claim stops churn this session.
-          if (labels == null) continue;
+          if (verdict == null) continue;
           // Deliver unconditionally - a re-render must never discard a computed
           // (and already metered) result. Writes are idempotent.
           updateStirlingFileStub(stub.id as FileId, {
-            classificationLabels: labels,
+            classificationLabels: verdict.labels,
+            classificationConfidence: verdict.confidence,
           });
           const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
-            classificationLabels: labels,
+            classificationLabels: verdict.labels,
+            classificationConfidence: verdict.confidence,
           });
           if (ok) wrote = true;
         }
@@ -122,7 +131,6 @@ export function useClientSideClassification(): void {
     fileStubs,
     active,
     classificationEnabled,
-    aiEnabled,
     configLoading,
     updateStirlingFileStub,
     bumpRevision,
@@ -134,7 +142,8 @@ export function useClientSideClassification(): void {
 async function classifyStub(
   fileId: FileId,
   fileName: string,
-): Promise<string[] | null> {
+  fileSize: number,
+): Promise<{ labels: string[]; confidence: HeuristicConfidence } | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
     file = await fileStorage.getStirlingFile(fileId).catch(() => null);
@@ -149,10 +158,28 @@ async function classifyStub(
   }
   const debug = isClassificationDebug();
   const startedAt = performance.now();
+  // A local run is still a billable policy run, so it belongs in the activity feed; recorded only
+  // once the bytes are in hand, so a file whose bytes never land leaves no phantom row.
+
+  // Read before recordRunStart, which takes the dispatch key itself and would otherwise always
+  // answer "already dispatched", silently stopping metering.
+  const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
+  const runId = `local-${CLASSIFICATION_CATEGORY_ID}-${fileId}-${Date.now()}`;
+  recordRunStart({
+    runId,
+    categoryId: CLASSIFICATION_CATEGORY_ID,
+    fileId: fileId as string,
+    fileName,
+    fileSize,
+    target: "local",
+    status: "RUNNING",
+    outputs: [],
+    error: null,
+    startedAt: Date.now(),
+  });
   try {
     const result = await classifyFileHeuristically(file, { explain: debug });
     const { labels } = result;
-    const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY, fileId);
     const ms = Math.round(performance.now() - startedAt);
     const verdict =
       labels.length > 0
@@ -174,12 +201,22 @@ async function classifyStub(
         labels,
       });
     }
-    markDispatched(CLASSIFICATION_CATEGORY, fileId);
-    return labels;
+    markDispatched(CLASSIFICATION_CATEGORY_ID, fileId);
+    // Labels, no output file - the same settle shape the server-run classification uses.
+    updateRun(runId, {
+      status: "COMPLETED",
+      imported: true,
+      outputFileIds: [fileId as string],
+    });
+    return { labels, confidence: result.confidence };
   } catch (err) {
     // Never persist a verdict for an unreadable file - the failure may be
     // environmental, so it must stay eligible to retry (and meter) later.
     console.warn(`[Classify] ${fileName}: could not be read, will retry`, err);
+    updateRun(runId, {
+      status: "FAILED",
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
