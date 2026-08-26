@@ -142,10 +142,16 @@ export function WorkbenchSessionPersistence() {
   // Until the restore has run, this mount's empty state is not the truth to record.
   const restoreSettled = useRef(false);
 
+  // Published so a build's restore setting is legible without reading the bundle.
+  useEffect(() => {
+    document.documentElement.dataset.workbenchRestore = String(
+      WORKBENCH_SESSION_RESTORE,
+    );
+  }, []);
+
   const write = useCallback(() => {
     if (!store || !restoreSettled.current) return;
     // A known identity whose fingerprint has not landed yet: wait, do not stamp it as nobody's.
-    if (userId != null && owner == null) return;
     if (userId != null && owner == null) return;
     const state = store.getState();
     const toOriginal = (id: FileId): string | null => {

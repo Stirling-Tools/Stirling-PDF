@@ -11,6 +11,23 @@ const SAMPLES = [
   "annotations_out_of_order.pdf",
 ].map((name) => path.join(FIXTURES_DIR, name));
 
+// Read from the running app, not imported: a spec resolves @app/* to a different layer than
+// the browser build does, so an imported WORKBENCH_SESSION_RESTORE can disagree with reality.
+async function restoreEnabled(
+  page: import("@playwright/test").Page,
+): Promise<boolean> {
+  await page.waitForFunction(
+    () => document.documentElement.dataset.workbenchRestore !== undefined,
+    null,
+    { timeout: 20000 },
+  );
+  return page.evaluate(
+    () => document.documentElement.dataset.workbenchRestore === "true",
+  );
+}
+
+const NO_RESTORE = "this build ships the workbench restore off";
+
 // Switching editor -> processor unmounts every editor provider; the session record
 // in sessionStorage is what brings the workbench back on return.
 test.describe("Workbench survives the editor/processor switch", () => {
@@ -31,6 +48,8 @@ test.describe("Workbench survives the editor/processor switch", () => {
   test("open files and the library return after a round-trip", async ({
     page,
   }) => {
+    test.skip(!(await restoreEnabled(page)), NO_RESTORE);
+
     // Portal endpoints the processor shell fetches on mount.
     for (const [pattern, json] of [
       ["**/api/v1/policies", []],
@@ -116,6 +135,8 @@ test.describe("The view survives a reload", () => {
     });
 
   test("comes back on the same view the user left", async ({ page }) => {
+    test.skip(!(await restoreEnabled(page)), NO_RESTORE);
+
     await uploadFiles(page, SAMPLES.slice(0, 3));
     await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
       timeout: 15000,
@@ -147,6 +168,8 @@ test.describe("The view survives a reload", () => {
   // restore reopened is one whose pixels actually arrive.
   test("a file the restore reopened renders its pages", async ({ page }) => {
     test.setTimeout(120_000);
+    test.skip(!(await restoreEnabled(page)), NO_RESTORE);
+
     await uploadFiles(page, SAMPLES.slice(0, 3));
     await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
       timeout: 15_000,
@@ -166,18 +189,6 @@ test.describe("The view survives a reload", () => {
     await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
       timeout: 30_000,
     });
-
-    // Gated on the restore having actually reopened it, because that is the precondition
-    // this spec asserts ON - a build with the flag off never reopens anything, so there is
-    // no restored file to check. A flag-on build that stops reopening is not let off: the
-    // spec above fails when the view does not come back.
-    const reopened = await page
-      .locator(".file-sidebar-file-item.viewed")
-      .first()
-      .waitFor({ state: "visible", timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false);
-    test.skip(!reopened, "this build does not reopen the workbench on reload");
 
     // A tile that decoded has non-zero naturalWidth. The restore resolves each recorded id
     // to its current leaf, so an empty tile here means it reopened something unreadable.
