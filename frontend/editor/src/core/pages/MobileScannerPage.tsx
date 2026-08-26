@@ -10,7 +10,7 @@ import {
   Switch,
   Card,
 } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { Button as DSButton } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
@@ -21,6 +21,7 @@ import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {
   loadJscanify,
   type JscanifyCornerPoints,
@@ -40,8 +41,37 @@ const FLUID = {
   pad: "clamp(0.5rem, 1.8dvh, 1.25rem)",
 } as const;
 
-const MAX_VISIBLE_THUMBS = 5;
-const THUMB_SIZE = "clamp(28px, 7dvh, 56px)";
+const THUMB_SIZES = [52, 44, 38, 32, 26, 20];
+const THUMB_GAP = 4;
+
+function fitThumbs(
+  total: number,
+  viewportWidth: number,
+  viewportHeight: number,
+) {
+  if (!viewportWidth || !viewportHeight) {
+    return { thumbSize: THUMB_SIZES[0], stripMaxHeight: undefined };
+  }
+  const rowWidth = Math.max(viewportWidth - 24, 80);
+  const heightFor = (size: number) => {
+    const perRow = Math.max(
+      1,
+      Math.floor((rowWidth + THUMB_GAP) / (size + THUMB_GAP)),
+    );
+    return Math.ceil(total / perRow) * (size + THUMB_GAP);
+  };
+  const preferred = viewportHeight * 0.24;
+  const thumbSize =
+    THUMB_SIZES.find((size) => heightFor(size) <= preferred) ??
+    THUMB_SIZES[THUMB_SIZES.length - 1];
+  // Let the strip grow past its usual share rather than hide images, but never
+  // far enough to swallow the preview.
+  const stripMaxHeight = Math.min(
+    Math.max(preferred, heightFor(thumbSize)),
+    viewportHeight * 0.45,
+  );
+  return { thumbSize, stripMaxHeight };
+}
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -70,12 +100,13 @@ export default function MobileScannerPage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session");
   const compact = useMediaQuery("(max-height: 34rem)") ?? false;
+  const { width: viewportWidth, height: viewportHeight } = useViewportSize();
 
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>(
     "choice",
   );
-  const [capturedImages, setCapturedImages] = useState<string[]>([]);
-  const [currentPreview, setCurrentPreview] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -183,10 +214,10 @@ export default function MobileScannerPage() {
 
   useEffect(() => {
     console.log(
-      `[Mobile Scanner] Camera effect triggered: mode=${mode}, cameraError=${cameraError}, currentPreview=${currentPreview}`,
+      `[Mobile Scanner] Camera effect triggered: mode=${mode}, cameraError=${cameraError}, viewing=${selectedIndex}`,
     );
 
-    if (mode === "camera" && !cameraError && !currentPreview) {
+    if (mode === "camera" && !cameraError && selectedIndex === null) {
       console.log(
         "[Mobile Scanner] Camera effect: Starting camera initialization",
       );
@@ -309,11 +340,11 @@ export default function MobileScannerPage() {
       }
       setCameraReady(false);
     };
-  }, [mode, cameraError, currentPreview, t]);
+  }, [mode, cameraError, selectedIndex, t]);
 
   useEffect(() => {
     console.log(
-      `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`,
+      `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, viewing=${selectedIndex}`,
     );
 
     if (
@@ -322,7 +353,7 @@ export default function MobileScannerPage() {
       openCvReady &&
       cameraReady &&
       scannerRef.current &&
-      !currentPreview
+      selectedIndex === null
     ) {
       const startHighlighting = () => {
         console.log("[Mobile Scanner] startHighlighting() called");
@@ -586,7 +617,17 @@ export default function MobileScannerPage() {
         }
       };
     }
-  }, [mode, autoEnhance, openCvReady, cameraReady, currentPreview]);
+  }, [mode, autoEnhance, openCvReady, cameraReady, selectedIndex]);
+
+  const addImages = useCallback(
+    (added: string[]) => {
+      if (added.length === 0) return;
+      const next = [...images, ...added];
+      setImages(next);
+      setSelectedIndex(next.length - 1);
+    },
+    [images],
+  );
 
   const captureImage = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -717,20 +758,20 @@ export default function MobileScannerPage() {
         finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
       }
 
-      setCurrentPreview(finalDataUrl);
+      addImages([finalDataUrl]);
     } finally {
       setIsProcessing(false);
     }
-  }, [autoEnhance, openCvReady]);
+  }, [addImages, autoEnhance, openCvReady]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const input = e.target;
-      const images = Array.from(input.files ?? []).filter((file) =>
+      const picked = Array.from(input.files ?? []).filter((file) =>
         file.type.startsWith("image/"),
       );
 
-      if (images.length === 0) {
+      if (picked.length === 0) {
         input.value = "";
         setUploadError(
           t("mobileScanner.invalidFileType", "Please choose an image file."),
@@ -742,7 +783,7 @@ export default function MobileScannerPage() {
 
       let dataUrls: string[];
       try {
-        dataUrls = await Promise.all(images.map(readFileAsDataUrl));
+        dataUrls = await Promise.all(picked.map(readFileAsDataUrl));
       } catch (err) {
         console.error("Failed to read selected files:", err);
         setUploadError(
@@ -753,29 +794,13 @@ export default function MobileScannerPage() {
         input.value = "";
       }
 
-      const queued = dataUrls.slice(0, -1);
-      const preview = dataUrls[dataUrls.length - 1];
-      setCapturedImages((prev) =>
-        currentPreview
-          ? [...prev, currentPreview, ...queued]
-          : [...prev, ...queued],
-      );
-      setCurrentPreview(preview);
+      addImages(dataUrls);
     },
-    [currentPreview, t],
+    [addImages, t],
   );
 
-  const addToBatch = useCallback(() => {
-    if (currentPreview) {
-      setCapturedImages((prev) => [...prev, currentPreview]);
-      setCurrentPreview(null);
-    }
-  }, [currentPreview]);
-
   const uploadImages = useCallback(async () => {
-    const imagesToUpload = currentPreview
-      ? [...capturedImages, currentPreview]
-      : capturedImages;
+    const imagesToUpload = images;
 
     if (imagesToUpload.length === 0) return;
     if (!sessionId) return;
@@ -815,8 +840,8 @@ export default function MobileScannerPage() {
       }
 
       setUploadProgress(100);
-      setCurrentPreview(null);
-      setCapturedImages([]);
+      setImages([]);
+      setSelectedIndex(null);
       setUploadSuccess(true);
 
       setTimeout(() => {
@@ -830,18 +855,27 @@ export default function MobileScannerPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [currentPreview, capturedImages, sessionId, t]);
+  }, [images, sessionId, t]);
 
-  const retake = useCallback(() => {
-    setCurrentPreview(null);
-  }, []);
+  const removeSelected = useCallback(() => {
+    if (selectedIndex === null) return;
+    const next = images.filter((_, i) => i !== selectedIndex);
+    setImages(next);
+    if (mode === "camera" || next.length === 0) setSelectedIndex(null);
+    else setSelectedIndex(Math.min(selectedIndex, next.length - 1));
+  }, [images, mode, selectedIndex]);
 
-  const clearBatch = useCallback(() => {
-    setCapturedImages([]);
+  const clearAll = useCallback(() => {
+    setImages([]);
+    setSelectedIndex(null);
   }, []);
 
   const openFilePicker = useCallback(() => {
     fileInputRef.current?.click();
+  }, []);
+
+  const showCaptureSurface = useCallback(() => {
+    setSelectedIndex(null);
   }, []);
 
   const startOver = useCallback(() => {
@@ -849,6 +883,8 @@ export default function MobileScannerPage() {
     setUploadProgress(0);
     setUploadError(null);
     setMode("choice");
+    setImages([]);
+    setSelectedIndex(null);
   }, []);
 
   const toggleTorch = useCallback(async () => {
@@ -942,18 +978,22 @@ export default function MobileScannerPage() {
     );
   }
 
+  const viewing =
+    selectedIndex !== null ? (images[selectedIndex] ?? null) : null;
   const cameraStarting =
-    mode === "camera" && !currentPreview && !cameraReady && !cameraError;
-  const batchCount = capturedImages.length + (currentPreview ? 1 : 0);
-  const canUpload = batchCount > 0;
+    mode === "camera" && !viewing && !cameraReady && !cameraError;
+  const total = images.length;
+  const canUpload = total > 0;
   const showActionBar =
-    Boolean(currentPreview) ||
-    mode === "camera" ||
-    mode === "file" ||
-    canUpload;
+    Boolean(viewing) || mode === "camera" || mode === "file" || canUpload;
   const buttonSize = compact ? "sm" : "md";
-  const visibleThumbs = capturedImages.slice(0, MAX_VISIBLE_THUMBS);
-  const hiddenThumbs = capturedImages.length - visibleThumbs.length;
+  // Pick the largest tile that still wraps every image into the strip box, so
+  // nothing is ever clipped out of reach and the strip never scrolls.
+  const { thumbSize, stripMaxHeight } = fitThumbs(
+    total,
+    viewportWidth,
+    viewportHeight,
+  );
 
   const uploadButton = canUpload ? (
     <DSButton
@@ -964,7 +1004,7 @@ export default function MobileScannerPage() {
       loading={isUploading}
     >
       {t("mobileScanner.uploadWithCount", "Upload ({{total}})", {
-        total: batchCount,
+        total,
       })}
     </DSButton>
   ) : null;
@@ -1029,7 +1069,7 @@ export default function MobileScannerPage() {
           </Alert>
         )}
 
-        {cameraError && !currentPreview && (
+        {cameraError && !viewing && (
           <Alert
             color="orange"
             radius={0}
@@ -1062,9 +1102,10 @@ export default function MobileScannerPage() {
           overflow: "hidden",
         }}
       >
-        {currentPreview ? (
+        {viewing ? (
           <Box
             style={{
+              position: "relative",
               flex: 1,
               minHeight: 0,
               background: "#000",
@@ -1074,9 +1115,32 @@ export default function MobileScannerPage() {
               overflow: "hidden",
             }}
           >
+            <DSButton
+              onClick={showCaptureSurface}
+              variant="primary"
+              size="sm"
+              style={{
+                position: "absolute",
+                top: "0.75rem",
+                left: "0.75rem",
+                zIndex: 10,
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                backdropFilter: "blur(8px)",
+                border: "none",
+              }}
+            >
+              ← {t("mobileScanner.back", "Back")}
+            </DSButton>
             <img
-              src={currentPreview}
-              alt={t("mobileScanner.previewAlt", "Selected image")}
+              src={viewing}
+              alt={t(
+                "mobileScanner.imagePosition",
+                "Image {{index}} of {{total}}",
+                {
+                  index: (selectedIndex ?? 0) + 1,
+                  total,
+                },
+              )}
               style={{
                 maxWidth: "100%",
                 maxHeight: "100%",
@@ -1342,7 +1406,7 @@ export default function MobileScannerPage() {
         onChange={handleFileSelect}
       />
 
-      {capturedImages.length > 0 && (
+      {total > 0 && (
         <Box
           px="sm"
           py={4}
@@ -1355,69 +1419,77 @@ export default function MobileScannerPage() {
         >
           <Group justify="space-between" mb={4} wrap="nowrap">
             <Text fw={600} style={{ fontSize: FLUID.body }}>
-              {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
-              )
+              {viewing
+                ? t(
+                    "mobileScanner.imagePosition",
+                    "Image {{index}} of {{total}}",
+                    { index: (selectedIndex ?? 0) + 1, total },
+                  )
+                : t("mobileScanner.imageCount", "{{count}} images", {
+                    count: total,
+                  })}
             </Text>
             <DSButton
               size="sm"
               variant="quiet"
               accent="danger"
-              onClick={clearBatch}
+              onClick={clearAll}
             >
-              {t("mobileScanner.clearBatch", "Clear")}
+              {t("mobileScanner.clearAll", "Clear All")}
             </DSButton>
           </Group>
           <Box
             style={{
               display: "flex",
-              gap: "var(--space-xs)",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: THUMB_GAP,
+              maxHeight: stripMaxHeight,
               overflow: "hidden",
             }}
           >
-            {visibleThumbs.map((img, idx) => (
-              <Box
-                key={idx}
-                style={{
-                  flex: "1 1 0",
-                  minWidth: 0,
-                  maxWidth: THUMB_SIZE,
-                  height: THUMB_SIZE,
-                  borderRadius: "var(--radius-sm)",
-                  overflow: "hidden",
-                  border: "2px solid var(--c-border-subtle)",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`${t("mobileScanner.batchImages", "Batch")} ${idx + 1}`}
+            {images.map((img, idx) => {
+              const isSelected = idx === selectedIndex;
+              return (
+                <Box
+                  key={idx}
+                  component="button"
+                  type="button"
+                  onClick={() => setSelectedIndex(idx)}
+                  aria-label={t(
+                    "mobileScanner.imagePosition",
+                    "Image {{index}} of {{total}}",
+                    { index: idx + 1, total },
+                  )}
+                  aria-current={isSelected}
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    objectFit: "cover",
+                    width: thumbSize,
+                    height: thumbSize,
+                    flex: "0 0 auto",
+                    padding: 0,
+                    cursor: "pointer",
+                    borderRadius: "var(--radius-sm)",
+                    overflow: "hidden",
+                    background: "none",
+                    border: isSelected
+                      ? "2px solid var(--c-accent-text)"
+                      : "2px solid var(--c-border-subtle)",
+                    opacity: isSelected || !viewing ? 1 : 0.55,
                   }}
-                />
-              </Box>
-            ))}
-            {hiddenThumbs > 0 && (
-              <Box
-                style={{
-                  flex: "1 1 0",
-                  minWidth: 0,
-                  maxWidth: THUMB_SIZE,
-                  height: THUMB_SIZE,
-                  borderRadius: "var(--radius-sm)",
-                  border: "2px solid var(--c-border-subtle)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text fw={600} style={{ fontSize: FLUID.body }}>
-                  +{hiddenThumbs}
-                </Text>
-              </Box>
-            )}
+                >
+                  <img
+                    src={img}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+              );
+            })}
           </Box>
         </Box>
       )}
@@ -1433,7 +1505,7 @@ export default function MobileScannerPage() {
           }}
         >
           <Stack gap={FLUID.gap}>
-            {mode === "camera" && !currentPreview && (
+            {mode === "camera" && !viewing && (
               <Group justify="space-around" style={{ width: "100%" }}>
                 <Group gap="xs">
                   <Switch
@@ -1462,29 +1534,38 @@ export default function MobileScannerPage() {
             )}
 
             <Group grow wrap="nowrap">
-              {currentPreview && (
+              {viewing && (
                 <DSButton
                   variant="secondary"
+                  accent="danger"
                   size={buttonSize}
-                  onClick={retake}
+                  onClick={removeSelected}
+                  leftSection={<DeleteOutlineRoundedIcon />}
                 >
                   {mode === "camera"
                     ? t("mobileScanner.retake", "Retake")
                     : t("mobileScanner.remove", "Remove")}
                 </DSButton>
               )}
-              {currentPreview && (
+              {viewing && (
                 <DSButton
                   variant="secondary"
                   size={buttonSize}
-                  onClick={mode === "camera" ? addToBatch : openFilePicker}
+                  onClick={
+                    mode === "camera" ? showCaptureSurface : openFilePicker
+                  }
+                  leftSection={
+                    mode === "camera" ? (
+                      <PhotoCameraRoundedIcon />
+                    ) : (
+                      <AddPhotoAlternateRoundedIcon />
+                    )
+                  }
                 >
-                  {mode === "camera"
-                    ? t("mobileScanner.addToBatch", "Add to Batch")
-                    : t("mobileScanner.addMore", "Add More")}
+                  {t("mobileScanner.addMore", "Add More")}
                 </DSButton>
               )}
-              {mode === "camera" && !currentPreview && (
+              {mode === "camera" && !viewing && (
                 <DSButton
                   size={buttonSize}
                   onClick={captureImage}
@@ -1496,14 +1577,14 @@ export default function MobileScannerPage() {
                     : t("mobileScanner.capture", "Capture")}
                 </DSButton>
               )}
-              {mode === "file" && !currentPreview && (
+              {mode === "file" && !viewing && (
                 <DSButton
                   size={buttonSize}
                   variant={canUpload ? "secondary" : "primary"}
                   onClick={openFilePicker}
                   leftSection={<AddPhotoAlternateRoundedIcon />}
                 >
-                  {t("mobileScanner.selectImage", "Select Image")}
+                  {t("mobileScanner.selectImages", "Select Images")}
                 </DSButton>
               )}
               {compact && uploadButton}
