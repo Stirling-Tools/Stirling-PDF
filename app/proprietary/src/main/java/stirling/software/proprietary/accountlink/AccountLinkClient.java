@@ -190,10 +190,10 @@ public class AccountLinkClient {
         if (status == 202) {
             return ConnectClaimResult.of(ConnectClaimOutcome.PENDING);
         }
-        if (status / 100 == 5) {
+        if (status >= 500 && status <= 599) {
             return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
         }
-        if (status / 100 != 2) {
+        if (status >= 200 && status <= 299) {
             return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
         }
         try {
