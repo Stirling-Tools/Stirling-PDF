@@ -32,6 +32,7 @@ import {
   paintPlainText,
   plainCaretOffset,
   readOverlayText,
+  refitEditedTokens,
   refitTokens,
   restoreCaretOffset,
 } from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
@@ -48,6 +49,11 @@ const RENDER_MODE_INVISIBLE = 3;
 const SETTLE_MS = 400;
 
 const STALL_MS = 250;
+
+// Un-measured keystrokes a run absorbs before the overlay takes over the
+// glyphs. One or two are re-rendered fast enough to leave the page's own ink
+// alone; a burst is not.
+const GUESSED_EDITS_BEFORE_MASK = 2;
 
 // Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a CSS
 // font-family stack that visually approximates the PDFium-rendered glyphs.
@@ -164,8 +170,15 @@ function computeExactLayout(args: {
   });
   if (!exact || exact.length === 0) return null;
 
+  // Slot lefts are indexed by line, so an edit that added or removed a line
+  // makes every entry below it describe a different line - the same length
+  // guard the baselines already get.
+  const slotLefts =
+    run.paragraphLineLefts?.length === exact.length
+      ? run.paragraphLineLefts
+      : undefined;
   const lineLefts = exact.map((line, i) => {
-    const fromSlot = run.paragraphLineLefts?.[i];
+    const fromSlot = slotLefts?.[i];
     if (fromSlot !== undefined && Number.isFinite(fromSlot)) return fromSlot;
     if (Number.isFinite(line.left)) return line.left;
     return i === 0 ? run.matrix.e : run.bounds.x;
@@ -226,6 +239,23 @@ function computeExactLayout(args: {
     ),
   ].join("|");
   return { lines, leftPx, topPx: stack.topPx, widthPx, heightPx, signature };
+}
+
+// PDF advance per em for every character the run already carries. Scale-free,
+// so it stays valid as the user zooms.
+function charAdvancesEm(run: TextRunSnapshot): Map<string, number> | null {
+  const starts = run.charStartsX;
+  const ends = run.charEndsX;
+  if (!starts || !ends || starts.length !== run.text.length) return null;
+  if (!(run.fontSize > 0)) return null;
+  const map = new Map<string, number>();
+  for (let i = 0; i < run.text.length; i += 1) {
+    const width = ends[i] - starts[i];
+    if (!Number.isFinite(width) || width <= 0) continue;
+    const ch = run.text[i];
+    if (!map.has(ch)) map.set(ch, width / run.fontSize);
+  }
+  return map.size > 0 ? map : null;
 }
 
 function baselinesFor(
@@ -297,6 +327,10 @@ export function TextRunOverlay({
   const [editTick, setEditTick] = useState(0);
   const [stalled, setStalled] = useState(false);
   const editedAtRevisionRef = useRef(-1);
+  // Keystrokes taken since the engine last measured this run, and when the
+  // overlay's glyphs first came due because of them.
+  const guessedEditsRef = useRef(0);
+  const maskDueSinceRef = useRef(0);
   const paintedSignatureRef = useRef<string | null>(null);
   const pointerFocusRef = useRef(false);
   // The mask has to be the page's own colour, not a guess from the text: a
@@ -368,6 +402,13 @@ export function TextRunOverlay({
   const exact = freshExact ?? (focused ? heldExactRef.current : null);
   if (!freshExact && !focused) heldExactRef.current = null;
 
+  const advanceEm = useMemo(() => charAdvancesEm(run), [run]);
+  // Kept across the edit: the engine drops the pen positions the moment the
+  // text changes, and a token typed into needs them most right then.
+  const heldAdvanceEmRef = useRef<Map<string, number> | null>(null);
+  if (advanceEm) heldAdvanceEmRef.current = advanceEm;
+  const paintOpts = { font, fontSizePx, advanceEm: heldAdvanceEmRef.current };
+
   useEffect(() => {
     const bump = () => {
       resetTextMetricsCache();
@@ -412,35 +453,54 @@ export function TextRunOverlay({
     return () => window.clearTimeout(timer);
   }, [pageRevision, touched, editTick]);
 
+  // No exact layout for the text now in the box: the engine only re-measures
+  // pen positions once typing pauses, so until it does the overlay is placing
+  // glyphs on the browser's advances rather than the PDF's.
+  const layoutIsGuessed = touched && !freshExact;
+
   useEffect(() => {
-    if (!touched) {
+    if (!layoutIsGuessed) {
+      guessedEditsRef.current = 0;
+      maskDueSinceRef.current = 0;
       setStalled(false);
       return;
     }
-    if (
-      pageRevision !== undefined &&
-      pageRevision > editedAtRevisionRef.current
-    ) {
-      setStalled(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setStalled(true), STALL_MS);
+    guessedEditsRef.current += 1;
+    // A keystroke or two the engine is about to re-measure must not flash the
+    // mask - real PDF ink beats a CSS approximation whenever it is current.
+    if (guessedEditsRef.current < GUESSED_EDITS_BEFORE_MASK) return;
+    // Past that, hand the run its own glyphs. Keeping them transparent leaves
+    // the caret - the only thing the user can see move - placed by a layout
+    // that disagrees with the page bitmap, so it walks off the text a fraction
+    // of a pixel per keystroke. The deadline is anchored where the mask first
+    // came due, so typing on does not keep pushing it out of reach.
+    const now = Date.now();
+    if (maskDueSinceRef.current === 0) maskDueSinceRef.current = now;
+    const wait = Math.max(0, STALL_MS - (now - maskDueSinceRef.current));
+    const timer = window.setTimeout(() => setStalled(true), wait);
     return () => window.clearTimeout(timer);
-  }, [pageRevision, touched, editTick]);
+  }, [layoutIsGuessed, editTick]);
 
   useEffect(() => {
     const el = ref.current;
     if (!el || composingRef.current) return;
     if (!isLinePainted(el)) return;
-    refitTokens(el, { font, fontSizePx });
+    refitTokens(el, paintOpts);
   }, [font, fontSizePx]);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const active = document.activeElement === el;
-    if (active && (touched || composingRef.current)) return;
+    if (active && composingRef.current) return;
     const domText = readOverlayText(el);
+    // Mid-edit, the only layout allowed to repaint is one the engine has
+    // already measured for exactly this text. It re-seats the typed glyphs on
+    // the PDF's own advances - without it the overlay keeps laying them out at
+    // the browser's, and the caret walks off the text on the page a fraction of
+    // a pixel per keystroke. Any other layout would be fighting a keystroke
+    // still in flight.
+    if (active && touched && !(freshExact && domText === run.text)) return;
     const wantSignature = freshExact ? freshExact.signature : "";
     if (!freshExact && isLinePainted(el) && domText === run.text) return;
     if (
@@ -450,9 +510,12 @@ export function TextRunOverlay({
     ) {
       return;
     }
-    const caret = active ? plainCaretOffset(el) : null;
+    // Keyed off the selection, not the focus: replaceChildren below detaches
+    // whatever node the caret sits in, and a caret this run holds without being
+    // document.activeElement is still a caret the next insert needs.
+    const caret = plainCaretOffset(el);
     if (freshExact) {
-      paintLines(el, freshExact.lines, { font, fontSizePx });
+      paintLines(el, freshExact.lines, paintOpts);
     } else {
       paintPlainText(el, run.text);
     }
@@ -677,6 +740,11 @@ export function TextRunOverlay({
         if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
           return;
         const el = e.currentTarget as HTMLDivElement;
+        // Re-fit the token the user just typed into. Its painted width is the
+        // PDF's advance for the ORIGINAL string, so leaving it alone lays the
+        // new text out at the browser's own advances and the caret drifts off
+        // the glyphs on the page, a pixel or so per keystroke.
+        if (isLinePainted(el)) refitEditedTokens(el, paintOpts);
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
         const raw = readOverlayText(el);

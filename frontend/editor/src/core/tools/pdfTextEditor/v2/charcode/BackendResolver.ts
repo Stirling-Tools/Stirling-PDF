@@ -407,7 +407,12 @@ export function findFontForChar(
   const styleK = want
     ? `${want.bold ? "b" : ""}${want.italic ? "i" : ""}|`
     : "";
-  const cacheK = `${ctx.pagePtr}:${styleK}${cp}`;
+  // So is the source face: the borrow prefers the run's own family, so two
+  // runs of different families must not share an answer.
+  const likeName = likeFontPtr
+    ? baseFontFamily(readFontName(m, likeFontPtr))
+    : undefined;
+  const cacheK = `${ctx.pagePtr}:${styleK}${likeName ?? ""}|${cp}`;
   if (fontForCharCache.has(cacheK)) return fontForCharCache.get(cacheK) ?? null;
   const tpMod = m as unknown as TextPageModule;
   const fontMod = m as unknown as FontReadModule;
@@ -428,6 +433,11 @@ export function findFontForChar(
   }
   try {
     const count = tpMod.FPDFText_CountChars(textPage);
+    // The run's OWN family, wherever the page happens to draw this char in it,
+    // beats whichever style-compatible face comes first in content order. A
+    // word the document already uses otherwise came back in a near-miss face -
+    // right weight, slightly wrong shapes and advances.
+    let fallback: number | null = null;
     for (let i = 0; i < count; i++) {
       const u = tpMod.FPDFText_GetUnicode(textPage, i);
       if (u !== cp) continue;
@@ -444,11 +454,18 @@ export function findFontForChar(
             continue;
           }
         }
-        fontForCharCache.set(cacheK, f);
-        return f;
+        if (!likeName || baseFontFamily(readFontName(m, f)) === likeName) {
+          fontForCharCache.set(cacheK, f);
+          return f;
+        }
+        if (fallback === null) fallback = f;
       } catch {
         continue;
       }
+    }
+    if (fallback !== null) {
+      fontForCharCache.set(cacheK, fallback);
+      return fallback;
     }
   } finally {
     if (tpMod.FPDFText_ClosePage) {
@@ -472,6 +489,24 @@ interface FontNameModule {
   FPDFFont_GetBaseFontName?: (font: number, buf: number, len: number) => number;
 }
 
+/**
+ * A face's family, with the subset tag and style suffix stripped:
+ * "ABCDEF+LMRoman12-Regular" -> "lmroman12". Two handles that agree here are
+ * the same design, so a glyph borrowed across them keeps the run's look.
+ */
+function baseFontFamily(name: string | undefined): string | undefined {
+  if (!name) return undefined;
+  const family = name.replace(/^[A-Z]{6}\+/, "").split(/[-,]/)[0];
+  return family ? family.toLowerCase() : undefined;
+}
+
+const fontNameCache = new Map<number, string | undefined>();
+
+/** Test-only: clear the memoised /BaseFont names. */
+export function _clearFontNameCacheForTests(): void {
+  fontNameCache.clear();
+}
+
 // Read a font's /BaseFont name so the backend can disambiguate WHICH font to
 // encode against when two fonts on the page render the same char.
 function readFontName(
@@ -479,6 +514,16 @@ function readFontName(
   fontPtr: number,
 ): string | undefined {
   if (!fontPtr) return undefined;
+  if (fontNameCache.has(fontPtr)) return fontNameCache.get(fontPtr);
+  const name = loadFontName(m, fontPtr);
+  fontNameCache.set(fontPtr, name);
+  return name;
+}
+
+function loadFontName(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): string | undefined {
   const fn = (m as unknown as FontNameModule).FPDFFont_GetBaseFontName;
   if (typeof fn !== "function") return undefined;
   try {

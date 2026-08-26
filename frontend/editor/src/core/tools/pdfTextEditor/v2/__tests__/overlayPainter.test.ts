@@ -6,10 +6,14 @@ import {
   paintPlainText,
   plainCaretOffset,
   readOverlayText,
+  refitEditedTokens,
   restoreCaretOffset,
 } from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
 
 const OPTS = { font: "normal 400 16px sans-serif", fontSizePx: 16 };
+
+/** Line box geometry the advance tests do not care about. */
+const BOX = { heightPx: 20, marginTopPx: 0, marginLeftPx: 0 };
 
 function line(text: string, marginTopPx = 0): PaintLine {
   const tokens = text
@@ -209,5 +213,152 @@ describe("readOverlayText", () => {
     const el = host();
     el.appendChild(document.createTextNode("a\u00A0b"));
     expect(readOverlayText(el)).toBe("a b");
+  });
+});
+
+describe("readOverlayText - browser-emptied blocks", () => {
+  // Chrome does not always leave a bare <br> behind. Pressing Enter at the end
+  // of a line leaves the new block holding an EMPTY CLONE of the token span
+  // with the filler <br> inside it, and innerText still reports that as a line
+  // of its own - so one Enter used to read back as two.
+  function withInnerText(el: HTMLElement, value: string): void {
+    Object.defineProperty(el, "innerText", {
+      configurable: true,
+      get: () => value,
+    });
+  }
+
+  it("reads a block emptied down to a token span as ONE blank line", () => {
+    const el = host();
+    paintLines(el, [line("Second line"), line("left margin")], OPTS);
+    const emptied = el.children[0] as HTMLElement;
+    const leftover = document.createElement("span");
+    leftover.setAttribute("data-v2-token", "");
+    leftover.dataset.src = "line";
+    leftover.appendChild(document.createElement("br"));
+    emptied.replaceChildren(leftover);
+    withInnerText(emptied, "\n");
+    expect(readOverlayText(el)).toBe("\nleft margin");
+  });
+
+  it("still splits a block that really does hold two lines", () => {
+    const el = host();
+    paintLines(el, [line("one two")], OPTS);
+    const block = el.children[0] as HTMLElement;
+    withInnerText(block, "one\ntwo");
+    expect(readOverlayText(el)).toBe("one\ntwo");
+  });
+});
+
+describe("plainCaretOffset - carets that are not in a text node", () => {
+  // Enter parks the caret inside the empty span Chrome left behind. A tree walk
+  // over text nodes alone reports nothing for that position, and the repaint
+  // that follows then dropped the caret to the top of the run.
+  it("finds a caret parked inside an empty token span", () => {
+    const el = host();
+    paintLines(el, [line("Second line"), line(""), line("left margin")], OPTS);
+    const blank = el.children[1] as HTMLElement;
+    const leftover = document.createElement("span");
+    leftover.setAttribute("data-v2-token", "");
+    blank.replaceChildren(leftover);
+
+    const range = document.createRange();
+    range.setStart(leftover, 0);
+    range.collapse(true);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    expect(plainCaretOffset(el)).toBe("Second line\n".length);
+  });
+
+  it("finds a caret parked on the container between two blocks", () => {
+    const el = host();
+    paintLines(el, [line("abc"), line("de")], OPTS);
+    const range = document.createRange();
+    range.setStart(el, 1);
+    range.collapse(true);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    expect(plainCaretOffset(el)).toBe(4);
+  });
+
+  it("reads a container caret past the last block as the end of it", () => {
+    const el = host();
+    paintLines(el, [line("abc"), line("de")], OPTS);
+    const range = document.createRange();
+    range.setStart(el, 2);
+    range.collapse(true);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    expect(plainCaretOffset(el)).toBe("abc\nde".length);
+  });
+});
+
+describe("refitEditedTokens", () => {
+  // The stub canvas above advances every face at 8px/char, so a token painted
+  // at a different advance is standing in for a PDF whose own face is wider or
+  // narrower than the one the browser has.
+  function tokenOf(el: HTMLElement): HTMLElement {
+    return el.querySelector<HTMLElement>("[data-v2-token]")!;
+  }
+
+  function fittedWidth(span: HTMLElement, chars: number): number {
+    const ls = parseFloat(span.style.letterSpacing || "0");
+    const mr = parseFloat(span.style.marginRight || "0");
+    return chars * 8 + chars * ls + mr;
+  }
+
+  it("re-prices a token the user typed into against the PDF's own advances", () => {
+    const el = host();
+    paintLines(el, [{ tokens: [{ text: "ab", advancePx: 24 }], ...BOX }], OPTS);
+    const span = tokenOf(el);
+    span.textContent = "abcd";
+    // "a" and "b" measured 12px each in the PDF; "c"/"d" are new, so they take
+    // the token's own browser-to-PDF ratio (24/16).
+    refitEditedTokens(el, {
+      ...OPTS,
+      advanceEm: new Map([
+        ["a", 12 / OPTS.fontSizePx],
+        ["b", 12 / OPTS.fontSizePx],
+      ]),
+    });
+    expect(fittedWidth(span, 4)).toBeCloseTo(48, 4);
+  });
+
+  it("falls back to the token's own ratio with no advance table", () => {
+    const el = host();
+    paintLines(el, [{ tokens: [{ text: "ab", advancePx: 24 }], ...BOX }], OPTS);
+    const span = tokenOf(el);
+    span.textContent = "abcd";
+    refitEditedTokens(el, OPTS);
+    expect(fittedWidth(span, 4)).toBeCloseTo(48, 4);
+  });
+
+  it("restores the exact fit when the edit is backspaced away", () => {
+    const el = host();
+    paintLines(el, [{ tokens: [{ text: "ab", advancePx: 24 }], ...BOX }], OPTS);
+    const span = tokenOf(el);
+    const painted = `${span.style.letterSpacing}|${span.style.marginRight}`;
+    span.textContent = "abcd";
+    refitEditedTokens(el, OPTS);
+    span.textContent = "ab";
+    refitEditedTokens(el, OPTS);
+    expect(`${span.style.letterSpacing}|${span.style.marginRight}`).toBe(
+      painted,
+    );
+  });
+
+  it("leaves untouched tokens exactly as painted", () => {
+    const el = host();
+    paintLines(el, [{ tokens: [{ text: "ab", advancePx: 24 }], ...BOX }], OPTS);
+    const span = tokenOf(el);
+    const before = `${span.style.letterSpacing}|${span.style.marginRight}`;
+    refitEditedTokens(el, OPTS);
+    expect(`${span.style.letterSpacing}|${span.style.marginRight}`).toBe(
+      before,
+    );
   });
 });

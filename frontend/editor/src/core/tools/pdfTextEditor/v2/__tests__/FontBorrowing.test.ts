@@ -21,6 +21,7 @@ import {
   fontStyleClass,
   styleClassFromName,
   _clearFontForCharCacheForTests,
+  _clearFontNameCacheForTests,
   _clearReusableFontCacheForTests,
 } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
 import type { ResolverContext } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
@@ -89,6 +90,7 @@ const ctxFor = (module: ResolverContext["module"]): ResolverContext => ({
 
 afterEach(() => {
   _clearFontForCharCacheForTests();
+  _clearFontNameCacheForTests();
   _clearReusableFontCacheForTests();
 });
 
@@ -189,6 +191,46 @@ describe("findFontForChar", () => {
     expect(
       findFontForChar("p", ctxFor(m), 0, styleClassFromName("Times-Bold")),
     ).toBe(BOLD);
+  });
+
+  it("prefers the run's OWN family over another face of the same weight", () => {
+    // Both are regular, so the weight guard lets either through. Taking the
+    // first in content order gave a word the document already sets in Times a
+    // near-miss face: right weight, slightly wrong shapes and advances.
+    const OTHER = 40;
+    const fonts = {
+      ...REAL_FONTS,
+      [OTHER]: { name: "AAAAAD+TimesNewRoman", dataLen: 4096 },
+    };
+    const m = makeModule(
+      [
+        ["s", OTHER],
+        ["s", REGULAR],
+      ],
+      fonts,
+    );
+    expect(findFontForChar("s", ctxFor(m), REGULAR)).toBe(REGULAR);
+  });
+
+  it("matches families across subset tags and style suffixes", () => {
+    const PLAIN = 50;
+    const fonts = {
+      ...REAL_FONTS,
+      [PLAIN]: { name: "Helvetica", dataLen: 4096 },
+    };
+    const m = makeModule([["s", PLAIN]], fonts);
+    // "AAAAAC+Helvetica" and a bare "Helvetica" are the same design.
+    expect(findFontForChar("s", ctxFor(m), REGULAR)).toBe(PLAIN);
+  });
+
+  it("still borrows another family when the run's own has no such glyph", () => {
+    const OTHER = 40;
+    const fonts = {
+      ...REAL_FONTS,
+      [OTHER]: { name: "AAAAAD+TimesNewRoman", dataLen: 4096 },
+    };
+    const m = makeModule([["s", OTHER]], fonts);
+    expect(findFontForChar("s", ctxFor(m), REGULAR)).toBe(OTHER);
   });
 
   it("still offers a Type 3 face - the emit path gates it on a measurable advance", () => {

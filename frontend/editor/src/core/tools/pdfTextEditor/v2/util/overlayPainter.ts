@@ -19,6 +19,12 @@ export interface PaintLine {
 export interface PaintOptions {
   font: string;
   fontSizePx: number;
+  /**
+   * PDF advance per em for characters the run already contains, keyed by
+   * character. The only measurement of the document's own face available while
+   * the user is typing, so it is what newly typed glyphs are sized against.
+   */
+  advanceEm?: Map<string, number> | null;
 }
 
 const LINE_ATTR = "data-v2-line";
@@ -73,13 +79,76 @@ function applyFit(
 }
 
 export function refitTokens(el: HTMLElement, opts: PaintOptions): void {
+  refit(el, opts, false);
+}
+
+/** Re-fit only the tokens the user has typed into - cheap enough per keystroke. */
+export function refitEditedTokens(el: HTMLElement, opts: PaintOptions): void {
+  refit(el, opts, true);
+}
+
+function refit(
+  el: HTMLElement,
+  opts: PaintOptions,
+  changedOnly: boolean,
+): void {
   for (const span of el.querySelectorAll<HTMLSpanElement>(`[${TOKEN_ATTR}]`)) {
     const advance = Number(span.dataset.adv);
     if (!Number.isFinite(advance)) continue;
     const text = span.textContent ?? "";
-    if (text !== span.dataset.src) continue;
-    applyFit(span, { text, advancePx: advance }, opts);
+    const source = span.dataset.src ?? "";
+    if (text === source) {
+      // An estimate the user has since backspaced away is sized for text that
+      // is no longer there, so replace it even on the per-keystroke pass.
+      if (!changedOnly || span.dataset.est) {
+        delete span.dataset.est;
+        applyFit(span, { text, advancePx: advance }, opts);
+      }
+      continue;
+    }
+    const target = predictedAdvance(text, source, advance, opts);
+    if (target === null) continue;
+    span.dataset.est = "1";
+    applyFit(span, { text, advancePx: target }, opts);
   }
+}
+
+/**
+ * Where the PDF will advance the pen for a token the user has typed into.
+ *
+ * A token is painted at the width the PDF advances, not the width the browser
+ * lays the same string out at - the two differ by 10-15% whenever the document
+ * face isn't the one the browser has, and by a different amount per glyph. The
+ * engine only re-measures once typing pauses, so until then each character is
+ * priced from the document's own advances where the run already has that
+ * character, and from the token's browser-to-PDF ratio where it does not.
+ * Leaving the pre-edit fit in place instead smears a five-character correction
+ * across a thirty-character word.
+ */
+function predictedAdvance(
+  text: string,
+  source: string,
+  sourceAdvancePx: number,
+  opts: PaintOptions,
+): number | null {
+  if (text === "" || source === "") return null;
+  const sourceNatural = measureAdvancePx(source, opts.font);
+  if (!(sourceNatural > 0) || !(sourceAdvancePx > 0)) return null;
+  const ratio = sourceAdvancePx / sourceNatural;
+  const table = opts.advanceEm;
+  if (!table || table.size === 0) {
+    const natural = measureAdvancePx(text, opts.font);
+    return natural > 0 ? natural * ratio : null;
+  }
+  let total = 0;
+  for (const ch of text) {
+    const em = table.get(ch);
+    total +=
+      em === undefined
+        ? measureAdvancePx(ch, opts.font) * ratio
+        : em * opts.fontSizePx;
+  }
+  return total > 0 ? total : null;
 }
 
 function tokenFitFor(token: PaintToken, opts: PaintOptions): TokenFit {
@@ -96,23 +165,21 @@ export function paintPlainText(el: HTMLElement, text: string): void {
   el.innerText = text;
 }
 
-function isBr(node: Node): boolean {
-  return node instanceof HTMLElement && node.tagName === "BR";
-}
-
 /**
  * Lines held by one painted line block.
  *
  * innerText is the only reader that agrees with layout about where a block
  * breaks - Firefox puts a manual break INSIDE the token span it split, which no
  * child walk sees. The single case it gets wrong is a block the browser
- * emptied, which keeps a filler <br> that innerText reports as a newline of its
- * own; that inserted a phantom line and shoved every line below it down the
- * page. So: special-case that one shape, and trust innerText for the rest.
+ * emptied, which keeps a filler break that innerText reports as a newline of
+ * its own; that inserts a phantom line and shoves every line below it down the
+ * page. The filler is not always a direct <br>: pressing Enter at the end of a
+ * line leaves Chrome an empty clone of the token span with the <br> inside it.
+ * An emptied block is one empty line however the browser spells it, so key off
+ * the absence of text rather than the shape holding it.
  */
 function blockLines(element: HTMLElement): string[] {
-  const kids = element.childNodes;
-  if (kids.length === 1 && isBr(kids[0])) return [""];
+  if ((element.textContent ?? "") === "") return [""];
   // textContent is the jsdom fallback: innerText needs layout, so unit tests
   // exercise structure while the browser suites cover the layout-driven cases.
   const text = element.innerText ?? element.textContent ?? "";
@@ -168,28 +235,39 @@ function lineBlocks(el: HTMLElement): HTMLElement[] {
   );
 }
 
+// Characters of `root` that precede (node, offset). A caret does not always sit
+// in a text node - pressing Enter parks it inside the empty token span Chrome
+// left behind - and a tree walk over text nodes alone reports nothing for those
+// positions, which loses the caret on the next repaint.
 function textOffsetWithin(
   root: HTMLElement,
   node: Node,
   offset: number,
 ): number | null {
   if (!root.contains(node)) return null;
-  if (node === root) {
-    let total = 0;
-    for (let i = 0; i < offset && i < root.childNodes.length; i += 1) {
-      total += (root.childNodes[i].textContent ?? "").length;
+  const range = document.createRange();
+  try {
+    range.setStart(root, 0);
+    range.setEnd(node, offset);
+  } catch {
+    return null;
+  }
+  return range.toString().length;
+}
+
+function containerCaretOffset(el: HTMLElement, offset: number): number | null {
+  const chars = textOffsetWithin(el, el, offset);
+  if (chars === null) return null;
+  let crossed = 0;
+  for (let i = 0; i < offset && i < el.childNodes.length; i += 1) {
+    const child = el.childNodes[i];
+    if (child instanceof HTMLElement && child.hasAttribute(LINE_ATTR)) {
+      crossed += 1;
     }
-    return total;
   }
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let total = 0;
-  let current = walker.nextNode();
-  while (current) {
-    if (current === node) return total + offset;
-    total += (current.nodeValue ?? "").length;
-    current = walker.nextNode();
-  }
-  return null;
+  // A caret past the last block belongs at that line's end, not on a fresh one.
+  const trailing = offset >= el.childNodes.length ? 1 : 0;
+  return chars + Math.max(0, crossed - trailing);
 }
 
 export function plainCaretOffset(el: HTMLElement): number | null {
@@ -200,6 +278,9 @@ export function plainCaretOffset(el: HTMLElement): number | null {
 
   const blocks = lineBlocks(el);
   if (blocks.length === 0) return textOffsetWithin(el, focusNode, focusOffset);
+  // Parked on the container itself: the offset counts CHILD BLOCKS, so add back
+  // the newline each completed block stands for.
+  if (focusNode === el) return containerCaretOffset(el, focusOffset);
 
   let before = 0;
   for (let i = 0; i < blocks.length; i += 1) {
