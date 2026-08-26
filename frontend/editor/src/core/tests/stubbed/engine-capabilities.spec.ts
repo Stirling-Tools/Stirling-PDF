@@ -107,6 +107,12 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
 
     await uploadFiles(page, SAMPLE_PDF);
 
+    // Dropped before the reload boots, so it cannot reopen the file for us: the eye
+    // below toggles, and whether the restore runs is a build flag this spec does not own.
+    await page.addInitScript(() =>
+      sessionStorage.removeItem("stirling.workbench.session"),
+    );
+
     // Full reload: FileContext rehydrates from IndexedDB, not from memory.
     await page.reload({ waitUntil: "domcontentloaded" });
 
@@ -115,8 +121,10 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
 
     // Rendering it is the assertion that matters: the metadata record survives
     // even when the bytes were never stored, so a filename proves nothing.
-    // The session restore reopens it in the viewer, so nothing needs clicking -
-    // a rendered tile here still means the bytes were read back from storage.
+    await restored.hover();
+    await restored
+      .locator(".file-sidebar-eye-btn")
+      .click({ timeout: 15_000, force: true });
 
     const firstPage = page.locator('[data-page-index="0"]').first();
     await expect(firstPage).toBeVisible({ timeout: 60_000 });
