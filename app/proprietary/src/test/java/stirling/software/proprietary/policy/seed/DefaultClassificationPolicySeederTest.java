@@ -21,6 +21,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
@@ -71,6 +72,22 @@ class DefaultClassificationPolicySeederTest {
         assertThat(policy.steps()).hasSize(1);
         assertThat(policy.steps().get(0).operation())
                 .isEqualTo("/api/v1/ai/tools/classify-and-label");
+    }
+
+    @Test
+    void listsTheEditorAsASourceSoResavingInTheWizardCannotSwitchClassificationOff() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of());
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policyStore).save(saved.capture());
+        Policy policy = saved.getValue();
+        // The portal wizard hydrates its source picker from these options and re-derives editor
+        // participation from the user's selection. An editor-run policy that does not list the
+        // editor here comes back from the wizard switched off.
+        assertThat(policy.editor().allowed()).isTrue();
+        assertThat(policy.output().options().get("sources")).isEqualTo(List.of(EditorSource.ID));
     }
 
     @Test

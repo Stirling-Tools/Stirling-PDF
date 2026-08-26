@@ -18,6 +18,7 @@ import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
@@ -100,7 +101,10 @@ public class DefaultClassificationPolicySeeder {
         Map<String, Object> options = new HashMap<>();
         options.put("categoryId", CATEGORY);
         options.put("mode", "new_version");
-        options.put("sources", List.of());
+        // The portal wizard still offers the editor as a pickable source and re-derives editor
+        // participation from what it finds selected, so leaving this empty would make an admin who
+        // merely re-saves this policy switch classification off.
+        options.put("sources", List.of(EditorSource.ID));
         options.put("scopeTypes", List.of());
         options.put("reviewerEmail", "");
         return new Policy(
