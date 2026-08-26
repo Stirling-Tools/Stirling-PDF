@@ -41,7 +41,7 @@ false = "Falsk"
 fileNotSavedToDisk = "Ikke gemt på disken"
 fileSavedToDisk = "Fil gemt på disken"
 fileSelected = "Valgt: {{filename}}"
-filesSelected = "Filer valgt"
+filesSelected = "{{count}} filer"
 font = "Skrifttype"
 fontSizeTooltip = "Størrelse på sidetalsteksten i punkter. Større tal giver større tekst."
 fontTypeTooltip = "Skrifttypefamilie til sidetal. Vælg efter din dokuments stil."
@@ -3969,6 +3969,7 @@ back = "Tilbage"
 backToFolder = "Tilbage til {{folder}}"
 backToMyFiles = "Tilbage til Mine filer"
 breadcrumbs = "Mappesti"
+bulkActions = "Handlinger"
 cancel = "Annuller"
 classification = "Klassifikation"
 clearSelection = "Ryd markering"
@@ -4142,6 +4143,11 @@ totalSize = "Samlet størrelse"
 type = "Type"
 versionHistory = "Versionsrejse"
 
+[filesPage.filters]
+activeCount = "{{count}} filtre aktive"
+clearAll = "Ryd filtre"
+label = "Filtre"
+
 [filesPage.folderName]
 cancel = "Annuller"
 error = "Kunne ikke gemme mappe. Prøv igen."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sortér filer"
 modifiedAsc = "Ældst først"
 modifiedDesc = "Nyest først"
 nameAsc = "Navn A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Alt gemt"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Kunne ikke anvende ændringerne"
 extractCsvError = "Kunne ikke udtrække CSV"
 extractXlsxError = "Kunne ikke udtrække XLSX"
 filled = "filled"
 flattenAfterFilling = "Fladgør efter udfyldning"
+goToPage = "Gå til denne side"
 noFields = "No fillable form fields found in this PDF."
+page = "Side"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl"
@@ -4318,7 +4328,82 @@ rescanFields = "Scan felter igen"
 rescanFormFields = "Scan formularfelter igen"
 save = "Gem"
 saveShortcut = "Ctrl+S for at gemme"
+skippedEdits_one = "1 ændring kunne ikke anvendes:"
+skippedEdits_other = "{{count}} ændringer kunne ikke anvendes:"
+skippedEditsTruncated = "{{count}} mere ikke vist."
 unsavedChanges = "Ikke-gemte ændringer"
+
+[formFill.create]
+commit = "Tilføj {{count}} felt(er) til PDF"
+empty = "Der er endnu ikke tegnet nogen felter."
+failed = "Kunne ikke tilføje felter"
+goToField = "Gå til dette felt"
+hint = "Vælg en felttype, og tegn den derefter på siden."
+placing = "Tegn et {{type}}-felt på siden. Tryk på Esc for at stoppe."
+preview = "Hold nede for at forhåndsvise"
+previewHelp = "Hold nede for at se felterne, som de vil se ud, når de er tilføjet, uden redigeringskonturerne."
+removeField = "Fjern felt"
+
+[formFill.editor]
+action = "Knaphandling"
+actionHelp = "Hvad knappen gør, når der klikkes på den."
+actionNone = "Ingen"
+actionPrint = "Udskriv"
+actionReset = "Nulstil formular"
+actionSubmit = "Send til URL"
+actionUri = "Åbn URL"
+actionUrl = "URL"
+actionUrlHelp = "Den adresse, knappen åbner eller sender til."
+addOption = "Tilføj valgmulighed"
+caption = "Knaptekst"
+captionHelp = "Teksten, der vises på knappen."
+defaultValue = "Standardværdi"
+defaultValueHelp = "Hvad feltet indeholder, før nogen udfylder det. Lad det stå tomt for et tomt felt."
+fontSize = "Skriftstørrelse"
+fontSizeHelp = "Tekststørrelse inde i feltet. Lad det stå tomt for at lade læseren tilpasse størrelsen."
+label = "Etiket"
+labelHelp = "Teksten, der vises til den, som udfylder formularen. Lad den stå tom for at bruge feltnavnet i stedet."
+maxLength = "Maks. længde (comb)"
+maxLengthHelp = "Begrænser, hvor mange tegn der kan være, tegnet som jævnt fordelte bokse."
+multiline = "Flere linjer"
+multilineHelp = "Tillader mere end én tekstlinje og ombryder ved feltets kant."
+multiSelect = "Tillad flere valg"
+multiSelectHelp = "Gør det muligt at vælge mere end én valgmulighed ad gangen."
+name = "Feltnavn"
+nameHelp = "Feltets interne navn. Bruges ved eksport af data eller udfyldning af formularen fra et andet system, så hold det unikt og uden mellemrum."
+optionGap = "Afstand mellem valgmuligheder"
+optionGapHelp = "Afstand mellem knapper, i punkter. Lad det stå tomt for at fordele dem jævnt ned gennem boksen."
+optionPlaceholder = "Valgmulighed {{n}}"
+options = "Valgmuligheder"
+optionsEmpty = "Tilføj mindst én valgmulighed."
+optionsHelp = "De valg, der tilbydes på listen. Hvert valg gemmes, som det indtastes, så hold dem korte og tydelige."
+optionSize = "Størrelse på valgmulighed"
+optionSizeHelp = "Bredde og højde for hver knap, i punkter. Lad det stå tomt for at tilpasse dem til den boks, du tegnede."
+readOnly = "Skrivebeskyttet"
+readOnlyHelp = "Viser en værdi, men forhindrer redigering."
+removeOption = "Fjern valgmulighed"
+required = "Påkrævet"
+requiredHelp = "Formularen kan ikke sendes, før dette felt er udfyldt."
+signatureNote = "Kun pladsholder - du underskriver ikke her. Den markerer, hvor en signatur hører til, så en PDF-underskriver (Adobe Acrobat, en underskriftstjeneste osv.) placerer signaturen på dette sted, når dokumentet underskrives."
+tooltip = "Værktøjstip"
+tooltipHelp = "Det tip, der vises, når nogen holder musen over feltet i en PDF-læser."
+type = "Type"
+typeHelp = "Hvilken type felt dette er. Hvis du ændrer det, genopbygges feltet, så dets aktuelle værdi videreføres ikke."
+
+[formFill.mode]
+create = "Opret"
+fill = "Udfyld"
+label = "Formularredigeringstilstand"
+modify = "Rediger"
+
+[formFill.modify]
+commit = "Gem {{count}} ændring(er)"
+delete = "Slet"
+empty = "Denne PDF har endnu ingen formularfelter."
+failed = "Kunne ikke gemme ændringer"
+groupSizeHint = "Brug Størrelse på valgmulighed"
+hint = "Vælg et felt for at redigere dets egenskaber, træk det på siden, eller slet det."
+restore = "Gendan"
 
 [formFill.sidebar]
 close = "Luk sidepanel"
@@ -4584,6 +4669,10 @@ title = "Ændre Metadata"
 desc = "Ændr dokumentbegrænsninger og tilladelser"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ændre Tilladelser"
+
+[home.classify]
+desc = "Identificér, hvilken slags dokument dette er, og mærk det."
+title = "Klassificér"
 
 [home.compare]
 desc = "Sammenligner og viser forskellene mellem 2 PDF-dokumenter"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Intet at rapportere."
+handoffUnavailable = "Denne browser vil ikke lade processoren sende dokumentet videre til redigeringsværktøjet. Åbn det fra redigeringsværktøjet i stedet."
+noDocumentLinked = "Denne fejl er ikke knyttet til et specifikt dokument, så der er intet at åbne her."
+notOnThisDevice = "Dette dokument findes ikke på denne enhed, så det kan ikke åbnes her."
+occurrences = "{{count}} gange"
+open = "Notifikationer"
+title = "Notifikationer"
+unread = "Ulæst"
+
+[notifications.action]
+failed = "Det virkede ikke. Prøv igen om et øjeblik."
+unavailable = "Ikke tilgængelig for denne notifikation."
+
+[notifications.detail]
+copied = "Kopieret"
+copy = "Kopiér fejl"
+less = "Vis mindre"
+more = "Vis hele beskeden"
+
+[notifications.section]
+earlier = "Tidligere"
+new = "Ny"
 
 [oauth.error]
 message = "Godkendelsen var ikke vellykket. Du kan lukke dette vindue og prøve igen."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "af {{allowance}} gratis PDFs brugt"
 capSuffix_other = "af {{allowance}} gratis PDFs brugt"
 eyebrow = "Processor-prøveperiode"
-statusLabel_one = "{{remaining}} tilbage"
-statusLabel_other = "{{remaining}} tilbage"
+statusLabel_one = "{{used}} brugt"
+statusLabel_other = "{{used}} brugt"
 sub = "Brug PDF Editor gratis. Betal for at behandle PDFs automatisk."
 title_one = "Behandl {{allowance}} PDFs gratis"
 title_other = "Behandl {{allowance}} PDFs gratis"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Vis fil"
+viewInProcessor = "Vis i processoren"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Denne fejl blev ikke registreret for et specifikt dokument, så der er intet her at åbne."
+unattended = "Denne fil blev tilført af en mappe, bucket eller webhook, så ingen browser holder den klar til åbning."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Kilder"
 connectSource = "Forbind kilde"
 
 [portal.sources.builder]
+advanced = "Avanceret"
 back = "Tilbage til kilder"
+backToSource = "Tilbage til kildeopsætning"
 backToTypes = "Alle kildetyper"
 cancel = "Annuller"
 chooseHint = "Vælg, hvor dokumenter kommer fra. Nedtonede connectors er på vej."
@@ -8726,7 +8845,6 @@ create = "Opret kilde"
 createTitle = "Forbind en kilde"
 delete = "Slet"
 editTitle = "Rediger kilde"
-enabled = "Aktiveret"
 save = "Gem ændringer"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: behandl hver fil én gang"
 snapshot = "Snapshot: genlæs mappen ved hver kørsel"
 
 [portal.sources.networkFields.recursive]
+helperText = "Medtag undermapper, hvis dine filer er organiseret i indlejrede mapper, eller overvåg kun det øverste niveau."
 label = "Mappedybde"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Størrelse, dato og indholdskontrol"
 stat = "Størrelse og ændringsdato"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Om den oprindelige fil skal blive liggende, efter den er blevet behandlet. Hvis den oprindelige fil bliver liggende, behandles den igen, næste gang pipelinen scanner kilden."
 label = "Læsetilstand"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Forbrug: behandl hver fil én gang"
 snapshot = "Snapshot: genlæs mappen ved hver kørsel"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Medtag undermapper, hvis dine filer er organiseret i indlejrede mapper, eller overvåg kun det øverste niveau."
 label = "Mappedybde"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Din Stirling-PDF-server er offline, og \"{{endpoint}}
 expired = "Din sesions tid har udløbet. Genlad siden og prøv igen."
 
 [settings]
+backToSections = "Alle indstillinger"
 close = "Luk"
+title = "Indstillinger"
 
 [settings.ai]
 documents = "Dokumenter & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Søg"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Søg i værktøjer..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Avanceret formatering"
+ai = "AI"
 automation = "Automatisering"
 developerTools = "Udviklerværktøjer"
 documentReview = "Dokumentgennemgang"
@@ -11335,8 +11460,11 @@ columnDefault = "Kolonne {{index}}"
 convertToPdf = "Konverter til PDF"
 csvStats = "{{rows}} rækker · {{columns}} kolonner · {{size}}"
 emptyFile = "Tom fil"
+htmlHidePreview = "Skjul forhåndsvisning"
 htmlPreview = "HTML-forhåndsvisning"
+htmlPreviewMobileHidden = "HTML-sider er layoutet til desktopbredder, så forhåndsvisningen er som standard slået fra her."
 htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressourcer indlæses muligvis ikke · {{size}}"
+htmlShowPreview = "Vis forhåndsvisning alligevel"
 invalidJson = "Ugyldig JSON — viser råt indhold"
 lineNumbers = "Linjenumre"
 loading = "Indlæser..."
@@ -11683,6 +11811,7 @@ exportAll = "Eksporter PDF"
 exportSelected = "Eksporter valgte sider"
 formFill = "Udfyld formular"
 hideToolbar = "Hide toolbar"
+moreActions = "Flere handlinger"
 multiTool = "Multiværktøj"
 panMode = "Panoreringstilstand"
 print = "Udskriv PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Vælg alle"
 selectByNumber = "Vælg efter sidetal"
 selectLanguage = "Vælg sprog"
 share = "Del"
+showAllTools = "Vis alle værktøjer"
+showFewerTools = "Skjul værktøjslinje"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Slå anmærkninger til/fra"
 toggleAttachments = "Slå vedhæftede filer til/fra"

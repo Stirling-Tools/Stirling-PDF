@@ -41,7 +41,7 @@ false = "Sai"
 fileNotSavedToDisk = "Chưa lưu vào ổ đĩa"
 fileSavedToDisk = "Tệp đã được lưu vào ổ đĩa"
 fileSelected = "Đã chọn: {{filename}}"
-filesSelected = "tệp đã chọn"
+filesSelected = "{{count}} tệp"
 font = "Phông chữ"
 fontSizeTooltip = "Kích thước chữ số trang theo point. Số lớn hơn sẽ tạo chữ lớn hơn."
 fontTypeTooltip = "Họ phông chữ cho số trang. Chọn theo phong cách tài liệu của bạn."
@@ -3969,6 +3969,7 @@ back = "Quay lại"
 backToFolder = "Quay lại {{folder}}"
 backToMyFiles = "Quay lại Tệp của tôi"
 breadcrumbs = "Đường dẫn thư mục"
+bulkActions = "Hành động"
 cancel = "Hủy"
 classification = "Phân loại"
 clearSelection = "Bỏ chọn"
@@ -4142,6 +4143,11 @@ totalSize = "Tổng kích thước"
 type = "Loại"
 versionHistory = "Hành trình phiên bản"
 
+[filesPage.filters]
+activeCount = "{{count}} bộ lọc đang hoạt động"
+clearAll = "Xóa bộ lọc"
+label = "Bộ lọc"
+
 [filesPage.folderName]
 cancel = "Hủy"
 error = "Không thể lưu thư mục. Hãy thử lại."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sắp xếp tệp"
 modifiedAsc = "Cũ nhất trước"
 modifiedDesc = "Gần đây trước"
 nameAsc = "Tên A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Đã lưu tất cả"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Không thể áp dụng các thay đổi"
 extractCsvError = "Không thể trích xuất CSV"
 extractXlsxError = "Không thể trích xuất XLSX"
 filled = "filled"
 flattenAfterFilling = "Làm phẳng sau khi điền"
+goToPage = "Đi tới trang này"
 noFields = "No fillable form fields found in this PDF."
+page = "Trang"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "bắt buộc"
@@ -4318,7 +4328,82 @@ rescanFields = "Quét lại trường"
 rescanFormFields = "Quét lại trường biểu mẫu"
 save = "Lưu"
 saveShortcut = "Ctrl+S để lưu"
+skippedEdits_one = "Không thể áp dụng 1 thay đổi:"
+skippedEdits_other = "Không thể áp dụng {{count}} thay đổi:"
+skippedEditsTruncated = "Còn {{count}} mục khác không được liệt kê."
 unsavedChanges = "Thay đổi chưa lưu"
+
+[formFill.create]
+commit = "Thêm {{count}} trường vào PDF"
+empty = "Chưa vẽ trường nào."
+failed = "Không thể thêm trường"
+goToField = "Đi tới trường này"
+hint = "Chọn loại trường, sau đó vẽ nó trên trang."
+placing = "Vẽ trường {{type}} trên trang. Nhấn Esc để dừng."
+preview = "Giữ để xem trước"
+previewHelp = "Giữ để xem các trường sẽ trông như thế nào sau khi được thêm, không có đường viền chỉnh sửa."
+removeField = "Xóa trường"
+
+[formFill.editor]
+action = "Hành động của nút"
+actionHelp = "Điều nút sẽ thực hiện khi được bấm."
+actionNone = "Không có"
+actionPrint = "In"
+actionReset = "Đặt lại biểu mẫu"
+actionSubmit = "Gửi đến URL"
+actionUri = "Mở URL"
+actionUrl = "URL"
+actionUrlHelp = "Địa chỉ mà nút mở hoặc gửi đến."
+addOption = "Thêm lựa chọn"
+caption = "Chú thích nút"
+captionHelp = "Văn bản được in trên mặt nút."
+defaultValue = "Giá trị mặc định"
+defaultValueHelp = "Nội dung trường có trước khi có người điền vào. Để trống nếu muốn trường trống."
+fontSize = "Cỡ chữ"
+fontSizeHelp = "Kích thước văn bản bên trong trường. Để trống để trình đọc tự điều chỉnh cho vừa."
+label = "Nhãn"
+labelHelp = "Nội dung hiển thị cho người điền biểu mẫu. Để trống để dùng tên trường."
+maxLength = "Độ dài tối đa (comb)"
+maxLengthHelp = "Giới hạn số ký tự có thể nhập, được vẽ thành các ô cách đều nhau."
+multiline = "Nhiều dòng"
+multilineHelp = "Cho phép nhiều hơn một dòng văn bản và tự xuống dòng ở cạnh trường."
+multiSelect = "Cho phép chọn nhiều"
+multiSelectHelp = "Cho phép chọn nhiều hơn một lựa chọn cùng lúc."
+name = "Tên trường"
+nameHelp = "Tên nội bộ của trường. Được dùng khi xuất dữ liệu hoặc điền biểu mẫu từ hệ thống khác, vì vậy hãy giữ tên này duy nhất và không có khoảng trắng."
+optionGap = "Khoảng cách lựa chọn"
+optionGapHelp = "Khoảng cách giữa các nút, tính bằng điểm. Để trống để dàn đều chúng xuống trong khung."
+optionPlaceholder = "Lựa chọn {{n}}"
+options = "Lựa chọn"
+optionsEmpty = "Thêm ít nhất một lựa chọn."
+optionsHelp = "Các lựa chọn được cung cấp trong danh sách. Mỗi lựa chọn được lưu đúng như đã nhập, vì vậy hãy giữ chúng ngắn gọn và khác biệt."
+optionSize = "Kích thước lựa chọn"
+optionSizeHelp = "Chiều rộng và chiều cao của mỗi nút, tính bằng điểm. Để trống để khớp chúng với khung bạn đã vẽ."
+readOnly = "Chỉ đọc"
+readOnlyHelp = "Hiển thị một giá trị nhưng không cho phép bất kỳ ai chỉnh sửa."
+removeOption = "Xóa lựa chọn"
+required = "Bắt buộc"
+requiredHelp = "Không thể gửi biểu mẫu cho đến khi trường này được điền."
+signatureNote = "Chỉ là chỗ giữ chỗ - bạn không ký tại đây. Nó đánh dấu vị trí cần chữ ký để trình ký PDF (Adobe Acrobat, dịch vụ ký, v.v.) đặt chữ ký vào vị trí này khi tài liệu được ký."
+tooltip = "Chú giải"
+tooltipHelp = "Gợi ý hiển thị khi ai đó di chuột lên trường trong trình đọc PDF."
+type = "Loại"
+typeHelp = "Đây là loại trường nào. Thay đổi loại sẽ tạo lại trường, nên giá trị hiện tại sẽ không được giữ lại."
+
+[formFill.mode]
+create = "Tạo"
+fill = "Điền"
+label = "Chế độ trình chỉnh sửa biểu mẫu"
+modify = "Sửa đổi"
+
+[formFill.modify]
+commit = "Lưu {{count}} thay đổi"
+delete = "Xóa"
+empty = "PDF này chưa có trường biểu mẫu nào."
+failed = "Không thể lưu thay đổi"
+groupSizeHint = "Sử dụng kích thước lựa chọn"
+hint = "Chọn một trường để chỉnh sửa thuộc tính, kéo nó trên trang hoặc xóa nó."
+restore = "Khôi phục"
 
 [formFill.sidebar]
 close = "Đóng thanh bên"
@@ -4584,6 +4669,10 @@ title = "Thay đổi Metadata"
 desc = "Thay đổi hạn chế và quyền của tài liệu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Thay đổi quyền"
+
+[home.classify]
+desc = "Xác định đây là loại tài liệu nào và gắn thẻ cho nó."
+title = "Phân loại"
 
 [home.compare]
 desc = "So sánh và hiển thị sự khác biệt giữa 2 tài liệu PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Không có gì để báo cáo."
+handoffUnavailable = "Trình duyệt này không cho phép bộ xử lý chuyển tài liệu sang trình chỉnh sửa. Thay vào đó, hãy mở tài liệu từ trình chỉnh sửa."
+noDocumentLinked = "Lỗi này không được liên kết với tài liệu cụ thể nào, nên không có gì để mở ở đây."
+notOnThisDevice = "Tài liệu này không có trên thiết bị này, nên không thể mở tại đây."
+occurrences = "{{count}} lần"
+open = "Thông báo"
+title = "Thông báo"
+unread = "Chưa đọc"
+
+[notifications.action]
+failed = "Thao tác đó không hoạt động. Hãy thử lại sau ít phút."
+unavailable = "Không khả dụng cho thông báo này."
+
+[notifications.detail]
+copied = "Đã sao chép"
+copy = "Sao chép lỗi"
+less = "Hiển thị ít hơn"
+more = "Hiển thị toàn bộ thông báo"
+
+[notifications.section]
+earlier = "Trước đó"
+new = "Mới"
 
 [oauth.error]
 message = "Xác thực không thành công. Bạn có thể đóng cửa sổ này và thử lại."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "trong {{allowance}} PDF miễn phí đã dùng"
 capSuffix_other = "trong {{allowance}} PDF miễn phí đã dùng"
 eyebrow = "Dùng thử Processor"
-statusLabel_one = "Còn {{remaining}}"
-statusLabel_other = "Còn {{remaining}}"
+statusLabel_one = "Đã dùng {{used}}"
+statusLabel_other = "Đã dùng {{used}}"
 sub = "Dùng Trình chỉnh sửa PDF miễn phí. Trả phí để xử lý PDF tự động."
 title_one = "Xử lý {{allowance}} PDF miễn phí"
 title_other = "Xử lý {{allowance}} PDF miễn phí"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Xem tệp"
+viewInProcessor = "Xem trong bộ xử lý"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Lỗi này không được ghi nhận với tài liệu cụ thể nào, nên không có gì để mở ở đây."
+unattended = "Tệp này được đưa vào bởi một thư mục, bucket hoặc webhook, nên không có trình duyệt của ai đang giữ nó để mở."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Nguồn"
 connectSource = "Kết nối nguồn"
 
 [portal.sources.builder]
+advanced = "Nâng cao"
 back = "Quay lại nguồn"
+backToSource = "Quay lại thiết lập nguồn"
 backToTypes = "Tất cả loại nguồn"
 cancel = "Hủy"
 chooseHint = "Chọn nơi tài liệu đến từ. Các connector bị làm mờ đang được phát triển."
@@ -8726,7 +8845,6 @@ create = "Tạo nguồn"
 createTitle = "Kết nối một nguồn"
 delete = "Xóa"
 editTitle = "Chỉnh sửa nguồn"
-enabled = "Đã bật"
 save = "Lưu thay đổi"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: xử lý mỗi file một lần"
 snapshot = "Snapshot: đọc lại thư mục mỗi lần chạy"
 
 [portal.sources.networkFields.recursive]
+helperText = "Bao gồm thư mục con nếu các tệp của bạn được sắp xếp trong các thư mục lồng nhau, hoặc chỉ theo dõi cấp trên cùng."
 label = "Độ sâu thư mục"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Kích thước, ngày và kiểm tra nội dung"
 stat = "Kích thước và ngày sửa đổi"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Có giữ tệp gốc tại chỗ sau khi tệp đã được xử lý hay không. Nếu tệp gốc được giữ tại chỗ, nó sẽ được xử lý lại vào lần tiếp theo pipeline quét nguồn."
 label = "Chế độ đọc"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: xử lý mỗi file một lần"
 snapshot = "Snapshot: đọc lại thư mục ở mỗi lần chạy"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Bao gồm thư mục con nếu các tệp của bạn được sắp xếp trong các thư mục lồng nhau, hoặc chỉ theo dõi cấp trên cùng."
 label = "Độ sâu thư mục"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Máy chủ Stirling-PDF của bạn đang ngoại tuy
 expired = "Phiên của bạn đã hết hạn. Vui lòng làm mới trang và thử lại."
 
 [settings]
+backToSections = "Tất cả cài đặt"
 close = "Đóng"
+title = "Cài đặt"
 
 [settings.ai]
 documents = "Tài liệu & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Tìm kiếm"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Tìm kiếm công cụ..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Định dạng nâng cao"
+ai = "AI"
 automation = "Tự động hóa"
 developerTools = "Công cụ nhà phát triển"
 documentReview = "Xem xét tài liệu"
@@ -11335,8 +11460,11 @@ columnDefault = "Cột {{index}}"
 convertToPdf = "Chuyển thành PDF"
 csvStats = "{{rows}} hàng · {{columns}} cột · {{size}}"
 emptyFile = "Tệp trống"
+htmlHidePreview = "Ẩn xem trước"
 htmlPreview = "Xem trước HTML"
+htmlPreviewMobileHidden = "Các trang HTML được bố trí cho chiều rộng màn hình máy tính, nên xem trước bị tắt theo mặc định tại đây."
 htmlPreviewWarning = "Xem trước HTML — tài nguyên bên ngoài có thể không tải · {{size}}"
+htmlShowPreview = "Vẫn hiển thị xem trước"
 invalidJson = "JSON không hợp lệ — đang hiển thị nội dung thô"
 lineNumbers = "Đánh số dòng"
 loading = "Đang tải..."
@@ -11683,6 +11811,7 @@ exportAll = "Xuất PDF"
 exportSelected = "Xuất các trang đã chọn"
 formFill = "Điền biểu mẫu"
 hideToolbar = "Hide toolbar"
+moreActions = "Thêm hành động"
 multiTool = "Công cụ đa năng"
 panMode = "Chế độ di chuyển"
 print = "In PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Chọn tất cả"
 selectByNumber = "Chọn theo số trang"
 selectLanguage = "Chọn ngôn ngữ"
 share = "Chia sẻ"
+showAllTools = "Hiển thị tất cả công cụ"
+showFewerTools = "Thu gọn thanh công cụ"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Bật/Tắt hiển thị chú thích"
 toggleAttachments = "Bật/Tắt tệp đính kèm"
