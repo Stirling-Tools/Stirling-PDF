@@ -306,9 +306,6 @@ export function Pipelines() {
           <h2 className="portal-pipelines__section-title">
             {t("portal.pipelines.templates.title")}
           </h2>
-          <p className="portal-pipelines__section-sub">
-            {t("portal.pipelines.templates.subtitle")}
-          </p>
           <div className="portal-pipelines__templates-scroll">
             {galleryEntries.map((entry) => (
               <PipelineTemplateCard

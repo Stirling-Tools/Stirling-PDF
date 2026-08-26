@@ -8027,7 +8027,6 @@ type = "Type"
 
 [portal.pipelines.templates]
 setUp = "Set up"
-subtitle = "Ready-made starting points with a simple, guided setup. Pick one, then customise it into a full pipeline if you need more control."
 title = "Templates"
 
 [portal.pipelines.trigger]
