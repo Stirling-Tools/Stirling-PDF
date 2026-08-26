@@ -46,9 +46,9 @@ jobs:
           version: "0.12.6"
           working-directory: "engine"
           enable-cache: false
-          cache-dependency-glob: |
-            engine/pyproject.toml
-            engine/uv.lock
+          # cache-dependency-glob: |
+          #   engine/pyproject.toml
+          #   engine/uv.lock
 
       # - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
       #   run: uv sync --project engine --locked --all-groups
