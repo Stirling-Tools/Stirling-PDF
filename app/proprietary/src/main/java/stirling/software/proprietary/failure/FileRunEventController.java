@@ -79,8 +79,10 @@ public class FileRunEventController {
     @Operation(
             summary = "Apply an action to a recorded failure",
             description =
-                    "Rejected with 400 if the failure's kind does not declare the action, so an"
-                            + " action that makes no sense for a given failure cannot be applied.")
+                    "Rejected with 400 if the failure's kind does not declare the action, or if the"
+                            + " action is one the client runs rather than the server, so neither an"
+                            + " action that makes no sense for a given failure nor one the server"
+                            + " cannot perform can be applied.")
     public FileRunEventView act(
             @PathParam("eventId") String eventId,
             @PathParam("actionId") String actionId,
@@ -189,10 +191,13 @@ public class FileRunEventController {
         }
     }
 
-    /** Inputs an action declared it needs. Empty for both actions that exist today. */
+    /**
+     * Inputs an action declared it needs. Empty for every action the server runs today: the one
+     * that needs a password is run by the client, which never sends it here.
+     */
     public record ActionRequest(Map<String, String> inputs) {
 
-        Map<String, String> safeInputs() {
+        public Map<String, String> safeInputs() {
             return inputs == null ? Map.of() : inputs;
         }
     }

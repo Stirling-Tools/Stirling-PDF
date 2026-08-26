@@ -98,6 +98,14 @@ configs/
 __pycache__/
 **/__pycache__/
 
+# Python virtualenvs. Large, platform-specific, and their symlinks break the build.
+.venv/
+**/.venv/
+venv/
+**/venv/
+*.egg-info/
+**/*.egg-info/
+
 # Local env
 .env
 .env.*

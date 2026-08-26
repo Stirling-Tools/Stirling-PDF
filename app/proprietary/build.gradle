@@ -48,7 +48,7 @@ dependencies {
     api "org.opensaml:opensaml-messaging-api:$openSamlVersion"
     api "org.opensaml:opensaml-messaging-impl:$openSamlVersion"
 
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window

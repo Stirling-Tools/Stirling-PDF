@@ -181,6 +181,8 @@ app/core/src/main/resources/static/images/google-drive.svg
 *.nar
 *.ear
 *.zip
+# Real backend archives the form-bundle reader is tested against.
+!frontend/editor/src/core/tools/formFill/__fixtures__/*.zip
 *.tar.gz
 *.rar
 *.db

@@ -138,7 +138,9 @@ public class SecurityConfiguration {
                     "X-Page-Number",
                     "X-Page-Size",
                     "Content-Disposition",
-                    "Content-Type");
+                    "Content-Type",
+                    "X-Stirling-Skipped-Field-Edits",
+                    "X-Stirling-Skipped-Field-Edits-Total");
 
     /**
      * Resolves the desired X-Frame-Options header value, preserving the original decision logic.

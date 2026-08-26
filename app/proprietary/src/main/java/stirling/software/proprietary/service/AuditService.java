@@ -99,10 +99,7 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(AuditEventType type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled or if not Enterprise edition
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -138,8 +135,7 @@ public class AuditService {
      */
     public void audit(
             String principal, AuditEventType type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled or if not Enterprise edition
-        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -168,8 +164,7 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(String type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled or if not Enterprise edition
-        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -204,8 +199,7 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(String principal, String type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled or if not Enterprise edition
-        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -235,9 +229,7 @@ public class AuditService {
             AuditEventType type,
             Map<String, Object> data,
             AuditLevel level) {
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -262,9 +254,7 @@ public class AuditService {
             String type,
             Map<String, Object> data,
             AuditLevel level) {
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!shouldRecord(type, level)) {
             return;
         }
 
@@ -627,6 +617,55 @@ public class AuditService {
 
         // Check if the required level is enabled
         return auditConfig.getAuditLevel().includes(requiredLevel);
+    }
+
+    /**
+     * Type-aware variant used by the controller aspect, which resolves the event type before
+     * deciding whether to record. Document-processing events feed the Documents tab (available to
+     * every Processor user), so they audit without an Enterprise license; the rest of the audit log
+     * stays Enterprise-only.
+     */
+    public boolean shouldAudit(
+            AuditEventType eventType, Method method, AuditConfigurationProperties auditConfig) {
+        if (!auditConfig.isEnabled() || !isLicensedToRecord(eventType)) {
+            return false;
+        }
+
+        Audited auditedAnnotation = method.getAnnotation(Audited.class);
+        AuditLevel requiredLevel =
+                (auditedAnnotation != null) ? auditedAnnotation.level() : AuditLevel.BASIC;
+
+        return auditConfig.getAuditLevel().includes(requiredLevel);
+    }
+
+    /**
+     * Whether an event of this type and level should be persisted: the configured audit level must
+     * include it and the current license must permit recording it.
+     */
+    private boolean shouldRecord(AuditEventType type, AuditLevel level) {
+        return auditConfig.isLevelEnabled(level) && isLicensedToRecord(type);
+    }
+
+    private boolean shouldRecord(String type, AuditLevel level) {
+        return auditConfig.isLevelEnabled(level) && isLicensedToRecord(type);
+    }
+
+    /**
+     * Whether the current license permits recording this event type. Enterprise records everything;
+     * without it only document-processing events (PDF_PROCESS, FILE_OPERATION) are captured,
+     * because they back the Documents tab that is open to every Processor user (still subject to
+     * audit being enabled at a level that includes them). Everything else stays Enterprise-only.
+     */
+    private boolean isLicensedToRecord(AuditEventType type) {
+        return runningEE
+                || type == AuditEventType.PDF_PROCESS
+                || type == AuditEventType.FILE_OPERATION;
+    }
+
+    private boolean isLicensedToRecord(String type) {
+        return runningEE
+                || AuditEventType.PDF_PROCESS.name().equals(type)
+                || AuditEventType.FILE_OPERATION.name().equals(type);
     }
 
     /**

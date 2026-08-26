@@ -70,6 +70,19 @@ Provider credentials (and any local overrides) go in the uncommitted
 VOYAGE_API_KEY=your-key
 ```
 
+### Embedding providers
+
+`STIRLING_RAG_EMBEDDING_MODEL` is a `provider:model` string. Any OpenAI-compatible
+`/v1/embeddings` endpoint (vLLM, Ollama, TEI, llama.cpp) works by pointing a base URL
+at it. Note `OPENAI_BASE_URL` is global and also redirects chat completions; push
+`provider`/`api_key`/`base_url` through admin AI settings to move embeddings only.
+Ollama reads `OLLAMA_BASE_URL`, and omitting it fails the first embed call, not startup.
+
+```
+STIRLING_RAG_EMBEDDING_MODEL=ollama:nomic-embed-text
+OLLAMA_BASE_URL=http://ollama:11434/v1
+```
+
 ## Backends
 
 **`sqlite`** - Embedded sqlite-vec. Single `.db` file, zero ops. Ideal for dev

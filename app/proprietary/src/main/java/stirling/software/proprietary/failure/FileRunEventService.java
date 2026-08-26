@@ -21,11 +21,21 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * team always comes from the authenticated principal, and scoping applies only when login is
  * enabled so single-user deployments keep working. When the team cannot be resolved the caller
  * reads nothing; see {@link #readScope()}.
+ *
+ * <p>The read scope decides who sees an incident; {@link #availableActions} decides who may act.
  */
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class FileRunEventService {
+
+    /** Why an offered action came back disabled. Copy lives under {@code portal.failures}. */
+    private static final String CLOSED_REASON_KEY = "portal.failures.disabled.closed";
+
+    private static final String UNATTENDED_REASON_KEY = "portal.failures.disabled.unattended";
+
+    /** The row never named a document, so unlike the unattended case no client can find one. */
+    private static final String DOCUMENTLESS_REASON_KEY = "portal.failures.disabled.noDocument";
 
     private final FileRunEventStore store;
     private final FailureActionRegistry actionRegistry;
@@ -116,36 +126,17 @@ public class FileRunEventService {
      * Dispatch an action against one event.
      *
      * @throws FailureActionException if the event is not the caller's, the action is unknown, the
-     *     event's kind does not declare the action, or the event is already closed
+     *     event's kind does not declare the action, the client is what runs the action, or the
+     *     event is already closed
      */
     public FileRunEvent dispatch(String eventId, String actionId, Map<String, String> inputs) {
         // Whoever can see it can close it: a leader for the whole team, everyone else for the
         // failures they caused. Someone who fixes their own problem should not have to ask a leader
         // to clear the row.
         //
-        // Closing the row is all this covers. Acting on the document behind it, such as supplying a
-        // password for a retry, would need its own permission, and no such action exists yet.
-        ReadScope scope = readScope();
-        if (!scope.permitted()) {
-            // Reported as "no such event", the same as an id from another team, so the response
-            // does
-            // not depend on whether the id happens to exist.
-            throw new FailureActionException(
-                    FailureActionException.Reason.EVENT_NOT_FOUND, "No such event: " + eventId);
-        }
-        FileRunEvent event =
-                store.find(eventId, scope.teamId())
-                        // Reported as "no such event" rather than a refusal, so a member cannot
-                        // learn that a colleague's incident exists by trying to close it.
-                        .filter(
-                                found ->
-                                        scope.actor() == null
-                                                || scope.actor().equals(found.actor()))
-                        .orElseThrow(
-                                () ->
-                                        new FailureActionException(
-                                                FailureActionException.Reason.EVENT_NOT_FOUND,
-                                                "No such event: " + eventId));
+        // Audience decides what is offered, not what may be dispatched, so this scope is the whole
+        // gate. A server action aimed at OWNER alone would need its own guard here.
+        FileRunEvent event = requireVisible(eventId);
 
         FailureActionId resolvedId = parseActionId(actionId);
 
@@ -155,6 +146,12 @@ public class FileRunEventService {
             throw new FailureActionException(
                     FailureActionException.Reason.ACTION_NOT_DECLARED,
                     "Kind " + event.kind().getId() + " does not offer action " + resolvedId);
+        }
+        // Without this a client could post VIEW_FILE and be answered as though something happened.
+        if (!resolvedId.runsOnServer()) {
+            throw new FailureActionException(
+                    FailureActionException.Reason.ACTION_NOT_DISPATCHABLE,
+                    "Action " + resolvedId + " is run by the client, not the server");
         }
         if (event.status().terminal()) {
             throw new FailureActionException(
@@ -174,21 +171,89 @@ public class FileRunEventService {
         return action.execute(event, inputs == null ? Map.of() : inputs, currentActor());
     }
 
+    /** "No such event" rather than a refusal, so trying does not confirm a colleague's exists. */
+    private FileRunEvent requireVisible(String eventId) {
+        ReadScope scope = readScope();
+        if (!scope.permitted()) {
+            return notFound(eventId);
+        }
+        return store.find(eventId, scope.teamId())
+                .filter(found -> scope.actor() == null || scope.actor().equals(found.actor()))
+                .orElseGet(() -> notFound(eventId));
+    }
+
+    private FileRunEvent notFound(String eventId) {
+        throw new FailureActionException(
+                FailureActionException.Reason.EVENT_NOT_FOUND, "No such event: " + eventId);
+    }
+
+    public Ownership ownershipOf(FileRunEvent event) {
+        if (event.actor() == null) {
+            return Ownership.UNOWNED;
+        }
+        String caller = currentActor();
+        return event.actor().equals(caller) ? Ownership.MINE : Ownership.THEIRS;
+    }
+
     /**
-     * Which of an event's declared actions are usable right now. Decided per row, so the client
-     * never renders a button that would be refused.
+     * Offers resolved for one caller, so no client renders a button that would be refused. Outside
+     * their audience is dropped, not disabled: greyed out would read as a permission problem.
      */
     public List<AvailableAction> availableActions(FileRunEvent event) {
+        Ownership ownership = ownershipOf(event);
+        boolean reviewsTeam = reviewsTeam();
         boolean closed = event.status().terminal();
-        return event.kind().getActions().stream()
-                .map(
-                        action ->
-                                new AvailableAction(
-                                        action,
-                                        event.kind().labelKeyFor(action),
-                                        !closed,
-                                        closed ? "portal.failures.disabled.closed" : null))
+        // Login disabled is excluded: its rows are unowned only for want of users, and its one
+        // operator owns everything they can see.
+        boolean unattended = enforced() && ownership == Ownership.UNOWNED;
+        // Answered here, or the client reports "not on this device" about a document the row never
+        // identified in the first place.
+        boolean documentless = event.fileId() == null || event.fileId().isBlank();
+        return event.kind().getOfferedActions().stream()
+                .filter(offer -> offeredTo(offer.audience(), ownership, reviewsTeam))
+                .map(offer -> availability(offer, closed, unattended, documentless))
                 .toList();
+    }
+
+    /** Enabled is derived from the reason, so a disabled button always has one to show. */
+    private static AvailableAction availability(
+            FailureKind.OfferedAction offer,
+            boolean closed,
+            boolean unattended,
+            boolean documentless) {
+        String reason = disabledReasonFor(offer.audience(), closed, unattended, documentless);
+        return new AvailableAction(offer.id(), offer.labelKey(), reason == null, reason);
+    }
+
+    /** Closed wins over everything, then the owner-only reasons, most specific first. */
+    private static String disabledReasonFor(
+            FailureAudience audience, boolean closed, boolean unattended, boolean documentless) {
+        if (closed) {
+            return CLOSED_REASON_KEY;
+        }
+        if (audience != FailureAudience.OWNER) {
+            return null;
+        }
+        if (unattended) {
+            return UNATTENDED_REASON_KEY;
+        }
+        return documentless ? DOCUMENTLESS_REASON_KEY : null;
+    }
+
+    /** An unattended incident has no owner, so its reviewer inherits the owner's actions. */
+    private static boolean offeredTo(
+            FailureAudience audience, Ownership ownership, boolean reviewsTeam) {
+        return switch (audience) {
+            case OWNER ->
+                    ownership == Ownership.MINE || (ownership == Ownership.UNOWNED && reviewsTeam);
+            case TEAM_REVIEWER -> reviewsTeam;
+            case ANYONE_WHO_SEES -> true;
+        };
+    }
+
+    /** Login disabled has no roles, so its one operator triages everything. */
+    private boolean reviewsTeam() {
+        return !enforced() || policyManagementAuthority.canEditPolicies();
     }
 
     private FailureActionId parseActionId(String actionId) {
@@ -261,7 +326,6 @@ public class FileRunEventService {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
-    /** One action as offered for a specific event, with its resolved availability. */
     public record AvailableAction(
             FailureActionId id, String labelKey, boolean enabled, String disabledReasonKey) {}
 }

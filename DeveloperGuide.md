@@ -46,8 +46,8 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Docker
 - Git
 - Java JDK 25
-- Node.js 18+ and npm (required for frontend development)
-- Gradle 7.0 or later (Included within the repo)
+- Node.js 22+ and npm (required for frontend development)
+- Gradle 9.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)

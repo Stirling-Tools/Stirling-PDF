@@ -668,7 +668,9 @@ public class PolicyController {
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
                             + " 'assets[i].file' - only for bindings the policy does not already"
                             + " store). Runs regardless of the policy's enabled flag, which only"
-                            + " gates automatic triggering. Returns a run id.")
+                            + " gates automatic triggering. A single-document run may also send its"
+                            + " own opaque 'fileId', which is recorded against any failure so the"
+                            + " caller can resolve it back to that document. Returns a run id.")
     public Response runStoredPolicy(
             @PathParam("policyId") String policyId, MultipartFormDataInput parts)
             throws IOException {
@@ -682,8 +684,16 @@ public class PolicyController {
                                                 "No policy: " + policyId,
                                                 Response.Status.NOT_FOUND));
         stampPolicyAudit(policy.toDefinition());
-        PolicyInputs inputs = toInputs(toRunFiles(parts));
-        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
+        PolicyRunFiles files = toRunFiles(parts);
+        PolicyInputs inputs = toInputs(files);
+        String runId =
+                policyRunner
+                        .runWith(
+                                policy,
+                                inputs,
+                                PolicyProgressListener.NOOP,
+                                documentReferenceFor(files, inputs))
+                        .runId();
         return Response.accepted(new JobResponse<>(true, runId, null)).build();
     }
 
@@ -831,6 +841,7 @@ public class PolicyController {
         Map<String, Collection<FormValue>> parts = input.getValues();
         files.setFileInput(filesUnder("fileInput", parts));
         files.setAssets(assetsFrom(parts));
+        files.setFileId(optionalText("fileId", parts));
         return files;
     }
 
@@ -866,6 +877,16 @@ public class PolicyController {
             assets.add(asset);
         }
         return assets;
+    }
+
+    /** The text part if the client sent one, else null: fileId is optional. */
+    private static String optionalText(String partName, Map<String, Collection<FormValue>> parts) {
+        for (FormValue value : parts.getOrDefault(partName, List.of())) {
+            if (!value.isFileItem() && value.getValue() != null && !value.getValue().isBlank()) {
+                return value.getValue();
+            }
+        }
+        return null;
     }
 
     private static String requireText(String partName, Map<String, Collection<FormValue>> parts) {
@@ -906,6 +927,19 @@ public class PolicyController {
             }
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * Only for a single-document run: an incident holds one file reference, so naming one of
+     * several would attribute the failure to whichever bound first. Counted off resolved inputs,
+     * not parts.
+     */
+    private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
+        String fileId = files.getFileId();
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+            return null;
+        }
+        return fileId;
     }
 
     private PolicyProgressListener streamListener(Sse sse, SseEventSink sink) {

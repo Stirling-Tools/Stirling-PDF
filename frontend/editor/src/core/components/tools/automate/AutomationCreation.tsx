@@ -82,7 +82,7 @@ export default function AutomationCreation({
     setConfigModalOpen(true);
   };
 
-  const handleToolConfigSave = (parameters: Record<string, any>) => {
+  const handleToolConfigSave = (parameters: Record<string, unknown>) => {
     if (configuraingToolIndex >= 0) {
       updateTool(configuraingToolIndex, {
         configured: true,

@@ -8,9 +8,9 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.scheduler.Scheduled;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.config.AuditConfigurationProperties;
@@ -19,14 +19,30 @@ import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 /** Service to periodically clean up old audit events based on retention policy. */
 @Slf4j
 @ApplicationScoped
-@RequiredArgsConstructor
 public class AuditCleanupService {
 
     private final PersistentAuditEventRepository auditRepository;
     private final AuditConfigurationProperties auditConfig;
+    private final boolean runningEE;
 
     // Default batch size for deletions
     private static final int BATCH_SIZE = 10000;
+
+    /**
+     * Maximum audit retention on non-Enterprise instances. Audit events feed the Documents tab on
+     * every instance, but longer history is an Enterprise feature - so non-EE deployments keep a
+     * shorter window ("infinite" included), bounding the always-on trail off-license.
+     */
+    private static final int NON_EE_MAX_RETENTION_DAYS = 30;
+
+    public AuditCleanupService(
+            PersistentAuditEventRepository auditRepository,
+            AuditConfigurationProperties auditConfig,
+            @Named("runningEE") boolean runningEE) {
+        this.auditRepository = auditRepository;
+        this.auditConfig = auditConfig;
+        this.runningEE = runningEE;
+    }
 
     /**
      * Scheduled task that runs daily to clean up old audit events. The retention period is
@@ -38,7 +54,7 @@ public class AuditCleanupService {
             return;
         }
 
-        int retentionDays = auditConfig.getRetentionDays();
+        int retentionDays = effectiveRetentionDays();
         if (retentionDays <= 0) {
             return;
         }
@@ -55,6 +71,20 @@ public class AuditCleanupService {
         } catch (Exception e) {
             log.error("Error cleaning up old audit events", e);
         }
+    }
+
+    /**
+     * The retention window actually applied. Enterprise uses the configured value (0 = infinite);
+     * non-Enterprise is clamped to {@link #NON_EE_MAX_RETENTION_DAYS}.
+     */
+    int effectiveRetentionDays() {
+        int configured = auditConfig.getRetentionDays();
+        if (runningEE) {
+            return configured;
+        }
+        return configured <= 0
+                ? NON_EE_MAX_RETENTION_DAYS
+                : Math.min(configured, NON_EE_MAX_RETENTION_DAYS);
     }
 
     /**

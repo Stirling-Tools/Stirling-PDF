@@ -150,7 +150,8 @@ class InMemoryFileRunEventRepository extends FileRunEventRepository {
             Collection<FileRunEventStatus> allowedFrom) {
         int closed = 0;
         for (FileRunEventEntity entity : rows.values()) {
-            if (entity.getOrigin() != FailureOrigin.TOOL
+            // Mirrors the real query: scoped by the absence of a source, not by origin.
+            if (entity.getSourceId() != null
                     || !sameTeam(entity, teamId)
                     || !Objects.equals(entity.getActor(), actor)
                     || entity.getFileId() == null

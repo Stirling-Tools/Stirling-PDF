@@ -216,7 +216,8 @@ public class WebMvcConfig implements ContainerResponseFilter {
         headers.putSingle(
                 "Access-Control-Expose-Headers",
                 "WWW-Authenticate, X-Total-Count, X-Page-Number, X-Page-Size, Content-Disposition,"
-                        + " Content-Type");
+                        + " Content-Type, X-Stirling-Skipped-Field-Edits,"
+                        + " X-Stirling-Skipped-Field-Edits-Total");
         headers.putSingle("Access-Control-Allow-Credentials", "true");
         headers.putSingle("Access-Control-Max-Age", "3600");
     }

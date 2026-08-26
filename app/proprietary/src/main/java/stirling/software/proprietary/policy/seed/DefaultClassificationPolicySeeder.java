@@ -26,8 +26,8 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Seeds an enabled Classification policy per team so classification is on by default. Idempotent;
- * skips the internal team.
+ * Seeds an enabled Classification policy per team; idempotent, skips the internal team. Left
+ * unowned: nobody created it, and an owner here would have to name a real user.
  */
 @Slf4j
 @ApplicationScoped
@@ -38,6 +38,11 @@ public class DefaultClassificationPolicySeeder {
     static final String CATEGORY = "classification";
     private static final String CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
     private static final String POLICY_NAME = "Classification Policy";
+
+    /**
+     * Pre-existing seeds used this placeholder, which was never a user; see {@link #repairOwner}.
+     */
+    private static final String LEGACY_OWNER = "system";
 
     private final PolicyStore policyStore;
     private final TeamRepository teamRepository;
@@ -69,14 +74,31 @@ public class DefaultClassificationPolicySeeder {
         if (teamId == null || TeamService.INTERNAL_TEAM_NAME.equals(teamName)) {
             return;
         }
-        boolean alreadySeeded =
+        Policy existing =
                 policyStore.findByTeam(teamId).stream()
-                        .anyMatch(DefaultClassificationPolicySeeder::isClassification);
-        if (alreadySeeded) {
+                        .filter(DefaultClassificationPolicySeeder::isClassification)
+                        .findFirst()
+                        .orElse(null);
+        if (existing != null) {
+            repairOwner(existing);
             return;
         }
         policyStore.save(defaultPolicy(teamId));
         log.info("Seeded default Classification policy for team {}", teamId);
+    }
+
+    /**
+     * Clear an owner seeded as a placeholder name. An owner someone deliberately set is left alone.
+     */
+    private void repairOwner(Policy policy) {
+        if (!LEGACY_OWNER.equals(policy.owner())) {
+            return;
+        }
+        policyStore.save(policy.withOwner(null));
+        log.info(
+                "Cleared placeholder owner '{}' on Classification policy {}",
+                LEGACY_OWNER,
+                policy.id());
     }
 
     private static boolean isClassification(Policy policy) {
@@ -96,7 +118,9 @@ public class DefaultClassificationPolicySeeder {
         return new Policy(
                 null,
                 POLICY_NAME,
-                "system",
+                // Nobody created this - it is seeded. A name here would have to be a real user, and
+                // every consumer of owner already handles its absence.
+                null,
                 true,
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),

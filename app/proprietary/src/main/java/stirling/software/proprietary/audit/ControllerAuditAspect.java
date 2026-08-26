@@ -87,23 +87,31 @@ public class ControllerAuditAspect {
             throws Throwable {
         Method method = joinPoint.getMethod();
 
-        // Fast path: check if auditing is enabled before doing any work
-        // This avoids all data collection if auditing is disabled
-        if (!auditService.shouldAudit(method, auditConfig)) {
+        // Resolve the event type up front so the enterprise gate can be type-aware: document
+        // processing events (the Documents tab's data source) are audited without an Enterprise
+        // license, while the rest of the audit log stays Enterprise-only. resolveEventType is cheap
+        // (annotation / class / path checks), so it's safe on the pre-record fast path.
+        Audited auditedAnnotation = method.getAnnotation(Audited.class);
+        String path = getRequestPath(method, httpMethod);
+        AuditEventType eventType =
+                auditService.resolveEventType(
+                        method,
+                        joinPoint.getTarget().getClass(),
+                        path,
+                        httpMethod,
+                        auditedAnnotation);
+
+        // Fast path: skip all data collection when this event won't be recorded.
+        if (!auditService.shouldAudit(eventType, method, auditConfig)) {
             return joinPoint.proceed();
         }
 
-        // Check if method is explicitly annotated with @Audited
-        Audited auditedAnnotation = method.getAnnotation(Audited.class);
         AuditLevel level = auditConfig.getAuditLevel();
-
         // If @Audited annotation is present, respect its level setting
         if (auditedAnnotation != null) {
             // Use the level from annotation if it's stricter than global level
             level = auditedAnnotation.level();
         }
-
-        String path = getRequestPath(method, httpMethod);
 
         // Skip static GET resources
         if ("GET".equals(httpMethod)) {
@@ -201,15 +209,6 @@ public class ControllerAuditAspect {
                 // Merge controller-set policy context + the internal-automation marker (set after
                 // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
                 auditService.addAutomationContext(data, req);
-
-                // Resolve the event type using the unified method
-                AuditEventType eventType =
-                        auditService.resolveEventType(
-                                method,
-                                joinPoint.getTarget().getClass(),
-                                path,
-                                httpMethod,
-                                auditedAnnotation);
 
                 // Add result only if operation result capture is explicitly enabled
                 // Skip result for UI_DATA events to avoid storing large response bodies

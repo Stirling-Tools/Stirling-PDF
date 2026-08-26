@@ -20,7 +20,7 @@ dependencies {
     api 'at.favre.lib:bcrypt:0.10.2'
     // Swagger/OpenAPI annotations (io.swagger.v3.oas.annotations.*) used by common's API marker
     // interfaces; was transitive via springdoc. Quarkus' SmallRye OpenAPI also understands these.
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     // REMOVED: spring-boot-starter-aspectj. Quarkus has no AspectJ weaving; quarkus-arc provides
     // CDI interceptors (@AroundInvoke / interceptor bindings) instead.
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
@@ -35,12 +35,12 @@ dependencies {
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
     api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:3.0.1'
+    api 'org.snakeyaml:snakeyaml-engine:3.1.1'
     // springdoc-openapi-starter-webmvc-ui -> SmallRye OpenAPI (schema at /q/openapi, UI at /q/swagger-ui)
     api 'io.quarkus:quarkus-smallrye-openapi'
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.2.0'
-    api 'org.simplejavamail:outlook-module:9.2.0' // MSG file support
+    api 'org.simplejavamail:simple-java-mail:9.3.2'
+    api 'org.simplejavamail:outlook-module:9.3.2' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
 
