@@ -28,8 +28,7 @@ import lombok.Getter;
  * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
- * <p>A new kind ships as a registry entry plus copy. Each offer says who it is for and where the
- * kind wants it, since one incident is read both by whoever hit it and by whoever reviews after.
+ * <p>A new kind ships as a registry entry plus copy. Each offer says who it is for and where.
  */
 @Getter
 public enum FailureKind {
@@ -40,8 +39,7 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            // The password is the fix and the owner's own document the runner-up; the rest go to
-            // the overflow menu.
+            // The password is the fix; the owner's own document is the runner-up.
             resolution(DECRYPT_AND_RETRY, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
@@ -55,8 +53,7 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            // Nothing known to be fixable, so no resolution to declare: a plain retry leads
-            // instead, an unrecognised failure often being a one-off.
+            // No known fix to declare, so a plain retry leads: these are often one-offs.
             global(RETRY, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
@@ -107,23 +104,14 @@ public enum FailureKind {
         this.offers = List.of(offers);
     }
 
-    /**
-     * One ordered list rather than ids plus parallel maps of audiences, slots and labels, which
-     * could disagree with each other.
-     *
-     * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
-     *     label
-     */
+    /** One ordered list, not parallel maps of audiences, slots and labels that could disagree. */
     private record Offer(
             FailureActionId id,
             FailureAudience audience,
             FailureActionSlot slot,
             String labelKeySuffix) {}
 
-    /**
-     * The action that fixes this kind, for whoever can actually apply it. In the resolution slot by
-     * definition: a kind needing two of these would be two kinds.
-     */
+    /** The action that fixes this kind. One per kind: needing two would make it two kinds. */
     private static Offer resolution(FailureActionId id, FailureAudience audience) {
         return new Offer(id, audience, FailureActionSlot.RESOLUTION, null);
     }
@@ -134,19 +122,13 @@ public enum FailureKind {
         return new Offer(id, audience, FailureActionSlot.RESOLUTION, labelKeySuffix);
     }
 
-    /**
-     * An action that is not this kind's fix: the same offer any kind can make, placed where this
-     * kind wants it and labelled by the shared wording.
-     */
+    /** Not this kind's fix: an offer any kind can make, with the shared wording. */
     private static Offer global(
             FailureActionId id, FailureAudience audience, FailureActionSlot slot) {
         return new Offer(id, audience, slot, null);
     }
 
-    /**
-     * As {@link #global(FailureActionId, FailureAudience, FailureActionSlot)}, but labelled by this
-     * kind's own wording where the shared one reads badly.
-     */
+    /** As above, with this kind's own wording where the shared one reads badly. */
     private static Offer global(
             FailureActionId id,
             FailureAudience audience,
@@ -191,10 +173,7 @@ public enum FailureKind {
         return offers.stream().map(Offer::id).toList();
     }
 
-    /**
-     * What this kind offers, in declaration order, each with its label and placement resolved. What
-     * a review surface reads, so it never has to ask three separate questions about one offer.
-     */
+    /** What this kind offers, in declaration order, each with label and placement resolved. */
     public List<OfferedAction> getOfferedActions() {
         return offers.stream()
                 .map(

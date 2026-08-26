@@ -1,21 +1,14 @@
 package stirling.software.proprietary.failure;
 
-/**
- * Where a kind would like one of its actions to sit: the thing that fixes it, a supporting action,
- * or one folded away in a menu.
- *
- * <p>Intent, not layout. The client does the final promotion, because only it knows whether the
- * document is still in its own file store, and a resolution it cannot run is worth less than a
- * secondary action it can. Declaration order in {@link FailureKind} breaks a tie within a slot.
- */
+/** Placement intent, not layout: the client promotes, knowing what it can actually run. */
 public enum FailureActionSlot {
 
-    /** The action that resolves the failure. At most one per kind is worth declaring here. */
+    /** The action that resolves the failure. At most one per kind. */
     RESOLUTION,
 
     /** Offered alongside the resolution, for a caller the resolution is not aimed at. */
     SECONDARY,
 
-    /** Available but folded away: correct, rarely the next thing anyone wants to press. */
+    /** Available but folded away: correct, rarely what anyone wants to press next. */
     OVERFLOW
 }

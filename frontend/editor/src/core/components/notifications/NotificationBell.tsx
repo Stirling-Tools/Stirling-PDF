@@ -45,12 +45,9 @@ function MountedNotificationBell() {
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(
     null,
   );
-  /**
-   * The action waiting on a password, held by the panel rather than the row that offered it: the
-   * panel closes on any click beyond itself, which would tear down a prompt a row owned.
-   */
+  /** Held by the panel, not the row: the panel closes on any outside click. */
   const [prompt, setPrompt] = useState<PasswordPrompt | null>(null);
-  // Held only while the prompt is open, and dropped as soon as it closes. Never stashed, never logged.
+  // Dropped as soon as the prompt closes. Never stashed, never logged.
   const [password, setPassword] = useState("");
   const [promptBusy, setPromptBusy] = useState(false);
   const [promptError, setPromptError] = useState<string | null>(null);
@@ -67,8 +64,7 @@ function MountedNotificationBell() {
     setPromptError(null);
     const outcome = await prompt.spec.run(prompt.context, password);
     setPromptBusy(false);
-    // A wrong password lands here carrying the server's own words. The prompt stays open on top of
-    // them, so the next attempt costs a keystroke rather than a re-open.
+    // The prompt stays open, so a second attempt costs a keystroke rather than a re-open.
     if (outcome && !outcome.ok) {
       setPromptError(
         outcome.message ??
@@ -80,8 +76,7 @@ function MountedNotificationBell() {
       return;
     }
     closePrompt();
-    // A password action resolves the incident server-side, so the list is re-read rather than
-    // patched here.
+    // The incident was resolved server-side, so the list is re-read rather than patched here.
     refresh();
     if (prompt.spec.closesPanel) setOpen(false);
   };
@@ -131,8 +126,7 @@ function MountedNotificationBell() {
     const closeOnOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (container.current?.contains(target)) return;
-      // An overflow menu is portaled outside the panel, so a click in it reads as outside; keep the
-      // panel open for it, or picking a menu action would tear the panel down before it ran.
+      // The overflow menu is portaled out, so a click in it would read as outside the panel.
       if (target.closest(".notification-bell__menu")) return;
       setOpen(false);
     };
@@ -219,8 +213,7 @@ function MountedNotificationBell() {
         </div>
       )}
 
-      {/* Rendered beside the panel rather than inside it: the same modal the app uses for a locked
-          upload, and it has to outlive the panel dismissing behind it. */}
+      {/* Beside the panel, not inside it: it has to outlive the panel dismissing behind it. */}
       <EncryptedPdfUnlockModal
         opened={prompt !== null}
         fileName={prompt?.rowTitle}

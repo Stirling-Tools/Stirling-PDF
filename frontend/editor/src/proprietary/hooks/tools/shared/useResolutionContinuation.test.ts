@@ -6,12 +6,7 @@ import type {
 } from "@app/services/notifications";
 import type { SucceededToolRun } from "@app/hooks/tools/shared/useResolutionContinuation";
 
-/**
- * The bell is one way to perform a resolution, not the only one. What is pinned here: a
- * successful manual run that IS an open failure's fix re-runs the policy and closes the row,
- * under exactly the rules the bell obeys - the server's offer decides who may, the original
- * reference keeps folding intact, and anything undeliverable leaves the row open.
- */
+// A manual run that IS an open failure's fix closes the row, under the rules the bell obeys.
 
 const fetchNotifications = vi.fn();
 const reportNotificationResolved = vi.fn();
@@ -148,8 +143,7 @@ describe("useResolutionContinuation", () => {
     await waitFor(() =>
       expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1"),
     );
-    // Under the ORIGINAL reference so a repeat folds onto this incident, attributed to the
-    // document the run put in the workbench, through the same chain resume the bell uses.
+    // The ORIGINAL reference so a repeat folds on, attributed to the run's own output.
     expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
       { policyId: "pol-1", fileId: "f-locked" },
       expect.any(File),
@@ -254,8 +248,7 @@ describe("useResolutionContinuation", () => {
       viewerReviewsTeam: false,
     });
 
-    // Two inputs, two independent outputs, no provenance: which one is the unlocked
-    // document is anyone's guess, so nothing runs.
+    // Two inputs, two outputs, no provenance: which is the unlocked document is a guess.
     continuation()(
       unlockRun({
         inputFileIds: ["f-locked", "f-other"],
@@ -340,14 +333,12 @@ describe("useResolutionContinuation", () => {
   });
 
   it("re-runs nothing from a success that is not the row's declared resolution", async () => {
-    // The failure wants an unlock; what succeeded is compress on the same document. However
-    // real that success, it fixed nothing the row is about, so the policy must not re-run.
+    // The failure wants an unlock; a compress on the same document fixes nothing it is about.
     fetchNotifications.mockResolvedValue({
       notifications: [policyRow()],
       viewerReviewsTeam: false,
     });
-    // A compress stash on the same file lets the run past the local gate, proving the kind
-    // check itself is what refuses it rather than the gate never asking.
+    // The stash lets it past the local gate, so the kind check is what refuses it.
     loadRetryPayload.mockResolvedValue({
       operation: "compress",
       endpoint: "/api/v1/misc/compress-pdf",
@@ -374,9 +365,7 @@ describe("useResolutionContinuation", () => {
   });
 
   it("does not resolve a file its batch run failed for", async () => {
-    // A batch can succeed for one input and fail for another without ever reaching the
-    // failure path. Being an input of a successful run proves nothing; producing an
-    // output does.
+    // Being an input of a successful run proves nothing; producing an output does.
     fetchNotifications.mockResolvedValue({
       notifications: [toolRow()],
       viewerReviewsTeam: false,
@@ -409,8 +398,7 @@ describe("useResolutionContinuation", () => {
   });
 
   it("does not resolve a row whose stash another kind's failure wrote", async () => {
-    // One stash per file, one incident per kind per file: the password failure's stash
-    // overwrote the compress one, so the compress row may not be resolved against it.
+    // The password failure's stash overwrote the compress one, so that row cannot use it.
     fetchNotifications.mockResolvedValue({
       notifications: [toolRow()],
       viewerReviewsTeam: false,

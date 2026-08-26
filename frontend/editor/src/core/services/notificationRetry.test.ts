@@ -2,11 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { indexedDBManager } from "@app/services/indexedDBManager";
 
-/**
- * Tests for the notification bell's retry stash. Three properties matter: a
- * retry offered by the bell can still find what it needs after a reload, the
- * store cannot grow without bound, and a password never lands in it.
- */
+// The stash survives a reload, cannot grow without bound, and never holds a password.
 
 const getStirlingFileStub = vi.fn();
 const getStirlingFiles = vi.fn();
@@ -146,13 +142,11 @@ describe("the retry stash", () => {
 
     const stored = await storedRecords();
     expect(JSON.stringify(stored)).not.toContain("hunter2");
-    // No password-shaped field survives either. Scoped to params, since the tool
-    // this failure came from is itself called remove-password.
+    // Scoped to params, since the tool this failure came from is itself called remove-password.
     expect(JSON.stringify(stored.map((record) => record.params))).not.toMatch(
       /pass(word|phrase)|token/i,
     );
-    // The rest of the parameters survive: without them a retry re-runs a
-    // different operation than the one that failed.
+    // The rest survive: without them a retry re-runs a different operation than the one that failed.
     expect((await loadRetryPayload("f-1"))?.params).toEqual({
       nested: { keep: "yes" },
       keepThese: ["a", "b"],
@@ -171,15 +165,13 @@ describe("the retry stash", () => {
   });
 
   it("drops a secret sitting just past the depth limit rather than passing the subtree through", async () => {
-    // Deliberately only a little past the limit, so the truncated subtree is small enough to store.
-    // A far deeper object would fail to store for unrelated reasons and pass this vacuously.
+    // Only a little past the limit: a far deeper object would fail to store and pass vacuously.
     let past: Record<string, unknown> = { password: "hunter2" };
     for (let i = 0; i < 25; i++) past = { down: past };
 
     await stashRetryPayload(payload({ params: { past } }));
 
-    // The point where the walk gives up is the one place it must not hand back a subtree it never
-    // examined: returning the value there would persist every secret below the limit.
+    // Where the walk gives up it must not hand back a subtree it never examined.
     expect(JSON.stringify(await storedRecords())).not.toContain("hunter2");
   });
 
@@ -285,10 +277,7 @@ describe("retryWithPassword", () => {
   });
 });
 
-/**
- * The unlock for a failure with no stash behind it - an attended policy run, whose notification
- * names the document and needs nothing else. Same request, fixed endpoint, no payload.
- */
+/** The unlock for a failure with no stash behind it: fixed endpoint, no payload. */
 describe("unlockLocalDocument", () => {
   it("removes the password from the document this browser holds, and stores nothing", async () => {
     getStirlingFiles.mockResolvedValue([

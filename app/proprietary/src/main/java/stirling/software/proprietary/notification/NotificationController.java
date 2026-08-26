@@ -50,14 +50,6 @@ public class NotificationController {
                 notifications.list(capped), notifications.callerReviewsTeam());
     }
 
-    /**
-     * Record that the client's own retry of this notification worked. A mirror of the failure
-     * surface's resolve semantics rather than a client that strips the prefix, because the bell
-     * must never hand a raw failure id to a failure endpoint.
-     *
-     * <p>Idempotent. A row a reviewer has since dismissed is a conflict, not a silent overwrite of
-     * their decision.
-     */
     @PostMapping("/{notificationId}/resolved")
     @Operation(
             summary = "Record that a client-side retry fixed what a notification was about",
@@ -76,10 +68,7 @@ public class NotificationController {
         }
     }
 
-    /**
-     * Wrapped so paging or a total can be added without breaking clients. {@code viewerReviewsTeam}
-     * is what lets the client filter a member's list.
-     */
+    /** Wrapped so paging or a total can be added without breaking clients. */
     public record NotificationsResponse(
             List<NotificationView> notifications, boolean viewerReviewsTeam) {}
 }

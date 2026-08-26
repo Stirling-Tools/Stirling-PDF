@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Re-running the policy a notification says failed. The whole point is that nothing was stashed for
- * it: the policy and the document both come off the row, and the bytes come out of storage under the
- * same reference the failure was filed against.
- */
+// Nothing was stashed: the policy, the document and the bytes all come off the row's reference.
 
 const getStirlingFile = vi.fn();
 vi.mock("@app/services/fileStorage", () => ({
@@ -38,8 +34,7 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => policies.value,
 }));
 
-// The REAL run store, because the point of registering is that the auto-run controller finds the run
-// there and polls it. A mock would assert the call and prove nothing about the record.
+// The REAL run store: a mock would assert the call and prove nothing about the record.
 const { getRun, isDispatched, recordRunStart, resetPolicyRuns, updateRun } =
   await import("@app/components/policies/policyRunStore");
 const { rerunPolicy, rechainPolicyOnDocument } =
@@ -66,15 +61,12 @@ describe("rerunPolicy", () => {
       ok: true,
       tracked: true,
     });
-    // The original reference, not a new one: the server folds a repeat failure onto the same
-    // incident rather than opening a second row about the same document.
+    // The original reference, so the server folds a repeat onto the same incident.
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [document], "f-1");
   });
 
   it("records the run so the editor polls it and delivers its output", async () => {
-    // Without this the retry is invisible: nothing polls the run, no output reaches the workspace,
-    // and the row sits open until the run fails again. usePolicyAutoRun drives all of that off the
-    // store, so being in the store IS the progress.
+    // usePolicyAutoRun drives everything off the store, so being in the store IS the progress.
     const document = new File(["%PDF-1.7"], "invoice.pdf");
     getStirlingFile.mockResolvedValue(document);
 
@@ -82,8 +74,7 @@ describe("rerunPolicy", () => {
 
     expect(getRun("run-1")).toMatchObject({
       runId: "run-1",
-      // The category the backend policy belongs to, which is what the import step needs to honour
-      // the policy's output mode and what the chain continues from.
+      // The category the import step needs, and what the chain continues from.
       categoryId: "security",
       // The document that failed is still the document in the workspace, so the output belongs to it.
       fileId: "f-1",
@@ -96,10 +87,7 @@ describe("rerunPolicy", () => {
   });
 
   it("still runs a policy the local cache cannot place, and says the run is untracked", async () => {
-    // A policy deleted since, or a cache this browser never built. The run is left to go, since the
-    // server-side effect is real and the submission has already happened, but a run with no category
-    // cannot be imported or chained, so nothing will ever deliver its output here. The caller is told
-    // as much rather than being handed a bare success it would close the failure on.
+    // A run with no category cannot be imported or chained, so nothing delivers its output.
     policies.value = {};
     getStirlingFile.mockResolvedValue(new File(["%PDF-1.7"], "invoice.pdf"));
 
@@ -157,9 +145,7 @@ describe("rechainPolicyOnDocument", () => {
   });
 
   it("attributes the run to the adopted document, not the one the failure named", async () => {
-    // Two references, deliberately: the server gets the failure's, so a repeat folds onto the same
-    // incident; the run store gets the adopted one, so the output versions the unlocked document the
-    // user is now looking at rather than the encrypted original they still have.
+    // Two references: the failure's to the server so a repeat folds on, the adopted one to the store.
     await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
 
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-1", [unlocked], "f-1");
@@ -168,10 +154,7 @@ describe("rechainPolicyOnDocument", () => {
   });
 
   it("runs untracked rather than filing the output against the wrong document, and admits it", async () => {
-    // No workspace id came back from the adoption. Recording it against the failure's reference
-    // would version the encrypted original, which is not what the run produced. So it goes
-    // unrecorded, and `tracked` carries that outward: the caller needs it to keep the failure open,
-    // since an unpolled run delivers nothing however well the submission went.
+    // No workspace id, so recording it would version the encrypted original instead.
     await expect(
       rechainPolicyOnDocument(target, unlocked, null, false),
     ).resolves.toEqual({ ok: true, tracked: false });
@@ -221,11 +204,7 @@ describe("rechainPolicyOnDocument", () => {
   });
 });
 
-/**
- * Where the chain picks up again. The rule is "the first upload policy not already applied", which is
- * normally the one that failed - the chain only advances on success, so everything ahead of it ran -
- * and is an earlier one only where the chain has changed since.
- */
+// Where the chain picks up again: the first upload policy not already applied.
 describe("rechainPolicyOnDocument rejoining the chain", () => {
   const unlocked = new File(["%PDF-1.7"], "invoice.pdf");
 
@@ -268,9 +247,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
   }
 
   it("resumes at the policy that failed when everything ahead of it has run", async () => {
-    // watermark ran on the upload and produced f-1, which is what security then choked on. Rejoining
-    // must not re-apply watermark: the document already carries it, and a second pass would stamp it
-    // twice and bill for the privilege.
+    // watermark produced f-1, so rejoining must not stamp it twice and bill for the privilege.
     policies.value = {
       watermark: uploadPolicy("pol-w", 0),
       security: uploadPolicy("pol-1", 1),
@@ -283,9 +260,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
   });
 
   it("resumes at an earlier policy that never ran, rather than skipping it", async () => {
-    // The chain gained watermark ahead of security after the failing run, so nothing has applied it to
-    // this document. Resuming at security would leave it applied to every later upload but not this
-    // one, which is the gap this rule exists to close.
+    // The chain gained watermark after the failing run, so nothing has applied it to this document.
     policies.value = {
       watermark: uploadPolicy("pol-w", 0),
       security: uploadPolicy("pol-1", 1),
@@ -293,8 +268,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
 
     await rechainPolicyOnDocument(target, unlocked, "f-unlocked", false);
 
-    // Filed under the resumed policy's own category, so the chaining step carries on from there and
-    // security still runs, on watermark's output.
+    // Filed under the resumed policy's category, so security still runs on watermark's output.
     expect(runStoredPolicy).toHaveBeenCalledWith("pol-w", [unlocked], "f-1");
     expect(getRun("run-1")).toMatchObject({
       categoryId: "watermark",
@@ -303,8 +277,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
   });
 
   it("leaves Classification out of the chain while the engine is off", async () => {
-    // It classifies in the browser in that build, so the server chain does not include it and it must
-    // not become a resume point either.
+    // It classifies in the browser there, so it is not in the server chain nor a resume point.
     policies.value = {
       classification: uploadPolicy("pol-c", 0),
       security: uploadPolicy("pol-1", 1),
@@ -316,8 +289,7 @@ describe("rechainPolicyOnDocument rejoining the chain", () => {
   });
 
   it("re-runs only what failed when the policy is not in the upload chain at all", async () => {
-    // An export-mode policy: there is no upload chain to rejoin, so the retry is the plain re-run it
-    // has always been.
+    // An export-mode policy has no upload chain to rejoin, so the retry is a plain re-run.
     policies.value = {
       watermark: uploadPolicy("pol-w", 0),
       security: { ...uploadPolicy("pol-1", 1), runOn: "export" },

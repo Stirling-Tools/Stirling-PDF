@@ -23,12 +23,7 @@ import stirling.software.proprietary.notification.NotificationService;
 import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 
-/**
- * Reporting a client-side retry that worked: the bell's one write. Lives beside the failure tests
- * because the invariants are failure invariants: the bell holds only the prefixed notification id,
- * so it cannot hand a raw event id to a failure endpoint, and the same service that scopes the
- * queue decides whose row a caller may close.
- */
+/** Reporting a client-side retry that worked: the bell's one write. */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("reporting a client-side retry that worked")
 class NotificationResolveTest {
@@ -79,8 +74,7 @@ class NotificationResolveTest {
 
     @Test
     void closesTheRowBehindThePrefixedId() {
-        // Why the route exists: a successful retry has to close its row, and the bell
-        // has no raw id to close it with.
+        // Why the route exists: the bell has no raw id to close its own row with.
         FileRunEvent event = given(FailureKind.UNKNOWN, ACTOR, "f-1");
 
         NotificationView resolved = controller.resolved("failure:" + event.id());
@@ -92,9 +86,7 @@ class NotificationResolveTest {
 
     @Test
     void theRowsOwnIdIsNotANotificationId() {
-        // This mirror exists so no client has to strip the prefix, so an unprefixed id is
-        // refused outright rather than left to work by accident for whichever source it
-        // would happen to reach.
+        // Refused outright rather than left to work by accident for whichever source it reaches.
         FileRunEvent event = given(FailureKind.UNKNOWN, ACTOR, "f-1");
 
         assertThat(statusOf(() -> controller.resolved(event.id())))

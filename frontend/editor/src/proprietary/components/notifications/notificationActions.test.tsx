@@ -8,16 +8,12 @@ import type {
 } from "@app/services/notifications";
 import type { NotificationActionContext } from "@core/components/notifications/notificationActions";
 
-/**
- * Where each action sends the reader. Only the editor has the workbench contexts above it, so the two
- * shells are the interesting cases: opening the document, or handing it over.
- */
+// Where each action sends the reader. Only the editor has the workbench contexts above it.
 
 const retryWithPassword = vi.fn();
 const unlockLocalDocument = vi.fn();
 vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
-  // The real stashMatchesKind: it is pure, and the guard it implements is part of
-  // what these tests exercise.
+  // The real stashMatchesKind: it is pure, and its guard is part of what these tests exercise.
   ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
   retryWithPassword: (...args: unknown[]) => retryWithPassword(...args),
   unlockLocalDocument: (...args: unknown[]) => unlockLocalDocument(...args),
@@ -79,8 +75,8 @@ const { useNotificationActions } =
 const addStirlingFileStubs = vi.fn();
 const setActiveFileId = vi.fn();
 const setWorkbench = vi.fn();
-// The heavy pdf.js thumbnail step is stubbed; createChildStub is pure but stubbed too so the test
-// can name the version's id without reproducing its metadata.
+const setToolAndWorkbench = vi.fn();
+// createChildStub is stubbed too, so the test can name the version's id directly.
 vi.mock("@app/contexts/file/fileActions", () => ({
   generateProcessedFileMetadata: () => Promise.resolve(null),
   createChildStub: (parent: { id: string }, _op: unknown, file: File) => ({
@@ -94,7 +90,7 @@ vi.mock("@app/contexts/file/fileActions", () => ({
 
 /** What the workbench already holds, so the "do not add it twice" path can be exercised. */
 let openFileIds: string[] = [];
-/** Stubs the workbench holds, by id, so the in-place replacement path has an original to version. */
+/** Stubs the workbench holds, so the in-place replacement path has an original to version. */
 let openFilesById: Record<string, unknown> = {};
 const setSelectedFiles = vi.fn();
 const addFiles = vi.fn();
@@ -155,10 +151,7 @@ function context(
   };
 }
 
-/**
- * A failure of an attended policy run: the editor started it on a document it was holding, so the
- * row names the policy and that document, and no stash was ever written for it.
- */
+/** An attended policy run: the row names the policy and the document, and nothing was stashed. */
 function policyContext(
   overrides: Partial<NotificationActionContext> = {},
 ): NotificationActionContext {
@@ -200,7 +193,7 @@ const inEditor = ({ children }: { children: ReactNode }) => (
         }
       >
         <NavigationActionsContext.Provider
-          value={{ actions: { setWorkbench } } as never}
+          value={{ actions: { setWorkbench, setToolAndWorkbench } } as never}
         >
           <ViewerContext.Provider value={{ setActiveFileId } as never}>
             {children}
@@ -235,18 +228,17 @@ beforeEach(() => {
   addStirlingFileStubs.mockReset().mockResolvedValue([]);
   setActiveFileId.mockReset();
   setWorkbench.mockReset();
+  setToolAndWorkbench.mockReset();
   h.getStirlingFileStub.mockReset().mockResolvedValue(h.stub);
   openFileIds = [];
   openFilesById = {};
   setSelectedFiles.mockReset();
   consumeFiles.mockReset().mockResolvedValue(["f-unlocked"]);
-  // The workspace's own id for the adopted document, which is what a policy re-run's output belongs
-  // to - not the reference the failure was filed against.
+  // The adopted document's own id, not the reference the failure was filed against.
   addFiles.mockReset().mockResolvedValue([{ fileId: "f-unlocked" }]);
   reportNotificationResolved.mockReset().mockResolvedValue(true);
   retryWithPassword.mockReset().mockResolvedValue({ ok: true, files: [] });
-  // The unlock succeeds by default and produces a document, since almost every case below is about
-  // what happens to it afterwards.
+  // The unlock succeeds by default: most cases below are about what happens afterwards.
   unlockLocalDocument.mockReset().mockResolvedValue({
     ok: true,
     files: [
@@ -256,8 +248,7 @@ beforeEach(() => {
       },
     ],
   });
-  // Tracked by default: the run is in the store, so something is polling it and its output will
-  // arrive. An untracked run is a separate case below, since it changes what the row may claim.
+  // Tracked by default: something is polling the run, so its output will arrive.
   rerunPolicy.mockReset().mockResolvedValue({ ok: true, tracked: true });
   rechainPolicyOnDocument.mockReset().mockResolvedValue({
     ok: true,
@@ -268,16 +259,21 @@ beforeEach(() => {
 });
 
 describe("useNotificationActions", () => {
-  it("opens the failed tool with the document selected", () => {
-    registry().RETRY?.run(context());
+  it("opens the failed tool on the failed document alone, in the viewer", async () => {
+    await registry().RETRY?.run(context());
 
-    expect(setSelectedFiles).toHaveBeenCalledWith(["f-1"]);
-    // The tool the stashed operation names, so the user sees the settings before it runs again.
-    expect(window.location.pathname).toBe("/remove-password");
+    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
+    expect(setActiveFileId).toHaveBeenCalledWith("f-1");
+    // The viewer scopes the tool to this one file. Any other view would hand it the whole
+    // workbench, so a retry on one failed document would re-run across every open file.
+    expect(setToolAndWorkbench).toHaveBeenCalledWith(
+      "removePassword",
+      "viewer",
+    );
   });
 
-  it("opens the editor itself when the stashed operation names no tool this build has", () => {
-    registry().RETRY?.run(
+  it("opens the document alone when the stashed operation names no tool this build has", async () => {
+    await registry().RETRY?.run(
       context({
         retryPayload: {
           operation: "quarantine",
@@ -291,7 +287,21 @@ describe("useNotificationActions", () => {
       }),
     );
 
-    expect(window.location.pathname).toBe("/");
+    expect(setActiveFileId).toHaveBeenCalledWith("f-1");
+    expect(setWorkbench).toHaveBeenCalledWith("viewer");
+    expect(setToolAndWorkbench).not.toHaveBeenCalled();
+  });
+
+  it("reports a retry whose document has gone from storage rather than opening nothing", async () => {
+    h.getStirlingFileStub.mockResolvedValue(null);
+
+    const outcome = await registry().RETRY?.run(context());
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "This document can no longer be retried from this browser.",
+    });
+    expect(setToolAndWorkbench).not.toHaveBeenCalled();
   });
 
   it("offers no retry once the document has left this browser", () => {
@@ -361,25 +371,65 @@ describe("useNotificationActions", () => {
     // The intent outlives the navigation that mounts the editor.
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
-    ).toBe("f-1");
+    ).toBe(JSON.stringify({ fileId: "f-1", tool: null }));
     // The editor's own URL, not the role router at "/".
     expect(window.location.pathname).toBe("/editor");
+  });
+
+  it("hands the tool over with the document, so a retry arrives scoped", async () => {
+    await registry(inProcessor).RETRY?.run(context());
+
+    expect(
+      window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
+    ).toBe(JSON.stringify({ fileId: "f-1", tool: "removePassword" }));
+    expect(window.location.pathname).toBe("/remove-password");
   });
 
   it("picks up a handed-over document as soon as an editor is there", async () => {
     window.sessionStorage.setItem(
       "stirling.notifications.pendingSelection",
-      "f-9",
+      JSON.stringify({ fileId: "f-9", tool: null }),
     );
 
     registry();
     await vi.waitFor(() => expect(setActiveFileId).toHaveBeenCalledWith("f-9"));
 
     expect(setWorkbench).toHaveBeenCalledWith("viewer");
+    expect(setToolAndWorkbench).not.toHaveBeenCalled();
     // One-shot: a later mount must not reopen a document the user has moved on from.
     expect(
       window.sessionStorage.getItem("stirling.notifications.pendingSelection"),
     ).toBeNull();
+  });
+
+  it("arrives scoped, so a retry handed over from the processor runs on one file", async () => {
+    window.sessionStorage.setItem(
+      "stirling.notifications.pendingSelection",
+      JSON.stringify({ fileId: "f-9", tool: "removePassword" }),
+    );
+
+    registry();
+
+    // One dispatch, not a workbench change the URL sync could then overwrite with a stale view.
+    await vi.waitFor(() =>
+      expect(setToolAndWorkbench).toHaveBeenCalledWith(
+        "removePassword",
+        "viewer",
+      ),
+    );
+    expect(setWorkbench).not.toHaveBeenCalled();
+  });
+
+  it("ignores a handed-over tool this build does not have", async () => {
+    window.sessionStorage.setItem(
+      "stirling.notifications.pendingSelection",
+      JSON.stringify({ fileId: "f-9", tool: "quarantine" }),
+    );
+
+    registry();
+    await vi.waitFor(() => expect(setWorkbench).toHaveBeenCalledWith("viewer"));
+
+    expect(setToolAndWorkbench).not.toHaveBeenCalled();
   });
 
   it("unlocks with the password it was given and reports what came back", async () => {
@@ -419,11 +469,9 @@ describe("useNotificationActions", () => {
     expect(outcome).toEqual({ ok: true });
     const [files, options] = addFiles.mock.calls[0];
     expect((files as File[]).map((file) => file.name)).toEqual(["invoice.pdf"]);
-    // Selected as well as added, so it is the document on screen when the panel closes; and marked
-    // in-app so `usePolicyAutoRun` does not enforce the upload chain on it by itself.
+    // Selected so it is on screen, and marked in-app so `usePolicyAutoRun` leaves it alone.
     expect(options).toEqual({ selectFiles: true, derivedFromTool: true });
-    // And the incident is closed, with the prefixed id: nothing else tells the server the client
-    // fixed it, so the bell would otherwise keep reporting a failure the user has dealt with.
+    // And closed with the prefixed id: nothing else tells the server the client fixed it.
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
   });
 
@@ -497,8 +545,7 @@ describe("useNotificationActions", () => {
   });
 
   it("keeps the unlock a success when the server will not record it", async () => {
-    // A reviewer dismissed the row first, or it was never this caller's. The document is already in
-    // the workbench, so a refused resolve must not present as a failed unlock.
+    // The document is already in the workbench, so a refused resolve is not a failed unlock.
     retryWithPassword.mockResolvedValue({
       ok: true,
       files: [{ blob: new Blob(["pdf"]), filename: "invoice.pdf" }],
@@ -511,8 +558,7 @@ describe("useNotificationActions", () => {
   });
 
   it("reports a failure when the unlocked document cannot be taken in", async () => {
-    // Unlocked but dropped is the one outcome that leaves the user with nothing, so it is never
-    // reported as success.
+    // Unlocked but dropped leaves the user with nothing, so it is never reported as success.
     retryWithPassword.mockResolvedValue({
       ok: true,
       files: [{ blob: new Blob(["pdf"]), filename: "invoice.pdf" }],
@@ -532,8 +578,7 @@ describe("useNotificationActions", () => {
   });
 
   it("offers no unlock where there is nowhere to put the result", async () => {
-    // The processor shell has no FileContext, so unlocking would produce a document with nowhere to
-    // go. The row promotes its next offer instead.
+    // No FileContext there, so an unlocked document would have nowhere to go.
     const actions = registry(inProcessor);
 
     expect(actions.DECRYPT_AND_RETRY?.available(context())).toBe(false);
@@ -648,10 +693,7 @@ describe("useNotificationActions", () => {
   });
 });
 
-/**
- * The other retry shape. An attended policy run stashes nothing, so everything these actions need
- * comes off the row itself: which policy failed, and which document this browser was holding.
- */
+/** The other retry shape: nothing is stashed, so everything comes off the row itself. */
 describe("retrying an attended policy run", () => {
   it("runs the policy again on the document it already holds", async () => {
     const outcome = await registry().RETRY?.run(policyContext());
@@ -666,8 +708,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("re-runs the policy rather than reopening a tool, even where a stash happens to exist", async () => {
-    // The same document can have failed a tool run earlier, leaving a stash keyed on it. The row
-    // is about the policy, so that is what runs again.
+    // An earlier tool failure may have left a stash, but the row is about the policy.
     await registry().RETRY?.run(
       policyContext({
         retryPayload: {
@@ -729,8 +770,7 @@ describe("retrying an attended policy run", () => {
     expect(actions.RETRY?.available(policyContext())).toBe(true);
     expect(actions.DECRYPT_AND_RETRY?.available(policyContext())).toBe(true);
 
-    // Unattended: the fileId is a source's hash of a path that was never on any device, so there
-    // is nothing here to re-submit. The server disables the owner's actions on these anyway.
+    // Unattended: the fileId hashes a path that was never on any device, so nothing can re-submit.
     const unattended = policyContext({
       notification: notification({
         origin: "POLICY",
@@ -757,8 +797,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("is offered nowhere without an editor to collect the result", () => {
-    // The processor shell mounts the bell outside the app's providers, so a run fired from there
-    // would have no workspace to land its output in.
+    // The bell mounts outside the app's providers there, so a run has nowhere to land.
     const actions = registry(inProcessor);
 
     expect(actions.RETRY?.available(policyContext())).toBe(false);
@@ -801,21 +840,16 @@ describe("retrying an attended policy run", () => {
     const [inputIds, files, stubs] = consumeFiles.mock.calls[0];
     expect(inputIds).toEqual(["f-1"]);
     expect((files as File[]).map((file) => file.name)).toEqual(["invoice.pdf"]);
-    // derivedFromTool is what stops the adoption starting a SECOND run of this same policy: the
-    // dispatch effect in usePolicyAutoRun treats a plain upload as work to enforce. A policy run is
-    // a billed automation run, so a double dispatch double-charges and can open a second incident.
+    // derivedFromTool stops the adoption starting a SECOND, billed run of this same policy.
     expect(
       (stubs as Array<{ derivedFromTool?: boolean }>)[0].derivedFromTool,
     ).toBe(true);
-    // Re-submitted under the ORIGINAL reference, so a second failure folds onto this same incident
-    // instead of opening a new one about the same document - while the run's output is attributed to
-    // the ADOPTED document, which is the one now in front of the user.
+    // Under the ORIGINAL reference so a repeat folds on, with the output on the ADOPTED document.
     expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
       { policyId: "pol-1", fileId: "f-1" },
       expect.any(File),
       "f-unlocked",
-      // No app-config above this render, so the engine reads as off and the chain excludes
-      // Classification. Which policies that leaves is the retry service's own business.
+      // No app-config above this render, so the engine reads as off and Classification drops out.
       false,
     );
     // And with the prefixed notification id, never a raw failure id.
@@ -826,8 +860,7 @@ describe("retrying an attended policy run", () => {
   it("starts exactly one run for one click", async () => {
     await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
 
-    // One submission, from here. The other possible source is the adoption, which is silenced by
-    // derivedFromTool above; see the gate's own test in usePolicyAutoRun.chain.test.tsx.
+    // One submission: the adoption's is silenced by derivedFromTool above.
     expect(rechainPolicyOnDocument).toHaveBeenCalledTimes(1);
     expect(rerunPolicy).not.toHaveBeenCalled();
     expect(consumeFiles.mock.calls[0][2][0]).toMatchObject({
@@ -836,8 +869,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("still runs when the adoption reports no workspace id, rather than guessing one", async () => {
-    // Nothing to attribute the output to, so the run goes untracked rather than being filed against
-    // the encrypted original, which would version the wrong document.
+    // Nothing to attribute the output to, so the run goes untracked rather than to the original.
     consumeFiles.mockResolvedValue([]);
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
@@ -852,10 +884,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("leaves the row open when the re-run cannot deliver, and says why", async () => {
-    // The run went, but untracked: nothing polls it, so the processed document never reaches the
-    // workbench. The unlocked INPUT is in, which is not what the user was after, so this may not
-    // present as success. Closing the row here would retire a failure that produced nothing and
-    // still billed a run.
+    // Untracked, so the processed document never arrives: the unlocked input is not the point.
     rechainPolicyOnDocument.mockResolvedValue({ ok: true, tracked: false });
 
     expect(
@@ -871,8 +900,7 @@ describe("retrying an attended policy run", () => {
   });
 
   it("says an untracked plain re-run cannot be delivered either", async () => {
-    // Same hole without a password in it: the local cache could not place the policy, so the run is
-    // unpolled and its output is not coming. The reader is told rather than shown a silent success.
+    // Same hole without a password: the cache could not place the policy, so nothing polls the run.
     rerunPolicy.mockResolvedValue({ ok: true, tracked: false });
 
     expect(await registry().RETRY?.run(policyContext())).toEqual({
@@ -935,9 +963,7 @@ describe("retrying an attended policy run", () => {
   it("never hands the password to anything but the unlock", async () => {
     await registry().DECRYPT_AND_RETRY?.run(policyContext(), "hunter2");
 
-    // Everything downstream of the unlock: the adoption, the re-run, the resolve. The password is
-    // an argument to one call and goes out of scope after it - it is in no payload, no stash and no
-    // id, so nothing here can persist it.
+    // Everything downstream of the unlock: no payload, stash or id carries the password.
     const downstream = [
       ...addFiles.mock.calls,
       ...rechainPolicyOnDocument.mock.calls,

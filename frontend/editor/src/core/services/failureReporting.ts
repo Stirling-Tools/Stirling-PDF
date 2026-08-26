@@ -166,8 +166,7 @@ function messageOf(error: unknown): string {
  * format is the same class of problem as the processor rejecting a file type, which
  * is already recorded.
  *
- * <p>Exported for `useToolOperation`, which must not stash a retry for a run the user
- * cancelled themselves.
+ * <p>Exported so a run the user cancelled does not get a retry stashed for it.
  */
 export function wasCancelled(error: unknown): boolean {
   const candidate = error as {

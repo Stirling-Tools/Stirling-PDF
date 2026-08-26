@@ -451,8 +451,7 @@ function FileContextInner({
 
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
 
-      // The modal is the remove-password tool by another door: if this unlock is the fix an
-      // open failure was waiting for, carry the resolution through just as a tool run would.
+      // The modal is the remove-password tool by another door, so it resolves the same.
       continueResolutions({
         operation: "removePassword",
         inputFileIds: [fileId],

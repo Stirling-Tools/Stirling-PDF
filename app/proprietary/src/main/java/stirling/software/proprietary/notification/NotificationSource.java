@@ -21,10 +21,7 @@ public enum NotificationSource {
         return prefix() + sourceRowId;
     }
 
-    /**
-     * The source a notification id belongs to, and the row id within it. Empty rather than throwing
-     * for an unprefixed id or an unknown source, since both arrive from clients.
-     */
+    /** Empty rather than throwing for an unprefixed or unknown id: both arrive from clients. */
     public static Optional<QualifiedId> parse(String notificationId) {
         if (notificationId == null) {
             return Optional.empty();

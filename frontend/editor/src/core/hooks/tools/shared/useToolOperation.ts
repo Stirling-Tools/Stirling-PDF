@@ -544,8 +544,7 @@ export const useToolOperation = <TParams>(
               outputFileIds,
             };
 
-            // This success may itself be the fix an open failure was waiting for. Outputs
-            // pair with the inputs that produced them, index for index, in this branch.
+            // Outputs pair with the inputs that produced them, index for index, in this branch.
             continueResolutions({
               operation: config.operationType,
               inputFileIds: validFiles.map((file) => file.fileId),
@@ -610,8 +609,7 @@ export const useToolOperation = <TParams>(
               outputFileIds,
             };
 
-            // Independent artifacts carry no per-output provenance, so only a run with one
-            // input and one output can be paired to a failure row.
+            // No per-output provenance here, so only a one-in one-out run can be paired.
             continueResolutions({
               operation: config.operationType,
               inputFileIds: validFiles.map((file) => file.fileId),
@@ -647,13 +645,8 @@ export const useToolOperation = <TParams>(
           fileIds: validFiles.map((file) => file.fileId),
         }).then(refreshNotificationsNow);
 
-        // Keep what a retry would need, since the report itself carries no
-        // operation and answers 204. Gated on the reporter's own cancellation
-        // test so the two cannot disagree about what counts as a failure; on the
-        // tool not being a custom processor, whose endpoint-specific request
-        // building a generic re-submission would bypass; and on this build having
-        // notifications at all, so a build with no bell does not fill a stash
-        // nothing can ever read.
+        // Keep what a retry needs: the report carries none of it. Skipped where nothing
+        // could use it, and gated on the reporter's own cancellation test.
         if (
           !wasCancelled(error) &&
           runtimeEndpoint &&

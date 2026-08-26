@@ -26,7 +26,7 @@ export interface PasswordPrompt {
   rowTitle: string;
 }
 
-/** The kind's own sentence, sharing the portal's copy. Empty for a kind this build has none for. */
+/** The kind's own sentence, sharing the portal's copy. */
 function summaryKeyOf(titleKey: string): string {
   return titleKey.replace(/\.title$/, ".description");
 }
@@ -98,13 +98,11 @@ export function NotificationItem({
     notification.actions,
     (offer) => {
       const spec = registry[offer.id];
-      // An id this build has never heard of: skipped, not rendered unwired. The server ships new kinds
-      // and their actions ahead of the clients that understand them.
+      // An id this build has never heard of: skipped rather than rendered unwired.
       if (!spec) return false;
       return spec.available(context);
     },
-    // The withheld reason may come from an action this device cannot perform right now, but
-    // never from one this build could not have rendered at all.
+    // A reason from an action this build could not have rendered explains nothing.
     (offer) => registry[offer.id] !== undefined,
   );
 
@@ -117,7 +115,7 @@ export function NotificationItem({
 
     const spec = registry[offer.id];
     if (!spec) return;
-    // A password action is handed to the panel, which prompts for it and runs it from there.
+    // The panel owns the prompt, and runs the action from there.
     if (spec.needsPassword) {
       onRequestPassword({ offer, spec, context, rowTitle: title });
       return;
@@ -146,7 +144,7 @@ export function NotificationItem({
       await navigator.clipboard.writeText(notification.detail);
       setCopied(true);
     } catch {
-      // No clipboard permission. Nothing worth an error of its own: the copy simply stays unoffered.
+      // No clipboard permission, and the message is on screen and selectable anyway.
     }
   };
 
@@ -178,9 +176,7 @@ export function NotificationItem({
 
       {note && <span className="notification-bell__note">{note}</span>}
 
-      {/* Two buttons at most, then a menu: the row's own answer, one runner-up, and the rest tucked
-          out of the way so a row of near-equal buttons never competes for the click. The menu is not
-          gated on a button existing: a row with no runnable action still owns its error log. */}
+      {/* The menu is not gated on a button existing: a row with no action still owns its log. */}
       {(primary || notification.detail) && (
         <span className="notification-bell__actions">
           {primary && (

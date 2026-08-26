@@ -3,10 +3,7 @@ package stirling.software.proprietary.failure;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Disposition of one recorded failure. {@code RESOLVED} is system-set when a client reports its own
- * retry worked, never dispatched as an action; a repeat reopens it.
- */
+/** Disposition of one recorded failure. {@code RESOLVED} is system-set; a repeat reopens it. */
 public enum FileRunEventStatus {
     NEW(false),
     ACKNOWLEDGED(false),

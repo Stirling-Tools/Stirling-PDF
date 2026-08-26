@@ -12,17 +12,14 @@ import {
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because
  * the portal mounts its bell as a sibling of AppProviders, so there is no single tree to provide in.
- *
- * TODO: read state lives in this browser, so it does not survive a cache clear or follow the user to
- * another one. It belongs on the server once notifications have a table of their own.
  */
 
+// TODO: read state is per-browser. Move it server-side when notifications get their own table.
 const POLL_INTERVAL_MS = 30_000;
 const SEEN_STORAGE_KEY = "stirling.notifications.readThroughAt";
 
-/** What the read marker measures against. A time, not an id: ids point at nothing once a row leaves. */
+/** A time, not an id: an id points at nothing once its row leaves the list. */
 function orderedAt(notification: AppNotification): number {
-  // Ordered server-side by when the failure last occurred, so a repeat is news again.
   return Date.parse(notification.lastSeenAt);
 }
 
@@ -130,8 +127,7 @@ async function read(forCycle: number): Promise<void> {
   if (forCycle !== cycle) return;
 
   const documents = Object.fromEntries(resolved);
-  // A member sees only their own failures, and one whose document is not in this browser is noise:
-  // they cannot open it, and are not the reviewer who could fix the policy. A reviewer keeps all.
+  // A member cannot open a document this browser does not hold, nor fix the policy behind it.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter((n) =>
@@ -249,8 +245,7 @@ export function useNotifications(): NotificationsState {
     getSnapshot,
   );
 
-  // Newer than the watermark is new, so a resolved row leaves without dragging the rest back into
-  // unread. A time that will not parse counts as new, which errs towards telling the user.
+  // A resolved row leaves without dragging the rest back into unread. Unparseable counts as new.
   const unreadCount =
     readThroughAt === null
       ? notifications.length

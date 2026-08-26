@@ -16,17 +16,11 @@ import type {
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
 
-/**
- * The bell renders whatever the server sends, and does with each row's actions only what the registry
- * for this build says it can. Two things are its own and worth pinning: which notifications the user has
- * already looked at, and how a row behaves around an action (password first, message on failure, re-read
- * on success).
- */
+// The bell's own two jobs: what counts as read, and how a row behaves around an action.
 
 const fetchNotifications = vi.fn();
 
-// These tests care about the rows, not the fetch envelope, so a mock that resolves a bare array is
-// wrapped as a reviewer's response (nothing filtered). Member filtering is covered in the hook test.
+// A bare array is wrapped as a reviewer's response; member filtering is the hook's own test.
 vi.mock("@app/services/notifications", () => ({
   fetchNotifications: async (...args: unknown[]) => {
     const value = await fetchNotifications(...args);
@@ -106,8 +100,7 @@ function offer(
   };
 }
 
-// Read state is a watermark on the list's ordering time, so rows need distinct ones. "a" is the
-// newest, matching the order these tests list them in.
+// Read state watermarks the ordering time, so rows need distinct ones. "a" is the newest.
 const AT: Record<string, string> = {
   a: "2026-08-05T02:00:00Z",
   b: "2026-08-05T01:00:00Z",
@@ -272,8 +265,7 @@ describe("NotificationBell", () => {
   });
 
   it("leaves the rest read when the row that was newest has gone", async () => {
-    // Resolving the newest failure removes its row. Marking read by id would then find nothing to
-    // measure from and light the badge for the older one the user had already read.
+    // The newest row leaves; marking read by id would then relight the badge for the older one.
     markReadThrough(AT.a);
     fetchNotifications.mockResolvedValue([notification("b")]);
 
@@ -587,8 +579,7 @@ describe("NotificationBell", () => {
 
     await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
     expect(run.mock.calls[0][1]).toBe("hunter2");
-    // The server resolved the incident, so the list is re-read rather than patched here, and the
-    // panel gets out of the way of the document it just produced.
+    // Resolved server-side, so the list is re-read and the panel gets out of the way.
     await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
     await waitFor(() =>
       expect(screen.queryByText("Password-protected document")).toBeNull(),

@@ -35,14 +35,13 @@
   text-align: center;
 }
 
-/* Tighter New/Earlier dividers, scoped to the bell so the shared DividerWithText is untouched elsewhere. */
+/* Scoped to the bell, so the shared DividerWithText is untouched elsewhere. */
 .notification-bell__divider.text-divider {
   margin-top: 0.125rem;
   margin-bottom: 0.125rem;
 }
 
-/* Lines either side, gray by default because the shared one is near-invisible here; New tints
-   them like the unread badge. */
+/* Gray by default, because the shared rule is near-invisible here. */
 .notification-bell__divider .text-divider__rule {
   background-color: var(--c-border-strong);
 }

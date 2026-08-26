@@ -5,20 +5,9 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-/**
- * The one rule that decides how loud a notification is allowed to be. Pinned against the shapes the
- * server actually sends for the two failure kinds that exist, because the promotions are only
- * correct in combination: what is left over depends on what won the buttons.
- *
- * Dispositions such as Dismiss never appear here: the projection carries only the actions the
- * client itself runs, so the bell is never handed a button it would refuse to draw.
- */
+// Pinned against the shapes the server sends: what is left over depends on what won the buttons.
 
-/**
- * The offers as `FailureKind` declares them. An unrecognised failure has no known fix, so its retry
- * is only ever a supporting action; a password failure has one, and its plain retry drops in behind
- * the unlock.
- */
+/** The offers as `FailureKind` declares them for an unrecognised failure. */
 const UNKNOWN_OFFERS: Record<string, NotificationActionOffer> = {
   RETRY: offer("RETRY", "SECONDARY"),
   VIEW_IN_PROCESSOR: offer("VIEW_IN_PROCESSOR", "SECONDARY"),
@@ -64,13 +53,11 @@ function from(
   });
 }
 
-/** What the server sends for an unrecognised failure, for a reader offered these actions. */
 const unknown = (...ids: string[]) => from(UNKNOWN_OFFERS, ids);
 
-/** The same for a password-protected one. */
 const password = (...ids: string[]) => from(PASSWORD_OFFERS, ids);
 
-/** The same offers, with the named ones marked as the server would refuse them, and why. */
+/** The same offers, with the named ones refused as the server would refuse them. */
 function refusing(
   offers: NotificationActionOffer[],
   reasonKey: string,
@@ -83,7 +70,7 @@ function refusing(
   );
 }
 
-/** Everything this client can do, as the registry would answer with the file on this device. */
+/** Everything this client can do, with the file on this device. */
 const RUNNABLE = new Set([
   "RETRY",
   "DECRYPT_AND_RETRY",
@@ -124,8 +111,7 @@ describe("promoteActions", () => {
   });
 
   it("leads an attended policy failure with the queue, and states what was refused", () => {
-    // The document is not the reader's to open, so a greyed unlock would be false hope: the row loses
-    // the buttons and keeps the explanation.
+    // Not the reader's document, so a greyed unlock would be false hope: the note stays instead.
     expect(
       promoted(
         refusing(
@@ -144,8 +130,7 @@ describe("promoteActions", () => {
   });
 
   it("leads an unattended failure with the queue, and says retrying is not available", () => {
-    // Nobody holds the document, so retrying is coming rather than missing. One reason for the row,
-    // taken from the best thing it lost.
+    // Nobody holds the document: one reason for the row, from the best thing it lost.
     expect(
       promoted(
         refusing(
@@ -164,8 +149,7 @@ describe("promoteActions", () => {
   });
 
   it("explains nothing on a colleague's failure, having taken nothing away", () => {
-    // Not their document, so nothing that needs the bytes was offered at all. There is no loss to
-    // account for, and a note would only puzzle the reader.
+    // Nothing needing the bytes was offered, so there is no loss to account for.
     expect(promoted(unknown("VIEW_IN_PROCESSOR"))).toEqual({
       primary: "VIEW_IN_PROCESSOR",
       secondary: null,
@@ -205,8 +189,7 @@ describe("promoteActions", () => {
   });
 
   it("leaves a closed row no buttons at all, only its reason", () => {
-    // Already resolved elsewhere: every offer is refused, so the row is its message plus one line
-    // saying why there is nothing left to do.
+    // Already closed elsewhere: every offer refused, so the row is its message plus one line.
     expect(
       promoted(
         refusing(unknown("RETRY", "VIEW_FILE"), CLOSED, "RETRY", "VIEW_FILE"),
@@ -220,9 +203,7 @@ describe("promoteActions", () => {
   });
 
   it("promotes past a resolution the shell cannot deliver", () => {
-    // The owner reading their own password failure from the processor: that shell has no FileContext,
-    // so the unlock has nowhere to put its output and reports itself unavailable. What is left is
-    // coherent on its own - the queue becomes the row's button.
+    // Read from the processor, which has no FileContext, so the unlock reports itself unavailable.
     const inProcessor = (action: NotificationActionOffer) =>
       action.id !== "DECRYPT_AND_RETRY" && canRun(action);
 
@@ -238,9 +219,7 @@ describe("promoteActions", () => {
   });
 
   it("drops a client action this device cannot perform, without inventing a reason", () => {
-    // The document is gone from this browser: the actions disappear rather than failing on click. The
-    // server withheld nothing, so the row has no server reason and the bell falls back to what this
-    // device knows.
+    // The document is gone from this browser: the actions disappear rather than fail on click.
     const { primary, overflow, withheldReasonKey } = promoteActions(
       unknown("RETRY", "VIEW_FILE"),
       () => false,
@@ -280,8 +259,7 @@ describe("promoteActions", () => {
   });
 
   it("never explains the row with an action this build has never heard of", () => {
-    // The server ships a new action, disabled with a reason, to a client that predates it.
-    // That client could never have drawn the button, so the reason is not its row's story.
+    // A client that could never have drawn the button is not explained by its reason.
     const list = [
       offer("QUARANTINE", "RESOLUTION", {
         enabled: false,
@@ -299,8 +277,7 @@ describe("promoteActions", () => {
   });
 
   it("takes the reason from the best action lost, not the first declared", () => {
-    // Two refusals, one row: the reader gets the one attached to the action they would have reached
-    // for first.
+    // Two refusals, one row: the reader gets the one they would have reached for first.
     const list = [
       offer("VIEW_FILE", "OVERFLOW", {
         enabled: false,

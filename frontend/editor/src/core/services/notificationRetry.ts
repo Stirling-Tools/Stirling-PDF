@@ -8,20 +8,10 @@ import { zipFileService } from "@app/services/zipFileService";
 import type { FileId } from "@app/types/file";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 
-/**
- * What the notification bell needs to offer "Retry" or "Decrypt and retry" on a
- * failure the editor reported. The server keeps none of it: the report drops the
- * operation and answers 204, so this lives here, keyed on the opaque `fileId` it was
- * filed against. Last-write-wins per fileId, which is narrower than the server's
- * dedup (that one also keys on the failure kind): see {@link stashMatchesKind} for
- * how a consumer tells whether the surviving stash belongs to a given row.
- */
+/** What the bell needs to retry a reported failure. The server keeps none of it. */
 export interface RetryPayload {
-  /** tool/endpoint identifier, e.g. "remove-password" */
   operation: string;
-  /** the API path that failed, so a retry needs no tool registry lookup */
   endpoint: string;
-  /** the tool parameters as submitted */
   params: Record<string, unknown>;
   fileIds: string[];
   /** Whether the endpoint takes the whole batch in one call, or one file per call. */
@@ -31,22 +21,12 @@ export interface RetryPayload {
   recordedAt: number;
 }
 
-/**
- * The error codes the named failure kinds claim, mirrored from the server's
- * {@code FailureKind} declarations. Used only to tell whether the one stash a file
- * carries belongs to a given row: the server keys incidents on kind as well as file,
- * so one file can have two open rows while this stash holds only the newest failure.
- */
+/** Mirrored from the server's `FailureKind` declarations. */
 const KIND_ERROR_CODES: Record<string, string> = {
   INPUT_PASSWORD_PROTECTED: "E004",
 };
 
-/**
- * Whether a stashed failure is the one a row of this kind describes. A named kind
- * owns exactly its claimed code; every other kind owns whatever no named kind
- * claims. A stash written before {@code errorCode} existed matches nothing named,
- * failing closed rather than retrying the wrong operation.
- */
+/** Whether the one stash a file carries is the failure this row describes. */
 export function stashMatchesKind(
   kindId: string,
   payload: RetryPayload,
@@ -59,12 +39,7 @@ export function stashMatchesKind(
   );
 }
 
-/**
- * Its own database rather than a store on `stirling-pdf-files`: that schema has
- * shipped at v9, and adding a store there means a version bump plus an upgrade path
- * on every install for a hint that is safe to lose. Still opened through
- * `indexedDBManager`, so this is not a second way to reach IndexedDB.
- */
+/** Its own database: the files schema is at v9, and this hint is safe to lose. */
 const RETRY_DB_CONFIG: DatabaseConfig = {
   name: "stirling-pdf-retry",
   version: 1,
@@ -81,17 +56,10 @@ interface StoredRetryRecord extends RetryPayload {
   fileId: string;
 }
 
-/**
- * Secret-looking field names. A tool's parameters can carry one (remove-password submits
- * `password`), so they are stripped on the way in rather than trusted to be absent.
- */
+/** Stripped on the way in: remove-password submits its password as a parameter. */
 const SECRET_FIELD = /pass(word|phrase)|secret|token|credential/i;
 
-/**
- * Stash the retry payload for a failure that was just reported. Never rejects, like
- * `reportToolFailure`: a browser that refuses IndexedDB should cost the user the retry
- * button, not a second error on top of the failure they already have.
- */
+/** Never rejects: a browser refusing IndexedDB costs the retry button, not a second error. */
 export async function stashRetryPayload(payload: RetryPayload): Promise<void> {
   try {
     const fileIds = payload.fileIds.filter(isUsableId);
@@ -100,7 +68,6 @@ export async function stashRetryPayload(payload: RetryPayload): Promise<void> {
     const record = {
       ...payload,
       fileIds,
-      // Persisting a password would defeat the point of asking for it again.
       params: withoutSecrets(payload.params),
     };
 
@@ -124,8 +91,7 @@ export async function loadRetryPayload(
   }
   if (!record) return null;
 
-  // A record written by an older shape of this service is unusable rather than
-  // half-usable: a retry with no endpoint has nowhere to go.
+  // An older shape is unusable rather than half-usable: a retry needs somewhere to go.
   if (!record.operation || !record.endpoint) return null;
 
   return {
@@ -133,18 +99,14 @@ export async function loadRetryPayload(
     endpoint: record.endpoint,
     params: record.params ?? {},
     fileIds: record.fileIds ?? [fileId],
-    // Older records predate these fields; both defaults fail closed (one file per
-    // call, matching no named kind).
+    // Older records predate these fields; both defaults fail closed.
     multiFile: record.multiFile ?? false,
     errorCode: record.errorCode ?? null,
     recordedAt: record.recordedAt,
   };
 }
 
-/**
- * Whether the document is still in this browser, which decides whether a retry can run at
- * all. Null once the user deletes the file, and on every other device they own.
- */
+/** Whether the document is still in this browser, which decides whether a retry can run. */
 export async function hasLocalFile(fileId: string | null): Promise<boolean> {
   if (!isUsableId(fileId)) return false;
 
@@ -162,11 +124,7 @@ export interface RetryOutputFile {
   filename: string;
 }
 
-/**
- * Why a retry could not run, for the component layer to word: the wording belongs
- * up there, which has `t`. `serverMessage` means {@link PasswordRetryOutcome.message}
- * carries the server's own words, which pass through untranslated on purpose.
- */
+/** Why a retry could not run; `serverMessage` means the message is the server's own words. */
 export type PasswordRetryFailure =
   | "notRetryable"
   | "fileMissing"
@@ -184,11 +142,7 @@ export interface PasswordRetryOutcome {
 const UNLOCK_ENDPOINT =
   "/api/v1/security/remove-password" satisfies ToolEndpoint;
 
-/**
- * Unlock a document this browser is holding, for a failure with no stashed operation such
- * as an attended policy run: a password-protected input is fixed the same way whatever was
- * reading it. Same contract as {@link retryWithPassword} otherwise.
- */
+/** Unlock a held document for a failure with no stashed operation, e.g. a policy run. */
 export async function unlockLocalDocument(
   fileId: string,
   password: string,
@@ -196,18 +150,7 @@ export async function unlockLocalDocument(
   return postWithPassword(UNLOCK_ENDPOINT, {}, [fileId], password);
 }
 
-/**
- * Re-run the stashed operation with the password the user just typed, and hand back
- * what it produced. The password is appended to a single request and then out of
- * scope: never stashed, never logged, never in the message returned here.
- *
- * A single-file endpoint was called once per file by the original run, so the retry
- * sends only `forFileId`, the document the row is about; a multi-file endpoint gets
- * the whole stashed batch back, exactly as it was submitted.
- *
- * `files` is returned rather than adopted because every file operation goes through
- * FileContext, which a service cannot reach.
- */
+/** Re-runs the stashed operation: `forFileId` alone, or the whole batch for a multi-file endpoint. */
 export async function retryWithPassword(
   payload: RetryPayload,
   password: string,
@@ -243,8 +186,7 @@ async function postWithPassword(
     files = [];
   }
 
-  // getStirlingFiles drops what it cannot find, so a short result means an input is
-  // gone. Resolved rather than thrown: the caller shows this next to the notification.
+  // getStirlingFiles drops what it cannot find, so a short result means an input is gone.
   if (files.length === 0 || files.length !== fileIds.length) {
     return { ok: false, reason: "fileMissing", message: null };
   }
@@ -267,11 +209,7 @@ async function postWithPassword(
   }
 }
 
-/**
- * The response as adoptable documents. A multi-output run answers with a ZIP, which
- * must not land in the workbench pretending to be one PDF, so it is unpacked here
- * the same way the tool pipeline unpacks it.
- */
+/** A multi-output run answers with a ZIP, which must not land in the workbench as one PDF. */
 async function asOutputFiles(
   blob: Blob,
   filename: string,
@@ -290,18 +228,14 @@ async function asOutputFiles(
   return [{ blob, filename }];
 }
 
-/**
- * The name the server gave the output, falling back to the input's: a caller adopting an
- * unnamed blob would put a file called "blob" in the user's workbench.
- */
+/** Falls back to the input's name, so an unnamed blob is not adopted as "blob". */
 function filenameOf(headers: unknown, fallback: string): string {
   const disposition = (headers as Record<string, unknown> | undefined)?.[
     "content-disposition"
   ];
   if (typeof disposition !== "string") return fallback;
 
-  // filename* (RFC 5987, percent-encoded) wins over plain filename, which is how a
-  // server sends a non-ASCII name.
+  // filename* (RFC 5987) wins over plain filename: that is how a non-ASCII name arrives.
   const encoded = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(disposition)?.[1];
   const plain = /filename="?([^";]+)"?/i.exec(disposition)?.[1];
   const name = encoded ?? plain;
@@ -319,11 +253,7 @@ function isUsableId(fileId: string | null | undefined): fileId is string {
   return typeof fileId === "string" && fileId.trim() !== "";
 }
 
-/**
- * The tool's parameters as form fields, alongside the documents under `fileInput`.
- * `objectToFormData` is not reused: it is typed to the generated request union and throws on
- * anything non-primitive, whereas a stashed payload is an opaque record read out of storage.
- */
+/** Not `objectToFormData`: that is typed to the generated union and throws on a stashed record. */
 function toFormData(params: Record<string, unknown>, files: File[]): FormData {
   const formData = new FormData();
 
@@ -345,23 +275,13 @@ function asField(value: unknown): string {
   return typeof value === "object" ? JSON.stringify(value) : `${value}`;
 }
 
-/**
- * How deep the walk below goes before it stops descending. Tool parameters are shallow, so this is
- * far above anything real; it exists so a pathological or cyclic object cannot exhaust the stack.
- */
+/** Far above any real tool's nesting; exists so a cyclic object cannot exhaust the stack. */
 const MAX_PARAM_DEPTH = 20;
 
-/** Stands in for a subtree too deep to walk. Never the value itself: see below. */
+/** Stands in for a subtree too deep to walk. */
 const TOO_DEEP = "[nested too deeply to store]";
 
-/**
- * Every secret-looking field dropped, at any depth: a tool can nest its parameters, and a
- * password one level down is still a password.
- *
- * Past {@link MAX_PARAM_DEPTH} the subtree is replaced rather than returned. Returning it would
- * mean anything below the limit is persisted unexamined, so the one place this function must not
- * fail open is exactly the place it stops looking.
- */
+/** Secrets dropped at any depth; past the limit the subtree is replaced, never returned unseen. */
 function withoutSecrets(
   value: Record<string, unknown>,
 ): Record<string, unknown>;
@@ -370,10 +290,6 @@ function withoutSecrets(value: unknown): unknown {
   return prunedBelow(value, 0);
 }
 
-/**
- * The walk itself. Separate from {@link withoutSecrets} because the depth is bookkeeping between
- * one level and the next, and no caller should be able to start part-way down.
- */
 function prunedBelow(value: unknown, depth: number): unknown {
   if (depth >= MAX_PARAM_DEPTH) return TOO_DEEP;
   if (Array.isArray(value))
@@ -388,10 +304,7 @@ function prunedBelow(value: unknown, depth: number): unknown {
   return kept;
 }
 
-/**
- * What the server said, or null when it said nothing usable (the caller words that
- * case itself). Never carries the password: it is not interpolated here.
- */
+/** What the server said, or null when it said nothing usable. Never carries the password. */
 function messageOf(error: unknown): string | null {
   const response = (error as { response?: { data?: unknown } })?.response?.data;
   if (typeof response === "string" && response.trim() !== "") return response;
@@ -414,8 +327,7 @@ async function writeRecords(records: StoredRetryRecord[]): Promise<void> {
     // put, not add: last write wins per fileId, matching the server's dedup.
     for (const record of records) store.put(record);
 
-    // Evict in the same transaction as the writes, so two concurrent stashes cannot
-    // both decide the store is under the cap.
+    // Evicted in the same transaction, so two concurrent stashes cannot both see room.
     const all = store.getAll();
     all.onsuccess = () => {
       const stored = (all.result ?? []) as StoredRetryRecord[];

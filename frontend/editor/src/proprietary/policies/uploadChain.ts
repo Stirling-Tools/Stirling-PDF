@@ -4,10 +4,7 @@ import {
 } from "@app/data/classificationPolicy";
 import type { PoliciesByCategory } from "@app/types/policies";
 
-/**
- * The active upload policies in execution order: each runs on the previous one's output, so their
- * effects accumulate. Shared because dispatch, chaining and a retry all have to agree on this order.
- */
+/** Active upload policies in execution order. Shared: dispatch, chaining and retry must agree. */
 export function orderUploadCategories(
   policies: PoliciesByCategory,
   aiEnabled: boolean,

@@ -174,8 +174,7 @@ class FileRunEventServiceTest {
 
         @Test
         void isNotAnActionAnyoneCanPress() {
-            // System-set on a successful client-side retry, so there is no id to dispatch and no
-            // button to render. Stated as a test because the absence is the property.
+            // System-set on a client-side retry, so there is no id to dispatch and no button.
             assertThat(Arrays.stream(FailureActionId.values()).map(Enum::name))
                     .doesNotContain("RESOLVE", "RESOLVED");
         }
@@ -422,8 +421,7 @@ class FileRunEventServiceTest {
 
         @Test
         void theOwnerIsOfferedTheFixAndNotTheReviewersView() {
-            // A member reading their own password failure: the unlock is theirs to do, and the
-            // processor view is for whoever reviews the team rather than owns the file.
+            // The unlock is the owner's to do; the processor view is for whoever reviews.
             when(authority.canEditPolicies()).thenReturn(false);
             FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 

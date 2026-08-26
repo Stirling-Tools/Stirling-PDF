@@ -11,36 +11,16 @@ import {
 } from "@app/services/policyApi";
 import type { FileId } from "@app/types/file";
 
-/**
- * Re-running the stored policy that a notification says failed.
- *
- * Nothing is stashed for this: the row names the policy and the workspace's own reference to the
- * document, and the bytes are in this browser's storage under that same reference, so the whole retry
- * is derivable from the row. A tool retry cannot be, which is why `notificationRetry` has a stash.
- *
- * Not a reuse of the auto-run controller, which is a hook. This makes the same single call the
- * auto-run makes and hands it to the same run store, so from there it is like any other run.
- */
+// No stash needed: the row names the policy and the reference the bytes are stored under.
 
 /** The document, and the policy to put it back through. Both read straight off the notification. */
 export interface PolicyRetryTarget {
   policyId: string;
-  /**
-   * The workspace reference the failing run was filed against. Sent back unchanged so the server folds
-   * a repeat failure onto the same incident.
-   */
+  /** Sent back unchanged, so the server folds a repeat failure onto the same incident. */
   fileId: string;
 }
 
-/**
- * What became of a re-run, so the caller can say it in the reader's own language. The wording belongs to
- * the component layer, which has `t`.
- *
- * `ok` alone is not enough to act on. A run that went but could not be recorded has no one polling it, so
- * its output never reaches this workspace: nothing about the failure is demonstrably fixed, however
- * cleanly the submission itself went. `tracked` is that difference, and the caller must not close a row
- * on the strength of `ok` without it.
- */
+/** `ok` without `tracked` means nothing polls the run, so no output reaches this workspace. */
 export type PolicyRerunOutcome =
   /** In the store, so `usePolicyAutoRun` polls it to terminal and imports what it produced. */
   | { ok: true; tracked: true }
@@ -58,7 +38,7 @@ export async function rerunPolicy(
   try {
     document = await fileStorage.getStirlingFile(target.fileId as FileId);
   } catch {
-    // Treated as absent: a browser that will not answer for the file cannot supply its bytes either.
+    // Treated as absent: a browser that will not answer for the file cannot supply its bytes.
     document = null;
   }
   if (!document) return { ok: false, reason: "missingFile" };
@@ -67,16 +47,7 @@ export async function rerunPolicy(
   return submit(target, document, target.fileId);
 }
 
-/**
- * Put bytes the caller already holds back through the upload chain: the just-unlocked document, which
- * is not in storage under the failing run's reference and never will be.
- *
- * Rejoins the chain at {@link resumePointFor} rather than re-running only what failed: the policies
- * after it never got their chance, and the ones before it must not run twice.
- *
- * @param workspaceFileId the ADOPTED document, not the one the failure named, so the output versions
- *     what the user is looking at. Null files the run untracked rather than against the wrong document.
- */
+/** Rejoins the chain at {@link resumePointFor}; `workspaceFileId` is the ADOPTED document. */
 export async function rechainPolicyOnDocument(
   target: PolicyRetryTarget,
   document: File,
@@ -97,10 +68,7 @@ interface ChainEntry {
   categoryId: string;
 }
 
-/**
- * Where the upload chain picks up for the failed document: its first policy not already applied. Not
- * the front of the chain, or one that already succeeded runs twice. Null when nothing places it.
- */
+/** The chain's first policy not already applied, so one that succeeded does not run twice. */
 function resumePointFor(
   target: PolicyRetryTarget,
   aiEnabled: boolean,
@@ -119,16 +87,7 @@ function resumePointFor(
   return policyId ? { policyId, categoryId } : null;
 }
 
-/**
- * Fire the run, then record it where every other run is recorded. The recording is what makes the retry
- * visible: `usePolicyAutoRun` polls every run in the store to completion and imports its outputs, and
- * that follows from the run being in the store with a real category, hence the lookup below.
- *
- * Two things can stop the recording without stopping the run: a local cache that cannot place the policy,
- * and an adoption that produced no workspace id. Neither is worth refusing the retry over, since the
- * server-side effect is real, but neither is a delivered result either. Both are reported as untracked so
- * the caller can say so and leave the failure open rather than closing a row whose output is not coming.
- */
+/** Recorded because `usePolicyAutoRun` polls the store; an unrecorded run delivers nothing. */
 async function submit(
   target: PolicyRetryTarget,
   document: File,
@@ -137,8 +96,7 @@ async function submit(
 ): Promise<PolicyRerunOutcome> {
   // Resolved before the run, so a lookup that throws cannot leave a live run unrecorded.
   const categoryId = resume?.categoryId ?? categoryForPolicy(target.policyId);
-  // The run goes to the chain's resume point where there is one, so the chaining step carries on from
-  // there and the rest of the chain applies. The failure's own reference still travels with it.
+  // At the resume point where there is one, so the rest of the chain carries on from there.
   const policyId = resume?.policyId ?? target.policyId;
   const runTarget = resolvePolicyRunTarget();
 
@@ -149,12 +107,10 @@ async function submit(
     return { ok: false, reason: "rejected", message: rejectionMessage(error) };
   }
 
-  // Nothing to file it under, or nothing to file it against. The run itself already went, so it is left
-  // to run: refusing it now would only add a wasted submission to an undeliverable one.
+  // The run already went, so it is left to run: refusing now only wastes a second submission.
   if (!categoryId || !workspaceFileId) return { ok: true, tracked: false };
 
-  // Marks (category, file) dispatched as it records, same as any other run: the pair has already run
-  // once, and this is that run again rather than a new one to dispatch later.
+  // Marks (category, file) dispatched as it records: the pair has run once, and this is it again.
   recordRunStart({
     runId,
     categoryId,
@@ -170,11 +126,7 @@ async function submit(
   return { ok: true, tracked: true };
 }
 
-/**
- * The category whose configured policy this is. The non-hook read rather than `usePolicies`, which needs
- * the app-config and team contexts the bell's shell may not have. Same cache the auto-run's reconcile
- * writes, so the same answer.
- */
+/** Non-hook read: `usePolicies` needs contexts the bell's shell may not have. */
 function categoryForPolicy(policyId: string): string | undefined {
   try {
     return Object.entries(loadPolicies()).find(

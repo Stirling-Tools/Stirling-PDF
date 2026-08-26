@@ -207,15 +207,11 @@ export function isDispatched(categoryId: string, fileId: string): boolean {
   return state.dispatched.includes(dispatchKey(categoryId, fileId));
 }
 
-/**
- * The upload policies already applied to produce this document, walked back through the runs that
- * produced it. Only a COMPLETED run counts: one that was dispatched and then failed has not applied.
- */
+/** Walked back through this document's lineage. Only a COMPLETED run counts as applied. */
 export function appliedCategoriesFor(fileId: string): Set<string> {
   const applied = new Set<string>();
   let cursor = fileId;
-  // A lineage cannot be longer than the runs recorded. The bound doubles as protection against a
-  // cycle in hand-edited localStorage, which would otherwise hang the caller.
+  // A lineage cannot outrun the recorded runs, and the bound also breaks a hand-edited cycle.
   for (let step = 0; step < state.runs.length; step++) {
     const child = cursor;
     const producer = state.runs.find(

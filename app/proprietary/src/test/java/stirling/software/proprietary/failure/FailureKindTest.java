@@ -107,8 +107,7 @@ class FailureKindTest {
         @ParameterizedTest
         @EnumSource(FailureKind.class)
         void everyOfferSaysWhoItIsForAndWhereItGoes(FailureKind kind) {
-            // Both are read per row to decide what a caller is shown, so a missing one would be a
-            // button placed by whatever the null case happened to do.
+            // Both decide what a caller is shown, so a missing one places a button by accident.
             for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
                 assertThat(offer.audience())
                         .as("%s offers %s", kind.getId(), offer.id())
@@ -231,8 +230,7 @@ class FailureKindTest {
 
         @Test
         void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so there is no resolution. A retry is still
-            // worth offering the person who hit it: an unrecognised failure is often a one-off.
+            // No known fix, so no resolution; a retry is still worth offering for a one-off.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
                             offered(FailureActionId.RETRY, OWNER, SECONDARY, "retry"),
@@ -296,8 +294,7 @@ class FailureKindTest {
 
         @Test
         void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
-            // The whole point of the audiences: the password is the fix and only the owner has it,
-            // so a reviewer is offered the run and a way to close the row instead.
+            // Only the owner has the password, so a reviewer is offered the run and a dismiss.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
                             offered(

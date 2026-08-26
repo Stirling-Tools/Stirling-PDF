@@ -100,8 +100,7 @@ describe("useNotifications", () => {
   });
 
   it("looks up an attended run's document but never an unattended run's", async () => {
-    // Only the attended row names a reference this browser could resolve; a source's hash can only
-    // miss, and would then read as "not on this device" about a document that never was.
+    // Only an attended row names a reference this browser could resolve; a source's hash misses.
     fetchNotifications.mockResolvedValue(
       feed([
         notification("attended", {
@@ -235,8 +234,7 @@ describe("useNotifications", () => {
     await act(async () => result.current.markAllSeen());
     expect(result.current.unreadCount).toBe(0);
 
-    // Resolved, so it leaves the list. A marker holding its id would have nothing left to measure
-    // from, and the row below it would read as unread again.
+    // It leaves the list; a marker holding its id would make the row below read as unread.
     fetchNotifications.mockResolvedValue(feed([notification("old")]));
     await act(async () => result.current.refresh());
 
@@ -319,8 +317,7 @@ describe("useNotifications", () => {
     );
     first.unmount();
 
-    // Nothing to report by the time the next bell appears: it must not show the old row while its
-    // own read is in flight.
+    // The next bell must not show the old row while its own read is still in flight.
     fetchNotifications.mockResolvedValue(feed([]));
     const second = renderHook(() => useNotifications());
 

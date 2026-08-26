@@ -171,18 +171,10 @@ public class FileRunEventService {
         return action.execute(event, inputs == null ? Map.of() : inputs, currentActor());
     }
 
-    /**
-     * Mark an incident resolved, because a client retried the operation and it worked. Nobody is
-     * offered a "resolve" button, which is why {@code RESOLVED} is a status and not a {@link
-     * FailureActionId}. Idempotent: a client reporting the same success twice reads its row back.
-     *
-     * @throws FailureActionException if the event is not the caller's, or is already closed some
-     *     other way
-     */
+    /** Mark an incident resolved after a client's own retry worked. Idempotent. */
     public FileRunEvent resolve(String eventId) {
         FileRunEvent event = requireVisible(eventId);
-        // No terminal pre-check: the store's guarded UPDATE decides, and tells a dismissed row
-        // apart from a deleted one after the fact rather than racing a read against the write.
+        // No terminal pre-check: the store's guarded UPDATE decides, rather than racing a read.
         return store.applyStatusOnce(
                 event.id(),
                 event.teamId(),
@@ -347,9 +339,7 @@ public class FileRunEventService {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
-    /**
-     * One action offered to one caller, availability resolved. {@code slot} is placement intent.
-     */
+    /** One action offered to one caller, availability resolved. */
     public record AvailableAction(
             FailureActionId id,
             String labelKey,
