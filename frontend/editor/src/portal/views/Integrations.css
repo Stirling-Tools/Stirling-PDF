@@ -116,9 +116,6 @@
 /* One list, table-shaped: a shared 4-column grid so the connected, available
    and coming-soon bands line up under the same headers. */
 .portal-integrations__table {
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-md);
-  background: var(--c-surface);
   overflow: hidden;
 }
 

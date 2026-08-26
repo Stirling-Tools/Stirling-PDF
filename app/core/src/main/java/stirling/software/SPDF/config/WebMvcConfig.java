@@ -159,16 +159,36 @@ public class WebMvcConfig implements WebMvcConfigurer {
             // Automatically enable CORS for Tauri desktop app
             // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
             logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
-            registerCorsMappings(
-                    registry,
-                    new String[] {
-                        "http://localhost:*",
-                        "https://localhost:*",
-                        "tauri://*", // Add this for Tauri apps
-                        "tauri://localhost",
-                        "http://tauri.localhost",
-                        "https://tauri.localhost"
-                    });
+            registry.addMapping("/**")
+                    .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "https://localhost:*",
+                            "tauri://*", // Add this for Tauri apps
+                            "tauri://localhost",
+                            "http://tauri.localhost",
+                            "https://tauri.localhost")
+                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                    .allowedHeaders(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN",
+                            "X-XSRF-TOKEN",
+                            "X-Browser-Id")
+                    .exposedHeaders(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
+                    .allowCredentials(true)
+                    .maxAge(3600);
         } else if (hasConfiguredOrigins) {
             // Use user-configured origins + always include Tauri origins for desktop app support
             logger.info(
@@ -191,7 +211,32 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 allOrigins.add("https://tauri.localhost");
             }
 
-            registerCorsMappings(registry, allOrigins.toArray(new String[0]));
+            String[] allowedOrigins = allOrigins.toArray(new String[0]);
+
+            registry.addMapping("/**")
+                    .allowedOriginPatterns(allowedOrigins)
+                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                    .allowedHeaders(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept",
+                            "Origin",
+                            "X-API-KEY",
+                            "X-CSRF-TOKEN",
+                            "X-XSRF-TOKEN",
+                            "X-Browser-Id")
+                    .exposedHeaders(
+                            "WWW-Authenticate",
+                            "X-Total-Count",
+                            "X-Page-Number",
+                            "X-Page-Size",
+                            "Content-Disposition",
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
+                    .allowCredentials(true)
+                    .maxAge(3600);
         } else {
             // Default to allowing all origins when nothing is configured
             logger.debug(
@@ -222,7 +267,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total")
                     .allowCredentials(true)
                     .maxAge(3600);
         }

@@ -1,5 +1,5 @@
 /* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
-/* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-input-bg, --c-hover, --c-active, --c-overlay. */
+/* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-modal-surface (modal panels), --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
 :root,
@@ -11,6 +11,7 @@ html[data-app-theme="light"] {
   --c-surface-raised: var(--p-white);
   --c-surface-sunken: var(--p-gray-100);
   --c-input-bg: var(--p-white);
+  --c-modal-surface: var(--p-white);
   --c-hover: var(--p-gray-50);
   --c-active: var(--p-gray-100);
   --c-overlay: rgba(0, 0, 0, 0.5);
@@ -22,7 +23,7 @@ html[data-app-theme="light"] {
 
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-snow);
-  --c-btn-secondary: var(--c-btn-inverse);
+  --c-btn-secondary: var(--c-surface-raised);
   --c-btn-secondary-border: var(--c-border);
 
   --c-border: var(--p-c-f0f0f0);
@@ -32,9 +33,13 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  /* Accent used as TEXT (links, toggles): a deeper hue that clears 4.5:1 on
+     light surfaces, where --c-primary itself does not. */
+  --c-accent-text: var(--p-blue-700);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
   /* Solid fills that carry a white label. Deeper than the --c-<tone> values
      above, which are picked for surfaces, borders and icons where the 3:1
@@ -66,6 +71,11 @@ html[data-app-theme="light"] {
   --c-success-subtle: color-mix(
     in srgb,
     var(--c-success) 10%,
+    var(--c-surface)
+  );
+  --c-warning-subtle: color-mix(
+    in srgb,
+    var(--c-warning) 10%,
     var(--c-surface)
   );
 
@@ -135,7 +145,8 @@ html[data-app-theme="midnight"] {
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-650);
   --c-surface-sunken: var(--p-zinc-850);
-  --c-input-bg: var(--p-zinc-650);
+  --c-input-bg: var(--c-surface);
+  --c-modal-surface: var(--c-surface);
   --c-hover: var(--p-gray-800);
   --c-active: var(--p-gray-800);
   --c-overlay: rgba(0, 0, 0, 0.6);
@@ -144,6 +155,8 @@ html[data-app-theme="midnight"] {
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
+  --c-accent-text: var(--p-blue-400);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
@@ -159,6 +172,7 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
@@ -348,7 +362,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
     var(--c-primary) 8%,
     var(--p-zinc-900)
   );
-  --c-input-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-zinc-900));
+  --c-input-bg: var(--c-surface);
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-28282d));
@@ -361,6 +375,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
@@ -411,7 +426,7 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-775);
   --c-surface-sunken: var(--p-zinc-900);
-  --c-input-bg: var(--p-zinc-900);
+  --c-input-bg: var(--c-surface);
   --c-hover: var(--p-zinc-750);
   --c-active: var(--p-zinc-700);
   --c-border: var(--p-c-28282d);
