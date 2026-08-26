@@ -26,18 +26,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Cache uv (lookup-only)
-        id: cache-uv-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ${{ runner.temp }}/uv-python-dir
-            ${{ runner.temp }}/setup-uv-cache
-          key: uv-${{ runner.os }}-${{ hashFiles(
-            'engine/pyproject.toml',
-            'engine/uv.lock'
-            ) }}
-          lookup-only: true
+      # - name: Cache uv (lookup-only)
+      #   id: cache-uv-restore
+      #   uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      #   with:
+      #     path: |
+      #       ${{ runner.temp }}/uv-python-dir
+      #       ${{ runner.temp }}/setup-uv-cache
+      #     key: uv-${{ runner.os }}-${{ hashFiles(
+      #       'engine/pyproject.toml',
+      #       'engine/uv.lock'
+      #       ) }}
+      #     lookup-only: true
 
       - name: Install uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
@@ -50,21 +50,22 @@ jobs:
             engine/pyproject.toml
             engine/uv.lock
 
-      - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-        run: uv sync --project engine --locked --all-groups
+      # - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
+      #   run: uv sync --project engine --locked --all-groups
 
-      - name: Save cache uv
-        if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ${{ runner.temp }}/uv-python-dir
-            ${{ runner.temp }}/setup-uv-cache
-          key: uv-${{ runner.os }}-${{ hashFiles(
-            'engine/pyproject.toml',
-            'engine/uv.lock'
-            ) }}
+      # - name: Save cache uv
+      #   if: steps.cache-uv-restore.outputs.cache-hit != 'true'
+      #   uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      #   with:
+      #     path: |
+      #       ${{ runner.temp }}/uv-python-dir
+      #       ${{ runner.temp }}/setup-uv-cache
+      #     key: uv-${{ runner.os }}-${{ hashFiles(
+      #       'engine/pyproject.toml',
+      #       'engine/uv.lock'
+      #       ) }}
   unoserver-image-cache-prime:
+    if: false
     environment:
       name: ci-unsigned
       deployment: false
@@ -144,6 +145,7 @@ jobs:
             ) }}
 
   gradle-cache-prime:
+    if: false
     environment:
       name: ci-unsigned
       deployment: false
