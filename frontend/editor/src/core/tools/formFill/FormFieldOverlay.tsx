@@ -146,7 +146,7 @@ function executePdfJs(
     change: "",
     rc: true,
     willCommit: false,
-    target: null as null,
+    target: null,
   };
 
   try {

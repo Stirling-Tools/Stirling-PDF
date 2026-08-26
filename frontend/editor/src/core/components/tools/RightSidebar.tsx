@@ -108,7 +108,7 @@ export default function RightSidebar() {
 
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
-      ? (toolRegistry[selectedToolKey as ToolId] ?? null)
+      ? (toolRegistry[selectedToolKey] ?? null)
       : null;
 
   const expandedWidth = "18.5rem";
@@ -131,7 +131,7 @@ export default function RightSidebar() {
     const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     collapsedQuickSection.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((entry) =>
-        items.push({ id: entry.id as ToolId, tool: entry.tool }),
+        items.push({ id: entry.id, tool: entry.tool }),
       ),
     );
     return items;
