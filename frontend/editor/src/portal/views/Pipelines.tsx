@@ -258,28 +258,6 @@ export function Pipelines() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
-      {galleryEntries.length > 0 && (
-        <section className="portal-pipelines__templates">
-          <h2 className="portal-pipelines__section-title">
-            {t("portal.pipelines.templates.title")}
-          </h2>
-          <p className="portal-pipelines__section-sub">
-            {t("portal.pipelines.templates.subtitle")}
-          </p>
-          <div className="portal-pipelines__templates-grid">
-            {galleryEntries.map((entry) => (
-              <PipelineTemplateCard
-                key={entry.category.id}
-                entry={entry}
-                onOpen={openTemplate}
-                locked={isLocked(entry)}
-                lockedLabel={t("portal.policies.card.requiresAiEngine")}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="portal-pipelines__all">
         <h2 className="portal-pipelines__section-title">
           {t("portal.pipelines.all.title")}
@@ -322,6 +300,28 @@ export function Pipelines() {
           <PipelinesTable pipelines={pipelines} onRowClick={openListRow} />
         )}
       </section>
+
+      {galleryEntries.length > 0 && (
+        <section className="portal-pipelines__templates">
+          <h2 className="portal-pipelines__section-title">
+            {t("portal.pipelines.templates.title")}
+          </h2>
+          <p className="portal-pipelines__section-sub">
+            {t("portal.pipelines.templates.subtitle")}
+          </p>
+          <div className="portal-pipelines__templates-scroll">
+            {galleryEntries.map((entry) => (
+              <PipelineTemplateCard
+                key={entry.category.id}
+                entry={entry}
+                onOpen={openTemplate}
+                locked={isLocked(entry)}
+                lockedLabel={t("portal.policies.card.requiresAiEngine")}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <PolicyDetailPanel
         policy={detail?.policy ?? null}

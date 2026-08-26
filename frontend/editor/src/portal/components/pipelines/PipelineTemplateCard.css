@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  height: 100%;
+  height: 12rem;
 }
 
 .portal-pipelines__template-card--locked {
@@ -36,12 +36,22 @@
 }
 
 .portal-pipelines__template-blurb {
-  /* Push the CTA to the card foot so cards in a row line their footers up. */
-  flex: 1;
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--c-text-subtle);
+  /* Clamp long descriptions to three lines with a trailing ellipsis. Note: no flex-grow here -
+     stretching the box defeats -webkit-line-clamp and makes it hard-clip mid-word instead. */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Pin whatever ends the card (the "Set up" link or a locked/coming-soon chip) to the card foot,
+   so footers line up across cards without flex-growing the clamped blurb above. */
+.portal-pipelines__template-card > :last-child {
+  margin-top: auto;
 }
 
 .portal-pipelines__template-cta {
