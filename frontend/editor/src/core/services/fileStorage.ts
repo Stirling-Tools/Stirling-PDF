@@ -10,6 +10,7 @@ import {
   StirlingFile,
   StirlingFileStub,
   createStirlingFile,
+  type ClassificationConfidence,
 } from "@app/types/fileContext";
 import {
   indexedDBManager,
@@ -36,6 +37,8 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   // group by label without re-reading PDF bytes, and it survives versioning.
   // See StirlingFileStub.classificationLabels.
   classificationLabels?: string[];
+  // See StirlingFileStub.classificationConfidence.
+  classificationConfidence?: ClassificationConfidence;
 }
 
 export interface StorageStats {
@@ -701,6 +704,7 @@ class FileStorageService {
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
           classificationLabels: record.classificationLabels,
+          classificationConfidence: record.classificationConfidence,
         };
 
         resolve(stub);
@@ -771,6 +775,7 @@ class FileStorageService {
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
+              classificationConfidence: record.classificationConfidence,
             });
           }
           cursor.continue();
@@ -873,6 +878,7 @@ class FileStorageService {
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
+              classificationConfidence: record.classificationConfidence,
             });
           }
           cursor.continue();

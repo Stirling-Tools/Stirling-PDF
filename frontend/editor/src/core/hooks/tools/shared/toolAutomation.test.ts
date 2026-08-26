@@ -404,6 +404,52 @@ describe("convert (format-routed custom tool)", () => {
     });
   });
 
+  test("round-trips a PDF -> PDF/UA step, restoring every accessibility option", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: {
+        ...convertDefaults,
+        fromExtension: "pdf",
+        toExtension: "pdfua",
+        pdfUaOptions: {
+          profile: "ua2",
+          language: "fr-FR",
+          overrideLanguage: true,
+          title: "Rapport annuel",
+          embedFonts: false,
+          altText: "0:12=Graphique des revenus",
+        },
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/pdf/ua");
+    expect(api.parameters).toMatchObject({
+      profile: "ua2",
+      language: "fr-FR",
+      overrideLanguage: "true",
+      title: "Rapport annuel",
+      embedFonts: "false",
+      altText: "0:12=Graphique des revenus",
+    });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.operation).toBe("/api/v1/convert/pdf/ua");
+    expect(back.params).toMatchObject({
+      toExtension: "pdfua",
+      pdfUaOptions: {
+        profile: "ua2",
+        language: "fr-FR",
+        overrideLanguage: true,
+        title: "Rapport annuel",
+        embedFonts: false,
+        altText: "0:12=Graphique des revenus",
+      },
+    });
+  });
+
   test("routes PDF/X through the shared PDF/A endpoint and recovers the PDF/X target", () => {
     const step: WorkingToolStep = {
       toolId: "convert" as ToolId,

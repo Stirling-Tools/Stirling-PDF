@@ -1063,7 +1063,9 @@ function FileCard({
         )}
         <div className="files-page-card-meta">
           <span>{fileSize}</span>
-          <span>·</span>
+          <span className="files-page-card-meta-sep" aria-hidden="true">
+            ·
+          </span>
           <span>{fileDate}</span>
           <PolicyBadges fileId={file.id as string} />
         </div>

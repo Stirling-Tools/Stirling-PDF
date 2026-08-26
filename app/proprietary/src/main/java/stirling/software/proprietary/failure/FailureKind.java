@@ -1,7 +1,11 @@
 package stirling.software.proprietary.failure;
 
-import static stirling.software.proprietary.failure.FailureActionId.ACKNOWLEDGE;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
+import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
+import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
+import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
+import static stirling.software.proprietary.failure.FailureAudience.OWNER;
+import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,13 +24,8 @@ import lombok.Getter;
  * The registry of failure kinds, described as data: a stable id, i18n keys and an English fallback
  * like {@code ExceptionUtils.ErrorCode}, plus the facets a review surface needs.
  *
- * <p>Actions are declared here but implemented in {@link FailureAction} beans resolved by id, so a
- * new kind ships as a registry entry plus copy. Two members today: {@link #UNKNOWN} gives every
- * failed run a record, and kinds get promoted out of it as production shows what occurs.
- *
- * <p>A kind offers an acknowledgement only where there is something to acknowledge <em>doing</em>.
- * With nothing to fix, "seen it" and "clear it" are the same decision, so the row offers only the
- * one that clears it.
+ * <p>A new kind ships as a registry entry plus copy. Each offer also says who it is for, since one
+ * incident is read both by whoever hit it and by whoever reviews after them.
  */
 @Getter
 public enum FailureKind {
@@ -37,8 +36,9 @@ public enum FailureKind {
             FailureScope.FILE,
             errorCodes("E004"),
             fallback("This document is password-protected, so the pipeline could not read it."),
-            offer(ACKNOWLEDGE),
-            offer(DISMISS, "dismissSkipFile")),
+            offer(VIEW_FILE, OWNER),
+            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
+            offer(DISMISS, ANYONE_WHO_SEES)),
 
     UNKNOWN(
             FailureStage.INTERNAL,
@@ -47,7 +47,11 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            offer(DISMISS));
+            // Same order as every other kind: declaration order is display order, so the document
+            // leads wherever it is offered rather than moving between failures.
+            offer(VIEW_FILE, OWNER),
+            offer(VIEW_IN_PROCESSOR, TEAM_REVIEWER),
+            offer(DISMISS, ANYONE_WHO_SEES));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";
     private static final String ACTION_KEY_PREFIX = "portal.failures.action.";
@@ -95,22 +99,26 @@ public enum FailureKind {
     }
 
     /**
-     * One action this kind offers, with the key to label it by. One ordered list rather than ids
-     * plus a parallel map of overrides, which could disagree with each other.
+     * One ordered list rather than ids plus parallel maps of audiences and labels, which could
+     * disagree with each other.
      *
      * @param labelKeySuffix key under {@code portal.failures.action.}, or null for the generic
      *     label
      */
-    private record Offer(FailureActionId id, String labelKeySuffix) {}
+    private record Offer(FailureActionId id, FailureAudience audience, String labelKeySuffix) {}
 
-    /** An action labelled by this kind's own wording, where the generic label reads badly. */
-    private static Offer offer(FailureActionId id, String labelKeySuffix) {
-        return new Offer(id, labelKeySuffix);
+    /** Declaration order is display order. */
+    private static Offer offer(FailureActionId id, FailureAudience audience) {
+        return new Offer(id, audience, null);
     }
 
-    /** An action labelled by the shared wording for that action. */
-    private static Offer offer(FailureActionId id) {
-        return new Offer(id, null);
+    /**
+     * As {@link #offer(FailureActionId, FailureAudience)}, but labelled by this kind's own wording
+     * where the shared one reads badly.
+     */
+    private static Offer offer(
+            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+        return new Offer(id, audience, labelKeySuffix);
     }
 
     /**
@@ -148,6 +156,22 @@ public enum FailureKind {
     public List<FailureActionId> getActions() {
         return offers.stream().map(Offer::id).toList();
     }
+
+    /**
+     * What this kind offers, in declaration order, each with its label resolved. What a review
+     * surface reads, so it never has to ask two separate questions about one offer.
+     */
+    public List<OfferedAction> getOfferedActions() {
+        return offers.stream()
+                .map(
+                        offer ->
+                                new OfferedAction(
+                                        offer.id(), labelKeyFor(offer.id()), offer.audience()))
+                .toList();
+    }
+
+    /** One action as a kind declares it: what to call it and who it is for. */
+    public record OfferedAction(FailureActionId id, String labelKey, FailureAudience audience) {}
 
     /** Whether this kind offers {@code action}. The dispatch guard: see {@code FailureActionId}. */
     public boolean declares(FailureActionId action) {

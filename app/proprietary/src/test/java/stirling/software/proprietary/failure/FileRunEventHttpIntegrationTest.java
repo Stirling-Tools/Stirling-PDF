@@ -120,13 +120,20 @@ class FileRunEventHttpIntegrationTest {
             // Epoch millis, not an ISO string: the client renders relative times from a number.
             assertThat(row.get("lastSeenAt").isNumber()).isTrue();
 
+            // Resolved for this reader: a leader looking at a colleague's password failure is
+            // offered the run and a way to close the row, not a password they do not have.
             JsonNode actions = row.get("actions");
             assertThat(actions).hasSize(2);
-            assertThat(actions.get(0).get("id").asString()).isEqualTo("ACKNOWLEDGE");
+            assertThat(actions.get(0).get("id").asString()).isEqualTo("VIEW_IN_PROCESSOR");
             assertThat(actions.get(0).get("labelKey").asString())
-                    .isEqualTo("portal.failures.action.acknowledge");
+                    .isEqualTo("portal.failures.action.viewInProcessor");
+            assertThat(actions.get(0).get("defaultLabel").asString())
+                    .isEqualTo("View in processor");
+            assertThat(actions.get(0).get("execution").asString()).isEqualTo("CLIENT");
             assertThat(actions.get(0).get("enabled").asBoolean()).isTrue();
             assertThat(actions.get(0).get("disabledReasonKey").isNull()).isTrue();
+            assertThat(actions.get(1).get("id").asString()).isEqualTo("DISMISS");
+            assertThat(actions.get(1).get("execution").asString()).isEqualTo("SERVER");
         }
 
         @Test
@@ -154,16 +161,17 @@ class FileRunEventHttpIntegrationTest {
         void coercesQueryParametersAndFiltersOnThem() throws Exception {
             String locked = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked", "b");
             seed(FailureKind.UNKNOWN, TEAM, "open", "a");
-            post("/api/v1/file-run-events/" + locked + "/actions/ACKNOWLEDGE", "{\"inputs\":{}}");
+            post("/api/v1/file-run-events/" + locked + "/actions/DISMISS", "{\"inputs\":{}}");
 
-            JsonNode acknowledged =
-                    mapper.readTree(get("/api/v1/file-run-events?status=ACKNOWLEDGED").body())
+            JsonNode dismissed =
+                    mapper.readTree(get("/api/v1/file-run-events?status=DISMISSED").body())
                             .get("events");
-            assertThat(acknowledged).hasSize(1);
+            assertThat(dismissed).hasSize(1);
 
             JsonNode byKind =
                     mapper.readTree(
-                                    get("/api/v1/file-run-events?kindId=INPUT_PASSWORD_PROTECTED")
+                                    get("/api/v1/file-run-events?status=DISMISSED"
+                                                    + "&kindId=INPUT_PASSWORD_PROTECTED")
                                             .body())
                             .get("events");
             assertThat(byKind).hasSize(1);
@@ -269,25 +277,23 @@ class FileRunEventHttpIntegrationTest {
             String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "boom");
 
             HttpResponse<String> response =
-                    post(
-                            "/api/v1/file-run-events/" + id + "/actions/ACKNOWLEDGE",
-                            "{\"inputs\":{}}");
+                    post("/api/v1/file-run-events/" + id + "/actions/DISMISS", "{\"inputs\":{}}");
 
             assertThat(response.statusCode()).isEqualTo(200);
             JsonNode row = mapper.readTree(response.body());
-            assertThat(row.get("status").asString()).isEqualTo("ACKNOWLEDGED");
+            assertThat(row.get("status").asString()).isEqualTo("DISMISSED");
             assertThat(row.get("statusActor").asString()).isEqualTo(ACTOR);
         }
 
         @Test
         void acceptsAPopulatedInputsMap() throws Exception {
-            // Nothing consumes inputs yet, but the shape must bind so the first action that needs
-            // one (a password) does not discover a broken contract.
+            // No server action consumes inputs, but the shape must still bind rather than 400, so a
+            // client that posts an empty or stale map is not refused over its body.
             String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "locked");
 
             HttpResponse<String> response =
                     post(
-                            "/api/v1/file-run-events/" + id + "/actions/ACKNOWLEDGE",
+                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                             "{\"inputs\":{\"password\":\"hunter2\"}}");
 
             assertThat(response.statusCode()).isEqualTo(200);
@@ -316,14 +322,26 @@ class FileRunEventHttpIntegrationTest {
         }
 
         @Test
+        void mapsAnActionTheClientRunsToBadRequest() throws Exception {
+            // Declared by the kind, refused here: over the wire, so a client that posts a retry
+            // gets a refusal rather than a 200 implying the server did something.
+            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+
+            assertThat(
+                            post(
+                                            "/api/v1/file-run-events/" + id + "/actions/VIEW_FILE",
+                                            "{\"inputs\":{}}")
+                                    .statusCode())
+                    .isEqualTo(400);
+        }
+
+        @Test
         void mapsAnotherTeamsRowToNotFound() throws Exception {
             String id = seed(FailureKind.UNKNOWN, 999L, "theirs", "boom");
 
             assertThat(
                             post(
-                                            "/api/v1/file-run-events/"
-                                                    + id
-                                                    + "/actions/ACKNOWLEDGE",
+                                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                                             "{\"inputs\":{}}")
                                     .statusCode())
                     .isEqualTo(404);
@@ -336,9 +354,7 @@ class FileRunEventHttpIntegrationTest {
 
             assertThat(
                             post(
-                                            "/api/v1/file-run-events/"
-                                                    + id
-                                                    + "/actions/ACKNOWLEDGE",
+                                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                                             "{\"inputs\":{}}")
                                     .statusCode())
                     .isEqualTo(409);

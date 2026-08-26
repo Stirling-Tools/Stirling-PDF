@@ -1,6 +1,9 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
+import static stirling.software.proprietary.failure.FailureAudience.OWNER;
+import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,6 +31,13 @@ import stirling.software.common.util.ExceptionUtils;
  * button that fails at runtime.
  */
 class FailureKindTest {
+
+    /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
+    private static FailureKind.OfferedAction offered(
+            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+        return new FailureKind.OfferedAction(
+                id, "portal.failures.action." + labelKeySuffix, audience);
+    }
 
     @Nested
     @DisplayName("every kind is well formed")
@@ -60,6 +70,27 @@ class FailureKindTest {
             assertThat(kind.getId()).matches("^[A-Z][A-Z0-9_]*$");
         }
 
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
+            // Declaration order is display order and the first usable offer is the row's primary,
+            // so
+            // two kinds disagreeing would flip the solid button between rows.
+            List<FailureActionId> ranking =
+                    List.of(
+                            FailureActionId.VIEW_FILE,
+                            FailureActionId.VIEW_IN_PROCESSOR,
+                            FailureActionId.DISMISS);
+
+            List<FailureActionId> declared = kind.getActions();
+            assertThat(ranking)
+                    .as("%s declares an action the shared ranking does not rank", kind.getId())
+                    .containsAll(declared);
+            assertThat(declared)
+                    .as("%s declares its actions out of the shared order", kind.getId())
+                    .isEqualTo(ranking.stream().filter(declared::contains).toList());
+        }
+
         @Test
         void idsAreUnique() {
             Set<String> ids = new HashSet<>();
@@ -86,6 +117,25 @@ class FailureKindTest {
             for (FailureActionId action : kind.getActions()) {
                 assertThat(kind.labelKeyFor(action)).startsWith("portal.failures.action.");
             }
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void everyOfferSaysWhoItIsFor(FailureKind kind) {
+            // Read per row to decide what a caller is shown, so a null would leak a button.
+            for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
+                assertThat(offer.audience())
+                        .as("%s offers %s", kind.getId(), offer.id())
+                        .isNotNull();
+            }
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void offersEachActionAtMostOnce(FailureKind kind) {
+            // The same action twice would be two buttons with one meaning, and labelKeyFor would
+            // answer for the first.
+            assertThat(kind.getActions()).doesNotHaveDuplicates();
         }
 
         @Test
@@ -182,10 +232,16 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersOnlyTheActionThatClearsIt() {
-            // Nothing here can be fixed, so "seen it" and "clear it" would be the same decision.
-            // Offering both just asks the reviewer to press two buttons to reach one outcome.
-            assertThat(FailureKind.UNKNOWN.getActions()).containsExactly(FailureActionId.DISMISS);
+        void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
+            // Nothing here is known to be fixable, so the offers are just the places to look.
+            assertThat(FailureKind.UNKNOWN.getOfferedActions())
+                    .containsExactly(
+                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
         }
 
         @Test
@@ -238,24 +294,49 @@ class FailureKindTest {
         }
 
         @Test
-        void aKindWithSomethingToFixOffersTheFixAndAWayToSkipIt() {
-            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getActions())
-                    .containsExactly(FailureActionId.ACKNOWLEDGE, FailureActionId.DISMISS);
+        void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
+            // The point of the audiences: only the owner holds the document.
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
+                    .containsExactly(
+                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(
+                                    FailureActionId.VIEW_IN_PROCESSOR,
+                                    TEAM_REVIEWER,
+                                    "viewInProcessor"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
         }
 
         @Test
-        void overriddenLabelWinsOverTheGenericOne() {
-            String label =
-                    FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(FailureActionId.DISMISS);
-            assertThat(label).isEqualTo("portal.failures.action.dismissSkipFile");
-            assertThat(label).isNotEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS));
+        void noKindOffersAcknowledgeAnyMore() {
+            // Kept in the vocabulary for rows already ACKNOWLEDGED; offered by nothing, so
+            // dispatchable by nothing.
+            for (FailureKind kind : FailureKind.values()) {
+                assertThat(kind.declares(FailureActionId.ACKNOWLEDGE))
+                        .as("%s offers ACKNOWLEDGE", kind.getId())
+                        .isFalse();
+            }
         }
 
         @Test
-        void genericLabelIsUsedWhenAKindDeclaresNoOverride() {
+        void everyKindLabelsItsActionsWithTheSharedWordingToday() {
+            // The per-kind override still exists for wording that reads badly in context.
+            for (FailureKind kind : FailureKind.values()) {
+                for (FailureActionId action : kind.getActions()) {
+                    assertThat(kind.labelKeyFor(action))
+                            .isEqualTo(FailureKind.genericLabelKey(action));
+                }
+            }
+        }
+
+        @Test
+        void genericLabelIsDerivedFromTheActionId() {
             assertThat(FailureKind.UNKNOWN.labelKeyFor(FailureActionId.DISMISS))
                     .isEqualTo(FailureKind.genericLabelKey(FailureActionId.DISMISS))
                     .isEqualTo("portal.failures.action.dismiss");
+            assertThat(
+                            FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
+                                    FailureActionId.VIEW_IN_PROCESSOR))
+                    .isEqualTo("portal.failures.action.viewInProcessor");
         }
 
         @Test

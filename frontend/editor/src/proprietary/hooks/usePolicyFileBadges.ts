@@ -4,7 +4,7 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
-import { isClassificationCategory } from "@app/data/policyCategories";
+import { isClassificationCategory } from "@app/data/classificationPolicy";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */

@@ -36,8 +36,11 @@
   border-color: var(--c-primary);
 }
 
-/* Keyboard-shortcut hint pinned to the right of the input. */
+/* Keyboard-shortcut hint pinned to the right of the input. Hidden by default
+   and opted back in below, so the two rules that must agree - showing the chip
+   and reserving room for it - are keyed on one condition and cannot drift. */
 .super-search-kbd {
+  display: none;
   position: absolute;
   right: 0.5rem;
   top: 50%;
@@ -52,6 +55,15 @@
   border: 1px solid var(--c-border-subtle);
   /* Tiny breathing room between the ⌘ glyph and the K. */
   letter-spacing: 0.06em;
+}
+
+/* Only where the shortcut is pressable and the pill has room for it. Below the
+   mobile breakpoint the chip used to sit over the input - it has no padding of
+   its own - so the placeholder ran underneath it instead of ellipsising. */
+@media (min-width: 64.0625rem) and (not (pointer: coarse)) {
+  .super-search-kbd {
+    display: inline-block;
+  }
 }
 
 /* Portalled to <body>; coords are set inline from the input's viewport rect. */
@@ -209,9 +221,6 @@
 }
 
 .super-search-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   width: 100%;
   padding: 0.45rem 0.5rem;
   border: none;
@@ -225,6 +234,18 @@
 .super-search-item.active,
 .super-search-item:hover {
   background: var(--c-hover);
+}
+
+.super-search-item .mantine-Button-inner {
+  width: 100%;
+}
+
+.super-search-item .mantine-Button-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  overflow: visible;
 }
 
 .super-search-item-icon {
@@ -241,6 +262,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .super-search-item-title {

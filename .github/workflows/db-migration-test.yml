@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -81,3 +81,8 @@ jobs:
           path: /tmp/stirling-migration-failed-*/app.log
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -rf /tmp/stirling-migration-failed-*
+        continue-on-error: true

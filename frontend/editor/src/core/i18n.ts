@@ -36,7 +36,7 @@ i18n
     debug: process.env.NODE_ENV === "development",
 
     // Ensure synchronous loading to prevent timing issues
-    initImmediate: false,
+    initAsync: false,
 
     interpolation: {
       escapeValue: false, // React already escapes values
