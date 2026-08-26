@@ -41,7 +41,7 @@ false = "偽"
 fileNotSavedToDisk = "ディスクに保存されていません"
 fileSavedToDisk = "ファイルをディスクに保存しました"
 fileSelected = "選択中：{{filename}}"
-filesSelected = "選択されたファイル"
+filesSelected = "{{count}} 個のファイル"
 font = "フォント"
 fontSizeTooltip = "ページ番号テキストのポイントサイズ。大きい数値ほど文字が大きくなります。"
 fontTypeTooltip = "ページ番号のフォントファミリー。文書のスタイルに合わせて選択してください。"
@@ -3969,6 +3969,7 @@ back = "戻る"
 backToFolder = "{{folder}} に戻る"
 backToMyFiles = "マイファイルに戻る"
 breadcrumbs = "フォルダパス"
+bulkActions = "アクション"
 cancel = "キャンセル"
 classification = "分類"
 clearSelection = "選択をクリア"
@@ -4142,6 +4143,11 @@ totalSize = "合計サイズ"
 type = "種類"
 versionHistory = "バージョンの履歴"
 
+[filesPage.filters]
+activeCount = "{{count}} 件のフィルターが有効"
+clearAll = "フィルターをクリア"
+label = "フィルター"
+
 [filesPage.folderName]
 cancel = "キャンセル"
 error = "フォルダを保存できませんでした。もう一度お試しください。"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "ファイルを並べ替え"
 modifiedAsc = "古い順"
 modifiedDesc = "新しい順"
 nameAsc = "名前 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "すべて保存済み"
 analyzingFields = "Analysing form fields..."
+applyFailed = "変更を適用できませんでした"
 extractCsvError = "CSV の抽出に失敗しました"
 extractXlsxError = "XLSX の抽出に失敗しました"
 filled = "filled"
 flattenAfterFilling = "入力後にフラット化"
+goToPage = "このページへ移動"
 noFields = "No fillable form fields found in this PDF."
+page = "ページ"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "必須"
@@ -4318,7 +4328,82 @@ rescanFields = "フィールドを再スキャン"
 rescanFormFields = "フォームフィールドを再スキャン"
 save = "保存"
 saveShortcut = "Ctrl+S で保存"
+skippedEdits_one = "1 件の変更を適用できませんでした:"
+skippedEdits_other = "{{count}} 件の変更を適用できませんでした:"
+skippedEditsTruncated = "さらに {{count}} 件は表示されていません。"
 unsavedChanges = "未保存の変更"
+
+[formFill.create]
+commit = "{{count}} 個のフィールドを PDF に追加"
+empty = "まだフィールドが描画されていません。"
+failed = "フィールドの追加に失敗しました"
+goToField = "このフィールドへ移動"
+hint = "フィールドの種類を選択し、ページ上に描画してください。"
+placing = "ページ上に {{type}} フィールドを描画します。停止するには Esc を押してください。"
+preview = "長押しでプレビュー"
+previewHelp = "長押しすると、編集用のアウトラインなしで、追加後のフィールドの見た目を確認できます。"
+removeField = "フィールドを削除"
+
+[formFill.editor]
+action = "ボタンアクション"
+actionHelp = "クリックされたときにボタンが行う動作です。"
+actionNone = "なし"
+actionPrint = "印刷"
+actionReset = "フォームをリセット"
+actionSubmit = "URL に送信"
+actionUri = "URL を開く"
+actionUrl = "URL"
+actionUrlHelp = "ボタンが開く、または送信する先のアドレスです。"
+addOption = "オプションを追加"
+caption = "ボタンキャプション"
+captionHelp = "ボタン面に表示されるテキストです。"
+defaultValue = "デフォルト値"
+defaultValueHelp = "入力前にフィールドに入っている内容です。空のフィールドにする場合は空欄のままにしてください。"
+fontSize = "フォントサイズ"
+fontSizeHelp = "フィールド内のテキストサイズです。リーダー側で収まるように調整する場合は空欄のままにしてください。"
+label = "ラベル"
+labelHelp = "フォーム入力者に表示される文言です。空欄にするとフィールド名が使用されます。"
+maxLength = "最大長（comb）"
+maxLengthHelp = "入力できる文字数を制限し、等間隔のボックスとして描画します。"
+multiline = "複数行"
+multilineHelp = "複数行のテキストを許可し、フィールドの端で折り返します。"
+multiSelect = "複数選択を許可"
+multiSelectHelp = "一度に複数のオプションを選択できるようにします。"
+name = "フィールド名"
+nameHelp = "フィールドの内部名です。データのエクスポートや別システムからのフォーム入力時に使用されるため、一意でスペースを含まない名前にしてください。"
+optionGap = "オプション間隔"
+optionGapHelp = "ボタン間の間隔（ポイント単位）です。空欄にすると、ボックス内で均等に縦方向へ配置されます。"
+optionPlaceholder = "オプション {{n}}"
+options = "オプション"
+optionsEmpty = "少なくとも 1 つのオプションを追加してください。"
+optionsHelp = "リストに表示する選択肢です。入力したとおりに保存されるため、短く区別しやすいものにしてください。"
+optionSize = "オプションサイズ"
+optionSizeHelp = "各ボタンの幅と高さ（ポイント単位）です。空欄にすると、描画したボックスに合わせます。"
+readOnly = "読み取り専用"
+readOnlyHelp = "値は表示しますが、編集はできないようにします。"
+removeOption = "オプションを削除"
+required = "必須"
+requiredHelp = "このフィールドが入力されるまでフォームを送信できません。"
+signatureNote = "プレースホルダーのみです - ここで署名するわけではありません。署名の位置を示すもので、ドキュメントに署名する際に PDF 署名ツール（Adobe Acrobat、署名サービスなど）がこの場所に署名を配置します。"
+tooltip = "ツールチップ"
+tooltipHelp = "PDF リーダーでフィールドにカーソルを合わせたときに表示されるヒントです。"
+type = "種類"
+typeHelp = "このフィールドの種類です。変更するとフィールドが再作成されるため、現在の値は引き継がれません。"
+
+[formFill.mode]
+create = "作成"
+fill = "入力"
+label = "フォームエディターモード"
+modify = "変更"
+
+[formFill.modify]
+commit = "{{count}} 件の変更を保存"
+delete = "削除"
+empty = "この PDF にはまだフォームフィールドがありません。"
+failed = "変更の保存に失敗しました"
+groupSizeHint = "オプションサイズを使用"
+hint = "フィールドを選択してプロパティを編集するか、ページ上でドラッグするか、削除してください。"
+restore = "復元"
 
 [formFill.sidebar]
 close = "サイドバーを閉じる"
@@ -4584,6 +4669,10 @@ title = "メタデータの変更"
 desc = "文書の制限と権限を変更"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "権限の変更"
+
+[home.classify]
+desc = "このドキュメントの種類を識別してタグ付けします。"
+title = "分類"
 
 [home.compare]
 desc = "2つのPDFを比較して表示します。"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "報告する内容はありません。"
+handoffUnavailable = "このブラウザーでは、プロセッサーからエディターにドキュメントを渡せません。代わりにエディターから開いてください。"
+noDocumentLinked = "この失敗は特定のドキュメントに関連付けられていないため、ここで開くものはありません。"
+notOnThisDevice = "このドキュメントはこのデバイス上にないため、ここでは開けません。"
+occurrences = "{{count}} 回"
+open = "通知"
+title = "通知"
+unread = "未読"
+
+[notifications.action]
+failed = "実行できませんでした。しばらくしてからもう一度お試しください。"
+unavailable = "この通知では利用できません。"
+
+[notifications.detail]
+copied = "コピーしました"
+copy = "エラーをコピー"
+less = "表示を減らす"
+more = "完全なメッセージを表示"
+
+[notifications.section]
+earlier = "以前"
+new = "新規"
 
 [oauth.error]
 message = "認証に失敗しました。このウィンドウを閉じて、もう一度お試しください。"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} 件の無料PDFのうち使用済み"
 capSuffix_other = "{{allowance}} 件の無料PDFのうち使用済み"
 eyebrow = "Processor トライアル"
-statusLabel_one = "残り {{remaining}}"
-statusLabel_other = "残り {{remaining}}"
+statusLabel_one = "{{used}} 使用済み"
+statusLabel_other = "{{used}} 使用済み"
 sub = "PDF Editor は無料で使用できます。PDF を自動処理する場合はお支払いください。"
 title_one = "{{allowance}} 件のPDFを無料で処理"
 title_other = "{{allowance}} 件のPDFを無料で処理"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "ファイルを表示"
+viewInProcessor = "プロセッサーで表示"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "この失敗は特定のドキュメントに対して記録されていないため、ここで開くものはありません。"
+unattended = "このファイルはフォルダー、バケット、または webhook から取り込まれたため、開くために保持しているブラウザーはありません。"
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "ソース"
 connectSource = "ソースを接続"
 
 [portal.sources.builder]
+advanced = "詳細"
 back = "ソースに戻る"
+backToSource = "ソース設定に戻る"
 backToTypes = "すべてのソースタイプ"
 cancel = "キャンセル"
 chooseHint = "ドキュメントの取得元を選択してください。グレー表示のコネクターは近日対応予定です。"
@@ -8726,7 +8845,6 @@ create = "ソースを作成"
 createTitle = "ソースを接続"
 delete = "削除"
 editTitle = "ソースを編集"
-enabled = "有効"
 save = "変更を保存"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: 各ファイルを 1 回処理"
 snapshot = "Snapshot: 実行ごとにフォルダーを再読み取り"
 
 [portal.sources.networkFields.recursive]
+helperText = "ファイルが入れ子のフォルダーに整理されている場合はサブフォルダーを含めるか、最上位のみを監視します。"
 label = "フォルダー階層"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "サイズ、日付、内容チェック"
 stat = "サイズと更新日時"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "処理後に元のファイルをそのまま残すかどうかです。元のファイルを残すと、次回パイプラインがソースをスキャンしたときに再処理されます。"
 label = "読み取りモード"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "消費: 各ファイルを1回処理"
 snapshot = "スナップショット: 実行ごとにフォルダーを再読み込み"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "ファイルが入れ子のフォルダーに整理されている場合はサブフォルダーを含めるか、最上位のみを監視します。"
 label = "フォルダーの深さ"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Stirling-PDF サーバーがオフラインで、ロ�
 expired = "セッションが期限切れです。ページを更新してもう一度お試しください。"
 
 [settings]
+backToSections = "すべての設定"
 close = "閉じる"
+title = "設定"
 
 [settings.ai]
 documents = "ドキュメント & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "検索"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "ツールを検索..."
 
 [toolPicker.subcategories]
 advancedFormatting = "高度なフォーマット"
+ai = "AI"
 automation = "自動化"
 developerTools = "開発者ツール"
 documentReview = "文書レビュー"
@@ -11335,8 +11460,11 @@ columnDefault = "列 {{index}}"
 convertToPdf = "PDF に変換"
 csvStats = "{{rows}} 行 · {{columns}} 列 · {{size}}"
 emptyFile = "空のファイル"
+htmlHidePreview = "プレビューを非表示"
 htmlPreview = "HTMLプレビュー"
+htmlPreviewMobileHidden = "HTML ページはデスクトップ幅向けにレイアウトされているため、ここではプレビューはデフォルトでオフになっています。"
 htmlPreviewWarning = "HTMLプレビュー — 外部リソースは読み込まれない場合があります · {{size}}"
+htmlShowPreview = "それでもプレビューを表示"
 invalidJson = "無効な JSON — 生の内容を表示しています"
 lineNumbers = "行番号"
 loading = "読み込み中..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF をエクスポート"
 exportSelected = "選択したページをエクスポート"
 formFill = "フォーム入力"
 hideToolbar = "Hide toolbar"
+moreActions = "その他のアクション"
 multiTool = "マルチツール"
 panMode = "パンモード"
 print = "PDF を印刷"
@@ -11703,6 +11832,8 @@ selectAll = "すべて選択"
 selectByNumber = "ページ番号で選択"
 selectLanguage = "言語を選択"
 share = "共有"
+showAllTools = "すべてのツールを表示"
+showFewerTools = "ツールバーを折りたたむ"
 showToolbar = "Show toolbar"
 toggleAnnotations = "注釈の表示を切り替え"
 toggleAttachments = "添付ファイルを切り替え"
