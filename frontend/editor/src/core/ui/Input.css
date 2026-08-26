@@ -3,7 +3,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-2);
-  background: var(--c-surface);
+  background: var(--c-input-bg);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   color: var(--c-text);

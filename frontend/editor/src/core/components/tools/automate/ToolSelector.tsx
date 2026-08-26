@@ -4,6 +4,7 @@ import { Stack, Text, ScrollArea } from "@mantine/core";
 import {
   ToolRegistryEntry,
   ToolRegistry,
+  SubcategoryId,
   getToolSupportsAutomate,
 } from "@app/data/toolsTaxonomy";
 import { useToolSections } from "@app/hooks/useToolSections";
@@ -81,9 +82,7 @@ export default function ToolSelector({
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(
-    transformedFilteredTools as any /* FIX ME */,
-  );
+  const { sections, searchGroups } = useToolSections(transformedFilteredTools);
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
@@ -98,7 +97,9 @@ export default function ToolSelector({
         return [
           {
             name: "Tools",
-            subcategoryId: "all" as any,
+            // Synthetic "all tools" group used only as a fallback when the
+            // taxonomy produces no sections; "all" is not a real SubcategoryId.
+            subcategoryId: "all" as unknown as SubcategoryId,
             tools: baseFilteredTools.map(([key, tool]) => ({ id: key, tool })),
           },
         ];
@@ -125,7 +126,7 @@ export default function ToolSelector({
       displayGroups.map((subcategory) =>
         renderToolButtons(
           t,
-          subcategory as any,
+          subcategory,
           null,
           handleToolSelect,
           !isSearching,
