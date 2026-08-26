@@ -41,7 +41,7 @@ false = "Onwaar"
 fileNotSavedToDisk = "Niet op schijf opgeslagen"
 fileSavedToDisk = "Bestand opgeslagen op schijf"
 fileSelected = "Geselecteerd: {{filename}}"
-filesSelected = "Bestanden geselecteerd"
+filesSelected = "{{count}} bestanden"
 font = "Lettertype"
 fontSizeTooltip = "Grootte van de paginanummertekst in punten. Grotere getallen geven grotere tekst."
 fontTypeTooltip = "Lettertypefamilie voor de paginanummers. Kies passend bij de stijl van uw document."
@@ -3969,6 +3969,7 @@ back = "Terug"
 backToFolder = "Terug naar {{folder}}"
 backToMyFiles = "Terug naar Mijn bestanden"
 breadcrumbs = "Mappad"
+bulkActions = "Acties"
 cancel = "Annuleren"
 classification = "Classificatie"
 clearSelection = "Selectie wissen"
@@ -4142,6 +4143,11 @@ totalSize = "Totale grootte"
 type = "Type"
 versionHistory = "Versietraject"
 
+[filesPage.filters]
+activeCount = "{{count}} filters actief"
+clearAll = "Filters wissen"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "Annuleren"
 error = "Kan map niet opslaan. Probeer het opnieuw."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Bestanden sorteren"
 modifiedAsc = "Oudste eerst"
 modifiedDesc = "Recent eerst"
 nameAsc = "Naam A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Alles opgeslagen"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Kon de wijzigingen niet toepassen"
 extractCsvError = "CSV extraheren mislukt"
 extractXlsxError = "XLSX extraheren mislukt"
 filled = "filled"
 flattenAfterFilling = "Afvlakken na invullen"
+goToPage = "Ga naar deze pagina"
 noFields = "No fillable form fields found in this PDF."
+page = "Pagina"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "verpl."
@@ -4318,7 +4328,82 @@ rescanFields = "Velden opnieuw scannen"
 rescanFormFields = "Formuliervelden opnieuw scannen"
 save = "Opslaan"
 saveShortcut = "Ctrl+S om op te slaan"
+skippedEdits_one = "1 wijziging kon niet worden toegepast:"
+skippedEdits_other = "{{count}} wijzigingen konden niet worden toegepast:"
+skippedEditsTruncated = "{{count}} meer niet vermeld."
 unsavedChanges = "Niet-opgeslagen wijzigingen"
+
+[formFill.create]
+commit = "{{count}} veld(en) aan PDF toevoegen"
+empty = "Nog geen velden getekend."
+failed = "Velden toevoegen mislukt"
+goToField = "Ga naar dit veld"
+hint = "Kies een veldtype en teken het vervolgens op de pagina."
+placing = "Teken een {{type}}-veld op de pagina. Druk op Esc om te stoppen."
+preview = "Ingedrukt houden voor voorbeeldweergave"
+previewHelp = "Houd ingedrukt om de velden te zien zoals ze eruitzien nadat ze zijn toegevoegd, zonder de bewerkingscontouren."
+removeField = "Veld verwijderen"
+
+[formFill.editor]
+action = "Knopactie"
+actionHelp = "Wat de knop doet wanneer erop wordt geklikt."
+actionNone = "Geen"
+actionPrint = "Afdrukken"
+actionReset = "Formulier opnieuw instellen"
+actionSubmit = "Naar URL verzenden"
+actionUri = "URL openen"
+actionUrl = "URL"
+actionUrlHelp = "Het adres dat de knop opent of waarnaar deze verzendt."
+addOption = "Optie toevoegen"
+caption = "Knoptekst"
+captionHelp = "De tekst die op de knop wordt weergegeven."
+defaultValue = "Standaardwaarde"
+defaultValueHelp = "Wat het veld bevat voordat iemand het invult. Laat leeg voor een leeg veld."
+fontSize = "Lettergrootte"
+fontSizeHelp = "Tekstgrootte binnen het veld. Laat leeg zodat de PDF-lezer de grootte passend maakt."
+label = "Label"
+labelHelp = "De tekst die wordt getoond aan degene die het formulier invult. Laat leeg om terug te vallen op de veldnaam."
+maxLength = "Max. lengte (comb)"
+maxLengthHelp = "Beperkt hoeveel tekens passen, weergegeven als gelijkmatig verdeelde vakjes."
+multiline = "Meerregelig"
+multilineHelp = "Staat meer dan één tekstregel toe en breekt af aan de rand van het veld."
+multiSelect = "Meerdere selecties toestaan"
+multiSelectHelp = "Hiermee kan meer dan één optie tegelijk worden gekozen."
+name = "Veldnaam"
+nameHelp = "De interne naam van het veld. Wordt gebruikt bij het exporteren van gegevens of het invullen van het formulier vanuit een ander systeem, dus houd deze uniek en zonder spaties."
+optionGap = "Optieafstand"
+optionGapHelp = "Ruimte tussen knoppen, in punten. Laat leeg om ze gelijkmatig over het vak te verdelen."
+optionPlaceholder = "Optie {{n}}"
+options = "Opties"
+optionsEmpty = "Voeg ten minste één optie toe."
+optionsHelp = "De keuzes die in de lijst worden aangeboden. Elke keuze wordt opgeslagen zoals getypt, dus houd ze kort en onderscheidend."
+optionSize = "Optiegrootte"
+optionSizeHelp = "Breedte en hoogte van elke knop, in punten. Laat leeg om ze passend te maken in het vak dat je hebt getekend."
+readOnly = "Alleen-lezen"
+readOnlyHelp = "Toont een waarde maar voorkomt dat iemand deze bewerkt."
+removeOption = "Optie verwijderen"
+required = "Verplicht"
+requiredHelp = "Het formulier kan niet worden verzonden totdat dit veld is ingevuld."
+signatureNote = "Alleen een tijdelijke aanduiding - je ondertekent hier niet. Het markeert waar een handtekening hoort, zodat een PDF-ondertekenaar (Adobe Acrobat, een ondertekeningsservice, enz.) de handtekening op deze plek plaatst wanneer het document wordt ondertekend."
+tooltip = "Tooltip"
+tooltipHelp = "De hint die wordt getoond wanneer iemand met de muis over het veld beweegt in een PDF-lezer."
+type = "Type"
+typeHelp = "Welk soort veld dit is. Als je dit wijzigt, wordt het veld opnieuw opgebouwd, dus de huidige waarde wordt niet overgenomen."
+
+[formFill.mode]
+create = "Maken"
+fill = "Invullen"
+label = "Modus formuliereditor"
+modify = "Wijzigen"
+
+[formFill.modify]
+commit = "{{count}} wijziging(en) opslaan"
+delete = "Verwijderen"
+empty = "Deze PDF heeft nog geen formuliervelden."
+failed = "Wijzigingen opslaan mislukt"
+groupSizeHint = "Gebruik Optiegrootte"
+hint = "Selecteer een veld om de eigenschappen te bewerken, sleep het over de pagina of verwijder het."
+restore = "Herstellen"
 
 [formFill.sidebar]
 close = "Zijbalk sluiten"
@@ -4584,6 +4669,10 @@ title = "Metadata wijzigen"
 desc = "Documentbeperkingen en machtigingen wijzigen"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Rechten wijzigen"
+
+[home.classify]
+desc = "Bepaal wat voor soort document dit is en voorzie het van een tag."
+title = "Classificeren"
 
 [home.compare]
 desc = "Vergelijkt en toont de verschillen tussen twee PDF-documenten"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Niets te melden."
+handoffUnavailable = "Deze browser staat niet toe dat de verwerker het document aan de editor doorgeeft. Open het in plaats daarvan vanuit de editor."
+noDocumentLinked = "Deze fout is niet gekoppeld aan een specifiek document, dus er is hier niets om te openen."
+notOnThisDevice = "Dit document staat niet op dit apparaat, dus het kan hier niet worden geopend."
+occurrences = "{{count}} keer"
+open = "Meldingen"
+title = "Meldingen"
+unread = "Ongelezen"
+
+[notifications.action]
+failed = "Dat werkte niet. Probeer het over een moment opnieuw."
+unavailable = "Niet beschikbaar voor deze melding."
+
+[notifications.detail]
+copied = "Gekopieerd"
+copy = "Fout kopiëren"
+less = "Minder tonen"
+more = "Volledig bericht tonen"
+
+[notifications.section]
+earlier = "Eerder"
+new = "Nieuw"
 
 [oauth.error]
 message = "Authenticatie is niet geslaagd. U kunt dit venster sluiten en het opnieuw proberen."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "van {{allowance}} gratis PDF's gebruikt"
 capSuffix_other = "van {{allowance}} gratis PDF's gebruikt"
 eyebrow = "Processor-proefperiode"
-statusLabel_one = "{{remaining}} over"
-statusLabel_other = "{{remaining}} over"
+statusLabel_one = "{{used}} gebruikt"
+statusLabel_other = "{{used}} gebruikt"
 sub = "Gebruik de PDF Editor gratis. Betaal om PDF's automatisch te verwerken."
 title_one = "Verwerk {{allowance}} PDF's gratis"
 title_other = "Verwerk {{allowance}} PDF's gratis"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Bestand bekijken"
+viewInProcessor = "In verwerker bekijken"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Deze fout is niet geregistreerd voor een specifiek document, dus er is hier niets om te openen."
+unattended = "Dit bestand is aangeleverd door een map, bucket of webhook, dus er is geen browser van een gebruiker die het kan openen."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Bronnen"
 connectSource = "Bron verbinden"
 
 [portal.sources.builder]
+advanced = "Geavanceerd"
 back = "Terug naar bronnen"
+backToSource = "Terug naar bronconfiguratie"
 backToTypes = "Alle brontypen"
 cancel = "Annuleren"
 chooseHint = "Kies waar documenten vandaan komen. Grijs gemaakte connectors zijn onderweg."
@@ -8726,7 +8845,6 @@ create = "Bron maken"
 createTitle = "Een bron verbinden"
 delete = "Verwijderen"
 editTitle = "Bron bewerken"
-enabled = "Ingeschakeld"
 save = "Wijzigingen opslaan"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: elk bestand één keer verwerken"
 snapshot = "Snapshot: de map bij elke uitvoering opnieuw lezen"
 
 [portal.sources.networkFields.recursive]
+helperText = "Neem submappen op als je bestanden zijn georganiseerd in geneste mappen, of bewaak alleen het bovenste niveau."
 label = "Mapdiepte"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Grootte, datum en inhoudscontrole"
 stat = "Grootte en wijzigingsdatum"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Of het oorspronkelijke bestand op zijn plek moet blijven nadat het is verwerkt. Als het oorspronkelijke bestand op zijn plek blijft, wordt het opnieuw verwerkt de volgende keer dat de pipeline de bron scant."
 label = "Leesmodus"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consumeren: verwerk elk bestand één keer"
 snapshot = "Snapshot: lees de map bij elke uitvoering opnieuw"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Neem submappen op als je bestanden zijn georganiseerd in geneste mappen, of bewaak alleen het bovenste niveau."
 label = "Mapdiepte"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\"
 expired = "Uw sessie is verlopen. Voer de pagina opnieuw in en probeer het opnieuw."
 
 [settings]
+backToSections = "Alle instellingen"
 close = "Sluiten"
+title = "Instellingen"
 
 [settings.ai]
 documents = "Documenten & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Zoeken"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Tools zoeken..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Geavanceerde opmaak"
+ai = "AI"
 automation = "Automatisering"
 developerTools = "Ontwikkelaarstools"
 documentReview = "Documentreview"
@@ -11335,8 +11460,11 @@ columnDefault = "Kolom {{index}}"
 convertToPdf = "Converteren naar PDF"
 csvStats = "{{rows}} rijen · {{columns}} kolommen · {{size}}"
 emptyFile = "Leeg bestand"
+htmlHidePreview = "Voorbeeldweergave verbergen"
 htmlPreview = "HTML-voorbeeld"
+htmlPreviewMobileHidden = "HTML-pagina's zijn ingedeeld voor desktopbreedtes, dus de voorbeeldweergave is hier standaard uitgeschakeld."
 htmlPreviewWarning = "HTML-voorbeeld — externe bronnen worden mogelijk niet geladen · {{size}}"
+htmlShowPreview = "Voorbeeldweergave toch tonen"
 invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
 lineNumbers = "Regelnummers"
 loading = "Laden..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF exporteren"
 exportSelected = "Geselecteerde pagina's exporteren"
 formFill = "Formulier invullen"
 hideToolbar = "Hide toolbar"
+moreActions = "Meer acties"
 multiTool = "Multi-tool"
 panMode = "Pan-modus"
 print = "PDF afdrukken"
@@ -11703,6 +11832,8 @@ selectAll = "Alles selecteren"
 selectByNumber = "Selecteren op paginanummers"
 selectLanguage = "Taal selecteren"
 share = "Delen"
+showAllTools = "Alle tools tonen"
+showFewerTools = "Werkbalk inklappen"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Annotaties tonen/verbergen"
 toggleAttachments = "Bijlagen tonen/verbergen"
