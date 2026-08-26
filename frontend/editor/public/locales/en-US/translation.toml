@@ -8039,7 +8039,7 @@ pipeline = "Pipeline"
 policy = "Policy"
 
 [portal.policies]
-defaultName = "{{category}} Policy"
+defaultName = "{{category}} Pipeline"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
@@ -8165,7 +8165,7 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 2 = "Watermark"
 
 [portal.policies.detail]
-enforces = "Enforces"
+enforces = "Steps"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
@@ -8185,13 +8185,13 @@ resume = "Resume"
 runNow = "Run now"
 
 [portal.policies.detail.clearHistory]
-body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
 cancel = "Cancel"
 confirm = "Clear history"
 title = "Clear processed history?"
 
 [portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this policy runs."
+description = "Documents will appear here once this pipeline runs."
 title = "No activity yet"
 
 [portal.policies.endpoints]
@@ -8401,7 +8401,7 @@ label = "Trigger a Zap or Make scenario"
 [portal.policies.stats]
 activeFor = "Active"
 dataProcessed = "Data processed"
-docsEnforced = "Docs enforced"
+docsEnforced = "Docs processed"
 
 [portal.policies.status]
 active = "Active"
@@ -8435,7 +8435,7 @@ back = "Back"
 cancel = "Cancel"
 continue = "Continue"
 customise = "Customise"
-enablePolicy = "Enable policy"
+enablePolicy = "Create pipeline"
 saveChanges = "Save changes"
 
 [portal.policies.wizard.capability.classify]
@@ -8480,7 +8480,7 @@ requiredLabel = "Enforce as policy"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
-saveFailed = "Couldn't save the policy. Please try again."
+saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.output]
 heading = "Output & run"
@@ -8499,7 +8499,7 @@ newVersion = "New version"
 
 [portal.policies.wizard.output.runOn]
 export = "Export"
-helper = "When the policy fires: on upload, or before export."
+helper = "When the pipeline runs: on upload, or before export."
 label = "Run on"
 upload = "Upload"
 
@@ -8516,11 +8516,11 @@ settings = "Settings"
 workflow = "Actions"
 
 [portal.policies.wizard.title]
-edit = "Edit {{category}} policy"
-setUp = "Set up {{category}} policy"
+edit = "Edit {{category}} pipeline"
+setUp = "Set up {{category}} pipeline"
 
 [portal.policies.wizard.workflow]
-description = "Choose what this policy does to every document it processes."
+description = "Choose what this pipeline does to every document it processes."
 
 [portal.policySummary.action]
 setUp = "Set up"
