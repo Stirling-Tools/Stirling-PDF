@@ -79,7 +79,8 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // SignSettings / SavedSignaturesSection resolve every key as
       // t(`${scope}.${key}`); scope and leaf only ever exist as separate literals.
       /^(sign|addText|addImage)\./,
-      // SettingsSearchBar indexes whole subtrees via t(prefix, { returnObjects }).
+      // Super search's settings content matching (settingsContentSearch)
+      // indexes whole subtrees via t(prefix, { returnObjects }).
       /^admin\.settings\./,
       /^settings\./,
       /^account\./,
@@ -114,6 +115,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // invisible to the static scan. The raw catalogue value is the fallback.
       /^policies\.field\./,
       /^policyOption\./,
+      // A failure's disabled reason arrives from the server as a key and is rendered with
+      // t(thatKey), so nothing in source names it, but the copy still has to exist.
+      /^portal\.failures\.disabled\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
