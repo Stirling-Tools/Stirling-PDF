@@ -76,7 +76,6 @@ describe("api/link — local backend (this instance)", () => {
     );
     expect(usage.totalUnsyncedUnits).toBeGreaterThanOrEqual(0);
   });
-
 });
 
 describe("api/link — SaaS backend (team-wide)", () => {

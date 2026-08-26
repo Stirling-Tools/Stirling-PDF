@@ -88,6 +88,43 @@ class AccountLinkClientTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void connectClaimGrantsTheCredentialOnSuccess() throws Exception {
+        HttpResponse<String> resp =
+                response(200, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        AccountLinkClient.ConnectClaimResult result = client.connectClaim("req-1", "secret");
+
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.GRANTED, result.outcome());
+        assertEquals("dev-1", result.deviceId());
+        assertEquals("sec-1", result.deviceSecret());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void connectClaimMapsTheStatusItIsGiven() throws Exception {
+        // The whole point of these four: a claim consumes the request server-side, so
+        // reading 200 as anything but success loses the credential irrecoverably.
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.PENDING, claimOutcome(202, "{}"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.UNAVAILABLE, claimOutcome(503, "{}"));
+        assertEquals(AccountLinkClient.ConnectClaimOutcome.REJECTED, claimOutcome(400, "{}"));
+        assertEquals(
+                AccountLinkClient.ConnectClaimOutcome.CONFIRMED,
+                claimOutcome(200, "{\"status\":\"confirmed\",\"teamId\":7}"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountLinkClient.ConnectClaimOutcome claimOutcome(int status, String body)
+            throws Exception {
+        // Built before the when(), not inside it: response() stubs a mock of its own, and
+        // Mockito cannot have that happen mid-stubbing.
+        HttpResponse<String> resp = response(status, body);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        return client.connectClaim("req-1", "secret").outcome();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void fetchEntitlementParsesSnapshotAndSendsDeviceHeaders() throws Exception {
         HttpResponse<String> resp =
                 response(
