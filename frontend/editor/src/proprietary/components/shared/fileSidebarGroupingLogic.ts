@@ -70,7 +70,7 @@ export function buildLabelGroups(
   // Other = files in no visible group: unlabelled, or labelled only under hidden categories.
   const covered = new Set<string>();
   for (const group of visible) {
-    for (const stub of group.stubs) covered.add(stub.id as string);
+    for (const stub of group.stubs) covered.add(stub.id);
   }
   const other = stubs.filter((stub) => !covered.has(stub.id as string));
 
