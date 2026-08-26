@@ -141,4 +141,56 @@ test.describe("The view survives a reload", () => {
     await page.waitForTimeout(3000);
     expect(await currentView(page)).toBe(before);
   });
+
+  // The conjunction neither neighbour covers: the spec above proves the VIEW comes back,
+  // engine-capabilities proves stored bytes decode, and nothing proved that the file the
+  // restore reopened is one whose pixels actually arrive.
+  test("a file the restore reopened renders its pages", async ({ page }) => {
+    test.setTimeout(120_000);
+    await uploadFiles(page, SAMPLES.slice(0, 3));
+    await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
+      timeout: 15_000,
+    });
+
+    await page
+      .getByRole("button", { name: /Open in Viewer/i })
+      .first()
+      .click({ force: true });
+    await expect
+      .poll(() => currentView(page), { timeout: 10_000 })
+      .toBe("viewer");
+    // Let the record settle: the writer debounces, so a reload can outrun it.
+    await page.waitForTimeout(600);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator(".file-sidebar-file-item")).toHaveCount(3, {
+      timeout: 30_000,
+    });
+
+    // Gated on the restore having actually reopened it, because that is the precondition
+    // this spec asserts ON - a build with the flag off never reopens anything, so there is
+    // no restored file to check. A flag-on build that stops reopening is not let off: the
+    // spec above fails when the view does not come back.
+    const reopened = await page
+      .locator(".file-sidebar-file-item.viewed")
+      .first()
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    test.skip(!reopened, "this build does not reopen the workbench on reload");
+
+    // A tile that decoded has non-zero naturalWidth. The restore resolves each recorded id
+    // to its current leaf, so an empty tile here means it reopened something unreadable.
+    const tile = page
+      .locator('[data-page-index="0"]')
+      .first()
+      .locator('img[src^="blob:"]')
+      .first();
+    await expect(tile).toBeAttached({ timeout: 30_000 });
+    await expect
+      .poll(() => tile.evaluate((img: HTMLImageElement) => img.naturalWidth), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(0);
+  });
 });
