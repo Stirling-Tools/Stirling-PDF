@@ -41,7 +41,7 @@ false = "错"
 fileNotSavedToDisk = "未保存到磁盘"
 fileSavedToDisk = "文件已保存到磁盘"
 fileSelected = "已选：{{filename}}"
-filesSelected = "选中的文件"
+filesSelected = "{{count}} 个文件"
 font = "字体"
 fontSizeTooltip = "页码文本的点数大小。数值越大文字越大。"
 fontTypeTooltip = "页码的字体族。根据文档风格选择。"
@@ -3969,6 +3969,7 @@ back = "返回"
 backToFolder = "返回 {{folder}}"
 backToMyFiles = "返回“我的文件”"
 breadcrumbs = "文件夹路径"
+bulkActions = "Actions"
 cancel = "取消"
 classification = "分类"
 clearSelection = "清除选择"
@@ -4142,6 +4143,11 @@ totalSize = "总大小"
 type = "类型"
 versionHistory = "版本历程"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "取消"
 error = "无法保存文件夹。请重试。"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "最早优先"
 modifiedDesc = "最新优先"
 nameAsc = "名称 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "全部已保存"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "提取 CSV 失败"
 extractXlsxError = "提取 XLSX 失败"
 filled = "filled"
 flattenAfterFilling = "填写后扁平化"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "必填"
@@ -4318,7 +4328,82 @@ rescanFields = "重新扫描字段"
 rescanFormFields = "重新扫描表单字段"
 save = "保存"
 saveShortcut = "按 Ctrl+S 保存"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "未保存的更改"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "关闭侧边栏"
@@ -4584,6 +4669,10 @@ title = "更改元数据"
 desc = "更改文档限制与权限"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "更改权限"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "比较并显示两个 PDF 文档之间的差异"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "认证未成功。您可以关闭此窗口后重试。"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 个免费 PDFs 中的额度"
 capSuffix_other = "已使用 {{allowance}} 个免费 PDFs 中的额度"
 eyebrow = "Processor 试用"
-statusLabel_one = "剩余 {{remaining}}"
-statusLabel_other = "剩余 {{remaining}}"
+statusLabel_one = "已使用 {{used}}"
+statusLabel_other = "已使用 {{used}}"
 sub = "免费使用 PDF 编辑器。自动处理 PDFs 按需付费。"
 title_one = "免费处理 {{allowance}} 个 PDFs"
 title_other = "免费处理 {{allowance}} 个 PDFs"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "源"
 connectSource = "连接源"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "返回源"
+backToSource = "Back to source setup"
 backToTypes = "所有源类型"
 cancel = "取消"
 chooseHint = "选择文档来源。灰显的连接器即将推出。"
@@ -8726,7 +8845,6 @@ create = "创建源"
 createTitle = "连接源"
 delete = "删除"
 editTitle = "编辑源"
-enabled = "已启用"
 save = "保存更改"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume：每个文件只处理一次"
 snapshot = "Snapshot：每次运行重新读取文件夹"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "文件夹深度"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "大小、日期和内容检查"
 stat = "大小和修改日期"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "读取模式"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "消费：每个文件只处理一次"
 snapshot = "快照：每次运行都重新读取文件夹"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "文件夹深度"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "您的 Stirling-PDF 服务器处于离线状态，且
 expired = "您的会话已过期。请刷新页面并重试。"
 
 [settings]
+backToSections = "All settings"
 close = "关闭"
+title = "Settings"
 
 [settings.ai]
 documents = "文档与 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "搜索工具…"
 
 [toolPicker.subcategories]
 advancedFormatting = "高级排版"
+ai = "AI"
 automation = "自动化"
 developerTools = "开发者工具"
 documentReview = "文档审阅"
@@ -11335,8 +11460,11 @@ columnDefault = "列 {{index}}"
 convertToPdf = "转换为 PDF"
 csvStats = "{{rows}} 行 · {{columns}} 列 · {{size}}"
 emptyFile = "空文件"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML 预览"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML 预览 — 外部资源可能无法加载 · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "无效的 JSON — 显示原始内容"
 lineNumbers = "行号"
 loading = "正在加载..."
@@ -11683,6 +11811,7 @@ exportAll = "导出 PDF"
 exportSelected = "导出所选页面"
 formFill = "填写表单"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "多功能工具"
 panMode = "平移模式"
 print = "打印 PDF"
@@ -11703,6 +11832,8 @@ selectAll = "全选"
 selectByNumber = "按页码选择"
 selectLanguage = "选择语言"
 share = "共享"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "切换注释显示"
 toggleAttachments = "切换附件"

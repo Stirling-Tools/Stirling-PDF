@@ -41,7 +41,7 @@ false = "Невярно"
 fileNotSavedToDisk = "Не е записан на диска"
 fileSavedToDisk = "Файлът е записан на диска"
 fileSelected = "Избрано: {{filename}}"
-filesSelected = "избрани файлове"
+filesSelected = "{{count}} файла"
 font = "Шрифт"
 fontSizeTooltip = "Размер на текста за номера на страници в точки. По-големите числа правят по-голям текст."
 fontTypeTooltip = "Семейство шрифтове за номерата на страниците. Изберете спрямо стила на документа."
@@ -3969,6 +3969,7 @@ back = "Назад"
 backToFolder = "Назад към {{folder}}"
 backToMyFiles = "Назад към Моите файлове"
 breadcrumbs = "Път на папката"
+bulkActions = "Actions"
 cancel = "Отказ"
 classification = "Класификация"
 clearSelection = "Изчистете избора"
@@ -4142,6 +4143,11 @@ totalSize = "Общ размер"
 type = "Тип"
 versionHistory = "Път на версиите"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "Отказ"
 error = "Папката не можа да бъде записана. Опитайте отново."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "Най-старите първо"
 modifiedDesc = "Най-новите първо"
 nameAsc = "Име A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Всичко е запазено"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "Неуспешно извличане на CSV"
 extractXlsxError = "Неуспешно извличане на XLSX"
 filled = "filled"
 flattenAfterFilling = "Фиксиране след попълване"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "зад."
@@ -4318,7 +4328,82 @@ rescanFields = "Пресканирайте полетата"
 rescanFormFields = "Пресканирайте полетата на формуляра"
 save = "Запазете"
 saveShortcut = "Ctrl+S за запазване"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Незапазени промени"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "Затворете страничната лента"
@@ -4584,6 +4669,10 @@ title = "Промяна на метаданни"
 desc = "Промяна на ограниченията и разрешенията на документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Промяна на правата"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "Сравнява и показва разликите между 2 PDF документа"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "Удостоверяването беше неуспешно. Можете да затворите този прозорец и да опитате отново."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "от {{allowance}} безплатни PDF използвани"
 capSuffix_other = "от {{allowance}} безплатни PDF използвани"
 eyebrow = "Пробен Processor"
-statusLabel_one = "остават {{remaining}}"
-statusLabel_other = "остават {{remaining}}"
+statusLabel_one = "{{used}} използван"
+statusLabel_other = "{{used}} използвани"
 sub = "Използвайте PDF Editor безплатно. Платете за автоматична обработка на PDF."
 title_one = "Обработете {{allowance}} PDF безплатно"
 title_other = "Обработете {{allowance}} PDF безплатно"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Източници"
 connectSource = "Свързване на източник"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Назад към източниците"
+backToSource = "Back to source setup"
 backToTypes = "Всички типове източници"
 cancel = "Отказ"
 chooseHint = "Изберете откъде идват документите. Конекторите в сиво са в процес на разработка."
@@ -8726,7 +8845,6 @@ create = "Създаване на източник"
 createTitle = "Свързване на източник"
 delete = "Изтриване"
 editTitle = "Редактиране на източник"
-enabled = "Активирано"
 save = "Запазване на промените"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: обработване на всеки файл веднъж
 snapshot = "Snapshot: повторно четене на папката при всяко изпълнение"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Дълбочина на папката"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Размер, дата и проверка на съдържанието
 stat = "Размер и дата на промяна"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "Режим на четене"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: обработи всеки файл веднъж"
 snapshot = "Snapshot: препрочитай папката при всяко изпълнение"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Дълбочина на папката"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Вашият Stirling-PDF сървър е офлай�
 expired = "Вашата сесия е изтекла. Моля, опреснете страницата и опитайте отново."
 
 [settings]
+backToSections = "All settings"
 close = "Затворете"
+title = "Settings"
 
 [settings.ai]
 documents = "Документи и RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Търсене на инструменти..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Разширено форматиране"
+ai = "AI"
 automation = "Автоматизация"
 developerTools = "Инструменти за разработчици"
 documentReview = "Преглед на документ"
@@ -11335,8 +11460,11 @@ columnDefault = "Колона {{index}}"
 convertToPdf = "Конвертирай в PDF"
 csvStats = "{{rows}} реда · {{columns}} колони · {{size}}"
 emptyFile = "Празен файл"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML визуализация"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML визуализация — външните ресурси може да не се заредят · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "Невалиден JSON — показване на суровото съдържание"
 lineNumbers = "Номера на редовете"
 loading = "Зареждане..."
@@ -11683,6 +11811,7 @@ exportAll = "Експортиране на PDF"
 exportSelected = "Експортиране на избраните страници"
 formFill = "Попълване на формуляр"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "Мултиинструмент"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Избиране на всички"
 selectByNumber = "Избор по номера на страници"
 selectLanguage = "Избор на език"
 share = "Сподели"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Превключване на видимостта на анотациите"
 toggleAttachments = "Превключване на прикачените файлове"

@@ -41,7 +41,7 @@ false = "തെറ്റ്"
 fileNotSavedToDisk = "ഡിസ്കിലേക്ക് സംരക്ഷിച്ചില്ല"
 fileSavedToDisk = "ഫയൽ ഡിസ്കിലേക്ക് സംരക്ഷിച്ചു"
 fileSelected = "തിരഞ്ഞെടുത്തത്: {{filename}}"
-filesSelected = "ഫയലുകൾ തിരഞ്ഞെടുത്തു"
+filesSelected = "{{count}} ഫയലുകൾ"
 font = "അക്ഷരം"
 fontSizeTooltip = "പേജ് നമ്പർ ടെക്സ്റ്റിന്റെ പോയിന്റ് സൈസ്. വലിയ നമ്പറുകൾ വലുതായ ടെക്സ്റ്റ് സൃഷ്ടിക്കും."
 fontTypeTooltip = "പേജ് നമ്പറുകളുടെ ഫോണ്ട് കുടുംബം. നിങ്ങളുടെ ഡോക്യുമെന്റിന്റെ ശൈലിയനുസരിച്ച് തിരഞ്ഞെടുക്കുക."
@@ -3969,6 +3969,7 @@ back = "തിരികെ"
 backToFolder = "{{folder}} ലേക്ക് തിരികെ"
 backToMyFiles = "എന്റെ ഫയലുകളിലേക്ക് തിരികെ"
 breadcrumbs = "ഫോൾഡർ പാത"
+bulkActions = "Actions"
 cancel = "റദ്ദാക്കുക"
 classification = "വർഗ്ഗീകരണം"
 clearSelection = "തിരഞ്ഞെടുപ്പ് നീക്കുക"
@@ -4142,6 +4143,11 @@ totalSize = "ആകെ വലുപ്പം"
 type = "തരം"
 versionHistory = "വേർഷൻ യാത്ര"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "റദ്ദാക്കുക"
 error = "ഫോൾഡർ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "പഴയത് ആദ്യം"
 modifiedDesc = "പുതിയത് ആദ്യം"
 nameAsc = "പേര് A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "എല്ലാം സേവ് ചെയ്തു"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "CSV extract ചെയ്യാനായില്ല"
 extractXlsxError = "XLSX extract ചെയ്യാനായില്ല"
 filled = "filled"
 flattenAfterFilling = "പൂരിപ്പിച്ചതിന് ശേഷം ഫ്ലാറ്റൻ ചെയ്യുക"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "ആവ."
@@ -4318,7 +4328,82 @@ rescanFields = "ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ച�
 rescanFormFields = "ഫോം ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ചെയ്യുക"
 save = "സംരക്ഷിക്കുക"
 saveShortcut = "സേവ് ചെയ്യാൻ Ctrl+S"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "സേവ് ചെയ്യാത്ത മാറ്റങ്ങൾ"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "സൈഡ്ബാർ അടയ്ക്കുക"
@@ -4584,6 +4669,10 @@ title = "മെറ്റാഡാറ്റ മാറ്റുക"
 desc = "ഡോക്യുമെന്റ് നിയന്ത്രണങ്ങളും അനുമതികളും മാറ്റുക"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "അനുമതികൾ മാറ്റുക"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "2 PDF പ്രമാണങ്ങൾ തമ്മിലുള്ള വ്യത്യാസങ്ങൾ താരതമ്യം ചെയ്യുകയും കാണിക്കുകയും ചെയ്യുന്നു"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "ഓതന്റിക്കേഷൻ വിജയിച്ചില്ല. ഈ വിൻഡോ അടച്ച് വീണ്ടും ശ്രമിക്കാം."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} free PDFs-ൽ ഉപയോഗിച്ചത്"
 capSuffix_other = "{{allowance}} free PDFs-ൽ ഉപയോഗിച്ചത്"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} ശേഷിക്കുന്നു"
-statusLabel_other = "{{remaining}} ശേഷിക്കുന്നു"
+statusLabel_one = "{{used}} ഉപയോഗിച്ചു"
+statusLabel_other = "{{used}} ഉപയോഗിച്ചു"
 sub = "PDF Editor സൗജന്യമായി ഉപയോഗിക്കുക. PDFs സ്വയമേവ പ്രോസസ് ചെയ്യാൻ പണം നൽകുക."
 title_one = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക"
 title_other = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "ഉറവിടങ്ങൾ"
 connectSource = "ഉറവിടം കണക്റ്റ് ചെയ്യുക"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "sources-ലേക്ക് മടങ്ങുക"
+backToSource = "Back to source setup"
 backToTypes = "എല്ലാ source types"
 cancel = "റദ്ദാക്കുക"
 chooseHint = "ഡോക്യുമെന്റുകൾ എവിടെ നിന്നാണ് വരുന്നതെന്ന് തിരഞ്ഞെടുക്കുക. Greyed-out connectors വരാനിരിക്കുകയാണ്."
@@ -8726,7 +8845,6 @@ create = "source സൃഷ്ടിക്കുക"
 createTitle = "ഒരു source ബന്ധിപ്പിക്കുക"
 delete = "ഇല്ലാതാക്കുക"
 editTitle = "source edit ചെയ്യുക"
-enabled = "Enabled"
 save = "മാറ്റങ്ങൾ save ചെയ്യുക"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: ഓരോ file-ഉം ഒരിക്കൽ process ചെ�
 snapshot = "Snapshot: ഓരോ run-ലും folder വീണ്ടും വായിക്കുക"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Size, date, content check"
 stat = "Size and date modified"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: ഓരോ ഫയലും ഒരിക്കൽ പ്രോ
 snapshot = "Snapshot: ഓരോ run-ലും folder വീണ്ടും വായിക്കുക"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "നിങ്ങളുടെ Stirling-PDF സെർവ
 expired = "നിങ്ങളുടെ സെഷൻ കാലഹരണപ്പെട്ടു. ദയവായി പേജ് പുതുക്കി വീണ്ടും ശ്രമിക്കുക."
 
 [settings]
+backToSections = "All settings"
 close = "അടയ്ക്കുക"
+title = "Settings"
 
 [settings.ai]
 documents = "പ്രമാണങ്ങൾ & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "ടോളുകൾ തിരയുക..."
 
 [toolPicker.subcategories]
 advancedFormatting = "അഡ്വാൻസ്ഡ് ഫോർമാറ്റിംഗ്"
+ai = "AI"
 automation = "ഓട്ടോമേഷൻ"
 developerTools = "ഡെവലപ്പർ ടൂളുകൾ"
 documentReview = "ഡോക്യുമെന്റ് റിവ്യൂ"
@@ -11335,8 +11460,11 @@ columnDefault = "നിര {{index}}"
 convertToPdf = "PDF ആയി മാറിക്കുക"
 csvStats = "{{rows}} വരികൾ · {{columns}} നിരകൾ · {{size}}"
 emptyFile = "ശൂന്യ ഫയൽ"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML പ്രിവ്യൂ"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML പ്രിവ്യൂ — ബാഹ്യ വിഭവങ്ങൾ ലോഡ് ചെയ്യാതിരിക്കാം · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "അസാധുവായ JSON — അസംസ്കൃത ഉള്ളടക്കം കാണിക്കുന്നു"
 lineNumbers = "വരി നമ്പറുകൾ"
 loading = "ലോഡ് ചെയ്യുന്നു..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF എക്സ്പോർട്ട് ചെയ്യുക"
 exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
 formFill = "ഫോം പൂരിപ്പിക്കുക"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "മൾട്ടി-ടൂൾ"
 panMode = "പാൻ മോഡ്"
 print = "PDF അച്ചടിക്കുക"
@@ -11703,6 +11832,8 @@ selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 selectByNumber = "പേജ് നമ്പർ പ്രകാരം തിരഞ്ഞെടുക്കുക"
 selectLanguage = "ഭാഷ തിരഞ്ഞെടുക്കുക"
 share = "പങ്കിടുക"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "അനോട്ടേഷനുകളുടെ ദൃശ്യത ടോഗിൾ ചെയ്യുക"
 toggleAttachments = "അറ്റാച്ച്മെന്റുകൾ ടോഗിൾ ചെയ്യുക"

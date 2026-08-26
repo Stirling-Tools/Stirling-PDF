@@ -3969,6 +3969,7 @@ back = "返回"
 backToFolder = "返回 {{folder}}"
 backToMyFiles = "返回我的檔案"
 breadcrumbs = "資料夾路徑"
+bulkActions = "Actions"
 cancel = "取消"
 classification = "分類"
 clearSelection = "清除選取"
@@ -4142,6 +4143,11 @@ totalSize = "總大小"
 type = "類型"
 versionHistory = "版本歷程"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "取消"
 error = "無法儲存資料夾。請再試一次。"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "由舊到新"
 modifiedDesc = "最近優先"
 nameAsc = "名稱 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "全部已儲存"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "擷取 CSV 失敗"
 extractXlsxError = "擷取 XLSX 失敗"
 filled = "filled"
 flattenAfterFilling = "填寫後扁平化"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "必填"
@@ -4318,7 +4328,82 @@ rescanFields = "重新掃描欄位"
 rescanFormFields = "重新掃描表單欄位"
 save = "儲存"
 saveShortcut = "Ctrl+S 儲存"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "未儲存的變更"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "關閉側邊欄"
@@ -4584,6 +4669,10 @@ title = "變更中繼資料"
 desc = "變更文件限制與權限"
 tags = "權限,限制,權利,存取控制,允許,拒絕,列印,複製,編輯,修改權限,安全設定,使用者權利,permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "變更權限"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "比較並顯示 2 個 PDF 檔案的差異"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "驗證未成功。您可以關閉此視窗後再試一次。"
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 個免費 PDFs"
 capSuffix_other = "已使用 {{allowance}} 個免費 PDFs"
 eyebrow = "Processor 試用"
-statusLabel_one = "剩餘 {{remaining}}"
-statusLabel_other = "剩餘 {{remaining}}"
+statusLabel_one = "已使用 {{used}}"
+statusLabel_other = "已使用 {{used}}"
 sub = "免費使用 PDF Editor。付費即可自動處理 PDFs。"
 title_one = "免費處理 {{allowance}} 個 PDFs"
 title_other = "免費處理 {{allowance}} 個 PDFs"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "來源"
 connectSource = "連接來源"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "返回來源"
+backToSource = "Back to source setup"
 backToTypes = "所有來源類型"
 cancel = "取消"
 chooseHint = "選擇文件來源。灰色顯示的連接器即將推出。"
@@ -8726,7 +8845,6 @@ create = "建立來源"
 createTitle = "連線來源"
 delete = "刪除"
 editTitle = "編輯來源"
-enabled = "已啟用"
 save = "儲存變更"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "資料夾深度"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "大小、日期與內容檢查"
 stat = "大小與修改日期"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "讀取模式"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "資料夾深度"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "您的 Stirling-PDF 伺服器已離線，且本機後
 expired = "您的工作階段已過期。請重新整理頁面並再試一次。"
 
 [settings]
+backToSections = "All settings"
 close = "關閉"
+title = "Settings"
 
 [settings.ai]
 documents = "文件與 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "搜尋工具..."
 
 [toolPicker.subcategories]
 advancedFormatting = "進階格式化"
+ai = "AI"
 automation = "自動化"
 developerTools = "開發者工具"
 documentReview = "文件審閱"
@@ -11335,8 +11460,11 @@ columnDefault = "欄 {{index}}"
 convertToPdf = "轉換為 PDF"
 csvStats = "{{rows}} 列 · {{columns}} 欄 · {{size}}"
 emptyFile = "空白檔案"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML 預覽"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML 預覽 — 外部資源可能無法載入 · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "無效的 JSON — 顯示原始內容"
 lineNumbers = "行號"
 loading = "載入中..."
@@ -11683,6 +11811,7 @@ exportAll = "匯出 PDF"
 exportSelected = "匯出所選頁面"
 formFill = "填寫表單"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "多功能工具"
 panMode = "平移模式"
 print = "列印 PDF"
@@ -11703,6 +11832,8 @@ selectAll = "全選"
 selectByNumber = "依頁碼選取"
 selectLanguage = "選擇語言"
 share = "分享"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "切換註解顯示"
 toggleAttachments = "切換附件"

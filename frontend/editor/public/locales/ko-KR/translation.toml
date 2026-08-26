@@ -41,7 +41,7 @@ false = "거짓"
 fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
 fileSavedToDisk = "파일이 디스크에 저장되었습니다"
 fileSelected = "선택됨: {{filename}}"
-filesSelected = "개의 파일이 선택됨"
+filesSelected = "{{count}}개 파일"
 font = "글꼴"
 fontSizeTooltip = "페이지 번호 텍스트의 포인트 크기입니다. 숫자가 클수록 텍스트가 커집니다."
 fontTypeTooltip = "페이지 번호에 사용할 글꼴 계열입니다. 문서 스타일에 맞게 선택하세요."
@@ -3969,6 +3969,7 @@ back = "뒤로"
 backToFolder = "{{folder}}로 돌아가기"
 backToMyFiles = "내 파일로 돌아가기"
 breadcrumbs = "폴더 경로"
+bulkActions = "Actions"
 cancel = "취소"
 classification = "분류"
 clearSelection = "선택 해제"
@@ -4142,6 +4143,11 @@ totalSize = "총 크기"
 type = "유형"
 versionHistory = "버전 기록"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "취소"
 error = "폴더를 저장할 수 없습니다. 다시 시도하세요."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "오래된 순"
 modifiedDesc = "최신 순"
 nameAsc = "이름 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "모두 저장됨"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "CSV 추출 실패"
 extractXlsxError = "XLSX 추출 실패"
 filled = "filled"
 flattenAfterFilling = "채운 후 평면화"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "필수"
@@ -4318,7 +4328,82 @@ rescanFields = "필드 재검색"
 rescanFormFields = "양식 필드 재검색"
 save = "저장"
 saveShortcut = "저장하려면 Ctrl+S"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "저장되지 않은 변경 사항"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "사이드바 닫기"
@@ -4584,6 +4669,10 @@ title = "메타데이터 변경"
 desc = "문서 제한 및 권한 변경"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "권한 변경"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "2개의 PDF 문서를 비교하고 차이점을 보여줍니다"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "인증에 성공하지 못했습니다. 이 창을 닫고 다시 시도하세요."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "무료 PDFs {{allowance}}개 중 사용됨"
 capSuffix_other = "무료 PDFs {{allowance}}개 중 사용됨"
 eyebrow = "Processor 평가판"
-statusLabel_one = "{{remaining}} 남음"
-statusLabel_other = "{{remaining}} 남음"
+statusLabel_one = "{{used}} 사용됨"
+statusLabel_other = "{{used}} 사용됨"
 sub = "PDF Editor는 무료로 사용하세요. PDF 자동 처리에는 비용이 부과됩니다."
 title_one = "PDF {{allowance}}개 무료 처리"
 title_other = "PDF {{allowance}}개 무료 처리"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "소스"
 connectSource = "소스 연결"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "소스로 돌아가기"
+backToSource = "Back to source setup"
 backToTypes = "모든 소스 유형"
 cancel = "취소"
 chooseHint = "문서가 어디에서 오는지 선택하세요. 회색으로 표시된 커넥터는 곧 제공됩니다."
@@ -8726,7 +8845,6 @@ create = "소스 생성"
 createTitle = "소스 연결"
 delete = "삭제"
 editTitle = "소스 편집"
-enabled = "활성화됨"
 save = "변경 사항 저장"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "폴더 깊이"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "크기, 날짜 및 콘텐츠 검사"
 stat = "크기 및 수정 날짜"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "읽기 모드"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "소비: 각 파일을 한 번 처리"
 snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "폴더 깊이"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Stirling-PDF 서버가 오프라인이며 로컬 백�
 expired = "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요."
 
 [settings]
+backToSections = "All settings"
 close = "닫기"
+title = "Settings"
 
 [settings.ai]
 documents = "문서 및 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "도구 검색..."
 
 [toolPicker.subcategories]
 advancedFormatting = "고급 서식"
+ai = "AI"
 automation = "자동화"
 developerTools = "개발자 도구"
 documentReview = "문서 검토"
@@ -11335,8 +11460,11 @@ columnDefault = "열 {{index}}"
 convertToPdf = "PDF로 변환"
 csvStats = "{{rows}}행 · {{columns}}열 · {{size}}"
 emptyFile = "빈 파일"
+htmlHidePreview = "Hide preview"
 htmlPreview = "HTML 미리보기"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "HTML 미리보기 — 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "잘못된 JSON — 원본 내용을 표시합니다"
 lineNumbers = "줄 번호"
 loading = "로딩 중..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF 내보내기"
 exportSelected = "선택한 페이지 내보내기"
 formFill = "양식 채우기"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "멀티 도구"
 panMode = "이동 모드"
 print = "PDF 인쇄"
@@ -11703,6 +11832,8 @@ selectAll = "모두 선택"
 selectByNumber = "페이지 번호로 선택"
 selectLanguage = "언어 선택"
 share = "공유"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "주석 표시 전환"
 toggleAttachments = "첨부 파일 표시 전환"

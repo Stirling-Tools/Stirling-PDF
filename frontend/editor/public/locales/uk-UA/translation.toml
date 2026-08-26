@@ -41,7 +41,7 @@ false = "Брехня"
 fileNotSavedToDisk = "Не збережено на диск"
 fileSavedToDisk = "Файл збережено на диск"
 fileSelected = "Вибрано: {{filename}}"
-filesSelected = "файлів обрано"
+filesSelected = "{{count}} файлів"
 font = "Шрифт"
 fontSizeTooltip = "Розмір тексту номера сторінки у пунктах. Більші числа дають більший текст."
 fontTypeTooltip = "Гарнітура для номерів сторінок. Оберіть відповідно до стилю документа."
@@ -3969,6 +3969,7 @@ back = "Назад"
 backToFolder = "Назад до {{folder}}"
 backToMyFiles = "Назад до «Мої файли»"
 breadcrumbs = "Шлях до папки"
+bulkActions = "Actions"
 cancel = "Скасувати"
 classification = "Класифікація"
 clearSelection = "Очистити вибір"
@@ -4142,6 +4143,11 @@ totalSize = "Загальний розмір"
 type = "Тип"
 versionHistory = "Історія версій"
 
+[filesPage.filters]
+activeCount = "{{count}} filters active"
+clearAll = "Clear filters"
+label = "Filters"
+
 [filesPage.folderName]
 cancel = "Скасувати"
 error = "Не вдалося зберегти папку. Спробуйте ще раз."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sort files"
 modifiedAsc = "Спочатку найстаріші"
 modifiedDesc = "Спочатку останні"
 nameAsc = "Назва A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Усе збережено"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Could not apply the changes"
 extractCsvError = "Не вдалося витягти CSV"
 extractXlsxError = "Не вдалося витягти XLSX"
 filled = "filled"
 flattenAfterFilling = "Сплющити після заповнення"
+goToPage = "Go to this page"
 noFields = "No fillable form fields found in this PDF."
+page = "Page"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "обов."
@@ -4318,7 +4328,82 @@ rescanFields = "Повторно сканувати поля"
 rescanFormFields = "Повторно сканувати поля форми"
 save = "Зберегти"
 saveShortcut = "Ctrl+S для збереження"
+skippedEdits_one = "1 change could not be applied:"
+skippedEdits_other = "{{count}} changes could not be applied:"
+skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Незбережені зміни"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+goToField = "Go to this field"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+preview = "Hold to preview"
+previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionHelp = "What the button does when clicked."
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+actionUrlHelp = "The address the button opens or submits to."
+addOption = "Add option"
+caption = "Button caption"
+captionHelp = "The text printed on the button face."
+defaultValue = "Default value"
+defaultValueHelp = "What the field contains before anyone fills it in. Leave blank for an empty field."
+fontSize = "Font size"
+fontSizeHelp = "Text size inside the field. Leave blank to let the reader size it to fit."
+label = "Label"
+labelHelp = "The wording shown to whoever fills the form. Leave it blank to fall back to the field name."
+maxLength = "Max length (comb)"
+maxLengthHelp = "Caps how many characters fit, drawn as evenly spaced boxes."
+multiline = "Multi-line"
+multilineHelp = "Allows more than one line of text and wraps at the field's edge."
+multiSelect = "Allow multiple selection"
+multiSelectHelp = "Lets more than one option be chosen at once."
+name = "Field name"
+nameHelp = "The field's internal name. Used when exporting data or filling the form from another system, so keep it unique and free of spaces."
+optionGap = "Option spacing"
+optionGapHelp = "Gap between buttons, in points. Leave blank to spread them evenly down the box."
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+optionsHelp = "The choices offered in the list. Each one is stored as typed, so keep them short and distinct."
+optionSize = "Option size"
+optionSizeHelp = "Width and height of each button, in points. Leave blank to fit them to the box you drew."
+readOnly = "Read-only"
+readOnlyHelp = "Shows a value but stops anyone editing it."
+removeOption = "Remove option"
+required = "Required"
+requiredHelp = "The form cannot be submitted until this field is filled in."
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
+type = "Type"
+typeHelp = "What kind of field this is. Changing it rebuilds the field, so its current value is not carried over."
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+label = "Form editor mode"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+groupSizeHint = "Use Option size"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "Закрити бічну панель"
@@ -4584,6 +4669,10 @@ title = "Змінити метадані"
 desc = "Змінити обмеження та дозволи документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Змінити дозволи"
+
+[home.classify]
+desc = "Identify what kind of document this is and tag it."
+title = "Classify"
 
 [home.compare]
 desc = "Порівнює та показує різницю між двома PDF-документами"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nothing to report."
+handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
+noDocumentLinked = "This failure is not linked to a specific document, so there is nothing to open here."
+notOnThisDevice = "This document is not on this device, so it cannot be opened here."
+occurrences = "{{count}} times"
+open = "Notifications"
+title = "Notifications"
+unread = "Unread"
+
+[notifications.action]
+failed = "That did not work. Try again in a moment."
+unavailable = "Not available for this notification."
+
+[notifications.detail]
+copied = "Copied"
+copy = "Copy error"
+less = "Show less"
+more = "Show full message"
+
+[notifications.section]
+earlier = "Earlier"
+new = "New"
 
 [oauth.error]
 message = "Автентифікація не відбулася. Можете закрити це вікно та спробувати ще раз."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "з {{allowance}} безкоштовних PDF використано"
 capSuffix_other = "з {{allowance}} безкоштовних PDF використано"
 eyebrow = "Пробний період Processor"
-statusLabel_one = "залишилося {{remaining}}"
-statusLabel_other = "залишилося {{remaining}}"
+statusLabel_one = "використано {{used}}"
+statusLabel_other = "використано {{used}}"
 sub = "Користуйтеся PDF Editor безкоштовно. Платіть за автоматичну обробку PDF."
 title_one = "Обробіть {{allowance}} PDF безкоштовно"
 title_other = "Обробіть {{allowance}} PDF безкоштовно"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "View file"
+viewInProcessor = "View in processor"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "This failure was not recorded against a specific document, so there is nothing here to open."
+unattended = "This file was fed by a folder, bucket or webhook, so nobody's browser is holding it to open."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Джерела"
 connectSource = "Підключити джерело"
 
 [portal.sources.builder]
+advanced = "Advanced"
 back = "Назад до джерел"
+backToSource = "Back to source setup"
 backToTypes = "Усі типи джерел"
 cancel = "Скасувати"
 chooseHint = "Виберіть, звідки надходять документи. З'єднувачі, позначені сірим, уже в роботі."
@@ -8726,7 +8845,6 @@ create = "Створити джерело"
 createTitle = "Підключити джерело"
 delete = "Видалити"
 editTitle = "Редагувати джерело"
-enabled = "Увімкнено"
 save = "Зберегти зміни"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: обробляти кожен файл один раз"
 snapshot = "Snapshot: перечитувати папку під час кожного запуску"
 
 [portal.sources.networkFields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Глибина папок"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Розмір, дата та перевірка вмісту"
 stat = "Розмір і дата зміни"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "Режим читання"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: обробляти кожен файл один раз"
 snapshot = "Snapshot: перечитувати папку під час кожного запуску"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
 label = "Глибина папки"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн і \"{{
 expired = "Ваш сеанс закінчився. Будь ласка, оновіть сторінку та повторіть спробу."
 
 [settings]
+backToSections = "All settings"
 close = "Закрити"
+title = "Settings"
 
 [settings.ai]
 documents = "Документи й RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Search"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Пошук інструментів..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Розширене форматування"
+ai = "AI"
 automation = "Автоматизація"
 developerTools = "Інструменти для розробників"
 documentReview = "Перегляд документа"
@@ -11335,8 +11460,11 @@ columnDefault = "Стовпець {{index}}"
 convertToPdf = "Перетворити в PDF"
 csvStats = "{{rows}} рядків · {{columns}} стовпців · {{size}}"
 emptyFile = "Порожній файл"
+htmlHidePreview = "Hide preview"
 htmlPreview = "Попередній перегляд HTML"
+htmlPreviewMobileHidden = "HTML pages are laid out for desktop widths, so the preview is off by default here."
 htmlPreviewWarning = "Попередній перегляд HTML — зовнішні ресурси можуть не завантажитися · {{size}}"
+htmlShowPreview = "Show preview anyway"
 invalidJson = "Некоректний JSON — показ вмісту як є"
 lineNumbers = "Номери рядків"
 loading = "Завантаження..."
@@ -11683,6 +11811,7 @@ exportAll = "Експортувати PDF"
 exportSelected = "Експортувати вибрані сторінки"
 formFill = "Заповнити форму"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "Мультиінструмент"
 panMode = "Режим переміщення"
 print = "Надрукувати PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Вибрати все"
 selectByNumber = "Вибрати за номерами сторінок"
 selectLanguage = "Вибрати мову"
 share = "Надати спільний доступ"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Перемкнути видимість анотацій"
 toggleAttachments = "Перемкнути вкладення"
