@@ -99,6 +99,11 @@ export interface ToolIOSpec {
 export type ToolIOTable = Partial<Record<ToolEndpoint, ToolIOSpec>>;
 
 export const TOOL_IO: ToolIOTable = {
+  "/api/v1/ai/tools/classify-and-label": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/convert/cbr/pdf": {
     accepts: ["CBR"],
     produces: "PDF",
@@ -208,6 +213,11 @@ export const TOOL_IO: ToolIOTable = {
         arity: "SISO",
       },
     ],
+  },
+  "/api/v1/convert/pdf/ua": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
   },
   "/api/v1/convert/pdf/vector": {
     accepts: ["PDF"],
@@ -539,6 +549,11 @@ export const TOOL_IO: ToolIOTable = {
   "/api/v1/misc/update-metadata": {
     accepts: ["PDF"],
     produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/security/accessibility-report": {
+    accepts: ["PDF"],
+    produces: "JSON",
     arity: "SISO",
   },
   "/api/v1/security/add-password": {

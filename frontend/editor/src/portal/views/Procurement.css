@@ -279,11 +279,7 @@
   margin: 0 calc(-1 * var(--flowmodal-inset));
 }
 .portal-qb__paper {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .portal-qb__paper-head {
   display: flex;
@@ -386,10 +382,7 @@
 
 /* ── Deal-status hero (Home, active deal) ─────────────────────────────────── */
 .portal-hero {
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
   padding: 1.1rem 1.25rem;
-  background: var(--c-surface);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -592,12 +585,12 @@
   cursor: pointer;
   transition:
     background 0.12s,
-    box-shadow 0.12s,
+    border-color 0.12s,
     transform 0.12s;
 }
 .portal-hero__chip--action:hover {
   background: var(--c-surface);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-color: var(--c-border-strong);
   transform: translateY(-1px);
 }
 
@@ -786,10 +779,6 @@
      does the scrolling. */
   min-height: 16rem;
   padding: 1.35rem 1.6rem;
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 12px;
-  background: var(--c-surface);
-  box-shadow: var(--shadow-sm);
   /* No serif token exists in the theme — the serif is specific to rendering legal terms as paper. */
   font-family: Georgia, "Times New Roman", "Liberation Serif", serif;
   font-size: 0.84rem;
