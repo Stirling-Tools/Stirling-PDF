@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +30,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.classification.ClassificationLabelProvider;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.databind.JsonNode;
@@ -44,6 +46,7 @@ class ClassifyLabelControllerTest {
     @Mock private PdfContentExtractor pdfContentExtractor;
     @Mock private PdfMetadataService pdfMetadataService;
     @Mock private AiEngineClient aiEngineClient;
+    @Mock private AiFeatureGate aiFeatureGate;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private ClassifyLabelController controller;
@@ -56,6 +59,7 @@ class ClassifyLabelControllerTest {
                         pdfContentExtractor,
                         pdfMetadataService,
                         aiEngineClient,
+                        aiFeatureGate,
                         objectMapper,
                         ClassificationLabelProvider.withLabels(labels),
                         null);
@@ -73,7 +77,7 @@ class ClassifyLabelControllerTest {
                 .thenReturn("{\"outcome\":\"classification\",\"labels\":[\"invoice\"]}");
 
         try {
-            controller.classifyAndLabel(file);
+            controller.classifyAndLabel(file, false);
         } catch (Exception ignored) {
             // WebResponseUtils.pdfDocToWebResponse needs a real temp file; the engine call and
             // metadata write we assert on have already happened by the time it runs.
@@ -84,6 +88,52 @@ class ClassifyLabelControllerTest {
         ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
         verify(aiEngineClient).post(eq("/api/v1/documents/classify"), body.capture(), isNull());
         return objectMapper.readTree(body.getValue());
+    }
+
+    /** Stubs a document that already carries a verdict, as a second run over a batch would see. */
+    private MultipartFile alreadyClassifiedDocument() throws Exception {
+        PDDocument document = mock(PDDocument.class);
+        PDDocumentInformation info = mock(PDDocumentInformation.class);
+        when(document.getDocumentInformation()).thenReturn(info);
+        when(info.getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY))
+                .thenReturn("{\"labels\":[\"invoice\"]}");
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("invoice.pdf");
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(document);
+        return file;
+    }
+
+    @Test
+    void classifyAndLabel_skipsADocumentThatAlreadyCarriesAVerdict() throws Exception {
+        withLabels(List.of(new ClassificationLabel("invoice", "Invoice", null)));
+        MultipartFile file = alreadyClassifiedDocument();
+
+        try {
+            controller.classifyAndLabel(file, false);
+        } catch (Exception ignored) {
+            // The response needs a real temp file; the decision under test happens before it.
+        }
+
+        // No second engine call, and no charge for one: re-classifying buys the same answer twice.
+        verify(aiEngineClient, never()).post(anyString(), anyString(), any());
+        verify(pdfMetadataService, never()).setClassificationMetadata(any(), anyString());
+    }
+
+    @Test
+    void classifyAndLabel_reclassifiesWhenAskedTo() throws Exception {
+        withLabels(List.of(new ClassificationLabel("invoice", "Invoice", null)));
+        MultipartFile file = alreadyClassifiedDocument();
+        when(pdfContentExtractor.extractPageTextRaw(any(), eq(1))).thenReturn("Invoice total");
+        when(aiEngineClient.post(eq("/api/v1/documents/classify"), anyString(), isNull()))
+                .thenReturn("{\"outcome\":\"classification\",\"labels\":[\"receipt\"]}");
+
+        try {
+            controller.classifyAndLabel(file, true);
+        } catch (Exception ignored) {
+            // As above.
+        }
+
+        verify(aiEngineClient).post(eq("/api/v1/documents/classify"), anyString(), isNull());
     }
 
     @Test

@@ -17,7 +17,7 @@ export interface AuditEvent {
   eventType: string;
   username: string;
   ipAddress: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export interface AuditEventsResponse {

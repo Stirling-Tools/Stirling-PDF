@@ -1,5 +1,6 @@
 package stirling.software.saas.payg.api;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.BillingCategory;
@@ -86,6 +88,8 @@ public class PaygWalletController {
     static final String STATUS_SUBSCRIBED = "subscribed";
     static final String ROLE_LEADER = "leader";
     static final String ROLE_MEMBER = "member";
+    static final String BILLING_MODE_PREPAID = "prepaid";
+    static final String BILLING_MODE_PAYG = "payg";
 
     /**
      * Placeholder ceiling for the team-less empty snapshot only (authenticated caller without a
@@ -104,6 +108,7 @@ public class PaygWalletController {
     private final WalletLedgerRepository ledgerRepo;
     private final PaygShadowChargeRepository shadowRepo;
     private final UserRepository userRepository;
+    private final PrepaidBundleService prepaidBundleService;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -113,7 +118,8 @@ public class PaygWalletController {
             WalletPolicyRepository policyRepo,
             WalletLedgerRepository ledgerRepo,
             PaygShadowChargeRepository shadowRepo,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            PrepaidBundleService prepaidBundleService) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -122,6 +128,8 @@ public class PaygWalletController {
         this.ledgerRepo = Objects.requireNonNull(ledgerRepo, "ledgerRepo");
         this.shadowRepo = Objects.requireNonNull(shadowRepo, "shadowRepo");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
     }
 
     // ---------------------------------------------------------------------------------------
@@ -187,6 +195,24 @@ public class PaygWalletController {
                         ? buildMemberRows(teamId, snap.periodStart(), snap.periodEnd())
                         : List.of();
 
+        // Prepaid bundles, aggregated across the team's in-term pools. Drawn ahead of the meter and
+        // kept out of the spend cap, so they're a separate dimension from the metered spend above.
+        PrepaidBundleService.PrepaidSummary prepaid = prepaidBundleService.summarize(teamId);
+        long prepaidRemaining = prepaid == null ? 0L : prepaid.unitsRemaining();
+        long prepaidTotal = prepaid == null ? 0L : prepaid.unitsTotal();
+        String prepaidExpiresAt =
+                prepaid == null || prepaid.expiresAt() == null
+                        ? null
+                        : ISO_DATE.format(prepaid.expiresAt().toLocalDate());
+        // Prepaid while pools still have units to draw; once exhausted the meter is live again.
+        String billingMode = prepaidRemaining > 0 ? BILLING_MODE_PREPAID : BILLING_MODE_PAYG;
+
+        // Per-credit rate for the bundle calculator — the bundle:processor price, NOT the metered
+        // per-doc rate. Resolved in the team's currency (USD fallback), null when the price is
+        // unsynced.
+        BigDecimal bundleRatePerCreditMinor =
+                billingService.resolveBundleRatePerCreditMinor(billing.currency());
+
         WalletSnapshotResponse body =
                 new WalletSnapshotResponse(
                         teamId,
@@ -211,7 +237,12 @@ public class PaygWalletController {
                         breakdowns.docs(),
                         analytics.docsProcessed(),
                         analytics.uniquePdfs(),
-                        analytics.sizeMultiplierPdfs());
+                        analytics.sizeMultiplierPdfs(),
+                        prepaidRemaining,
+                        prepaidTotal,
+                        prepaidExpiresAt,
+                        billingMode,
+                        bundleRatePerCreditMinor);
         return ResponseEntity.ok(body);
     }
 
@@ -396,7 +427,7 @@ public class PaygWalletController {
 
     private Optional<TeamMembership> primaryMembership(Long userId) {
         List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 
     private List<MemberRow> buildMemberRows(
@@ -485,6 +516,11 @@ public class PaygWalletController {
                 new CategoryBreakdown(0, 0, 0),
                 0,
                 0,
-                0);
+                0,
+                0L,
+                0L,
+                null,
+                BILLING_MODE_PAYG,
+                null);
     }
 }

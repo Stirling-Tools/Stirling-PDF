@@ -88,11 +88,17 @@ function compressStaticCopyPlugin(): PluginOption {
 // Pages). Otherwise URLs stay root-relative, which still resolves against whatever
 // origin serves the page (correct for self-hosted Docker). Logic lives in
 // scripts/og-prerender.mjs so it can be unit-tested without a full build.
-function prerenderOgPlugin(): PluginOption {
+function prerenderOgPlugin(isSaas: boolean): PluginOption {
+  // SaaS (stirling.com) prerenders the marketing cards from a dedicated
+  // manifest; every other flavour uses the tool-registry manifest.
+  const manifestFile = isSaas
+    ? "public/og-metadata.saas.json"
+    : "public/og-metadata.json";
   return {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
+      // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
       const { prerenderOg } = await import("./scripts/og-prerender.mjs");
       const ogBase = (
         process.env.VITE_OG_BASE_URL ||
@@ -105,14 +111,11 @@ function prerenderOgPlugin(): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(
-            path.resolve(__dirname, "public/og-metadata.json"),
-            "utf8",
-          ),
+          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
         );
       } catch {
         console.warn(
-          "[prerender-og] public/og-metadata.json missing; skipping OG prerender. " +
+          `[prerender-og] ${manifestFile} missing; skipping OG prerender. ` +
             "Run `node scripts/generate-og-metadata.mjs`.",
         );
         return;
@@ -330,8 +333,13 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       compressStaticCopyPlugin(),
-      prerenderOgPlugin(),
+      prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
+    // so without this `@app/*` resolves in the app and fails in a worker.
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -356,9 +364,36 @@ export default defineConfig(async ({ mode, command }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks: {
-            "vendor-react": ["react", "react-dom"],
-            "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
+          manualChunks(id) {
+            if (id.includes("material-symbols-icons.json"))
+              return "vendor-iconset";
+            if (id.includes("node_modules")) {
+              if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
+              if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              if (
+                id.includes("react") ||
+                id.includes("@mantine") ||
+                id.includes("@emotion") ||
+                id.includes("@mui") ||
+                id.includes("@iconify")
+              ) {
+                return "vendor-ui";
+              }
+              if (id.includes("@supabase")) return "vendor-supabase";
+              if (id.includes("posthog-js") || id.includes("@posthog"))
+                return "vendor-posthog";
+              if (id.includes("@cantoo/pdf-lib") || id.includes("pdf-lib"))
+                return "vendor-pdflib";
+              if (
+                id.includes("recharts") ||
+                id.includes("d3") ||
+                id.includes("decimal.js")
+              )
+                return "vendor-charts";
+              if (id.includes("jszip") || id.includes("pako"))
+                return "vendor-zip";
+              if (id.includes("i18next")) return "vendor-i18n";
+            }
           },
         },
       },

@@ -2,14 +2,14 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useDocuments } from "@portal/queries/documents";
 import {
-  fetchDocuments,
   DOCUMENT_STATUS_LABEL,
-  type DocumentsResponse,
   type ReviewDocument,
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
+import { FileRunEventList } from "@portal/components/failures/FileRunEventList";
+import "@portal/components/failures/failures.css";
 import "@portal/views/Documents.css";
 
 function DownloadIcon() {
@@ -66,7 +66,7 @@ function toCsv(docs: ReviewDocument[], t: TFunction): string {
 export function Documents() {
   const { t } = useTranslation();
   const { tier } = useTier();
-  const state = useAsync<DocumentsResponse>(() => fetchDocuments(tier), [tier]);
+  const state = useDocuments(tier);
   const documents = state.data?.documents ?? [];
 
   function exportCsv() {
@@ -96,7 +96,7 @@ export function Documents() {
         </div>
         <Button
           variant="secondary"
-          size="sm"
+          fat
           leftSection={<DownloadIcon />}
           onClick={exportCsv}
           disabled={documents.length === 0}
@@ -106,6 +106,15 @@ export function Documents() {
       </header>
 
       <ReviewQueue documents={documents} loading={state.loading} />
+
+      {/* Recorded policy, pipeline and editor failures. DEV ONLY, deliberately: this list is a
+          stand-in until failures get their own review screen, and it is not the surface we want to
+          ship. The endpoints behind it are live and gated, so nothing here is load-bearing.
+
+          Vite folds this to false in a build, so neither the section nor its fetch ships. The bell's
+          "View in processor" action is gated the same way and for the same reason - lift both
+          together when the review screen lands, or that button navigates nowhere. */}
+      {import.meta.env.DEV && <FileRunEventList />}
     </div>
   );
 }

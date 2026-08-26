@@ -16,6 +16,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
@@ -216,8 +217,7 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
     }
@@ -232,7 +232,6 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         new OutputSpec("inline", Map.of("sources", List.of("editor")))));
@@ -245,8 +244,7 @@ class SourceOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));

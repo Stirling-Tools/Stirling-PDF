@@ -31,7 +31,7 @@ export const SizeRow: Story = {
 export const InheritsColor: Story = {
   render: () => (
     <div style={{ display: "flex", gap: 24 }}>
-      <span style={{ color: "var(--color-blue)" }}>
+      <span style={{ color: "var(--c-primary)" }}>
         <Spinner />
       </span>
       <span style={{ color: "var(--color-green)" }}>

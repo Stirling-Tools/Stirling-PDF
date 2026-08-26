@@ -5,9 +5,9 @@ ARG BASE_VERSION=1.0.2@sha256:c7698687f486707ddef9e0298587ca8b44c4e96185e1bdb0c3
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.6.1-jdk25@sha256:d25357611c559203299f3c6673101154156bdd28985858ff6f465fc69bd27ca4 AS app-build
+FROM gradle:9.7.1-jdk25@sha256:d868117760a7c92214705f47ed173116a5d13e58d68702f974ff30acd062737e AS app-build
 
-ARG TASK_VERSION=3.49.1
+ARG TASK_VERSION=3.52.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
@@ -30,6 +30,8 @@ WORKDIR /app
 
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/
+COPY buildSrc/build.gradle                 buildSrc/
+COPY buildSrc/src/main/                    buildSrc/src/main/
 COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
@@ -59,7 +61,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
       --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b27ca47660a8fa837e47a8533b9b1a3a430295cf29ca28d91af4fd121572dc29 AS jar-extract
+FROM eclipse-temurin:25-jre-noble@sha256:fbcf915c585659b30eb766ada4d6d7cfc9ec1040bf521e95bf61b10a25af73db AS jar-extract
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers

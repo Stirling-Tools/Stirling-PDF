@@ -21,6 +21,8 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
+import { reportToolFailure } from "@app/services/failureReporting";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -218,7 +220,7 @@ export const useToolOperation = <TParams>(
       // Listen for global error file id events from HTTP interceptor during this run
       let externalErrorFileIds: string[] = [];
       const errorListener = (e: Event) => {
-        const detail = (e as CustomEvent)?.detail as any;
+        const detail = (e as CustomEvent<{ fileIds?: unknown }>)?.detail;
         if (detail?.fileIds) {
           externalErrorFileIds = Array.isArray(detail.fileIds)
             ? detail.fileIds
@@ -588,7 +590,7 @@ export const useToolOperation = <TParams>(
             };
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
@@ -602,6 +604,15 @@ export const useToolOperation = <TParams>(
         } catch (_e) {
           void _e;
         }
+
+        // Report it so a leader sees the failure too, then carry on with the user's
+        // own error handling. Fire-and-forget: the reporter swallows its own errors.
+        // Chained, not fired alongside: the re-read must happen after the row exists.
+        void reportToolFailure({
+          operation: config.operationType,
+          error,
+          fileIds: validFiles.map((file) => file.fileId),
+        }).then(refreshNotificationsNow);
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);
@@ -691,21 +702,22 @@ export const useToolOperation = <TParams>(
 
       // Show success message
       actions.setStatus(t("undoSuccess", "Operation undone successfully"));
-    } catch (error: any) {
+    } catch (error) {
       let errorMessage = extractErrorMessage(error);
 
       // Provide more specific error messages based on error type
-      if (error.message?.includes("Mismatch between input files")) {
+      const err = error as { message?: string; name?: string };
+      if (err.message?.includes("Mismatch between input files")) {
         errorMessage = t(
           "undoDataMismatch",
           "Cannot undo: operation data is corrupted",
         );
-      } else if (error.message?.includes("IndexedDB")) {
+      } else if (err.message?.includes("IndexedDB")) {
         errorMessage = t(
           "undoStorageError",
           "Undo completed but some files could not be saved to storage",
         );
-      } else if (error.name === "QuotaExceededError") {
+      } else if (err.name === "QuotaExceededError") {
         errorMessage = t(
           "undoQuotaError",
           "Cannot undo: insufficient storage space",
