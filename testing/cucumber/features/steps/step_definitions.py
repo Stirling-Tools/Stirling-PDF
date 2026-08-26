@@ -48,6 +48,22 @@ def step_generate_pdf(context, fileInput):
     context.files[context.param_name] = open(context.file_name, "rb")
 
 
+# run-parallel.sh runs each shard from its own scratch directory and copies only
+# exampleFiles/ into it, so a CWD-relative fixture path that escapes that directory
+# resolves in a serial run and vanishes in a sharded one. Resolve against the
+# cucumber root as a fallback so both layouts find the same file.
+_CUCUMBER_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+
+def _resolve_example_file(filePath):
+    if os.path.exists(filePath):
+        return filePath
+    rooted = os.path.normpath(os.path.join(_CUCUMBER_DIR, filePath))
+    if os.path.exists(rooted):
+        return rooted
+    return filePath
+
+
 @given('I use an example file at "{filePath}" as parameter "{fileInput}"')
 def step_use_example_file(context, filePath, fileInput):
     context.param_name = fileInput
@@ -57,7 +73,7 @@ def step_use_example_file(context, filePath, fileInput):
 
     # Ensure the file exists before opening
     try:
-        example_file = open(filePath, "rb")
+        example_file = open(_resolve_example_file(filePath), "rb")
         context.files[context.param_name] = example_file
     except FileNotFoundError:
         raise FileNotFoundError(f"The example file '{filePath}' does not exist.")
