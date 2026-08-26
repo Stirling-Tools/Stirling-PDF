@@ -95,22 +95,12 @@ export async function startReauth(
   });
 }
 
-/** Poll while waiting, so a second tab or a reload still shows the truth. */
-export async function fetchConnectStatus(): Promise<ConnectStatus> {
-  return apiClient.local.json<ConnectStatus>(`${CONNECT}/status`);
-}
-
 /** Finish a handshake using the nonce the approval page put in the callback fragment. */
 export async function completeConnect(nonce: string): Promise<ConnectStatus> {
   return apiClient.local.json<ConnectStatus>(`${CONNECT}/complete`, {
     method: "POST",
     body: { nonce },
   });
-}
-
-/** Abandon an open handshake. */
-export async function cancelConnect(): Promise<void> {
-  await apiClient.local.json<void>(`${CONNECT}/cancel`, { method: "POST" });
 }
 
 /**

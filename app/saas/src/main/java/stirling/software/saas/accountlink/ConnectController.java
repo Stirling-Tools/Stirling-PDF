@@ -263,15 +263,15 @@ public class ConnectController {
         };
     }
 
-    /** Best-effort source address for the creation cap. */
+    /**
+     * Source address for the creation cap.
+     *
+     * <p>Deliberately not reading {@code X-Forwarded-For}: the caller sets it, so keying a cap on
+     * it lets one rotate fake addresses and have no cap at all. {@code
+     * server.forward-headers-strategy} is NATIVE, so the container has already resolved the real
+     * client from trusted proxies.
+     */
     private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            String first = forwarded.split(",")[0].strip();
-            if (!first.isEmpty()) {
-                return first.length() > 45 ? first.substring(0, 45) : first;
-            }
-        }
         String remote = request.getRemoteAddr();
         return remote == null || remote.length() <= 45 ? remote : remote.substring(0, 45);
     }

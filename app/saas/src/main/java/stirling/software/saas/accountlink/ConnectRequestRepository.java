@@ -22,4 +22,7 @@ public interface ConnectRequestRepository extends JpaRepository<ConnectRequest, 
 
     /** Backs the per-IP creation cap, since creating a request needs no authentication. */
     long countByRequesterIpAndCreatedAtAfter(String requesterIp, LocalDateTime after);
+
+    /** Sweeps rows past use, whatever they settled as. Anyone can create these. */
+    int deleteByExpiresAtBefore(LocalDateTime cutoff);
 }

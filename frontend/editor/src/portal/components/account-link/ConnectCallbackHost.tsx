@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Modal } from "@app/ui";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { withBasePath } from "@app/constants/app";
 import {
   completeConnect,
   startConnect,
@@ -118,7 +119,15 @@ export function ConnectCallbackHost() {
       return;
     }
     setState("working");
-    void startConnect()
+    // Same callback the modal sends. Without it the backend falls back to the bare
+    // origin, which drops the app's base path and lands the return on nothing.
+    void startConnect(
+      window.location.hostname,
+      new URL(
+        withBasePath("/account-link/callback"),
+        window.location.origin,
+      ).toString(),
+    )
       .then((status) => {
         if (status.authorizeUrl) {
           window.location.assign(status.authorizeUrl);

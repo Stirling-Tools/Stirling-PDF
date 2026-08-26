@@ -183,12 +183,6 @@ public class ConnectService {
         };
     }
 
-    /** Drops any open handshake. */
-    @Transactional
-    public void cancel() {
-        stateRepo.findById(ConnectState.SINGLETON_ID).ifPresent(stateRepo::delete);
-    }
-
     @Transactional(readOnly = true)
     public ConnectStatus status() {
         Optional<DeviceCredential> credential = credentialStore.get();

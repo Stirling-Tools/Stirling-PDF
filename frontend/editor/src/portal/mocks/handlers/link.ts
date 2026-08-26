@@ -59,17 +59,6 @@ export const linkHandlers = [
     });
   }),
 
-  http.get("*/api/v1/account-link/connect/status", async () => {
-    await delay(120);
-    const linked = getLocalStatus().linked;
-    return HttpResponse.json({
-      phase: linked ? "LINKED" : "NONE",
-      authorizeUrl: null,
-      secondsRemaining: null,
-      teamId: linked ? 7 : null,
-    });
-  }),
-
   http.get("/api/v1/account-link/usage", async () => {
     await delay(120);
     return HttpResponse.json(getLocalUsage());

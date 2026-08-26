@@ -98,17 +98,6 @@ public class AccountLinkController {
         return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
     }
 
-    @GetMapping("/connect/status")
-    public ResponseEntity<ConnectService.ConnectStatus> connectStatus() {
-        return ResponseEntity.ok(connectService.status());
-    }
-
-    @PostMapping("/connect/cancel")
-    public ResponseEntity<Void> connectCancel() {
-        connectService.cancel();
-        return ResponseEntity.noContent().build();
-    }
-
     /** Everything we know about where the admin's browser is, for the callback. */
     private static ConnectService.CallbackHint callbackHint(
             ConnectStartRequest req, HttpServletRequest http) {
