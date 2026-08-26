@@ -26,44 +26,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # - name: Cache uv (lookup-only)
-      #   id: cache-uv-restore
-      #   uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      #   with:
-      #     path: |
-      #       ${{ runner.temp }}/uv-python-dir
-      #       ${{ runner.temp }}/setup-uv-cache
-      #     key: uv-${{ runner.os }}-${{ hashFiles(
-      #       'engine/pyproject.toml',
-      #       'engine/uv.lock'
-      #       ) }}
-      #     lookup-only: true
-
       - name: Install uv
         # if: steps.cache-uv-restore.outputs.cache-hit != 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.12.6"
-          working-directory: "engine"
-          enable-cache: false
-          # cache-dependency-glob: |
-          #   engine/pyproject.toml
-          #   engine/uv.lock
+          enable-cache: true
+          download-from-astral-mirror: false
 
-      # - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-      #   run: uv sync --project engine --locked --all-groups
-
-      # - name: Save cache uv
-      #   if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-      #   uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      #   with:
-      #     path: |
-      #       ${{ runner.temp }}/uv-python-dir
-      #       ${{ runner.temp }}/setup-uv-cache
-      #     key: uv-${{ runner.os }}-${{ hashFiles(
-      #       'engine/pyproject.toml',
-      #       'engine/uv.lock'
-      #       ) }}
   unoserver-image-cache-prime:
     if: false
     environment:

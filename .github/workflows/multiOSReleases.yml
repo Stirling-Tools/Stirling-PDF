@@ -888,11 +888,9 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.12.6"
-          # working-directory: "engine"
-          enable-cache: false
-          # cache-dependency-glob: |
-            # engine/pyproject.toml
-            # engine/uv.lock
+          enable-cache: true
+          download-from-astral-mirror: false
+
       - name: Verify updater signatures
         run: |
           uv run --project engine --locked --only-group updater-signatures python .github/scripts/verify-updater-signatures.py \
