@@ -116,8 +116,13 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
       pathname.includes("/auth/") ||
       pathname.includes("/invite/");
 
+    // Public phone pages reached by QR code. Nobody is signed in there, so a
+    // bounce to /login only strands the phone away from its session.
+    const isPublicMobilePage =
+      pathname.includes("/mobile-scanner") || pathname.includes("/mobile-sign");
+
     // If not on auth page, redirect to login with expired session message
-    if (!isAuthPage && !skipAuthRedirect) {
+    if (!isAuthPage && !isPublicMobilePage && !skipAuthRedirect) {
       if (loginRedirectRecentlyFired()) {
         console.warn(
           "[httpErrorHandler] 401 redirect already fired moments ago — suppressing repeat to avoid a login loop:",

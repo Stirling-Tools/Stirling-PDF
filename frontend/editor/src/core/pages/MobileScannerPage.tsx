@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Box,
   Stack,
@@ -10,6 +10,7 @@ import {
   Switch,
   Card,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { Button as DSButton } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
@@ -26,10 +27,35 @@ import {
   type JscanifyScanner,
 } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
+
+// Everything on this page must fit one screen with no scrolling, so sizes are
+// fluid: they shrink with the viewport height and cap out on roomy screens.
+const FLUID = {
+  logo: "clamp(20px, 3.4dvh, 28px)",
+  wordmark: "clamp(14px, 2.4dvh, 20px)",
+  icon: "clamp(1.5rem, 5.5dvh, 2.75rem)",
+  title: "clamp(0.95rem, 2.4dvh, 1.15rem)",
+  body: "clamp(0.7rem, 1.7dvh, 0.85rem)",
+  gap: "clamp(0.35rem, 1.4dvh, 1rem)",
+  pad: "clamp(0.5rem, 1.8dvh, 1.25rem)",
+} as const;
+
+// Cap the thumbnail strip: past this the extras collapse into a "+N" tile
+// rather than scrolling sideways.
+const MAX_VISIBLE_THUMBS = 5;
+const THUMB_SIZE = "clamp(28px, 7dvh, 56px)";
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
 
 // Experimental camera controls (W3C Image Capture / MediaStream extensions) that
 // are not yet part of the standard DOM lib typings but are widely shipped on
@@ -56,8 +82,10 @@ declare global {
 export default function MobileScannerPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const sessionId = searchParams.get("session");
+  // Short screens (landscape phones, mostly) drop the branding and the
+  // explanatory copy and lay actions out in a single row so nothing overflows.
+  const compact = useMediaQuery("(max-height: 34rem)") ?? false;
 
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>(
     "choice",
@@ -76,7 +104,6 @@ export default function MobileScannerPage() {
   const [torchSupported, setTorchSupported] = useState(false);
   const [sessionValid, setSessionValid] = useState<boolean | null>(null); // null = checking, true = valid, false = invalid
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [cameraReady, setCameraReady] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -93,7 +120,6 @@ export default function MobileScannerPage() {
   // Validate session on page load
   useEffect(() => {
     const validateSession = async () => {
-      setLoadingStatus("Validating session...");
       if (!sessionId) {
         setSessionValid(false);
         setSessionError(
@@ -102,7 +128,6 @@ export default function MobileScannerPage() {
             "Session not found. Please try again.",
           ),
         );
-        setLoadingStatus("Session validation failed");
         return;
       }
 
@@ -116,8 +141,6 @@ export default function MobileScannerPage() {
           if (data.valid) {
             setSessionValid(true);
             setSessionError(null);
-            // Don't set status here - let camera/detection effects control status from now on
-            console.log("Session validated successfully:", data);
           } else {
             setSessionValid(false);
             setSessionError(
@@ -126,7 +149,6 @@ export default function MobileScannerPage() {
                 "This session has expired. Please refresh and try again.",
               ),
             );
-            setLoadingStatus("Session expired ✗");
           }
         } else {
           setSessionValid(false);
@@ -136,7 +158,6 @@ export default function MobileScannerPage() {
               "Session not found. Please refresh and try again.",
             ),
           );
-          setLoadingStatus("Session not found ✗");
         }
       } catch (err) {
         console.error("Failed to validate session:", err);
@@ -147,7 +168,6 @@ export default function MobileScannerPage() {
             "Unable to verify session. Please try again.",
           ),
         );
-        setLoadingStatus("Session validation error: " + (err as Error).message);
       }
     };
 
@@ -158,26 +178,19 @@ export default function MobileScannerPage() {
     let cancelled = false;
 
     loadJscanify({
-      onStatus: (status) => {
-        if (!cancelled) setLoadingStatus(status);
-      },
+      onStatus: (status) => console.log("[Mobile Scanner] jscanify:", status),
     })
       .then(() => {
         if (cancelled) return;
         try {
           scannerRef.current = new window.jscanify!();
           setOpenCvReady(true);
-          console.log("✓ jscanify initialized with OpenCV");
         } catch (err) {
-          setLoadingStatus("jscanify init failed ✗");
           console.error("Failed to initialize jscanify:", err);
         }
       })
       .catch((err) => {
         if (cancelled) return;
-        setLoadingStatus(
-          `Scanner library failed to load ✗: ${(err as Error).message}`,
-        );
         console.error("Failed to load jscanify:", err);
       });
 
@@ -202,7 +215,6 @@ export default function MobileScannerPage() {
         const error =
           "MediaDevices API not available - requires HTTPS or localhost";
         console.error(error);
-        setLoadingStatus("Camera API not available ✗");
         setCameraError(
           t(
             "mobileScanner.httpsRequired",
@@ -212,8 +224,6 @@ export default function MobileScannerPage() {
         setMode("file");
         return;
       }
-
-      setLoadingStatus("Initializing camera...");
 
       console.log("[Mobile Scanner] Requesting camera permission...");
       navigator.mediaDevices
@@ -242,9 +252,6 @@ export default function MobileScannerPage() {
                 video.videoWidth,
                 "x",
                 video.videoHeight,
-              );
-              setLoadingStatus(
-                `Camera ready: ${video.videoWidth}x${video.videoHeight} ✓`,
               );
 
               // Signal that camera is ready - this will trigger detection effect
@@ -313,7 +320,6 @@ export default function MobileScannerPage() {
         })
         .catch((err) => {
           console.error("Camera error:", err);
-          setLoadingStatus("Camera access denied ✗");
           setCameraError(
             t(
               "mobileScanner.cameraAccessDenied",
@@ -347,15 +353,6 @@ export default function MobileScannerPage() {
       `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`,
     );
 
-    // Show helpful status if detection is enabled but waiting for dependencies
-    if (mode === "camera" && autoEnhance && !currentPreview) {
-      if (!openCvReady) {
-        setLoadingStatus("Waiting for OpenCV...");
-      } else if (!cameraReady) {
-        setLoadingStatus("Waiting for camera...");
-      }
-    }
-
     if (
       mode === "camera" &&
       autoEnhance &&
@@ -368,7 +365,6 @@ export default function MobileScannerPage() {
         console.log("[Mobile Scanner] startHighlighting() called");
 
         if (!videoRef.current || !highlightCanvasRef.current) {
-          setLoadingStatus("Missing video/canvas refs ✗");
           console.error(
             "[Mobile Scanner] Missing refs: video=" +
               !!videoRef.current +
@@ -378,7 +374,6 @@ export default function MobileScannerPage() {
           return;
         }
         if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) {
-          setLoadingStatus("Video has no dimensions ✗");
           console.error(
             "[Mobile Scanner] Missing video dimensions: " +
               videoRef.current.videoWidth +
@@ -390,7 +385,6 @@ export default function MobileScannerPage() {
 
         const video = videoRef.current;
         const highlightCanvas = highlightCanvasRef.current;
-        setLoadingStatus("Detection active ✓");
         console.log(
           "[Mobile Scanner] Starting highlighting loop for " +
             video.videoWidth +
@@ -598,7 +592,6 @@ export default function MobileScannerPage() {
         const video = videoRef.current;
 
         if (!video) {
-          setLoadingStatus("No video element ✗");
           console.log("[Mobile Scanner] No video element");
           return;
         }
@@ -612,19 +605,16 @@ export default function MobileScannerPage() {
           video.videoWidth > 0 &&
           video.videoHeight > 0
         ) {
-          setLoadingStatus("Detection starting... ✓");
           console.log("[Mobile Scanner] ✓ Video ready, starting detection now");
           startHighlighting();
         } else if (retryCount < 50) {
           // Retry up to 50 times (5 seconds)
           retryCount++;
-          setLoadingStatus(`Waiting for video... (${retryCount}/50)`);
           console.log(
             `[Mobile Scanner] Video not ready yet, retry ${retryCount}/50...`,
           );
           retryTimeout = window.setTimeout(startWhenReady, 100);
         } else {
-          setLoadingStatus("Video failed to load ✗");
           console.error(
             "[Mobile Scanner] ✗ Video failed to become ready after 5 seconds",
           );
@@ -814,22 +804,48 @@ export default function MobileScannerPage() {
   }, [autoEnhance, openCvReady]);
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target;
+      const images = Array.from(input.files ?? []).filter((file) =>
+        file.type.startsWith("image/"),
+      );
 
-      const file = files[0];
-      const reader = new FileReader();
+      if (images.length === 0) {
+        input.value = "";
+        setUploadError(
+          t("mobileScanner.invalidFileType", "Please choose an image file."),
+        );
+        return;
+      }
 
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCurrentPreview(event.target.result as string);
-        }
-      };
+      setUploadError(null);
 
-      reader.readAsDataURL(file);
+      let dataUrls: string[];
+      try {
+        dataUrls = await Promise.all(images.map(readFileAsDataUrl));
+      } catch (err) {
+        console.error("Failed to read selected files:", err);
+        setUploadError(
+          t("mobileScanner.fileReadFailed", "Could not read that file."),
+        );
+        return;
+      } finally {
+        // Reset so re-picking the same file still fires onChange.
+        input.value = "";
+      }
+
+      // Keep selection order: everything but the last joins the batch, the
+      // last stays on screen for review.
+      const queued = dataUrls.slice(0, -1);
+      const preview = dataUrls[dataUrls.length - 1];
+      setCapturedImages((prev) =>
+        currentPreview
+          ? [...prev, currentPreview, ...queued]
+          : [...prev, ...queued],
+      );
+      setCurrentPreview(preview);
     },
-    [],
+    [currentPreview, t],
   );
 
   const addToBatch = useCallback(() => {
@@ -841,7 +857,7 @@ export default function MobileScannerPage() {
 
   const uploadImages = useCallback(async () => {
     const imagesToUpload = currentPreview
-      ? [currentPreview, ...capturedImages]
+      ? [...capturedImages, currentPreview]
       : capturedImages;
 
     if (imagesToUpload.length === 0) return;
@@ -884,15 +900,15 @@ export default function MobileScannerPage() {
       }
 
       setUploadProgress(100);
+      setCurrentPreview(null);
+      setCapturedImages([]);
       setUploadSuccess(true);
 
-      // Close the mobile tab after successful upload
+      // Only tabs this app opened can be closed by script; everywhere else the
+      // success screen stays put. Navigating instead would land a signed-out
+      // phone on the login page.
       setTimeout(() => {
         window.close();
-        // Fallback if window.close() doesn't work (some browsers block it)
-        if (!window.closed) {
-          navigate(EDITOR_BASENAME);
-        }
       }, 1500);
     } catch (err) {
       console.error("Upload failed:", err);
@@ -902,7 +918,7 @@ export default function MobileScannerPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [currentPreview, capturedImages, sessionId, navigate, t]);
+  }, [currentPreview, capturedImages, sessionId, t]);
 
   const retake = useCallback(() => {
     setCurrentPreview(null);
@@ -910,6 +926,17 @@ export default function MobileScannerPage() {
 
   const clearBatch = useCallback(() => {
     setCapturedImages([]);
+  }, []);
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const startOver = useCallback(() => {
+    setUploadSuccess(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setMode("choice");
   }, []);
 
   const toggleTorch = useCallback(async () => {
@@ -972,8 +999,10 @@ export default function MobileScannerPage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          gap: "0.25rem",
           height: "100dvh",
           padding: "2rem",
+          textAlign: "center",
         }}
       >
         <CheckCircleRoundedIcon
@@ -988,216 +1017,338 @@ export default function MobileScannerPage() {
             "Your images have been transferred.",
           )}
         </Text>
+        <Text size="sm" c="dimmed">
+          {t("mobileScanner.closeTabHint", "You can close this tab now.")}
+        </Text>
+        <DSButton
+          variant="secondary"
+          size="md"
+          style={{ marginTop: "1.5rem" }}
+          onClick={startOver}
+        >
+          {t("mobileScanner.scanAnother", "Scan another")}
+        </DSButton>
       </Box>
     );
   }
 
+  const cameraStarting =
+    mode === "camera" && !currentPreview && !cameraReady && !cameraError;
+  const batchCount = capturedImages.length + (currentPreview ? 1 : 0);
+  const canUpload = batchCount > 0;
+  // Choice screen with nothing captured has no action of its own; anywhere
+  // else the bar carries the primary action.
+  const showActionBar =
+    Boolean(currentPreview) ||
+    mode === "camera" ||
+    mode === "file" ||
+    canUpload;
+  const buttonSize = compact ? "sm" : "md";
+  const visibleThumbs = capturedImages.slice(0, MAX_VISIBLE_THUMBS);
+  const hiddenThumbs = capturedImages.length - visibleThumbs.length;
+
+  const uploadButton = canUpload ? (
+    <DSButton
+      fullWidth
+      variant="primary"
+      size={buttonSize}
+      onClick={uploadImages}
+      loading={isUploading}
+    >
+      {t("mobileScanner.uploadWithCount", "Upload ({{total}})", {
+        total: batchCount,
+      })}
+    </DSButton>
+  ) : null;
+
+  // One fixed-height column that never scrolls: header and notices on top, a
+  // content region that shrinks to whatever is left, actions pinned to the
+  // bottom. Every level clips, so nothing can render off screen.
   return (
     <Box
       style={{
-        minHeight: "100dvh",
+        height: "100dvh",
+        maxHeight: "100dvh",
         background: "var(--c-bg)",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <Box
-        p="md"
-        style={{
-          background: "var(--c-bg-raised)",
-          borderBottom: "1px solid var(--c-border-subtle)",
-        }}
-      >
-        <Group gap="sm" align="center">
-          <LogoIcon
-            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
-            style={{ height: "32px", width: "32px" }}
-          />
-          <Wordmark alt="Stirling PDF" style={{ height: "24px" }} />
-        </Group>
-      </Box>
-
-      {/* Status Banner - only show during camera loading or errors */}
-      {loadingStatus && mode === "camera" && !loadingStatus.includes("✓") && (
+      {!compact && (
         <Box
-          p="xs"
           style={{
-            background: loadingStatus.includes("✗")
-              ? "var(--mantine-color-red-1)"
-              : "var(--mantine-color-blue-1)",
+            flex: "0 0 auto",
+            padding: FLUID.pad,
+            background: "var(--c-bg-raised)",
             borderBottom: "1px solid var(--c-border-subtle)",
-            fontSize: "0.85rem",
-            fontFamily: "monospace",
-            textAlign: "center",
           }}
         >
-          {loadingStatus}
+          <Group gap="sm" align="center" wrap="nowrap">
+            <LogoIcon
+              alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
+              style={{ height: FLUID.logo, width: FLUID.logo }}
+            />
+            <Wordmark alt="Stirling PDF" style={{ height: FLUID.wordmark }} />
+          </Group>
         </Box>
       )}
 
-      {uploadError && (
-        <Box p="md">
-          <Alert
-            color="red"
-            icon={<ErrorRoundedIcon />}
-            onClose={() => setUploadError(null)}
-            withCloseButton
-          >
-            {uploadError}
-          </Alert>
-        </Box>
-      )}
-
-      {isUploading && (
-        <Box p="sm">
-          <Text size="sm" mb="xs">
-            {t("mobileScanner.uploading", "Uploading...")}
-          </Text>
-          <Progress value={uploadProgress} animated />
-        </Box>
-      )}
-
-      {cameraError && (
-        <Box p="md">
-          <Alert color="orange" icon={<InfoRoundedIcon />}>
-            {cameraError}
-          </Alert>
-        </Box>
-      )}
-
-      {/* Choice screen */}
-      {mode === "choice" && !currentPreview && (
-        <Stack
-          gap="lg"
-          p="xl"
-          align="center"
-          style={{ maxWidth: "500px", margin: "0 auto" }}
-        >
-          <Stack gap="xs" align="center">
-            <Text size="xl" fw={700} ta="center">
-              {t("mobileScanner.chooseMethod", "Choose Upload Method")}
-            </Text>
-            <Text size="sm" c="dimmed" ta="center">
-              {t(
-                "mobileScanner.chooseMethodDescription",
-                "Select how you want to scan and upload documents",
-              )}
-            </Text>
-          </Stack>
-
-          <Stack gap="md" style={{ width: "100%" }}>
-            <Card
-              shadow="sm"
-              padding="xl"
-              radius="md"
-              withBorder
-              style={{ cursor: "pointer" }}
-              onClick={() => setMode("camera")}
-              styles={{
-                root: {
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    boxShadow: "var(--mantine-shadow-md)",
-                  },
-                },
-              }}
-            >
-              <Stack align="center" gap="md">
-                <PhotoCameraRoundedIcon
-                  style={{
-                    fontSize: "3rem",
-                    color: "var(--c-accent-text)",
-                  }}
-                />
-                <Text size="lg" fw={600}>
-                  {t("mobileScanner.camera", "Camera")}
-                </Text>
-                <Text size="sm" c="dimmed" ta="center">
-                  {t(
-                    "mobileScanner.cameraDescription",
-                    "Scan documents using your device camera with automatic edge detection",
-                  )}
-                </Text>
-              </Stack>
-            </Card>
-
-            <Card
-              shadow="sm"
-              padding="xl"
-              radius="md"
-              withBorder
-              style={{ cursor: "pointer" }}
-              onClick={() => setMode("file")}
-              styles={{
-                root: {
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    boxShadow: "var(--mantine-shadow-md)",
-                  },
-                },
-              }}
-            >
-              <Stack align="center" gap="md">
-                <UploadRoundedIcon
-                  style={{
-                    fontSize: "3rem",
-                    color: "var(--mantine-color-green-6)",
-                  }}
-                />
-                <Text size="lg" fw={600}>
-                  {t("mobileScanner.fileUpload", "File Upload")}
-                </Text>
-                <Text size="sm" c="dimmed" ta="center">
-                  {t(
-                    "mobileScanner.fileDescription",
-                    "Upload existing photos or documents from your device",
-                  )}
-                </Text>
-              </Stack>
-            </Card>
-          </Stack>
-        </Stack>
-      )}
-
-      {/* Camera interface */}
-      {mode === "camera" && !currentPreview && (
-        <Box
-          style={{
-            position: "relative",
-            height: "calc(100dvh - 60px)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* Back button - floating top left */}
-          <DSButton
-            onClick={() => setMode("choice")}
-            variant="primary"
-            size="sm"
+      {/* Notices - compact, and capped so they can never squeeze the content
+          region away on a short screen */}
+      <Box style={{ flex: "0 0 auto", maxHeight: "30dvh", overflow: "hidden" }}>
+        {cameraStarting && (
+          <Box
+            px="xs"
+            py={4}
             style={{
-              position: "absolute",
-              top: "1rem",
-              left: "1rem",
-              zIndex: 10,
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              backdropFilter: "blur(8px)",
-              border: "none",
+              background: "var(--mantine-color-blue-1)",
+              borderBottom: "1px solid var(--c-border-subtle)",
+              fontSize: FLUID.body,
+              textAlign: "center",
             }}
           >
-            ← {t("mobileScanner.back", "Back")}
-          </DSButton>
-          {/* Video feed - fills available space */}
+            {t("mobileScanner.startingCamera", "Starting camera…")}
+          </Box>
+        )}
+
+        {uploadError && (
+          <Alert
+            color="red"
+            radius={0}
+            py={4}
+            icon={<ErrorRoundedIcon style={{ fontSize: "1.1rem" }} />}
+            onClose={() => setUploadError(null)}
+            withCloseButton
+            closeButtonLabel={t("mobileScanner.dismiss", "Dismiss")}
+          >
+            <Text style={{ fontSize: FLUID.body }}>{uploadError}</Text>
+          </Alert>
+        )}
+
+        {/* Camera/HTTPS warning: dismissible, and hidden while a preview is
+            waiting on the user so it never crowds the upload decision. */}
+        {cameraError && !currentPreview && (
+          <Alert
+            color="orange"
+            radius={0}
+            py={4}
+            icon={<InfoRoundedIcon style={{ fontSize: "1.1rem" }} />}
+            onClose={() => setCameraError(null)}
+            withCloseButton
+            closeButtonLabel={t("mobileScanner.dismiss", "Dismiss")}
+          >
+            <Text style={{ fontSize: FLUID.body }}>{cameraError}</Text>
+          </Alert>
+        )}
+
+        {isUploading && (
+          <Box px="md" py={4}>
+            <Text style={{ fontSize: FLUID.body }} mb={2}>
+              {t("mobileScanner.uploading", "Uploading...")}
+            </Text>
+            <Progress value={uploadProgress} animated size="sm" />
+          </Box>
+        )}
+      </Box>
+
+      {/* Content region - takes whatever is left and clips, never scrolls */}
+      <Box
+        style={{
+          flex: "1 1 auto",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {currentPreview ? (
+          /* Preview takes over whichever mode produced it */
+          <Box
+            style={{
+              flex: 1,
+              minHeight: 0,
+              background: "#000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={currentPreview}
+              alt={t("mobileScanner.previewAlt", "Selected image")}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                display: "block",
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        ) : mode === "choice" ? (
+          <Box
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: FLUID.gap,
+              padding: FLUID.pad,
+              width: "100%",
+              maxWidth: "500px",
+              margin: "0 auto",
+              overflow: "hidden",
+            }}
+          >
+            {!compact && (
+              <Stack gap={2} align="center" style={{ flex: "0 0 auto" }}>
+                <Text fw={700} ta="center" style={{ fontSize: FLUID.title }}>
+                  {t("mobileScanner.chooseMethod", "Choose Upload Method")}
+                </Text>
+                <Text
+                  c="dimmed"
+                  ta="center"
+                  style={{ fontSize: FLUID.body }}
+                  lineClamp={2}
+                >
+                  {t(
+                    "mobileScanner.chooseMethodDescription",
+                    "Select how you want to scan and upload documents",
+                  )}
+                </Text>
+              </Stack>
+            )}
+
+            {/* Cards share the leftover height rather than overflowing it */}
+            <Box
+              style={{
+                flex: "1 1 auto",
+                minHeight: 0,
+                display: "flex",
+                flexDirection: compact ? "row" : "column",
+                justifyContent: "center",
+                gap: FLUID.gap,
+              }}
+            >
+              {[
+                {
+                  key: "camera",
+                  icon: (
+                    <PhotoCameraRoundedIcon
+                      style={{
+                        fontSize: FLUID.icon,
+                        color: "var(--c-accent-text)",
+                      }}
+                    />
+                  ),
+                  title: t("mobileScanner.camera", "Camera"),
+                  description: t(
+                    "mobileScanner.cameraDescription",
+                    "Scan documents using your device camera with automatic edge detection",
+                  ),
+                  onClick: () => {
+                    setCameraError(null);
+                    setMode("camera" as const);
+                  },
+                },
+                {
+                  key: "file",
+                  icon: (
+                    <UploadRoundedIcon
+                      style={{
+                        fontSize: FLUID.icon,
+                        color: "var(--mantine-color-green-6)",
+                      }}
+                    />
+                  ),
+                  title: t("mobileScanner.fileUpload", "File Upload"),
+                  description: t(
+                    "mobileScanner.fileDescription",
+                    "Upload existing photos or documents from your device",
+                  ),
+                  onClick: () => setMode("file" as const),
+                },
+              ].map((choice) => (
+                <Card
+                  key={choice.key}
+                  shadow="sm"
+                  radius="md"
+                  withBorder
+                  p={FLUID.pad}
+                  onClick={choice.onClick}
+                  style={{
+                    flex: "1 1 0",
+                    minHeight: 0,
+                    minWidth: 0,
+                    // Cap the height so roomy portrait screens do not stretch
+                    // the cards into mostly-empty slabs. Side by side on a
+                    // short screen they fill what is there instead.
+                    maxHeight: compact
+                      ? undefined
+                      : "clamp(110px, 26dvh, 220px)",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Stack
+                    align="center"
+                    gap={FLUID.gap}
+                    style={{ minHeight: 0 }}
+                  >
+                    {choice.icon}
+                    <Text
+                      fw={600}
+                      ta="center"
+                      style={{ fontSize: FLUID.title }}
+                    >
+                      {choice.title}
+                    </Text>
+                    {!compact && (
+                      <Text
+                        c="dimmed"
+                        ta="center"
+                        lineClamp={3}
+                        style={{ fontSize: FLUID.body }}
+                      >
+                        {choice.description}
+                      </Text>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Box>
+          </Box>
+        ) : mode === "camera" ? (
           <Box
             style={{
               position: "relative",
               flex: 1,
+              minHeight: 0,
               background: "#000",
               overflow: "hidden",
             }}
           >
+            <DSButton
+              onClick={() => setMode("choice")}
+              variant="primary"
+              size="sm"
+              style={{
+                position: "absolute",
+                top: "0.75rem",
+                left: "0.75rem",
+                zIndex: 10,
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                backdropFilter: "blur(8px)",
+                border: "none",
+              }}
+            >
+              ← {t("mobileScanner.back", "Back")}
+            </DSButton>
             <video
               ref={videoRef}
               autoPlay
@@ -1211,7 +1362,7 @@ export default function MobileScannerPage() {
               }}
             />
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            {/* Highlight overlay canvas - shows real-time document edge detection */}
+            {/* Highlight overlay canvas - real-time document edge detection */}
             <canvas
               ref={highlightCanvasRef}
               style={{
@@ -1228,17 +1379,173 @@ export default function MobileScannerPage() {
               }}
             />
           </Box>
-
-          {/* Controls bar - fixed at bottom */}
+        ) : (
           <Box
             style={{
-              backgroundColor: "var(--c-bg-raised)",
-              borderTop: "1px solid var(--c-border-subtle)",
-              padding: "0.75rem 1rem",
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: FLUID.gap,
+              padding: FLUID.pad,
+              width: "100%",
+              maxWidth: "500px",
+              margin: "0 auto",
+              overflow: "hidden",
             }}
           >
-            <Stack gap="sm">
-              {/* Settings toggles */}
+            <DSButton
+              onClick={() => setMode("choice")}
+              variant="tertiary"
+              size="sm"
+              style={{ alignSelf: "flex-start", flex: "0 0 auto" }}
+            >
+              ← {t("mobileScanner.back", "Back")}
+            </DSButton>
+            <Card
+              shadow="sm"
+              radius="md"
+              withBorder
+              p={FLUID.pad}
+              onClick={openFilePicker}
+              style={{
+                flex: "1 1 auto",
+                minHeight: 0,
+                maxHeight: compact ? undefined : "clamp(140px, 34dvh, 300px)",
+                cursor: "pointer",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Stack align="center" gap={FLUID.gap} style={{ minHeight: 0 }}>
+                <UploadRoundedIcon
+                  style={{
+                    fontSize: FLUID.icon,
+                    color: "var(--mantine-color-gray-5)",
+                  }}
+                />
+                <Text fw={600} ta="center" style={{ fontSize: FLUID.title }}>
+                  {t(
+                    "mobileScanner.selectFilesPrompt",
+                    "Select files to upload",
+                  )}
+                </Text>
+              </Stack>
+            </Card>
+          </Box>
+        )}
+      </Box>
+
+      {/* Outside the mode branches so the pinned bar can reach it from the
+          preview screen too. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display: "none" }}
+        onChange={handleFileSelect}
+      />
+
+      {/* Batch strip - sits directly above the actions, always in view */}
+      {capturedImages.length > 0 && (
+        <Box
+          px="sm"
+          py={4}
+          style={{
+            flex: "0 0 auto",
+            borderTop: "1px solid var(--c-border-subtle)",
+            background: "var(--c-bg-raised)",
+            overflow: "hidden",
+          }}
+        >
+          <Group justify="space-between" mb={4} wrap="nowrap">
+            <Text fw={600} style={{ fontSize: FLUID.body }}>
+              {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
+              )
+            </Text>
+            <DSButton
+              size="sm"
+              variant="quiet"
+              accent="danger"
+              onClick={clearBatch}
+            >
+              {t("mobileScanner.clearBatch", "Clear")}
+            </DSButton>
+          </Group>
+          <Box
+            style={{
+              display: "flex",
+              gap: "var(--space-xs)",
+              overflow: "hidden",
+            }}
+          >
+            {visibleThumbs.map((img, idx) => (
+              <Box
+                key={idx}
+                style={{
+                  // Shrink to share the row on narrow screens; capped so a
+                  // short batch does not stretch into giant tiles.
+                  flex: "1 1 0",
+                  minWidth: 0,
+                  maxWidth: THUMB_SIZE,
+                  height: THUMB_SIZE,
+                  borderRadius: "var(--radius-sm)",
+                  overflow: "hidden",
+                  border: "2px solid var(--c-border-subtle)",
+                }}
+              >
+                <img
+                  src={img}
+                  alt={`${t("mobileScanner.batchImages", "Batch")} ${idx + 1}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "block",
+                    objectFit: "cover",
+                  }}
+                />
+              </Box>
+            ))}
+            {hiddenThumbs > 0 && (
+              <Box
+                style={{
+                  flex: "1 1 0",
+                  minWidth: 0,
+                  maxWidth: THUMB_SIZE,
+                  height: THUMB_SIZE,
+                  borderRadius: "var(--radius-sm)",
+                  border: "2px solid var(--c-border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text fw={600} style={{ fontSize: FLUID.body }}>
+                  +{hiddenThumbs}
+                </Text>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {/* Action bar - pinned to the bottom of the viewport on every screen */}
+      {showActionBar && (
+        <Box
+          style={{
+            flex: "0 0 auto",
+            backgroundColor: "var(--c-bg-raised)",
+            borderTop: "1px solid var(--c-border-subtle)",
+            padding: `${FLUID.gap} 1rem`,
+            paddingBottom: `calc(${FLUID.gap} + env(safe-area-inset-bottom, 0px))`,
+          }}
+        >
+          <Stack gap={FLUID.gap}>
+            {mode === "camera" && !currentPreview && (
               <Group justify="space-around" style={{ width: "100%" }}>
                 <Group gap="xs">
                   <Switch
@@ -1247,7 +1554,7 @@ export default function MobileScannerPage() {
                     onChange={(e) => setAutoEnhance(e.currentTarget.checked)}
                     disabled={!openCvReady}
                   />
-                  <Text size="xs">
+                  <Text style={{ fontSize: FLUID.body }}>
                     {t("mobileScanner.edgeDetection", "Edge Detection")}
                   </Text>
                 </Group>
@@ -1258,202 +1565,66 @@ export default function MobileScannerPage() {
                       checked={torchEnabled}
                       onChange={toggleTorch}
                     />
-                    <Text size="xs">
+                    <Text style={{ fontSize: FLUID.body }}>
                       {t("mobileScanner.flashlight", "Flash")}
                     </Text>
                   </Group>
                 )}
               </Group>
+            )}
 
-              {/* Capture button */}
-              <DSButton
-                fullWidth
-                size="md"
-                onClick={captureImage}
-                loading={isProcessing}
-                variant="primary"
-              >
-                {isProcessing
-                  ? t("mobileScanner.processing", "Processing...")
-                  : t("mobileScanner.capture", "Capture")}
-              </DSButton>
-            </Stack>
-          </Box>
-        </Box>
-      )}
-
-      {/* File upload interface */}
-      {mode === "file" && !currentPreview && (
-        <Stack
-          gap="lg"
-          p="xl"
-          align="center"
-          style={{ maxWidth: "500px", margin: "0 auto" }}
-        >
-          <DSButton
-            onClick={() => setMode("choice")}
-            variant="tertiary"
-            size="sm"
-            style={{ alignSelf: "flex-start" }}
-          >
-            ← {t("mobileScanner.back", "Back")}
-          </DSButton>
-          <Card
-            shadow="sm"
-            padding="xl"
-            radius="md"
-            withBorder
-            style={{ width: "100%" }}
-          >
-            <Stack align="center" gap="lg">
-              <UploadRoundedIcon
-                style={{
-                  fontSize: "4rem",
-                  color: "var(--mantine-color-gray-5)",
-                }}
-              />
-              <Text size="lg" fw={600} ta="center">
-                {t("mobileScanner.selectFilesPrompt", "Select files to upload")}
-              </Text>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                style={{ display: "none" }}
-                onChange={handleFileSelect}
-              />
-              <DSButton
-                size="lg"
-                fullWidth
-                onClick={() => fileInputRef.current?.click()}
-                leftSection={<AddPhotoAlternateRoundedIcon />}
-              >
-                {t("mobileScanner.selectImage", "Select Image")}
-              </DSButton>
-            </Stack>
-          </Card>
-        </Stack>
-      )}
-
-      {/* Preview interface */}
-      {currentPreview && (
-        <Box
-          style={{
-            position: "relative",
-            height: "calc(100dvh - 60px)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* Preview image - fills available space */}
-          <Box
-            style={{
-              position: "relative",
-              flex: 1,
-              background: "#000",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <img
-              src={currentPreview}
-              alt="Preview"
-              style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-                display: "block",
-                objectFit: "contain",
-              }}
-            />
-          </Box>
-
-          {/* Controls bar - fixed at bottom */}
-          <Box
-            style={{
-              backgroundColor: "var(--c-bg-raised)",
-              borderTop: "1px solid var(--c-border-subtle)",
-              padding: "0.75rem 1rem",
-            }}
-          >
-            <Stack gap="sm">
-              <Group grow>
-                <DSButton variant="secondary" onClick={retake} size="md">
-                  {t("mobileScanner.retake", "Retake")}
+            {/* On short screens every action shares one row so the bar stays
+                a single line tall. */}
+            <Group grow wrap="nowrap">
+              {currentPreview && (
+                <DSButton
+                  variant="secondary"
+                  size={buttonSize}
+                  onClick={retake}
+                >
+                  {mode === "camera"
+                    ? t("mobileScanner.retake", "Retake")
+                    : t("mobileScanner.remove", "Remove")}
                 </DSButton>
-                <DSButton variant="primary" onClick={addToBatch} size="md">
-                  {t("mobileScanner.addToBatch", "Add to Batch")}
+              )}
+              {currentPreview && (
+                <DSButton
+                  variant="secondary"
+                  size={buttonSize}
+                  onClick={mode === "camera" ? addToBatch : openFilePicker}
+                >
+                  {mode === "camera"
+                    ? t("mobileScanner.addToBatch", "Add to Batch")
+                    : t("mobileScanner.addMore", "Add More")}
                 </DSButton>
-              </Group>
-              <DSButton
-                fullWidth
-                variant="primary"
-                size="md"
-                onClick={uploadImages}
-                loading={isUploading}
-              >
-                {t("mobileScanner.upload", "Upload")}
-              </DSButton>
-            </Stack>
-          </Box>
-        </Box>
-      )}
-
-      {capturedImages.length > 0 && (
-        <Box p="sm" style={{ borderTop: "1px solid var(--c-border-subtle)" }}>
-          <Group justify="space-between" mb="sm">
-            <Text size="sm" fw={600}>
-              {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
-              )
-            </Text>
-            <Group gap="xs">
-              <DSButton
-                size="sm"
-                variant="secondary"
-                accent="danger"
-                onClick={clearBatch}
-              >
-                {t("mobileScanner.clearBatch", "Clear")}
-              </DSButton>
-              <DSButton
-                variant="primary"
-                size="sm"
-                onClick={uploadImages}
-                loading={isUploading}
-              >
-                {t("mobileScanner.uploadAll", "Upload All")}
-              </DSButton>
+              )}
+              {mode === "camera" && !currentPreview && (
+                <DSButton
+                  size={buttonSize}
+                  onClick={captureImage}
+                  loading={isProcessing}
+                  variant="primary"
+                >
+                  {isProcessing
+                    ? t("mobileScanner.processing", "Processing...")
+                    : t("mobileScanner.capture", "Capture")}
+                </DSButton>
+              )}
+              {mode === "file" && !currentPreview && (
+                <DSButton
+                  size={buttonSize}
+                  variant={canUpload ? "secondary" : "primary"}
+                  onClick={openFilePicker}
+                  leftSection={<AddPhotoAlternateRoundedIcon />}
+                >
+                  {t("mobileScanner.selectImage", "Select Image")}
+                </DSButton>
+              )}
+              {compact && uploadButton}
             </Group>
-          </Group>
-          <Box
-            style={{
-              display: "flex",
-              gap: "var(--space-sm)",
-              overflowX: "auto",
-              paddingBottom: "var(--space-sm)",
-            }}
-          >
-            {capturedImages.map((img, idx) => (
-              <Box
-                key={idx}
-                style={{
-                  minWidth: "80px",
-                  height: "80px",
-                  borderRadius: "var(--radius-sm)",
-                  overflow: "hidden",
-                  border: "2px solid var(--c-border-subtle)",
-                }}
-              >
-                <img
-                  src={img}
-                  alt={`Capture ${idx + 1}`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </Box>
-            ))}
-          </Box>
+
+            {!compact && uploadButton}
+          </Stack>
         </Box>
       )}
     </Box>
