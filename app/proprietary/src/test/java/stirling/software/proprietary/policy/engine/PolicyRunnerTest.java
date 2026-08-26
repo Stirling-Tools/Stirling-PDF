@@ -32,6 +32,7 @@ import org.springframework.core.io.ByteArrayResource;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
+import stirling.software.proprietary.policy.ledger.IdentityHasher;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -293,11 +294,54 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(InputSpec.folder("/in")));
         PolicyInputs inputs = PolicyInputs.of(List.of());
         PolicyRunHandle handle = new PolicyRunHandle("r", new CompletableFuture<>());
-        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
+        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP, null, null))
                 .thenReturn(handle);
 
-        assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP));
+        assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP, null));
         verifyNoInteractions(folderSource);
+    }
+
+    @Test
+    void anAttendedRunCarriesTheClientsOwnDocumentReferenceAndNoSource() {
+        // A failure of this run can then name the document the user is still holding, and the null
+        // sourceId is what marks the reference as the client's own rather than a source's hash.
+        Policy policy = policy(List.of());
+        PolicyInputs inputs = PolicyInputs.of(List.of(new ByteArrayResource("a".getBytes())));
+        when(policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1"))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        runner.runWith(policy, inputs, PolicyProgressListener.NOOP, "editor-file-1");
+
+        verify(policyEngine)
+                .runPolicy(policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1");
+    }
+
+    @Test
+    void anUnattendedRunStillCarriesItsSourcesHashedIdentity() throws Exception {
+        // The other id space, unchanged: a folder identity is a path, and a path is a filename, so
+        // what reaches the run is the one-way hash and never the client-minted kind of reference.
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        String sourceId = policy.inputs().getFirst().sourceId();
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenReturn(
+                        List.of(
+                                ResolvedInput.forFile(
+                                        PolicyInputs.of(List.of()), "/in/doc.pdf", success -> {})));
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        runner.run(policy);
+
+        verify(policyEngine)
+                .runPolicy(
+                        eq(policy),
+                        any(),
+                        any(),
+                        eq(sourceId),
+                        eq(IdentityHasher.identityHash("/in/doc.pdf")));
     }
 
     @Test
@@ -317,10 +361,11 @@ class PolicyRunnerTest {
                         List.of(
                                 new ByteArrayResource("a".getBytes()),
                                 new ByteArrayResource("b".getBytes())));
-        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
+        when(policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, null, "editor-file-1"))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
-        runner.runWith(policy, inputs, PolicyProgressListener.NOOP);
+        runner.runWith(policy, inputs, PolicyProgressListener.NOOP, "editor-file-1");
 
         String key = EditorSource.counterKey(7L);
         assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());

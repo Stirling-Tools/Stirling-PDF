@@ -1,7 +1,6 @@
 alphabet = "アルファベット"
 apply = "適用"
 applyAndContinue = "適用して続行"
-areYouSure = "本当に離れますか？"
 back = "戻る"
 black = "黒"
 blue = "青"
@@ -106,6 +105,7 @@ undoSuccess = "操作を元に戻しました"
 unknown = "不明"
 unpin = "ピン留めを解除（ツール実行後に置き換え）"
 unsavedChanges = "PDF に未保存の変更があります。"
+unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
 unsavedChangesTitle = "未保存の変更"
 unsupported = "未対応"
 username = "ユーザー名"
@@ -1879,6 +1879,9 @@ width = "幅"
 [app]
 description = "無料の Adobe Acrobat 代替（1,000万+ ダウンロード）"
 
+[appBanner]
+dismiss = "Dismiss"
+
 [attachments]
 convertToPdfA3b = "PDF/A-3b に変換"
 convertToPdfA3bDescription = "添付ファイルを埋め込んだアーカイブ用 PDF を作成します"
@@ -2933,12 +2936,16 @@ text = "これらの権限を変更不可にするには、パスワード追加
 [chat.actions]
 copy = "メッセージをコピー"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling エージェントのオプション"
+assistant = "AI Assistant"
 clearChat = "チャットをクリア"
 
 [chat.input]
@@ -3001,28 +3008,35 @@ tooltip = "この操作はクラウドクレジットを消費します"
 tooltip = "画面から色を取得"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "色を選択"
 
 [common]
+actions = "Actions"
 back = "戻る"
 cancel = "キャンセル"
 close = "閉じる"
+codeSample = "Code sample"
 collapse = "折りたたむ"
 confirm = "確認"
 continue = "続行"
 copied = "コピーしました！"
 copy = "コピー"
 done = "完了"
+enterValue = "Enter value"
 error = "エラー"
 expand = "展開"
 loading = "読み込み中..."
 next = "次へ"
+open = "Open"
 preview = "プレビュー"
 previous = "前へ"
 refresh = "更新"
 remaining = "残り"
 retry = "再試行"
 save = "保存"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "選択をクリア"
@@ -3185,6 +3199,7 @@ title = "圧縮方式"
 [compress.settings]
 desiredSize = "目標ファイルサイズ"
 desiredSizePlaceholder = "サイズを入力"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "圧縮はファイルサイズを簡単に減らす方法です。「ファイルサイズ」を選ぶと目標サイズを入力でき、品質は自動調整します。「品質」を選ぶと圧縮強度を手動設定できます。"
@@ -3387,6 +3402,24 @@ pdfOptions = "PDF オプション"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
+pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
+pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
+pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
+pdfUaEmbedFonts = "Embed missing fonts"
+pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
+pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "What this image tells the reader"
+pdfUaFindImages = "Find images needing a description"
+pdfUaLanguage = "Document language"
+pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaNoImagesNeedingText = "No image is missing a description."
+pdfUaOptions = "PDF/UA Options"
+pdfUaOverrideLanguage = "Replace the document's own language"
+pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
+pdfUaProfile = "Conformance level"
+pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
+pdfUaTitle = "Document title"
+pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "先に変換元形式を選択してください"
 settings = "設定"
 single = "単一"
@@ -3565,7 +3598,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "検索..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "編集"
@@ -3824,11 +3861,13 @@ shareSelected = "選択項目を共有"
 sharing = "共有"
 showAll = "すべて表示"
 showHistory = "履歴を表示"
+sortBy = "Sort files"
 sortByDate = "日付で並べ替え"
 sortByName = "名前で並べ替え"
 sortBySize = "サイズで並べ替え"
 storage = "ストレージ"
 storageState = "ストレージ"
+storageUsed = "Storage used"
 synced = "同期済み"
 title = "PDF ファイルをアップロード"
 toolChain = "適用ツール"
@@ -3874,8 +3913,12 @@ addFiles = "ファイルを追加"
 addingFiles = "ファイルを追加中…"
 collapse = "サイドバーを折りたたむ"
 customizeGroups = "グループをカスタマイズ"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
+downloadFailed = "Download failed"
 dropHint = "開始するにはファイルを開いてください"
 dropToAdd = "Drop files to add"
+duplicateFailed = "Could not duplicate file"
 expand = "サイドバーを展開"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive が未設定です"
@@ -3888,15 +3931,17 @@ openFromComputer = "コンピューターから開く"
 openSettings = "設定を開く"
 other = "その他"
 recent = "最近"
-search = "検索"
-searchPlaceholder = "ファイルを検索..."
 viewAll = "{{count}} 個のファイルをすべて表示"
 
 [fileSidebar.fileItem]
 closeViewer = "ビューアを閉じる"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
+duplicate = "Duplicate"
 moreActions = "More actions"
 openInViewer = "ビューアで開く"
+rename = "Rename"
 savedToServer = "Saved to server"
 updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
@@ -3908,6 +3953,14 @@ reset = "デフォルトにリセット"
 subtitle = "ファイルを親カテゴリにグループ化します。既存または新しいラベルをカテゴリに追加したり、名前を変更したり、独自のカテゴリを作成したりできます。どのカテゴリにも属さないファイルは「その他」に表示されます。"
 title = "サイドバーのカテゴリ"
 
+[fileSidebar.rename]
+cancel = "Cancel"
+error = "Could not rename the file."
+illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
+label = "File name"
+save = "Rename"
+title = "Rename file"
+
 [filesPage]
 addToWorkspace = "ワークスペースに追加"
 addToWorkspaceCount = "{{count}} 件をワークスペースに追加"
@@ -3918,7 +3971,6 @@ backToMyFiles = "マイファイルに戻る"
 breadcrumbs = "フォルダパス"
 cancel = "キャンセル"
 classification = "分類"
-clearSearch = "検索をクリア"
 clearSelection = "選択をクリア"
 closeDetails = "詳細を閉じる"
 create = "作成"
@@ -3950,6 +4002,7 @@ downloadAll = "すべてダウンロード"
 downloadVersion = "このバージョンをダウンロード"
 dropOverlay = "ドロップしてアップロード"
 dropOverlaySub = "ファイルは最初はローカルに追加されます。フォルダに整理するには『Move to』または『Save to cloud』を使用してください。"
+duplicate = "Duplicate"
 file = "ファイル"
 fileInfo = "File info"
 fileMenu = "ファイルの操作"
@@ -3983,8 +4036,6 @@ resizeFolderTree = "フォルダツリーのサイズ変更（矢印キー、Shi
 save = "保存"
 saveToServer = "サーバーに保存"
 saveToServerDisabledHint = "このサーバーでサーバーへの保存は有効になっていません。管理者に有効化を依頼してください。"
-search = "検索"
-searchPlaceholder = "このフォルダとサブフォルダを検索"
 selectAll = "すべて選択"
 selectAllHint = "クリックですべて選択。ヒント: Ctrl（または Cmd）でファイルを個別に追加、Shift で範囲選択。"
 selectedCount = "{{count}} 件を選択"
@@ -4044,6 +4095,10 @@ title = "まだクラウドファイルがありません"
 hint = "アップロードせずに保存したファイルはここに残ります。ファイルをドロップして追加できます。"
 title = "ローカル専用のファイルはありません"
 
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
+
 [filesPage.empty.recent]
 hint = "開いたり編集したファイルがここに表示されます。"
 title = "まだ変更はありません"
@@ -4063,6 +4118,8 @@ cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "フォルダを削除できませんでした。"
 deleteFolderFailedDetail = "フォルダを削除できませんでした: {{message}}"
+downloadFailed = "Could not download the file."
+duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "フォルダの外観を更新できませんでした。"
 folderAppearanceFailedDetail = "フォルダの外観を更新できませんでした: {{message}}"
 moveFilesFailed = "ファイルを移動できませんでした。"
@@ -4112,6 +4169,11 @@ local = "ローカル"
 localHint = "このブラウザにのみ保存"
 shared = "共有"
 sharedHint = "リンクであなたと共有"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "古い順"
@@ -4168,6 +4230,7 @@ noFilesInStorageOpen = "ストレージに利用可能なファイルがあり�
 open = "開く"
 openFile = "ファイルを開く"
 openFiles = "複数ファイルを開く"
+selectFile = "Select {{name}}"
 selectFromStorage = "ストレージから選択"
 upload = "アップロード"
 uploadFile = "ファイルをアップロード"
@@ -4241,9 +4304,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "すべて保存済み"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "CSV の抽出に失敗しました"
 extractXlsxError = "XLSX の抽出に失敗しました"
+filled = "filled"
 flattenAfterFilling = "入力後にフラット化"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "必須"
 requiredFieldsError = "必須フィールドをすべて入力してください"
 rescanFields = "フィールドを再スキャン"
@@ -4795,9 +4863,6 @@ title = "画像をPDFに変換"
 [imageToPdf]
 tags = "conversion,img,jpg,picture,photo,psd,photoshop"
 
-[infoBanner]
-dismiss = "閉じる"
-
 [invite]
 acceptError = "アカウントの作成に失敗しました"
 accountFor = "次のユーザーのアカウントを作成:"
@@ -4979,6 +5044,34 @@ uploadSuccess = "アップロード成功！"
 uploadSuccessMessage = "画像の転送が完了しました。"
 validating = "セッションを検証中..."
 
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
+
 [mobileUpload]
 description = "スキャンして写真をアップロード。画像は自動で PDF に変換されます。"
 descriptionNoConvert = "モバイルデバイスから写真をアップロードするためにスキャンします。"
@@ -4997,8 +5090,13 @@ title = "モバイルからアップロード"
 tags = "マルチツール,マルチ操作,UI,クリック&ドラッグ,フロントエンド,クライアントサイド,インタラクティブ,操作可能,移動,削除,移行,分割"
 title = "PDFマルチツール"
 
-[navbar]
-search = "検索"
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
 
 [oauth.error]
 message = "認証に失敗しました。このウィンドウを閉じて、もう一度お試しください。"
@@ -5127,6 +5225,7 @@ activeFiles = "<strong>アクティブファイル</strong> ビューには、�
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "閉じる"
 cropSettings = "切り抜きたいファイルを選択したら、PDF を切り抜く範囲を指定するために切り抜きツールを設定できます。"
+dialogLabel = "Onboarding"
 fileCheckbox = "ファイルをクリックすると、処理対象として選択されます。バッチ処理のために複数選択も可能です。"
 fileReplacement = "変更されたファイルはワークベンチ内で元のファイルを自動的に置き換えるため、さらに別のツールに簡単に回せます。"
 filesButton = "クイックアクセスバーの <strong>ファイル</strong> ボタンから、ツールで使用する PDF をアップロードできます。"
@@ -5563,6 +5662,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs remaining"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5642,6 +5742,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -5970,6 +6071,11 @@ header = "PDFをPDF/Aに変換"
 tags = "アーカイブ,長期,標準,変換,保存,保全"
 title = "PDFをPDF/Aに変換"
 
+[pdfToPDFUA]
+header = "PDF To PDF/UA"
+tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+title = "PDF To PDF/UA"
+
 [pdfToPDFX]
 tags = "印刷,標準,変換,制作,プリプレス,アーカイブ"
 title = "PDF を PDF/X に"
@@ -6045,6 +6151,7 @@ small = "500 クレジット"
 xsmall = "100 クレジット"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "ニーズに合ったプランを選択"
 title = "利用可能なプラン"
 
@@ -6624,6 +6731,7 @@ reachedTitle = "月間利用額上限に達しました"
 title = "Stripe ポータルを開けませんでした"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} 件の無料PDFのうち使用済み"
 capSuffix_other = "{{allowance}} 件の無料PDFのうち使用済み"
 eyebrow = "Processor トライアル"
@@ -6873,6 +6981,32 @@ label = "Jira"
 description = "policy 実行時にドキュメントまたは通知をメール送信します。"
 label = "Mailgun"
 
+[portal.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[portal.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[portal.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[portal.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[portal.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[portal.connections.types.n8n.fields.token]
+label = "Header value"
+
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "処理済みドキュメントを Nextcloud に保存します。"
@@ -7077,11 +7211,6 @@ title = "公式 SDKs"
 beta = "Beta"
 deprecated = "非推奨"
 
-[portal.docs.search]
-empty = "一致するドキュメントはありません"
-placeholder = "ドキュメントを検索"
-results = "{{count}} 件の結果"
-
 [portal.docs.skills]
 eyebrow = "スキル"
 lead = "エージェントが単一ツールとして呼び出す、バンドルされた名前付き機能です。各スキルは評価付きの決定論的な操作チェーンです。"
@@ -7180,11 +7309,11 @@ editorAction = "エディター"
 empty = "このフィルターに一致するドキュメントはありません。"
 rowActions = "行のアクション"
 sensitiveLabel = "機密"
-sensitiveTitle = "機密 — アクセスが必要"
 
 [portal.documents.table.columns]
 action = "パイプライン / アクション"
 document = "ドキュメント"
+labels = "Labels"
 product = "製品"
 status = "ステータス"
 time = "時刻"
@@ -7200,6 +7329,7 @@ host = "ホスト"
 lastSeen = "最終確認"
 region = "リージョン"
 status = "ステータス"
+target = "Target"
 version = "バージョン"
 
 [portal.editorAdmin.health.empty]
@@ -7273,6 +7403,56 @@ running = "実行中"
 description = "このビューで予期しないエラーが発生しました。再試行するか、サイドバーから別のセクションを選択してください。"
 retry = "再試行"
 title = "このページで問題が発生しました"
+
+[portal.failures]
+fromSource = "From source {{source}}"
+occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.debug]
+copyJson = "Copy JSON"
+dismissAll = "Dismiss all ({{total}})"
+dismissing = "Dismissing..."
+hideJson = "Hide raw JSON ({{total}})"
+refresh = "Refresh failures"
+showJson = "Show raw JSON ({{total}})"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "戻る"
@@ -7380,11 +7560,6 @@ cancel = "キャンセル"
 confirm = "キーを取り消す"
 title = "API キーを取り消す"
 
-[portal.infrastructure.attestationLabel]
-attested = "証明済み"
-inScope = "対象範囲内"
-notApplicable = "N/A"
-
 [portal.infrastructure.audit]
 filterAriaLabel = "カテゴリで監査イベントをフィルター"
 heading = "監査ログ"
@@ -7456,11 +7631,6 @@ info = "情報"
 success = "成功"
 warning = "警告"
 
-[portal.infrastructure.certLabel]
-certified = "認定済み"
-inProgress = "進行中"
-notStarted = "未開始"
-
 [portal.infrastructure.createKey]
 cancel = "キャンセル"
 createKey = "キーを作成"
@@ -7474,237 +7644,9 @@ subtitleCreated = "今すぐこのシークレットをコピーしてくださ�
 title = "API キーを作成"
 titleCreated = "キーが作成されました"
 
-[portal.infrastructure.deployLabel]
-live = "ライブ"
-queued = "キュー済み"
-rolledBack = "ロールバック済み"
-rolling = "ロールアウト中"
-
-[portal.infrastructure.deployments]
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[portal.infrastructure.deployments.deployColumns]
-deployedBy = "デプロイ者"
-environment = "環境"
-product = "製品"
-status = "ステータス"
-version = "バージョン"
-when = "日時"
-
-[portal.infrastructure.deployments.recent]
-heading = "最近のデプロイメント"
-subheading = "製品と環境全体の最新のロールアウト。"
-
-[portal.infrastructure.deployments.regionColumns]
-instances = "インスタンス"
-latency = "レイテンシ"
-load = "負荷"
-p99 = "P99"
-region = "リージョン"
-status = "ステータス"
-throughput = "スループット"
-uptime = "稼働時間"
-version = "バージョン"
-
-[portal.infrastructure.deployments.regions]
-heading = "リージョン"
-subheading = "デプロイ済みのすべての Stirling リージョンのライブ健全性 — レイテンシ、負荷、ロールアウトバージョン。"
-
-[portal.infrastructure.deployments.regions.empty]
-description = "ワークスペースがプロビジョニングされると、デプロイ済みリージョンがここに表示されます。"
-title = "デプロイ済みリージョンはありません"
-
 [portal.infrastructure.keyLabel]
 active = "アクティブ"
 revoked = "取り消し済み"
-
-[portal.infrastructure.modelLabel]
-active = "アクティブ"
-degraded = "低下"
-disabled = "無効"
-
-[portal.infrastructure.models]
-heading = "モデル"
-msValue = "{{value}} ms"
-subheading = "ワークスペース全体のドキュメント処理を支えるモデルカタログとルーティング。"
-
-[portal.infrastructure.models.byom]
-description = "オンプレミスまたはセルフホスト型モデルを登録し、データレジデンシー制約のある処理のためにリージョンに固定します。"
-title = "独自モデルを持ち込む"
-
-[portal.infrastructure.models.catalogue]
-heading = "カタログ"
-sub = "ワークスペースで利用可能なマネージドモデル。ライブのレイテンシとコスト付き。"
-subEnterprise = "マネージド、持ち込み、オンプレミスモデル — リージョンごとの固定が利用可能。"
-
-[portal.infrastructure.models.catalogue.empty]
-description = "ワークスペースのカタログ内のモデルがここに表示されます。"
-title = "利用可能なモデルはありません"
-
-[portal.infrastructure.models.columns]
-cost = "コスト"
-latency = "レイテンシ"
-load = "負荷"
-model = "モデル"
-status = "ステータス"
-type = "種類"
-version = "バージョン"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/call"
-perThousand = "{{price}}/1k"
-
-[portal.infrastructure.models.metrics]
-activeModels = "アクティブモデル"
-avgLatency = "平均レイテンシ"
-included = "含まれる"
-monthlySpend = "月間モデル費用"
-
-[portal.infrastructure.models.routing]
-empty = "ルーティングルールは設定されていません。"
-heading = "ルーティングルール"
-sub = "各操作をどのモデルが処理するか。より限定的なルールに一致しない場合はデフォルトが適用されます。"
-subLocked = "操作を特定のモデルにルーティング — 有料プランで利用可能です。"
-
-[portal.infrastructure.models.routing.lockedBanner]
-description = "Pro にアップグレードすると、各操作とドキュメントタイプをどのモデルが処理するかを制御できます。"
-title = "モデルルーティングは有料機能です"
-
-[portal.infrastructure.models.routingColumns]
-default = "デフォルト"
-docType = "ドキュメントタイプ"
-modelForAria = "{{operation}} のモデル"
-operation = "操作"
-routedTo = "ルーティング先"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "分類"
-extraction = "抽出"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "低下"
-down = "停止"
-healthy = "正常"
-
-[portal.infrastructure.security.access.byok]
-description = "独自の KMS からキーを提供します。Stirling はそのキーで暗号化しますが、引き続き読み取り可能です。"
-label = "独自キーを持ち込む（BYOK）"
-
-[portal.infrastructure.security.access.hyok]
-description = "キーは KMS から外に出ません。Stirling は暗号文のみを保持します。"
-label = "独自キーを保持する（HYOK）"
-
-[portal.infrastructure.security.access.stirling]
-description = "Stirling が暗号化キーを管理します。最も簡単で、ユーザー側のキー運用は不要です。"
-label = "Stirling 保持のキー"
-
-[portal.infrastructure.security.accessPolicy]
-heading = "ドキュメントアクセスポリシー"
-subheading = "保存中の処理済みドキュメントを誰が復号できるかを制御します。"
-
-[portal.infrastructure.security.attestations]
-heading = "コンプライアンス証明"
-noReport = "利用可能なレポートはありません"
-subheading = "フレームワークごとの監査態勢。証明済み統制についてはレポートを利用できます。"
-viewReport = "レポートを表示 →"
-
-[portal.infrastructure.security.compliance]
-heading = "コンプライアンス"
-subheading = "Stirling プラットフォームを対象とする証明と認証。"
-
-[portal.infrastructure.security.empty]
-description = "ワークスペースのセキュリティ設定がここに表示されます。"
-title = "セキュリティ態勢を利用できません"
-
-[portal.infrastructure.security.hyokBanner]
-description = "HYOK では、暗号化キーが KMS から外に出ることはありません。Stirling は暗号文のみを保存および処理し、いつでも取り消すことができます。"
-title = "Stirling はドキュメントを復号できません"
-
-[portal.infrastructure.security.ipAllowlist]
-empty = "設定された IP 範囲はありません — すべての IP が許可されています。"
-heading = "IP allowlist"
-sub = "API アクセスはこれらの CIDR 範囲に制限されています。"
-subLocked = "API アクセスを既知の IP 範囲に制限 — 有料プランで利用可能です。"
-
-[portal.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Pro にアップグレードすると、API アクセスを特定のネットワークに制限できます。"
-title = "IP allowlist は有料機能です"
-
-[portal.infrastructure.security.ipColumns]
-added = "追加日"
-addedBy = "追加者"
-cidr = "CIDR"
-label = "ラベル"
-
-[portal.infrastructure.security.keyManagement]
-algorithm = "アルゴリズム"
-heading = "暗号化キー管理"
-keyId = "キー識別子"
-lastRotated = "最終ローテーション"
-rotateKey = "キーをローテーション"
-rotationPolicy = "ローテーションポリシー"
-subheading = "保存中のドキュメントを暗号化するキーの管理 — 誰が復号できるか、キーをどのようにローテーションするか。"
-
-[portal.infrastructure.security.managedBanner]
-description = "Bring-your-own-key（BYOK）と hold-your-own-key（HYOK）の管理は Enterprise で利用できます。独自の KMS からキーを提供するにはアップグレードしてください。"
-title = "お使いのプランではキーは Stirling によって管理されます"
-
-[portal.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "アジア太平洋"
-
-[portal.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR データ境界"
-label = "欧州連合"
-
-[portal.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "米国"
-
-[portal.infrastructure.security.residencyHeader]
-heading = "データレジデンシー"
-subheading = "ドキュメントが保存および処理される場所。"
-
-[portal.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} 使用済み"
-
-[portal.infrastructure.storage.empty]
-description = "接続されたストレージと使用量がここに表示されます。"
-title = "ストレージが設定されていません"
-
-[portal.infrastructure.storage.lifecycle]
-active = "アクティブ"
-activeRange = "0–{{value}}d"
-archived = "アーカイブ済み"
-coldStorage = "コールドストレージ"
-deleted = "削除済み"
-never = "なし"
-purged = "パージ済み"
-
-[portal.infrastructure.storage.providers]
-connect = "接続"
-connected = "接続済み"
-heading = "接続済みプロバイダー"
-subheading = "処理済みアーティファクトの書き込み先。"
-
-[portal.infrastructure.storage.retention]
-heading = "保持"
-subheading = "ライフサイクル削除までアーティファクトを保持する期間。"
-windowLabel = "デフォルトの保持期間"
-
-[portal.infrastructure.storage.retentionOption]
-days_one = "{{count}} 日"
-days_other = "{{count}} 日"
-never = "削除しない"
-
-[portal.infrastructure.storage.totalUsage]
-heading = "合計使用量"
-progressLabel = "使用済みストレージ"
-subheading = "接続済みプロバイダー全体で消費されたストレージ。"
 
 [portal.infrastructure.tabs]
 apiKeys = "API キー"
@@ -7715,11 +7657,9 @@ security = "セキュリティ"
 storage = "ストレージ"
 
 [portal.integrations]
-addAnother = "別のものを追加"
 availableHeading = "利用可能"
 comingSoonHeading = "近日対応予定"
 connect = "接続"
-connectedHeading = "接続済み"
 connectionCount_one = "{{count}} 件の接続"
 connectionCount_other = "{{count}} 件の接続"
 customApi = "カスタム API"
@@ -7736,6 +7676,10 @@ notify = "通知"
 security = "セキュリティ"
 signing = "署名"
 storage = "ストレージ"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "接続済み"
@@ -7767,7 +7711,6 @@ integrations = "連携"
 pipelines = "パイプライン"
 policies = "ポリシー"
 procurement = "調達"
-settings = "設定"
 sources = "ソース"
 usage = "使用量と請求"
 users = "ユーザー"
@@ -7784,7 +7727,7 @@ title = "パイプライン"
 newPipeline = "新しいパイプライン"
 
 [portal.pipelines.builder]
-addStep = "ツールを追加"
+activate = "Activate"
 back = "パイプラインに戻る"
 cannotFollow = "{{produced}} を受け取れません"
 chooseAccount = "アカウントを選択"
@@ -7792,28 +7735,38 @@ chooseDestination = "宛先を選択"
 chooseOperation = "このステップの処理を選択"
 chooseSource = "ソースを選択"
 discard = "変更を破棄"
-enabled = "有効"
 inputs = "入力"
 inputSource = "入力ソース"
 inputTrigger = "トリガー"
 keepEditing = "編集を続ける"
+moreActions = "More actions"
 needsConfiguring = "設定が必要です"
-needsUpload = "アップロードされたファイルが必要"
-noSources = "まだ接続済みのソースがありません。入力として使用するには作成してください。"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 noToolMatches = "検索に一致するツールはありません。"
-pipelineSettings = "パイプライン設定"
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "ツールを検索"
-selectToolBody = "ツールを追加してパイプラインを構築します。"
-selectToolTitle = "ツールはまだありません"
 sendToSystem = "別のシステムへ送信"
 stepsIncompatible = "これらのステップは、前のステップが生成するものでは実行できません: {{tools}}。"
 stepsNeedSetup = "保存する前に、これらのステップの設定がまだ必要です: {{tools}}。"
-toolSettings = "ツール設定"
+supportingFiles = "Supporting files"
+testRun = "Test with a file"
 unknownStep = "認識できない操作です。そのまま保持されました。"
 unsavedBody = "未保存の変更があります。離れる前に保存しますか、それとも破棄しますか？"
 unsavedTitle = "未保存の変更"
-uploadUnsupported = "アップロードされたファイルはまだパイプラインでサポートされていないため、これらのステップは保存できません: {{tools}}。"
 usesDefaults = "デフォルト設定で実行"
+viewDefinition = "View definition"
+
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "前のステップからのすべてのファイルを結合します"
@@ -7825,30 +7778,35 @@ undeclared-operation = "このステップが受け付けるものを確認で�
 
 [portal.pipelines.composer]
 addTool = "ツールを追加"
-cancel = "キャンセル"
-chainEmpty = "ツールを追加してパイプラインの構築を開始します。"
 create = "パイプラインを作成"
+createPaused = "Create paused"
 editingUnsupported = "これらのツールパラメーターを編集用に表示することはまだサポートされていません。"
-moveDown = "下へ移動"
-moveUp = "上へ移動"
+editSource = "Edit source"
 name = "名前"
 namePlaceholder = "例: Redaction sweep"
 noToolSettings = "このツールには設定可能な項目がありません。"
-operations_one = "操作（{{count}}）"
-operations_other = "操作（{{count}}）"
 output = "出力"
-removeStep = "操作を削除"
 save = "変更を保存"
 scheduleEvery = "実行間隔"
-sources = "ソース"
-sourcesLoading = "ソースを読み込み中..."
 trigger = "トリガー"
 triggerManual = "手動のみ"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "日"
 hours = "時間"
 minutes = "分"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\" を削除しますか？この操作は元に戻せません。"
@@ -7867,6 +7825,37 @@ connectSource = "ソースを接続"
 description = "最初のパイプラインを作成します: 実行対象のソースを選び、操作を連結し、出力先を選択します。"
 title = "パイプラインはまだありません"
 
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
+
 [portal.pipelines.kpi]
 active = "アクティブ"
 paused = "一時停止中"
@@ -7879,7 +7868,6 @@ completed_one = "実行が完了しました。"
 completed_other = "{{count}} 件の実行がすべて完了しました。"
 empty = "実行するものがありません: ソースに処理対象のドキュメントがありませんでした。"
 failed = "実行に失敗しました: {{error}}"
-historyCleared = "履歴をクリアしました。次回の実行では、現在ソース内にあるすべてを再処理します。"
 inFlight = "新しく実行するものがありません: 以前の実行のドキュメントがまだ処理中です。"
 parked_one = "実行するものがありません: {{count}} 件のドキュメントは以前に失敗して保留中です。原因を修正してから、履歴をクリアして再試行してください。"
 parked_other = "実行するものがありません: {{count}} 件のドキュメントは以前に失敗して保留中です。原因を修正してから、履歴をクリアして再試行してください。"
@@ -7895,6 +7883,7 @@ name = "パイプライン"
 sources = "ソース"
 status = "ステータス"
 steps = "ステップ"
+trigger = "Trigger"
 
 [portal.pipelines.trigger]
 folder-watch = "フォルダー監視"
@@ -8208,6 +8197,24 @@ label = "Jira 課題に添付"
 [portal.policies.operations.mailgunEmail]
 description = "処理済みドキュメントを添付ファイルとして送信します。"
 label = "ドキュメントをメール送信（Mailgun）"
+
+[portal.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[portal.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[portal.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[portal.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [portal.policies.operations.nextcloudUpload]
 description = "処理済みドキュメントをフォルダーに書き込みます。"
@@ -8683,16 +8690,6 @@ maxed = "上限に達しました"
 subtitle = "無料トライアルは {{date}} まで有効です。カードは不要です。"
 title = "Enterprise トライアル"
 
-[portal.search]
-ariaLabel = "検索"
-placeholder = "Stirling を検索 — エンドポイント、パイプライン、ドキュメント…"
-
-[portal.search.empty]
-noActionsDescription = "利用可能になると、クイックアクションがここに表示されます。"
-noActionsTitle = "クイックアクションはありません"
-noMatches = "「{{query}}」に一致するものはありません"
-noMatchesDescription = "別のキーワードを試すか、カタログを参照してください。"
-
 [portal.settings.groups]
 admin = "管理者"
 
@@ -8743,10 +8740,6 @@ cancel = "キャンセル"
 confirm = "削除"
 title = "ソースを削除しますか？"
 
-[portal.sources.empty]
-description = "フォルダー（まもなくクラウドストレージも）を接続して、ポリシーがドキュメントを取得できる場所を用意します。"
-title = "まだソースが接続されていません"
-
 [portal.sources.kpi]
 inUse = "使用中"
 total = "接続"
@@ -8785,6 +8778,7 @@ unused = "未使用"
 documents = "ドキュメント"
 source = "ソース"
 status = "ステータス"
+type = "Type"
 usedBy = "ポリシー"
 
 [portal.sources.types.box]
@@ -9980,9 +9974,6 @@ title = "ポリシーとプライバシー"
 [settings.preferences]
 title = "環境設定"
 
-[settings.search]
-placeholder = "設定ページを検索..."
-
 [settings.security]
 description = "アカウントを安全に保つため、パスワードを更新してください。"
 title = "セキュリティ"
@@ -10128,6 +10119,7 @@ last = "最後のページ"
 maintainRatio = "アスペクト比を維持を切替え"
 next = "次のページ"
 noSavedSigs = "保存された署名が見つかりません"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "個人署名"
 previous = "前のページ"
 redo = "やり直す"
@@ -10166,6 +10158,7 @@ backgroundRemovalFailedTitle = "背景の削除に失敗"
 hint = "署名の PNG または JPG 画像をアップロードしてください"
 label = "署名画像をアップロード"
 placeholder = "画像ファイルを選択"
+previewAlt = "Current image signature"
 processing = "画像を処理中..."
 removeBackground = "白背景を削除（透過化）"
 
@@ -10178,6 +10171,17 @@ resumeHint = "再開してクリックで署名を追加します。"
 saved = "上の保存済み署名を選択し、PDF上の任意の場所をクリックして配置します。"
 text = "上で氏名を入力した後、PDF 上の任意の場所をクリックして署名を配置します。"
 title = "署名の追加方法"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "署名を移動"
@@ -10625,6 +10629,23 @@ title = "サーバーにアップロード"
 updateButton = "サーバー上で更新"
 uploadButton = "サーバーにアップロード"
 
+[superSearch]
+all = "All"
+ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
+hint = "Type to search"
+placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
+
+[superSearch.group]
+docs = "Docs"
+files = "Files"
+pages = "Pages"
+processor = "Processor"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -10774,7 +10795,6 @@ goBack = "戻る"
 pdfTools = "PDF ツール"
 placeholder = "ツールを選択して開始"
 premiumFeature = "プレミアム機能:"
-searchTools = "ツールを検索"
 toolsHeader = "ツール"
 viewAllTools = "すべてのツールを表示"
 
@@ -10821,6 +10841,9 @@ pageFormatting = "ページ整形"
 removal = "削除"
 signing = "署名"
 verification = "検証"
+
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
 
 [tools]
 noSearchResults = "ツールが見つかりません"
@@ -10979,6 +11002,13 @@ approver = "ポリシーを承認"
 editor = "エディター"
 processor = "プロセッサー"
 
+[users.columns]
+capabilities = "Capabilities"
+email = "Email"
+person = "Person"
+role = "Role"
+status = "Status"
+
 [users.confirm]
 cancelInviteBody = "{{email}} への招待をキャンセルしますか？現在のリンクでは参加できなくなります。"
 cancelInviteTitle = "招待をキャンセル"
@@ -10998,10 +11028,8 @@ title = "まだメンバーはいません"
 addToTeam = "チームに追加"
 guestCount = "{{count}}人のゲスト"
 guests = "ゲスト"
-guestsDesc = "外部共同作業者。共有された範囲に限定されます。エディターのみ。"
 ledBy = "{{owner}} が主導"
 org = "組織"
-orgDesc = "組織全体の権限とポリシー承認権を持つオーナー"
 owners = "{{count}}人のオーナー"
 team = "{{name}} チーム"
 teamMeta = "{{count}}人"
@@ -11041,12 +11069,14 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "{{who}} による招待"
 cancel = "キャンセル"
-count = "{{count}}件保留中"
-desc = "まだ参加していない招待済みのユーザーです。承諾するまでシートを保持します。"
 expiresInDays_one = "{{count}}日後に期限切れ"
 expiresInDays_other = "{{count}}日後に期限切れ"
 expiresToday = "今日期限切れ"
 title = "保留中の招待"
+
+[users.invites.columns]
+expires = "Expires"
+invitee = "Invitee"
 
 [users.loadError]
 description = "バックエンドへの接続で問題が発生したか、アクセス権がありません。もう一度お試しください。"
@@ -11237,12 +11267,15 @@ searchPlaceholder = "添付ファイルを検索"
 title = "添付ファイル"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "ブックマークのタイトル"
 bookmarkTitleRequired = "ブックマークのタイトルは必須です"
 closeSidebar = "ブックマークのサイドバーを閉じる"
 collapseAll = "すべてのブックマークを折りたたむ"
+empty = "No bookmarks in this document"
 expandAll = "すべてのブックマークを展開"
 searchPlaceholder = "ブックマークを検索"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "コメントを追加"
@@ -11264,10 +11297,12 @@ locateAnnotation = "ドキュメント内で表示"
 moreActions = "その他の操作"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "ページ {{page}}"
 placingHint = "配置するにはページをクリック…（キャンセル）"
 removeCommentOnly = "コメントのみ削除"
 saveReply = "返信を保存"
+searchPlaceholder = "Search comments"
 title = "コメント"
 typeComment = "コメント"
 typeInsertText = "テキストを挿入"
@@ -11290,6 +11325,7 @@ unsavedDesc = "未保存の変更があります"
 closeSidebar = "レイヤーのサイドバーを閉じる"
 hideAll = "すべてのレイヤーを非表示"
 showAll = "すべてのレイヤーを表示"
+title = "Layers"
 
 [viewer.link]
 delete = "リンクを削除"
@@ -11646,6 +11682,7 @@ exitRedaction = "墨消しモードを終了"
 exportAll = "PDF をエクスポート"
 exportSelected = "選択したページをエクスポート"
 formFill = "フォーム入力"
+hideToolbar = "Hide toolbar"
 multiTool = "マルチツール"
 panMode = "パンモード"
 print = "PDF を印刷"
@@ -11666,6 +11703,7 @@ selectAll = "すべて選択"
 selectByNumber = "ページ番号で選択"
 selectLanguage = "言語を選択"
 share = "共有"
+showToolbar = "Show toolbar"
 toggleAnnotations = "注釈の表示を切り替え"
 toggleAttachments = "添付ファイルを切り替え"
 toggleBookmarks = "ブックマークを切り替え"
