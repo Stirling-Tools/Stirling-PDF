@@ -41,7 +41,7 @@ false = "Usann"
 fileNotSavedToDisk = "Ikke lagret til disk"
 fileSavedToDisk = "Fil lagret til disk"
 fileSelected = "Valgt: {{filename}}"
-filesSelected = "filer valgt"
+filesSelected = "{{count}} filer"
 font = "Skrifttype"
 fontSizeTooltip = "Størrelse på sidetalltekst i punkter. Større tall gir større tekst."
 fontTypeTooltip = "Skrifttype for sidetall. Velg basert på dokumentstilen din."
@@ -3969,6 +3969,7 @@ back = "Tilbake"
 backToFolder = "Tilbake til {{folder}}"
 backToMyFiles = "Tilbake til Mine filer"
 breadcrumbs = "Mappesti"
+bulkActions = "Handlinger"
 cancel = "Avbryt"
 classification = "Klassifisering"
 clearSelection = "Tøm utvalg"
@@ -4142,6 +4143,11 @@ totalSize = "Total størrelse"
 type = "Type"
 versionHistory = "Versjonsforløp"
 
+[filesPage.filters]
+activeCount = "{{count}} filtre aktive"
+clearAll = "Fjern filtre"
+label = "Filtre"
+
 [filesPage.folderName]
 cancel = "Avbryt"
 error = "Kunne ikke lagre mappe. Prøv igjen."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sorter filer"
 modifiedAsc = "Eldste først"
 modifiedDesc = "Nyeste først"
 nameAsc = "Navn A→Å"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Alt lagret"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Kunne ikke bruke endringene"
 extractCsvError = "Kunne ikke trekke ut CSV"
 extractXlsxError = "Kunne ikke trekke ut XLSX"
 filled = "filled"
 flattenAfterFilling = "Flate ut etter utfylling"
+goToPage = "Gå til denne siden"
 noFields = "No fillable form fields found in this PDF."
+page = "Side"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl"
@@ -4318,7 +4328,82 @@ rescanFields = "Skann felter på nytt"
 rescanFormFields = "Skann skjemafelter på nytt"
 save = "Lagre"
 saveShortcut = "Ctrl+S for å lagre"
+skippedEdits_one = "1 endring kunne ikke brukes:"
+skippedEdits_other = "{{count}} endringer kunne ikke brukes:"
+skippedEditsTruncated = "{{count}} flere ikke oppført."
 unsavedChanges = "Ulagrede endringer"
+
+[formFill.create]
+commit = "Legg til {{count}} felt i PDF"
+empty = "Ingen felt tegnet ennå."
+failed = "Kunne ikke legge til felt"
+goToField = "Gå til dette feltet"
+hint = "Velg en felttype, og tegn den deretter på siden."
+placing = "Tegn et {{type}}-felt på siden. Trykk Esc for å stoppe."
+preview = "Hold inne for forhåndsvisning"
+previewHelp = "Hold inne for å se feltene slik de vil se ut når de er lagt til, uten redigeringsomrissene."
+removeField = "Fjern felt"
+
+[formFill.editor]
+action = "Knappehandling"
+actionHelp = "Hva knappen gjør når den klikkes."
+actionNone = "Ingen"
+actionPrint = "Skriv ut"
+actionReset = "Tilbakestill skjema"
+actionSubmit = "Send til URL"
+actionUri = "Åpne URL"
+actionUrl = "URL"
+actionUrlHelp = "Adressen knappen åpner eller sender til."
+addOption = "Legg til alternativ"
+caption = "Knappetekst"
+captionHelp = "Teksten som vises på knappen."
+defaultValue = "Standardverdi"
+defaultValueHelp = "Hva feltet inneholder før noen fyller det ut. La stå tomt for et tomt felt."
+fontSize = "Skriftstørrelse"
+fontSizeHelp = "Tekststørrelse inne i feltet. La stå tomt for å la leseren tilpasse størrelsen."
+label = "Etikett"
+labelHelp = "Teksten som vises til den som fyller ut skjemaet. La den stå tom for å bruke feltnavnet som reserve."
+maxLength = "Maks lengde (comb)"
+maxLengthHelp = "Begrenser hvor mange tegn som får plass, tegnet som jevnt fordelte bokser."
+multiline = "Flere linjer"
+multilineHelp = "Tillater mer enn én tekstlinje og bryter ved feltets kant."
+multiSelect = "Tillat flere valg"
+multiSelectHelp = "Lar mer enn ett alternativ velges samtidig."
+name = "Feltnavn"
+nameHelp = "Feltets interne navn. Brukes ved eksport av data eller utfylling av skjemaet fra et annet system, så hold det unikt og uten mellomrom."
+optionGap = "Avstand mellom alternativer"
+optionGapHelp = "Avstand mellom knapper, i punkter. La stå tomt for å fordele dem jevnt nedover boksen."
+optionPlaceholder = "Alternativ {{n}}"
+options = "Alternativer"
+optionsEmpty = "Legg til minst ett alternativ."
+optionsHelp = "Valgene som tilbys i listen. Hvert lagres slik det skrives, så hold dem korte og tydelige."
+optionSize = "Alternativstørrelse"
+optionSizeHelp = "Bredde og høyde for hver knapp, i punkter. La stå tomt for å tilpasse dem til boksen du tegnet."
+readOnly = "Skrivebeskyttet"
+readOnlyHelp = "Viser en verdi, men hindrer redigering."
+removeOption = "Fjern alternativ"
+required = "Obligatorisk"
+requiredHelp = "Skjemaet kan ikke sendes inn før dette feltet er fylt ut."
+signatureNote = "Kun plassholder – du signerer ikke her. Den markerer hvor en signatur hører hjemme, slik at en PDF-signerer (Adobe Acrobat, en signeringstjeneste osv.) plasserer signaturen på dette stedet når dokumentet signeres."
+tooltip = "Verktøytips"
+tooltipHelp = "Hintet som vises når noen holder pekeren over feltet i en PDF-leser."
+type = "Type"
+typeHelp = "Hvilken type felt dette er. Hvis du endrer det, bygges feltet på nytt, så den gjeldende verdien beholdes ikke."
+
+[formFill.mode]
+create = "Opprett"
+fill = "Fyll ut"
+label = "Skjemaredigeringsmodus"
+modify = "Endre"
+
+[formFill.modify]
+commit = "Lagre {{count}} endring(er)"
+delete = "Slett"
+empty = "Denne PDF har ingen skjemafelt ennå."
+failed = "Kunne ikke lagre endringer"
+groupSizeHint = "Bruk alternativstørrelse"
+hint = "Velg et felt for å redigere egenskapene, dra det på siden eller slett det."
+restore = "Gjenopprett"
 
 [formFill.sidebar]
 close = "Lukk sidepanel"
@@ -4584,6 +4669,10 @@ title = "Endre Metadata"
 desc = "Endre dokumentbegrensninger og tillatelser"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Endre tillatelser"
+
+[home.classify]
+desc = "Identifiser hvilken type dokument dette er, og merk det."
+title = "Klassifiser"
 
 [home.compare]
 desc = "Sammenligner og viser forskjellene mellom to PDF-dokumenter"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Ingenting å rapportere."
+handoffUnavailable = "Denne nettleseren lar ikke behandleren overføre dokumentet til redigeringsprogrammet. Åpne det fra redigeringsprogrammet i stedet."
+noDocumentLinked = "Denne feilen er ikke knyttet til et bestemt dokument, så det er ingenting å åpne her."
+notOnThisDevice = "Dette dokumentet er ikke på denne enheten, så det kan ikke åpnes her."
+occurrences = "{{count}} ganger"
+open = "Varsler"
+title = "Varsler"
+unread = "Ulest"
+
+[notifications.action]
+failed = "Det fungerte ikke. Prøv igjen om et øyeblikk."
+unavailable = "Ikke tilgjengelig for dette varselet."
+
+[notifications.detail]
+copied = "Kopiert"
+copy = "Kopier feil"
+less = "Vis mindre"
+more = "Vis hele meldingen"
+
+[notifications.section]
+earlier = "Tidligere"
+new = "Nye"
 
 [oauth.error]
 message = "Autentiseringen var ikke vellykket. Du kan lukke dette vinduet og prøve igjen."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "av {{allowance}} gratis PDF-er brukt"
 capSuffix_other = "av {{allowance}} gratis PDF-er brukt"
 eyebrow = "Processor-prøveperiode"
-statusLabel_one = "{{remaining}} igjen"
-statusLabel_other = "{{remaining}} igjen"
+statusLabel_one = "{{used}} brukt"
+statusLabel_other = "{{used}} brukt"
 sub = "Bruk PDF Editor gratis. Betal for å behandle PDF-er automatisk."
 title_one = "Behandle {{allowance}} PDF-er gratis"
 title_other = "Behandle {{allowance}} PDF-er gratis"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Vis fil"
+viewInProcessor = "Vis i behandler"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Denne feilen ble ikke registrert mot et bestemt dokument, så det er ingenting å åpne her."
+unattended = "Denne filen ble matet inn av en mappe, bucket eller webhook, så ingen nettleser holder den for åpning."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Kilder"
 connectSource = "Koble til kilde"
 
 [processor.sources.builder]
+advanced = "Avansert"
 back = "Tilbake til kilder"
+backToSource = "Tilbake til kildeoppsett"
 backToTypes = "Alle kildetyper"
 cancel = "Avbryt"
 chooseHint = "Velg hvor dokumenter kommer fra. Nedtonede tilkoblinger er på vei."
@@ -8729,7 +8848,6 @@ create = "Opprett kilde"
 createTitle = "Koble til en kilde"
 delete = "Slett"
 editTitle = "Rediger kilde"
-enabled = "Aktivert"
 save = "Lagre endringer"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: behandle hver fil én gang"
 snapshot = "Snapshot: les mappen på nytt ved hver kjøring"
 
 [processor.sources.networkFields.recursive]
+helperText = "Inkluder undermapper hvis filene dine er organisert i nestede mapper, eller overvåk bare toppnivået."
 label = "Mappedybde"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Størrelse, dato og innholdskontroll"
 stat = "Størrelse og endringsdato"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Om den opprinnelige filen skal bli liggende etter at den er behandlet. Hvis den opprinnelige filen blir liggende, behandles den på nytt neste gang pipeline skanner kilden."
 label = "Lesemodus"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Konsumer: behandle hver fil én gang"
 snapshot = "Snapshot: les mappen på nytt ved hver kjøring"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Inkluder undermapper hvis filene dine er organisert i nestede mapper, eller overvåk bare toppnivået."
 label = "Mappedybde"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoin
 expired = "Økten din har utløpt. Vennligst oppdater siden og prøv igjen."
 
 [settings]
+backToSections = "Alle innstillinger"
 close = "Lukk"
+title = "Innstillinger"
 
 [settings.ai]
 documents = "Dokumenter og RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Søk"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Søk i verktøy..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Avansert formatering"
+ai = "AI"
 automation = "Automatisering"
 developerTools = "Utviklerverktøy"
 documentReview = "Dokumentgjennomgang"
@@ -11335,8 +11460,11 @@ columnDefault = "Kolonne {{index}}"
 convertToPdf = "Konverter til PDF"
 csvStats = "{{rows}} rader · {{columns}} kolonner · {{size}}"
 emptyFile = "Tom fil"
+htmlHidePreview = "Skjul forhåndsvisning"
 htmlPreview = "HTML-forhåndsvisning"
+htmlPreviewMobileHidden = "HTML-sider er utformet for skrivebordsbredder, så forhåndsvisningen er av som standard her."
 htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressurser kan hende ikke lastes · {{size}}"
+htmlShowPreview = "Vis forhåndsvisning likevel"
 invalidJson = "Ugyldig JSON — viser rått innhold"
 lineNumbers = "Linjenumre"
 loading = "Laster ..."
@@ -11683,6 +11811,7 @@ exportAll = "Eksporter PDF"
 exportSelected = "Eksporter valgte sider"
 formFill = "Fyll ut skjema"
 hideToolbar = "Hide toolbar"
+moreActions = "Flere handlinger"
 multiTool = "Multiverktøy"
 panMode = "Panoreringsmodus"
 print = "Skriv ut PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Velg alle"
 selectByNumber = "Velg etter sidenummer"
 selectLanguage = "Velg språk"
 share = "Del"
+showAllTools = "Vis alle verktøy"
+showFewerTools = "Skjul verktøylinje"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Veksle synlighet for annoteringer"
 toggleAttachments = "Veksle vedlegg"

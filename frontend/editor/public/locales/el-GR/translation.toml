@@ -41,7 +41,7 @@ false = "Ψευδές"
 fileNotSavedToDisk = "Δεν αποθηκεύτηκε στον δίσκο"
 fileSavedToDisk = "Το αρχείο αποθηκεύτηκε στον δίσκο"
 fileSelected = "Επιλέχθηκε: {{filename}}"
-filesSelected = "αρχεία επιλεγμένα"
+filesSelected = "{{count}} αρχεία"
 font = "Γραμματοσειρά"
 fontSizeTooltip = "Μέγεθος του κειμένου του αριθμού σελίδας σε σημεία. Μεγαλύτεροι αριθμοί δημιουργούν μεγαλύτερο κείμενο."
 fontTypeTooltip = "Οικογένεια γραμματοσειράς για τους αριθμούς σελίδων. Επιλέξτε σύμφωνα με το στυλ του εγγράφου σας."
@@ -3969,6 +3969,7 @@ back = "Πίσω"
 backToFolder = "Πίσω στον φάκελο {{folder}}"
 backToMyFiles = "Πίσω στα Αρχεία μου"
 breadcrumbs = "Διαδρομή φακέλου"
+bulkActions = "Ενέργειες"
 cancel = "Άκυρο"
 classification = "Ταξινόμηση"
 clearSelection = "Εκκαθάριση επιλογής"
@@ -4142,6 +4143,11 @@ totalSize = "Συνολικό μέγεθος"
 type = "Τύπος"
 versionHistory = "Πορεία εκδόσεων"
 
+[filesPage.filters]
+activeCount = "{{count}} ενεργά φίλτρα"
+clearAll = "Εκκαθάριση φίλτρων"
+label = "Φίλτρα"
+
 [filesPage.folderName]
 cancel = "Άκυρο"
 error = "Δεν ήταν δυνατή η αποθήκευση του φακέλου. Δοκιμάστε ξανά."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Ταξινόμηση αρχείων"
 modifiedAsc = "Παλαιότερα πρώτα"
 modifiedDesc = "Πιο πρόσφατα πρώτα"
 nameAsc = "Όνομα A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Όλα αποθηκεύτηκαν"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Δεν ήταν δυνατή η εφαρμογή των αλλαγών"
 extractCsvError = "Απέτυχε η εξαγωγή CSV"
 extractXlsxError = "Απέτυχε η εξαγωγή XLSX"
 filled = "filled"
 flattenAfterFilling = "Επιπεδοποίηση μετά τη συμπλήρωση"
+goToPage = "Μετάβαση σε αυτήν τη σελίδα"
 noFields = "No fillable form fields found in this PDF."
+page = "Σελίδα"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "απαιτ."
@@ -4318,7 +4328,82 @@ rescanFields = "Επανασάρωση πεδίων"
 rescanFormFields = "Επανασάρωση πεδίων φόρμας"
 save = "Αποθήκευση"
 saveShortcut = "Ctrl+S για αποθήκευση"
+skippedEdits_one = "Δεν ήταν δυνατή η εφαρμογή 1 αλλαγής:"
+skippedEdits_other = "Δεν ήταν δυνατή η εφαρμογή {{count}} αλλαγών:"
+skippedEditsTruncated = "{{count}} ακόμη δεν εμφανίζονται."
 unsavedChanges = "Μη αποθηκευμένες αλλαγές"
+
+[formFill.create]
+commit = "Προσθήκη {{count}} πεδίου/πεδίων στο PDF"
+empty = "Δεν έχουν σχεδιαστεί πεδία ακόμη."
+failed = "Απέτυχε η προσθήκη πεδίων"
+goToField = "Μετάβαση σε αυτό το πεδίο"
+hint = "Επιλέξτε έναν τύπο πεδίου και, στη συνέχεια, σχεδιάστε τον στη σελίδα."
+placing = "Σχεδιάστε ένα πεδίο {{type}} στη σελίδα. Πατήστε Esc για διακοπή."
+preview = "Κρατήστε πατημένο για προεπισκόπηση"
+previewHelp = "Κρατήστε πατημένο για να δείτε τα πεδία όπως θα φαίνονται όταν προστεθούν, χωρίς τα περιγράμματα επεξεργασίας."
+removeField = "Αφαίρεση πεδίου"
+
+[formFill.editor]
+action = "Ενέργεια κουμπιού"
+actionHelp = "Τι κάνει το κουμπί όταν πατηθεί."
+actionNone = "Καμία"
+actionPrint = "Εκτύπωση"
+actionReset = "Επαναφορά φόρμας"
+actionSubmit = "Υποβολή σε URL"
+actionUri = "Άνοιγμα URL"
+actionUrl = "URL"
+actionUrlHelp = "Η διεύθυνση που ανοίγει ή στην οποία υποβάλλει το κουμπί."
+addOption = "Προσθήκη επιλογής"
+caption = "Λεζάντα κουμπιού"
+captionHelp = "Το κείμενο που εκτυπώνεται στην επιφάνεια του κουμπιού."
+defaultValue = "Προεπιλεγμένη τιμή"
+defaultValueHelp = "Τι περιέχει το πεδίο πριν το συμπληρώσει κάποιος. Αφήστε κενό για κενό πεδίο."
+fontSize = "Μέγεθος γραμματοσειράς"
+fontSizeHelp = "Μέγεθος κειμένου μέσα στο πεδίο. Αφήστε κενό για να προσαρμόσει ο αναγνώστης το μέγεθος ώστε να χωράει."
+label = "Ετικέτα"
+labelHelp = "Το κείμενο που εμφανίζεται σε όποιον συμπληρώνει τη φόρμα. Αφήστε το κενό για να χρησιμοποιηθεί το όνομα του πεδίου."
+maxLength = "Μέγιστο μήκος (comb)"
+maxLengthHelp = "Περιορίζει πόσοι χαρακτήρες χωρούν, σχεδιασμένοι ως ομοιόμορφα διατεταγμένα κουτιά."
+multiline = "Πολλαπλών γραμμών"
+multilineHelp = "Επιτρέπει περισσότερες από μία γραμμές κειμένου και αναδίπλωση στην άκρη του πεδίου."
+multiSelect = "Να επιτρέπεται πολλαπλή επιλογή"
+multiSelectHelp = "Επιτρέπει την επιλογή περισσότερων από μία επιλογών ταυτόχρονα."
+name = "Όνομα πεδίου"
+nameHelp = "Το εσωτερικό όνομα του πεδίου. Χρησιμοποιείται κατά την εξαγωγή δεδομένων ή τη συμπλήρωση της φόρμας από άλλο σύστημα, οπότε κρατήστε το μοναδικό και χωρίς κενά."
+optionGap = "Απόσταση επιλογών"
+optionGapHelp = "Κενό μεταξύ κουμπιών, σε στιγμές. Αφήστε κενό για να κατανεμηθούν ομοιόμορφα στο κουτί."
+optionPlaceholder = "Επιλογή {{n}}"
+options = "Επιλογές"
+optionsEmpty = "Προσθέστε τουλάχιστον μία επιλογή."
+optionsHelp = "Οι επιλογές που προσφέρονται στη λίστα. Κάθε μία αποθηκεύεται όπως πληκτρολογείται, οπότε κρατήστε τις σύντομες και διακριτές."
+optionSize = "Μέγεθος επιλογής"
+optionSizeHelp = "Πλάτος και ύψος κάθε κουμπιού, σε στιγμές. Αφήστε κενό για να προσαρμοστούν στο κουτί που σχεδιάσατε."
+readOnly = "Μόνο για ανάγνωση"
+readOnlyHelp = "Εμφανίζει μια τιμή αλλά εμποδίζει την επεξεργασία της."
+removeOption = "Αφαίρεση επιλογής"
+required = "Υποχρεωτικό"
+requiredHelp = "Η φόρμα δεν μπορεί να υποβληθεί μέχρι να συμπληρωθεί αυτό το πεδίο."
+signatureNote = "Μόνο σύμβολο κράτησης θέσης - δεν υπογράφετε εδώ. Επισημαίνει πού ανήκει μια υπογραφή, ώστε ένας υπογράφων PDF (Adobe Acrobat, υπηρεσία υπογραφής κ.λπ.) να τοποθετήσει την υπογραφή σε αυτό το σημείο όταν υπογραφεί το έγγραφο."
+tooltip = "Tooltip"
+tooltipHelp = "Η υπόδειξη που εμφανίζεται όταν κάποιος περνά τον δείκτη πάνω από το πεδίο σε έναν αναγνώστη PDF."
+type = "Τύπος"
+typeHelp = "Τι είδους πεδίο είναι αυτό. Η αλλαγή του αναδημιουργεί το πεδίο, οπότε η τρέχουσα τιμή του δεν μεταφέρεται."
+
+[formFill.mode]
+create = "Δημιουργία"
+fill = "Συμπλήρωση"
+label = "Λειτουργία επεξεργαστή φόρμας"
+modify = "Τροποποίηση"
+
+[formFill.modify]
+commit = "Αποθήκευση {{count}} αλλαγής/αλλαγών"
+delete = "Διαγραφή"
+empty = "Αυτό το PDF δεν έχει ακόμη πεδία φόρμας."
+failed = "Απέτυχε η αποθήκευση αλλαγών"
+groupSizeHint = "Χρήση μεγέθους επιλογής"
+hint = "Επιλέξτε ένα πεδίο για να επεξεργαστείτε τις ιδιότητές του, σύρετέ το στη σελίδα ή διαγράψτε το."
+restore = "Επαναφορά"
 
 [formFill.sidebar]
 close = "Κλείσιμο πλευρικής γραμμής"
@@ -4584,6 +4669,10 @@ title = "Αλλαγή μεταδεδομένων"
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Αλλαγή δικαιωμάτων"
+
+[home.classify]
+desc = "Προσδιορίστε τι είδους έγγραφο είναι αυτό και προσθέστε του ετικέτα."
+title = "Ταξινόμηση"
 
 [home.compare]
 desc = "Σύγκριση και εμφάνιση διαφορών μεταξύ 2 εγγράφων PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Δεν υπάρχει τίποτα προς αναφορά."
+handoffUnavailable = "Αυτό το πρόγραμμα περιήγησης δεν θα επιτρέψει στον επεξεργαστή να περάσει το έγγραφο στον επεξεργαστή φόρμας. Ανοίξτε το από τον επεξεργαστή φόρμας αντ' αυτού."
+noDocumentLinked = "Αυτή η αποτυχία δεν συνδέεται με συγκεκριμένο έγγραφο, επομένως δεν υπάρχει κάτι να ανοίξετε εδώ."
+notOnThisDevice = "Αυτό το έγγραφο δεν βρίσκεται σε αυτήν τη συσκευή, επομένως δεν μπορεί να ανοιχτεί εδώ."
+occurrences = "{{count}} φορές"
+open = "Ειδοποιήσεις"
+title = "Ειδοποιήσεις"
+unread = "Μη αναγνωσμένα"
+
+[notifications.action]
+failed = "Αυτό δεν λειτούργησε. Δοκιμάστε ξανά σε λίγο."
+unavailable = "Δεν είναι διαθέσιμο για αυτήν την ειδοποίηση."
+
+[notifications.detail]
+copied = "Αντιγράφηκε"
+copy = "Αντιγραφή σφάλματος"
+less = "Εμφάνιση λιγότερων"
+more = "Εμφάνιση πλήρους μηνύματος"
+
+[notifications.section]
+earlier = "Παλαιότερα"
+new = "Νέα"
 
 [oauth.error]
 message = "Η ταυτοποίηση δεν ήταν επιτυχής. Μπορείτε να κλείσετε αυτό το παράθυρο και να δοκιμάσετε ξανά."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκε"
 capSuffix_other = "από {{allowance}} δωρεάν PDFs χρησιμοποιήθηκαν"
 eyebrow = "Δοκιμή Processor"
-statusLabel_one = "{{remaining}} απομένει"
-statusLabel_other = "{{remaining}} απομένουν"
+statusLabel_one = "{{used}} χρησιμοποιήθηκε"
+statusLabel_other = "{{used}} χρησιμοποιήθηκαν"
 sub = "Χρησιμοποιήστε τον PDF Editor δωρεάν. Πληρώστε για αυτόματη επεξεργασία PDFs."
 title_one = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
 title_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Προβολή αρχείου"
+viewInProcessor = "Προβολή στον επεξεργαστή"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Αυτή η αποτυχία δεν καταγράφηκε για συγκεκριμένο έγγραφο, επομένως δεν υπάρχει κάτι να ανοίξετε εδώ."
+unattended = "Αυτό το αρχείο τροφοδοτήθηκε από φάκελο, bucket ή webhook, επομένως κανένα πρόγραμμα περιήγησης δεν το έχει για άνοιγμα."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Πηγές"
 connectSource = "Σύνδεση πηγής"
 
 [processor.sources.builder]
+advanced = "Σύνθετα"
 back = "Πίσω στις πηγές"
+backToSource = "Επιστροφή στη ρύθμιση προέλευσης"
 backToTypes = "Όλοι οι τύποι πηγών"
 cancel = "Ακύρωση"
 chooseHint = "Επιλέξτε από πού προέρχονται τα έγγραφα. Οι γκριζαρισμένοι connectors έρχονται σύντομα."
@@ -8729,7 +8848,6 @@ create = "Δημιουργία πηγής"
 createTitle = "Σύνδεση πηγής"
 delete = "Διαγραφή"
 editTitle = "Επεξεργασία πηγής"
-enabled = "Ενεργοποιημένο"
 save = "Αποθήκευση αλλαγών"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Κατανάλωση: επεξεργασία κάθε αρχείου 
 snapshot = "Snapshot: επανάγνωση του φακέλου σε κάθε εκτέλεση"
 
 [processor.sources.networkFields.recursive]
+helperText = "Συμπεριλάβετε υποφακέλους αν τα αρχεία σας είναι οργανωμένα σε ένθετους φακέλους ή παρακολουθήστε μόνο το ανώτερο επίπεδο."
 label = "Βάθος φακέλου"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Έλεγχος μεγέθους, ημερομηνίας και περι�
 stat = "Μέγεθος και ημερομηνία τροποποίησης"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Αν θα παραμείνει το αρχικό αρχείο στη θέση του μετά την επεξεργασία του. Αν το αρχικό αρχείο παραμείνει στη θέση του, θα επανεπεξεργαστεί την επόμενη φορά που η διοχέτευση θα σαρώσει την προέλευση."
 label = "Λειτουργία ανάγνωσης"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Κατανάλωση: επεξεργασία κάθε αρχείου 
 snapshot = "Στιγμιότυπο: επανανάγνωση του φακέλου σε κάθε εκτέλεση"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Συμπεριλάβετε υποφακέλους αν τα αρχεία σας είναι οργανωμένα σε ένθετους φακέλους ή παρακολουθήστε μόνο το ανώτερο επίπεδο."
 label = "Βάθος φακέλου"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Ο διακομιστής σας Stirling-PDF είν�
 expired = "Η συνεδρία σας έληξε. Παρακαλώ ανανεώστε τη σελίδα και προσπαθήστε ξανά."
 
 [settings]
+backToSections = "Όλες οι ρυθμίσεις"
 close = "Κλείσιμο"
+title = "Ρυθμίσεις"
 
 [settings.ai]
 documents = "Έγγραφα & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Αναζήτηση"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Αναζήτηση εργαλείων..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Προχωρημένη μορφοποίηση"
+ai = "AI"
 automation = "Αυτοματοποίηση"
 developerTools = "Εργαλεία προγραμματιστή"
 documentReview = "Έλεγχος εγγράφου"
@@ -11335,8 +11460,11 @@ columnDefault = "Στήλη {{index}}"
 convertToPdf = "Μετατροπή σε PDF"
 csvStats = "{{rows}} γραμμές · {{columns}} στήλες · {{size}}"
 emptyFile = "Κενό αρχείο"
+htmlHidePreview = "Απόκρυψη προεπισκόπησης"
 htmlPreview = "Προεπισκόπηση HTML"
+htmlPreviewMobileHidden = "Οι σελίδες HTML είναι διαμορφωμένες για πλάτη επιφάνειας εργασίας, οπότε η προεπισκόπηση είναι απενεργοποιημένη από προεπιλογή εδώ."
 htmlPreviewWarning = "Προεπισκόπηση HTML — ενδέχεται να μη φορτωθούν εξωτερικοί πόροι · {{size}}"
+htmlShowPreview = "Εμφάνιση προεπισκόπησης ούτως ή άλλως"
 invalidJson = "Μη έγκυρο JSON — εμφάνιση ακατέργαστου περιεχομένου"
 lineNumbers = "Αριθμοί γραμμών"
 loading = "Φόρτωση..."
@@ -11683,6 +11811,7 @@ exportAll = "Εξαγωγή PDF"
 exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
 formFill = "Συμπλήρωση φόρμας"
 hideToolbar = "Hide toolbar"
+moreActions = "Περισσότερες ενέργειες"
 multiTool = "Πολυεργαλείο"
 panMode = "Λειτουργία μετακίνησης"
 print = "Εκτύπωση PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Επιλογή όλων"
 selectByNumber = "Επιλογή βάσει αριθμών σελίδων"
 selectLanguage = "Επιλέξτε γλώσσα"
 share = "Κοινή χρήση"
+showAllTools = "Εμφάνιση όλων των εργαλείων"
+showFewerTools = "Σύμπτυξη γραμμής εργαλείων"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Εναλλαγή ορατότητας σχολιασμών"
 toggleAttachments = "Εναλλαγή συνημμένων"

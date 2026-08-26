@@ -41,7 +41,7 @@ false = "Fals"
 fileNotSavedToDisk = "No s'ha desat al disc"
 fileSavedToDisk = "Fitxer desat al disc"
 fileSelected = "Seleccionat: {{filename}}"
-filesSelected = "fitxers seleccionats"
+filesSelected = "{{count}} fitxers"
 font = "Tipus de lletra"
 fontSizeTooltip = "Mida del text del número de pàgina en punts. Valors més alts generen text més gran."
 fontTypeTooltip = "Família del tipus de lletra per als números de pàgina. Tria-la segons l'estil del teu document."
@@ -3969,6 +3969,7 @@ back = "Enrere"
 backToFolder = "Torna a {{folder}}"
 backToMyFiles = "Torna a Els meus fitxers"
 breadcrumbs = "Ruta de la carpeta"
+bulkActions = "Accions"
 cancel = "Cancel·la"
 classification = "Classificació"
 clearSelection = "Neteja la selecció"
@@ -4142,6 +4143,11 @@ totalSize = "Mida total"
 type = "Tipus"
 versionHistory = "Recorregut de versions"
 
+[filesPage.filters]
+activeCount = "{{count}} filtres actius"
+clearAll = "Esborra els filtres"
+label = "Filtres"
+
 [filesPage.folderName]
 cancel = "Cancel·la"
 error = "No s'ha pogut desar la carpeta. Torna-ho a provar."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Ordena els fitxers"
 modifiedAsc = "Més antic primer"
 modifiedDesc = "Més recent primer"
 nameAsc = "Nom A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Tot desat"
 analyzingFields = "Analysing form fields..."
+applyFailed = "No s'han pogut aplicar els canvis"
 extractCsvError = "No s'ha pogut extreure el CSV"
 extractXlsxError = "No s'ha pogut extreure l'XLSX"
 filled = "filled"
 flattenAfterFilling = "Aplana després d'emplenar"
+goToPage = "Ves a aquesta pàgina"
 noFields = "No fillable form fields found in this PDF."
+page = "Pàgina"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl."
@@ -4318,7 +4328,82 @@ rescanFields = "Torna a analitzar els camps"
 rescanFormFields = "Torna a analitzar els camps del formulari"
 save = "Desa"
 saveShortcut = "Ctrl+S per desar"
+skippedEdits_one = "No s'ha pogut aplicar 1 canvi:"
+skippedEdits_other = "No s'han pogut aplicar {{count}} canvis:"
+skippedEditsTruncated = "{{count}} més no es mostren."
 unsavedChanges = "Canvis no desats"
+
+[formFill.create]
+commit = "Afegeix {{count}} camp(s) al PDF"
+empty = "No s'ha dibuixat cap camp encara."
+failed = "No s'han pogut afegir els camps"
+goToField = "Ves a aquest camp"
+hint = "Tria un tipus de camp i després dibuixa'l a la pàgina."
+placing = "Dibuixa un camp de tipus {{type}} a la pàgina. Prem Esc per aturar-te."
+preview = "Mantén premut per previsualitzar"
+previewHelp = "Mantén premut per veure els camps tal com es mostraran un cop afegits, sense els contorns d'edició."
+removeField = "Elimina el camp"
+
+[formFill.editor]
+action = "Acció del botó"
+actionHelp = "Què fa el botó quan s'hi fa clic."
+actionNone = "Cap"
+actionPrint = "Imprimeix"
+actionReset = "Restableix el formulari"
+actionSubmit = "Envia a URL"
+actionUri = "Obre URL"
+actionUrl = "URL"
+actionUrlHelp = "L'adreça que el botó obre o a la qual envia."
+addOption = "Afegeix una opció"
+caption = "Text del botó"
+captionHelp = "El text imprès a la cara del botó."
+defaultValue = "Valor per defecte"
+defaultValueHelp = "Què conté el camp abans que ningú l'empleni. Deixa-ho en blanc per a un camp buit."
+fontSize = "Mida de la lletra"
+fontSizeHelp = "Mida del text dins del camp. Deixa-ho en blanc perquè el lector n'ajusti la mida perquè hi càpiga."
+label = "Etiqueta"
+labelHelp = "El text que es mostra a qui emplena el formulari. Deixa-ho en blanc per fer servir el nom del camp per defecte."
+maxLength = "Longitud màxima (comb)"
+maxLengthHelp = "Limita el nombre de caràcters que hi caben, dibuixats com a caselles espaiades uniformement."
+multiline = "Diverses línies"
+multilineHelp = "Permet més d'una línia de text i fa salt de línia a la vora del camp."
+multiSelect = "Permet la selecció múltiple"
+multiSelectHelp = "Permet triar més d'una opció alhora."
+name = "Nom del camp"
+nameHelp = "El nom intern del camp. S'utilitza en exportar dades o en emplenar el formulari des d'un altre sistema, així que mantén-lo únic i sense espais."
+optionGap = "Espaiat de les opcions"
+optionGapHelp = "Espai entre botons, en punts. Deixa-ho en blanc per distribuir-los uniformement dins del quadre."
+optionPlaceholder = "Opció {{n}}"
+options = "Opcions"
+optionsEmpty = "Afegeix almenys una opció."
+optionsHelp = "Les opcions que s'ofereixen a la llista. Cadascuna s'emmagatzema tal com s'escriu, així que mantén-les curtes i diferenciades."
+optionSize = "Mida de l'opció"
+optionSizeHelp = "Amplada i alçada de cada botó, en punts. Deixa-ho en blanc per ajustar-los al quadre que has dibuixat."
+readOnly = "Només de lectura"
+readOnlyHelp = "Mostra un valor però impedeix que algú l'editi."
+removeOption = "Elimina l'opció"
+required = "Obligatori"
+requiredHelp = "El formulari no es pot enviar fins que aquest camp s'hagi emplenat."
+signatureNote = "Només és un marcador de posició - no signeu aquí. Marca on correspon una signatura perquè un signador de PDF (Adobe Acrobat, un servei de signatura, etc.) col·loqui la signatura en aquest lloc quan se signi el document."
+tooltip = "Descripció emergent"
+tooltipHelp = "L'ajuda que es mostra quan algú passa el cursor per sobre del camp en un lector de PDF."
+type = "Tipus"
+typeHelp = "Quin tipus de camp és. En canviar-lo es reconstrueix el camp, de manera que el seu valor actual no es conserva."
+
+[formFill.mode]
+create = "Crea"
+fill = "Emplena"
+label = "Mode de l'editor de formularis"
+modify = "Modifica"
+
+[formFill.modify]
+commit = "Desa {{count}} canvi(s)"
+delete = "Suprimeix"
+empty = "Aquest PDF encara no té camps de formulari."
+failed = "No s'han pogut desar els canvis"
+groupSizeHint = "Utilitza la mida de l'opció"
+hint = "Selecciona un camp per editar-ne les propietats, arrossega'l a la pàgina o suprimeix-lo."
+restore = "Restaura"
 
 [formFill.sidebar]
 close = "Tanca la barra lateral"
@@ -4584,6 +4669,10 @@ title = "Canvia Metadades"
 desc = "Canvia les restriccions i els permisos del document"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Canviar Permissos"
+
+[home.classify]
+desc = "Identifica quin tipus de document és i etiqueta'l."
+title = "Classifica"
 
 [home.compare]
 desc = "Compara i mostra les diferències entre 2 documents PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "No hi ha res a informar."
+handoffUnavailable = "Aquest navegador no permet que el processador passi el document a l'editor. Obre'l des de l'editor."
+noDocumentLinked = "Aquesta fallada no està vinculada a cap document específic, així que no hi ha res per obrir aquí."
+notOnThisDevice = "Aquest document no es troba en aquest dispositiu, així que no es pot obrir aquí."
+occurrences = "{{count}} vegades"
+open = "Notificacions"
+title = "Notificacions"
+unread = "No llegides"
+
+[notifications.action]
+failed = "Això no ha funcionat. Torna-ho a provar d'aquí a un moment."
+unavailable = "No disponible per a aquesta notificació."
+
+[notifications.detail]
+copied = "Copiat"
+copy = "Copia l'error"
+less = "Mostra menys"
+more = "Mostra el missatge complet"
+
+[notifications.section]
+earlier = "Anteriors"
+new = "Noves"
 
 [oauth.error]
 message = "L'autenticació no ha estat correcta. Pots tancar aquesta finestra i tornar-ho a provar."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "de {{allowance}} PDF gratuïts utilitzats"
 capSuffix_other = "de {{allowance}} PDF gratuïts utilitzats"
 eyebrow = "Prova de Processor"
-statusLabel_one = "en queda {{remaining}}"
-statusLabel_other = "en queden {{remaining}}"
+statusLabel_one = "{{used}} utilitzat"
+statusLabel_other = "{{used}} utilitzats"
 sub = "Utilitza el PDF Editor de franc. Paga per processar PDF automàticament."
 title_one = "Processa {{allowance}} PDF de franc"
 title_other = "Processa {{allowance}} PDF de franc"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Visualitza el fitxer"
+viewInProcessor = "Visualitza al processador"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Aquesta fallada no s'ha registrat per a cap document específic, així que no hi ha res per obrir aquí."
+unattended = "Aquest fitxer ha arribat des d'una carpeta, un bucket o un webhook, així que cap navegador el manté disponible per obrir-lo."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Fonts"
 connectSource = "Connecta una font"
 
 [processor.sources.builder]
+advanced = "Avançat"
 back = "Torna a les fonts"
+backToSource = "Torna a la configuració de l'origen"
 backToTypes = "Tots els tipus de font"
 cancel = "Cancel·la"
 chooseHint = "Tria d'on venen els documents. Els connectors en gris estan en camí."
@@ -8729,7 +8848,6 @@ create = "Crea una font"
 createTitle = "Connecta una font"
 delete = "Suprimeix"
 editTitle = "Edita la font"
-enabled = "Activada"
 save = "Desa els canvis"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: processa cada fitxer una vegada"
 snapshot = "Snapshot: torna a llegir la carpeta a cada execució"
 
 [processor.sources.networkFields.recursive]
+helperText = "Inclou subcarpetes si els fitxers estan organitzats en carpetes imbricades, o supervisa només el nivell superior."
 label = "Profunditat de carpeta"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Mida, data i comprovació de contingut"
 stat = "Mida i data de modificació"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Indica si s'ha de deixar el fitxer original al seu lloc després que s'hagi processat. Si el fitxer original es deixa al seu lloc, es tornarà a processar la propera vegada que el pipeline analitzi l'origen."
 label = "Mode de lectura"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Consumeix: processa cada fitxer una vegada"
 snapshot = "Instantània: torna a llegir la carpeta en cada execució"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Inclou subcarpetes si els fitxers estan organitzats en carpetes imbricades, o supervisa només el nivell superior."
 label = "Profunditat de carpeta"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i 
 expired = "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho."
 
 [settings]
+backToSections = "Tota la configuració"
 close = "Tanca"
+title = "Configuració"
 
 [settings.ai]
 documents = "Documents i RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Cerca"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Cerca eines..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Formatació avançada"
+ai = "IA"
 automation = "Automatització"
 developerTools = "Eines per a desenvolupadors"
 documentReview = "Revisió del document"
@@ -11335,8 +11460,11 @@ columnDefault = "Columna {{index}}"
 convertToPdf = "Converteix a PDF"
 csvStats = "{{rows}} files · {{columns}} columnes · {{size}}"
 emptyFile = "Fitxer buit"
+htmlHidePreview = "Amaga la previsualització"
 htmlPreview = "Previsualització HTML"
+htmlPreviewMobileHidden = "Les pàgines HTML estan dissenyades per a amplades d'escriptori, per tant aquí la previsualització està desactivada per defecte."
 htmlPreviewWarning = "Previsualització HTML — els recursos externs poden no carregar-se · {{size}}"
+htmlShowPreview = "Mostra la previsualització igualment"
 invalidJson = "JSON no vàlid — es mostra el contingut en brut"
 lineNumbers = "Números de línia"
 loading = "Carregant..."
@@ -11683,6 +11811,7 @@ exportAll = "Exporta el PDF"
 exportSelected = "Exporta les pàgines seleccionades"
 formFill = "Omple el formulari"
 hideToolbar = "Hide toolbar"
+moreActions = "Més accions"
 multiTool = "Eina múltiple"
 panMode = "Mode de desplaçament"
 print = "Imprimeix el PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Selecciona-ho tot"
 selectByNumber = "Selecciona per números de pàgina"
 selectLanguage = "Selecciona l’idioma"
 share = "Comparteix"
+showAllTools = "Mostra totes les eines"
+showFewerTools = "Replega la barra d'eines"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Mostra/oculta les anotacions"
 toggleAttachments = "Mostra/oculta els adjunts"

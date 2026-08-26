@@ -41,7 +41,7 @@ false = "Ne"
 fileNotSavedToDisk = "Neuloženo na disk"
 fileSavedToDisk = "Soubor uložen na disk"
 fileSelected = "Vybráno: {{filename}}"
-filesSelected = "vybraných souborů"
+filesSelected = "{{count}} souborů"
 font = "Písmo"
 fontSizeTooltip = "Velikost textu čísla stránky v bodech. Větší čísla znamenají větší text."
 fontTypeTooltip = "Rodina písma pro čísla stránek. Zvolte podle stylu dokumentu."
@@ -3969,6 +3969,7 @@ back = "Zpět"
 backToFolder = "Zpět do {{folder}}"
 backToMyFiles = "Zpět na Moje soubory"
 breadcrumbs = "Cesta ke složce"
+bulkActions = "Akce"
 cancel = "Zrušit"
 classification = "Klasifikace"
 clearSelection = "Zrušit výběr"
@@ -4142,6 +4143,11 @@ totalSize = "Celková velikost"
 type = "Typ"
 versionHistory = "Vývoj verzí"
 
+[filesPage.filters]
+activeCount = "{{count}} aktivních filtrů"
+clearAll = "Vymazat filtry"
+label = "Filtry"
+
 [filesPage.folderName]
 cancel = "Zrušit"
 error = "Složku se nepodařilo uložit. Zkuste to znovu."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Seřadit soubory"
 modifiedAsc = "Od nejstarších"
 modifiedDesc = "Od nejnovějších"
 nameAsc = "Název A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Vše uloženo"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Změny se nepodařilo použít"
 extractCsvError = "Nepodařilo se extrahovat CSV"
 extractXlsxError = "Nepodařilo se extrahovat XLSX"
 filled = "filled"
 flattenAfterFilling = "Zploštit po vyplnění"
+goToPage = "Přejít na tuto stránku"
 noFields = "No fillable form fields found in this PDF."
+page = "Stránka"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "pov."
@@ -4318,7 +4328,82 @@ rescanFields = "Znovu detekovat pole"
 rescanFormFields = "Znovu detekovat pole formuláře"
 save = "Uložit"
 saveShortcut = "Ctrl+S pro uložení"
+skippedEdits_one = "1 změnu se nepodařilo použít:"
+skippedEdits_other = "{{count}} změn se nepodařilo použít:"
+skippedEditsTruncated = "{{count}} dalších není uvedeno."
 unsavedChanges = "Neuložené změny"
+
+[formFill.create]
+commit = "Přidat {{count}} polí do PDF"
+empty = "Zatím nejsou nakreslena žádná pole."
+failed = "Pole se nepodařilo přidat"
+goToField = "Přejít na toto pole"
+hint = "Vyberte typ pole a poté ho nakreslete na stránku."
+placing = "Nakreslete pole {{type}} na stránku. Stisknutím Esc skončíte."
+preview = "Podržte pro náhled"
+previewHelp = "Podržením zobrazíte pole tak, jak budou vypadat po přidání, bez obrysů pro úpravy."
+removeField = "Odebrat pole"
+
+[formFill.editor]
+action = "Akce tlačítka"
+actionHelp = "Co tlačítko provede po kliknutí."
+actionNone = "Žádná"
+actionPrint = "Tisk"
+actionReset = "Resetovat formulář"
+actionSubmit = "Odeslat na URL"
+actionUri = "Otevřít URL"
+actionUrl = "URL"
+actionUrlHelp = "Adresa, kterou tlačítko otevře nebo na ni odešle data."
+addOption = "Přidat možnost"
+caption = "Popisek tlačítka"
+captionHelp = "Text vytištěný na čelní straně tlačítka."
+defaultValue = "Výchozí hodnota"
+defaultValueHelp = "Co pole obsahuje, než ho někdo vyplní. Pro prázdné pole nechte prázdné."
+fontSize = "Velikost písma"
+fontSizeHelp = "Velikost textu uvnitř pole. Nechte prázdné, aby ji prohlížeč přizpůsobil."
+label = "Štítek"
+labelHelp = "Text zobrazený osobě, která formulář vyplňuje. Nechte prázdné pro použití názvu pole."
+maxLength = "Maximální délka (comb)"
+maxLengthHelp = "Omezuje počet znaků, které se vejdou, vykreslené jako rovnoměrně rozmístěná políčka."
+multiline = "Víceřádkové"
+multilineHelp = "Umožňuje více než jeden řádek textu a zalamuje ho na okraji pole."
+multiSelect = "Povolit vícenásobný výběr"
+multiSelectHelp = "Umožňuje vybrat více než jednu možnost najednou."
+name = "Název pole"
+nameHelp = "Interní název pole. Používá se při exportu dat nebo vyplňování formuláře z jiného systému, proto musí být jedinečný a bez mezer."
+optionGap = "Mezera mezi možnostmi"
+optionGapHelp = "Mezera mezi tlačítky v bodech. Nechte prázdné, aby se rovnoměrně rozmístila po rámečku."
+optionPlaceholder = "Možnost {{n}}"
+options = "Možnosti"
+optionsEmpty = "Přidejte alespoň jednu možnost."
+optionsHelp = "Volby nabízené v seznamu. Každá se uloží tak, jak je zadána, proto je udržujte krátké a odlišné."
+optionSize = "Velikost možnosti"
+optionSizeHelp = "Šířka a výška každého tlačítka v bodech. Nechte prázdné, aby se přizpůsobily nakreslenému rámečku."
+readOnly = "Pouze pro čtení"
+readOnlyHelp = "Zobrazuje hodnotu, ale brání jejím úpravám."
+removeOption = "Odebrat možnost"
+required = "Povinné"
+requiredHelp = "Formulář nelze odeslat, dokud není toto pole vyplněno."
+signatureNote = "Pouze zástupné místo - zde nepodepisujete. Označuje, kam patří podpis, aby nástroj pro podepisování PDF (Adobe Acrobat, podpisová služba atd.) při podpisu dokumentu umístil podpis na toto místo."
+tooltip = "Tooltip"
+tooltipHelp = "Nápověda zobrazená, když někdo najede na pole v prohlížeči PDF."
+type = "Typ"
+typeHelp = "Jaký druh pole to je. Změna pole znovu vytvoří, takže jeho aktuální hodnota nebude zachována."
+
+[formFill.mode]
+create = "Vytvořit"
+fill = "Vyplnit"
+label = "Režim editoru formuláře"
+modify = "Upravit"
+
+[formFill.modify]
+commit = "Uložit {{count}} změn"
+delete = "Smazat"
+empty = "Toto PDF zatím nemá žádná formulářová pole."
+failed = "Změny se nepodařilo uložit"
+groupSizeHint = "Použít velikost možnosti"
+hint = "Vyberte pole pro úpravu jeho vlastností, přetáhněte ho na stránce nebo ho smažte."
+restore = "Obnovit"
 
 [formFill.sidebar]
 close = "Zavřít postranní panel"
@@ -4584,6 +4669,10 @@ title = "Změnit metadata"
 desc = "Změnit omezení a oprávnění dokumentu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Změnit oprávnění"
+
+[home.classify]
+desc = "Určete, o jaký druh dokumentu jde, a označte ho štítkem."
+title = "Klasifikovat"
 
 [home.compare]
 desc = "Porovná a zobrazí rozdíly mezi 2 PDF dokumenty"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Není co hlásit."
+handoffUnavailable = "Tento prohlížeč nedovolí zpracovateli předat dokument editoru. Otevřete ho místo toho z editoru."
+noDocumentLinked = "Toto selhání není propojeno s konkrétním dokumentem, takže zde není co otevřít."
+notOnThisDevice = "Tento dokument není na tomto zařízení, takže ho zde nelze otevřít."
+occurrences = "{{count}}krát"
+open = "Oznámení"
+title = "Oznámení"
+unread = "Nepřečtené"
+
+[notifications.action]
+failed = "To se nepodařilo. Zkuste to za chvíli znovu."
+unavailable = "Pro toto oznámení není k dispozici."
+
+[notifications.detail]
+copied = "Zkopírováno"
+copy = "Kopírovat chybu"
+less = "Zobrazit méně"
+more = "Zobrazit celou zprávu"
+
+[notifications.section]
+earlier = "Dříve"
+new = "Nové"
 
 [oauth.error]
 message = "Ověření nebylo úspěšné. Toto okno můžete zavřít a zkusit to znovu."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "z {{allowance}} bezplatných PDFs použito"
 capSuffix_other = "z {{allowance}} bezplatných PDFs použito"
 eyebrow = "Zkušební Processor"
-statusLabel_one = "zbývá {{remaining}}"
-statusLabel_other = "zbývá {{remaining}}"
+statusLabel_one = "{{used}} využito"
+statusLabel_other = "{{used}} využito"
 sub = "Používejte PDF Editor zdarma. Plaťte za automatické zpracování PDFs."
 title_one = "Zpracujte {{allowance}} PDFs zdarma"
 title_other = "Zpracujte {{allowance}} PDFs zdarma"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Zobrazit soubor"
+viewInProcessor = "Zobrazit ve zpracovateli"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Toto selhání nebylo zaznamenáno u konkrétního dokumentu, takže zde není co otevřít."
+unattended = "Tento soubor byl dodán složkou, bucketem nebo webhookem, takže ho žádný prohlížeč neudržuje k otevření."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Zdroje"
 connectSource = "Připojit zdroj"
 
 [processor.sources.builder]
+advanced = "Pokročilé"
 back = "Zpět na zdroje"
+backToSource = "Zpět na nastavení zdroje"
 backToTypes = "Všechny typy zdrojů"
 cancel = "Zrušit"
 chooseHint = "Vyberte, odkud dokumenty pocházejí. Zašedlé konektory jsou na cestě."
@@ -8729,7 +8848,6 @@ create = "Vytvořit zdroj"
 createTitle = "Připojit zdroj"
 delete = "Smazat"
 editTitle = "Upravit zdroj"
-enabled = "Povoleno"
 save = "Uložit změny"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: zpracovat každý soubor jednou"
 snapshot = "Snapshot: znovu načíst složku při každém spuštění"
 
 [processor.sources.networkFields.recursive]
+helperText = "Zahrňte podsložky, pokud jsou soubory uspořádány do vnořených složek, nebo sledujte pouze nejvyšší úroveň."
 label = "Hloubka složky"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Velikost, datum a kontrola obsahu"
 stat = "Velikost a datum změny"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Zda ponechat původní soubor na místě po jeho zpracování. Pokud původní soubor zůstane na místě, bude při dalším skenování zdroje pipeline zpracován znovu."
 label = "Režim čtení"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Spotřebovat: zpracovat každý soubor jednou"
 snapshot = "Snímek: znovu načíst složku při každém spuštění"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Zahrňte podsložky, pokud jsou soubory uspořádány do vnořených složek, nebo sledujte pouze nejvyšší úroveň."
 label = "Hloubka složky"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}
 expired = "Vaše relace vypršela. Obnovte prosím stránku a zkuste to znovu."
 
 [settings]
+backToSections = "Všechna nastavení"
 close = "Zavřít"
+title = "Nastavení"
 
 [settings.ai]
 documents = "Dokumenty a RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Hledat"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Hledat nástroje..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Pokročilé formátování"
+ai = "AI"
 automation = "Automatizace"
 developerTools = "Nástroje pro vývojáře"
 documentReview = "Kontrola dokumentu"
@@ -11335,8 +11460,11 @@ columnDefault = "Sloupec {{index}}"
 convertToPdf = "Převést do PDF"
 csvStats = "{{rows}} řádků · {{columns}} sloupců · {{size}}"
 emptyFile = "Prázdný soubor"
+htmlHidePreview = "Skrýt náhled"
 htmlPreview = "Náhled HTML"
+htmlPreviewMobileHidden = "HTML stránky jsou rozvrženy pro šířky desktopu, takže zde je náhled ve výchozím nastavení vypnutý."
 htmlPreviewWarning = "Náhled HTML — externí zdroje se nemusí načíst · {{size}}"
+htmlShowPreview = "Přesto zobrazit náhled"
 invalidJson = "Neplatný JSON — zobrazen nezpracovaný obsah"
 lineNumbers = "Čísla řádků"
 loading = "Načítání..."
@@ -11683,6 +11811,7 @@ exportAll = "Exportovat PDF"
 exportSelected = "Exportovat vybrané stránky"
 formFill = "Vyplnit formulář"
 hideToolbar = "Hide toolbar"
+moreActions = "Další akce"
 multiTool = "Multinástroj"
 panMode = "Režim posunu"
 print = "Tisk PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Vybrat vše"
 selectByNumber = "Vybrat podle čísel stránek"
 selectLanguage = "Vyberte jazyk"
 share = "Sdílet"
+showAllTools = "Zobrazit všechny nástroje"
+showFewerTools = "Sbalit panel nástrojů"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Přepnout viditelnost anotací"
 toggleAttachments = "Přepnout přílohy"

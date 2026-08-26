@@ -41,7 +41,7 @@ false = "Faltsua"
 fileNotSavedToDisk = "Ez da diskoan gorde"
 fileSavedToDisk = "Fitxategia diskoan gorde da"
 fileSelected = "Hautatuta: {{filename}}"
-filesSelected = "Hautatutako fitxategiak"
+filesSelected = "{{count}} fitxategi"
 font = "Letra-tipoa"
 fontSizeTooltip = "Orri-zenbakiaren testuaren tamaina puntutan. Zenbaki handiagoek testu handiagoa sortzen dute."
 fontTypeTooltip = "Orri-zenbakientzako letra-familia. Aukeratu zure dokumentuaren estiloaren arabera."
@@ -3969,6 +3969,7 @@ back = "Atzera"
 backToFolder = "Itzuli hona: {{folder}}"
 backToMyFiles = "Itzuli Nire Fitxategietara"
 breadcrumbs = "Karpetaren bidea"
+bulkActions = "Ekintzak"
 cancel = "Utzi"
 classification = "Sailkapena"
 clearSelection = "Garbitu hautapena"
@@ -4142,6 +4143,11 @@ totalSize = "Tamaina osoa"
 type = "Mota"
 versionHistory = "Bertsioen ibilbidea"
 
+[filesPage.filters]
+activeCount = "{{count}} iragazki aktibo"
+clearAll = "Garbitu iragazkiak"
+label = "Iragazkiak"
+
 [filesPage.folderName]
 cancel = "Utzi"
 error = "Ezin izan da karpeta gorde. Saiatu berriro."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Ordenatu fitxategiak"
 modifiedAsc = "Zaharrenak lehenik"
 modifiedDesc = "Berrienak lehenik"
 nameAsc = "Izena A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Dena gordeta"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Ezin izan dira aldaketak aplikatu"
 extractCsvError = "Ezin izan da CSV erauzi"
 extractXlsxError = "Ezin izan da XLSX erauzi"
 filled = "filled"
 flattenAfterFilling = "Lautu betetze ondoren"
+goToPage = "Joan orri honetara"
 noFields = "No fillable form fields found in this PDF."
+page = "Orria"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "behar."
@@ -4318,7 +4328,82 @@ rescanFields = "Eremuak berriro eskaneatu"
 rescanFormFields = "Inprimaki-eremuak berriro eskaneatu"
 save = "Gorde"
 saveShortcut = "Ctrl+S gordetzeko"
+skippedEdits_one = "Ezin izan da aldaketa bat aplikatu:"
+skippedEdits_other = "Ezin izan dira {{count}} aldaketa aplikatu:"
+skippedEditsTruncated = "Beste {{count}} ez dira zerrendatu."
 unsavedChanges = "Gorde gabeko aldaketak"
+
+[formFill.create]
+commit = "Gehitu {{count}} eremu PDF fitxategira"
+empty = "Oraindik ez da eremurik marraztu."
+failed = "Ezin izan dira eremuak gehitu"
+goToField = "Joan eremu honetara"
+hint = "Hautatu eremu mota bat, eta marraztu orrian."
+placing = "Marraztu {{type}} eremu bat orrian. Sakatu Esc gelditzeko."
+preview = "Eduki sakatuta aurrebista ikusteko"
+previewHelp = "Eduki sakatuta eremuak gehitu ondoren nolakoak izango diren ikusteko, edizio-ingeradarik gabe."
+removeField = "Kendu eremua"
+
+[formFill.editor]
+action = "Botoiaren ekintza"
+actionHelp = "Botoiak klik egitean zer egiten duen."
+actionNone = "Bat ere ez"
+actionPrint = "Inprimatu"
+actionReset = "Berrezarri formularioa"
+actionSubmit = "Bidali URL helbidera"
+actionUri = "Ireki URL"
+actionUrl = "URL"
+actionUrlHelp = "Botoiak irekitzen duen edo bidaltzeko erabiltzen duen URL helbidea."
+addOption = "Gehitu aukera"
+caption = "Botoiaren epigrafea"
+captionHelp = "Botoiaren aurpegian inprimatzen den testua."
+defaultValue = "Balio lehenetsia"
+defaultValueHelp = "Norbaitek bete aurretik eremuak duen edukia. Utzi hutsik eremu huts baterako."
+fontSize = "Letra-tamaina"
+fontSizeHelp = "Eremu barruko testuaren tamaina. Utzi hutsik irakurgailuak egokitzeko tamaina ezar dezan."
+label = "Etiketa"
+labelHelp = "Formularioa betetzen duenari erakutsiko zaion testua. Utzi hutsik eremuaren izena erabiltzeko."
+maxLength = "Gehieneko luzera (comb)"
+maxLengthHelp = "Zenbat karaktere sar daitezkeen mugatzen du, tarte berdineko laukitxo gisa marraztuta."
+multiline = "Lerro anitzekoa"
+multilineHelp = "Testu-lerro bat baino gehiago onartzen ditu eta eremuaren ertzean doitzen du."
+multiSelect = "Baimendu hautapen anitza"
+multiSelectHelp = "Aldi berean aukera bat baino gehiago hautatzeko aukera ematen du."
+name = "Eremuaren izena"
+nameHelp = "Eremuaren barne-izena. Datuak esportatzean edo formularioa beste sistema batetik betetzean erabiltzen da; beraz, mantendu bakarra eta zuriunerik gabea."
+optionGap = "Aukeren arteko tartea"
+optionGapHelp = "Botoien arteko tartea, puntutan. Utzi hutsik kutxan behera modu uniformean banatzeko."
+optionPlaceholder = "{{n}}. aukera"
+options = "Aukerak"
+optionsEmpty = "Gehitu gutxienez aukera bat."
+optionsHelp = "Zerrendan eskaintzen diren aukerak. Bakoitza idatzi bezala gordetzen da; beraz, mantendu laburrak eta bereiziak."
+optionSize = "Aukeraren tamaina"
+optionSizeHelp = "Botoi bakoitzaren zabalera eta altuera, puntutan. Utzi hutsik marraztu duzun kutxara egokitzeko."
+readOnly = "Irakurtzeko soilik"
+readOnlyHelp = "Balio bat erakusten du, baina editatzea eragozten du."
+removeOption = "Kendu aukera"
+required = "Beharrezkoa"
+requiredHelp = "Formularioa ezin da bidali eremu hau bete arte."
+signatureNote = "Leku-marka soilik - hemen ez duzu sinatzen. Sinadura non egon behar den markatzen du, PDF sinatzaile batek (Adobe Acrobat, sinadura-zerbitzu bat, etab.) dokumentua sinatzen denean sinadura leku honetan jar dezan."
+tooltip = "Argibide-burbuila"
+tooltipHelp = "PDF irakurgailu batean norbaitek eremuaren gainean sagua jartzean erakusten den argibidea."
+type = "Mota"
+typeHelp = "Eremu mota. Aldatzean eremua berreraikitzen da; beraz, uneko balioa ez da mantenduko."
+
+[formFill.mode]
+create = "Sortu"
+fill = "Bete"
+label = "Formulario-editorearen modua"
+modify = "Aldatu"
+
+[formFill.modify]
+commit = "Gorde {{count}} aldaketa"
+delete = "Ezabatu"
+empty = "PDF honek ez du oraindik formulario-eremurik."
+failed = "Ezin izan dira aldaketak gorde"
+groupSizeHint = "Erabili aukeraren tamaina"
+hint = "Hautatu eremu bat bere propietateak editatzeko, arrastatu orrian edo ezabatu."
+restore = "Lehengoratu"
 
 [formFill.sidebar]
 close = "Itxi alboko barra"
@@ -4584,6 +4669,10 @@ title = "Aldatu metadatuak"
 desc = "Aldatu dokumentuaren murrizketak eta baimenak"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
+
+[home.classify]
+desc = "Identifikatu zer dokumentu mota den eta etiketatu."
+title = "Sailkatu"
 
 [home.compare]
 desc = "Konparatu eta erakutsi 2 PDF dokumenturen aldeak"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Ez dago jakinaraztekorik."
+handoffUnavailable = "Arakatzaile honek ez dio prozesadoreari dokumentua editoreari pasatzen utziko. Ireki editoretik horren ordez."
+noDocumentLinked = "Hutsegite hau ez dago dokumentu zehatz bati lotuta; beraz, hemen ez dago irekitzeko ezer."
+notOnThisDevice = "Dokumentu hau ez dago gailu honetan; beraz, ezin da hemen ireki."
+occurrences = "{{count}} aldiz"
+open = "Jakinarazpenak"
+title = "Jakinarazpenak"
+unread = "Irakurri gabeak"
+
+[notifications.action]
+failed = "Horrek ez du funtzionatu. Saiatu berriro une bat barru."
+unavailable = "Ez dago erabilgarri jakinarazpen honetarako."
+
+[notifications.detail]
+copied = "Kopiatuta"
+copy = "Kopiatu errorea"
+less = "Erakutsi gutxiago"
+more = "Erakutsi mezu osoa"
+
+[notifications.section]
+earlier = "Lehenago"
+new = "Berria"
 
 [oauth.error]
 message = "Autentifikazioa ez da ongi burutu. Leiho hau itxi eta saiatu berriro."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} doako PDFetatik erabilita"
 capSuffix_other = "{{allowance}} doako PDFetatik erabilita"
 eyebrow = "Processor proba"
-statusLabel_one = "{{remaining}} geratzen da"
-statusLabel_other = "{{remaining}} geratzen dira"
+statusLabel_one = "{{used}} erabilita"
+statusLabel_other = "{{used}} erabilita"
 sub = "Erabili PDF Editor doan. Ordaindu PDFak automatikoki prozesatzeko."
 title_one = "Prozesatu {{allowance}} PDF doan"
 title_other = "Prozesatu {{allowance}} PDF doan"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Ikusi fitxategia"
+viewInProcessor = "Ikusi prozesadorean"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Hutsegite hau ez zen dokumentu zehatz baten aurka erregistratu; beraz, hemen ez dago irekitzeko ezer."
+unattended = "Fitxategi hau karpeta, bucket edo webhook batek eman du; beraz, inoren arakatzaileak ez dauka irekitzeko."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Iturburuak"
 connectSource = "Konektatu iturburua"
 
 [processor.sources.builder]
+advanced = "Aurreratua"
 back = "Itzuli iturburuetara"
+backToSource = "Itzuli iturburuaren konfiguraziora"
 backToTypes = "Iturburu mota guztiak"
 cancel = "Utzi"
 chooseHint = "Aukeratu dokumentuak nondik datozen. Grisez dauden konektoreak bidean daude."
@@ -8729,7 +8848,6 @@ create = "Sortu iturburua"
 createTitle = "Konektatu iturburu bat"
 delete = "Ezabatu"
 editTitle = "Editatu iturburua"
-enabled = "Gaituta"
 save = "Gorde aldaketak"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Kontsumitu: prozesatu fitxategi bakoitza behin"
 snapshot = "Snapshot: berrirakurri karpeta exekuzio bakoitzean"
 
 [processor.sources.networkFields.recursive]
+helperText = "Sartu azpikarpetak zure fitxategiak habiaratutako karpetetan antolatuta badaude, edo kontrolatu goiko maila bakarrik."
 label = "Karpetaren sakonera"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Tamaina, data eta eduki-egiaztapena"
 stat = "Tamaina eta aldatze-data"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Jatorrizko fitxategia prozesatu ondoren bere lekuan utzi behar den ala ez. Jatorrizko fitxategia bere lekuan uzten bada, pipeline-ak iturburua eskaneatzen duen hurrengo aldian berriro prozesatuko da."
 label = "Irakurketa-modua"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Kontsumitu: prozesatu fitxategi bakoitza behin"
 snapshot = "Snapshot: berrirakurri karpeta exekuzio bakoitzean"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Sartu azpikarpetak zure fitxategiak habiaratutako karpetetan antolatuta badaude, edo kontrolatu goiko maila bakarrik."
 label = "Karpetaren sakonera"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \
 expired = "Zure saioa iraungi da. Freskatu orria eta saiatu berriro."
 
 [settings]
+backToSections = "Ezarpen guztiak"
 close = "Itxi"
+title = "Ezarpenak"
 
 [settings.ai]
 documents = "Dokumentuak eta RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Bilatu"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Bilatu tresnak..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Formateatze aurreratua"
+ai = "AI"
 automation = "Automatizazioa"
 developerTools = "Garatzaileentzako tresnak"
 documentReview = "Dokumentu-berrikuspena"
@@ -11335,8 +11460,11 @@ columnDefault = "{{index}}. zutabea"
 convertToPdf = "Bihurtu PDFra"
 csvStats = "{{rows}} errenkada · {{columns}} zutabe · {{size}}"
 emptyFile = "Fitxategi hutsa"
+htmlHidePreview = "Ezkutatu aurrebista"
 htmlPreview = "HTML aurrebista"
+htmlPreviewMobileHidden = "HTML orriak mahaigaineko zabaleretarako diseinatuta daude; beraz, aurrebista desaktibatuta dago hemen lehenespenez."
 htmlPreviewWarning = "HTML aurrebista — kanpoko baliabideak agian ez dira kargatuko · {{size}}"
+htmlShowPreview = "Erakutsi aurrebista hala ere"
 invalidJson = "JSON baliogabea — edukia gordinean erakusten"
 lineNumbers = "Lerro-zenbakiak"
 loading = "Kargatzen..."
@@ -11683,6 +11811,7 @@ exportAll = "Esportatu PDFa"
 exportSelected = "Esportatu hautatutako orriak"
 formFill = "Bete inprimakia"
 hideToolbar = "Hide toolbar"
+moreActions = "Ekintza gehiago"
 multiTool = "Multi-tresna"
 panMode = "Pan modua"
 print = "Inprimatu PDFa"
@@ -11703,6 +11832,8 @@ selectAll = "Hautatu dena"
 selectByNumber = "Hautatu orri-zenbakien arabera"
 selectLanguage = "Hautatu hizkuntza"
 share = "Partekatu"
+showAllTools = "Erakutsi tresna guztiak"
+showFewerTools = "Tolestu tresna-barra"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Txandakatu anotazioen ikusgarritasuna"
 toggleAttachments = "Txandakatu eranskinak"
