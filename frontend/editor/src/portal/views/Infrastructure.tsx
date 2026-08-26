@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tabs, type TabItem } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
+import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
 import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
@@ -13,30 +14,42 @@ type InfraTab = "api-keys" | "audit" | "storage";
 /** Shown but inert: no backend behind these screens yet. */
 type DisabledInfraTab = "deployments" | "security" | "models";
 
-const ENABLED_TABS: InfraTab[] = ["api-keys", "audit", "storage"];
-
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("api-keys");
   const { setActiveView } = useView();
   const [searchParams, setSearchParams] = useSearchParams();
+  // Audit is Enterprise-only; disabled (greyed, inert) on non-enterprise instances.
+  const auditEnabled = useEnterpriseEnabled().enabled;
+
+  const canOpenTab = useCallback(
+    (key: string) =>
+      key === "api-keys" ||
+      key === "storage" ||
+      (key === "audit" && auditEnabled),
+    [auditEnabled],
+  );
 
   // Deep-link (?tab=<key>) from elsewhere (e.g. the home visualiser's outcome
   // cards → audit log): open that tab, then drop the param.
   useEffect(() => {
     const requested = searchParams.get("tab");
     if (!requested) return;
-    if ((ENABLED_TABS as string[]).includes(requested)) {
+    if (canOpenTab(requested)) {
       setTab(requested as InfraTab);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("tab");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, canOpenTab]);
 
   const tabs: TabItem<InfraTab | DisabledInfraTab>[] = [
     { key: "api-keys", label: t("portal.infrastructure.tabs.apiKeys") },
-    { key: "audit", label: t("portal.infrastructure.tabs.audit") },
+    {
+      key: "audit",
+      label: t("portal.infrastructure.tabs.audit"),
+      disabled: !auditEnabled,
+    },
     {
       key: "deployments",
       label: t("portal.infrastructure.tabs.deployments"),
@@ -77,7 +90,7 @@ export function Infrastructure() {
         items={tabs}
         activeKey={tab}
         onChange={(key) => {
-          if ((ENABLED_TABS as string[]).includes(key)) setTab(key as InfraTab);
+          if (canOpenTab(key)) setTab(key as InfraTab);
         }}
         variant="underline"
         ariaLabel={t("portal.infrastructure.sectionsAriaLabel")}

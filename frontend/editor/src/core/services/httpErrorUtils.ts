@@ -25,14 +25,14 @@ function titleForStatus(status?: number): string {
   return "Request failed";
 }
 
-export function extractAxiosErrorMessage(error: any): {
+export function extractAxiosErrorMessage(error: unknown): {
   title: string;
   body: string;
 } {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const _statusText = error.response?.statusText || "";
-    let parsed: any = undefined;
+    let parsed: unknown = undefined;
     const raw = error.response?.data;
     if (typeof raw === "string") {
       try {
@@ -44,8 +44,8 @@ export function extractAxiosErrorMessage(error: any): {
       parsed = raw;
     }
     const extractIds = (): string[] | undefined => {
-      if (Array.isArray(parsed?.errorFileIds))
-        return parsed.errorFileIds as string[];
+      const errorFileIds = (parsed as { errorFileIds?: unknown })?.errorFileIds;
+      if (Array.isArray(errorFileIds)) return errorFileIds as string[];
       const rawText = typeof raw === "string" ? raw : "";
       const uuidMatches = rawText.match(
         /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g,
@@ -60,7 +60,8 @@ export function extractAxiosErrorMessage(error: any): {
       if (!data) return typeof raw === "string" ? raw : "";
       const ids = extractIds();
       if (ids && ids.length > 0) return `Failed files: ${ids.join(", ")}`;
-      if (data?.message) return data.message as string;
+      const message = (data as { message?: unknown })?.message;
+      if (message) return message as string;
       if (typeof raw === "string") return raw;
       try {
         return JSON.stringify(data);
@@ -82,7 +83,8 @@ export function extractAxiosErrorMessage(error: any): {
     return { title, body: bodyMsg };
   }
   try {
-    const msg = (error?.message || String(error)) as string;
+    const msg = ((error as { message?: unknown })?.message ||
+      String(error)) as string;
     return {
       title: "Network error",
       body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg,
