@@ -59,6 +59,7 @@ import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbench
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -602,6 +603,9 @@ export default function WorkbenchBar({
             enforcingProgress={enforcingProgress}
           />
         )}
+        {/* Last in the globals, so it is the rightmost control. */}
+        <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        <NotificationBell />
       </div>
     </div>
   );
