@@ -3969,6 +3969,7 @@ back = "返回"
 backToFolder = "返回 {{folder}}"
 backToMyFiles = "返回我的檔案"
 breadcrumbs = "資料夾路徑"
+bulkActions = "操作"
 cancel = "取消"
 classification = "分類"
 clearSelection = "清除選取"
@@ -4142,6 +4143,11 @@ totalSize = "總大小"
 type = "類型"
 versionHistory = "版本歷程"
 
+[filesPage.filters]
+activeCount = "{{count}} 個篩選器已啟用"
+clearAll = "清除篩選器"
+label = "篩選器"
+
 [filesPage.folderName]
 cancel = "取消"
 error = "無法儲存資料夾。請再試一次。"
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "排序檔案"
 modifiedAsc = "由舊到新"
 modifiedDesc = "最近優先"
 nameAsc = "名稱 A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "全部已儲存"
 analyzingFields = "Analysing form fields..."
+applyFailed = "無法套用變更"
 extractCsvError = "擷取 CSV 失敗"
 extractXlsxError = "擷取 XLSX 失敗"
 filled = "filled"
 flattenAfterFilling = "填寫後扁平化"
+goToPage = "前往此頁面"
 noFields = "No fillable form fields found in this PDF."
+page = "頁面"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "必填"
@@ -4318,7 +4328,82 @@ rescanFields = "重新掃描欄位"
 rescanFormFields = "重新掃描表單欄位"
 save = "儲存"
 saveShortcut = "Ctrl+S 儲存"
+skippedEdits_one = "無法套用 1 項變更："
+skippedEdits_other = "無法套用 {{count}} 項變更："
+skippedEditsTruncated = "另有 {{count}} 項未列出。"
 unsavedChanges = "未儲存的變更"
+
+[formFill.create]
+commit = "將 {{count}} 個欄位新增至 PDF"
+empty = "尚未繪製任何欄位。"
+failed = "新增欄位失敗"
+goToField = "前往此欄位"
+hint = "選擇欄位類型，然後在頁面上繪製。"
+placing = "在頁面上繪製 {{type}} 欄位。按 Esc 停止。"
+preview = "按住以預覽"
+previewHelp = "按住即可查看欄位新增後的外觀，不顯示編輯外框。"
+removeField = "移除欄位"
+
+[formFill.editor]
+action = "按鈕動作"
+actionHelp = "按一下時按鈕會執行的動作。"
+actionNone = "無"
+actionPrint = "列印"
+actionReset = "重設表單"
+actionSubmit = "提交至 URL"
+actionUri = "開啟 URL"
+actionUrl = "URL"
+actionUrlHelp = "按鈕開啟或提交至的位址。"
+addOption = "新增選項"
+caption = "按鈕文字"
+captionHelp = "列印在按鈕表面的文字。"
+defaultValue = "預設值"
+defaultValueHelp = "在任何人填寫前欄位包含的內容。留白則為空白欄位。"
+fontSize = "字型大小"
+fontSizeHelp = "欄位內的文字大小。留白則讓閱讀器自動調整大小以符合欄位。"
+label = "標籤"
+labelHelp = "顯示給填寫表單者的文字。留白則退回使用欄位名稱。"
+maxLength = "最大長度（分格）"
+maxLengthHelp = "限制可容納的字元數，並繪製為等距方格。"
+multiline = "多行"
+multilineHelp = "允許多行文字，並在欄位邊緣自動換行。"
+multiSelect = "允許多重選取"
+multiSelectHelp = "允許一次選擇多個選項。"
+name = "欄位名稱"
+nameHelp = "欄位的內部名稱。匯出資料或從其他系統填寫表單時會使用，因此請保持唯一且不含空格。"
+optionGap = "選項間距"
+optionGapHelp = "按鈕之間的間距，以點為單位。留白則在方框內向下平均分布。"
+optionPlaceholder = "選項 {{n}}"
+options = "選項"
+optionsEmpty = "請新增至少一個選項。"
+optionsHelp = "清單中提供的選擇。每個選擇都會按輸入內容儲存，因此請保持簡短且彼此不同。"
+optionSize = "選項大小"
+optionSizeHelp = "每個按鈕的寬度與高度，以點為單位。留白則會符合您繪製的方框。"
+readOnly = "唯讀"
+readOnlyHelp = "顯示值但阻止任何人編輯。"
+removeOption = "移除選項"
+required = "必填"
+requiredHelp = "此欄位填寫前，無法提交表單。"
+signatureNote = "僅為預留位置 - 您不是在這裡簽署。它會標示簽名應在的位置，以便 PDF 簽署工具（Adobe Acrobat、簽署服務等）在文件簽署時將簽名放在此處。"
+tooltip = "工具提示"
+tooltipHelp = "滑鼠停留在 PDF 閱讀器中的欄位上時顯示的提示。"
+type = "類型"
+typeHelp = "這是何種類型的欄位。變更它會重建欄位，因此目前的值不會保留。"
+
+[formFill.mode]
+create = "建立"
+fill = "填寫"
+label = "表單編輯器模式"
+modify = "修改"
+
+[formFill.modify]
+commit = "儲存 {{count}} 項變更"
+delete = "刪除"
+empty = "此 PDF 尚無表單欄位。"
+failed = "儲存變更失敗"
+groupSizeHint = "使用選項大小"
+hint = "選取欄位以編輯其屬性、在頁面上拖曳它，或刪除它。"
+restore = "還原"
 
 [formFill.sidebar]
 close = "關閉側邊欄"
@@ -4584,6 +4669,10 @@ title = "變更中繼資料"
 desc = "變更文件限制與權限"
 tags = "權限,限制,權利,存取控制,允許,拒絕,列印,複製,編輯,修改權限,安全設定,使用者權利,permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "變更權限"
+
+[home.classify]
+desc = "識別這是何種類型的文件並加上標籤。"
+title = "分類"
 
 [home.compare]
 desc = "比較並顯示 2 個 PDF 檔案的差異"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "沒有要回報的事項。"
+handoffUnavailable = "此瀏覽器不允許處理器將文件傳給編輯器。請改從編輯器開啟。"
+noDocumentLinked = "此失敗未連結至特定文件，因此這裡沒有可開啟的內容。"
+notOnThisDevice = "此文件不在此裝置上，因此無法在此開啟。"
+occurrences = "{{count}} 次"
+open = "通知"
+title = "通知"
+unread = "未讀"
+
+[notifications.action]
+failed = "操作未成功。請稍後再試。"
+unavailable = "此通知無法使用。"
+
+[notifications.detail]
+copied = "已複製"
+copy = "複製錯誤"
+less = "顯示較少"
+more = "顯示完整訊息"
+
+[notifications.section]
+earlier = "較早"
+new = "新通知"
 
 [oauth.error]
 message = "驗證未成功。您可以關閉此視窗後再試一次。"
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "已使用 {{allowance}} 個免費 PDFs"
 capSuffix_other = "已使用 {{allowance}} 個免費 PDFs"
 eyebrow = "Processor 試用"
-statusLabel_one = "剩餘 {{remaining}}"
-statusLabel_other = "剩餘 {{remaining}}"
+statusLabel_one = "已使用 {{used}}"
+statusLabel_other = "已使用 {{used}}"
 sub = "免費使用 PDF Editor。付費即可自動處理 PDFs。"
 title_one = "免費處理 {{allowance}} 個 PDFs"
 title_other = "免費處理 {{allowance}} 個 PDFs"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "檢視檔案"
+viewInProcessor = "在處理器中檢視"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "此失敗未記錄於特定文件，因此這裡沒有可開啟的內容。"
+unattended = "此檔案是由資料夾、bucket 或 webhook 提供，因此沒有人的瀏覽器持有它可供開啟。"
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "來源"
 connectSource = "連接來源"
 
 [processor.sources.builder]
+advanced = "進階"
 back = "返回來源"
+backToSource = "返回來源設定"
 backToTypes = "所有來源類型"
 cancel = "取消"
 chooseHint = "選擇文件來源。灰色顯示的連接器即將推出。"
@@ -8729,7 +8848,6 @@ create = "建立來源"
 createTitle = "連線來源"
 delete = "刪除"
 editTitle = "編輯來源"
-enabled = "已啟用"
 save = "儲存變更"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
 [processor.sources.networkFields.recursive]
+helperText = "如果您的檔案整理在巢狀資料夾中，請包含子資料夾，或僅監看最上層。"
 label = "資料夾深度"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "大小、日期與內容檢查"
 stat = "大小與修改日期"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "是否在處理後將原始檔案保留在原位。如果原始檔案保留在原位，下次管線掃描來源時會重新處理它。"
 label = "讀取模式"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "消耗：每個檔案只處理一次"
 snapshot = "快照：每次執行都重新讀取資料夾"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "如果您的檔案整理在巢狀資料夾中，請包含子資料夾，或僅監看最上層。"
 label = "資料夾深度"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "您的 Stirling-PDF 伺服器已離線，且本機後
 expired = "您的工作階段已過期。請重新整理頁面並再試一次。"
 
 [settings]
+backToSections = "所有設定"
 close = "關閉"
+title = "設定"
 
 [settings.ai]
 documents = "文件與 RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "搜尋"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "搜尋工具..."
 
 [toolPicker.subcategories]
 advancedFormatting = "進階格式化"
+ai = "AI"
 automation = "自動化"
 developerTools = "開發者工具"
 documentReview = "文件審閱"
@@ -11335,8 +11460,11 @@ columnDefault = "欄 {{index}}"
 convertToPdf = "轉換為 PDF"
 csvStats = "{{rows}} 列 · {{columns}} 欄 · {{size}}"
 emptyFile = "空白檔案"
+htmlHidePreview = "隱藏預覽"
 htmlPreview = "HTML 預覽"
+htmlPreviewMobileHidden = "HTML 頁面是以桌面寬度排版，因此此處預設關閉預覽。"
 htmlPreviewWarning = "HTML 預覽 — 外部資源可能無法載入 · {{size}}"
+htmlShowPreview = "仍要顯示預覽"
 invalidJson = "無效的 JSON — 顯示原始內容"
 lineNumbers = "行號"
 loading = "載入中..."
@@ -11683,6 +11811,7 @@ exportAll = "匯出 PDF"
 exportSelected = "匯出所選頁面"
 formFill = "填寫表單"
 hideToolbar = "Hide toolbar"
+moreActions = "更多操作"
 multiTool = "多功能工具"
 panMode = "平移模式"
 print = "列印 PDF"
@@ -11703,6 +11832,8 @@ selectAll = "全選"
 selectByNumber = "依頁碼選取"
 selectLanguage = "選擇語言"
 share = "分享"
+showAllTools = "顯示所有工具"
+showFewerTools = "收合工具列"
 showToolbar = "Show toolbar"
 toggleAnnotations = "切換註解顯示"
 toggleAttachments = "切換附件"

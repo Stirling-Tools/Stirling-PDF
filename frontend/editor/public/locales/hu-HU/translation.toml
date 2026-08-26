@@ -41,7 +41,7 @@ false = "Nem"
 fileNotSavedToDisk = "Nincs lemezre mentve"
 fileSavedToDisk = "Fájl mentve a lemezre"
 fileSelected = "Kiválasztva: {{filename}}"
-filesSelected = "fájl kiválasztva"
+filesSelected = "{{count}} fájl"
 font = "Betűtípus"
 fontSizeTooltip = "A lapszám szövegének mérete pontban. A nagyobb szám nagyobb szöveget eredményez."
 fontTypeTooltip = "A lapszámok betűcsaládja. Válassza a dokumentum stílusához illően."
@@ -3969,6 +3969,7 @@ back = "Vissza"
 backToFolder = "Vissza ide: {{folder}}"
 backToMyFiles = "Vissza a Saját fájlokhoz"
 breadcrumbs = "Mappaútvonal"
+bulkActions = "Műveletek"
 cancel = "Mégse"
 classification = "Besorolás"
 clearSelection = "Kijelölés törlése"
@@ -4142,6 +4143,11 @@ totalSize = "Teljes méret"
 type = "Típus"
 versionHistory = "Verziótörténet"
 
+[filesPage.filters]
+activeCount = "{{count}} aktív szűrő"
+clearAll = "Szűrők törlése"
+label = "Szűrők"
+
 [filesPage.folderName]
 cancel = "Mégse"
 error = "A mappát nem sikerült menteni. Próbálja újra."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Fájlok rendezése"
 modifiedAsc = "Legrégebbi elöl"
 modifiedDesc = "Legújabb elöl"
 nameAsc = "Név A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Minden mentve"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Nem sikerült alkalmazni a módosításokat"
 extractCsvError = "CSV kinyerése sikertelen"
 extractXlsxError = "XLSX kinyerése sikertelen"
 filled = "filled"
 flattenAfterFilling = "Kitöltés után lapítás"
+goToPage = "Ugrás erre az oldalra"
 noFields = "No fillable form fields found in this PDF."
+page = "Oldal"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "kötelező"
@@ -4318,7 +4328,82 @@ rescanFields = "Mezők újraolvasása"
 rescanFormFields = "Űrlapmezők újraolvasása"
 save = "Mentés"
 saveShortcut = "Ctrl+S a mentéshez"
+skippedEdits_one = "1 módosítást nem sikerült alkalmazni:"
+skippedEdits_other = "{{count}} módosítást nem sikerült alkalmazni:"
+skippedEditsTruncated = "További {{count}} nincs felsorolva."
 unsavedChanges = "Nem mentett módosítások"
+
+[formFill.create]
+commit = "{{count}} mező hozzáadása a PDF-hez"
+empty = "Még nincs megrajzolt mező."
+failed = "Nem sikerült hozzáadni a mezőket"
+goToField = "Ugrás erre a mezőre"
+hint = "Válasszon mezőtípust, majd rajzolja meg az oldalon."
+placing = "Rajzoljon egy {{type}} mezőt az oldalon. A leállításhoz nyomja meg az Esc billentyűt."
+preview = "Tartsa lenyomva az előnézethez"
+previewHelp = "Tartsa lenyomva, hogy szerkesztési körvonalak nélkül lássa, hogyan fognak kinézni a mezők a hozzáadás után."
+removeField = "Mező eltávolítása"
+
+[formFill.editor]
+action = "Gombművelet"
+actionHelp = "Mit tegyen a gomb kattintáskor."
+actionNone = "Nincs"
+actionPrint = "Nyomtatás"
+actionReset = "Űrlap visszaállítása"
+actionSubmit = "Küldés URL-re"
+actionUri = "URL megnyitása"
+actionUrl = "URL"
+actionUrlHelp = "Az a cím, amelyet a gomb megnyit, vagy amelyre elküld."
+addOption = "Opció hozzáadása"
+caption = "Gombfelirat"
+captionHelp = "A gomb felületén megjelenő szöveg."
+defaultValue = "Alapértelmezett érték"
+defaultValueHelp = "Amit a mező tartalmaz, mielőtt bárki kitölti. Üres mezőhöz hagyja üresen."
+fontSize = "Betűméret"
+fontSizeHelp = "A mezőn belüli szöveg mérete. Hagyja üresen, hogy az olvasóprogram igazítsa a méretet."
+label = "Címke"
+labelHelp = "Az űrlapot kitöltő számára megjelenő szöveg. Hagyja üresen, hogy a mező neve legyen használva."
+maxLength = "Maximális hossz (comb)"
+maxLengthHelp = "Korlátozza a beírható karakterek számát, egyenletesen elosztott mezőkként megjelenítve."
+multiline = "Többsoros"
+multilineHelp = "Több sornyi szöveget engedélyez, és a mező szélénél sort tör."
+multiSelect = "Többszörös kiválasztás engedélyezése"
+multiSelectHelp = "Egyszerre több opció kiválasztását teszi lehetővé."
+name = "Mező neve"
+nameHelp = "A mező belső neve. Adatok exportálásakor vagy az űrlap másik rendszerből történő kitöltésekor használatos, ezért legyen egyedi és szóközmentes."
+optionGap = "Opciók térköze"
+optionGapHelp = "A gombok közötti távolság pontban. Hagyja üresen, hogy egyenletesen legyenek elosztva a dobozban."
+optionPlaceholder = "{{n}}. opció"
+options = "Opciók"
+optionsEmpty = "Adjon hozzá legalább egy opciót."
+optionsHelp = "A listában felkínált választási lehetőségek. Mindegyik a beírt formában tárolódik, ezért legyenek rövidek és jól megkülönböztethetők."
+optionSize = "Opció mérete"
+optionSizeHelp = "Az egyes gombok szélessége és magassága pontban. Hagyja üresen, hogy illeszkedjenek a megrajzolt dobozhoz."
+readOnly = "Csak olvasható"
+readOnlyHelp = "Megjelenít egy értéket, de megakadályozza a szerkesztését."
+removeOption = "Opció eltávolítása"
+required = "Kötelező"
+requiredHelp = "Az űrlap nem küldhető el, amíg ez a mező nincs kitöltve."
+signatureNote = "Csak helykitöltő - itt nem ír alá. Azt jelöli, hová tartozik az aláírás, hogy egy PDF aláíró (Adobe Acrobat, aláírási szolgáltatás stb.) ide helyezze az aláírást a dokumentum aláírásakor."
+tooltip = "Tooltip"
+tooltipHelp = "A PDF olvasóban akkor megjelenő tipp, amikor valaki a mező fölé viszi az egérmutatót."
+type = "Típus"
+typeHelp = "Milyen típusú ez a mező. A módosítása újraépíti a mezőt, ezért az aktuális értéke nem kerül átvitelre."
+
+[formFill.mode]
+create = "Létrehozás"
+fill = "Kitöltés"
+label = "Űrlapszerkesztő mód"
+modify = "Módosítás"
+
+[formFill.modify]
+commit = "{{count}} módosítás mentése"
+delete = "Törlés"
+empty = "Ebben a PDF-ben még nincsenek űrlapmezők."
+failed = "Nem sikerült menteni a módosításokat"
+groupSizeHint = "Opció méretének használata"
+hint = "Válasszon ki egy mezőt a tulajdonságainak szerkesztéséhez, húzza az oldalon, vagy törölje."
+restore = "Visszaállítás"
 
 [formFill.sidebar]
 close = "Oldalsáv bezárása"
@@ -4584,6 +4669,10 @@ title = "Metaadatok módosítása"
 desc = "Dokumentumkorlátozások és jogosultságok módosítása"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Jogosultságok módosítása"
+
+[home.classify]
+desc = "Azonosítsa, milyen típusú dokumentum ez, és címkézze fel."
+title = "Osztályozás"
 
 [home.compare]
 desc = "Két PDF dokumentum összehasonlítása és különbségek megjelenítése"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nincs jelenteni való."
+handoffUnavailable = "Ez a böngésző nem engedi, hogy a feldolgozó átadja a dokumentumot a szerkesztőnek. Nyissa meg inkább a szerkesztőből."
+noDocumentLinked = "Ez a hiba nincs konkrét dokumentumhoz kapcsolva, ezért itt nincs mit megnyitni."
+notOnThisDevice = "Ez a dokumentum nincs ezen az eszközön, ezért itt nem nyitható meg."
+occurrences = "{{count}} alkalommal"
+open = "Értesítések"
+title = "Értesítések"
+unread = "Olvasatlan"
+
+[notifications.action]
+failed = "Ez nem sikerült. Próbálja újra egy pillanat múlva."
+unavailable = "Ehhez az értesítéshez nem érhető el."
+
+[notifications.detail]
+copied = "Másolva"
+copy = "Hiba másolása"
+less = "Kevesebb megjelenítése"
+more = "Teljes üzenet megjelenítése"
+
+[notifications.section]
+earlier = "Korábbi"
+new = "Új"
 
 [oauth.error]
 message = "A hitelesítés nem volt sikeres. Bezárhatja ezt az ablakot, és megpróbálhatja újra."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "felhasználva a(z) {{allowance}} ingyenes PDF-ből"
 capSuffix_other = "felhasználva a(z) {{allowance}} ingyenes PDF-ből"
 eyebrow = "Processor próbaidőszak"
-statusLabel_one = "{{remaining}} maradt"
-statusLabel_other = "{{remaining}} maradt"
+statusLabel_one = "{{used}} felhasználva"
+statusLabel_other = "{{used}} felhasználva"
 sub = "Használja a PDF Editor-t ingyen. Fizessen a PDF-ek automatikus feldolgozásáért."
 title_one = "Dolgozzon fel {{allowance}} PDF-et ingyen"
 title_other = "Dolgozzon fel {{allowance}} PDF-et ingyen"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Fájl megtekintése"
+viewInProcessor = "Megtekintés a feldolgozóban"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Ez a hiba nem konkrét dokumentumhoz lett rögzítve, ezért itt nincs mit megnyitni."
+unattended = "Ezt a fájlt egy mappa, bucket vagy webhook adta át, ezért senkinek a böngészője nem tartja megnyitásra készen."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Források"
 connectSource = "Forrás csatlakoztatása"
 
 [processor.sources.builder]
+advanced = "Speciális"
 back = "Vissza a forrásokhoz"
+backToSource = "Vissza a forrás beállításához"
 backToTypes = "Minden forrástípus"
 cancel = "Mégse"
 chooseHint = "Válassza ki, honnan érkeznek a dokumentumok. A kiszürkített csatlakozók úton vannak."
@@ -8729,7 +8848,6 @@ create = "Forrás létrehozása"
 createTitle = "Forrás csatlakoztatása"
 delete = "Törlés"
 editTitle = "Forrás szerkesztése"
-enabled = "Engedélyezve"
 save = "Módosítások mentése"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: minden fájl feldolgozása egyszer"
 snapshot = "Snapshot: mappa újraolvasása minden futtatáskor"
 
 [processor.sources.networkFields.recursive]
+helperText = "Tartalmazza az almappákat, ha a fájljai beágyazott mappákba vannak rendezve, vagy csak a legfelső szintet figyelje."
 label = "Mappamélység"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Méret, dátum és tartalomellenőrzés"
 stat = "Méret és módosítás dátuma"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Meghagyja-e az eredeti fájlt a helyén a feldolgozás után. Ha az eredeti fájl a helyén marad, a pipeline következő forrásellenőrzésekor újra feldolgozásra kerül."
 label = "Olvasási mód"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Elfogyasztás: minden fájl feldolgozása egyszer"
 snapshot = "Pillanatkép: a mappa újraolvasása minden futtatáskor"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Tartalmazza az almappákat, ha a fájljai beágyazott mappákba vannak rendezve, vagy csak a legfelső szintet figyelje."
 label = "Mappamélység"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "A Stirling-PDF szervere offline, és a(z) \"{{endpoin
 expired = "A munkamenet lejárt. Kérjük, frissítse az oldalt és próbálja újra."
 
 [settings]
+backToSections = "Összes beállítás"
 close = "Bezárás"
+title = "Beállítások"
 
 [settings.ai]
 documents = "Dokumentumok és RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Keresés"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Eszközök keresése..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Speciális formázás"
+ai = "AI"
 automation = "Automatizálás"
 developerTools = "Fejlesztői eszközök"
 documentReview = "Dokumentum-áttekintés"
@@ -11335,8 +11460,11 @@ columnDefault = "{{index}}. oszlop"
 convertToPdf = "Konvertálás PDF-be"
 csvStats = "{{rows}} sor · {{columns}} oszlop · {{size}}"
 emptyFile = "Üres fájl"
+htmlHidePreview = "Előnézet elrejtése"
 htmlPreview = "HTML előnézet"
+htmlPreviewMobileHidden = "A HTML oldalak asztali szélességre vannak elrendezve, ezért itt az előnézet alapértelmezés szerint ki van kapcsolva."
 htmlPreviewWarning = "HTML előnézet — a külső erőforrások nem biztos, hogy betöltődnek · {{size}}"
+htmlShowPreview = "Előnézet megjelenítése mégis"
 invalidJson = "Érvénytelen JSON — nyers tartalom megjelenítése"
 lineNumbers = "Sorszámok"
 loading = "Betöltés..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF exportálása"
 exportSelected = "Kijelölt oldalak exportálása"
 formFill = "Űrlap kitöltése"
 hideToolbar = "Hide toolbar"
+moreActions = "További műveletek"
 multiTool = "Többfunkciós eszköz"
 panMode = "Mozgatás mód"
 print = "PDF nyomtatása"
@@ -11703,6 +11832,8 @@ selectAll = "Összes kijelölése"
 selectByNumber = "Kiválasztás oldalszámok szerint"
 selectLanguage = "Nyelv kiválasztása"
 share = "Megosztás"
+showAllTools = "Összes eszköz megjelenítése"
+showFewerTools = "Eszköztár összecsukása"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Annotációk láthatóságának be-/kikapcsolása"
 toggleAttachments = "Mellékletek be-/kikapcsolása"

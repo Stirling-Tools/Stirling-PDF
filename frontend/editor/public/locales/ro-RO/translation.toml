@@ -41,7 +41,7 @@ false = "Fals"
 fileNotSavedToDisk = "Nesalvat pe disc"
 fileSavedToDisk = "Fișier salvat pe disc"
 fileSelected = "Selectat: {{filename}}"
-filesSelected = "fișiere selectate"
+filesSelected = "{{count}} fișiere"
 font = "Font"
 fontSizeTooltip = "Dimensiunea textului numărului de pagină în puncte. Numere mai mari creează text mai mare."
 fontTypeTooltip = "Familia de font pentru numerele de pagină. Alegeți în funcție de stilul documentului."
@@ -3969,6 +3969,7 @@ back = "Înapoi"
 backToFolder = "Înapoi la {{folder}}"
 backToMyFiles = "Înapoi la Fișierele mele"
 breadcrumbs = "Calea folderului"
+bulkActions = "Acțiuni"
 cancel = "Anulați"
 classification = "Clasificare"
 clearSelection = "Goliți selecția"
@@ -4142,6 +4143,11 @@ totalSize = "Dimensiune totală"
 type = "Tip"
 versionHistory = "Evoluție versiuni"
 
+[filesPage.filters]
+activeCount = "{{count}} filtre active"
+clearAll = "Șterge filtrele"
+label = "Filtre"
+
 [filesPage.folderName]
 cancel = "Anulați"
 error = "Nu s-a putut salva folderul. Încercați din nou."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sortează fișierele"
 modifiedAsc = "Cele mai vechi mai întâi"
 modifiedDesc = "Cele mai recente mai întâi"
 nameAsc = "Nume A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Totul salvat"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Nu s-au putut aplica modificările"
 extractCsvError = "Extragerea CSV a eșuat"
 extractXlsxError = "Extragerea XLSX a eșuat"
 filled = "filled"
 flattenAfterFilling = "Aplatizați după completare"
+goToPage = "Mergi la această pagină"
 noFields = "No fillable form fields found in this PDF."
+page = "Pagină"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl"
@@ -4318,7 +4328,82 @@ rescanFields = "Rescanați câmpurile"
 rescanFormFields = "Rescanați câmpurile formularului"
 save = "Salvați"
 saveShortcut = "Ctrl+S pentru salvare"
+skippedEdits_one = "1 modificare nu a putut fi aplicată:"
+skippedEdits_other = "{{count}} modificări nu au putut fi aplicate:"
+skippedEditsTruncated = "Încă {{count}} nu sunt listate."
 unsavedChanges = "Modificări nesalvate"
+
+[formFill.create]
+commit = "Adaugă {{count}} câmp(uri) în PDF"
+empty = "Nu a fost desenat încă niciun câmp."
+failed = "Nu s-au putut adăuga câmpurile"
+goToField = "Mergi la acest câmp"
+hint = "Alege un tip de câmp, apoi desenează-l pe pagină."
+placing = "Desenează un câmp {{type}} pe pagină. Apasă Esc pentru a opri."
+preview = "Ține apăsat pentru previzualizare"
+previewHelp = "Ține apăsat pentru a vedea cum vor arăta câmpurile după adăugare, fără contururile de editare."
+removeField = "Elimină câmpul"
+
+[formFill.editor]
+action = "Acțiune buton"
+actionHelp = "Ce face butonul când este apăsat."
+actionNone = "Niciuna"
+actionPrint = "Tipărește"
+actionReset = "Resetează formularul"
+actionSubmit = "Trimite la URL"
+actionUri = "Deschide URL"
+actionUrl = "URL"
+actionUrlHelp = "Adresa pe care butonul o deschide sau către care trimite."
+addOption = "Adaugă opțiune"
+caption = "Text buton"
+captionHelp = "Textul afișat pe fața butonului."
+defaultValue = "Valoare implicită"
+defaultValueHelp = "Ce conține câmpul înainte ca cineva să îl completeze. Lasă necompletat pentru un câmp gol."
+fontSize = "Dimensiune font"
+fontSizeHelp = "Dimensiunea textului din câmp. Lasă necompletat pentru ca cititorul să îl dimensioneze ca să se potrivească."
+label = "Etichetă"
+labelHelp = "Textul afișat celui care completează formularul. Lasă necompletat pentru a reveni la numele câmpului."
+maxLength = "Lungime maximă (comb)"
+maxLengthHelp = "Limitează câte caractere încap, desenate ca niște casete spațiate uniform."
+multiline = "Pe mai multe linii"
+multilineHelp = "Permite mai mult de o linie de text și trece la rând la marginea câmpului."
+multiSelect = "Permite selecție multiplă"
+multiSelectHelp = "Permite alegerea mai multor opțiuni simultan."
+name = "Nume câmp"
+nameHelp = "Numele intern al câmpului. Folosit la exportarea datelor sau la completarea formularului din alt sistem, așa că păstrează-l unic și fără spații."
+optionGap = "Spațiere opțiuni"
+optionGapHelp = "Spațiul dintre butoane, în puncte. Lasă necompletat pentru a le distribui uniform pe verticală în casetă."
+optionPlaceholder = "Opțiunea {{n}}"
+options = "Opțiuni"
+optionsEmpty = "Adaugă cel puțin o opțiune."
+optionsHelp = "Alegerile oferite în listă. Fiecare este stocată exact cum este introdusă, așa că păstrează-le scurte și distincte."
+optionSize = "Dimensiune opțiune"
+optionSizeHelp = "Lățimea și înălțimea fiecărui buton, în puncte. Lasă necompletat pentru a le potrivi în caseta pe care ai desenat-o."
+readOnly = "Doar citire"
+readOnlyHelp = "Afișează o valoare, dar împiedică editarea ei."
+removeOption = "Elimină opțiunea"
+required = "Obligatoriu"
+requiredHelp = "Formularul nu poate fi trimis până când acest câmp nu este completat."
+signatureNote = "Doar substituent - nu semnezi aici. Marchează locul unde trebuie să fie o semnătură, astfel încât un semnatar PDF (Adobe Acrobat, un serviciu de semnare etc.) să plaseze semnătura în acest loc când documentul este semnat."
+tooltip = "Tooltip"
+tooltipHelp = "Indiciul afișat când cineva trece cu cursorul peste câmp într-un cititor PDF."
+type = "Tip"
+typeHelp = "Ce fel de câmp este acesta. Schimbarea lui reconstruiește câmpul, astfel că valoarea sa curentă nu este preluată."
+
+[formFill.mode]
+create = "Creează"
+fill = "Completează"
+label = "Mod editor formular"
+modify = "Modifică"
+
+[formFill.modify]
+commit = "Salvează {{count}} modificare/modificări"
+delete = "Șterge"
+empty = "Acest PDF nu are încă niciun câmp de formular."
+failed = "Nu s-au putut salva modificările"
+groupSizeHint = "Folosește dimensiunea opțiunii"
+hint = "Selectează un câmp pentru a-i edita proprietățile, trage-l pe pagină sau șterge-l."
+restore = "Restaurează"
 
 [formFill.sidebar]
 close = "Închideți bara laterală"
@@ -4584,6 +4669,10 @@ title = "Schimbă Metadatele"
 desc = "Schimbați restricțiile și permisiunile documentului"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Schimbă Permisiunile"
+
+[home.classify]
+desc = "Identifică ce fel de document este acesta și etichetează-l."
+title = "Clasifică"
 
 [home.compare]
 desc = "Compară și arată diferențele dintre 2 documente PDF."
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Nimic de raportat."
+handoffUnavailable = "Acest browser nu va permite procesorului să trimită documentul către editor. Deschide-l din editor în schimb."
+noDocumentLinked = "Această eroare nu este asociată cu un document anume, deci nu există nimic de deschis aici."
+notOnThisDevice = "Acest document nu se află pe acest dispozitiv, deci nu poate fi deschis aici."
+occurrences = "de {{count}} ori"
+open = "Notificări"
+title = "Notificări"
+unread = "Necitite"
+
+[notifications.action]
+failed = "Nu a funcționat. Încearcă din nou peste un moment."
+unavailable = "Nu este disponibil pentru această notificare."
+
+[notifications.detail]
+copied = "Copiat"
+copy = "Copiază eroarea"
+less = "Afișează mai puțin"
+more = "Afișează mesajul complet"
+
+[notifications.section]
+earlier = "Anterioare"
+new = "Noi"
 
 [oauth.error]
 message = "Autentificarea nu a reușit. Puteți închide această fereastră și să încercați din nou."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "din {{allowance}} PDF-uri gratuite folosite"
 capSuffix_other = "din {{allowance}} PDF-uri gratuite folosite"
 eyebrow = "Perioadă de încercare Processor"
-statusLabel_one = "{{remaining}} rămas"
-statusLabel_other = "{{remaining}} rămase"
+statusLabel_one = "{{used}} utilizat"
+statusLabel_other = "{{used}} utilizate"
 sub = "Folosește PDF Editor gratuit. Plătește pentru a procesa PDF-uri automat."
 title_one = "Procesează gratuit {{allowance}} PDF"
 title_other = "Procesează gratuit {{allowance}} PDF-uri"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Vizualizează fișierul"
+viewInProcessor = "Vizualizează în procesor"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Această eroare nu a fost înregistrată pentru un document anume, deci nu există nimic de deschis aici."
+unattended = "Acest fișier a fost alimentat de un folder, bucket sau webhook, așa că niciun browser nu îl deține pentru a-l deschide."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Surse"
 connectSource = "Conectează sursa"
 
 [processor.sources.builder]
+advanced = "Avansat"
 back = "Înapoi la surse"
+backToSource = "Înapoi la configurarea sursei"
 backToTypes = "Toate tipurile de surse"
 cancel = "Anulați"
 chooseHint = "Alegeți de unde vin documentele. Conectorii gri sunt în pregătire."
@@ -8729,7 +8848,6 @@ create = "Creați sursa"
 createTitle = "Conectați o sursă"
 delete = "Ștergeți"
 editTitle = "Editați sursa"
-enabled = "Activată"
 save = "Salvați modificările"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: procesați fiecare fișier o singură dată"
 snapshot = "Snapshot: recitiți folderul la fiecare rulare"
 
 [processor.sources.networkFields.recursive]
+helperText = "Include subfolderele dacă fișierele sunt organizate în foldere imbricate sau urmărește doar nivelul superior."
 label = "Adâncime folder"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Dimensiune, dată și verificare conținut"
 stat = "Dimensiune și dată modificare"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Dacă fișierul original să rămână pe loc după ce a fost procesat. Dacă fișierul original rămâne pe loc, va fi reprocesat data viitoare când pipeline-ul scanează sursa."
 label = "Mod citire"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Consumă: procesează fiecare fișier o singură dată"
 snapshot = "Instantaneu: recitește folderul la fiecare rulare"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Include subfolderele dacă fișierele sunt organizate în foldere imbricate sau urmărește doar nivelul superior."
 label = "Adâncime folder"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Serverul dvs. Stirling-PDF este offline, iar \"{{endp
 expired = "Sesiunea dvs. a expirat. Reîmprospătați pagina și încercați din nou."
 
 [settings]
+backToSections = "Toate setările"
 close = "Închideți"
+title = "Setări"
 
 [settings.ai]
 documents = "Documente și RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Caută"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Căutați instrumente..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Formatare avansată"
+ai = "AI"
 automation = "Automatizare"
 developerTools = "Instrumente pentru dezvoltatori"
 documentReview = "Revizuire documente"
@@ -11335,8 +11460,11 @@ columnDefault = "Coloana {{index}}"
 convertToPdf = "Convertiți în PDF"
 csvStats = "{{rows}} rânduri · {{columns}} coloane · {{size}}"
 emptyFile = "Fișier gol"
+htmlHidePreview = "Ascunde previzualizarea"
 htmlPreview = "Previzualizare HTML"
+htmlPreviewMobileHidden = "Paginile HTML sunt aranjate pentru lățimi de desktop, așa că previzualizarea este dezactivată implicit aici."
 htmlPreviewWarning = "Previzualizare HTML — resursele externe s-ar putea să nu se încarce · {{size}}"
+htmlShowPreview = "Afișează oricum previzualizarea"
 invalidJson = "JSON invalid — se afișează conținutul brut"
 lineNumbers = "Numere de linie"
 loading = "Se încarcă..."
@@ -11683,6 +11811,7 @@ exportAll = "Exportă PDF"
 exportSelected = "Exportă paginile selectate"
 formFill = "Completează formularul"
 hideToolbar = "Hide toolbar"
+moreActions = "Mai multe acțiuni"
 multiTool = "Instrument multiplu"
 panMode = "Mod panoramare"
 print = "Tipărește PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Selectează tot"
 selectByNumber = "Selectează după numerele paginilor"
 selectLanguage = "Selectează limba"
 share = "Partajează"
+showAllTools = "Afișează toate instrumentele"
+showFewerTools = "Restrânge bara de instrumente"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Comută vizibilitatea adnotărilor"
 toggleAttachments = "Comută atașamentele"

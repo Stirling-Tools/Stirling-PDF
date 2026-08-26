@@ -41,7 +41,7 @@ false = "Nie"
 fileNotSavedToDisk = "Nie zapisano na dysku"
 fileSavedToDisk = "Plik zapisano na dysku"
 fileSelected = "Wybrano: {{filename}}"
-filesSelected = "wybrane pliki"
+filesSelected = "{{count}} plików"
 font = "Czcionka"
 fontSizeTooltip = "Rozmiar tekstu numeru strony w punktach. Większe wartości tworzą większy tekst."
 fontTypeTooltip = "Rodzina czcionek dla numerów stron. Wybierz zgodnie ze stylem dokumentu."
@@ -3969,6 +3969,7 @@ back = "Wstecz"
 backToFolder = "Wróć do {{folder}}"
 backToMyFiles = "Wróć do Moich plików"
 breadcrumbs = "Ścieżka folderu"
+bulkActions = "Akcje"
 cancel = "Anuluj"
 classification = "Klasyfikacja"
 clearSelection = "Wyczyść zaznaczenie"
@@ -4142,6 +4143,11 @@ totalSize = "Łączny rozmiar"
 type = "Typ"
 versionHistory = "Historia wersji"
 
+[filesPage.filters]
+activeCount = "Aktywne filtry: {{count}}"
+clearAll = "Wyczyść filtry"
+label = "Filtry"
+
 [filesPage.folderName]
 cancel = "Anuluj"
 error = "Nie można było zapisać folderu. Spróbuj ponownie."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sortuj pliki"
 modifiedAsc = "Najpierw najstarsze"
 modifiedDesc = "Najpierw najnowsze"
 nameAsc = "Nazwa A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Wszystko zapisano"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Nie udało się zastosować zmian"
 extractCsvError = "Nie udało się wyodrębnić CSV"
 extractXlsxError = "Nie udało się wyodrębnić XLSX"
 filled = "filled"
 flattenAfterFilling = "Spłaszcz po wypełnieniu"
+goToPage = "Przejdź do tej strony"
 noFields = "No fillable form fields found in this PDF."
+page = "Strona"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "wym."
@@ -4318,7 +4328,82 @@ rescanFields = "Skanuj pola ponownie"
 rescanFormFields = "Skanuj ponownie pola formularza"
 save = "Zapisz"
 saveShortcut = "Ctrl+S, aby zapisać"
+skippedEdits_one = "Nie udało się zastosować 1 zmiany:"
+skippedEdits_other = "Nie udało się zastosować {{count}} zmian:"
+skippedEditsTruncated = "{{count}} kolejnych nie wymieniono."
 unsavedChanges = "Niezapisane zmiany"
+
+[formFill.create]
+commit = "Dodaj {{count}} pól do PDF"
+empty = "Nie narysowano jeszcze żadnych pól."
+failed = "Nie udało się dodać pól"
+goToField = "Przejdź do tego pola"
+hint = "Wybierz typ pola, a następnie narysuj je na stronie."
+placing = "Narysuj pole {{type}} na stronie. Naciśnij Esc, aby zakończyć."
+preview = "Przytrzymaj, aby wyświetlić podgląd"
+previewHelp = "Przytrzymaj, aby zobaczyć pola tak, jak będą wyglądać po dodaniu, bez obrysów edycji."
+removeField = "Usuń pole"
+
+[formFill.editor]
+action = "Akcja przycisku"
+actionHelp = "Co robi przycisk po kliknięciu."
+actionNone = "Brak"
+actionPrint = "Drukuj"
+actionReset = "Resetuj formularz"
+actionSubmit = "Prześlij do URL"
+actionUri = "Otwórz URL"
+actionUrl = "URL"
+actionUrlHelp = "Adres, który przycisk otwiera lub do którego przesyła dane."
+addOption = "Dodaj opcję"
+caption = "Podpis przycisku"
+captionHelp = "Tekst wyświetlany na przycisku."
+defaultValue = "Wartość domyślna"
+defaultValueHelp = "Zawartość pola, zanim ktoś je wypełni. Pozostaw puste, aby pole było puste."
+fontSize = "Rozmiar czcionki"
+fontSizeHelp = "Rozmiar tekstu w polu. Pozostaw puste, aby czytnik dopasował rozmiar."
+label = "Etykieta"
+labelHelp = "Tekst wyświetlany osobie wypełniającej formularz. Pozostaw puste, aby użyć nazwy pola."
+maxLength = "Maks. długość (comb)"
+maxLengthHelp = "Ogranicza liczbę znaków, rysując je jako równomiernie rozmieszczone pola."
+multiline = "Wielowierszowe"
+multilineHelp = "Pozwala na więcej niż jeden wiersz tekstu i zawija go przy krawędzi pola."
+multiSelect = "Zezwól na wielokrotny wybór"
+multiSelectHelp = "Pozwala wybrać więcej niż jedną opcję naraz."
+name = "Nazwa pola"
+nameHelp = "Wewnętrzna nazwa pola. Używana podczas eksportowania danych lub wypełniania formularza z innego systemu, więc powinna być unikalna i bez spacji."
+optionGap = "Odstęp opcji"
+optionGapHelp = "Odstęp między przyciskami, w punktach. Pozostaw puste, aby rozmieścić je równomiernie w dół pola."
+optionPlaceholder = "Opcja {{n}}"
+options = "Opcje"
+optionsEmpty = "Dodaj co najmniej jedną opcję."
+optionsHelp = "Wybory oferowane na liście. Każdy jest zapisywany tak, jak wpisano, więc powinny być krótkie i odrębne."
+optionSize = "Rozmiar opcji"
+optionSizeHelp = "Szerokość i wysokość każdego przycisku, w punktach. Pozostaw puste, aby dopasować je do narysowanego pola."
+readOnly = "Tylko do odczytu"
+readOnlyHelp = "Wyświetla wartość, ale uniemożliwia jej edycję."
+removeOption = "Usuń opcję"
+required = "Wymagane"
+requiredHelp = "Formularza nie można przesłać, dopóki to pole nie zostanie wypełnione."
+signatureNote = "Tylko symbol zastępczy — tutaj nie składasz podpisu. Wskazuje miejsce na podpis, aby osoba podpisująca PDF (Adobe Acrobat, usługa podpisywania itp.) umieściła podpis w tym miejscu podczas podpisywania dokumentu."
+tooltip = "Podpowiedź"
+tooltipHelp = "Wskazówka wyświetlana, gdy ktoś najedzie kursorem na pole w czytniku PDF."
+type = "Typ"
+typeHelp = "Rodzaj tego pola. Zmiana przebudowuje pole, więc jego bieżąca wartość nie zostanie zachowana."
+
+[formFill.mode]
+create = "Utwórz"
+fill = "Wypełnij"
+label = "Tryb edytora formularzy"
+modify = "Modyfikuj"
+
+[formFill.modify]
+commit = "Zapisz {{count}} zmian"
+delete = "Usuń"
+empty = "Ten PDF nie ma jeszcze pól formularza."
+failed = "Nie udało się zapisać zmian"
+groupSizeHint = "Użyj rozmiaru opcji"
+hint = "Wybierz pole, aby edytować jego właściwości, przeciągnij je na stronie lub usuń."
+restore = "Przywróć"
 
 [formFill.sidebar]
 close = "Zamknij pasek boczny"
@@ -4584,6 +4669,10 @@ title = "Zmień metadane"
 desc = "Zmień ograniczenia i uprawnienia dokumentu"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Zmień uprawnienia"
+
+[home.classify]
+desc = "Określ, jakiego rodzaju jest ten dokument, i oznacz go tagiem."
+title = "Klasyfikuj"
 
 [home.compare]
 desc = "Porównuje i pokazuje różnice między dwoma dokumentami PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Brak zgłoszeń."
+handoffUnavailable = "Ta przeglądarka nie pozwoli procesorowi przekazać dokumentu do edytora. Otwórz go zamiast tego z poziomu edytora."
+noDocumentLinked = "Ta awaria nie jest powiązana z konkretnym dokumentem, więc nie ma tu nic do otwarcia."
+notOnThisDevice = "Tego dokumentu nie ma na tym urządzeniu, więc nie można go tutaj otworzyć."
+occurrences = "{{count}} razy"
+open = "Powiadomienia"
+title = "Powiadomienia"
+unread = "Nieprzeczytane"
+
+[notifications.action]
+failed = "To nie zadziałało. Spróbuj ponownie za chwilę."
+unavailable = "Niedostępne dla tego powiadomienia."
+
+[notifications.detail]
+copied = "Skopiowano"
+copy = "Kopiuj błąd"
+less = "Pokaż mniej"
+more = "Pokaż pełny komunikat"
+
+[notifications.section]
+earlier = "Wcześniejsze"
+new = "Nowe"
 
 [oauth.error]
 message = "Uwierzytelnienie nie zakończyło się pomyślnie. Możesz zamknąć to okno i spróbować ponownie."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "z {{allowance}} bezpłatnych PDF wykorzystano"
 capSuffix_other = "z {{allowance}} bezpłatnych PDF wykorzystano"
 eyebrow = "Okres próbny Processor"
-statusLabel_one = "Pozostało {{remaining}}"
-statusLabel_other = "Pozostało {{remaining}}"
+statusLabel_one = "Wykorzystano {{used}}"
+statusLabel_other = "Wykorzystano {{used}}"
 sub = "Korzystaj z edytora PDF bezpłatnie. Płać za automatyczne przetwarzanie PDF."
 title_one = "Przetwórz {{allowance}} PDF bezpłatnie"
 title_other = "Przetwórz {{allowance}} PDF bezpłatnie"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Wyświetl plik"
+viewInProcessor = "Wyświetl w procesorze"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Ta awaria nie została zarejestrowana dla konkretnego dokumentu, więc nie ma tu nic do otwarcia."
+unattended = "Ten plik został przekazany przez folder, bucket lub webhook, więc żadna przeglądarka nie przechowuje go do otwarcia."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Źródła"
 connectSource = "Połącz źródło"
 
 [processor.sources.builder]
+advanced = "Zaawansowane"
 back = "Wróć do źródeł"
+backToSource = "Wróć do konfiguracji źródła"
 backToTypes = "Wszystkie typy źródeł"
 cancel = "Anuluj"
 chooseHint = "Wybierz, skąd pochodzą dokumenty. Wyszarzone konektory są w przygotowaniu."
@@ -8729,7 +8848,6 @@ create = "Utwórz źródło"
 createTitle = "Połącz źródło"
 delete = "Usuń"
 editTitle = "Edytuj źródło"
-enabled = "Włączone"
 save = "Zapisz zmiany"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Consume: przetwórz każdy plik raz"
 snapshot = "Snapshot: odczytuj folder ponownie przy każdym uruchomieniu"
 
 [processor.sources.networkFields.recursive]
+helperText = "Uwzględnij podfoldery, jeśli pliki są uporządkowane w zagnieżdżonych folderach, albo obserwuj tylko najwyższy poziom."
 label = "Głębokość folderu"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Rozmiar, data i kontrola zawartości"
 stat = "Rozmiar i data modyfikacji"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Czy pozostawić oryginalny plik na miejscu po jego przetworzeniu. Jeśli oryginalny plik zostanie pozostawiony na miejscu, zostanie ponownie przetworzony przy następnym skanowaniu źródła przez pipeline."
 label = "Tryb odczytu"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Zużyj: przetwórz każdy plik raz"
 snapshot = "Migawka: ponownie odczytaj folder przy każdym uruchomieniu"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Uwzględnij podfoldery, jeśli pliki są uporządkowane w zagnieżdżonych folderach, albo obserwuj tylko najwyższy poziom."
 label = "Głębokość folderu"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Twój serwer Stirling-PDF jest offline, a \"{{endpoin
 expired = "Twoja sesja wygasła. Odśwież stronę i spróbuj ponownie."
 
 [settings]
+backToSections = "Wszystkie ustawienia"
 close = "Zamknij"
+title = "Ustawienia"
 
 [settings.ai]
 documents = "Dokumenty i RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Szukaj"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Szukaj narzędzi..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Zaawansowane formatowanie"
+ai = "AI"
 automation = "Automatyzacja"
 developerTools = "Narzędzia programistyczne"
 documentReview = "Przegląd dokumentu"
@@ -11335,8 +11460,11 @@ columnDefault = "Kolumna {{index}}"
 convertToPdf = "Konwertuj do PDF"
 csvStats = "{{rows}} wierszy · {{columns}} kolumn · {{size}}"
 emptyFile = "Pusty plik"
+htmlHidePreview = "Ukryj podgląd"
 htmlPreview = "Podgląd HTML"
+htmlPreviewMobileHidden = "Strony HTML są projektowane dla szerokości komputerów stacjonarnych, więc podgląd jest tutaj domyślnie wyłączony."
 htmlPreviewWarning = "Podgląd HTML — zasoby zewnętrzne mogą się nie załadować · {{size}}"
+htmlShowPreview = "Mimo to pokaż podgląd"
 invalidJson = "Nieprawidłowy JSON — wyświetlanie surowej zawartości"
 lineNumbers = "Numery wierszy"
 loading = "Wczytywanie..."
@@ -11683,6 +11811,7 @@ exportAll = "Eksportuj PDF"
 exportSelected = "Eksportuj wybrane strony"
 formFill = "Wypełnij formularz"
 hideToolbar = "Hide toolbar"
+moreActions = "Więcej akcji"
 multiTool = "Wielofunkcyjne narzędzie"
 panMode = "Tryb przesuwania"
 print = "Drukuj PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Zaznacz wszystko"
 selectByNumber = "Zaznacz według numerów stron"
 selectLanguage = "Wybierz język"
 share = "Udostępnij"
+showAllTools = "Pokaż wszystkie narzędzia"
+showFewerTools = "Zwiń pasek narzędzi"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Pokaż/ukryj adnotacje"
 toggleAttachments = "Pokaż/ukryj załączniki"

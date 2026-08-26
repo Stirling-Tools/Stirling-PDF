@@ -41,7 +41,7 @@ false = "Нет"
 fileNotSavedToDisk = "Не сохранён на диск"
 fileSavedToDisk = "Файл сохранён на диск"
 fileSelected = "Выбрано: {{filename}}"
-filesSelected = "файлов выбрано"
+filesSelected = "{{count}} файлов"
 font = "Шрифт"
 fontSizeTooltip = "Размер текста номера страницы в пунктах. Большие числа — больше текст."
 fontTypeTooltip = "Семейство шрифтов для номеров страниц. Выберите в соответствии со стилем документа."
@@ -3969,6 +3969,7 @@ back = "Назад"
 backToFolder = "Назад к {{folder}}"
 backToMyFiles = "Назад к Моим файлам"
 breadcrumbs = "Путь к папке"
+bulkActions = "Действия"
 cancel = "Отмена"
 classification = "Классификация"
 clearSelection = "Очистить выбор"
@@ -4142,6 +4143,11 @@ totalSize = "Общий размер"
 type = "Тип"
 versionHistory = "Путь версий"
 
+[filesPage.filters]
+activeCount = "{{count}} активных фильтров"
+clearAll = "Сбросить фильтры"
+label = "Фильтры"
+
 [filesPage.folderName]
 cancel = "Отмена"
 error = "Не удалось сохранить папку. Попробуйте ещё раз."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Сортировать файлы"
 modifiedAsc = "Сначала старые"
 modifiedDesc = "Сначала новые"
 nameAsc = "Имя А→Я"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Все сохранено"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Не удалось применить изменения"
 extractCsvError = "Не удалось извлечь CSV"
 extractXlsxError = "Не удалось извлечь XLSX"
 filled = "filled"
 flattenAfterFilling = "Сплющить после заполнения"
+goToPage = "Перейти на эту страницу"
 noFields = "No fillable form fields found in this PDF."
+page = "Страница"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "обяз."
@@ -4318,7 +4328,82 @@ rescanFields = "Пересканировать поля"
 rescanFormFields = "Пересканировать поля формы"
 save = "Сохранить"
 saveShortcut = "Ctrl+S для сохранения"
+skippedEdits_one = "1 изменение не удалось применить:"
+skippedEdits_other = "{{count}} изменений не удалось применить:"
+skippedEditsTruncated = "Еще {{count}} не перечислено."
 unsavedChanges = "Несохраненные изменения"
+
+[formFill.create]
+commit = "Добавить {{count}} поле(я) в PDF"
+empty = "Поля еще не нарисованы."
+failed = "Не удалось добавить поля"
+goToField = "Перейти к этому полю"
+hint = "Выберите тип поля, затем нарисуйте его на странице."
+placing = "Нарисуйте поле {{type}} на странице. Нажмите Esc, чтобы остановить."
+preview = "Удерживайте для предпросмотра"
+previewHelp = "Удерживайте, чтобы увидеть, как будут выглядеть поля после добавления, без контуров редактирования."
+removeField = "Удалить поле"
+
+[formFill.editor]
+action = "Действие кнопки"
+actionHelp = "Что делает кнопка при нажатии."
+actionNone = "Нет"
+actionPrint = "Печать"
+actionReset = "Сбросить форму"
+actionSubmit = "Отправить на URL"
+actionUri = "Открыть URL"
+actionUrl = "URL"
+actionUrlHelp = "Адрес, который кнопка открывает или на который отправляет данные."
+addOption = "Добавить вариант"
+caption = "Надпись на кнопке"
+captionHelp = "Текст, отображаемый на кнопке."
+defaultValue = "Значение по умолчанию"
+defaultValueHelp = "Что содержит поле до заполнения. Оставьте пустым для пустого поля."
+fontSize = "Размер шрифта"
+fontSizeHelp = "Размер текста внутри поля. Оставьте пустым, чтобы средство просмотра подобрало размер по размеру поля."
+label = "Метка"
+labelHelp = "Текст, который видит тот, кто заполняет форму. Оставьте пустым, чтобы использовать имя поля."
+maxLength = "Макс. длина (comb)"
+maxLengthHelp = "Ограничивает количество символов; они отображаются как равномерно расположенные ячейки."
+multiline = "Многострочное"
+multilineHelp = "Позволяет вводить более одной строки текста и переносит текст у края поля."
+multiSelect = "Разрешить множественный выбор"
+multiSelectHelp = "Позволяет выбрать более одного варианта одновременно."
+name = "Имя поля"
+nameHelp = "Внутреннее имя поля. Используется при экспорте данных или заполнении формы из другой системы, поэтому оно должно быть уникальным и без пробелов."
+optionGap = "Интервал между вариантами"
+optionGapHelp = "Расстояние между кнопками в пунктах. Оставьте пустым, чтобы равномерно распределить их по области."
+optionPlaceholder = "Вариант {{n}}"
+options = "Варианты"
+optionsEmpty = "Добавьте хотя бы один вариант."
+optionsHelp = "Варианты, предлагаемые в списке. Каждый сохраняется в введенном виде, поэтому делайте их короткими и различимыми."
+optionSize = "Размер варианта"
+optionSizeHelp = "Ширина и высота каждой кнопки в пунктах. Оставьте пустым, чтобы подогнать их под нарисованную область."
+readOnly = "Только для чтения"
+readOnlyHelp = "Показывает значение, но не позволяет никому его редактировать."
+removeOption = "Удалить вариант"
+required = "Обязательное"
+requiredHelp = "Форму нельзя отправить, пока это поле не будет заполнено."
+signatureNote = "Только заполнитель — здесь вы не подписываете. Он отмечает место для подписи, чтобы подписант PDF (Adobe Acrobat, сервис подписи и т. д.) разместил подпись в этом месте при подписании документа."
+tooltip = "Подсказка"
+tooltipHelp = "Подсказка, отображаемая при наведении на поле в средстве просмотра PDF."
+type = "Тип"
+typeHelp = "Какого типа это поле. При изменении типа поле пересоздается, поэтому его текущее значение не переносится."
+
+[formFill.mode]
+create = "Создать"
+fill = "Заполнить"
+label = "Режим редактора форм"
+modify = "Изменить"
+
+[formFill.modify]
+commit = "Сохранить {{count}} изменение(я)"
+delete = "Удалить"
+empty = "В этом PDF пока нет полей формы."
+failed = "Не удалось сохранить изменения"
+groupSizeHint = "Использовать размер варианта"
+hint = "Выберите поле, чтобы изменить его свойства, перетащите его на странице или удалите."
+restore = "Восстановить"
 
 [formFill.sidebar]
 close = "Закрыть боковую панель"
@@ -4584,6 +4669,10 @@ title = "Изменить метаданные"
 desc = "Изменение ограничений и разрешений документа"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Изменить разрешения"
+
+[home.classify]
+desc = "Определить тип документа и добавить к нему тег."
+title = "Классифицировать"
 
 [home.compare]
 desc = "Сравнивает и показывает различия между 2 PDF-документами"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Сообщений нет."
+handoffUnavailable = "Этот браузер не позволит обработчику передать документ в редактор. Откройте его из редактора."
+noDocumentLinked = "Этот сбой не связан с конкретным документом, поэтому здесь нечего открывать."
+notOnThisDevice = "Этого документа нет на этом устройстве, поэтому его нельзя открыть здесь."
+occurrences = "{{count}} раз"
+open = "Уведомления"
+title = "Уведомления"
+unread = "Непрочитанные"
+
+[notifications.action]
+failed = "Не удалось выполнить действие. Повторите попытку через некоторое время."
+unavailable = "Недоступно для этого уведомления."
+
+[notifications.detail]
+copied = "Скопировано"
+copy = "Копировать ошибку"
+less = "Показать меньше"
+more = "Показать полное сообщение"
+
+[notifications.section]
+earlier = "Ранее"
+new = "Новые"
 
 [oauth.error]
 message = "Аутентификация не выполнена. Закройте окно и попробуйте снова."
@@ -6738,8 +6851,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "из {{allowance}} бесплатных PDF использовано"
 capSuffix_other = "из {{allowance}} бесплатных PDF использовано"
 eyebrow = "Пробный период Processor"
-statusLabel_one = "осталось {{remaining}}"
-statusLabel_other = "осталось {{remaining}}"
+statusLabel_one = "использовано {{used}}"
+statusLabel_other = "использовано {{used}}"
 sub = "Используйте PDF Editor бесплатно. Платите за автоматическую обработку PDF."
 title_one = "Обработайте {{allowance}} PDF бесплатно"
 title_other = "Обработайте {{allowance}} PDF бесплатно"
@@ -7420,6 +7533,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Просмотреть файл"
+viewInProcessor = "Просмотреть в обработчике"
 
 [processor.failures.debug]
 copyJson = "Copy JSON"
@@ -7431,6 +7546,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [processor.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Этот сбой не был записан для конкретного документа, поэтому здесь нечего открывать."
+unattended = "Этот файл был передан папкой, bucket или webhook, поэтому ни в чьем браузере нет файла для открытия."
 unavailable = "Not available for this failure."
 
 [processor.failures.empty]
@@ -8719,7 +8836,9 @@ title = "Источники"
 connectSource = "Подключить источник"
 
 [processor.sources.builder]
+advanced = "Расширенные"
 back = "Назад к источникам"
+backToSource = "Назад к настройке источника"
 backToTypes = "Все типы источников"
 cancel = "Отмена"
 chooseHint = "Выберите, откуда поступают документы. Неактивные коннекторы уже в разработке."
@@ -8729,7 +8848,6 @@ create = "Создать источник"
 createTitle = "Подключить источник"
 delete = "Удалить"
 editTitle = "Редактировать источник"
-enabled = "Включено"
 save = "Сохранить изменения"
 
 [processor.sources.builder.folderAccess]
@@ -8766,6 +8884,7 @@ consume = "Потребление: обработать каждый файл о
 snapshot = "Снимок: перечитывать папку при каждом запуске"
 
 [processor.sources.networkFields.recursive]
+helperText = "Включайте подпапки, если ваши файлы организованы во вложенных папках, или отслеживайте только верхний уровень."
 label = "Глубина папки"
 
 [processor.sources.networkFields.recursive.options]
@@ -8819,6 +8938,7 @@ hash = "Размер, дата и проверка содержимого"
 stat = "Размер и дата изменения"
 
 [processor.sources.types.folder.fields.mode]
+helperText = "Оставлять ли исходный файл на месте после обработки. Если исходный файл оставить на месте, он будет повторно обработан при следующем сканировании источника конвейером."
 label = "Режим чтения"
 
 [processor.sources.types.folder.fields.mode.options]
@@ -8826,6 +8946,7 @@ consume = "Consume: обработать каждый файл один раз"
 snapshot = "Snapshot: перечитывать папку при каждом запуске"
 
 [processor.sources.types.folder.fields.recursive]
+helperText = "Включайте подпапки, если ваши файлы организованы во вложенных папках, или отслеживайте только верхний уровень."
 label = "Глубина папки"
 
 [processor.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн, и \"{
 expired = "Ваша сессия истекла. Пожалуйста, обновите страницу и попробуйте снова."
 
 [settings]
+backToSections = "Все настройки"
 close = "Закрыть"
+title = "Настройки"
 
 [settings.ai]
 documents = "Документы и RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Поиск"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Поиск инструментов..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Расширенное форматирование"
+ai = "AI"
 automation = "Автоматизация"
 developerTools = "Инструменты разработчика"
 documentReview = "Рецензирование документа"
@@ -11335,8 +11460,11 @@ columnDefault = "Столбец {{index}}"
 convertToPdf = "Преобразовать в PDF"
 csvStats = "{{rows}} строк · {{columns}} столбцов · {{size}}"
 emptyFile = "Пустой файл"
+htmlHidePreview = "Скрыть предпросмотр"
 htmlPreview = "Предпросмотр HTML"
+htmlPreviewMobileHidden = "HTML страницы сверстаны под ширину экрана компьютера, поэтому здесь предпросмотр по умолчанию отключен."
 htmlPreviewWarning = "Предпросмотр HTML — внешние ресурсы могут не загрузиться · {{size}}"
+htmlShowPreview = "Все равно показать предпросмотр"
 invalidJson = "Некорректный JSON — показано исходное содержимое"
 lineNumbers = "Номера строк"
 loading = "Загрузка..."
@@ -11683,6 +11811,7 @@ exportAll = "Экспортировать PDF"
 exportSelected = "Экспортировать выбранные страницы"
 formFill = "Заполнить форму"
 hideToolbar = "Hide toolbar"
+moreActions = "Дополнительные действия"
 multiTool = "Мультиинструмент"
 panMode = "Режим перемещения"
 print = "Печать PDF"
@@ -11703,6 +11832,8 @@ selectAll = "Выбрать все"
 selectByNumber = "Выбрать по номерам страниц"
 selectLanguage = "Выбрать язык"
 share = "Поделиться"
+showAllTools = "Показать все инструменты"
+showFewerTools = "Свернуть панель инструментов"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Показать/скрыть аннотации"
 toggleAttachments = "Показать/скрыть вложения"
