@@ -1,15 +1,16 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
-    "PostToolUse": [
+    "Stop": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/lint/comment-lint-hook.mjs"],
-            "timeout": 30
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/lint/comment-lint-hook.mjs"
+            ],
+            "timeout": 60
           }
         ]
       }

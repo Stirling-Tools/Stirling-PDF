@@ -11,6 +11,7 @@ vars:
     '.github/scripts/*.py'
     'app/core/src/main/resources/static/python/*.py'
     ':(exclude)*split_photos.py'
+    ':(exclude)scripts/lint/fixtures/*'
   SPELL_FILES: >-
     '*.html'
     '*.css'
@@ -188,17 +189,16 @@ tasks:
       - node scripts/lint/comment-lint.mjs {{.CLI_ARGS}}
 
   comment-lint:hook:
-    desc: "Comment gate for one file, as the editor hook calls it"
+    desc: "Comment gate for the editor hook: everything this turn changed"
     summary: |
-      Scoped to a single file and to the lines that differ from HEAD, which is what
-      an editor hook wants: tell the author about what they just wrote, not about
-      the file's history. Set FILE to an absolute or repo-relative path.
+      Same scope as `task comment-lint`, kept as its own name so the hook has a
+      stable entry point and the taskfile shows every way the linter is invoked.
 
-      Not in the frontend-install dependency chain on purpose. This runs on every
-      file write, so it stays as short as it can be; if oxlint is missing the TS
+      Not in the frontend-install dependency chain on purpose: this runs at the end
+      of every turn, so it stays as short as it can be. If oxlint is missing the TS
       half warns and skips.
     cmds:
-      - node scripts/lint/comment-lint.mjs --since HEAD --json {{.FILE}}
+      - node scripts/lint/comment-lint.mjs
 
   comment-lint:all:
     desc: "Report every comment finding in the tree (never fails)"

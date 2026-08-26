@@ -153,8 +153,10 @@ committed; on a CI pull request it compares against the target branch via
 the rules themselves rather than the code under review, so it runs on CI and before
 a rule change, not on every local commit.
 
-`task comment-lint` also runs inside `task pre-commit`, and the same rules run as a
-Claude Code `PostToolUse` hook so an agent sees findings on the file it just wrote.
+`task comment-lint` also runs inside `task pre-commit`, and as a Claude Code `Stop`
+hook, so an agent is told before it finishes a turn and fixes the comment inside
+that turn. Stop rather than per file write: a run costs the same for one file as for
+twenty-five, and half of all writes in a turn go to a file already written in it.
 
 Findings are scoped to comment text that is new, not to lines git calls new, so
 reindenting or moving code does not resurface comments you did not write.
@@ -199,4 +201,5 @@ a standing backlog being cleared by directory; diff scoping is what keeps it off
 whoever touches a file first.
 
 To turn the editor hook off, put `{ "env": { "COMMENT_LINT_HOOK": "0" } }` in
-`.claude/settings.local.json`. The commit-time gate still applies.
+`.claude/settings.local.json`. The commit-time gate still applies, so you lose the
+early warning rather than the check.
