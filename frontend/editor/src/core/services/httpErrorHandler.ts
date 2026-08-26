@@ -116,8 +116,6 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
       pathname.includes("/auth/") ||
       pathname.includes("/invite/");
 
-    // Public phone pages reached by QR code. Nobody is signed in there, so a
-    // bounce to /login only strands the phone away from its session.
     const isPublicMobilePage =
       pathname.includes("/mobile-scanner") || pathname.includes("/mobile-sign");
 
