@@ -9,7 +9,6 @@
         {
           "image-name": "mark-left.svg",
           "name": "Mark Left",
-          "glass": true,
           "hidden": false,
           "position": {
             "scale": 1.0,
@@ -19,7 +18,6 @@
         {
           "image-name": "mark-right.svg",
           "name": "Mark Right",
-          "glass": true,
           "hidden": false,
           "position": {
             "scale": 1.0,
@@ -27,12 +25,7 @@
           },
           "opacity": 0.6
         }
-      ],
-      "specular": true,
-      "shadow": {
-        "kind": "layer-color",
-        "opacity": 0.5
-      }
+      ]
     }
   ],
   "supported-platforms": {

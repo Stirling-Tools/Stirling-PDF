@@ -154,11 +154,11 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      # Tauri compiles the Liquid Glass icon (icons/macos/app.icon) with actool
-      # and skips it when actool is older than 26, so the icon would vanish with
+      # Tauri compiles the macOS 26 icon (icons/macos/app.icon) with actool and
+      # skips it when actool is older than 26, so the icon would vanish with
       # a green build. Runs before Setup Rust so the whole macOS build, tests
       # included, compiles against one SDK rather than two either side of it.
-      - name: Select Xcode 26+ (Liquid Glass app icon)
+      - name: Select Xcode 26+ (macOS 26 app icon)
         if: runner.os == 'macOS'
         shell: bash
         run: |
@@ -170,7 +170,7 @@ jobs:
             if [ "$major" -ge 26 ]; then xcode="$candidate"; break; fi
           done
           if [ -z "$xcode" ]; then
-            echo "::error::No Xcode >= 26 on this runner - Tauri would silently skip the Liquid Glass icon"
+            echo "::error::No Xcode >= 26 on this runner - Tauri would silently skip the macOS 26 icon"
             exit 1
           fi
           sudo xcode-select -s "$xcode"
@@ -542,7 +542,7 @@ jobs:
       # actool can succeed and still leave CFBundleIconName unwritten, which ships
       # a green build with the icon quietly falling back to the icns. Assert both
       # halves rather than trusting the bundler's warning.
-      - name: Verify Liquid Glass icon landed (macOS only)
+      - name: Verify macOS 26 icon landed (macOS only)
         if: runner.os == 'macOS'
         shell: bash
         run: |

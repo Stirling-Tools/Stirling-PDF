@@ -38,7 +38,7 @@ tasks:
       - assets-car
 
   assets-car:
-    desc: "Compile the macOS Liquid Glass app icon"
+    desc: "Compile the macOS 26 app icon"
     platforms: [darwin]
     dir: editor/src-tauri
     cmds:
