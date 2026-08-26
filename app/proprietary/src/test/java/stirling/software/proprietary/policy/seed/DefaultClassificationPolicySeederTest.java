@@ -36,10 +36,14 @@ class DefaultClassificationPolicySeederTest {
     }
 
     private static Policy classificationPolicy(Long teamId) {
+        return classificationPolicy(teamId, null);
+    }
+
+    private static Policy classificationPolicy(Long teamId, String owner) {
         return new Policy(
                 "p1",
                 "Classification Policy",
-                "system",
+                owner,
                 true,
                 List.of(),
                 List.of(),
@@ -71,6 +75,29 @@ class DefaultClassificationPolicySeederTest {
     @Test
     void doesNotSeedWhenAClassificationPolicyAlreadyExists() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L)));
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        verify(policyStore, never()).save(any());
+    }
+
+    @Test
+    void clearsAPlaceholderOwnerSeededBeforeOwnersHadToBeReal() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "system")));
+
+        seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
+
+        // "system" was never a user row, and a step dispatch authenticates as the owner. Absence
+        // is handled everywhere; a placeholder name is not.
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policyStore).save(saved.capture());
+        assertThat(saved.getValue().owner()).isNull();
+        assertThat(saved.getValue().id()).isEqualTo("p1");
+    }
+
+    @Test
+    void leavesADeliberatelyChosenOwnerAlone() {
+        when(policyStore.findByTeam(7L)).thenReturn(List.of(classificationPolicy(7L, "alice")));
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
 

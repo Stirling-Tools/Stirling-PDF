@@ -5,3 +5,9 @@
  * portal (core, desktop, prototypes) must never resolve @portal.
  */
 export const PORTAL_BASENAME = "/processor";
+
+/**
+ * The recorded-failures section of the portal's Documents view. Here because whoever links to it and
+ * whoever renders it are in different layers.
+ */
+export const PORTAL_FAILURES_ANCHOR = "failures";
