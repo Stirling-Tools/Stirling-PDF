@@ -32,8 +32,8 @@ vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
 }));
 
-// The suggested-policy gallery is out of scope here: keep the catalogue empty so the test focuses on
-// the pipelines list.
+// The template gallery is out of scope here: keep the catalogue empty so the test focuses on the
+// pipelines list.
 vi.mock("@portal/queries/policies", () => ({
   usePoliciesOverview: () => ({ data: null, loading: false, error: null }),
 }));
@@ -99,7 +99,9 @@ describe("Pipelines view", () => {
   it("opens the builder when creating a pipeline", async () => {
     renderView();
     await screen.findByText("Redaction sweep");
-    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
+    fireEvent.click(
+      screen.getByText("portal.pipelines.actions.newCustomPipeline"),
+    );
     expect(await screen.findByText("builder new")).toBeInTheDocument();
   });
 

@@ -7837,11 +7837,11 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.pipelines]
-subtitle = "Pipelines and the policies your organisation requires. Start from a suggested policy, or build any pipeline and enforce it. Click a row to edit, run, or pause it."
+subtitle = "Automate your document workflows. Start from a template for a simple, guided setup, or build a custom pipeline from scratch. Enforce any pipeline as a policy to run it on every document."
 title = "Pipelines"
 
 [portal.pipelines.actions]
-newPipeline = "New pipeline"
+newCustomPipeline = "New custom pipeline"
 
 [portal.pipelines.all]
 title = "All pipelines"
@@ -7912,8 +7912,8 @@ invalid = "Not valid JSON. The last valid version is kept until this is fixed."
 label = "Policy metadata (advanced)"
 
 [portal.pipelines.builder.required]
-desc = "Members can't pause or delete a required policy, and it enforces on their documents."
-label = "Required by your organisation"
+desc = "Members can't skip, pause, or delete it, and it runs on their documents automatically."
+label = "Enforce as policy"
 
 [portal.pipelines.composer]
 addTool = "Add a tool"
@@ -8017,10 +8017,6 @@ timeout = "Run is taking longer than expected; it may still finish in the backgr
 active = "Active"
 paused = "Paused"
 
-[portal.pipelines.suggested]
-subtitle = "Ready-made policies with a simple setup. Add one, then customise it into a full pipeline if you need to."
-title = "Suggested policies"
-
 [portal.pipelines.table]
 name = "Pipeline"
 sources = "Sources"
@@ -8029,6 +8025,11 @@ steps = "Steps"
 trigger = "Trigger"
 type = "Type"
 
+[portal.pipelines.templates]
+setUp = "Set up"
+subtitle = "Ready-made starting points with a simple, guided setup. Pick one, then customise it into a full pipeline if you need more control."
+title = "Templates"
+
 [portal.pipelines.trigger]
 folder-watch = "Folder watch"
 manual = "Manual"
@@ -8036,7 +8037,7 @@ schedule = "Scheduled"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"
-required = "Required"
+policy = "Policy"
 
 [portal.policies]
 defaultName = "{{category}} Policy"
@@ -8475,9 +8476,8 @@ description = "Every uploaded document is classified against the built-in labels
 labelsHeading = "Classification labels"
 
 [portal.policies.wizard.enforcement]
-heading = "Enforcement"
-requiredDesc = "Members can't pause or delete a required policy, and it runs on their documents automatically."
-requiredLabel = "Required by your organisation"
+requiredDesc = "Run this on every document automatically. Members can't skip, pause, or delete it."
+requiredLabel = "Enforce as policy"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."

@@ -10,6 +10,7 @@ import {
   Banner,
   Button,
   Card,
+  Checkbox,
   FormField,
   Input,
   Modal,
@@ -600,24 +601,6 @@ function PolicySetupWizardBody({
 
       {step === "settings" && (
         <div className="portal-policies__wizard-section">
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.enforcement.heading")}
-          </h3>
-          <Card padding="none">
-            <SettingsRow
-              label={t("portal.policies.wizard.enforcement.requiredLabel")}
-              description={t("portal.policies.wizard.enforcement.requiredDesc")}
-              control={
-                <ToggleSwitch
-                  size="sm"
-                  checked={required}
-                  onChange={setRequired}
-                  label=""
-                />
-              }
-            />
-          </Card>
-
           {config.fields.length > 0 && (
             <>
               <h3 className="portal-policies__wizard-heading">
@@ -802,6 +785,15 @@ function PolicySetupWizardBody({
               </>
             )}
             {/* TODO: reviewer user-picker goes here */}
+          </div>
+
+          <div className="portal-policies__wizard-enforce">
+            <Checkbox
+              checked={required}
+              onChange={(e) => setRequired(e.target.checked)}
+              label={t("portal.policies.wizard.enforcement.requiredLabel")}
+              description={t("portal.policies.wizard.enforcement.requiredDesc")}
+            />
           </div>
         </div>
       )}

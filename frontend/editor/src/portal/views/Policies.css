@@ -234,6 +234,13 @@
   font-weight: 600;
 }
 
+/* "Enforce as policy" — the last choice in the simple wizard, set off from the settings above. */
+.portal-policies__wizard-enforce {
+  margin-top: 0.75rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
 .portal-policies__fields {
   display: flex;
   flex-direction: column;

@@ -35,11 +35,10 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         key: "type",
         header: t("portal.pipelines.table.type", "Type"),
         sortable: true,
-        // A required pipeline IS a policy (the org mandates it); an ordinary one is just an
-        // automation.
+        // A pipeline enforced as a policy shows as "Policy"; an ordinary one as "Pipeline".
         get: (p) =>
           p.required
-            ? { tone: "purple", label: t("portal.pipelines.type.required") }
+            ? { tone: "purple", label: t("portal.pipelines.type.policy") }
             : { tone: "neutral", label: t("portal.pipelines.type.pipeline") },
       }),
       column.text({

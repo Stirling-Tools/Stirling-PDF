@@ -28,7 +28,7 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
-import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
+import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
@@ -252,26 +252,31 @@ export function Pipelines() {
           onClick={openCreate}
           leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         >
-          {t("portal.pipelines.actions.newPipeline")}
+          {t("portal.pipelines.actions.newCustomPipeline")}
         </Button>
       </header>
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
       {galleryEntries.length > 0 && (
-        <section className="portal-pipelines__suggested">
+        <section className="portal-pipelines__templates">
           <h2 className="portal-pipelines__section-title">
-            {t("portal.pipelines.suggested.title")}
+            {t("portal.pipelines.templates.title")}
           </h2>
           <p className="portal-pipelines__section-sub">
-            {t("portal.pipelines.suggested.subtitle")}
+            {t("portal.pipelines.templates.subtitle")}
           </p>
-          <PolicyCatalogueTable
-            entries={galleryEntries}
-            onOpen={openTemplate}
-            isLocked={isLocked}
-            lockedLabel={t("portal.policies.card.requiresAiEngine")}
-          />
+          <div className="portal-pipelines__templates-grid">
+            {galleryEntries.map((entry) => (
+              <PipelineTemplateCard
+                key={entry.category.id}
+                entry={entry}
+                onOpen={openTemplate}
+                locked={isLocked(entry)}
+                lockedLabel={t("portal.policies.card.requiresAiEngine")}
+              />
+            ))}
+          </div>
         </section>
       )}
 

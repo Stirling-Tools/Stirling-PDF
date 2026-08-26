@@ -31,11 +31,18 @@
   max-width: 46rem;
 }
 
-/* Sections: the suggested-policy gallery and the full list. */
-.portal-pipelines__suggested,
+/* Sections: the template gallery and the full pipelines list. */
+.portal-pipelines__templates,
 .portal-pipelines__all {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Template gallery: a responsive row of cards that wraps to fit. */
+.portal-pipelines__templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: 0.75rem;
 }
 
