@@ -41,7 +41,7 @@ false = "Yanlış"
 fileNotSavedToDisk = "Diske kaydedilmedi"
 fileSavedToDisk = "Dosya diske kaydedildi"
 fileSelected = "Seçildi: {{filename}}"
-filesSelected = "dosya seçildi"
+filesSelected = "{{count}} dosya"
 font = "Yazı tipi"
 fontSizeTooltip = "Sayfa numarası metninin punto cinsinden boyutu. Daha büyük sayılar daha büyük metin oluşturur."
 fontTypeTooltip = "Sayfa numaraları için yazı tipi ailesi. Belgenizin stiline göre seçin."
@@ -3969,6 +3969,7 @@ back = "Geri"
 backToFolder = "{{folder}} klasörüne geri dön"
 backToMyFiles = "Dosyalarıma geri dön"
 breadcrumbs = "Klasör yolu"
+bulkActions = "İşlemler"
 cancel = "İptal"
 classification = "Sınıflandırma"
 clearSelection = "Seçimi temizle"
@@ -4142,6 +4143,11 @@ totalSize = "Toplam boyut"
 type = "Tür"
 versionHistory = "Sürüm yolculuğu"
 
+[filesPage.filters]
+activeCount = "{{count}} filtre etkin"
+clearAll = "Filtreleri temizle"
+label = "Filtreler"
+
 [filesPage.folderName]
 cancel = "İptal"
 error = "Klasör kaydedilemedi. Tekrar deneyin."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Dosyaları sırala"
 modifiedAsc = "En eskiden"
 modifiedDesc = "En yeniden"
 nameAsc = "Ad A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Tümü kaydedildi"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Değişiklikler uygulanamadı"
 extractCsvError = "CSV çıkarılamadı"
 extractXlsxError = "XLSX çıkarılamadı"
 filled = "filled"
 flattenAfterFilling = "Doldurduktan sonra düzleştir"
+goToPage = "Bu sayfaya git"
 noFields = "No fillable form fields found in this PDF."
+page = "Sayfa"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "zor"
@@ -4318,7 +4328,82 @@ rescanFields = "Alanları yeniden tara"
 rescanFormFields = "Form alanlarını yeniden tara"
 save = "Kaydet"
 saveShortcut = "Kaydetmek için Ctrl+S"
+skippedEdits_one = "1 değişiklik uygulanamadı:"
+skippedEdits_other = "{{count}} değişiklik uygulanamadı:"
+skippedEditsTruncated = "Listelenmeyen {{count}} tane daha var."
 unsavedChanges = "Kaydedilmemiş değişiklikler"
+
+[formFill.create]
+commit = "PDF'ye {{count}} alan ekle"
+empty = "Henüz çizilmiş alan yok."
+failed = "Alanlar eklenemedi"
+goToField = "Bu alana git"
+hint = "Bir alan türü seçin, ardından sayfaya çizin."
+placing = "Sayfaya bir {{type}} alanı çizin. Durdurmak için Esc tuşuna basın."
+preview = "Önizlemek için basılı tutun"
+previewHelp = "Düzenleme çerçeveleri olmadan, alanların eklendikten sonra nasıl görüneceğini görmek için basılı tutun."
+removeField = "Alanı kaldır"
+
+[formFill.editor]
+action = "Düğme eylemi"
+actionHelp = "Düğmeye tıklandığında ne yapacağı."
+actionNone = "Yok"
+actionPrint = "Yazdır"
+actionReset = "Formu sıfırla"
+actionSubmit = "URL'ye gönder"
+actionUri = "URL aç"
+actionUrl = "URL"
+actionUrlHelp = "Düğmenin açtığı veya gönderdiği adres."
+addOption = "Seçenek ekle"
+caption = "Düğme başlığı"
+captionHelp = "Düğme yüzeyinde yazdırılan metin."
+defaultValue = "Varsayılan değer"
+defaultValueHelp = "Alan doldurulmadan önce içinde bulunan değer. Boş bir alan için boş bırakın."
+fontSize = "Yazı tipi boyutu"
+fontSizeHelp = "Alan içindeki metin boyutu. Okuyucunun sığacak şekilde boyutlandırmasına izin vermek için boş bırakın."
+label = "Etiket"
+labelHelp = "Formu dolduran kişiye gösterilecek ifade. Alan adına geri dönmek için boş bırakın."
+maxLength = "Maksimum uzunluk (comb)"
+maxLengthHelp = "Kaç karakterin sığacağını sınırlar; eşit aralıklı kutular olarak çizilir."
+multiline = "Çok satırlı"
+multilineHelp = "Birden fazla metin satırına izin verir ve alanın kenarında satırı kaydırır."
+multiSelect = "Birden çok seçime izin ver"
+multiSelectHelp = "Aynı anda birden fazla seçeneğin seçilmesine izin verir."
+name = "Alan adı"
+nameHelp = "Alanın dahili adı. Veri dışa aktarırken veya formu başka bir sistemden doldururken kullanılır; bu nedenle benzersiz ve boşluksuz tutun."
+optionGap = "Seçenek aralığı"
+optionGapHelp = "Düğmeler arasındaki boşluk, punto cinsinden. Kutunun içinde eşit olarak yaymak için boş bırakın."
+optionPlaceholder = "Seçenek {{n}}"
+options = "Seçenekler"
+optionsEmpty = "En az bir seçenek ekleyin."
+optionsHelp = "Listede sunulan seçenekler. Her biri yazıldığı şekilde saklanır; bu yüzden kısa ve ayırt edilebilir tutun."
+optionSize = "Seçenek boyutu"
+optionSizeHelp = "Her düğmenin genişliği ve yüksekliği, punto cinsinden. Çizdiğiniz kutuya sığdırmak için boş bırakın."
+readOnly = "Salt okunur"
+readOnlyHelp = "Bir değer gösterir ancak düzenlenmesini engeller."
+removeOption = "Seçeneği kaldır"
+required = "Zorunlu"
+requiredHelp = "Bu alan doldurulana kadar form gönderilemez."
+signatureNote = "Yalnızca yer tutucudur - burada imza atmazsınız. Bir imzanın nereye ait olduğunu işaretler; böylece bir PDF imzalayıcı (Adobe Acrobat, imzalama hizmeti vb.) belge imzalandığında imzayı bu noktaya yerleştirir."
+tooltip = "Tooltip"
+tooltipHelp = "Birisi PDF okuyucuda alanın üzerine geldiğinde gösterilen ipucu."
+type = "Tür"
+typeHelp = "Bu alanın ne tür bir alan olduğu. Değiştirmek alanı yeniden oluşturur, bu nedenle mevcut değeri taşınmaz."
+
+[formFill.mode]
+create = "Oluştur"
+fill = "Doldur"
+label = "Form düzenleyici modu"
+modify = "Değiştir"
+
+[formFill.modify]
+commit = "{{count}} değişikliği kaydet"
+delete = "Sil"
+empty = "Bu PDF'de henüz form alanı yok."
+failed = "Değişiklikler kaydedilemedi"
+groupSizeHint = "Seçenek boyutunu kullan"
+hint = "Özelliklerini düzenlemek için bir alan seçin, sayfada sürükleyin veya silin."
+restore = "Geri yükle"
 
 [formFill.sidebar]
 close = "Kenar çubuğunu kapat"
@@ -4584,6 +4669,10 @@ title = "Metaveriyi Değiştir"
 desc = "Belge kısıtlamalarını ve izinleri değiştirin"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İzinleri Değiştir"
+
+[home.classify]
+desc = "Bunun ne tür bir belge olduğunu belirleyin ve etiketleyin."
+title = "Sınıflandır"
 
 [home.compare]
 desc = "2 PDF Belgesi arasındaki farkları karşılaştırır ve gösterir"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Bildirilecek bir şey yok."
+handoffUnavailable = "Bu tarayıcı, işleyicinin belgeyi düzenleyiciye aktarmasına izin vermeyecek. Bunun yerine düzenleyiciden açın."
+noDocumentLinked = "Bu hata belirli bir belgeyle bağlantılı değil, bu nedenle burada açılacak bir şey yok."
+notOnThisDevice = "Bu belge bu cihazda değil, bu nedenle burada açılamaz."
+occurrences = "{{count}} kez"
+open = "Bildirimler"
+title = "Bildirimler"
+unread = "Okunmamış"
+
+[notifications.action]
+failed = "Bu işe yaramadı. Birazdan tekrar deneyin."
+unavailable = "Bu bildirim için kullanılamaz."
+
+[notifications.detail]
+copied = "Kopyalandı"
+copy = "Hatayı kopyala"
+less = "Daha az göster"
+more = "Tam mesajı göster"
+
+[notifications.section]
+earlier = "Daha önce"
+new = "Yeni"
 
 [oauth.error]
 message = "Kimlik doğrulama başarılı olmadı. Bu pencereyi kapatıp tekrar deneyebilirsiniz."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} ücretsiz PDF hakkından kullanıldı"
 capSuffix_other = "{{allowance}} ücretsiz PDF hakkından kullanıldı"
 eyebrow = "Processor denemesi"
-statusLabel_one = "{{remaining}} kaldı"
-statusLabel_other = "{{remaining}} kaldı"
+statusLabel_one = "{{used}} kullanıldı"
+statusLabel_other = "{{used}} kullanıldı"
 sub = "PDF Editor'ı ücretsiz kullanın. PDF'leri otomatik işlemek için ödeme yapın."
 title_one = "{{allowance}} PDF'yi ücretsiz işleyin"
 title_other = "{{allowance}} PDF'yi ücretsiz işleyin"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Dosyayı görüntüle"
+viewInProcessor = "İşleyicide görüntüle"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Bu hata belirli bir belgeye kaydedilmedi, bu nedenle burada açılacak bir şey yok."
+unattended = "Bu dosya bir folder, bucket veya webhook tarafından beslendi, bu nedenle kimsenin tarayıcısı onu açmak için tutmuyor."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Kaynaklar"
 connectSource = "Kaynak bağla"
 
 [portal.sources.builder]
+advanced = "Gelişmiş"
 back = "Kaynaklara dön"
+backToSource = "Kaynak kurulumuna geri dön"
 backToTypes = "Tüm kaynak türleri"
 cancel = "İptal"
 chooseHint = "Belgelerin nereden geldiğini seçin. Gri görünen connector'lar yolda."
@@ -8726,7 +8845,6 @@ create = "Kaynak oluştur"
 createTitle = "Bir kaynak bağla"
 delete = "Sil"
 editTitle = "Kaynağı düzenle"
-enabled = "Etkin"
 save = "Değişiklikleri kaydet"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: her dosyayı bir kez işle"
 snapshot = "Snapshot: her çalıştırmada klasörü yeniden oku"
 
 [portal.sources.networkFields.recursive]
+helperText = "Dosyalarınız iç içe klasörler halinde düzenlenmişse alt klasörleri dahil edin veya yalnızca en üst düzeyi izleyin."
 label = "Klasör derinliği"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Boyut, tarih ve içerik kontrolü"
 stat = "Boyut ve değiştirilme tarihi"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "İşlendikten sonra orijinal dosyanın yerinde bırakılıp bırakılmayacağı. Orijinal dosya yerinde bırakılırsa pipeline kaynağı bir sonraki taradığında yeniden işlenecektir."
 label = "Okuma modu"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Tüket: her dosyayı bir kez işle"
 snapshot = "Anlık görüntü: klasörü her çalıştırmada yeniden oku"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Dosyalarınız iç içe klasörler halinde düzenlenmişse alt klasörleri dahil edin veya yalnızca en üst düzeyi izleyin."
 label = "Klasör derinliği"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Stirling-PDF sunucunuz çevrimdışı ve \"{{endpoint
 expired = "Oturumunuzun süresi doldu. Lütfen sayfayı yenileyip tekrar deneyin."
 
 [settings]
+backToSections = "Tüm ayarlar"
 close = "Kapat"
+title = "Ayarlar"
 
 [settings.ai]
 documents = "Belgeler ve RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Ara"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Araçlarda ara..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Gelişmiş Biçimlendirme"
+ai = "AI"
 automation = "Otomasyon"
 developerTools = "Geliştirici Araçları"
 documentReview = "Belge İnceleme"
@@ -11335,8 +11460,11 @@ columnDefault = "Sütun {{index}}"
 convertToPdf = "PDF'ye Dönüştür"
 csvStats = "{{rows}} satır · {{columns}} sütun · {{size}}"
 emptyFile = "Boş dosya"
+htmlHidePreview = "Önizlemeyi gizle"
 htmlPreview = "HTML önizleme"
+htmlPreviewMobileHidden = "HTML sayfaları masaüstü genişlikleri için düzenlenmiştir, bu nedenle önizleme burada varsayılan olarak kapalıdır."
 htmlPreviewWarning = "HTML önizleme — harici kaynaklar yüklenmeyebilir · {{size}}"
+htmlShowPreview = "Yine de önizlemeyi göster"
 invalidJson = "Geçersiz JSON — ham içerik gösteriliyor"
 lineNumbers = "Satır numaraları"
 loading = "Yükleniyor..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF'yi dışa aktar"
 exportSelected = "Seçili sayfaları dışa aktar"
 formFill = "Form doldur"
 hideToolbar = "Hide toolbar"
+moreActions = "Daha fazla eylem"
 multiTool = "Çoklu araç"
 panMode = "Kaydırma modu"
 print = "PDF'yi yazdır"
@@ -11703,6 +11832,8 @@ selectAll = "Tümünü seç"
 selectByNumber = "Sayfa numaralarına göre seç"
 selectLanguage = "Dil seç"
 share = "Paylaş"
+showAllTools = "Tüm araçları göster"
+showFewerTools = "Araç çubuğunu daralt"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Ek açıklamaların görünürlüğünü değiştir"
 toggleAttachments = "Ekleri göster/gizle"

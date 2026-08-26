@@ -41,7 +41,7 @@ false = "غلط"
 fileNotSavedToDisk = "روی دیسک ذخیره نشد"
 fileSavedToDisk = "فایل روی دیسک ذخیره شد"
 fileSelected = "انتخاب‌شده: {{filename}}"
-filesSelected = "فایل‌ها انتخاب شدند"
+filesSelected = "{{count}} فایل"
 font = "فونت"
 fontSizeTooltip = "اندازه متن شماره صفحه بر حسب پوینت. اعداد بزرگ‌تر متن بزرگ‌تری ایجاد می‌کنند."
 fontTypeTooltip = "خانواده فونت برای شماره صفحات. بر اساس سبک سند خود انتخاب کنید."
@@ -3969,6 +3969,7 @@ back = "بازگشت"
 backToFolder = "بازگشت به {{folder}}"
 backToMyFiles = "بازگشت به فایل‌های من"
 breadcrumbs = "مسیر پوشه"
+bulkActions = "اقدامات"
 cancel = "لغو"
 classification = "طبقه‌بندی"
 clearSelection = "پاک‌کردن انتخاب"
@@ -4142,6 +4143,11 @@ totalSize = "حجم کل"
 type = "نوع"
 versionHistory = "سفر نسخه"
 
+[filesPage.filters]
+activeCount = "{{count}} فیلتر فعال"
+clearAll = "پاک کردن فیلترها"
+label = "فیلترها"
+
 [filesPage.folderName]
 cancel = "لغو"
 error = "امکان ذخیرهٔ پوشه نبود. دوباره امتحان کنید."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "مرتب‌سازی فایل‌ها"
 modifiedAsc = "قدیمی‌ترین ابتدا"
 modifiedDesc = "جدیدترین ابتدا"
 nameAsc = "نام A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "همه ذخیره شد"
 analyzingFields = "Analysing form fields..."
+applyFailed = "امکان اعمال تغییرات نبود"
 extractCsvError = "استخراج CSV ناموفق بود"
 extractXlsxError = "استخراج XLSX ناموفق بود"
 filled = "filled"
 flattenAfterFilling = "مسطح‌سازی پس از پرکردن"
+goToPage = "رفتن به این صفحه"
 noFields = "No fillable form fields found in this PDF."
+page = "صفحه"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "الزامی"
@@ -4318,7 +4328,82 @@ rescanFields = "اسکن دوبارهٔ فیلدها"
 rescanFormFields = "اسکن دوبارهٔ فیلدهای فرم"
 save = "ذخیره"
 saveShortcut = "Ctrl+S برای ذخیره"
+skippedEdits_one = "۱ تغییر قابل اعمال نبود:"
+skippedEdits_other = "{{count}} تغییر قابل اعمال نبود:"
+skippedEditsTruncated = "{{count}} مورد دیگر فهرست نشده است."
 unsavedChanges = "تغییرات ذخیره‌نشده"
+
+[formFill.create]
+commit = "افزودن {{count}} فیلد به PDF"
+empty = "هنوز هیچ فیلدی رسم نشده است."
+failed = "افزودن فیلدها ناموفق بود"
+goToField = "رفتن به این فیلد"
+hint = "نوع فیلد را انتخاب کنید، سپس آن را روی صفحه رسم کنید."
+placing = "یک فیلد {{type}} روی صفحه رسم کنید. برای توقف Esc را فشار دهید."
+preview = "برای پیش‌نمایش نگه دارید"
+previewHelp = "نگه دارید تا فیلدها را همان‌طور که پس از افزودن دیده می‌شوند، بدون کادرهای ویرایش، ببینید."
+removeField = "حذف فیلد"
+
+[formFill.editor]
+action = "عملکرد دکمه"
+actionHelp = "کاری که دکمه هنگام کلیک انجام می‌دهد."
+actionNone = "هیچ‌کدام"
+actionPrint = "چاپ"
+actionReset = "بازنشانی فرم"
+actionSubmit = "ارسال به URL"
+actionUri = "باز کردن URL"
+actionUrl = "URL"
+actionUrlHelp = "آدرسی که دکمه باز می‌کند یا به آن ارسال می‌کند."
+addOption = "افزودن گزینه"
+caption = "عنوان دکمه"
+captionHelp = "متنی که روی دکمه چاپ می‌شود."
+defaultValue = "مقدار پیش‌فرض"
+defaultValueHelp = "مقداری که فیلد پیش از پر شدن دارد. برای فیلد خالی، خالی بگذارید."
+fontSize = "اندازه قلم"
+fontSizeHelp = "اندازه متن داخل فیلد. خالی بگذارید تا نمایشگر PDF آن را متناسب کند."
+label = "برچسب"
+labelHelp = "متنی که به کسی که فرم را پر می‌کند نمایش داده می‌شود. خالی بگذارید تا از نام فیلد استفاده شود."
+maxLength = "حداکثر طول (comb)"
+maxLengthHelp = "تعداد نویسه‌هایی را که جا می‌شوند محدود می‌کند و آن‌ها را به‌صورت خانه‌های با فاصله برابر رسم می‌کند."
+multiline = "چندخطی"
+multilineHelp = "اجازه می‌دهد بیش از یک خط متن وارد شود و متن در لبه فیلد به خط بعد برود."
+multiSelect = "اجازه انتخاب چندگانه"
+multiSelectHelp = "امکان انتخاب بیش از یک گزینه را هم‌زمان فراهم می‌کند."
+name = "نام فیلد"
+nameHelp = "نام داخلی فیلد. هنگام خروجی گرفتن از داده‌ها یا پر کردن فرم از سامانه‌ای دیگر استفاده می‌شود، بنابراین آن را یکتا و بدون فاصله نگه دارید."
+optionGap = "فاصله گزینه‌ها"
+optionGapHelp = "فاصله بین دکمه‌ها، بر حسب پوینت. خالی بگذارید تا به‌طور یکنواخت در طول کادر پخش شوند."
+optionPlaceholder = "گزینه {{n}}"
+options = "گزینه‌ها"
+optionsEmpty = "حداقل یک گزینه اضافه کنید."
+optionsHelp = "گزینه‌های ارائه‌شده در فهرست. هرکدام دقیقاً همان‌طور که تایپ شده ذخیره می‌شود، پس آن‌ها را کوتاه و متمایز نگه دارید."
+optionSize = "اندازه گزینه"
+optionSizeHelp = "عرض و ارتفاع هر دکمه، بر حسب پوینت. خالی بگذارید تا با کادری که رسم کرده‌اید متناسب شوند."
+readOnly = "فقط خواندنی"
+readOnlyHelp = "مقداری را نمایش می‌دهد اما از ویرایش آن جلوگیری می‌کند."
+removeOption = "حذف گزینه"
+required = "الزامی"
+requiredHelp = "فرم تا زمانی که این فیلد پر نشود نمی‌تواند ارسال شود."
+signatureNote = "فقط جای‌نگهدارنده است - شما اینجا امضا نمی‌کنید. این مشخص می‌کند امضا کجا قرار می‌گیرد تا یک امضاکننده PDF (Adobe Acrobat، یک سرویس امضا و غیره) هنگام امضای سند، امضا را در این محل قرار دهد."
+tooltip = "راهنمای شناور"
+tooltipHelp = "راهنمایی که وقتی کسی در نمایشگر PDF نشانگر را روی فیلد می‌برد نمایش داده می‌شود."
+type = "نوع"
+typeHelp = "این فیلد از چه نوعی است. تغییر آن فیلد را دوباره می‌سازد، بنابراین مقدار فعلی منتقل نمی‌شود."
+
+[formFill.mode]
+create = "ایجاد"
+fill = "پر کردن"
+label = "حالت ویرایشگر فرم"
+modify = "ویرایش"
+
+[formFill.modify]
+commit = "ذخیره {{count}} تغییر"
+delete = "حذف"
+empty = "این PDF هنوز هیچ فیلد فرمی ندارد."
+failed = "ذخیره تغییرات ناموفق بود"
+groupSizeHint = "استفاده از اندازه گزینه"
+hint = "فیلدی را برای ویرایش ویژگی‌هایش انتخاب کنید، آن را روی صفحه بکشید، یا حذفش کنید."
+restore = "بازیابی"
 
 [formFill.sidebar]
 close = "بستن نوار کناری"
@@ -4584,6 +4669,10 @@ title = "تغییر متاداده"
 desc = "تغییر محدودیت‌ها و مجوزهای سند"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "تغییر مجوزها"
+
+[home.classify]
+desc = "نوع این سند را شناسایی و آن را برچسب‌گذاری کنید."
+title = "طبقه‌بندی"
 
 [home.compare]
 desc = "مقایسه و نمایش تفاوت‌ها بین 2 سند PDF"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "چیزی برای گزارش وجود ندارد."
+handoffUnavailable = "این مرورگر اجازه نمی‌دهد پردازشگر سند را به ویرایشگر منتقل کند. به‌جای آن، آن را از ویرایشگر باز کنید."
+noDocumentLinked = "این خطا به سند خاصی مرتبط نیست، بنابراین چیزی برای باز کردن در اینجا وجود ندارد."
+notOnThisDevice = "این سند روی این دستگاه نیست، بنابراین نمی‌توان آن را اینجا باز کرد."
+occurrences = "{{count}} بار"
+open = "اعلان‌ها"
+title = "اعلان‌ها"
+unread = "خوانده‌نشده"
+
+[notifications.action]
+failed = "انجام نشد. کمی بعد دوباره تلاش کنید."
+unavailable = "برای این اعلان در دسترس نیست."
+
+[notifications.detail]
+copied = "کپی شد"
+copy = "کپی خطا"
+less = "نمایش کمتر"
+more = "نمایش پیام کامل"
+
+[notifications.section]
+earlier = "پیش‌تر"
+new = "جدید"
 
 [oauth.error]
 message = "احراز هویت موفق نبود. می‌توانید این پنجره را ببندید و دوباره تلاش کنید."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "از {{allowance}} PDF رایگان استفاده شده"
 capSuffix_other = "از {{allowance}} PDF رایگان استفاده شده"
 eyebrow = "آزمایشی Processor"
-statusLabel_one = "{{remaining}} باقی‌مانده"
-statusLabel_other = "{{remaining}} باقی‌مانده"
+statusLabel_one = "{{used}} استفاده‌شده"
+statusLabel_other = "{{used}} استفاده‌شده"
 sub = "از PDF Editor رایگان استفاده کنید. برای پردازش خودکار PDFها پرداخت کنید."
 title_one = "{{allowance}} PDF را رایگان پردازش کنید"
 title_other = "{{allowance}} PDF را رایگان پردازش کنید"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "مشاهده فایل"
+viewInProcessor = "مشاهده در پردازشگر"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "این خطا برای سند خاصی ثبت نشده است، بنابراین چیزی برای باز کردن در اینجا وجود ندارد."
+unattended = "این فایل از طریق یک پوشه، bucket یا webhook وارد شده است، بنابراین مرورگر هیچ‌کس آن را برای باز کردن در اختیار ندارد."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "منابع"
 connectSource = "اتصال منبع"
 
 [portal.sources.builder]
+advanced = "پیشرفته"
 back = "بازگشت به منابع"
+backToSource = "بازگشت به تنظیمات منبع"
 backToTypes = "همه انواع منبع"
 cancel = "لغو"
 chooseHint = "انتخاب کنید اسناد از کجا می‌آیند. اتصال‌دهنده‌های خاکستری‌شده در راه هستند."
@@ -8726,7 +8845,6 @@ create = "ایجاد منبع"
 createTitle = "اتصال یک منبع"
 delete = "حذف"
 editTitle = "ویرایش منبع"
-enabled = "فعال"
 save = "ذخیره تغییرات"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: پردازش هر فایل فقط یک‌بار"
 snapshot = "Snapshot: خواندن دوباره پوشه در هر اجرا"
 
 [portal.sources.networkFields.recursive]
+helperText = "اگر فایل‌های شما در پوشه‌های تودرتو سازمان‌دهی شده‌اند، زیرپوشه‌ها را هم شامل کنید، یا فقط سطح بالایی را پایش کنید."
 label = "عمق پوشه"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "اندازه، تاریخ و بررسی محتوا"
 stat = "اندازه و تاریخ تغییر"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "این‌که پس از پردازش، فایل اصلی در جای خود باقی بماند یا نه. اگر فایل اصلی در جای خود باقی بماند، دفعه بعد که خط لوله منبع را اسکن کند دوباره پردازش می‌شود."
 label = "حالت خواندن"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "مصرف: هر فایل را یک‌بار پردازش کن"
 snapshot = "Snapshot: در هر اجرا پوشه را دوباره بخوان"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "اگر فایل‌های شما در پوشه‌های تودرتو سازمان‌دهی شده‌اند، زیرپوشه‌ها را هم شامل کنید، یا فقط سطح بالایی را پایش کنید."
 label = "عمق پوشه"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "سرور Stirling-PDF شما آفلاین است و \
 expired = "نشست شما به پایان رسیده است. لطفاً صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
 
 [settings]
+backToSections = "همه تنظیمات"
 close = "بستن"
+title = "تنظیمات"
 
 [settings.ai]
 documents = "اسناد و RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "جستجو"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "جستجوی ابزارها..."
 
 [toolPicker.subcategories]
 advancedFormatting = "قالب‌بندی پیشرفته"
+ai = "AI"
 automation = "اتوماسیون"
 developerTools = "ابزارهای توسعه‌دهنده"
 documentReview = "بازبینی سند"
@@ -11335,8 +11460,11 @@ columnDefault = "ستون {{index}}"
 convertToPdf = "تبدیل به PDF"
 csvStats = "{{rows}} ردیف · {{columns}} ستون · {{size}}"
 emptyFile = "فایل خالی"
+htmlHidePreview = "پنهان کردن پیش‌نمایش"
 htmlPreview = "پیش‌نمایش HTML"
+htmlPreviewMobileHidden = "صفحات HTML برای عرض‌های دسکتاپ چیدمان شده‌اند، بنابراین پیش‌نمایش اینجا به‌طور پیش‌فرض خاموش است."
 htmlPreviewWarning = "پیش‌نمایش HTML — ممکن است منابع خارجی بارگذاری نشوند · {{size}}"
+htmlShowPreview = "با این حال پیش‌نمایش را نشان بده"
 invalidJson = "JSON نامعتبر — محتوای خام نمایش داده می‌شود"
 lineNumbers = "شماره خطوط"
 loading = "در حال بارگذاری..."
@@ -11683,6 +11811,7 @@ exportAll = "خروجی گرفتن از PDF"
 exportSelected = "خروجی گرفتن از صفحات منتخب"
 formFill = "پر کردن فرم"
 hideToolbar = "Hide toolbar"
+moreActions = "اقدامات بیشتر"
 multiTool = "ابزار چندگانه"
 panMode = "حالت جابه‌جایی"
 print = "چاپ PDF"
@@ -11703,6 +11832,8 @@ selectAll = "انتخاب همه"
 selectByNumber = "انتخاب بر اساس شماره‌های صفحه"
 selectLanguage = "انتخاب زبان"
 share = "اشتراک‌گذاری"
+showAllTools = "نمایش همه ابزارها"
+showFewerTools = "جمع کردن نوار ابزار"
 showToolbar = "Show toolbar"
 toggleAnnotations = "نمایش/مخفی کردن حاشیه‌نویسی‌ها"
 toggleAttachments = "نمایش/مخفی کردن پیوست‌ها"

@@ -41,7 +41,7 @@ false = "തെറ്റ്"
 fileNotSavedToDisk = "ഡിസ്കിലേക്ക് സംരക്ഷിച്ചില്ല"
 fileSavedToDisk = "ഫയൽ ഡിസ്കിലേക്ക് സംരക്ഷിച്ചു"
 fileSelected = "തിരഞ്ഞെടുത്തത്: {{filename}}"
-filesSelected = "ഫയലുകൾ തിരഞ്ഞെടുത്തു"
+filesSelected = "{{count}} ഫയലുകൾ"
 font = "അക്ഷരം"
 fontSizeTooltip = "പേജ് നമ്പർ ടെക്സ്റ്റിന്റെ പോയിന്റ് സൈസ്. വലിയ നമ്പറുകൾ വലുതായ ടെക്സ്റ്റ് സൃഷ്ടിക്കും."
 fontTypeTooltip = "പേജ് നമ്പറുകളുടെ ഫോണ്ട് കുടുംബം. നിങ്ങളുടെ ഡോക്യുമെന്റിന്റെ ശൈലിയനുസരിച്ച് തിരഞ്ഞെടുക്കുക."
@@ -3969,6 +3969,7 @@ back = "തിരികെ"
 backToFolder = "{{folder}} ലേക്ക് തിരികെ"
 backToMyFiles = "എന്റെ ഫയലുകളിലേക്ക് തിരികെ"
 breadcrumbs = "ഫോൾഡർ പാത"
+bulkActions = "പ്രവർത്തനങ്ങൾ"
 cancel = "റദ്ദാക്കുക"
 classification = "വർഗ്ഗീകരണം"
 clearSelection = "തിരഞ്ഞെടുപ്പ് നീക്കുക"
@@ -4142,6 +4143,11 @@ totalSize = "ആകെ വലുപ്പം"
 type = "തരം"
 versionHistory = "വേർഷൻ യാത്ര"
 
+[filesPage.filters]
+activeCount = "{{count}} ഫിൽട്ടറുകൾ സജീവമാണ്"
+clearAll = "ഫിൽട്ടറുകൾ മായ്ക്കുക"
+label = "ഫിൽട്ടറുകൾ"
+
 [filesPage.folderName]
 cancel = "റദ്ദാക്കുക"
 error = "ഫോൾഡർ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "ഫയലുകൾ ക്രമീകരിക്കുക"
 modifiedAsc = "പഴയത് ആദ്യം"
 modifiedDesc = "പുതിയത് ആദ്യം"
 nameAsc = "പേര് A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "എല്ലാം സേവ് ചെയ്തു"
 analyzingFields = "Analysing form fields..."
+applyFailed = "മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല"
 extractCsvError = "CSV extract ചെയ്യാനായില്ല"
 extractXlsxError = "XLSX extract ചെയ്യാനായില്ല"
 filled = "filled"
 flattenAfterFilling = "പൂരിപ്പിച്ചതിന് ശേഷം ഫ്ലാറ്റൻ ചെയ്യുക"
+goToPage = "ഈ പേജിലേക്ക് പോകുക"
 noFields = "No fillable form fields found in this PDF."
+page = "പേജ്"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "ആവ."
@@ -4318,7 +4328,82 @@ rescanFields = "ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ച�
 rescanFormFields = "ഫോം ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ചെയ്യുക"
 save = "സംരക്ഷിക്കുക"
 saveShortcut = "സേവ് ചെയ്യാൻ Ctrl+S"
+skippedEdits_one = "1 മാറ്റം പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
+skippedEdits_other = "{{count}} മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
+skippedEditsTruncated = "{{count}} എണ്ണം കൂടി പട്ടികപ്പെടുത്തിയിട്ടില്ല."
 unsavedChanges = "സേവ് ചെയ്യാത്ത മാറ്റങ്ങൾ"
+
+[formFill.create]
+commit = "PDF-ലേക്ക് {{count}} ഫീൽഡ്(കൾ) ചേർക്കുക"
+empty = "ഇതുവരെ ഫീൽഡുകളൊന്നും വരച്ചിട്ടില്ല."
+failed = "ഫീൽഡുകൾ ചേർക്കുന്നതിൽ പരാജയപ്പെട്ടു"
+goToField = "ഈ ഫീൽഡിലേക്ക് പോകുക"
+hint = "ഒരു ഫീൽഡ് തരം തിരഞ്ഞെടുക്കുക, തുടർന്ന് അത് പേജിൽ വരയ്ക്കുക."
+placing = "പേജിൽ ഒരു {{type}} ഫീൽഡ് വരയ്ക്കുക. നിർത്താൻ Esc അമർത്തുക."
+preview = "പ്രിവ്യൂ കാണാൻ അമർത്തിപ്പിടിക്കുക"
+previewHelp = "എഡിറ്റിംഗ് ഔട്ട്‌ലൈനുകൾ ഇല്ലാതെ ചേർത്തുകഴിഞ്ഞാൽ ഫീൽഡുകൾ എങ്ങനെ കാണപ്പെടും എന്ന് കാണാൻ അമർത്തിപ്പിടിക്കുക."
+removeField = "ഫീൽഡ് നീക്കംചെയ്യുക"
+
+[formFill.editor]
+action = "ബട്ടൺ പ്രവർത്തനം"
+actionHelp = "ക്ലിക്ക് ചെയ്യുമ്പോൾ ബട്ടൺ ചെയ്യുന്നത്."
+actionNone = "ഒന്നുമില്ല"
+actionPrint = "പ്രിന്റ് ചെയ്യുക"
+actionReset = "ഫോം റീസെറ്റ് ചെയ്യുക"
+actionSubmit = "URL-ലേക്ക് സമർപ്പിക്കുക"
+actionUri = "URL തുറക്കുക"
+actionUrl = "URL"
+actionUrlHelp = "ബട്ടൺ തുറക്കുകയോ സമർപ്പിക്കുകയോ ചെയ്യുന്ന വിലാസം."
+addOption = "ഓപ്ഷൻ ചേർക്കുക"
+caption = "ബട്ടൺ ക്യാപ്ഷൻ"
+captionHelp = "ബട്ടണിന്റെ മുഖഭാഗത്ത് പ്രിന്റ് ചെയ്യുന്ന വാചകം."
+defaultValue = "സ്ഥിര മൂല്യം"
+defaultValueHelp = "ആരും പൂരിപ്പിക്കുന്നതിന് മുമ്പ് ഫീൽഡിൽ അടങ്ങിയിരിക്കുന്നതു. ശൂന്യമായ ഫീൽഡിന് ശൂന്യമായി വിടുക."
+fontSize = "ഫോണ്ട് വലുപ്പം"
+fontSizeHelp = "ഫീൽഡിനുള്ളിലെ ടെക്സ്റ്റ് വലുപ്പം. യോജിക്കുന്ന രീതിയിൽ reader വലുപ്പം നിശ്ചയിക്കാൻ ശൂന്യമായി വിടുക."
+label = "ലേബൽ"
+labelHelp = "ഫോം പൂരിപ്പിക്കുന്ന വ്യക്തിക്ക് കാണിക്കുന്ന വാചകം. ഫീൽഡ് പേരിലേക്ക് മടങ്ങാൻ ഇത് ശൂന്യമായി വിടുക."
+maxLength = "പരമാവധി നീളം (comb)"
+maxLengthHelp = "എത്ര അക്ഷരങ്ങൾ ഉൾക്കൊള്ളാമെന്ന് പരിമിതപ്പെടുത്തുന്നു, തുല്യ അകലത്തിലുള്ള ബോക്സുകളായി വരയ്ക്കുന്നു."
+multiline = "ഒന്നിലധികം വരികൾ"
+multilineHelp = "ഒന്നിൽ കൂടുതൽ ടെക്സ്റ്റ് വരികൾ അനുവദിക്കുകയും ഫീൽഡിന്റെ അരികിൽ വരി മടക്കുകയും ചെയ്യുന്നു."
+multiSelect = "ഒന്നിലധികം തിരഞ്ഞെടുക്കൽ അനുവദിക്കുക"
+multiSelectHelp = "ഒരേ സമയം ഒന്നിൽ കൂടുതൽ ഓപ്ഷനുകൾ തിരഞ്ഞെടുക്കാൻ അനുവദിക്കുന്നു."
+name = "ഫീൽഡ് പേര്"
+nameHelp = "ഫീൽഡിന്റെ ആന്തരിക പേര്. ഡാറ്റ എക്സ്പോർട്ട് ചെയ്യുമ്പോഴോ മറ്റൊരു സിസ്റ്റത്തിൽ നിന്ന് ഫോം പൂരിപ്പിക്കുമ്പോഴോ ഉപയോഗിക്കുന്നു, അതിനാൽ ഇത് സവിശേഷവും സ്പേസുകളില്ലാത്തതുമാക്കുക."
+optionGap = "ഓപ്ഷൻ ഇടവേള"
+optionGapHelp = "ബട്ടണുകൾക്കിടയിലെ ഇടവേള, പോയിന്റുകളിൽ. ബോക്സിൽ തുല്യമായി താഴേക്ക് പരത്താൻ ശൂന്യമായി വിടുക."
+optionPlaceholder = "ഓപ്ഷൻ {{n}}"
+options = "ഓപ്ഷനുകൾ"
+optionsEmpty = "കുറഞ്ഞത് ഒരു ഓപ്ഷൻ ചേർക്കുക."
+optionsHelp = "ലിസ്റ്റിൽ നൽകുന്ന തിരഞ്ഞെടുപ്പുകൾ. ഓരോന്നും ടൈപ്പ് ചെയ്തതുപോലെ സൂക്ഷിക്കും, അതിനാൽ അവ ചെറുതും വ്യത്യസ്തവുമാക്കുക."
+optionSize = "ഓപ്ഷൻ വലുപ്പം"
+optionSizeHelp = "ഓരോ ബട്ടണിന്റെയും വീതിയും ഉയരവും, പോയിന്റുകളിൽ. നിങ്ങൾ വരച്ച ബോക്സിന് യോജിപ്പിക്കാൻ ശൂന്യമായി വിടുക."
+readOnly = "വായനയ്ക്ക് മാത്രം"
+readOnlyHelp = "ഒരു മൂല്യം കാണിക്കുന്നു, പക്ഷേ ആരെയും അത് എഡിറ്റ് ചെയ്യുന്നതിൽ നിന്ന് തടയുന്നു."
+removeOption = "ഓപ്ഷൻ നീക്കംചെയ്യുക"
+required = "ആവശ്യമാണ്"
+requiredHelp = "ഈ ഫീൽഡ് പൂരിപ്പിക്കുന്നതുവരെ ഫോം സമർപ്പിക്കാൻ കഴിയില്ല."
+signatureNote = "പ്ലേസ്‌ഹോൾഡർ മാത്രം - നിങ്ങൾ ഇവിടെ ഒപ്പിടുന്നില്ല. ഒരു ഒപ്പ് എവിടെ വരണമെന്ന് ഇത് അടയാളപ്പെടുത്തുന്നു, അതിനാൽ PDF signer (Adobe Acrobat, ഒരു signing service, മുതലായവ) ഡോക്യുമെന്റ് ഒപ്പിടുമ്പോൾ ഈ സ്ഥാനത്ത് ഒപ്പ് സ്ഥാപിക്കുന്നു."
+tooltip = "Tooltip"
+tooltipHelp = "PDF reader-ൽ ആരെങ്കിലും ഫീൽഡിന് മുകളിൽ ഹോവർ ചെയ്യുമ്പോൾ കാണിക്കുന്ന സൂചന."
+type = "തരം"
+typeHelp = "ഇത് ഏത് തരത്തിലുള്ള ഫീൽഡാണ്. ഇത് മാറ്റുന്നത് ഫീൽഡ് പുനർനിർമ്മിക്കും, അതിനാൽ നിലവിലെ മൂല്യം കൊണ്ടുപോകില്ല."
+
+[formFill.mode]
+create = "സൃഷ്ടിക്കുക"
+fill = "പൂരിപ്പിക്കുക"
+label = "ഫോം എഡിറ്റർ മോഡ്"
+modify = "പരിഷ്കരിക്കുക"
+
+[formFill.modify]
+commit = "{{count}} മാറ്റം(ങ്ങൾ) സംരക്ഷിക്കുക"
+delete = "ഇല്ലാതാക്കുക"
+empty = "ഈ PDF-ൽ ഇതുവരെ ഫോം ഫീൽഡുകളൊന്നുമില്ല."
+failed = "മാറ്റങ്ങൾ സംരക്ഷിക്കുന്നതിൽ പരാജയപ്പെട്ടു"
+groupSizeHint = "ഓപ്ഷൻ വലുപ്പം ഉപയോഗിക്കുക"
+hint = "ഗുണങ്ങൾ എഡിറ്റ് ചെയ്യാൻ ഒരു ഫീൽഡ് തിരഞ്ഞെടുക്കുക, അത് പേജിൽ വലിച്ചിടുക, അല്ലെങ്കിൽ ഇല്ലാതാക്കുക."
+restore = "പുനഃസ്ഥാപിക്കുക"
 
 [formFill.sidebar]
 close = "സൈഡ്ബാർ അടയ്ക്കുക"
@@ -4584,6 +4669,10 @@ title = "മെറ്റാഡാറ്റ മാറ്റുക"
 desc = "ഡോക്യുമെന്റ് നിയന്ത്രണങ്ങളും അനുമതികളും മാറ്റുക"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "അനുമതികൾ മാറ്റുക"
+
+[home.classify]
+desc = "ഇത് ഏത് തരത്തിലുള്ള ഡോക്യുമെന്റാണെന്ന് തിരിച്ചറിഞ്ഞ് ടാഗ് ചെയ്യുക."
+title = "വർഗീകരിക്കുക"
 
 [home.compare]
 desc = "2 PDF പ്രമാണങ്ങൾ തമ്മിലുള്ള വ്യത്യാസങ്ങൾ താരതമ്യം ചെയ്യുകയും കാണിക്കുകയും ചെയ്യുന്നു"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "റിപ്പോർട്ട് ചെയ്യാൻ ഒന്നുമില്ല."
+handoffUnavailable = "ഈ browser പ്രോസസ്സറിന് ഡോക്യുമെന്റ് എഡിറ്ററിലേക്ക് കൈമാറാൻ അനുവദിക്കില്ല. പകരം എഡിറ്ററിൽ നിന്ന് അത് തുറക്കുക."
+noDocumentLinked = "ഈ പരാജയം ഒരു നിർദ്ദിഷ്ട ഡോക്യുമെന്റുമായി ലിങ്ക് ചെയ്തിട്ടില്ല, അതിനാൽ ഇവിടെ തുറക്കാൻ ഒന്നുമില്ല."
+notOnThisDevice = "ഈ ഡോക്യുമെന്റ് ഈ ഉപകരണത്തിലില്ല, അതിനാൽ ഇവിടെ തുറക്കാൻ കഴിയില്ല."
+occurrences = "{{count}} തവണ"
+open = "അറിയിപ്പുകൾ"
+title = "അറിയിപ്പുകൾ"
+unread = "വായിക്കാത്തത്"
+
+[notifications.action]
+failed = "അത് പ്രവർത്തിച്ചില്ല. കുറച്ച് സമയത്തിന് ശേഷം വീണ്ടും ശ്രമിക്കുക."
+unavailable = "ഈ അറിയിപ്പിനായി ലഭ്യമല്ല."
+
+[notifications.detail]
+copied = "പകർത്തി"
+copy = "പിശക് പകർത്തുക"
+less = "കുറച്ച് കാണിക്കുക"
+more = "മുഴുവൻ സന്ദേശവും കാണിക്കുക"
+
+[notifications.section]
+earlier = "മുമ്പത്തേത്"
+new = "പുതിയത്"
 
 [oauth.error]
 message = "ഓതന്റിക്കേഷൻ വിജയിച്ചില്ല. ഈ വിൻഡോ അടച്ച് വീണ്ടും ശ്രമിക്കാം."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} free PDFs-ൽ ഉപയോഗിച്ചത്"
 capSuffix_other = "{{allowance}} free PDFs-ൽ ഉപയോഗിച്ചത്"
 eyebrow = "Processor trial"
-statusLabel_one = "{{remaining}} ശേഷിക്കുന്നു"
-statusLabel_other = "{{remaining}} ശേഷിക്കുന്നു"
+statusLabel_one = "{{used}} ഉപയോഗിച്ചു"
+statusLabel_other = "{{used}} ഉപയോഗിച്ചു"
 sub = "PDF Editor സൗജന്യമായി ഉപയോഗിക്കുക. PDFs സ്വയമേവ പ്രോസസ് ചെയ്യാൻ പണം നൽകുക."
 title_one = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക"
 title_other = "{{allowance}} PDFs സൗജന്യമായി പ്രോസസ് ചെയ്യുക"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "ഫയൽ കാണുക"
+viewInProcessor = "പ്രോസസ്സറിൽ കാണുക"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "ഈ പരാജയം ഒരു നിർദ്ദിഷ്ട ഡോക്യുമെന്റിനെതിരെ രേഖപ്പെടുത്തിയിട്ടില്ല, അതിനാൽ ഇവിടെ തുറക്കാൻ ഒന്നുമില്ല."
+unattended = "ഈ ഫയൽ ഒരു ഫോൾഡർ, bucket അല്ലെങ്കിൽ webhook വഴി നൽകിയതാണ്, അതിനാൽ തുറക്കാൻ ആരുടെയും browser അത് കൈവശം വച്ചിട്ടില്ല."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "ഉറവിടങ്ങൾ"
 connectSource = "ഉറവിടം കണക്റ്റ് ചെയ്യുക"
 
 [portal.sources.builder]
+advanced = "വിപുലമായത്"
 back = "sources-ലേക്ക് മടങ്ങുക"
+backToSource = "സോഴ്‌സ് സജ്ജീകരണത്തിലേക്ക് മടങ്ങുക"
 backToTypes = "എല്ലാ source types"
 cancel = "റദ്ദാക്കുക"
 chooseHint = "ഡോക്യുമെന്റുകൾ എവിടെ നിന്നാണ് വരുന്നതെന്ന് തിരഞ്ഞെടുക്കുക. Greyed-out connectors വരാനിരിക്കുകയാണ്."
@@ -8726,7 +8845,6 @@ create = "source സൃഷ്ടിക്കുക"
 createTitle = "ഒരു source ബന്ധിപ്പിക്കുക"
 delete = "ഇല്ലാതാക്കുക"
 editTitle = "source edit ചെയ്യുക"
-enabled = "Enabled"
 save = "മാറ്റങ്ങൾ save ചെയ്യുക"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: ഓരോ file-ഉം ഒരിക്കൽ process ചെ�
 snapshot = "Snapshot: ഓരോ run-ലും folder വീണ്ടും വായിക്കുക"
 
 [portal.sources.networkFields.recursive]
+helperText = "നിങ്ങളുടെ ഫയലുകൾ nested ഫോൾഡറുകളായി ക്രമീകരിച്ചിട്ടുണ്ടെങ്കിൽ സബ്‌ഫോൾഡറുകൾ ഉൾപ്പെടുത്തുക, അല്ലെങ്കിൽ മുകളിലെ ലെവൽ മാത്രം നിരീക്ഷിക്കുക."
 label = "Folder depth"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Size, date, content check"
 stat = "Size and date modified"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "പ്രോസസ് ചെയ്ത ശേഷം യഥാർത്ഥ ഫയൽ അതേ സ്ഥലത്ത് വിടണോ എന്നത്. യഥാർത്ഥ ഫയൽ അതേ സ്ഥലത്ത് വിടുകയാണെങ്കിൽ, അടുത്ത തവണ pipeline സോഴ്‌സ് സ്കാൻ ചെയ്യുമ്പോൾ അത് വീണ്ടും പ്രോസസ് ചെയ്യും."
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "Consume: ഓരോ ഫയലും ഒരിക്കൽ പ്രോ
 snapshot = "Snapshot: ഓരോ run-ലും folder വീണ്ടും വായിക്കുക"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "നിങ്ങളുടെ ഫയലുകൾ nested ഫോൾഡറുകളായി ക്രമീകരിച്ചിട്ടുണ്ടെങ്കിൽ സബ്‌ഫോൾഡറുകൾ ഉൾപ്പെടുത്തുക, അല്ലെങ്കിൽ മുകളിലെ ലെവൽ മാത്രം നിരീക്ഷിക്കുക."
 label = "Folder depth"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "നിങ്ങളുടെ Stirling-PDF സെർവ
 expired = "നിങ്ങളുടെ സെഷൻ കാലഹരണപ്പെട്ടു. ദയവായി പേജ് പുതുക്കി വീണ്ടും ശ്രമിക്കുക."
 
 [settings]
+backToSections = "എല്ലാ ക്രമീകരണങ്ങളും"
 close = "അടയ്ക്കുക"
+title = "ക്രമീകരണങ്ങൾ"
 
 [settings.ai]
 documents = "പ്രമാണങ്ങൾ & RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "തിരയുക"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "ടോളുകൾ തിരയുക..."
 
 [toolPicker.subcategories]
 advancedFormatting = "അഡ്വാൻസ്ഡ് ഫോർമാറ്റിംഗ്"
+ai = "AI"
 automation = "ഓട്ടോമേഷൻ"
 developerTools = "ഡെവലപ്പർ ടൂളുകൾ"
 documentReview = "ഡോക്യുമെന്റ് റിവ്യൂ"
@@ -11335,8 +11460,11 @@ columnDefault = "നിര {{index}}"
 convertToPdf = "PDF ആയി മാറിക്കുക"
 csvStats = "{{rows}} വരികൾ · {{columns}} നിരകൾ · {{size}}"
 emptyFile = "ശൂന്യ ഫയൽ"
+htmlHidePreview = "പ്രിവ്യൂ മറയ്ക്കുക"
 htmlPreview = "HTML പ്രിവ്യൂ"
+htmlPreviewMobileHidden = "HTML പേജുകൾ desktop വീതികൾക്കായി ക്രമീകരിച്ചിരിക്കുന്നതിനാൽ ഇവിടെ പ്രിവ്യൂ സ്ഥിരമായി ഓഫാണ്."
 htmlPreviewWarning = "HTML പ്രിവ്യൂ — ബാഹ്യ വിഭവങ്ങൾ ലോഡ് ചെയ്യാതിരിക്കാം · {{size}}"
+htmlShowPreview = "എങ്കിലും പ്രിവ്യൂ കാണിക്കുക"
 invalidJson = "അസാധുവായ JSON — അസംസ്കൃത ഉള്ളടക്കം കാണിക്കുന്നു"
 lineNumbers = "വരി നമ്പറുകൾ"
 loading = "ലോഡ് ചെയ്യുന്നു..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF എക്സ്പോർട്ട് ചെയ്യുക"
 exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
 formFill = "ഫോം പൂരിപ്പിക്കുക"
 hideToolbar = "Hide toolbar"
+moreActions = "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
 multiTool = "മൾട്ടി-ടൂൾ"
 panMode = "പാൻ മോഡ്"
 print = "PDF അച്ചടിക്കുക"
@@ -11703,6 +11832,8 @@ selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 selectByNumber = "പേജ് നമ്പർ പ്രകാരം തിരഞ്ഞെടുക്കുക"
 selectLanguage = "ഭാഷ തിരഞ്ഞെടുക്കുക"
 share = "പങ്കിടുക"
+showAllTools = "എല്ലാ ടൂളുകളും കാണിക്കുക"
+showFewerTools = "ടൂൾബാർ ചുരുക്കുക"
 showToolbar = "Show toolbar"
 toggleAnnotations = "അനോട്ടേഷനുകളുടെ ദൃശ്യത ടോഗിൾ ചെയ്യുക"
 toggleAttachments = "അറ്റാച്ച്മെന്റുകൾ ടോഗിൾ ചെയ്യുക"

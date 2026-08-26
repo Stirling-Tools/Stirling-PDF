@@ -41,7 +41,7 @@ false = "Yanlış"
 fileNotSavedToDisk = "Diskə yadda saxlanılmadı"
 fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 fileSelected = "Seçilən: {{filename}}"
-filesSelected = "seçilmiş fayllar"
+filesSelected = "{{count}} fayl"
 font = "Şrift"
 fontSizeTooltip = "Səhifə nömrəsi mətninin ölçüsü (pt). Daha böyük rəqəmlər daha böyük mətn yaradır."
 fontTypeTooltip = "Səhifə nömrələri üçün şrift ailəsi. Sənəd üslubunuza uyğun seçin."
@@ -3969,6 +3969,7 @@ back = "Geri"
 backToFolder = "{{folder}} qovluğuna geri"
 backToMyFiles = "Mənim Fayllarıma geri"
 breadcrumbs = "Qovluq yolu"
+bulkActions = "Əməliyyatlar"
 cancel = "Ləğv et"
 classification = "Təsnifat"
 clearSelection = "Seçimi təmizlə"
@@ -4142,6 +4143,11 @@ totalSize = "Ümumi ölçü"
 type = "Növ"
 versionHistory = "Versiya yolu"
 
+[filesPage.filters]
+activeCount = "{{count}} filtr aktivdir"
+clearAll = "Filtrləri təmizlə"
+label = "Filtrlər"
+
 [filesPage.folderName]
 cancel = "Ləğv et"
 error = "Qovluğu saxlamaq mümkün olmadı. Yenidən cəhd edin."
@@ -4176,6 +4182,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Faylları sırala"
 modifiedAsc = "Ən köhnə əvvəlcə"
 modifiedDesc = "Ən yenilər əvvəlcə"
 nameAsc = "Ad A→Z"
@@ -4305,11 +4312,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Hamısı saxlanıldı"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Dəyişiklikləri tətbiq etmək mümkün olmadı"
 extractCsvError = "CSV çıxarmaq alınmadı"
 extractXlsxError = "XLSX çıxarmaq alınmadı"
 filled = "filled"
 flattenAfterFilling = "Doldurduqdan sonra yastılaşdır"
+goToPage = "Bu səhifəyə keç"
 noFields = "No fillable form fields found in this PDF."
+page = "Səhifə"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "təl."
@@ -4318,7 +4328,82 @@ rescanFields = "Sahələri yenidən skan et"
 rescanFormFields = "Forma sahələrini yenidən skan et"
 save = "Saxla"
 saveShortcut = "Saxlamaq üçün Ctrl+S"
+skippedEdits_one = "1 dəyişiklik tətbiq edilə bilmədi:"
+skippedEdits_other = "{{count}} dəyişiklik tətbiq edilə bilmədi:"
+skippedEditsTruncated = "{{count}} əlavə qeyd göstərilmir."
 unsavedChanges = "Saxlanılmamış dəyişikliklər"
+
+[formFill.create]
+commit = "PDF-ə {{count}} sahə əlavə et"
+empty = "Hələ heç bir sahə çəkilməyib."
+failed = "Sahələri əlavə etmək alınmadı"
+goToField = "Bu sahəyə keç"
+hint = "Sahə növünü seçin, sonra onu səhifədə çəkin."
+placing = "Səhifədə {{type}} sahəsi çəkin. Dayandırmaq üçün Esc düyməsini basın."
+preview = "Önizləmə üçün basılı saxlayın"
+previewHelp = "Sahələrin əlavə edildikdən sonra necə görünəcəyini redaktə konturları olmadan görmək üçün basılı saxlayın."
+removeField = "Sahəni sil"
+
+[formFill.editor]
+action = "Düymə əməliyyatı"
+actionHelp = "Düyməyə kliklənəndə nə baş verəcəyi."
+actionNone = "Heç nə"
+actionPrint = "Çap et"
+actionReset = "Formanı sıfırla"
+actionSubmit = "URL-ə göndər"
+actionUri = "URL aç"
+actionUrl = "URL"
+actionUrlHelp = "Düymənin açdığı və ya göndərdiyi ünvan."
+addOption = "Seçim əlavə et"
+caption = "Düymə başlığı"
+captionHelp = "Düymənin üzərində göstərilən mətn."
+defaultValue = "Standart dəyər"
+defaultValueHelp = "Kimsə doldurmazdan əvvəl sahədə olan məzmun. Boş sahə üçün boş buraxın."
+fontSize = "Şrift ölçüsü"
+fontSizeHelp = "Sahə daxilində mətn ölçüsü. Oxuyucunun uyğunlaşdırmasına imkan vermək üçün boş buraxın."
+label = "Etiket"
+labelHelp = "Formanı dolduran şəxsə göstərilən mətn. Sahə adına qayıtmaq üçün boş buraxın."
+maxLength = "Maks. uzunluq (comb)"
+maxLengthHelp = "Neçə simvolun sığacağını məhdudlaşdırır, bərabər aralıqlı xanalar kimi çəkilir."
+multiline = "Çoxsətirli"
+multilineHelp = "Birdən çox mətn sətrinə icazə verir və sahənin kənarında sətirə keçirir."
+multiSelect = "Çoxlu seçimə icazə ver"
+multiSelectHelp = "Eyni anda birdən çox seçimin seçilməsinə imkan verir."
+name = "Sahə adı"
+nameHelp = "Sahənin daxili adı. Məlumat ixrac edilərkən və ya forma başqa sistemdən doldurularkən istifadə olunur, buna görə unikal və boşluqsuz saxlayın."
+optionGap = "Seçim aralığı"
+optionGapHelp = "Düymələr arasındakı məsafə, punktla. Onları qutuda bərabər yaymaq üçün boş buraxın."
+optionPlaceholder = "Seçim {{n}}"
+options = "Seçimlər"
+optionsEmpty = "Ən azı bir seçim əlavə edin."
+optionsHelp = "Siyahıda təqdim olunan seçimlər. Hər biri yazıldığı kimi saxlanılır, buna görə qısa və fərqli saxlayın."
+optionSize = "Seçim ölçüsü"
+optionSizeHelp = "Hər düymənin eni və hündürlüyü, punktla. Çəkdiyiniz qutuya uyğunlaşdırmaq üçün boş buraxın."
+readOnly = "Yalnız oxuma"
+readOnlyHelp = "Dəyəri göstərir, lakin heç kimin onu redaktə etməsinə imkan vermir."
+removeOption = "Seçimi sil"
+required = "Məcburi"
+requiredHelp = "Bu sahə doldurulmayana qədər forma göndərilə bilməz."
+signatureNote = "Yalnız yer tutucudur - burada imza atmırsınız. Bu, imzanın harada yerləşməli olduğunu göstərir ki, sənəd imzalananda PDF imzalayıcı (Adobe Acrobat, imzalama xidməti və s.) imzanı bu yerə yerləşdirsin."
+tooltip = "İpucu"
+tooltipHelp = "Kimsə PDF oxuyucusunda sahənin üzərinə gəldikdə göstərilən ipucu."
+type = "Növ"
+typeHelp = "Bu sahənin hansı növdə olduğunu göstərir. Dəyişdirildikdə sahə yenidən qurulur, buna görə cari dəyəri saxlanılmır."
+
+[formFill.mode]
+create = "Yarat"
+fill = "Doldur"
+label = "Forma redaktoru rejimi"
+modify = "Dəyişdir"
+
+[formFill.modify]
+commit = "{{count}} dəyişikliyi saxla"
+delete = "Sil"
+empty = "Bu PDF-də hələ forma sahələri yoxdur."
+failed = "Dəyişiklikləri saxlamaq alınmadı"
+groupSizeHint = "Seçim ölçüsündən istifadə edin"
+hint = "Xüsusiyyətlərini redaktə etmək üçün sahə seçin, onu səhifədə sürükləyin və ya silin."
+restore = "Bərpa et"
 
 [formFill.sidebar]
 close = "Yan paneli bağla"
@@ -4584,6 +4669,10 @@ title = "Metadatanı Dəyiş"
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişin"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "İcazələri Dəyişdir"
+
+[home.classify]
+desc = "Bunun hansı növ sənəd olduğunu müəyyənləşdirin və etiketləyin."
+title = "Təsnif et"
 
 [home.compare]
 desc = "2 PDF Sənədini müqayisə edir və fərqləri göstərir"
@@ -5097,6 +5186,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Bildiriləcək heç nə yoxdur."
+handoffUnavailable = "Bu brauzer emalçıya sənədi redaktora ötürməyə imkan verməyəcək. Bunun əvəzinə onu redaktordan açın."
+noDocumentLinked = "Bu xəta konkret sənədlə əlaqəli deyil, buna görə burada açılacaq heç nə yoxdur."
+notOnThisDevice = "Bu sənəd bu cihazda deyil, buna görə burada açıla bilməz."
+occurrences = "{{count}} dəfə"
+open = "Bildirişlər"
+title = "Bildirişlər"
+unread = "Oxunmamış"
+
+[notifications.action]
+failed = "Bu alınmadı. Bir azdan yenidən cəhd edin."
+unavailable = "Bu bildiriş üçün əlçatan deyil."
+
+[notifications.detail]
+copied = "Kopyalandı"
+copy = "Xətanı kopyala"
+less = "Daha az göstər"
+more = "Tam mesajı göstər"
+
+[notifications.section]
+earlier = "Əvvəlkilər"
+new = "Yeni"
 
 [oauth.error]
 message = "Təsdiqləmə uğurlu olmadı. Bu pəncərəni bağlayıb yenidən cəhd edə bilərsiniz."
@@ -6735,8 +6848,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "{{allowance}} pulsuz PDF-dən istifadə olunub"
 capSuffix_other = "{{allowance}} pulsuz PDF-dən istifadə olunub"
 eyebrow = "Processor sınağı"
-statusLabel_one = "{{remaining}} qalıb"
-statusLabel_other = "{{remaining}} qalıb"
+statusLabel_one = "{{used}} istifadə olunub"
+statusLabel_other = "{{used}} istifadə olunub"
 sub = "PDF Editor-dan pulsuz istifadə edin. PDF-ləri avtomatik emal etmək üçün ödəyin."
 title_one = "{{allowance}} PDF-i pulsuz emal edin"
 title_other = "{{allowance}} PDF-i pulsuz emal edin"
@@ -7417,6 +7530,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Fayla bax"
+viewInProcessor = "Emalçıda bax"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7543,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Bu xəta konkret sənədə aid qeydə alınmayıb, buna görə burada açılacaq heç nə yoxdur."
+unattended = "Bu fayl qovluq, bucket və ya webhook tərəfindən ötürülüb, buna görə onu açmaq üçün heç kimin brauzerində saxlanılmır."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8833,9 @@ title = "Mənbələr"
 connectSource = "Mənbə qoş"
 
 [portal.sources.builder]
+advanced = "Qabaqcıl"
 back = "Mənbələrə qayıt"
+backToSource = "Mənbə qurulumuna qayıt"
 backToTypes = "Bütün mənbə növləri"
 cancel = "Ləğv et"
 chooseHint = "Sənədlərin haradan gələcəyini seçin. Bozlaşdırılmış connector-lar yoldadır."
@@ -8726,7 +8845,6 @@ create = "Mənbə yarat"
 createTitle = "Mənbə qoş"
 delete = "Sil"
 editTitle = "Mənbəni redaktə et"
-enabled = "Aktivləşdirilib"
 save = "Dəyişiklikləri saxla"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8881,7 @@ consume = "Consume: hər faylı bir dəfə emal et"
 snapshot = "Snapshot: hər icrada qovluğu yenidən oxu"
 
 [portal.sources.networkFields.recursive]
+helperText = "Fayllarınız iç-içə qovluqlarda təşkil olunubsa alt qovluqları daxil edin, ya da yalnız üst səviyyəni izləyin."
 label = "Qovluq dərinliyi"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8935,7 @@ hash = "Ölçü, tarix və məzmun yoxlaması"
 stat = "Ölçü və dəyişdirilmə tarixi"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Emal edildikdən sonra orijinal faylın yerində saxlanılıb-saxlanılmayacağı. Orijinal fayl yerində saxlanılarsa, pipeline növbəti dəfə mənbəni skan etdikdə yenidən emal olunacaq."
 label = "Oxuma rejimi"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8943,7 @@ consume = "İstehlak: hər faylı bir dəfə emal et"
 snapshot = "Snapshot: hər işə salmada qovluğu yenidən oxu"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Fayllarınız iç-içə qovluqlarda təşkil olunubsa alt qovluqları daxil edin, ya da yalnız üst səviyyəni izləyin."
 label = "Qovluq dərinliyi"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9817,9 @@ toolNotAvailableLocally = "Sizin Stirling-PDF serveriniz oflayndır və \"{{endp
 expired = "Sessiyanızın vaxtı bitdi. Səhifəni yeniləyin və yenidən cəhd edin."
 
 [settings]
+backToSections = "Bütün ayarlar"
 close = "Bağla"
+title = "Ayarlar"
 
 [settings.ai]
 documents = "Sənədlər və RAG"
@@ -10635,6 +10758,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Axtar"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10955,7 @@ searchPlaceholder = "Alətlərdə axtar..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Qabaqcıl Formatlama"
+ai = "AI"
 automation = "Avtomatlaşdırma"
 developerTools = "Tərtibatçı Alətləri"
 documentReview = "Sənəd Baxışı"
@@ -11335,8 +11460,11 @@ columnDefault = "Sütun {{index}}"
 convertToPdf = "PDF-ə çevir"
 csvStats = "{{rows}} sətir · {{columns}} sütun · {{size}}"
 emptyFile = "Boş fayl"
+htmlHidePreview = "Önizləməni gizlət"
 htmlPreview = "HTML ön baxış"
+htmlPreviewMobileHidden = "HTML səhifələri masaüstü enləri üçün tərtib edilib, buna görə burada önizləmə standart olaraq söndürülüb."
 htmlPreviewWarning = "HTML ön baxış — xarici resurslar yüklənməyə bilər · {{size}}"
+htmlShowPreview = "Yenə də önizləməni göstər"
 invalidJson = "Etibarsız JSON — xam məzmun göstərilir"
 lineNumbers = "Sətir nömrələri"
 loading = "Yüklənir..."
@@ -11683,6 +11811,7 @@ exportAll = "PDF-i ixrac et"
 exportSelected = "Seçilmiş səhifələri ixrac et"
 formFill = "Formu doldur"
 hideToolbar = "Hide toolbar"
+moreActions = "Daha çox əməliyyat"
 multiTool = "Çoxfunksiyalı alət"
 panMode = "Sürüşdürmə rejimi"
 print = "PDF-i çap et"
@@ -11703,6 +11832,8 @@ selectAll = "Hamısını seç"
 selectByNumber = "Səhifə nömrələrinə görə seç"
 selectLanguage = "Dili seçin"
 share = "Paylaş"
+showAllTools = "Bütün alətləri göstər"
+showFewerTools = "Alətlər panelini yığ"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
 toggleAttachments = "Qoşmaları aç/bağla"
