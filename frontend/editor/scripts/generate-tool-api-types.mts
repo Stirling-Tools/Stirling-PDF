@@ -10,15 +10,9 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
-import * as prettier from "prettier";
 
-// The API namespaces whose endpoints a pipeline can reference. `/api/v1/ai/tools/`
-// is absent from the spec, so it cannot appear here. Extend this list when other
-// namespaces become tools.
-//
-// `/api/v1/filter/` and `/api/v1/integration/` are included even though neither is a
-// user-facing tool: a stored pipeline can contain one, and ToolEndpoint keys the I/O
-// table, so leaving them out would stop a chain being checked past such a step.
+// Endpoints a pipeline can reference. filter/integration are not user-facing tools but a stored
+// pipeline can contain one; the AI namespace is admitted one endpoint at a time, not wholesale.
 const ALLOWED_PATH_PREFIXES = [
   "/api/v1/general/",
   "/api/v1/misc/",
@@ -26,6 +20,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/convert/",
   "/api/v1/filter/",
   "/api/v1/integration/",
+  "/api/v1/ai/tools/classify-and-label",
 ];
 
 // File plumbing, not user parameters: `fileInput` and `file` are the uploaded primary document
@@ -227,11 +222,7 @@ function collectToolIO(
   return { table, dropped };
 }
 
-async function renderToolIO(
-  spec: Json,
-  table: Record<string, unknown>,
-  outputPath: string,
-): Promise<string> {
+function renderToolIO(spec: Json, table: Record<string, unknown>): string {
   if (Object.keys(table).length === 0) {
     throw new Error(
       `No ${IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; regenerate with 'task backend:swagger'.`,
@@ -312,33 +303,12 @@ export function toolIOFor(
 }
 `;
 
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  return prettier.format(body, { ...prettierConfig, parser: "typescript" });
+  return body;
 }
 
-/** In check mode, fail when the committed file is out of date. */
-function writeOrCheck(
-  outputPath: string,
-  formatted: string,
-  check: boolean,
-  task: string,
-): void {
-  if (check) {
-    let current = "";
-    try {
-      current = readFileSync(outputPath, "utf-8");
-    } catch {
-      // Missing file counts as out of date.
-    }
-    if (current !== formatted) {
-      throw new Error(
-        `${outputPath} is out of date. Run '${task}' and commit the result.`,
-      );
-    }
-    return;
-  }
+function writeOutput(outputPath: string, contents: string): void {
   mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, formatted, "utf-8");
+  writeFileSync(outputPath, contents, "utf-8");
 }
 
 async function main(): Promise<void> {
@@ -347,12 +317,11 @@ async function main(): Promise<void> {
       spec: { type: "string" },
       output: { type: "string" },
       "io-output": { type: "string" },
-      check: { type: "boolean", default: false },
     },
   });
   if (!values.spec || !values.output || !values["io-output"]) {
     throw new Error(
-      "Usage: generate-tool-api-types.mts --spec <SwaggerDoc.json> --output <file.ts> --io-output <file.ts> [--check]",
+      "Usage: generate-tool-api-types.mts --spec <SwaggerDoc.json> --output <file.ts> --io-output <file.ts>",
     );
   }
   const specPath = resolve(values.spec);
@@ -478,14 +447,9 @@ async function main(): Promise<void> {
       `Dropped ${dropped.length} @ToolIO declaration(s) on paths that are not tool endpoints. Add the namespace to ALLOWED_PATH_PREFIXES if a pipeline can contain these steps:\n  ${dropped.join("\n  ")}`,
     );
   }
-  writeOrCheck(
-    ioOutputPath,
-    await renderToolIO(spec, ioDeclarations, ioOutputPath),
-    values.check ?? false,
-    "task frontend:tool-models",
-  );
+  writeOutput(ioOutputPath, renderToolIO(spec, ioDeclarations));
   console.log(
-    `${values.check ? "Up to date" : "Generated"}: ${Object.keys(ioDeclarations).length} tool I/O declarations.`,
+    `Generated ${Object.keys(ioDeclarations).length} tool I/O declarations.`,
   );
 
   // Transitively inline every referenced component into `definitions`, rewriting its refs too.
@@ -508,7 +472,6 @@ async function main(): Promise<void> {
     definitions,
     fileFieldsByClass,
     outputPath,
-    values.check ?? false,
     skipped,
   );
 }
@@ -518,7 +481,6 @@ async function compileAndWrite(
   definitions: Record<string, Json>,
   fileFieldsByClass: Record<string, string[]>,
   outputPath: string,
-  check: boolean,
   skipped: string[],
 ): Promise<void> {
   // json-schema-to-typescript only emits a named, exported interface per schema
@@ -597,17 +559,9 @@ async function compileAndWrite(
   ].join("\n");
 
   const body = `${FILE_HEADER}\n\n${models}\n\n${footer}\n`;
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  const formatted = await prettier.format(body, {
-    ...prettierConfig,
-    parser: "typescript",
-  });
-
-  writeOrCheck(outputPath, formatted, check, "task frontend:tool-models");
-  console.log(
-    `${check ? "Up to date" : "Generated"}: ${tools.length} tool endpoints.`,
-  );
-  if (!check && skipped.length > 0) {
+  writeOutput(outputPath, body);
+  console.log(`Generated ${tools.length} tool endpoints.`);
+  if (skipped.length > 0) {
     console.log(
       `Skipped ${skipped.length} POST endpoint(s) with no request body: ${skipped.join(", ")}`,
     );

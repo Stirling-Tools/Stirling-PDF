@@ -17,7 +17,7 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.6.1",
+            "moduleVersion": "1.6.3",
             "moduleLicense": "LGPL-2.1-only",
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -31,7 +31,7 @@
         {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.6.1",
+            "moduleVersion": "1.6.3",
             "moduleLicense": "LGPL-2.1-only",
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -1064,21 +1064,14 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.46",
+            "moduleVersion": "2.2.47",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.47",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
-            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.46",
+            "moduleVersion": "2.2.53",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1090,9 +1083,9 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
-            "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
-            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.46",
+            "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
+            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
+            "moduleVersion": "2.2.53",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1100,6 +1093,13 @@
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
             "moduleVersion": "2.2.47",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
+            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
+            "moduleVersion": "2.2.53",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -2304,7 +2304,7 @@
         },
         {
             "moduleName": "org.simplejavamail:core-module",
-            "moduleVersion": "9.3.1",
+            "moduleVersion": "9.3.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -2317,13 +2317,13 @@
         },
         {
             "moduleName": "org.simplejavamail:outlook-module",
-            "moduleVersion": "9.3.1",
+            "moduleVersion": "9.3.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.simplejavamail:simple-java-mail",
-            "moduleVersion": "9.3.1",
+            "moduleVersion": "9.3.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -2343,10 +2343,10 @@
         },
         {
             "moduleName": "org.snakeyaml:snakeyaml-engine",
-            "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml-engine",
-            "moduleVersion": "3.0.1",
+            "moduleUrl": "https://codeberg.org/snakeyaml/snakeyaml-engine",
+            "moduleVersion": "3.1.1",
             "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",

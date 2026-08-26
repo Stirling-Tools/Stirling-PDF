@@ -91,7 +91,12 @@ describe("auto-run ordered chaining", () => {
 
     // The first policy (order 0) runs on the upload; the second waits for the chain.
     expect(runStored).toHaveBeenCalledTimes(1);
-    expect(runStored).toHaveBeenCalledWith("backend-sec", [{ size: 100 }]);
+    // Recorded against a document this browser can resolve, which is what makes its failure actionable.
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-sec",
+      [{ size: 100 }],
+      "file-1",
+    );
   });
 
   it("chains the next policy onto a completed run's output", async () => {
@@ -120,8 +125,12 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    // The next policy (order 1) fires on the first policy's output, not the original.
-    expect(runStored).toHaveBeenCalledWith("backend-cls", [{ size: 100 }]);
+    // Fires on the first policy's output and reports that output's own id, not the original's.
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-cls",
+      [{ size: 100 }],
+      "file-1-v2",
+    );
   });
 
   it("keeps classification out of the server chain when the AI engine is off", async () => {
@@ -136,10 +145,31 @@ describe("auto-run ordered chaining", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
 
-    expect(runStored).toHaveBeenCalledWith("backend-sec", [{ size: 100 }]);
+    expect(runStored).toHaveBeenCalledWith(
+      "backend-sec",
+      [{ size: 100 }],
+      "file-1",
+    );
     expect(runStored).not.toHaveBeenCalledWith(
       "backend-cls",
       expect.anything(),
+      expect.anything(),
     );
+  });
+
+  it("never dispatches on a file marked derivedFromTool", async () => {
+    // A policy run is billed, so this gate is what stops `importOutputs` re-enforcing a policy on
+    // its own output forever. If this fails, fix the gate rather than the test.
+    setFileStubs([
+      { id: "file-1", name: "unlocked.pdf", derivedFromTool: true },
+    ]);
+    runStored.mockResolvedValue("run-sec");
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+
+    expect(runStored).not.toHaveBeenCalled();
   });
 });

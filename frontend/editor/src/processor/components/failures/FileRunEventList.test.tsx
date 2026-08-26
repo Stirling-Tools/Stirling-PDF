@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render as baseRender, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ProcessorTestProviders } from "@processor/test/TestQueryProvider";
 import type { FileRunEvent } from "@processor/api/fileRunEvents";
 
 /**
  * Tests for the list: the states it survives (loading, empty, no registry, refused),
- * plus replacing a row in place after acting and re-reading when the server refuses.
+ * plus replacing a row in place after acting, re-reading when the server refuses, and
+ * bringing itself into view when a notification links to it.
  */
+
+// jsdom does no layout and so implements no scrollIntoView.
+const scrollIntoView = vi.fn();
+Element.prototype.scrollIntoView = scrollIntoView;
 
 const fetchFileRunEvents = vi.fn();
 const applyFileRunEventAction = vi.fn();
@@ -55,9 +61,19 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// The list reads through the shared query hooks, and @app/ui needs Mantine.
-const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: ProcessorTestProviders });
+// The list reads through the shared query hooks, @app/ui needs Mantine, and the section reads
+// the location to know whether it was linked to.
+const render = (
+  ui: Parameters<typeof baseRender>[0],
+  at = "/processor/documents",
+) =>
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <ProcessorTestProviders>
+        <MemoryRouter initialEntries={[at]}>{children}</MemoryRouter>
+      </ProcessorTestProviders>
+    ),
+  });
 
 const { FileRunEventList } =
   await import("@processor/components/failures/FileRunEventList");
@@ -102,6 +118,7 @@ describe("FileRunEventList", () => {
   beforeEach(() => {
     fetchFileRunEvents.mockReset();
     applyFileRunEventAction.mockReset();
+    scrollIntoView.mockReset();
     // The dev-panel test stubs import.meta.env.DEV, which would otherwise persist
     // into every test after it.
     vi.unstubAllEnvs();
@@ -214,6 +231,24 @@ describe("FileRunEventList", () => {
     // Updated from the response rather than by refetching, so the list does not
     // reload and jump under the reviewer.
     expect(fetchFileRunEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("brings itself into view when a notification links to it", async () => {
+    // It sits below the review queue, so landing on the page is not the same as seeing it.
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />, "/processor/documents#failures");
+
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+  });
+
+  it("stays where it is on an ordinary visit to the page", async () => {
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />);
+
+    await screen.findByText("Password-protected document");
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it("re-reads from the server when an action is refused", async () => {

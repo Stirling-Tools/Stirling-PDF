@@ -99,6 +99,11 @@ export interface ToolIOSpec {
 export type ToolIOTable = Partial<Record<ToolEndpoint, ToolIOSpec>>;
 
 export const TOOL_IO: ToolIOTable = {
+  "/api/v1/ai/tools/classify-and-label": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/convert/cbr/pdf": {
     accepts: ["CBR"],
     produces: "PDF",

@@ -1,4 +1,3 @@
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal } from "@app/ui";
@@ -152,6 +151,11 @@ export function ConnectionModal({
       onClose={onClose}
       // The grid wants room to breathe; a form is easier to read narrow.
       width={mode === "pick" ? "lg" : "md"}
+      // Once a type is chosen the header owns the step-back to the picker; the form
+      // body is just the fields. Only when a choice was actually offered (not a
+      // pinned slot or an edit, where the type is fixed).
+      onBack={mode === "form" && canPick ? () => setMode("pick") : undefined}
+      backLabel={t("processor.connections.picker2.back")}
       title={
         isEdit
           ? t("processor.connections.editTitle")
@@ -190,20 +194,6 @@ export function ConnectionModal({
         <ConnectionTypePicker types={available} onPick={pickType} />
       ) : (
         <>
-          {canPick && (
-            // The choice is made in the picker now; this just gets them back to it, so the
-            // selection stays visible without a dropdown that duplicates the grid.
-            <Button
-              variant="quiet"
-              size="sm"
-              className="processor-sources__connection-back"
-              leftSection={<ArrowBackRoundedIcon fontSize="inherit" />}
-              onClick={() => setMode("pick")}
-            >
-              {t("processor.connections.picker2.back")}
-            </Button>
-          )}
-
           {type ? (
             <ConnectionForm type={type} values={values} onChange={setValues} />
           ) : (

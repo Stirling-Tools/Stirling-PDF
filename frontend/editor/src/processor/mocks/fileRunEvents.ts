@@ -96,8 +96,8 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     scope: "FILE",
     origin: "TOOL",
     remedy: "PERMANENT",
-    titleKey: "portal.failures.kind.unknown.title",
-    descriptionKey: "portal.failures.kind.unknown.description",
+    titleKey: "processor.failures.kind.unknown.title",
+    descriptionKey: "processor.failures.kind.unknown.description",
     defaultTitle: "Unrecognised failure",
     // Reported by the user's own client, so there is no run to reference.
     detail: "compress: Request failed with status code 500",
@@ -121,8 +121,8 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     scope: "FILE",
     origin: "TOOL",
     remedy: "NEEDS_USER_INPUT",
-    titleKey: "portal.failures.kind.inputPasswordProtected.title",
-    descriptionKey: "portal.failures.kind.inputPasswordProtected.description",
+    titleKey: "processor.failures.kind.inputPasswordProtected.title",
+    descriptionKey: "processor.failures.kind.inputPasswordProtected.description",
     defaultTitle: "Password-protected document",
     detail: "remove-password: The PDF Document is passworded",
     policyId: null,
@@ -136,7 +136,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     statusActor: null,
     // A colleague's own upload. Nothing here acts on the document, so triage is just
     // acknowledging or clearing the row.
-    actions: [dismissOffer(true, "portal.failures.action.dismissSkipFile")],
+    actions: [dismissOffer(true, "processor.failures.action.dismissSkipFile")],
     createdAt: NOW - 4 * HOUR,
     lastSeenAt: NOW - 4 * HOUR,
   },

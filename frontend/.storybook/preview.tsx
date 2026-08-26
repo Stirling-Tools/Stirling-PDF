@@ -71,9 +71,9 @@ for (const [path, raw] of Object.entries(localeModules)) {
 }
 
 if (!i18next.isInitialized) {
-  // initImmediate: false → initialise synchronously from the inline resources
-  // (there's no async backend here), so i18next is ready before the first story
-  // renders. Without it the first render can beat init and stick on raw keys.
+  // initAsync: false → initialise synchronously from the inline resources.
+  // There is no asynchronous backend here, so i18next is ready before stories
+  // render.
   void i18next.use(initReactI18next).init({
     lng: "en-US",
     fallbackLng: "en-US",
@@ -81,7 +81,7 @@ if (!i18next.isInitialized) {
     resources,
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-    initImmediate: false,
+    initAsync: false,
   });
 } else {
   // Something initialised i18next first (e.g. the app's async TOML backend):
