@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
 /** Browser-mediated "connect this server" handshake. */
@@ -44,21 +44,20 @@ public class ConnectController {
     /** Frontend route serving the approval page. */
     static final String LINK_PATH = "/link";
 
-    /** Origin of our own web app, when it is not the origin serving this API. */
-    @Value("${stirling.billing.account-link.app-base-url:}")
-    private String appBaseUrl;
-
     private final ConnectRequestService service;
     private final LeaderTeamResolver leaderTeams;
     private final AccountLinkService accountLinkService;
+    private final ApplicationProperties applicationProperties;
 
     public ConnectController(
             ConnectRequestService service,
             LeaderTeamResolver leaderTeams,
-            AccountLinkService accountLinkService) {
+            AccountLinkService accountLinkService,
+            ApplicationProperties applicationProperties) {
         this.service = service;
         this.leaderTeams = leaderTeams;
         this.accountLinkService = accountLinkService;
+        this.applicationProperties = applicationProperties;
     }
 
     /** Sent by the instance's own backend, before it holds any credential. */
@@ -142,11 +141,15 @@ public class ConnectController {
                                 authorizeUrl(result.requestId(), http)));
     }
 
-    /** Where to send the admin to approve a handshake. */
+    /**
+     * Where to send the admin to approve a handshake. {@code system.frontendUrl} is the web app's
+     * own base URL, including any base path; without it the API's origin has to serve the app too.
+     */
     private String authorizeUrl(String requestId, HttpServletRequest http) {
+        String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
         String base =
-                appBaseUrl != null && !appBaseUrl.isBlank()
-                        ? appBaseUrl.strip().replaceAll("/+$", "")
+                frontendUrl != null && !frontendUrl.isBlank()
+                        ? frontendUrl.strip().replaceAll("/+$", "")
                         : requestOrigin(http);
         return base
                 + LINK_PATH

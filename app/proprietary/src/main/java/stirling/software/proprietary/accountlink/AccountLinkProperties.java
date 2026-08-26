@@ -21,12 +21,6 @@ public class AccountLinkProperties {
     /** Base URL of the SaaS backend this instance links to (register + entitlement live there). */
     private String saasBaseUrl = "https://stirling.com/app";
 
-    /**
-     * Externally reachable base URL of <em>this</em> instance, used to build the callback the
-     * approval page returns the admin to.
-     */
-    private String publicUrl;
-
     /** Cached entitlement is reused for this long before a refresh is attempted. */
     private long entitlementCacheSeconds = 300;
 
@@ -37,8 +31,8 @@ public class AccountLinkProperties {
     private final Metering metering = new Metering();
 
     /**
-     * Dedicated billing switch, <b>separate</b> from {@link #enabled} so the link plumbing can be
-     * enabled (e.g.
+     * Separate from {@link #enabled} so linking can be exercised without billing anything. Both
+     * default off, and metering needs the master flag as well.
      */
     @Getter
     @Setter

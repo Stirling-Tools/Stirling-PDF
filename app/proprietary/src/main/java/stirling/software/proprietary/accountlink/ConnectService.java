@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+
 /** Browser-mediated account linking, instance side. */
 @Slf4j
 @Service
@@ -35,7 +37,7 @@ public class ConnectService {
     private final ConnectStateRepository stateRepo;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
-    private final AccountLinkProperties properties;
+    private final ApplicationProperties applicationProperties;
     private final SecureRandom random = new SecureRandom();
 
     public ConnectService(
@@ -43,12 +45,12 @@ public class ConnectService {
             ConnectStateRepository stateRepo,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
-            AccountLinkProperties properties) {
+            ApplicationProperties applicationProperties) {
         this.client = client;
         this.stateRepo = stateRepo;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
-        this.properties = properties;
+        this.applicationProperties = applicationProperties;
     }
 
     public enum Phase {
@@ -109,8 +111,7 @@ public class ConnectService {
         String callbackUrl = resolveCallbackUrl(hint);
         if (callbackUrl == null) {
             throw new IOException(
-                    "Cannot determine where to send the admin back to; set"
-                            + " stirling.billing.account-link.public-url");
+                    "Cannot determine where to send the admin back to; set system.frontendUrl");
         }
         String nonce = randomSecret();
         String claimSecret = randomSecret();
@@ -208,7 +209,7 @@ public class ConnectService {
 
     /** Decides the callback, preferring knowledge over inference. */
     String resolveCallbackUrl(CallbackHint hint) {
-        String configured = properties.getPublicUrl();
+        String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
             return trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
         }

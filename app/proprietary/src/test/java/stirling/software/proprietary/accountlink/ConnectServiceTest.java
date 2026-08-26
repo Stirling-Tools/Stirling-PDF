@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimOutcome;
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimResult;
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectRequestResult;
@@ -39,21 +40,28 @@ class ConnectServiceTest {
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
 
-    private AccountLinkProperties properties;
+    private ApplicationProperties applicationProperties;
     private ConnectService service;
 
     @BeforeEach
     void setUp() {
-        properties = new AccountLinkProperties();
-        properties.setSaasBaseUrl("https://api.example.com");
+        applicationProperties = new ApplicationProperties();
         service =
                 new ConnectService(
-                        client, stateRepo, credentialStore, entitlementCache, properties);
+                        client,
+                        stateRepo,
+                        credentialStore,
+                        entitlementCache,
+                        applicationProperties);
+    }
+
+    private void configureFrontendUrl(String url) {
+        applicationProperties.getSystem().setFrontendUrl(url);
     }
 
     @Test
-    void start_advertisesTheConfiguredPublicUrlInPreferenceToTheRequest() throws Exception {
-        properties.setPublicUrl("https://pdf.example.com/");
+    void start_advertisesTheConfiguredFrontendUrlInPreferenceToTheRequest() throws Exception {
+        configureFrontendUrl("https://pdf.example.com/");
         stubCreate();
 
         service.start("prod-1", fromRequest("http://10.0.0.5:8080"));
@@ -86,7 +94,7 @@ class ConnectServiceTest {
     @Test
     void start_withNoAddressAtAllFailsRatherThanGuessing() {
         assertThat(catchIo(() -> service.start(null, fromRequest(null))))
-                .hasMessageContaining("public-url");
+                .hasMessageContaining("system.frontendUrl");
         verifyNoInteractions(client);
     }
 
@@ -127,7 +135,7 @@ class ConnectServiceTest {
 
     @Test
     void resolveCallback_letsConfigurationBeatEverything() {
-        properties.setPublicUrl("https://pdf.example.com/");
+        configureFrontendUrl("https://pdf.example.com/");
 
         assertThat(
                         service.resolveCallbackUrl(

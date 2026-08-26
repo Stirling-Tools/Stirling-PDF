@@ -167,10 +167,10 @@ tasks:
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
       # Appends RUN_SUBPATH: the approval page is at <base>/link, so a subpath build
       # serves it at <base>/app/link. An explicit value still wins.
-      STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL:
+      SYSTEM_FRONTENDURL:
         sh: |
-          if [ -n "${STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL:-}" ]; then
-            echo "${STIRLING_BILLING_ACCOUNT_LINK_APP_BASE_URL}"
+          if [ -n "${SYSTEM_FRONTENDURL:-}" ]; then
+            echo "${SYSTEM_FRONTENDURL}"
           elif [ -n "{{.APP_BASE_URL}}" ] && [ -n "${RUN_SUBPATH:-}" ]; then
             echo "{{.APP_BASE_URL}}/${RUN_SUBPATH}"
           else

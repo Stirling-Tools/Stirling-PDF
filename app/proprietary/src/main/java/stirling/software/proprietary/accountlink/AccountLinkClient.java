@@ -354,7 +354,7 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodEnd"));
     }
 
-    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. */
+    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */
     private static UnitCalcPolicy parseUnitCalcPolicy(JsonNode root) {
         if (!root.hasNonNull("unitCalcPolicy")) {
             return null;
