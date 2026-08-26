@@ -136,10 +136,23 @@ export default function HomePage() {
   // when opened directly on a /settings URL (deep link) - close falls back to
   // the editor root.
   const settingsOriginRef = useRef<string | null>(null);
+  // Last route outside /settings. Openers that navigate straight to
+  // /settings/* (super search) have already replaced the URL by the time the
+  // modal opens, so the origin has to be remembered on the way past.
+  const lastNonSettingsPathRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!location.pathname.startsWith("/settings")) {
+      lastNonSettingsPathRef.current = location.pathname;
+    }
+  }, [location.pathname]);
   const wasConfigOpenRef = useRef(false);
   useEffect(() => {
     if (configModalOpen && !wasConfigOpenRef.current) {
-      settingsOriginRef.current = isInSettings() ? null : location.pathname;
+      // Already in /settings when the modal opened: either a nav-driven open
+      // (fall back to the route we came from) or a genuine deep link (null).
+      settingsOriginRef.current = isInSettings()
+        ? lastNonSettingsPathRef.current
+        : location.pathname;
     }
     wasConfigOpenRef.current = configModalOpen;
   }, [configModalOpen, location.pathname]);
