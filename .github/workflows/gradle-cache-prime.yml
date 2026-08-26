@@ -51,7 +51,7 @@ jobs:
             engine/uv.lock
 
       - if: steps.cache-uv-restore.outputs.cache-hit != 'true'
-        run: uv sync --project engine --locked --group engine engine-dev cucumber tools updater-signatures pre-commit
+        run: uv sync --project engine --locked --all-groups
 
       - name: Save cache uv
         if: steps.cache-uv-restore.outputs.cache-hit != 'true'
