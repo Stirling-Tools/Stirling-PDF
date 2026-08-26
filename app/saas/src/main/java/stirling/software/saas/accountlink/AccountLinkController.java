@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
-/** Team-wide management of linked instances (combined-billing "Mode A"). */
+/** Team-wide management of linked instances (combined billing). */
 @Slf4j
 @Hidden
 @RestController

@@ -40,12 +40,15 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default ""}}'
+      # Set by dev:linked. Inline rather than in `env:` so an empty value emits nothing
+      # and cannot blank the committed default.
+      ACCOUNT_LINK_SAAS_BASE_URL: '{{.ACCOUNT_LINK_SAAS_BASE_URL | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .ACCOUNT_LINK_SAAS_BASE_URL}}STIRLING_BILLING_ACCOUNT_LINK_ENABLED=true STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL={{.ACCOUNT_LINK_SAAS_BASE_URL}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .ACCOUNT_LINK_SAAS_BASE_URL}}STIRLING_BILLING_ACCOUNT_LINK_ENABLED=true STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL={{.ACCOUNT_LINK_SAAS_BASE_URL}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:
@@ -102,16 +105,10 @@ tasks:
 
   dev:linked:
     desc: "Self-hosted backend linked to a locally running SaaS backend (see task linked:*)"
-    dotenv: ['app/.env.proprietary.local', 'app/.env.proprietary']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
       SAAS_BASE_URL: '{{.SAAS_BASE_URL | default "http://localhost:8081"}}'
-    env:
-      SERVER_PORT: '{{.PORT}}'
-      # `env:` outranks dotenv, so a stale .env.proprietary.local cannot override these.
-      STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
-      STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: '{{.SAAS_BASE_URL}}'
     cmds:
       - 'echo ">> self-hosted :{{.PORT}} linking to SaaS at {{.SAAS_BASE_URL}}"'
       # The two backends run different STIRLING_FLAVOURs, which are different Gradle
@@ -130,10 +127,10 @@ tasks:
           if [ "$n" -ge 150 ]; then
             echo ">> SaaS backend never answered; starting anyway"
           fi
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun"
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun
-        platforms: [linux, darwin]
+      - task: dev:proprietary
+        vars:
+          PORT: '{{.PORT}}'
+          ACCOUNT_LINK_SAAS_BASE_URL: '{{.SAAS_BASE_URL}}'
 
   _run:saas:
     internal: true

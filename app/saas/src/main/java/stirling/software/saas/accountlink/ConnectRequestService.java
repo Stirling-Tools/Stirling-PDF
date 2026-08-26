@@ -350,14 +350,7 @@ public class ConnectRequestService {
     /** Scheme, host and port, with the default port omitted so origins compare cleanly. */
     static String originOf(URI uri) {
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
-        int port = uri.getPort();
-        boolean defaultPort =
-                port == -1
-                        || ("http".equals(scheme) && port == 80)
-                        || ("https".equals(scheme) && port == 443);
-        return defaultPort
-                ? scheme + "://" + uri.getHost()
-                : scheme + "://" + uri.getHost() + ":" + port;
+        return scheme + "://" + Origins.hostPort(scheme, uri.getHost(), uri.getPort());
     }
 
     private static String schemeOf(String origin) {

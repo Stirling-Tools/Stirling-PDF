@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Self-hosted side of combined-billing "Mode A" (connected self-hosted). */
+/** Self-hosted side of combined billing: this instance bills through a linked SaaS team. */
 @Getter
 @Setter
 @Component

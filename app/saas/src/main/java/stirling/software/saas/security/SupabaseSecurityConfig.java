@@ -157,7 +157,7 @@ public class SupabaseSecurityConfig {
                                                                 SupabaseSecurityConfig
                                                                         ::toAuthentication)));
 
-        // Device-credential auth for linked self-hosted instances (combined-billing Mode A).
+        // Device-credential auth for linked self-hosted instances (combined billing).
         // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
         // is absent here, so the instance surface cannot authenticate at all until release.
         DeviceCredentialAuthenticationFilter deviceFilter =

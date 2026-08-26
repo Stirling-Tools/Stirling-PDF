@@ -8,7 +8,7 @@ import {
 } from "react";
 
 /**
- * The "linked" dimension of the account-link surface (combined-billing "Mode A"),
+ * The "linked" dimension of the account-link surface (combined billing),
  * a sibling to TierContext. It answers one question the rest of the portal asks:
  * has this self-hosted org linked its SaaS account, and if so, is it on the free
  * grant or actively subscribed?

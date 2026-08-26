@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Same-origin account-link surface on the self-hosted instance (combined-billing "Mode A"). */
+/** Same-origin account-link surface on the self-hosted instance (combined billing). */
 @Slf4j
 @Hidden
 @RestController

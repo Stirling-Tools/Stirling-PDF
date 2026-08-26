@@ -159,16 +159,12 @@ public class ConnectController {
         String proto = firstHop(request.getHeader("X-Forwarded-Proto"));
         String host = firstHop(request.getHeader("X-Forwarded-Host"));
         String scheme = proto != null ? proto : request.getScheme();
-        String hostPort;
-        if (host != null) {
-            hostPort = host;
-        } else {
-            int port = request.getServerPort();
-            boolean defaultPort =
-                    ("http".equals(scheme) && port == 80)
-                            || ("https".equals(scheme) && port == 443);
-            hostPort = defaultPort ? request.getServerName() : request.getServerName() + ":" + port;
-        }
+        // A forwarded host already carries its own port, if it needs one.
+        String hostPort =
+                host != null
+                        ? host
+                        : Origins.hostPort(
+                                scheme, request.getServerName(), request.getServerPort());
         String context = request.getContextPath() == null ? "" : request.getContextPath();
         return scheme + "://" + hostPort + context;
     }

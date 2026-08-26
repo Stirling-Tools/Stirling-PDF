@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Account-link instance registration + lifecycle (combined-billing "Mode A"). */
+/** Account-link instance registration + lifecycle (combined billing). */
 @Slf4j
 @Service
 @Profile("saas")

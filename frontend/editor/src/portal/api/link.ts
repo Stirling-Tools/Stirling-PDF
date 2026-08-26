@@ -29,7 +29,7 @@ export interface LinkedInstanceRow {
   revoked: boolean;
 }
 
-/** Account-link client (combined-billing "Mode A"). */
+/** Account-link client (combined billing). */
 
 const BASE = "/api/v1/account-link";
 

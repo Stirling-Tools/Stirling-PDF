@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Linking orchestrator (self-hosted side of combined-billing "Mode A"). */
+/** Linking orchestrator (self-hosted side of combined billing). */
 @Slf4j
 @Service
 @Profile("!saas")
