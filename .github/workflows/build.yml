@@ -210,7 +210,7 @@ jobs:
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
       pull-requests: write
