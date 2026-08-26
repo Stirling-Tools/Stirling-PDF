@@ -76,6 +76,8 @@ export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
   sources: string[];
+  /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
+  runsOnEditor?: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -433,6 +435,7 @@ function decoratePolicy(
     configured: true,
     status,
     sources: decoded.sources,
+    runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -595,6 +598,9 @@ export function buildWireFromSetup(
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
+      // A fresh wizard save: the editor is on when the user picked it as a source,
+      // the same rule the editor's own buildBackendPolicy applies.
+      runsOnEditor: result.sources.includes("editor"),
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,
@@ -625,6 +631,8 @@ export function buildWireFromState(
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,
+      // Carry the stored value through: pause/resume must not re-derive it.
+      runsOnEditor: s.runsOnEditor === true,
       scopeTypes: s.scopeTypes,
       reviewerEmail: s.reviewerEmail,
       fieldValues: s.fieldValues,

@@ -37,7 +37,10 @@ import {
 } from "@app/services/policyBackend";
 import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
 import { orderRewritesFirst } from "@app/data/classificationPolicy";
-import type { PolicyToStore } from "@app/services/policyPipeline";
+import {
+  EDITOR_SOURCE_ID,
+  type PolicyToStore,
+} from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
   PolicyConfigResult,
@@ -172,6 +175,9 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        // Patch the flag alongside the list it is derived from on save, or the cache
+        // keeps running a policy on upload that the user just took off the editor.
+        runsOnEditor: result.sources.includes(EDITOR_SOURCE_ID),
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
@@ -209,6 +215,9 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        // Patch the flag alongside the list it is derived from on save, or the cache
+        // keeps running a policy on upload that the user just took off the editor.
+        runsOnEditor: result.sources.includes(EDITOR_SOURCE_ID),
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
@@ -274,6 +283,9 @@ export function usePolicies() {
         backendId,
         fieldValues: result.fieldValues,
         sources: result.sources,
+        // Patch the flag alongside the list it is derived from on save, or the cache
+        // keeps running a policy on upload that the user just took off the editor.
+        runsOnEditor: result.sources.includes(EDITOR_SOURCE_ID),
         scopeTypes: result.scopeTypes,
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
