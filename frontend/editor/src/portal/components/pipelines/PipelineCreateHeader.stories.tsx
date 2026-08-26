@@ -18,6 +18,7 @@ const noop = () => {};
  */
 function Playground({ initialName }: { initialName: string }) {
   const [name, setName] = useState(initialName);
+  const [icon, setIcon] = useState("route");
   const blockers =
     name.trim() === ""
       ? [
@@ -30,6 +31,8 @@ function Playground({ initialName }: { initialName: string }) {
     <PipelineCreateHeader
       name={name}
       onNameChange={setName}
+      icon={icon}
+      onIconChange={setIcon}
       canSave={blockers.length === 0}
       blockers={blockers}
       saving={false}

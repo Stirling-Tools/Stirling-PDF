@@ -10,11 +10,15 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
+import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
   name: string;
   onNameChange: (name: string) => void;
+  /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
+  icon: string;
+  onIconChange: (key: string) => void;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -49,6 +53,8 @@ export interface PipelineEditHeaderProps {
 export function PipelineEditHeader({
   name,
   onNameChange,
+  icon,
+  onIconChange,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -115,6 +121,8 @@ export function PipelineEditHeader({
         >
           <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
         </ActionIcon>
+
+        <PipelineIconPicker value={icon} onChange={onIconChange} />
 
         {renaming ? (
           <Input

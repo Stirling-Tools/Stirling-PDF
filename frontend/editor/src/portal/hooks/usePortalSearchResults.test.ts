@@ -241,6 +241,7 @@ function makePipelineView(
     name,
     enabled: true,
     required: false,
+    icon: "",
     status: "active",
     trigger,
     sources: [],

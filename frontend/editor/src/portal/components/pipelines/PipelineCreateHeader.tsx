@@ -2,11 +2,15 @@ import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { ActionIcon, Button, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
+import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
 
 export interface PipelineCreateHeaderProps {
   name: string;
   onNameChange: (name: string) => void;
+  /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
+  icon: string;
+  onIconChange: (key: string) => void;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -28,6 +32,8 @@ export interface PipelineCreateHeaderProps {
 export function PipelineCreateHeader({
   name,
   onNameChange,
+  icon,
+  onIconChange,
   canSave,
   blockers,
   saving,
@@ -48,6 +54,8 @@ export function PipelineCreateHeader({
       >
         <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
       </ActionIcon>
+
+      <PipelineIconPicker value={icon} onChange={onIconChange} />
 
       <Input
         className="portal-pipeline-create-header__name"

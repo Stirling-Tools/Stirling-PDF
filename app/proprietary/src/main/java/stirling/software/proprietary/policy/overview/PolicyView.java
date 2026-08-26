@@ -14,6 +14,7 @@ public record PolicyView(
         String name,
         boolean enabled,
         boolean required,
+        String icon,
         String status,
         String trigger,
         List<SourceRef> sources,

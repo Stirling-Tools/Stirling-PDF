@@ -149,11 +149,17 @@ function toView(policy: OverviewPolicy): PipelineView {
         .filter((type): type is string => type != null),
     ),
   ];
+  // Mirror the backend: the first-class icon wins, else the template's categoryId marker, else none.
+  const options = policy.output?.options ?? {};
+  const icon =
+    policy.icon ||
+    (typeof options.categoryId === "string" ? options.categoryId : "");
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
     required: policy.required ?? false,
+    icon,
     status: policy.enabled ? "active" : "paused",
     trigger: triggers.length === 0 ? "manual" : triggers.join(", "),
     sources: inputs.map((input) => ({

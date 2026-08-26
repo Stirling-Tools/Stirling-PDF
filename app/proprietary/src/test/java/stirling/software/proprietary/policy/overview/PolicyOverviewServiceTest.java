@@ -151,6 +151,7 @@ class PolicyOverviewServiceTest {
                         "owner",
                         true,
                         true,
+                        "",
                         List.of(),
                         List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
                         OutputSpec.inline(),
@@ -159,6 +160,41 @@ class PolicyOverviewServiceTest {
 
         PolicyView view = find(service.overview(), "Mandatory redaction");
         assertTrue(view.required());
+    }
+
+    @Test
+    void iconIsExplicitOtherwiseFallsBackToCategory() {
+        // The policy's first-class icon wins.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Custom with icon",
+                        "owner",
+                        true,
+                        false,
+                        "shield",
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(),
+                        null));
+        // No explicit icon: a template-derived policy falls back to its categoryId marker.
+        policyStore.save(
+                new Policy(
+                        null,
+                        "Template derived",
+                        "owner",
+                        true,
+                        false,
+                        "",
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
+                        new OutputSpec("inline", Map.of("categoryId", "security")),
+                        List.of(),
+                        null));
+
+        assertEquals("shield", find(service.overview(), "Custom with icon").icon());
+        assertEquals("security", find(service.overview(), "Template derived").icon());
     }
 
     @Test

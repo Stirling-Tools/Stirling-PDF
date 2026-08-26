@@ -390,6 +390,7 @@ public class PolicyController {
                 owner,
                 policy.enabled(),
                 policy.required(),
+                policy.icon(),
                 policy.inputs(),
                 policy.steps(),
                 policy.output(),

@@ -50,6 +50,7 @@ const RESPONSE: PipelinesOverviewResponse = {
       name: "Redaction sweep",
       enabled: true,
       required: false,
+      icon: "security",
       status: "active",
       trigger: "schedule",
       sources: [{ id: "src-claims", name: "Claims intake" }],

@@ -284,6 +284,9 @@ export function PipelineBuilder() {
   // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
   // pipeline, and it enforces on their documents when it runs on the editor.
   const [required, setRequired] = useState(false);
+  // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
+  // the template category glyph in the list; a custom pipeline defaults to none until picked.
+  const [icon, setIcon] = useState("");
   // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
   // reviewer, fieldValues...). Preserved verbatim through an edit so a customised policy never loses
   // its simple-only settings; edited in the output inspector's dev section until it gets real UI.
@@ -369,6 +372,13 @@ export function PipelineBuilder() {
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
     setRequired(policy?.required ?? false);
+    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to
+    // its category id (a valid icon key) so the picker shows the category glyph.
+    const seedCategoryId = policy?.output?.options?.categoryId;
+    setIcon(
+      policy?.icon ??
+        (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+    );
     setOutputOptions(policy?.output?.options ?? {});
     setOutputType(policy?.output?.type ?? "inline");
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
@@ -717,6 +727,7 @@ export function PipelineBuilder() {
     name: name.trim(),
     enabled,
     required,
+    icon,
     inputs:
       editorEnforced || !sourceChosen
         ? []
@@ -856,6 +867,7 @@ export function PipelineBuilder() {
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
         required,
+        icon,
         // An editor-enforced policy pulls from no source and writes to no destination; a
         // source-driven pipeline carries its one input (canSave guarantees the source) and
         // destinations. The wire shape stays a list.
@@ -1365,6 +1377,8 @@ export function PipelineBuilder() {
         <PipelineEditHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1383,6 +1397,8 @@ export function PipelineBuilder() {
         <PipelineCreateHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}

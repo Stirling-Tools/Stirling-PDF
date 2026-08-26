@@ -72,6 +72,7 @@ public class PolicyOverviewService {
                 policy.name(),
                 policy.enabled(),
                 policy.required(),
+                iconKey(policy),
                 policy.enabled() ? "active" : "paused",
                 triggerSummary(policy),
                 sources,
@@ -93,6 +94,25 @@ public class PolicyOverviewService {
                     .collect(Collectors.joining(", "));
         }
         return outputSummary(policy.output());
+    }
+
+    /**
+     * The list-row icon key. The policy's first-class {@code icon} wins; otherwise a
+     * template-derived policy falls back to its {@code categoryId} (the template-identity marker
+     * the frontend maps to the category glyph). Empty when neither is set, so the frontend shows
+     * its default.
+     */
+    private static String iconKey(Policy policy) {
+        if (!policy.icon().isBlank()) {
+            return policy.icon();
+        }
+        OutputSpec output = policy.output();
+        if (output != null
+                && output.options().get("categoryId") instanceof String category
+                && !category.isBlank()) {
+            return category;
+        }
+        return "";
     }
 
     /**

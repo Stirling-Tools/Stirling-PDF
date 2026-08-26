@@ -26,10 +26,13 @@ function Playground({
 }) {
   const [name, setName] = useState(initialName);
   const [enabled, setEnabled] = useState(initialEnabled);
+  const [icon, setIcon] = useState("route");
   return (
     <PipelineEditHeader
       name={name}
       onNameChange={setName}
+      icon={icon}
+      onIconChange={setIcon}
       enabled={enabled}
       onTogglePause={() => setEnabled((e) => !e)}
       togglingEnabled={false}
