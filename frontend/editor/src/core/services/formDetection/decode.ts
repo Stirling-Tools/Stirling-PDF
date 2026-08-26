@@ -140,7 +140,8 @@ export function decodeRfDetr(
   const boxes = outputs["dets"];
   const logits = outputs["labels"];
   if (!boxes || !logits) return [];
-  if (boxes.d2 < 4 || logits.d2 < numClasses) return [];
+  // logits need a column per class plus the trailing no-object slot the loop below drops.
+  if (boxes.d2 < 4 || logits.d2 <= numClasses) return [];
   const queries = Math.min(boxes.d1, logits.d1);
   const size = spec.inputSize;
 

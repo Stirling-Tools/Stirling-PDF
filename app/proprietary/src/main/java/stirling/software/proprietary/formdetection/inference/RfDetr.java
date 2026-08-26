@@ -61,11 +61,13 @@ public final class RfDetr {
         }
         // The head emits one logit per class plus a no-object slot; anything narrower means the
         // model was trained for a different class set than the catalogue entry claims.
-        if (logits.d2() < numClasses) {
+        if (logits.d2() <= numClasses) {
             log.warn(
-                    "rfdetr '{}' has {} columns for {} classes; skipping",
+                    "rfdetr '{}' has {} columns, expected >= {} for {} classes plus no-object;"
+                            + " skipping",
                     LOGITS,
                     logits.d2(),
+                    numClasses + 1,
                     numClasses);
             return List.of();
         }
