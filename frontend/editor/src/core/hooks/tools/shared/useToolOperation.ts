@@ -36,6 +36,7 @@ import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
+import { useOptionalWorkflowRecorder } from "@app/contexts/workflowRecorder/WorkflowRecorderContext";
 import {
   buildInputTracking,
   buildOutputPairs,
@@ -121,6 +122,7 @@ export const useToolOperation = <TParams>(
 
   const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
+  const workflowRecorder = useOptionalWorkflowRecorder();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -589,6 +591,21 @@ export const useToolOperation = <TParams>(
               outputFileIds,
             };
           }
+
+          try {
+            workflowRecorder?.recordCompletedOperation({
+              operationType: config.operationType,
+              parameters: params,
+              inputCount: validFiles.length,
+              outputCount: processedFiles.length,
+              endpoint: runtimeEndpoint,
+            });
+          } catch (recorderError) {
+            console.warn(
+              "[useToolOperation] Failed to record workflow step:",
+              recorderError,
+            );
+          }
         }
       } catch (error) {
         try {
@@ -641,6 +658,7 @@ export const useToolOperation = <TParams>(
       extractZipFiles,
       willUseCloud,
       checkCredits,
+      workflowRecorder,
     ],
   );
 

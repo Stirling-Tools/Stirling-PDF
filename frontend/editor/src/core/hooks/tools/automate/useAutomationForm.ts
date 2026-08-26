@@ -12,12 +12,14 @@ import { ToolId } from "@app/types/toolId";
 interface UseAutomationFormProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
+  initialAutomation?: AutomationConfig;
   toolRegistry: Partial<ToolRegistry>;
 }
 
 export function useAutomationForm({
   mode,
   existingAutomation,
+  initialAutomation,
   toolRegistry,
 }: UseAutomationFormProps) {
   const { t } = useTranslation();
@@ -52,21 +54,27 @@ export function useAutomationForm({
 
   // Initialize based on mode and existing automation
   useEffect(() => {
-    if (
+    const sourceAutomation =
       (mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) &&
       existingAutomation
-    ) {
-      setAutomationName(existingAutomation.name || "");
-      setAutomationDescription(existingAutomation.description || "");
-      setAutomationIcon(existingAutomation.icon || "SettingsIcon");
+        ? existingAutomation
+        : mode === AutomationMode.CREATE
+          ? initialAutomation
+          : undefined;
 
-      const operations = existingAutomation.operations || [];
+    if (sourceAutomation) {
+      setAutomationName(sourceAutomation.name || "");
+      setAutomationDescription(sourceAutomation.description || "");
+      setAutomationIcon(sourceAutomation.icon || "SettingsIcon");
+
+      const operations = sourceAutomation.operations || [];
       const tools = operations.map((op, index) => {
         const operation = typeof op === "string" ? op : op.operation;
         const toolEntry = toolRegistry[operation as ToolId];
-        // If tool has no settingsComponent, it's automatically configured
         const isConfigured =
-          mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
+          mode === AutomationMode.EDIT ||
+          sourceAutomation === initialAutomation ||
+          !toolEntry?.automationSettings;
 
         return {
           id: `${operation}-${Date.now()}-${index}`,
@@ -98,7 +106,14 @@ export function useAutomationForm({
       );
       setSelectedTools(defaultTools);
     }
-  }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
+  }, [
+    mode,
+    existingAutomation,
+    initialAutomation,
+    t,
+    getToolName,
+    getToolDefaultParameters,
+  ]);
 
   const addTool = (operation: string) => {
     const toolEntry = toolRegistry[operation as ToolId];

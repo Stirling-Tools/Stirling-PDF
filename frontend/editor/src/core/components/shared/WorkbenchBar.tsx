@@ -50,6 +50,7 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
+import WorkflowRecordingIndicator from "@app/components/shared/WorkflowRecordingIndicator";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
@@ -590,6 +591,8 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        <WorkflowRecordingIndicator />
+
         {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
         {currentView === "viewer" && sharingEnabled && (
           <ViewerShareButton disabled={actionsDisabled} />
