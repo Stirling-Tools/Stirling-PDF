@@ -688,8 +688,12 @@ export function PipelineBuilder() {
   );
   const snapshot = JSON.stringify({
     name: name.trim(),
+    icon,
+    required,
     input,
     steps: stepSnapshot,
+    outputType,
+    outputOptions,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
