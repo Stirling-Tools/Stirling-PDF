@@ -44,7 +44,8 @@ jobs:
         with:
           version: "0.12.6"
           # working-directory: "engine"
-          enable-cache: false
+          enable-cache: true
+          download-from-astral-mirror: false
           # cache-dependency-glob: |
           #   engine/pyproject.toml
           #   engine/uv.lock
