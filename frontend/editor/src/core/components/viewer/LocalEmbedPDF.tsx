@@ -20,7 +20,11 @@ import {
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
-import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import {
+  ZoomPluginPackage,
+  ZoomMode,
+  ZoomGestureWrapper,
+} from "@embedpdf/plugin-zoom/react";
 import {
   InteractionManagerPluginPackage,
   PagePointerProvider,
@@ -1074,183 +1078,185 @@ export function LocalEmbedPDF({
                         contain: "strict",
                       }}
                     >
-                      <Scroller
-                        documentId={documentId}
-                        renderPage={({ width, height, pageIndex }) => {
-                          return (
-                            <Rotate
-                              key={`${documentId}-${pageIndex}`}
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            >
-                              <PagePointerProvider
+                      <ZoomGestureWrapper documentId={documentId}>
+                        <Scroller
+                          documentId={documentId}
+                          renderPage={({ width, height, pageIndex }) => {
+                            return (
+                              <Rotate
+                                key={`${documentId}-${pageIndex}`}
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
-                                <ViewerPageContainer
+                                <PagePointerProvider
                                   documentId={documentId}
                                   pageIndex={pageIndex}
-                                  width={width}
-                                  height={height}
                                 >
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      transition: "filter 0.25s ease",
-                                      filter:
-                                        pdfRenderMode === "dark"
-                                          ? "invert(1) hue-rotate(180deg)"
-                                          : pdfRenderMode === "sepia"
-                                            ? "sepia(0.7) brightness(0.85)"
-                                            : undefined,
-                                    }}
+                                  <ViewerPageContainer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    width={width}
+                                    height={height}
                                   >
-                                    <TilingLayer
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        transition: "filter 0.25s ease",
+                                        filter:
+                                          pdfRenderMode === "dark"
+                                            ? "invert(1) hue-rotate(180deg)"
+                                            : pdfRenderMode === "sepia"
+                                              ? "sepia(0.7) brightness(0.85)"
+                                              : undefined,
+                                      }}
+                                    >
+                                      <TilingLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                      />
+                                    </div>
+
+                                    <CustomSearchLayer
                                       documentId={documentId}
                                       pageIndex={pageIndex}
                                     />
-                                  </div>
 
-                                  <CustomSearchLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  <div
-                                    className="pdf-selection-layer"
-                                    style={{
-                                      position: "absolute",
-                                      inset: 0,
-                                      pointerEvents: "none",
-                                    }}
-                                  >
-                                    <SelectionLayer
+                                    <div
+                                      className="pdf-selection-layer"
+                                      style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        pointerEvents: "none",
+                                      }}
+                                    >
+                                      <SelectionLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        background="var(--pdf-selection-bg)"
+                                        selectionMenu={(props) => (
+                                          <TextSelectionMenu {...props} />
+                                        )}
+                                      />
+                                    </div>
+                                    <TextSelectionHandler
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      background="var(--pdf-selection-bg)"
-                                      selectionMenu={(props) => (
-                                        <TextSelectionMenu {...props} />
-                                      )}
                                     />
-                                  </div>
-                                  <TextSelectionHandler
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
 
-                                  {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
-                                  {enableFormFill && file && (
-                                    <ButtonAppearanceOverlay
-                                      pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                    />
-                                  )}
+                                    {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
+                                    {enableFormFill && file && (
+                                      <ButtonAppearanceOverlay
+                                        pageIndex={pageIndex}
+                                        pdfSource={file}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                      />
+                                    )}
 
-                                  {/* FormFieldOverlay for interactive form filling */}
-                                  {enableFormFill && (
-                                    <FormFieldOverlay
+                                    {/* FormFieldOverlay for interactive form filling */}
+                                    {enableFormFill && (
+                                      <FormFieldOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                        fileId={fileId}
+                                      />
+                                    )}
+
+                                    {/* Create-mode: drag to place new fields */}
+                                    {enableFormFill && formEditingActive && (
+                                      <FormFieldCreationOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                        fileId={fileId}
+                                      />
+                                    )}
+
+                                    {/* Modify-mode: select / move / resize existing fields */}
+                                    {enableFormFill && formEditingActive && (
+                                      <FormFieldEditOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                        fileId={fileId}
+                                      />
+                                    )}
+
+                                    {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
+                                    {file && (
+                                      <SignatureFieldOverlay
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        pdfSource={file}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                      />
+                                    )}
+
+                                    {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+                                    {(enableAnnotations || enableRedaction) && (
+                                      <AnnotationLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        selectionOutline={{ color: "#007ACC" }}
+                                        selectionMenu={(props) => (
+                                          <AnnotationSelectionMenu {...props} />
+                                        )}
+                                        style={
+                                          !showBakedAnnotations
+                                            ? {
+                                                opacity: 0,
+                                                pointerEvents: "none",
+                                              }
+                                            : undefined
+                                        }
+                                      />
+                                    )}
+
+                                    {enableRedaction && (
+                                      <RedactionLayer
+                                        documentId={documentId}
+                                        pageIndex={pageIndex}
+                                        selectionMenu={(props) => (
+                                          <RedactionSelectionMenu {...props} />
+                                        )}
+                                      />
+                                    )}
+
+                                    {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
+                                    <LinkLayer
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      fileId={fileId}
                                     />
-                                  )}
 
-                                  {/* Create-mode: drag to place new fields */}
-                                  {enableFormFill && formEditingActive && (
-                                    <FormFieldCreationOverlay
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      fileId={fileId}
-                                    />
-                                  )}
-
-                                  {/* Modify-mode: select / move / resize existing fields */}
-                                  {enableFormFill && formEditingActive && (
-                                    <FormFieldEditOverlay
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      fileId={fileId}
-                                    />
-                                  )}
-
-                                  {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
-                                  {file && (
-                                    <SignatureFieldOverlay
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      pdfSource={file}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                    />
-                                  )}
-
-                                  {/* AnnotationLayer for annotation editing and annotation-based redactions */}
-                                  {(enableAnnotations || enableRedaction) && (
-                                    <AnnotationLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      selectionOutline={{ color: "#007ACC" }}
-                                      selectionMenu={(props) => (
-                                        <AnnotationSelectionMenu {...props} />
-                                      )}
-                                      style={
-                                        !showBakedAnnotations
-                                          ? {
-                                              opacity: 0,
-                                              pointerEvents: "none",
-                                            }
-                                          : undefined
-                                      }
-                                    />
-                                  )}
-
-                                  {enableRedaction && (
-                                    <RedactionLayer
-                                      documentId={documentId}
-                                      pageIndex={pageIndex}
-                                      selectionMenu={(props) => (
-                                        <RedactionSelectionMenu {...props} />
-                                      )}
-                                    />
-                                  )}
-
-                                  {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                  <LinkLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-
-                                  {/* Signature preview overlay (opt-in; off by default) */}
-                                  {signatureOverlayEnabled && (
-                                    <SignaturePreviewLayer
-                                      pageIndex={pageIndex}
-                                      pageWidth={width}
-                                      pageHeight={height}
-                                      previews={localSignaturePreviews}
-                                      readOnly={signaturePreviewsReadOnly}
-                                      placementMode={signaturePlacementMode}
-                                      placementData={signaturePlacementData}
-                                      placementType={signaturePlacementType}
-                                      onChange={handleSignaturePreviewsChange}
-                                      selectedId={selectedSignatureId}
-                                      onSelect={setSelectedSignatureId}
-                                    />
-                                  )}
-                                </ViewerPageContainer>
-                              </PagePointerProvider>
-                            </Rotate>
-                          );
-                        }}
-                      />
+                                    {/* Signature preview overlay (opt-in; off by default) */}
+                                    {signatureOverlayEnabled && (
+                                      <SignaturePreviewLayer
+                                        pageIndex={pageIndex}
+                                        pageWidth={width}
+                                        pageHeight={height}
+                                        previews={localSignaturePreviews}
+                                        readOnly={signaturePreviewsReadOnly}
+                                        placementMode={signaturePlacementMode}
+                                        placementData={signaturePlacementData}
+                                        placementType={signaturePlacementType}
+                                        onChange={handleSignaturePreviewsChange}
+                                        selectedId={selectedSignatureId}
+                                        onSelect={setSelectedSignatureId}
+                                      />
+                                    )}
+                                  </ViewerPageContainer>
+                                </PagePointerProvider>
+                              </Rotate>
+                            );
+                          }}
+                        />
+                      </ZoomGestureWrapper>
                     </Viewport>
                   </GlobalPointerProvider>
                   {enableAnnotations && (
