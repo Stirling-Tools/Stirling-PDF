@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -51,6 +52,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -106,6 +108,7 @@ public class PolicyController {
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
     private final PolicyAssetCleaner assetCleaner;
+    private final PolicyAssetResolver assetResolver;
     private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
@@ -125,12 +128,13 @@ public class PolicyController {
                             + " endpoint and download outputs via /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
             @RequestPart("json") PipelineDefinition definition,
+            @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = toInputs(files);
+        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(files));
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
         recordEditorDocs(inputs);
@@ -146,12 +150,13 @@ public class PolicyController {
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
             @RequestPart("json") PipelineDefinition definition,
+            @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = toInputs(files);
+        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(files));
 
         SseEmitter emitter =
                 new SseEmitter(applicationProperties.getPolicies().getStreamTimeoutMs());
@@ -432,19 +437,45 @@ public class PolicyController {
      * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
      * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
      * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
-     * covers them all; runs ({@code /run}) stay open to the team. Single-user deployments (login
-     * disabled) have no such role, so they trust the local operator. The path allowlist for folder
-     * sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     * covers them all; runs over the caller's own files ({@code /{id}/run}) stay open to the team,
+     * while source sweeps are gated by {@link #requirePolicySweepAllowed}. Single-user deployments
+     * (login disabled) have no such role, so they trust the local operator. The path allowlist for
+     * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
      */
     private void requirePolicyEditingAllowed() {
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            return;
-        }
-        if (!policyManagementAuthority.canEditPolicies()) {
+        if (!policyEditingAllowed()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Policies may only be created or modified by a team leader");
         }
+    }
+
+    /**
+     * Sweeping a policy's configured sources requires the same role as managing policies: the sweep
+     * operates on the team's configured sources using the server's stored connection credentials,
+     * which makes it a policy-management capability rather than ordinary use, and team scoping on
+     * its own does not express that. Deliberately narrower than it looks: it gates only the sweep,
+     * not {@link #runStoredPolicy}, because running a policy over documents the caller supplied is
+     * ordinary editor enforcement that every member performs on upload and export.
+     */
+    private void requirePolicySweepAllowed() {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return;
+        }
+        if (!policyManagementAuthority.canTriggerPolicies()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Not permitted to run this policy against its configured sources");
+        }
+    }
+
+    /**
+     * Whether the caller may create/modify policies (a team leader, or any operator when login is
+     * off).
+     */
+    private boolean policyEditingAllowed() {
+        return !applicationProperties.getSecurity().isEnableLogin()
+                || policyManagementAuthority.canEditPolicies();
     }
 
     @GetMapping
@@ -545,7 +576,9 @@ public class PolicyController {
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
                             + " 'assets[i].file' - only for bindings the policy does not already"
                             + " store). Runs regardless of the policy's enabled flag, which only"
-                            + " gates automatic triggering. Returns a run id.")
+                            + " gates automatic triggering. A single-document run may also send its"
+                            + " own opaque 'fileId', which is recorded against any failure so the"
+                            + " caller can resolve it back to that document. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
@@ -559,7 +592,14 @@ public class PolicyController {
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
-        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner
+                        .runWith(
+                                policy,
+                                inputs,
+                                PolicyProgressListener.NOOP,
+                                documentReferenceFor(files, inputs))
+                        .runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -571,8 +611,10 @@ public class PolicyController {
                             + " the enabled flag (which only gates automatic triggering). Returns"
                             + " the ids of the runs started (poll the run-status endpoint for each)"
                             + " plus what the sweep skipped - already-processed, parked-by-failure,"
-                            + " and in-flight counts - so an empty result explains itself.")
+                            + " and in-flight counts - so an empty result explains itself. Requires"
+                            + " the policy-management role.")
     public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
+        requirePolicySweepAllowed();
         Policy policy =
                 policyStore
                         .get(policyId)
@@ -651,6 +693,25 @@ public class PolicyController {
     }
 
     /**
+     * Resolve a test run's stored {@code asset:<id>} bindings from the saved policy the builder is
+     * editing, so their bytes need not be re-uploaded. Scoped to that policy (the resolver loads
+     * only the assets it references, in its own team) and gated to policy editors - the same
+     * authority that can read asset bytes - so a member can't rebind a policy's stored asset into
+     * an ad-hoc step to read it back. A blank id (an unsaved pipeline has no stored bindings) or an
+     * inaccessible policy leaves the run-supplied inputs untouched.
+     */
+    private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
+        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
+            return inputs;
+        }
+        return policyStore
+                .get(policyId)
+                .filter(policyAccessGuard::canAccess)
+                .map(policy -> assetResolver.resolve(policy, inputs))
+                .orElse(inputs);
+    }
+
+    /**
      * Turn the typed run files into engine {@link PolicyInputs}: the primary documents plus the
      * named supporting-file store, where each asset's {@code key} is the name a step references
      * from its {@code fileParameters}. Assets sharing a key are grouped, so a key may carry several
@@ -668,6 +729,19 @@ public class PolicyController {
             }
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * Only for a single-document run: an incident holds one file reference, so naming one of
+     * several would attribute the failure to whichever bound first. Counted off resolved inputs,
+     * not parts.
+     */
+    private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
+        String fileId = files.getFileId();
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+            return null;
+        }
+        return fileId;
     }
 
     private PolicyProgressListener streamListener(SseEmitter emitter) {
