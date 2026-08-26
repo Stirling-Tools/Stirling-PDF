@@ -41,6 +41,8 @@ export interface WirePolicy {
   name: string;
   owner?: string;
   enabled: boolean;
+  /** Org-mandated policy; first-class on the record (see the pipeline `Policy.required`). */
+  required?: boolean;
   trigger: null;
   steps: WirePipelineStep[];
   output: WireOutputSpec;
@@ -78,6 +80,8 @@ export interface PolicyDecodedState {
   id: string;
   name: string;
   enabled: boolean;
+  /** Org-mandated policy; first-class on the record, not part of the options bag. */
+  required: boolean;
   categoryId: string;
   sources: string[];
   scopeTypes: string[];

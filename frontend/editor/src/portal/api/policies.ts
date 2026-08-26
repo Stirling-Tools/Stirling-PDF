@@ -14,11 +14,18 @@ import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import {
+  policyStep,
+  policyStepFromWire,
+  type PolicyToolId,
+  type PolicyToolStep,
+} from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import type { Policy } from "@portal/api/pipelines";
 import type {
   PolicyDecodedState,
   PolicyRunView,
+  WireOutputOptions,
   WirePipelineStep,
   WirePolicy,
 } from "@app/policies/types";
@@ -75,6 +82,8 @@ export interface PolicyConfigDef {
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
+  /** Org-mandated policy (see the pipeline `Policy.required`). */
+  required: boolean;
   sources: string[];
   scopeTypes: string[];
   reviewerEmail: string;
@@ -90,6 +99,7 @@ export interface PolicyState {
 }
 
 export interface PolicySetupResult {
+  required: boolean;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
   scopeTypes: string[];
@@ -432,6 +442,7 @@ function decoratePolicy(
   const state: PolicyState = {
     configured: true,
     status,
+    required: decoded.required,
     sources: decoded.sources,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
@@ -517,6 +528,73 @@ export function assemblePolicies(
   return { summary, catalogue };
 }
 
+/**
+ * Whether `inner` appears in `outer` in order (no reordering), each used once. The wizard renders
+ * a category's capabilities in a fixed order, so a policy whose enabled tools are a subsequence of
+ * the template's canonical chain round-trips; any other order cannot be shown simply.
+ */
+function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
+  let cursor = 0;
+  for (const item of inner) {
+    const at = outer.indexOf(item, cursor);
+    if (at === -1) return false;
+    cursor = at + 1;
+  }
+  return true;
+}
+
+/**
+ * Whether a full pipeline record can be losslessly re-expressed by the simple policy wizard, and if
+ * so the CatalogueEntry that seeds it (so editing round-trips). This is the single authority the
+ * unified page uses to route to the simple editor vs the full builder, and that the builder uses to
+ * decide whether "back to simple" is still offered. It returns null the moment it meets anything the
+ * wizard cannot show: no template origin, a server trigger/input, a stored destination, an unknown
+ * or extra tool, or a reordered chain. Tool parameters need no check — the wizard seeds each tool
+ * from its saved step wholesale, so any params it doesn't surface still round-trip untouched.
+ */
+export function parseSimplePolicy(
+  policy: Policy,
+  runs: PolicyRunView[] = [],
+): CatalogueEntry | null {
+  const rawCategory = policy.output?.options?.categoryId;
+  const categoryId = typeof rawCategory === "string" ? rawCategory : "";
+  if (!categoryId) return null;
+  const category = POLICY_CATEGORIES.find((c) => c.id === categoryId);
+  const config = POLICY_CONFIG[categoryId];
+  if (!category || !config) return null;
+
+  // The wizard only runs on the editor (sources + runOn live in the options bag, not as server
+  // inputs/destinations). A policy carrying either cannot be shown simply.
+  if ((policy.inputs?.length ?? 0) > 0) return null;
+  if ((policy.outputIds?.length ?? 0) > 0) return null;
+
+  // Every step must be one of this template's capabilities, and they must stay in canonical order.
+  const canonical = config.defaultOperations.map((op) => op.toolId);
+  const toolIds: PolicyToolId[] = [];
+  for (const step of policy.steps) {
+    const parsed = policyStepFromWire(step as WirePipelineStep);
+    if (!parsed || !canonical.includes(parsed.toolId)) return null;
+    toolIds.push(parsed.toolId);
+  }
+  if (!isOrderedSubset(toolIds, canonical)) return null;
+
+  const wire: WirePolicy = {
+    id: policy.id ?? "",
+    name: policy.name,
+    enabled: policy.enabled,
+    trigger: null,
+    steps: policy.steps as WirePipelineStep[],
+    // The options bag is untyped on the pipeline record; the codec reads it defensively.
+    output: {
+      type: "inline",
+      options: (policy.output?.options ?? {}) as Partial<WireOutputOptions>,
+    },
+  };
+  const decorated = decoratePolicy(fromWirePolicy(wire), runs, false);
+  if (!decorated) return null;
+  return { category, config, policy: decorated };
+}
+
 /** GET /api/v1/policies/{id} — one stored policy's raw record. */
 export async function fetchPolicy(id: string): Promise<WirePolicy> {
   return apiClient.local.json<WirePolicy>(
@@ -593,6 +671,7 @@ export function buildWireFromSetup(
       id: entry.policy?.state.backendId ?? "",
       name: policyDisplayName(entry, t),
       enabled,
+      required: result.required,
       categoryId: entry.category.id,
       sources: result.sources,
       scopeTypes: result.scopeTypes,
@@ -623,6 +702,7 @@ export function buildWireFromState(
       id: s.backendId ?? "",
       name: policyDisplayName(entry, t),
       enabled,
+      required: s.required,
       categoryId: entry.category.id,
       sources: s.sources,
       scopeTypes: s.scopeTypes,

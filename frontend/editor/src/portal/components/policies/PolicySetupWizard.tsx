@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CheckIcon from "@mui/icons-material/Check";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
@@ -68,6 +69,12 @@ interface PolicySetupWizardProps {
    * async; if it rejects the wizard re-enables submit and surfaces the failure.
    */
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  /**
+   * Fires when the user asks to Customise: hands the current (unsaved) settings to the full pipeline
+   * builder, which takes over editing. The builder can express anything the simple wizard can't, so
+   * this is a one-way step unless the pipeline stays simple-representable.
+   */
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }
 
 type Step = "workflow" | "settings";
@@ -227,6 +234,7 @@ export function PolicySetupWizard({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: PolicySetupWizardProps) {
   // Re-key the wizard on the opened category so all state resets cleanly when a
   // different category is opened (avoids stale field values bleeding across).
@@ -236,6 +244,7 @@ export function PolicySetupWizard({
       entry={entry}
       onClose={onClose}
       onSubmit={onSubmit}
+      onCustomise={onCustomise}
     />
   ) : null;
 }
@@ -244,10 +253,12 @@ function PolicySetupWizardBody({
   entry,
   onClose,
   onSubmit,
+  onCustomise,
 }: {
   entry: CatalogueEntry;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
+  onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
 }) {
   const { t } = useTranslation();
 
@@ -313,6 +324,9 @@ function PolicySetupWizardBody({
   // edit and default new policies to no retries (run once).
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
+  // A suggested policy is something the org requires by nature, so new ones default to required;
+  // editing preserves whatever was saved.
+  const [required, setRequired] = useState(policy?.state.required ?? true);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -366,6 +380,33 @@ function PolicySetupWizardBody({
     );
   }
 
+  /** The wizard's current state as a submit result: shared by Save and Customise. */
+  function collectResult(): PolicySetupResult {
+    const steps: PipelineStep[] = enabledTools.map((tl) =>
+      policyStepToWire(tl),
+    );
+    return {
+      required,
+      fieldValues,
+      sources,
+      scopeTypes,
+      reviewerEmail,
+      outputMode,
+      outputName: outputName.trim(),
+      outputNamePosition,
+      runOn,
+      maxRetries,
+      retryDelayMinutes,
+      steps,
+    };
+  }
+
+  // Hand the current settings to the full builder. No "needs at least one tool" guard here: the
+  // builder has its own, and the point of customising is to keep shaping the chain.
+  function customise() {
+    onCustomise(entry, collectResult());
+  }
+
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
@@ -375,23 +416,8 @@ function PolicySetupWizardBody({
     }
     setError(null);
     setSubmitting(true);
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
-    );
     try {
-      await onSubmit(entry, {
-        fieldValues,
-        sources,
-        scopeTypes,
-        reviewerEmail,
-        outputMode,
-        outputName: outputName.trim(),
-        outputNamePosition,
-        runOn,
-        maxRetries,
-        retryDelayMinutes,
-        steps,
-      });
+      await onSubmit(entry, collectResult());
     } catch (e) {
       setSubmitting(false);
       // Surface the backend's actual reason (e.g. a step missing its account) rather than a
@@ -424,6 +450,14 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-foot">
           <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
+          </Button>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={customise}
+            leftSection={<TuneRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.policies.wizard.actions.customise")}
           </Button>
           {step === "workflow" ? (
             <Button
@@ -566,6 +600,24 @@ function PolicySetupWizardBody({
 
       {step === "settings" && (
         <div className="portal-policies__wizard-section">
+          <h3 className="portal-policies__wizard-heading">
+            {t("portal.policies.wizard.enforcement.heading")}
+          </h3>
+          <Card padding="none">
+            <SettingsRow
+              label={t("portal.policies.wizard.enforcement.requiredLabel")}
+              description={t("portal.policies.wizard.enforcement.requiredDesc")}
+              control={
+                <ToggleSwitch
+                  size="sm"
+                  checked={required}
+                  onChange={setRequired}
+                  label=""
+                />
+              }
+            />
+          </Card>
+
           {config.fields.length > 0 && (
             <>
               <h3 className="portal-policies__wizard-heading">

@@ -14,17 +14,28 @@ const render = (
   options?: Parameters<typeof baseRender>[1],
 ) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
-// Deterministic i18n: keys returned verbatim.
+// Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
+// unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+  Trans: (props: { children?: unknown }) => props.children,
 }));
 
 const fetchPipelines = vi.fn();
+const fetchPipeline = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
+  fetchPipeline: (id: string) => fetchPipeline(id),
+}));
+
+// The suggested-policy gallery is out of scope here: keep the catalogue empty so the test focuses on
+// the pipelines list.
+vi.mock("@portal/queries/policies", () => ({
+  usePoliciesOverview: () => ({ data: null, loading: false, error: null }),
 }));
 
 const RESPONSE: PipelinesOverviewResponse = {
@@ -38,6 +49,7 @@ const RESPONSE: PipelinesOverviewResponse = {
       id: "plc-redaction",
       name: "Redaction sweep",
       enabled: true,
+      required: false,
       status: "active",
       trigger: "schedule",
       sources: [{ id: "src-claims", name: "Claims intake" }],
@@ -70,6 +82,18 @@ describe("Pipelines view", () => {
   beforeEach(() => {
     fetchPipelines.mockReset();
     fetchPipelines.mockResolvedValue(RESPONSE);
+    fetchPipeline.mockReset();
+    // A plain pipeline (no template origin) - parseSimplePolicy returns null, so the row opens the
+    // full builder page.
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: {} },
+      outputIds: [],
+    });
   });
 
   it("opens the builder when creating a pipeline", async () => {
@@ -79,7 +103,7 @@ describe("Pipelines view", () => {
     expect(await screen.findByText("builder new")).toBeInTheDocument();
   });
 
-  it("opens a pipeline's own page when its row is clicked", async () => {
+  it("opens the full builder when a plain pipeline row is clicked", async () => {
     renderView();
     fireEvent.click(await screen.findByText("Redaction sweep"));
     expect(await screen.findByText("pipeline page")).toBeInTheDocument();

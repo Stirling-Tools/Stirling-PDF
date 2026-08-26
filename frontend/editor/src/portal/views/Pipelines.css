@@ -31,6 +31,29 @@
   max-width: 46rem;
 }
 
+/* Sections: the suggested-policy gallery and the full list. */
+.portal-pipelines__suggested,
+.portal-pipelines__all {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-pipelines__section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 640;
+  color: var(--c-text);
+}
+
+.portal-pipelines__section-sub {
+  margin: -0.375rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+  max-width: 46rem;
+}
+
 /* Table cells */
 .portal-pipelines__name-cell {
   display: flex;

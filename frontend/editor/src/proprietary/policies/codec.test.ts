@@ -6,6 +6,7 @@ const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
   name: "Security Policy",
   enabled: true,
+  required: true,
   categoryId: "security",
   sources: ["editor", "gdrive"],
   scopeTypes: ["Contracts", "Invoices"],
@@ -34,6 +35,14 @@ describe("toWirePolicy", () => {
     expect(toWirePolicy(FULL_STATE).output.type).toBe("inline");
   });
 
+  it("keeps required first-class (not in the options bag)", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    expect(wire.required).toBe(true);
+    expect(
+      (wire.output.options as Record<string, unknown>).required,
+    ).toBeUndefined();
+  });
+
   it("packs metadata into output.options", () => {
     const wire = toWirePolicy(FULL_STATE);
     const opts = wire.output.options;
@@ -55,6 +64,7 @@ describe("fromWirePolicy → round-trip", () => {
     const wire = toWirePolicy(FULL_STATE);
     const decoded = fromWirePolicy(wire);
     expect(decoded.id).toBe(FULL_STATE.id);
+    expect(decoded.required).toBe(FULL_STATE.required);
     expect(decoded.categoryId).toBe(FULL_STATE.categoryId);
     expect(decoded.sources).toEqual(FULL_STATE.sources);
     expect(decoded.scopeTypes).toEqual(FULL_STATE.scopeTypes);

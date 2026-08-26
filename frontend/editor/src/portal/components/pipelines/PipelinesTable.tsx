@@ -31,6 +31,17 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         icon: () => <AccountTreeRounded />,
         primary: (p) => p.name,
       }),
+      column.badge({
+        key: "type",
+        header: t("portal.pipelines.table.type", "Type"),
+        sortable: true,
+        // A required pipeline IS a policy (the org mandates it); an ordinary one is just an
+        // automation.
+        get: (p) =>
+          p.required
+            ? { tone: "purple", label: t("portal.pipelines.type.required") }
+            : { tone: "neutral", label: t("portal.pipelines.type.pipeline") },
+      }),
       column.text({
         key: "trigger",
         header: t("portal.pipelines.table.trigger", "Trigger"),

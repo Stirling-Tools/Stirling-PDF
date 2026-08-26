@@ -7837,15 +7837,19 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.pipelines]
-subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
+subtitle = "Pipelines and the policies your organisation requires. Start from a suggested policy, or build any pipeline and enforce it. Click a row to edit, run, or pause it."
 title = "Pipelines"
 
 [portal.pipelines.actions]
 newPipeline = "New pipeline"
 
+[portal.pipelines.all]
+title = "All pipelines"
+
 [portal.pipelines.builder]
 activate = "Activate"
 back = "Back to pipelines"
+backToSimple = "Back to the simple view"
 cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
 chooseDestination = "Choose a destination"
@@ -7892,6 +7896,24 @@ format-mismatch = "Sends {{produced}}, needs {{accepts}}"
 output-uncertain = "May not run: output depends on setup"
 source-mismatch = "Input is {{produced}}, needs {{accepts}}"
 undeclared-operation = "Can't check what this step accepts"
+
+[portal.pipelines.builder.editorEnforced]
+input = "Editor"
+inputNote = "This policy runs on documents in the editor, so it has no pull source. Run and output settings live in the metadata on the output panel."
+output = "Back to the document"
+
+[portal.pipelines.builder.editorEnforced.runOn]
+export = "On export"
+upload = "On upload"
+
+[portal.pipelines.builder.metadata]
+helper = "Temporary raw view of the policy's metadata (run/output settings, sources, scope). Edited here until it gets a proper UI; leave it as-is if unsure."
+invalid = "Not valid JSON. The last valid version is kept until this is fixed."
+label = "Policy metadata (advanced)"
+
+[portal.pipelines.builder.required]
+desc = "Members can't pause or delete a required policy, and it enforces on their documents."
+label = "Required by your organisation"
 
 [portal.pipelines.composer]
 addTool = "Add a tool"
@@ -7995,22 +8017,29 @@ timeout = "Run is taking longer than expected; it may still finish in the backgr
 active = "Active"
 paused = "Paused"
 
+[portal.pipelines.suggested]
+subtitle = "Ready-made policies with a simple setup. Add one, then customise it into a full pipeline if you need to."
+title = "Suggested policies"
+
 [portal.pipelines.table]
 name = "Pipeline"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
 trigger = "Trigger"
+type = "Type"
 
 [portal.pipelines.trigger]
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
 
+[portal.pipelines.type]
+pipeline = "Pipeline"
+required = "Required"
+
 [portal.policies]
 defaultName = "{{category}} Policy"
-subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
-title = "Policies"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
@@ -8173,11 +8202,6 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 sanitizePdf = "Remove JavaScript"
-
-[portal.policies.offline]
-description = "Your policies are saved and will appear once the connection is restored."
-retry = "Retry"
-title = "Backend unavailable"
 
 [portal.policies.operations]
 change = "Change what this step does"
@@ -8410,6 +8434,7 @@ status = "Status"
 back = "Back"
 cancel = "Cancel"
 continue = "Continue"
+customise = "Customise"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
@@ -8448,6 +8473,11 @@ label = "Apply a watermark"
 [portal.policies.wizard.classification]
 description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
 labelsHeading = "Classification labels"
+
+[portal.policies.wizard.enforcement]
+heading = "Enforcement"
+requiredDesc = "Members can't pause or delete a required policy, and it runs on their documents automatically."
+requiredLabel = "Required by your organisation"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."

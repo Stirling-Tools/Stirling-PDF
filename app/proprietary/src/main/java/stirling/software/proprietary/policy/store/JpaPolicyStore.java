@@ -44,6 +44,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
+                        policy.required(),
                         policy.inputs(),
                         policy.steps(),
                         policy.output(),

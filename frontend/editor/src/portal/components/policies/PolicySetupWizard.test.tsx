@@ -60,6 +60,7 @@ function editEntry(steps: PipelineStep[]): CatalogueEntry {
     state: {
       configured: true,
       status: "active",
+      required: true,
       sources: ["editor"],
       scopeTypes: [],
       reviewerEmail: "",
@@ -102,7 +103,12 @@ describe("PolicySetupWizard", () => {
     ]);
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
     );
     await submitWizard(SAVE_CHANGES);
 
@@ -126,7 +132,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={vi.fn()} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        onCustomise={vi.fn()}
+      />,
     );
 
     // Sanitize is in the same chain and always shows, so once it renders the chain has loaded.
@@ -146,7 +157,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={vi.fn()} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        onCustomise={vi.fn()}
+      />,
     );
 
     await waitFor(() =>
@@ -163,7 +179,12 @@ describe("PolicySetupWizard", () => {
     };
 
     render(
-      <PolicySetupWizard entry={entry} onClose={vi.fn()} onSubmit={onSubmit} />,
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
     );
     await submitWizard(ENABLE);
 

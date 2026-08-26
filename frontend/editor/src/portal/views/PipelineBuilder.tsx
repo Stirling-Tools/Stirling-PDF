@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import {
   ActionIcon,
   Banner,
@@ -14,6 +15,7 @@ import {
   Modal,
   Select,
   Spinner,
+  ToggleSwitch,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
@@ -65,8 +67,9 @@ import {
   uploadPipelineAsset,
   type PolicyAsset,
 } from "@portal/api/pipelineAssets";
-import { clearProcessedHistory } from "@portal/api/policies";
+import { clearProcessedHistory, parseSimplePolicy } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
+import { PolicyMetadataDevEditor } from "@portal/components/pipelines/PolicyMetadataDevEditor";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
@@ -211,6 +214,12 @@ export function PipelineBuilder() {
     ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const location = useLocation();
+  // A Customise hand-off from the simple policy wizard: the in-progress settings as a full pipeline
+  // record, seeded here instead of fetched. When editing an existing policy the id-based fetch still
+  // runs in the background so run/pause/delete act on the last-saved version.
+  const handoff = location.state as { draft?: Policy } | null;
+  const seedDraft = handoff?.draft ?? null;
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
@@ -272,6 +281,16 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
+  // pipeline, and it enforces on their documents when it runs on the editor.
+  const [required, setRequired] = useState(false);
+  // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
+  // reviewer, fieldValues...). Preserved verbatim through an edit so a customised policy never loses
+  // its simple-only settings; edited in the output inspector's dev section until it gets real UI.
+  const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [outputType, setOutputType] = useState("inline");
   /**
    * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
    * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
@@ -340,13 +359,18 @@ export function PipelineBuilder() {
     };
   }, []);
 
-  // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
+  // Seed the form once: immediately for a new pipeline or a Customise hand-off, or after the policy
+  // loads for an edit. A hand-off draft wins over the fetched record (it carries the unsaved wizard
+  // edits), so an edit reached via Customise need not wait for the fetch.
   useEffect(() => {
     if (seeded) return;
-    if (isEdit && !policyState.data) return;
-    const policy = policyState.data ?? undefined;
+    if (isEdit && !seedDraft && !policyState.data) return;
+    const policy = seedDraft ?? policyState.data ?? undefined;
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
+    setRequired(policy?.required ?? false);
+    setOutputOptions(policy?.output?.options ?? {});
+    setOutputType(policy?.output?.type ?? "inline");
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
@@ -367,7 +391,7 @@ export function PipelineBuilder() {
     );
     setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
-  }, [isEdit, policyState.data, allTools, seeded]);
+  }, [isEdit, seedDraft, policyState.data, allTools, seeded]);
 
   const sourceType = (sourceId: string) =>
     availableSources.find((s) => s.id === sourceId)?.type;
@@ -664,6 +688,20 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
+  // A policy that runs on the editor (its metadata sources include the editor) is enforced on
+  // documents in the app rather than pulling from a source and writing to a destination, so it needs
+  // neither an input source nor a destination - both are supplied by the editor / the document
+  // itself. The template origin, if any, is what lets the simple wizard round-trip it.
+  const enforcedSources = Array.isArray(outputOptions.sources)
+    ? (outputOptions.sources as string[])
+    : [];
+  const editorEnforced = enforcedSources.includes("editor");
+  const enforcedRunOn = outputOptions.runOn === "export" ? "export" : "upload";
+  const originCategoryId =
+    typeof outputOptions.categoryId === "string"
+      ? outputOptions.categoryId
+      : "";
+
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
   const sourceChosen = input.sourceId !== "";
@@ -672,17 +710,43 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   const outputValid = outputIds.length === 1;
 
+  // The working pipeline as a wire record, for the representability check. Steps serialize
+  // synchronously here (no asset upload) - parseSimplePolicy only reads their operation + params.
+  const currentSimplePolicy: Policy = {
+    id: policyState.data?.id ?? seedDraft?.id,
+    name: name.trim(),
+    enabled,
+    required,
+    inputs:
+      editorEnforced || !sourceChosen
+        ? []
+        : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+    steps: steps.map((step) => serializeToolStep(step, allTools)),
+    output: { type: outputType, options: outputOptions },
+    outputIds: editorEnforced ? [] : outputIds,
+  };
+  // "Back to simple" is offered only while the pipeline can still be shown by the wizard - governed
+  // by representability, not by whether the builder was opened. It disappears the moment an edit
+  // takes the chain out of its template's shape, and reappears if that edit is undone.
+  const simpleEntry = originCategoryId
+    ? parseSimplePolicy(currentSimplePolicy)
+    : null;
+
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
-  if (!sourceChosen)
-    blockers.push(t("portal.pipelines.builder.blocker.source"));
-  else if (!scheduleValid)
-    blockers.push(t("portal.pipelines.builder.blocker.schedule"));
-  if (!outputValid)
-    blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  // An editor-enforced policy needs no source or destination (the editor supplies both), so those
+  // requirements apply only to source-driven pipelines.
+  if (!editorEnforced) {
+    if (!sourceChosen)
+      blockers.push(t("portal.pipelines.builder.blocker.source"));
+    else if (!scheduleValid)
+      blockers.push(t("portal.pipelines.builder.blocker.schedule"));
+    if (!outputValid)
+      blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  }
   if (hasUnconfiguredSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.setup", {
@@ -703,6 +767,16 @@ export function PipelineBuilder() {
 
   function close() {
     navigate(listPath);
+  }
+
+  /**
+   * Hand the pipeline back to the simple wizard, carrying the current (unsaved) state. Only reachable
+   * while {@link simpleEntry} is non-null, i.e. the chain still fits its template - so nothing is
+   * lost. The list route reopens the wizard from this record.
+   */
+  function backToSimple() {
+    if (!simpleEntry) return;
+    navigate(listPath, { state: { reopenSimple: currentSimplePolicy } });
   }
 
   // Leave the builder, but prompt first if there are unsaved edits (see the unsaved-changes modal).
@@ -778,16 +852,21 @@ export function PipelineBuilder() {
     setError(null);
     try {
       const policy: Policy = {
-        id: policyState.data?.id ?? undefined,
+        id: policyState.data?.id ?? seedDraft?.id ?? undefined,
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
-        // The wire shape stays a list; canSave guarantees the one input has a source.
-        inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
+        required,
+        // An editor-enforced policy pulls from no source and writes to no destination; a
+        // source-driven pipeline carries its one input (canSave guarantees the source) and
+        // destinations. The wire shape stays a list.
+        inputs: editorEnforced
+          ? []
+          : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
         steps: await serializeStepsForSave(),
-        // Destinations are the referenced saved sources; the inline output field is
-        // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
-        output: policyState.data?.output ?? { type: "inline", options: {} },
-        outputIds,
+        // The output carries the policy metadata bag (runOn, naming, scope...), edited in the dev
+        // section and preserved verbatim otherwise, so a customised policy never loses it.
+        output: { type: outputType, options: outputOptions },
+        outputIds: editorEnforced ? [] : outputIds,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -1133,6 +1212,16 @@ export function PipelineBuilder() {
 
   /** The editor for whatever node is selected. Undefined when nothing is. */
   function inspectorBody() {
+    if (selected === "input" && editorEnforced) {
+      // An editor-enforced policy has no pull source: it runs on documents in the app. Run/output
+      // details live in the metadata bag (edited from the output panel), so the input is just a note.
+      return (
+        <p className="portal-builder__muted">
+          {t("portal.pipelines.builder.editorEnforced.inputNote")}
+        </p>
+      );
+    }
+
     if (selected === "input") {
       // Nothing to pick from yet: a dropdown of nothing helps no one, so offer only the way to make
       // the first source. The trigger has no meaning without a source either, so it waits too.
@@ -1237,13 +1326,21 @@ export function PipelineBuilder() {
 
     if (selected === "output") {
       return (
-        <DestinationPicker
-          sources={writableSources}
-          value={outputIds}
-          onChange={setOutputIds}
-          onCreateNew={() => createSourceFor("output")}
-          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-        />
+        <>
+          {!editorEnforced && (
+            <DestinationPicker
+              sources={writableSources}
+              value={outputIds}
+              onChange={setOutputIds}
+              onCreateNew={() => createSourceFor("output")}
+              onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+            />
+          )}
+          <PolicyMetadataDevEditor
+            value={outputOptions}
+            onChange={setOutputOptions}
+          />
+        </>
       );
     }
 
@@ -1317,6 +1414,29 @@ export function PipelineBuilder() {
         />
       )}
 
+      <div className="portal-builder__policybar">
+        <ToggleSwitch
+          size="sm"
+          checked={required}
+          onChange={setRequired}
+          label={t("portal.pipelines.builder.required.label")}
+        />
+        <span className="portal-builder__muted">
+          {t("portal.pipelines.builder.required.desc")}
+        </span>
+        {simpleEntry && (
+          <Button
+            variant="tertiary"
+            size="sm"
+            style={{ marginLeft: "auto" }}
+            onClick={backToSimple}
+            leftSection={<UndoRoundedIcon style={{ fontSize: "1.05rem" }} />}
+          >
+            {t("portal.pipelines.builder.backToSimple")}
+          </Button>
+        )}
+      </div>
+
       <div className="portal-builder__grid">
         <div className="portal-builder__canvas">
           <PipelineGraphToolbar
@@ -1331,29 +1451,40 @@ export function PipelineBuilder() {
             // An end is on the chain once it has been asked for or already holds a value, so a
             // loaded pipeline needs no seeding: its source and destination place themselves.
             input={
-              inputAsked || inputValid
+              editorEnforced
                 ? {
-                    label:
-                      chosenSource?.name ??
-                      t("portal.pipelines.builder.chooseSource"),
-                    detail: chosenSource ? triggerSummary() : undefined,
-                    warning: inputValid
-                      ? undefined
-                      : t("portal.pipelines.builder.needsSource"),
+                    label: t("portal.pipelines.builder.editorEnforced.input"),
+                    detail: t(
+                      `portal.pipelines.builder.editorEnforced.runOn.${enforcedRunOn}`,
+                    ),
                   }
-                : null
+                : inputAsked || inputValid
+                  ? {
+                      label:
+                        chosenSource?.name ??
+                        t("portal.pipelines.builder.chooseSource"),
+                      detail: chosenSource ? triggerSummary() : undefined,
+                      warning: inputValid
+                        ? undefined
+                        : t("portal.pipelines.builder.needsSource"),
+                    }
+                  : null
             }
             output={
-              outputAsked || outputValid
+              editorEnforced
                 ? {
-                    label:
-                      chosenDestination?.name ??
-                      t("portal.pipelines.builder.chooseDestination"),
-                    warning: outputValid
-                      ? undefined
-                      : t("portal.pipelines.builder.needsDestination"),
+                    label: t("portal.pipelines.builder.editorEnforced.output"),
                   }
-                : null
+                : outputAsked || outputValid
+                  ? {
+                      label:
+                        chosenDestination?.name ??
+                        t("portal.pipelines.builder.chooseDestination"),
+                      warning: outputValid
+                        ? undefined
+                        : t("portal.pipelines.builder.needsDestination"),
+                    }
+                  : null
             }
             steps={graphSteps}
             selected={selected}

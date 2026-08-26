@@ -1,0 +1,22 @@
+.portal-builder__dev-json {
+  width: 100%;
+  min-height: 12rem;
+  resize: vertical;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text);
+  background: var(--c-input-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: 0.625rem 0.75rem;
+}
+
+.portal-builder__dev-json:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+.portal-builder__dev-json[aria-invalid="true"] {
+  border-color: var(--c-danger);
+}

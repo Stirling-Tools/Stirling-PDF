@@ -20,17 +20,15 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Builds the Pipelines overview: one row per policy the caller's team built on the Pipelines page,
- * with its sources resolved to live display names, its steps, and a trigger/output summary.
- * Frontend/catalogue policies (marked by a {@code categoryId} in their output options) belong to
- * the user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
+ * Builds the unified Pipelines overview: one row per policy the caller's team owns, with its
+ * sources resolved to live display names, its steps, and a trigger/output summary. This lists EVERY
+ * policy - both pipelines built in the full builder and the friendly "suggested" policies - since
+ * the two surfaces were merged (a policy is a pipeline the org requires). No catalogue filter any
+ * more.
  */
 @Service
 @RequiredArgsConstructor
 public class PolicyOverviewService {
-
-    // Output-options key marking a frontend/catalogue policy (set by the Policies page and seeder).
-    private static final String CATEGORY_OPTION = "categoryId";
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
@@ -38,10 +36,7 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
-        List<Policy> policies =
-                policyAccessGuard.visibleFrom(policyStore).stream()
-                        .filter(PolicyOverviewService::isPipeline)
-                        .toList();
+        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore).stream().toList();
         Map<String, String> sourceNames = sourceNames();
 
         List<PolicyView> views =
@@ -53,18 +48,6 @@ public class PolicyOverviewService {
                         .toList();
 
         return new PoliciesOverviewResponse(buildKpis(policies), views);
-    }
-
-    private static boolean isPipeline(Policy policy) {
-        return !isCataloguePolicy(policy);
-    }
-
-    /** A frontend/catalogue policy, marked by a {@code categoryId} in its output options. */
-    private static boolean isCataloguePolicy(Policy policy) {
-        OutputSpec output = policy.output();
-        return output != null
-                && output.options().get(CATEGORY_OPTION) instanceof String category
-                && !category.isBlank();
     }
 
     /** Display names for every source the caller's team can see, keyed by source id. */
@@ -88,6 +71,7 @@ public class PolicyOverviewService {
                 policy.id(),
                 policy.name(),
                 policy.enabled(),
+                policy.required(),
                 policy.enabled() ? "active" : "paused",
                 triggerSummary(policy),
                 sources,

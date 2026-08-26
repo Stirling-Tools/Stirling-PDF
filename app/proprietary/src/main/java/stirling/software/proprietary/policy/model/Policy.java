@@ -20,6 +20,7 @@ public record Policy(
         String name,
         String owner,
         boolean enabled,
+        boolean required,
         List<PipelineInput> inputs,
         List<PipelineStep> steps,
         OutputSpec output,
@@ -31,6 +32,24 @@ public record Policy(
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
+    }
+
+    /**
+     * Without the {@code required} flag: defaults to not org-required. Kept for the many callers
+     * and tests written before {@code required} existed; the frontend and stores that care about it
+     * use the full constructor.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId) {
+        this(id, name, owner, enabled, false, inputs, steps, output, outputIds, teamId);
     }
 
     /**
@@ -82,17 +101,20 @@ public record Policy(
 
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
-        return new Policy(id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, required, inputs, steps, resolved, outputIds, teamId);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
-        return new Policy(id, name, newOwner, enabled, inputs, steps, output, outputIds, teamId);
+        return new Policy(
+                id, name, newOwner, enabled, required, inputs, steps, output, outputIds, teamId);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
-        return new Policy(id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId);
+        return new Policy(
+                id, name, owner, enabled, required, inputs, steps, output, newOutputIds, teamId);
     }
 
     /**
