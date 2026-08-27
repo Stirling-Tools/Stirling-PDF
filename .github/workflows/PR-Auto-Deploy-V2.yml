@@ -284,9 +284,6 @@ jobs:
 
       - name: Deploy V2 to VPS
         id: deploy
-        env:
-          # Same enterprise key the enterprise Playwright suite runs on.
-          ENTERPRISE_LICENSE_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
         run: |
           # Use same port strategy as regular PRs - just the PR number
           V2_PORT=${{ needs.check-pr.outputs.pr_number }}
@@ -368,6 +365,8 @@ jobs:
           TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
           NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
           NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          # Same enterprise key the enterprise Playwright suite runs on.
+          ENTERPRISE_LICENSE_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
 
       # ---- Storybook preview (only when this PR touches stories/.storybook) ----
       # Runs inside the same approved-contributor-gated deploy job, so it deploys
