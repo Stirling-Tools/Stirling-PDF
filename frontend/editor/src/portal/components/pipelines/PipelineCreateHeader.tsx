@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import { ActionIcon, Button, Input } from "@app/ui";
+import { ActionIcon, Button, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
-import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
+import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
 import { PipelinePolicyControls } from "@portal/components/pipelines/PipelinePolicyControls";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
 
@@ -63,7 +63,12 @@ export function PipelineCreateHeader({
         <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
       </ActionIcon>
 
-      <PipelineIconPicker value={icon} onChange={onIconChange} />
+      <IconPicker
+        value={icon}
+        onChange={onIconChange}
+        options={PIPELINE_ICON_OPTIONS}
+        ariaLabel={t("portal.pipelines.builder.icon.label")}
+      />
 
       <Input
         className="portal-pipeline-create-header__name"

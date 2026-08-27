@@ -8,9 +8,9 @@ import PowerSettingsNewRoundedIcon from "@mui/icons-material/PowerSettingsNewRou
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
+import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
-import { PipelineIconPicker } from "@portal/components/pipelines/PipelineIconPicker";
+import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
 import { PipelinePolicyControls } from "@portal/components/pipelines/PipelinePolicyControls";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
@@ -130,7 +130,12 @@ export function PipelineEditHeader({
           <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
         </ActionIcon>
 
-        <PipelineIconPicker value={icon} onChange={onIconChange} />
+        <IconPicker
+          value={icon}
+          onChange={onIconChange}
+          options={PIPELINE_ICON_OPTIONS}
+          ariaLabel={t("portal.pipelines.builder.icon.label")}
+        />
 
         {renaming ? (
           <Input

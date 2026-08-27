@@ -4,6 +4,7 @@
 // pipeline that only stores its categoryId still resolves to the matching glyph.
 
 import type { ReactNode } from "react";
+import type { IconPickerOption } from "@app/ui";
 import type { SxProps, Theme } from "@mui/material";
 import { PIPELINE_ROUTE_GLYPH } from "@portal/components/icons";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
@@ -100,3 +101,8 @@ export function pipelineIcon(
   const sx: SxProps<Theme> = { fontSize };
   return <Icon sx={sx} className={className} />;
 }
+
+/** The pipeline's icon vocabulary as options for the shared SUI `IconPicker`. */
+export const PIPELINE_ICON_OPTIONS: IconPickerOption[] = PIPELINE_ICON_KEYS.map(
+  (key) => ({ key, label: key, node: pipelineIcon(key, "1.25rem") }),
+);
