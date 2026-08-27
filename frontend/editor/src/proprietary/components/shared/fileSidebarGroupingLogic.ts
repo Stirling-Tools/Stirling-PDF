@@ -56,7 +56,7 @@ export function buildLabelGroups(
     if (members.length === 0) continue;
     visible.push({
       id: `category:${category.id}`,
-      label: category.name,
+      label: t(`classification.families.${category.id}`, category.name),
       icon: category.icon,
       stubs: members,
       defaultExpanded: false,
