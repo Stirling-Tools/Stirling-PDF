@@ -290,11 +290,6 @@ final class HeadingDetector {
      * promoted to a heading: it is bold, short, and not a full sentence. Used for bold labels that
      * are not large enough to be headings.
      */
-    static boolean isBoldLabel(TextLine line) {
-        return isBoldLabel(line.text(), line.words());
-    }
-
-    /** Geometry-only overload; see {@link #headingPrefix(String, float, List, float, float)}. */
     static boolean isBoldLabel(String lineText, List<TextWord> words) {
         String text = lineText.strip();
         if (text.isEmpty() || wordCount(text) > MAX_HEADING_WORDS || endsLikeSentence(text)) {

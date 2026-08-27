@@ -92,9 +92,7 @@ class AdvancedPdfMarkdownConverterTest {
             rows.add(new TextLine(List.of(near, far), 50f, y, 2_499_999_980f, 10f));
         }
 
-        List<float[]> columns =
-                assertDoesNotThrow(
-                        () -> AdvancedPdfMarkdownConverter.findColumnRangesFromLines(rows));
+        List<float[]> columns = assertDoesNotThrow(() -> ColumnRanges.fromTextLines(rows));
         assertTrue(
                 columns.isEmpty(),
                 "implausible page span should disable column detection, not allocate from it");
@@ -113,8 +111,7 @@ class AdvancedPdfMarkdownConverterTest {
             rows.add(new TextLine(List.of(w), x, y, 200f, 10f));
         }
 
-        List<Float> gutters =
-                assertDoesNotThrow(() -> AdvancedPdfMarkdownConverter.detectGuttersFromLines(rows));
+        List<Float> gutters = assertDoesNotThrow(() -> ColumnLayout.guttersFromTextLines(rows));
         assertTrue(
                 gutters.isEmpty(),
                 "implausible page span should disable gutter detection, not scan it");
@@ -141,7 +138,7 @@ class AdvancedPdfMarkdownConverterTest {
                             "returns all relevant data meeting the search intent"
                         });
         assertTrue(
-                AdvancedPdfMarkdownConverter.everyColumnIsProse(prose, 3),
+                TableShape.everyColumnIsProse(prose, 3),
                 "three columns of running sentences are a page layout, not a table");
     }
 
@@ -161,39 +158,30 @@ class AdvancedPdfMarkdownConverterTest {
                             "N",
                             "Approval is needed from the Treasurer if the acquisition is large"
                         });
-        assertTrue(
-                !AdvancedPdfMarkdownConverter.everyColumnIsProse(table, 3),
-                "a keyed table is a table");
+        assertTrue(!TableShape.everyColumnIsProse(table, 3), "a keyed table is a table");
     }
 
     @Test
     void splitApostropheIsClosedUpInCells() {
         // PDFium splits on its own bounding boxes, so a tight apostrophe arrives as its own word.
-        assertEquals(
-                "the firm's returns",
-                AdvancedPdfMarkdownConverter.rejoinContractions("the firm ' s returns"));
-        assertEquals("Don’t know", AdvancedPdfMarkdownConverter.rejoinContractions("Don ’ t know"));
+        assertEquals("the firm's returns", WordGeometry.rejoinContractions("the firm ' s returns"));
+        assertEquals("Don’t know", WordGeometry.rejoinContractions("Don ’ t know"));
         // An opening quote has real space around it and must keep it.
-        assertEquals(
-                "he said ' hello",
-                AdvancedPdfMarkdownConverter.rejoinContractions("he said ' hello"));
+        assertEquals("he said ' hello", WordGeometry.rejoinContractions("he said ' hello"));
     }
 
     @Test
     void headingLevelsAreRebasedOnTheStrongestHeadingPresent() {
         // A document whose headings are body-size and bold scores every one of them level 3;
         // relative to each other they are its top level, so they must render as level 1.
-        assertEquals(
-                "# CONTENTS\n",
-                AdvancedPdfMarkdownConverter.normaliseHeadingLevels("### CONTENTS\n"));
+        assertEquals("# CONTENTS\n", MarkdownText.normaliseHeadingLevels("### CONTENTS\n"));
         // A real two-level document keeps two levels, with no gap between them.
         assertEquals(
                 "# Title\n\ntext\n\n## Section\n",
-                AdvancedPdfMarkdownConverter.normaliseHeadingLevels(
-                        "# Title\n\ntext\n\n### Section\n"));
+                MarkdownText.normaliseHeadingLevels("# Title\n\ntext\n\n### Section\n"));
         // Already rooted at level 1 with no gaps: left alone.
         String unchanged = "# Title\n\n## Section\n";
-        assertEquals(unchanged, AdvancedPdfMarkdownConverter.normaliseHeadingLevels(unchanged));
+        assertEquals(unchanged, MarkdownText.normaliseHeadingLevels(unchanged));
     }
 
     /**
@@ -215,11 +203,7 @@ class AdvancedPdfMarkdownConverterTest {
             vertical.add(new PageRules.Rule(1_000_000f + i * 10f, -50f, -30f));
         }
 
-        int components =
-                assertDoesNotThrow(
-                        () ->
-                                AdvancedPdfMarkdownConverter.ruledComponentCount(
-                                        horizontal, vertical));
+        int components = assertDoesNotThrow(() -> RuleGrid.componentCount(horizontal, vertical));
         // 4000 disjoint rules would be 4000 components; the cap is what keeps this bounded.
         assertEquals(256, components, "component count must stay bounded");
     }
@@ -236,7 +220,7 @@ class AdvancedPdfMarkdownConverterTest {
         }
 
         assertTrue(
-                AdvancedPdfMarkdownConverter.ruledComponentCount(horizontal, vertical) == 0,
+                RuleGrid.componentCount(horizontal, vertical) == 0,
                 "a rule flood should disable ruled-table detection, not scan it");
     }
 
