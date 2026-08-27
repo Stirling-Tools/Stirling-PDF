@@ -316,7 +316,11 @@ public class SupabaseSecurityConfig {
                         "Origin",
                         "X-API-KEY",
                         "X-Browser-Id"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate"));
+        cfg.setExposedHeaders(
+                List.of(
+                        "WWW-Authenticate",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

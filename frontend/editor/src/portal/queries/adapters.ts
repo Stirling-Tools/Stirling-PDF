@@ -11,6 +11,6 @@ export function toAsyncState<T>(query: UseQueryResult<T>): AsyncState<T> {
   return {
     data: query.data ?? null,
     loading: query.isPending,
-    error: (query.error as Error | null) ?? null,
+    error: query.error ?? null,
   };
 }

@@ -10,7 +10,6 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import apiClient from "@app/services/apiClient";
 import { configureSpringAuth } from "@app/auth/config";
-import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -137,7 +136,7 @@ describe("Login", () => {
     // The shared login hook reads getSpringAuthConfig().http; in the real app,
     // startup points that at apiClient. Mirror that here so the mocked apiClient
     // serves the login-ui-data fetch.
-    configureSpringAuth({ http: apiClient as unknown as AxiosInstance });
+    configureSpringAuth({ http: apiClient });
   });
 
   it("should render login form", async () => {

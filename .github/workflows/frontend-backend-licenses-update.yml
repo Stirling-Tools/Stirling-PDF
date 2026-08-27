@@ -28,7 +28,7 @@ jobs:
       licenses-backend: ${{ steps.changes.outputs.licenses-backend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -43,7 +43,9 @@ jobs:
 
   generate-frontend-license-report:
     # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
-    environment: ci-bot
+    environment:
+      name: ci-bot
+      deployment: false
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
     needs: files-changed
@@ -54,7 +56,7 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -319,7 +321,9 @@ jobs:
 
   generate-backend-license-report:
     # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
-    environment: ci-bot
+    environment:
+      name: ci-bot
+      deployment: false
     if: needs.files-changed.outputs.licenses-backend == 'true'
     needs: files-changed
     name: Generate Backend License Report
@@ -330,7 +334,7 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 

@@ -12,7 +12,6 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { saveOperationResults } from "@app/services/operationResultsSaveService";
 import { useFileActions, useFileSelectors } from "@app/contexts/FileContext";
-import { FileId } from "@app/types/fileContext";
 import i18n from "@app/i18n";
 
 export interface ReviewToolStepProps<TParams = unknown> {
@@ -65,11 +64,11 @@ function ReviewStepContent<TParams = unknown>({
         downloadFilename: operation.downloadFilename || "download",
         downloadLocalPath: operation.downloadLocalPath,
         outputFileIds: operation.outputFileIds,
-        getFile: (fileId) => selectors.getFile(fileId as FileId),
-        getStub: (fileId) => selectors.getStirlingFileStub(fileId as FileId),
+        getFile: (fileId) => selectors.getFile(fileId),
+        getStub: (fileId) => selectors.getStirlingFileStub(fileId),
         markSaved: (fileId, savedPath) => {
-          const stub = selectors.getStirlingFileStub(fileId as FileId);
-          fileActions.updateStirlingFileStub(fileId as FileId, {
+          const stub = selectors.getStirlingFileStub(fileId);
+          fileActions.updateStirlingFileStub(fileId, {
             localFilePath: stub?.localFilePath ?? savedPath,
             isDirty: false,
           });
