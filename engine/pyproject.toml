@@ -18,7 +18,7 @@ engine = [
     # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration.
     # Explicit extras: the `pydantic-ai` meta-package pulls all 20 providers (~230MB).
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
-    "pydantic-ai-slim[anthropic,openai]>=1.107.2,<2.0.0",
+    "pydantic-ai-slim[anthropic,openai]>=2.32.1,<3.0.0",
     "pydantic-settings>=2.15.0",
     "python-dotenv>=1.2.2",
     "sqlite-vec>=0.1.9",
