@@ -32,20 +32,40 @@ export function startEagerWasmCompilation(): void {
   if (compilationStarted) return;
   compilationStarted = true;
 
-  if (
-    typeof WebAssembly === "object" &&
-    typeof WebAssembly.compileStreaming === "function"
-  ) {
-    WebAssembly.compileStreaming(fetch(pdfiumWasmUrl))
-      .then(resolvePromise)
-      .catch((err) => {
-        console.warn(
-          "Eager WASM compilation failed or not supported in this environment:",
-          err,
-        );
-        resolvePromise(null);
-      });
-  } else {
+  if (typeof WebAssembly !== "object") {
     resolvePromise(null);
+    return;
   }
+
+  const compileWithFallback = async (): Promise<WebAssembly.Module | null> => {
+    try {
+      if (typeof WebAssembly.compileStreaming === "function") {
+        try {
+          return await WebAssembly.compileStreaming(fetch(pdfiumWasmUrl));
+        } catch (streamingErr) {
+          console.warn(
+            "WASM compileStreaming failed, falling back to ArrayBuffer:",
+            streamingErr,
+          );
+        }
+      }
+
+      // compileStreaming requires application/wasm MIME; fall back to ArrayBuffer if the server or proxy serves octet-stream.
+      const res = await fetch(pdfiumWasmUrl);
+      if (!res.ok) {
+        throw new Error(
+          `Failed to fetch WASM: ${res.status} ${res.statusText}`,
+        );
+      }
+      const buffer = await res.arrayBuffer();
+      return await WebAssembly.compile(buffer);
+    } catch (err) {
+      console.warn("WASM compilation failed:", err);
+      return null;
+    }
+  };
+
+  compileWithFallback()
+    .then(resolvePromise)
+    .catch(() => resolvePromise(null));
 }

@@ -620,9 +620,7 @@ const EmbedPdfViewerContent = ({
 
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
-        redactionTrackerRef.current?.commitAllPending();
-        // Give a small delay for the commit to process
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await redactionTrackerRef.current?.commitAllPending();
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF
@@ -752,7 +750,6 @@ const EmbedPdfViewerContent = ({
         pendingRotationRestoreRef.current = currentRotation;
         rotationRestoreAttemptsRef.current = 0;
 
-        // Track the new file ID so the viewer follows it after the list reorders
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
 
@@ -889,6 +886,9 @@ const EmbedPdfViewerContent = ({
       scrollRestoreAttemptsRef.current = 0;
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
 
       // Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);

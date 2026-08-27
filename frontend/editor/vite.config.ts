@@ -256,6 +256,7 @@ export default defineConfig(async ({ mode, command }) => {
           "/login/saml2": backendProxy,
           "/swagger-ui": backendProxy,
           "/v1/api-docs": backendProxy,
+          "/fonts": backendProxy,
         };
 
   return {
@@ -339,6 +340,11 @@ export default defineConfig(async ({ mode, command }) => {
           {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
+          },
+          {
+            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
+            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+            dest: "fonts",
           },
         ],
       }),
