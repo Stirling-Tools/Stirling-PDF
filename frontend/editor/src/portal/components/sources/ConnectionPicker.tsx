@@ -1,3 +1,4 @@
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Select } from "@app/ui";
@@ -9,6 +10,7 @@ import {
 } from "@portal/api/integrations";
 import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
 import { connectionTypeOf } from "@portal/components/sources/connectionTypes";
+import "@portal/components/sources/connections.css";
 
 /**
  * Selects a stored connection of one type by id — an S3 bucket for a source, a Purview tenant for a
@@ -82,21 +84,26 @@ export function ConnectionPicker({
     };
   }, [integrationType, presetId]);
 
+  const openCreate = () => (onCreateNew ? onCreateNew() : setModalOpen(true));
+  const showSelect = (connections?.length ?? 0) > 0 || Boolean(value);
+
   return (
     <div className="portal-sources__connection-picker">
-      <Select
-        value={value || null}
-        placeholder={t("portal.connections.picker.placeholder")}
-        options={(connections ?? []).map((connection) => ({
-          value: String(connection.id),
-          label: connection.name,
-        }))}
-        onChange={(selected) => onChange(selected ?? "")}
-      />
+      {showSelect && (
+        <Select
+          value={value || null}
+          placeholder={t("portal.connections.picker.placeholder")}
+          options={(connections ?? []).map((connection) => ({
+            value: String(connection.id),
+            label: connection.name,
+          }))}
+          onChange={(selected) => onChange(selected ?? "")}
+        />
+      )}
       <Button
-        variant="tertiary"
-        size="sm"
-        onClick={() => (onCreateNew ? onCreateNew() : setModalOpen(true))}
+        variant="secondary"
+        leftSection={<AddRoundedIcon fontSize="inherit" />}
+        onClick={openCreate}
       >
         {t("portal.connections.picker.createNew")}
       </Button>

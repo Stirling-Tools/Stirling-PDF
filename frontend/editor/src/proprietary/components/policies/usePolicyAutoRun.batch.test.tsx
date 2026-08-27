@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { ClassificationConfidence } from "@app/types/fileContext";
 
 /**
  * Batch integration test (61 files, two chained upload policies) driving the real
@@ -12,7 +13,11 @@ const FILE_COUNT = 61;
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
 const mocks = vi.hoisted(() => ({
-  workspace: [] as Array<{ id: string; classificationLabels?: string[] }>,
+  workspace: [] as Array<{
+    id: string;
+    classificationLabels?: string[];
+    classificationConfidence?: ClassificationConfidence;
+  }>,
   consumeSilentCalls: 0,
   consumeNonSilentCalls: 0,
   persistCalls: 0,
@@ -117,10 +122,20 @@ function Harness() {
   return null;
 }
 
+/** The heuristic verdict that escalates to the AI classifier; only "high" stands alone. */
+const LOW = "low" as const;
+
 function replaceInWorkspace(inputIds: string[], outputIds: string[]) {
+  // A versioned output carries its input's heuristic verdict; the escalation decision is about the
+  // document, not about which step produced the current bytes.
+  const inherited =
+    mocks.workspace.find((s) => inputIds.includes(s.id))
+      ?.classificationConfidence ?? LOW;
   mocks.workspace = mocks.workspace
     .filter((s) => !inputIds.includes(s.id))
-    .concat(outputIds.map((id) => ({ id })));
+    .concat(
+      outputIds.map((id) => ({ id, classificationConfidence: inherited })),
+    );
 }
 
 beforeEach(() => {
@@ -138,6 +153,7 @@ beforeEach(() => {
 
   mocks.workspace = Array.from({ length: FILE_COUNT }, (_, i) => ({
     id: `file-${i}`,
+    classificationConfidence: LOW,
   }));
 
   mocks.listPolicyRuns.mockResolvedValue([]);

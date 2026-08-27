@@ -94,10 +94,10 @@ type Story = StoryObj<typeof meta>;
 
 /** An available tool rendered in its default, unselected state. */
 export const Default: Story = {
-  render: () => <ToolItemDemo toolId={"split" as ToolId} />,
+  render: () => <ToolItemDemo toolId={"split"} />,
 };
 
 /** The active tool in the panel — highlighted selected state. */
 export const Selected: Story = {
-  render: () => <ToolItemDemo toolId={"split" as ToolId} isSelected />,
+  render: () => <ToolItemDemo toolId={"split"} isSelected />,
 };

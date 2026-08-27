@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -225,7 +226,161 @@ class PolicyEngineTest {
         // A failed run is recorded durably, so an admin can see it after the in-memory run expires.
         verify(failureRecorder)
                 .recordRunFailure(
-                        eq(runId), any(), any(), any(), anyString(), any(Throwable.class));
+                        eq(runId), any(), any(), any(), any(), anyString(), any(Throwable.class));
+    }
+
+    @Test
+    void recordsWhichSourceFedAFailedRun() throws Exception {
+        // The source is threaded onto the run so an unattended failure is attributable: there is no
+        // user to name for a file that arrived from a bucket. The actor is asserted null rather
+        // than
+        // any(): a loose matcher here is what let the owner be recorded as the actor unnoticed.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        PolicyRunHandle handle =
+                engine.runPolicy(
+                        policyOwnedBy("owner"),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP,
+                        "src-s3-invoices",
+                        "file-hash-1");
+        handle.completion().get(10, TimeUnit.SECONDS);
+
+        verify(failureRecorder)
+                .recordRunFailure(
+                        anyString(),
+                        any(),
+                        eq("src-s3-invoices"),
+                        eq("file-hash-1"),
+                        isNull(),
+                        anyString(),
+                        any(Throwable.class));
+    }
+
+    @Test
+    void anAttendedFailureIsRecordedAgainstWhoTriggeredItNotThePolicysOwner() throws Exception {
+        // Bob runs Alice's shared policy on his own upload and it fails. The row must name Bob: he
+        // is the one whose browser holds the document, and a member's read scope narrows to their
+        // own rows, so filing it under Alice hides it from the only person who can act on it.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        MDC.put("auditPrincipal", "bob"); // the request thread's acting user
+        try {
+            engine.runPolicy(
+                            policyOwnedBy("alice"),
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP,
+                            null,
+                            "bob-doc-1")
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        verify(failureRecorder)
+                .recordRunFailure(
+                        anyString(),
+                        any(),
+                        isNull(),
+                        eq("bob-doc-1"),
+                        eq("bob"),
+                        anyString(),
+                        any(Throwable.class));
+    }
+
+    @Test
+    void anUnattendedFailureIsRecordedWithNoActorWhileStillBillingTheOwner() throws Exception {
+        // The two identities are deliberately different, and this pins both at once: usage is
+        // charged to the owner (MDC audit principal on the worker), but the failure has no actor,
+        // which is what makes it UNOWNED and hands the owner actions to the team's reviewer.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            throw new RuntimeException("boom");
+                        });
+
+        // No MDC and no security context: exactly a trigger-fired sweep.
+        engine.runPolicy(
+                        policyOwnedBy("alice"),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP,
+                        "src-watched-folder",
+                        "file-hash-1")
+                .completion()
+                .get(10, TimeUnit.SECONDS);
+
+        assertEquals("alice", principalAtDispatch[0], "billing must still be the policy owner");
+        verify(failureRecorder)
+                .recordRunFailure(
+                        anyString(),
+                        any(),
+                        eq("src-watched-folder"),
+                        eq("file-hash-1"),
+                        isNull(),
+                        anyString(),
+                        any(Throwable.class));
+    }
+
+    @Test
+    void anAdHocFailureIsRecordedAgainstTheSubmittingUser() throws Exception {
+        // An ad-hoc run has no stored policy, so the submitter is both payer and actor. Asserted so
+        // the two entry points cannot drift apart.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        MDC.put("auditPrincipal", "bob");
+        try {
+            engine.submit(
+                            definition(new PipelineStep(ROTATE, Map.of())),
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP)
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        verify(failureRecorder)
+                .recordRunFailure(
+                        anyString(),
+                        any(),
+                        any(),
+                        any(),
+                        eq("bob"),
+                        anyString(),
+                        any(Throwable.class));
+    }
+
+    @Test
+    void aRunRefusedAtAdmissionIsRecordedAgainstWhoeverTriggeredIt() throws Exception {
+        // The queue-full path records its own row, and it is attended: the user is still holding
+        // the
+        // document, so it must reach them rather than landing as an ownerless incident.
+        when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(true);
+        CompletableFuture<Object> rejected = new CompletableFuture<>();
+        rejected.completeExceptionally(new RuntimeException("Job queue full"));
+        doReturn(rejected).when(jobQueue).queueJob(anyString(), anyInt(), any(), anyLong());
+
+        MDC.put("auditPrincipal", "bob");
+        try {
+            engine.runPolicy(
+                    policyOwnedBy("alice"),
+                    PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                    PolicyProgressListener.NOOP,
+                    null,
+                    "bob-doc-1");
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        verify(failureRecorder)
+                .recordRunFailureAs(any(), anyString(), any(), isNull(), eq("bob"), anyString());
     }
 
     @Test
@@ -238,7 +393,7 @@ class PolicyEngineTest {
         doThrow(new RuntimeException("event store unavailable"))
                 .when(failureRecorder)
                 .recordRunFailure(
-                        anyString(), any(), any(), any(), anyString(), any(Throwable.class));
+                        anyString(), any(), any(), any(), any(), anyString(), any(Throwable.class));
 
         PolicyRunHandle handle =
                 engine.submit(
@@ -504,6 +659,17 @@ class PolicyEngineTest {
 
     private static PipelineDefinition definition(PipelineStep... steps) {
         return new PipelineDefinition("test", List.of(steps), OutputSpec.inline());
+    }
+
+    private static Policy policyOwnedBy(String owner) {
+        return new Policy(
+                "p1",
+                "rotate",
+                owner,
+                true,
+                List.of(),
+                List.of(new PipelineStep(ROTATE, Map.of())),
+                OutputSpec.inline());
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
