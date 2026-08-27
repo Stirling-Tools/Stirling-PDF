@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -35,6 +36,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyAssetResolver {
 

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.service.IntegrationConfigValidator;
 
@@ -17,6 +18,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * that uses the connection is saved ({@link NetworkInputSource#validate}).
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class NetworkIntegrationValidator implements IntegrationConfigValidator {
 

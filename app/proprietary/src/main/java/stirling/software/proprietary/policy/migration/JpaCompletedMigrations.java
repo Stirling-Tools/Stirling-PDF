@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
+
 /**
  * Durable {@link CompletedMigrations} backed by JPA; the runtime bean. {@code markDone} relies on
  * the primary-key uniqueness of {@link CompletedMigration#getId()} to stay safe under a concurrent
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class JpaCompletedMigrations implements CompletedMigrations {
 

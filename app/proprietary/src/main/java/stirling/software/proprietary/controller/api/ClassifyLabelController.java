@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -56,8 +57,11 @@ import tools.jackson.databind.node.ObjectNode;
  * pipeline can name it as a step like any other tool. Classification is a thing a pipeline does,
  * not a thing only the Classification policy may do.
  */
+// Classification is a Processor feature: this is the classify step's only endpoint, and the
+// editor never opens it interactively (registry marks classify hiddenFromToolList).
 @Slf4j
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class ClassifyLabelController {

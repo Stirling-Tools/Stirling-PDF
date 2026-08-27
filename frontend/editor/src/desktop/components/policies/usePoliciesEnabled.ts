@@ -1,5 +1,8 @@
 import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 
 export function usePoliciesEnabled(): boolean {
-  return useConfirmedSaaSMode();
+  const saasMode = useConfirmedSaaSMode();
+  const processorEnabled = useProcessorEnabled();
+  return saasMode && processorEnabled;
 }

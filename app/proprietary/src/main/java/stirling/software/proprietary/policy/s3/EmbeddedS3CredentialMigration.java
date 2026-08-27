@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
@@ -43,6 +44,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class EmbeddedS3CredentialMigration {
 

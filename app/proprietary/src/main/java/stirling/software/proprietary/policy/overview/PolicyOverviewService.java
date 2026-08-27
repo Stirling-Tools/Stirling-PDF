@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -26,6 +27,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * the user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyOverviewService {
 

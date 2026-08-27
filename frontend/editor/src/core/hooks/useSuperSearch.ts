@@ -82,13 +82,14 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
 ];
 
 /**
- * Whether the current user can enter the Processor at all: explicit portal
- * access, admin, or single-user mode with login disabled. Null gates (config
- * still loading) stay closed.
+ * Whether the current user can enter the Processor at all: the server runs one,
+ * plus explicit portal access, admin, or single-user mode with login disabled.
+ * Null gates (config still loading) stay closed.
  */
 export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
   return (
     !!gates &&
+    gates.processorEnabled === true &&
     (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
   );
 }
@@ -104,6 +105,7 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
             portalAccessible: authState.portalAccess ?? false,
+            processorEnabled: config.processorEnabled ?? false,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
@@ -327,6 +329,9 @@ export function rankSettingsResults(
     // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
     if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;
+    // Editor-only server: the nav builder drops these, so offering them here
+    // would deep-link into a section the modal no longer renders.
+    if (s.processorOnly && gates?.processorEnabled !== true) return false;
     return true;
   });
   // Row context: the display label of the section the row lives in.

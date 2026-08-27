@@ -171,6 +171,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
 const VALID_MODES = [
   "core",
   "proprietary",
+  "editoronly",
   "saas",
   "desktop",
   "prototypes",
@@ -180,6 +181,7 @@ type BuildMode = (typeof VALID_MODES)[number];
 const TSCONFIG_MAP: Record<BuildMode, string> = {
   core: "./tsconfig.core.vite.json",
   proprietary: "./tsconfig.proprietary.vite.json",
+  editoronly: "./tsconfig.editoronly.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
   prototypes: "./tsconfig.prototypes.vite.json",

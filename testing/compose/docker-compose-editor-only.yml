@@ -1,0 +1,99 @@
+# Editor-only deployment: no Processor, no portal.
+#
+# The three controls have to agree or the result is incoherent, so they are set
+# together here and nowhere else:
+#   PROCESSOR_ENABLED=false   backend - the Processor's beans and endpoints
+#   FRONTEND_MODE=editoronly  build   - the editor's Processor modules
+#   BUILD_PORTAL=false        build   - the /processor portal chunk
+#
+#   docker compose -f testing/compose/docker-compose-editor-only.yml up --build
+#
+# Add `--profile control` to also bring up a stock Processor-on server on :8080.
+# Absence proves nothing on its own - the control is what makes the editor-only
+# server's missing UI and 404s mean something. It is a second full image build.
+services:
+  stirling-editor-only:
+    build:
+      context: ../..
+      dockerfile: docker/embedded/Dockerfile
+      args:
+        FRONTEND_MODE: editoronly
+        BUILD_PORTAL: "false"
+    container_name: Stirling-PDF-Editor-Only
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - "8081:8080"
+    volumes:
+      - ../../stirling/editor-only/data:/usr/share/tessdata:rw
+      - ../../stirling/editor-only/config:/configs:rw
+      - ../../stirling/editor-only/logs:/logs:rw
+    environment:
+      # The flag under test. Everything else here is ordinary setup.
+      PROCESSOR_ENABLED: "false"
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_INITIALLOGIN_USERNAME: "admin"
+      SECURITY_INITIALLOGIN_PASSWORD: "stirling"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Editor-only deployment (Processor disabled)
+      UI_APPNAMENAVBAR: Stirling-PDF Editor Only
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+    networks:
+      - stirling-network
+
+  # Positive control: the same image build with nothing turned off, so the
+  # editor-only server above can be diffed against a server that has it all.
+  stirling-processor-control:
+    profiles: ["control"]
+    build:
+      context: ../..
+      dockerfile: docker/embedded/Dockerfile
+      args:
+        BUILD_PORTAL: "true"
+    container_name: Stirling-PDF-Processor-Control
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../../stirling/processor-control/data:/usr/share/tessdata:rw
+      - ../../stirling/processor-control/config:/configs:rw
+      - ../../stirling/processor-control/logs:/logs:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "true"
+      SECURITY_INITIALLOGIN_USERNAME: "admin"
+      SECURITY_INITIALLOGIN_PASSWORD: "stirling"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Processor-on control for the editor-only comparison
+      UI_APPNAMENAVBAR: Stirling-PDF Processor
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+    networks:
+      - stirling-network
+
+networks:
+  stirling-network:
+    driver: bridge

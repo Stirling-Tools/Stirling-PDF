@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
 @Component
+@ConditionalOnProcessor
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";

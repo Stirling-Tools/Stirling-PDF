@@ -20,11 +20,13 @@ function httpError(status: number) {
   return { isAxiosError: true, message: "http", response: { status } };
 }
 
-// Configure the two backend endpoints. teamMy === "404" simulates self-hosted.
+// Configure the backend endpoints the decision reads. teamMy === "404"
+// simulates self-hosted; processorEnabled defaults to on, as a server ships.
 function backend(opts: {
   role: string;
   portalAccess: boolean;
   teamMy: unknown[] | "404";
+  processorEnabled?: boolean;
 }) {
   h.get.mockImplementation((url: string) => {
     if (url === "/api/v1/auth/me") {
@@ -36,6 +38,11 @@ function backend(opts: {
       return opts.teamMy === "404"
         ? Promise.reject(httpError(404))
         : Promise.resolve({ data: opts.teamMy });
+    }
+    if (url === "/api/v1/config/app-config") {
+      return Promise.resolve({
+        data: { processorEnabled: opts.processorEnabled ?? true },
+      });
     }
     return Promise.resolve({ data: {} });
   });
@@ -144,6 +151,35 @@ describe("RootGate", () => {
     renderAt("/");
     await waitFor(() => expect(at()).toBe("/editor"));
     expect(h.get).not.toHaveBeenCalled();
+  });
+
+  it("routes to the editor when the server has the processor off", async () => {
+    // The build ships the portal, and the user would qualify for it - but this
+    // server doesn't mount the route, so landing there would bounce.
+    backend({
+      role: "ROLE_ADMIN",
+      portalAccess: true,
+      teamMy: "404",
+      processorEnabled: false,
+    });
+    renderAt("/");
+    await waitFor(() => expect(at()).toBe("/editor"));
+  });
+
+  it("still routes to the processor when app-config is unreachable", async () => {
+    // Unknown is not off: a blip must not silently take the portal away.
+    h.get.mockImplementation((url: string) => {
+      if (url === "/api/v1/auth/me") {
+        return Promise.resolve({
+          data: { user: { role: "ROLE_ADMIN", portalAccess: true } },
+        });
+      }
+      if (url === "/api/v1/config/app-config")
+        return Promise.reject(httpError(500));
+      return Promise.reject(httpError(404));
+    });
+    renderAt("/");
+    await waitFor(() => expect(at()).toBe("/processor"));
   });
 
   it("routes to the editor when this build ships no processor", async () => {

@@ -406,6 +406,10 @@ aiEngine:
     pdfComment: true # AI-authored PDF comments/annotations
     classify: true # Automatic document classification/labelling
 
+# To run editor-only (no policies, sources, classification, routing, integrations or webhooks) set
+# PROCESSOR_ENABLED=false, or processor.enabled: false in custom_settings.yml. Do NOT put it in this
+# file - every boot rewrites settings.yml from the template and drops keys the template lacks.
+
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
   # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs,

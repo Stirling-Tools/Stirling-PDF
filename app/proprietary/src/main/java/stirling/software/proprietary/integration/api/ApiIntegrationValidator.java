@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 import stirling.software.proprietary.integration.model.IntegrationType;
@@ -22,6 +23,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * cannot close).
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class ApiIntegrationValidator implements IntegrationConfigValidator {
 

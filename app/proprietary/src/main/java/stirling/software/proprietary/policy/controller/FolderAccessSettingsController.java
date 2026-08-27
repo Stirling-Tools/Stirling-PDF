@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.annotations.api.AdminApi;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 
@@ -20,6 +21,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
  * settings section.
  */
 @AdminApi
+@ConditionalOnProcessor
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class FolderAccessSettingsController {

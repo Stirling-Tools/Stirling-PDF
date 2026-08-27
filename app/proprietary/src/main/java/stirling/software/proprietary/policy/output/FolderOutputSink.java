@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class FolderOutputSink implements PolicyOutputSink {
 

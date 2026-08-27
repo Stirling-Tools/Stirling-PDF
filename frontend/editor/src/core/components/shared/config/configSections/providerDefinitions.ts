@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 
@@ -868,7 +869,10 @@ export const useAllProviders = (): Provider[] => {
   const telegramProvider = useTelegramProvider();
   const saml2Provider = useSAML2Provider();
   const googleDriveProvider = useGoogleDriveProvider();
+  const processorEnabled = useProcessorEnabled();
 
+  // The bot drops files in the watched folder and polls the finished one, so
+  // without the Processor every upload just times out - don't offer to set it up.
   return [
     googleProvider,
     gitHubProvider,
@@ -876,7 +880,7 @@ export const useAllProviders = (): Provider[] => {
     genericOAuth2Provider,
     saml2Provider,
     smtpProvider,
-    telegramProvider,
+    ...(processorEnabled ? [telegramProvider] : []),
     googleDriveProvider,
   ];
 };

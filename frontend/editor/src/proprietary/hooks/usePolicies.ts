@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -72,10 +73,14 @@ function toStoreRequest(
   };
 }
 
+/** Editor-only server: no stored policies to reconcile against, ever. */
+const NO_POLICIES: PoliciesByCategory = {};
+
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
   const { config, refetch: refetchAppConfig } = useAppConfig();
   const { isTeamLeader } = useSaaSTeam();
+  const processorEnabled = useProcessorEnabled();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -87,6 +92,9 @@ export function usePolicies() {
   // locally-cached folderId; retry with backoff since the backend may not be up yet.
   // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
+    // No /api/v1/policies on an editor-only server - don't lean on it 404ing,
+    // the retry budget would hammer it 15 times per mount.
+    if (!processorEnabled) return;
     let cancelled = false;
     let attempt = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -126,7 +134,7 @@ export function usePolicies() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [processorEnabled]);
 
   /**
    * Enable a new policy from the wizard result: persist it to the backend (the
@@ -385,8 +393,9 @@ export function usePolicies() {
     (!config.enableLogin || isTeamLeader || config.isAdmin === true);
 
   return {
-    policies,
-    canConfigure,
+    // Stale localStorage outlives the flag flip, so blank the list too.
+    policies: processorEnabled ? policies : NO_POLICIES,
+    canConfigure: canConfigure && processorEnabled,
     enablePolicy,
     savePolicyConfig,
     commitPolicyConfig,

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -50,6 +51,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class FolderWatchTrigger implements PolicyTrigger {
 

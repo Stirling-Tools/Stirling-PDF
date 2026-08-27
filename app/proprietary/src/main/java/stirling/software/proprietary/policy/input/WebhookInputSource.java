@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -27,6 +28,7 @@ import stirling.software.proprietary.policy.webhook.WebhookSpool;
 
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class WebhookInputSource implements InputSource {
 

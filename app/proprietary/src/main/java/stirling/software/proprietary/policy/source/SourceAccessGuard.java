@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -18,6 +19,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * {@link stirling.software.proprietary.policy.config.PolicyAccessGuard}.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class SourceAccessGuard {
 

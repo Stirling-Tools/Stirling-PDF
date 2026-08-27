@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.classification.ClassificationRunBiller;
 
@@ -26,6 +27,7 @@ import stirling.software.proprietary.classification.ClassificationRunBiller;
 @Slf4j
 @Hidden
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/policies")
 public class ClassificationMeterController {
 

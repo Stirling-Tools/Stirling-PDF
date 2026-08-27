@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -21,6 +22,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * /api/v1/general/files/{fileId}}. Used for manual runs whose results return to the caller.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class InlineOutputSink implements PolicyOutputSink {
 

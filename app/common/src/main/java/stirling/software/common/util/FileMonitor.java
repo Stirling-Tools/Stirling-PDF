@@ -18,10 +18,14 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.configuration.RuntimePathConfig;
 
+// Watches only the pipeline folders for PipelineDirectoryProcessor, so an editor-only server
+// should not hold a WatchService or run its scheduled tick.
 @Component
 @Slf4j
+@ConditionalOnProcessor
 public class FileMonitor {
 
     private final Map<Path, WatchKey> path2KeyMapping;

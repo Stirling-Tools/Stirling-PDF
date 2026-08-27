@@ -115,6 +115,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Folder Access",
     keywords: ["folders", "access", "permissions", "scanning"],
     adminArea: true,
+    processorOnly: true,
     groupLabelKey: "settings.configuration.title",
     groupLabelFallback: "Configuration",
   },

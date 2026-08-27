@@ -37,6 +37,8 @@ export interface OnboardingRuntimeState {
 export interface OnboardingConditionContext extends OnboardingRuntimeState {
   loginEnabled: boolean;
   effectiveIsAdmin: boolean;
+  /** Server runs the Processor. False = editor-only deployment. */
+  processorEnabled: boolean;
 }
 
 export interface OnboardingStep {
@@ -96,7 +98,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: "modal-slide",
     slideId: "processor-intro",
     // Admins can manage policies in the portal/processor; regular users can't.
-    condition: (ctx) => ctx.effectiveIsAdmin,
+    condition: (ctx) => ctx.effectiveIsAdmin && ctx.processorEnabled,
   },
   {
     id: "admin-overview",

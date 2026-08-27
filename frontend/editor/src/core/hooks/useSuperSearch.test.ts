@@ -257,6 +257,7 @@ describe("useSuperSearch helpers", () => {
       {
         isAdmin: false,
         loginEnabled: false,
+        processorEnabled: true,
       },
       selectEntry,
     );
@@ -277,10 +278,27 @@ describe("useSuperSearch helpers", () => {
         isAdmin: false,
         loginEnabled: true,
         portalAccessible: true,
+        processorEnabled: true,
       },
       vi.fn(),
     );
 
     expect(results.map((result) => result.key)).toEqual(["processor:users"]);
+  });
+
+  it("closes the Processor group on an editor-only server", () => {
+    const results = rankProcessorResults(
+      "members",
+      t,
+      {
+        isAdmin: true,
+        loginEnabled: true,
+        portalAccessible: true,
+        processorEnabled: false,
+      },
+      vi.fn(),
+    );
+
+    expect(results).toEqual([]);
   });
 });

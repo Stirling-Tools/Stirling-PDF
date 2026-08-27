@@ -14,6 +14,7 @@ import {
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
+import { isProcessorEnabled } from "@app/services/processorEnabled";
 import type { FileId } from "@app/types/file";
 import {
   type ClientActionOutcome,
@@ -141,8 +142,8 @@ export function useNotificationActions(): ClientActionRegistry {
 
     const viewInProcessor: ClientActionSpec = {
       // Its destination is dev-only until failures get a review screen; the other half of this gate
-      // is in portal/views/Documents, and both lift together.
-      available: () => import.meta.env.DEV,
+      // is in portal/views/Documents, and both lift together. Never on an editor-only server.
+      available: () => import.meta.env.DEV && isProcessorEnabled(),
       closesPanel: true,
       run: () => navigate(FAILURES_DESTINATION),
     };

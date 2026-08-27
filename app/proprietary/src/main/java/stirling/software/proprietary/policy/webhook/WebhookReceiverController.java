@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -30,6 +31,7 @@ import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 
 @Slf4j
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/webhooks")
 @Hidden
 @RequiredArgsConstructor

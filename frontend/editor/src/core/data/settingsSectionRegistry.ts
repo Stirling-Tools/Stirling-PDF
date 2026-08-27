@@ -49,6 +49,8 @@ export interface SettingsSectionEntry {
    * which keys off the local backend's login mode rather than auth state.
    */
   requiresAccount?: boolean;
+  /** Section only exists when the server runs the Processor (processor.enabled). */
+  processorOnly?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */

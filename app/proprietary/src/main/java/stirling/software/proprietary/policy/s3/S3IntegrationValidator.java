@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 import stirling.software.proprietary.integration.model.IntegrationType;
@@ -19,6 +20,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  * time so a bad connection fails in the form rather than in a sweep.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class S3IntegrationValidator implements IntegrationConfigValidator {
 

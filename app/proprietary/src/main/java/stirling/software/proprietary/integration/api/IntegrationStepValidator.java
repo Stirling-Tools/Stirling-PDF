@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.policy.engine.PipelineStepValidator;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -24,6 +25,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
  * validation of a stored policy, and {@code PolicyController}'s ad-hoc gate.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class IntegrationStepValidator implements PipelineStepValidator {
 

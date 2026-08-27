@@ -15,6 +15,7 @@ import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.PolicyRun;
 
@@ -28,6 +29,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 public class PolicyRunRegistry {
 
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();

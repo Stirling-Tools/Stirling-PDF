@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -24,6 +25,7 @@ import stirling.software.proprietary.util.SecretMasker;
  * always consistent with the live policy set.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class SourceOverviewService {
 

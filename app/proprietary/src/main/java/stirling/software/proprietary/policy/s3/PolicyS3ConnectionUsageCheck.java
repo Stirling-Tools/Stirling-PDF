@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.service.IntegrationConfigUsageCheck;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.Source;
@@ -21,6 +22,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * stores.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyS3ConnectionUsageCheck implements IntegrationConfigUsageCheck {
 

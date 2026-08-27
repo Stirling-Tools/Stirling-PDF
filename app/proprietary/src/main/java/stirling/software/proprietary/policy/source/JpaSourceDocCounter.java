@@ -14,6 +14,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
+
 /**
  * Durable {@link SourceDocCounter}; the runtime bean. {@code record} keeps two things in step: an
  * hourly bucket ({@link SourceDocCountEntity}) that feeds the rolling 24h / 30d / daily-series
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
  * table stays bounded (~one row per source per active hour, for at most 30 days).
  */
 @Service
+@ConditionalOnProcessor
 public class JpaSourceDocCounter implements SourceDocCounter {
 
     private final SourceDocCountRepository countRepository;

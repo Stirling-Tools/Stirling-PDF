@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
@@ -30,6 +31,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 public class PolicyAssetCleaner {
 
     // An upload sits unreferenced until the save that binds it, so the window has to outlast a

@@ -338,6 +338,9 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Processor (policies, sources, classification). Off = editor-only server.
+            configData.put("processorEnabled", applicationProperties.getProcessor().isEnabled());
+
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
             configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());

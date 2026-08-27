@@ -15,6 +15,12 @@ type EntitySearchModule = typeof import("@portal/search/entitySearch");
 const includePortal =
   import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
 
+// Every import site goes through this one thunk: a single ungated import()
+// anywhere re-emits the whole portal chunk even with the flag off.
+const importEntitySearch = includePortal
+  ? () => import("@portal/search/entitySearch")
+  : null;
+
 const NO_GROUPS: SuperSearchGroup[] = [];
 const NO_SCOPES: readonly PortalEntityScopeId[] = [];
 
@@ -45,9 +51,9 @@ export function useProcessorEntityGroups(
   const hasQuery = trimmed.length > 0;
 
   useEffect(() => {
-    if (!active || modRef.current) return;
+    if (!active || modRef.current || !importEntitySearch) return;
     let cancelled = false;
-    void import("@portal/search/entitySearch").then((loaded) => {
+    void importEntitySearch().then((loaded) => {
       if (cancelled) return;
       modRef.current = loaded;
       setMod(loaded);
@@ -68,8 +74,9 @@ export function useProcessorEntityGroups(
 
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
-      const loaded =
-        modRef.current ?? (await import("@portal/search/entitySearch"));
+      // Unreachable with the portal excluded: no scope is ever requested.
+      if (!importEntitySearch) throw new Error("portal entity search excluded");
+      const loaded = modRef.current ?? (await importEntitySearch());
       return loaded.fetchPortalEntityScope(scopeId, "free");
     },
     [],

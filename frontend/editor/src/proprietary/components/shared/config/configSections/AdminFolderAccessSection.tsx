@@ -21,6 +21,7 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import apiClient from "@app/services/apiClient";
 
 interface FolderAccessSettingsData {
@@ -36,6 +37,7 @@ export default function AdminFolderAccessSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
     useLoginRequired();
+  const processorEnabled = useProcessorEnabled();
   const {
     restartModalOpened,
     showRestartModal,
@@ -63,14 +65,17 @@ export default function AdminFolderAccessSection() {
   }, [loginEnabled]);
 
   useEffect(() => {
-    if (!loginEnabled) return;
+    // The controller behind this is @ConditionalOnProcessor, so on an editor-only
+    // server the call would 404 into a red toast. (fetchSettings above is fine -
+    // AdminSettingsController is ungated - and gating it would hang the loader.)
+    if (!loginEnabled || !processorEnabled) return;
     apiClient
       .get<ImpliedFolderRoot[]>(
         "/api/v1/admin/settings/policies/implied-folder-roots",
       )
       .then((res) => setImpliedRoots(res.data ?? []))
       .catch(() => setImpliedRoots([]));
-  }, [loginEnabled]);
+  }, [loginEnabled, processorEnabled]);
 
   const roots = settings.allowedFolderRoots ?? [];
 

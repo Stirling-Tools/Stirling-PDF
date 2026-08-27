@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import {
   readCachedOtherApp,
   writeCachedOtherApp,
@@ -35,6 +36,7 @@ async function fetchPortalAccess(): Promise<boolean> {
  */
 export function usePortalAccess(): boolean {
   const { user } = useAuth();
+  const processorEnabled = useProcessorEnabled();
   const userId = user?.id ?? null;
   // The query cache is per-tree and per-load, so it can't help a cold start or
   // the hop into the processor, which mounts its own client. Seed from the last
@@ -45,8 +47,9 @@ export function usePortalAccess(): boolean {
   const { data, isSuccess } = useQuery({
     queryKey: qk.portalAccess(userId),
     queryFn: fetchPortalAccess,
-    // Signed out: nothing to ask, and any previous answer is void.
-    enabled: userId !== null,
+    // Signed out, or no processor on this server: nothing to ask, and any
+    // previous answer is void.
+    enabled: userId !== null && processorEnabled,
     // Backend unreachable or guest (401) means no access now; a later refetch
     // asks again rather than trusting the failure.
     retry: false,
@@ -60,5 +63,6 @@ export function usePortalAccess(): boolean {
     if (isSuccess && data !== undefined) writeCachedOtherApp(data);
   }, [isSuccess, data]);
 
-  return data === true;
+  // The localStorage seed outlives the server flag, so re-check it here too.
+  return processorEnabled && data === true;
 }

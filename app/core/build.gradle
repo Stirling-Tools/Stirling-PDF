@@ -173,6 +173,11 @@ if (buildPrototypes) {
     frontendMode = 'proprietary'
 }
 def frontendBuildTask = "frontend:build:${frontendMode}"
+// editoronly strips the Processor from the bundle; the portal IS the Processor's UI.
+if (frontendMode == 'editoronly' && buildWithPortal) {
+    throw new GradleException("-PfrontendMode=editoronly cannot be combined with -PbuildWithPortal=true. " +
+            "An editor-only build ships no Processor UI; run the JAR with PROCESSOR_ENABLED=false to match.")
+}
 
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
@@ -281,6 +286,9 @@ tasks.register('npmBuild', Exec) {
 
     doFirst {
         println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
+        if (frontendMode == 'editoronly') {
+            println "  editor-only bundle: run this JAR with PROCESSOR_ENABLED=false, or the server keeps a Processor its UI cannot reach."
+        }
     }
 }
 

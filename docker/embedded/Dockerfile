@@ -47,6 +47,9 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 # Embed the admin portal app at /portal. Set true by the deploy workflow when the
 # portal or AI layers change; defaults false so normal builds skip the extra app.
 ARG BUILD_PORTAL=false
+# Vite build mode. Empty keeps the flavour-derived default; "editoronly" builds an
+# editor with no Processor code, which must be run with PROCESSOR_ENABLED=false.
+ARG FRONTEND_MODE=
 
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
@@ -55,6 +58,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
     gradle clean build \
       -PbuildWithFrontend=true \
       -PbuildWithPortal=${BUILD_PORTAL} \
+      ${FRONTEND_MODE:+-PfrontendMode=${FRONTEND_MODE}} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \

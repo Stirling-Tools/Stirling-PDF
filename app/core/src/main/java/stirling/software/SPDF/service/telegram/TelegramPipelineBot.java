@@ -39,6 +39,7 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
@@ -47,9 +48,12 @@ import stirling.software.common.model.ApplicationProperties;
  *
  * @since 2.2.x
  */
+// Needs the Processor: it drops files in the watched folder and polls the finished folder, both
+// driven by PipelineDirectoryProcessor. Without it every upload would just time out.
 @Slf4j
 @Component
 @ConditionalOnProperty(prefix = "telegram", name = "enabled", havingValue = "true")
+@ConditionalOnProcessor
 public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private static final String CHAT_PRIVATE = "private";

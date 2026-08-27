@@ -2,10 +2,14 @@ import { useMemo, useRef } from "react";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
 import { isClassificationCategory } from "@app/data/classificationPolicy";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+
+/** Shared empty result, so a Processor-less build hands back one identity. */
+const NO_BADGES: Map<string, FileItemPolicyRef[]> = new Map();
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -175,10 +179,14 @@ export function reusePolicyBadgeArrays(
  * {@link reusePolicyBadgeArrays}.
  */
 export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
+  const processorEnabled = useProcessorEnabled();
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
   const previous = useRef<Map<string, FileItemPolicyRef[]> | null>(null);
   return useMemo(() => {
+    // Editor-only server: no policies, so no badges - and a shared empty map
+    // keeps every memoized consumer bailing out.
+    if (!processorEnabled) return NO_BADGES;
     const labelById = new Map(
       loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
     );
@@ -188,5 +196,5 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
     );
     previous.current = map;
     return map;
-  }, [runs, fileStubs]);
+  }, [processorEnabled, runs, fileStubs]);
 }

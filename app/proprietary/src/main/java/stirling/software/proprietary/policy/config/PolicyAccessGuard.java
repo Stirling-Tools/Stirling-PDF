@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
@@ -23,6 +24,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * enabled; single-user deployments (login disabled) pass every check.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyAccessGuard {
 

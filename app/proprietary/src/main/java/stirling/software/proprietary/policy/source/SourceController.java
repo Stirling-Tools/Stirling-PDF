@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -42,6 +43,7 @@ import stirling.software.proprietary.util.SecretMasker;
  * everything is scoped to the caller's team.
  */
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/sources")
 @Hidden
 @RequiredArgsConstructor

@@ -9,6 +9,7 @@ import {
   isPortalAvailable,
   loginLandingMode,
 } from "@app/utils/loginLanding";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 
 /**
  * Processor-user preference: where to land after signing in (processor vs
@@ -19,11 +20,14 @@ import {
 export function LoginLandingSetting() {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
+  const processorEnabled = useProcessorEnabled();
   const [eligible, setEligible] = useState(false);
 
   // Only look up eligibility when the control could actually show; skip the
-  // request entirely in soft-release / no-portal builds.
-  const active = loginLandingMode() === "dynamic" && isPortalAvailable();
+  // request entirely in soft-release / no-portal builds and on editor-only
+  // servers, where "Processor" would name a product that isn't running.
+  const active =
+    processorEnabled && loginLandingMode() === "dynamic" && isPortalAvailable();
   useEffect(() => {
     if (!active) return;
     let cancelled = false;

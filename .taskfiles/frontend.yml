@@ -154,6 +154,13 @@ tasks:
       - task: dev:_run
         vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
+  dev:editoronly:
+    desc: "Start frontend dev server in editor-only mode (no Processor)"
+    deps: [prepare]
+    cmds:
+      - task: dev:_run
+        vars: { MODE: editoronly, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+
   dev:saas:
     desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
     deps:
@@ -212,6 +219,12 @@ tasks:
       PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
       - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
+
+  build:editoronly:
+    desc: "Build for editor-only mode (no Processor; pair with PROCESSOR_ENABLED=false)"
+    deps: [prepare]
+    cmds:
+      - npx vite build editor --mode editoronly
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -413,6 +426,13 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/proprietary/tsconfig.json }
 
+  typecheck:editoronly:
+    desc: "Typecheck editor-only build variant"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/editoronly/tsconfig.json }
+
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
     deps:
@@ -471,6 +491,7 @@ tasks:
     cmds:
       - task: typecheck:core
       - task: typecheck:proprietary
+      - task: typecheck:editoronly
       - task: typecheck:saas
       - task: typecheck:desktop
       - task: typecheck:cloud

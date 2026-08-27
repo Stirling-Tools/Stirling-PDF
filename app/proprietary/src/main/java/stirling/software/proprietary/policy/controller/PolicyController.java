@@ -41,6 +41,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
@@ -90,6 +91,7 @@ import stirling.software.proprietary.util.SecretMasker;
  */
 @Slf4j
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/policies")
 @Hidden
 @RequiredArgsConstructor

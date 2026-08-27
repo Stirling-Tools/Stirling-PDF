@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.proprietary.audit.PortalAuditScope;
 import stirling.software.proprietary.audit.PortalDocumentsScopeResolver;
@@ -24,7 +25,9 @@ import stirling.software.proprietary.service.PortalDocumentsService;
  * resolved per deployment - self-hosted portal users see the whole server, SaaS users see their
  * team (see {@link PortalDocumentsScopeResolver}).
  */
+// Serves the portal only, and an editor-only server has no portal to serve.
 @ProprietaryUiDataApi
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 @PreAuthorize("@resourceAccess.canUsePortal()")
 public class PortalDocumentsController {

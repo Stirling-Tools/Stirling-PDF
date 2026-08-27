@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@app/api/config";
+import { setProcessorEnabled } from "@app/services/processorEnabled";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
@@ -114,6 +115,13 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   useEffect(() => {
     if (data) onConfigLoadedRef.current?.(data);
   }, [data]);
+
+  // fetchAppConfig publishes this too; repeat it for the seeded path, which
+  // never fetches.
+  useEffect(() => {
+    if (!data && initialConfig)
+      setProcessorEnabled(initialConfig.processorEnabled === true);
+  }, [data, initialConfig]);
 
   const value = useMemo<AppConfigContextValue>(
     () => ({

@@ -4,6 +4,18 @@ import java.util.regex.Pattern;
 
 public class RequestUriUtils {
 
+    /**
+     * Mirror of {@code processor.enabled}, published by ApplicationProperties at bean init. Static
+     * because every method here is, and every caller invokes them per-request from a filter, long
+     * after the context has refreshed. Defaults to on so a context that never publishes (tests,
+     * standalone use) behaves as it always did.
+     */
+    private static volatile boolean processorEnabled = true;
+
+    public static void setProcessorEnabled(boolean enabled) {
+        processorEnabled = enabled;
+    }
+
     // Share tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
     private static final Pattern SHARE_LINK_PATTERN =
             Pattern.compile(
@@ -76,7 +88,10 @@ public class RequestUriUtils {
         // cookie, so the server can't authenticate the navigation itself). The
         // portal gates access via its own auth gate + RequirePortalAccess, and its
         // data APIs stay protected, so serving the shell pre-auth is safe.
-        if ("/processor".equals(normalizedUri) || normalizedUri.startsWith("/processor/")) {
+        // Not on an editor-only server: there is no portal to bootstrap.
+        if (processorEnabled
+                && ("/processor".equals(normalizedUri)
+                        || normalizedUri.startsWith("/processor/"))) {
             return true;
         }
 
@@ -134,6 +149,13 @@ public class RequestUriUtils {
             if (normalizedUri.equals(prefix) || normalizedUri.startsWith(prefix + "/")) {
                 return false;
             }
+        }
+
+        // Editor-only server: the portal route-set isn't mounted, so don't serve its shell.
+        if (!processorEnabled
+                && ("/processor".equals(normalizedUri)
+                        || normalizedUri.startsWith("/processor/"))) {
+            return false;
         }
 
         if (normalizedUri.isBlank()) {
@@ -211,7 +233,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
-                || trimmedUri.startsWith("/api/v1/webhooks/")
+                // Policy webhook receiver; the controller only exists with the Processor on.
+                || (processorEnabled && trimmedUri.startsWith("/api/v1/webhooks/"))
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")

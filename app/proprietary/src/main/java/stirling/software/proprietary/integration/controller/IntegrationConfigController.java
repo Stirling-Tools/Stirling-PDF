@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.dto.IntegrationConfigRequest;
 import stirling.software.proprietary.integration.dto.IntegrationConfigResponse;
 import stirling.software.proprietary.integration.service.IntegrationConfigService;
@@ -27,6 +28,7 @@ import stirling.software.proprietary.security.model.User;
 
 /** CRUD for S3/MCP/API integration configs. Secrets are never returned. */
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/integrations")
 @RequiredArgsConstructor
 // Portal-exclusive: server-side portal-access boundary, not just isAuthenticated. Per-config

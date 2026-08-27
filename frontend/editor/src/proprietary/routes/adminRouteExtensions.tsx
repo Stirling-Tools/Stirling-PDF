@@ -1,6 +1,9 @@
-import { lazy } from "react";
+import { lazy, useEffect, useState } from "react";
 import type { ReactElement } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
+import { fetchAppConfig } from "@app/api/config";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 // The portal ships as a lazy chunk of the editor. It's included in dev (so it's
@@ -21,6 +24,33 @@ const PortalApp = includePortal
   : null;
 
 /**
+ * Runtime half of the gate. The chunk being bundled says nothing about the
+ * server: an editor-only deployment (processor.enabled=false) must not mount it.
+ * Config is fetched directly because this route sits above AppProviders.
+ */
+function PortalRoute() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void fetchAppConfig()
+      .then((config) => {
+        if (active) setEnabled(config.processorEnabled === true);
+      })
+      .catch(() => {
+        if (active) setEnabled(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (enabled === null) return <LoadingFallback />;
+  if (!enabled) return <Navigate to={EDITOR_BASENAME} replace />;
+  return PortalApp ? <PortalApp /> : null;
+}
+
+/**
  * The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*).
  * Access is gated inside PortalApp (its own AuthProvider + AuthGate, plus server
  * enforcement), so this just wires the lazy route into the editor's router when
@@ -32,7 +62,7 @@ export function getAdminRouteExtensions(): ReactElement[] {
     <Route
       key="portal"
       path={`${PORTAL_BASENAME}/*`}
-      element={<PortalApp />}
+      element={<PortalRoute />}
     />,
   ];
 }

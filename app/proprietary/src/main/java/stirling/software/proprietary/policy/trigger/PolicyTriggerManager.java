@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
+
 /** Starts and stops every {@link PolicyTrigger} with the application lifecycle. */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyTriggerManager implements SmartLifecycle {
 

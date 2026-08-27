@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 const get = vi.fn();
 let currentUserId: string | null = null;
+let processorEnabled = true;
 
 vi.mock("@app/services/apiClient", () => ({
   default: {
@@ -14,6 +15,12 @@ vi.mock("@app/services/apiClient", () => ({
 
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ user: currentUserId ? { id: currentUserId } : null }),
+}));
+
+// Stubbed rather than provider-wrapped: the real hook reads app-config, which
+// this suite never fetches.
+vi.mock("@app/hooks/useProcessorEnabled", () => ({
+  useProcessorEnabled: () => processorEnabled,
 }));
 
 const { usePortalAccess } = await import("@app/hooks/usePortalAccess");
@@ -41,6 +48,7 @@ describe("usePortalAccess", () => {
     localStorage.clear();
     get.mockReset();
     currentUserId = null;
+    processorEnabled = true;
     client = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
     });
@@ -125,6 +133,24 @@ describe("usePortalAccess", () => {
     expect(second.result.current).toBe(true);
     // ...and corrected once the backend disagrees.
     await waitFor(() => expect(second.result.current).toBe(false));
+  });
+
+  it("reports no access, and asks nothing, on an editor-only server", async () => {
+    // Even for an admin whose remembered answer was yes: the server has no
+    // processor to let them into.
+    currentUserId = "admin-1";
+    get.mockResolvedValue(meReturning(true));
+    const first = renderHook(() => usePortalAccess());
+    await waitFor(() => expect(first.result.current).toBe(true));
+    first.unmount();
+
+    client.clear();
+    get.mockClear();
+    processorEnabled = false;
+    const { result } = renderHook(() => usePortalAccess());
+
+    expect(result.current).toBe(false);
+    expect(get).not.toHaveBeenCalled();
   });
 
   it("ignores a response that lands after unmount", async () => {

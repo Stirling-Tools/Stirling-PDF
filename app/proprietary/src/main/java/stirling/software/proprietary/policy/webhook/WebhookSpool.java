@@ -8,9 +8,11 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.configuration.InstallationPathConfig;
 
 @Component
+@ConditionalOnProcessor
 public class WebhookSpool {
 
     private static final String SPOOL_DIR = "policy-webhook-spool";

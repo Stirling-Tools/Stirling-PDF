@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useServerExperience } from "@app/hooks/useServerExperience";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 
 import {
   ONBOARDING_STEPS,
@@ -172,6 +173,7 @@ export function useOnboardingOrchestrator(
   const defaultState = options?.defaultRuntimeState ?? DEFAULT_RUNTIME_STATE;
   const serverExperience = useServerExperience();
   const { config, loading: configLoading } = useAppConfig();
+  const processorEnabled = useProcessorEnabled();
   const location = useLocation();
   const bypassOnboarding = useBypassOnboarding();
 
@@ -265,12 +267,13 @@ export function useOnboardingOrchestrator(
     () => ({
       ...serverExperience,
       ...runtimeState,
+      processorEnabled,
       effectiveIsAdmin:
         serverExperience.effectiveIsAdmin ||
         (!serverExperience.loginEnabled &&
           runtimeState.selectedRole === "admin"),
     }),
-    [serverExperience, runtimeState],
+    [serverExperience, runtimeState, processorEnabled],
   );
 
   const activeFlow = useMemo(() => {

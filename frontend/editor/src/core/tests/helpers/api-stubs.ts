@@ -139,6 +139,8 @@ export interface MockAppApiOptions {
   endpointsAvailability?: Record<string, { enabled: boolean }>;
   /** Backend probe status. Set to `"DOWN"` to exercise offline-mode UI. */
   backendStatus?: "UP" | "DOWN";
+  /** Server's `processor.enabled`. Set `false` for an editor-only deployment. */
+  processorEnabled?: boolean;
 }
 
 /**
@@ -162,6 +164,7 @@ export async function mockAppApis(
     defaultLocale = "en-US",
     endpointsAvailability = {},
     backendStatus = "UP",
+    processorEnabled = true,
   } = opts;
 
   // Backend liveness probe — determines whether the UI shows the app or an offline screen
@@ -177,6 +180,7 @@ export async function mockAppApis(
         isAdmin,
         languages,
         defaultLocale,
+        processorEnabled,
       },
     }),
   );

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 
 import tools.jackson.databind.JsonNode;
@@ -30,6 +31,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 public class ExternalApiCaller {
 
     /**

@@ -24,6 +24,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
@@ -77,6 +78,7 @@ export default function AdminGeneralSection() {
   const location = useLocation();
   const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
+  const processorEnabled = useProcessorEnabled();
   const {
     restartModalOpened,
     showRestartModal,
@@ -1097,147 +1099,161 @@ export default function AdminGeneralSection() {
               </Text>
             </div>
 
-            <Text fw={500} size="sm" mt="xs">
-              {t(
-                "admin.settings.general.customPaths.pipeline.label",
-                "Pipeline Directories",
-              )}
-            </Text>
+            {/* Every reader of these paths (pipeline processor, folder watcher,
+                Telegram bot, folder guard) is Processor-gated. */}
+            {processorEnabled && (
+              <>
+                <Text fw={500} size="sm" mt="xs">
+                  {t(
+                    "admin.settings.general.customPaths.pipeline.label",
+                    "Pipeline Directories",
+                  )}
+                </Text>
 
-            <div>
-              <TextInput
-                label={
-                  <Group gap="xs">
-                    <span>
-                      {t(
-                        "admin.settings.general.customPaths.pipeline.pipelineDir.label",
-                        "Pipeline Directory",
-                      )}
-                    </span>
-                    <PendingBadge
-                      show={isFieldPending("customPaths.pipeline.pipelineDir")}
-                    />
-                  </Group>
-                }
-                description={t(
-                  "admin.settings.general.customPaths.pipeline.pipelineDir.description",
-                  "Base directory for pipeline resources (leave empty for default: /pipeline)",
-                )}
-                value={settings.customPaths?.pipeline?.pipelineDir || ""}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    customPaths: {
-                      ...settings.customPaths,
-                      pipeline: {
-                        ...settings.customPaths?.pipeline,
-                        pipelineDir: e.target.value,
-                      },
-                    },
-                  })
-                }
-                placeholder="/pipeline"
-                disabled={!loginEnabled}
-              />
-            </div>
+                <div>
+                  <TextInput
+                    label={
+                      <Group gap="xs">
+                        <span>
+                          {t(
+                            "admin.settings.general.customPaths.pipeline.pipelineDir.label",
+                            "Pipeline Directory",
+                          )}
+                        </span>
+                        <PendingBadge
+                          show={isFieldPending(
+                            "customPaths.pipeline.pipelineDir",
+                          )}
+                        />
+                      </Group>
+                    }
+                    description={t(
+                      "admin.settings.general.customPaths.pipeline.pipelineDir.description",
+                      "Base directory for pipeline resources (leave empty for default: /pipeline)",
+                    )}
+                    value={settings.customPaths?.pipeline?.pipelineDir || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        customPaths: {
+                          ...settings.customPaths,
+                          pipeline: {
+                            ...settings.customPaths?.pipeline,
+                            pipelineDir: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="/pipeline"
+                    disabled={!loginEnabled}
+                  />
+                </div>
 
-            <div>
-              <Textarea
-                label={
-                  <Group gap="xs">
-                    <span>
-                      {t(
-                        "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.label",
-                        "Watched Folders Directories",
-                      )}
-                    </span>
-                    <PendingBadge
-                      show={
-                        isFieldPending(
-                          "customPaths.pipeline.watchedFoldersDirs",
-                        ) ||
-                        isFieldPending("customPaths.pipeline.watchedFoldersDir")
-                      }
-                    />
-                  </Group>
-                }
-                description={t(
-                  "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.description",
-                  "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)",
-                )}
-                value={watchedFoldersInput}
-                onChange={(e) => {
-                  const parsedDirs = parseWatchedFoldersInput(e.target.value);
-                  setSettings({
-                    ...settings,
-                    customPaths: {
-                      ...settings.customPaths,
-                      pipeline: {
-                        ...settings.customPaths?.pipeline,
-                        watchedFoldersDir: parsedDirs[0] || "",
-                        watchedFoldersDirs: parsedDirs,
-                      },
-                    },
-                  });
-                }}
-                placeholder="/pipeline/watchedFolders"
-                minRows={3}
-                autosize
-                disabled={!loginEnabled}
-              />
-              {watchedFoldersValidation && (
-                <Stack gap="xs" mt="xs">
-                  {watchedFoldersValidation.map((warning, idx) => (
-                    <Text
-                      key={idx}
-                      size="sm"
-                      c={warning.includes("CRITICAL") ? "red" : "yellow"}
-                    >
-                      {warning}
-                    </Text>
-                  ))}
-                </Stack>
-              )}
-            </div>
+                <div>
+                  <Textarea
+                    label={
+                      <Group gap="xs">
+                        <span>
+                          {t(
+                            "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.label",
+                            "Watched Folders Directories",
+                          )}
+                        </span>
+                        <PendingBadge
+                          show={
+                            isFieldPending(
+                              "customPaths.pipeline.watchedFoldersDirs",
+                            ) ||
+                            isFieldPending(
+                              "customPaths.pipeline.watchedFoldersDir",
+                            )
+                          }
+                        />
+                      </Group>
+                    }
+                    description={t(
+                      "admin.settings.general.customPaths.pipeline.watchedFoldersDirs.description",
+                      "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)",
+                    )}
+                    value={watchedFoldersInput}
+                    onChange={(e) => {
+                      const parsedDirs = parseWatchedFoldersInput(
+                        e.target.value,
+                      );
+                      setSettings({
+                        ...settings,
+                        customPaths: {
+                          ...settings.customPaths,
+                          pipeline: {
+                            ...settings.customPaths?.pipeline,
+                            watchedFoldersDir: parsedDirs[0] || "",
+                            watchedFoldersDirs: parsedDirs,
+                          },
+                        },
+                      });
+                    }}
+                    placeholder="/pipeline/watchedFolders"
+                    minRows={3}
+                    autosize
+                    disabled={!loginEnabled}
+                  />
+                  {watchedFoldersValidation && (
+                    <Stack gap="xs" mt="xs">
+                      {watchedFoldersValidation.map((warning, idx) => (
+                        <Text
+                          key={idx}
+                          size="sm"
+                          c={warning.includes("CRITICAL") ? "red" : "yellow"}
+                        >
+                          {warning}
+                        </Text>
+                      ))}
+                    </Stack>
+                  )}
+                </div>
 
-            <div>
-              <TextInput
-                label={
-                  <Group gap="xs">
-                    <span>
-                      {t(
-                        "admin.settings.general.customPaths.pipeline.finishedFoldersDir.label",
-                        "Finished Folders Directory",
-                      )}
-                    </span>
-                    <PendingBadge
-                      show={isFieldPending(
-                        "customPaths.pipeline.finishedFoldersDir",
-                      )}
-                    />
-                  </Group>
-                }
-                description={t(
-                  "admin.settings.general.customPaths.pipeline.finishedFoldersDir.description",
-                  "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
-                )}
-                value={settings.customPaths?.pipeline?.finishedFoldersDir || ""}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    customPaths: {
-                      ...settings.customPaths,
-                      pipeline: {
-                        ...settings.customPaths?.pipeline,
-                        finishedFoldersDir: e.target.value,
-                      },
-                    },
-                  })
-                }
-                placeholder="/pipeline/finishedFolders"
-                disabled={!loginEnabled}
-              />
-            </div>
+                <div>
+                  <TextInput
+                    label={
+                      <Group gap="xs">
+                        <span>
+                          {t(
+                            "admin.settings.general.customPaths.pipeline.finishedFoldersDir.label",
+                            "Finished Folders Directory",
+                          )}
+                        </span>
+                        <PendingBadge
+                          show={isFieldPending(
+                            "customPaths.pipeline.finishedFoldersDir",
+                          )}
+                        />
+                      </Group>
+                    }
+                    description={t(
+                      "admin.settings.general.customPaths.pipeline.finishedFoldersDir.description",
+                      "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)",
+                    )}
+                    value={
+                      settings.customPaths?.pipeline?.finishedFoldersDir || ""
+                    }
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        customPaths: {
+                          ...settings.customPaths,
+                          pipeline: {
+                            ...settings.customPaths?.pipeline,
+                            finishedFoldersDir: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="/pipeline/finishedFolders"
+                    disabled={!loginEnabled}
+                  />
+                </div>
+              </>
+            )}
 
             <Text fw={500} size="sm" mt="md">
               {t(

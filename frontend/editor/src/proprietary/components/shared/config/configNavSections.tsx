@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   useConfigNavSections as useCoreConfigNavSections,
+  ConfigNavItem,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
 import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
@@ -25,6 +26,7 @@ import AdminAuditSection from "@app/components/shared/config/configSections/Admi
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
 import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
 import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
@@ -40,6 +42,7 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
+  const processorEnabled = useProcessorEnabled();
 
   // Get the core sections (Preferences + Help)
   const sections = useCoreConfigNavSections(
@@ -136,14 +139,23 @@ export const useConfigNavSections = (
           badge: t("toolPanel.alpha", "Alpha"),
           badgeColor: "orange",
         },
-        {
-          key: "adminFolderAccess",
-          label: t("settings.configuration.folderAccess", "Folder Access"),
-          icon: "folder-rounded",
-          component: <AdminFolderAccessSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
-        },
+        // Folder sources/outputs are Processor-only, so an editor-only server has
+        // no boundary to configure here.
+        ...(processorEnabled
+          ? ([
+              {
+                key: "adminFolderAccess",
+                label: t(
+                  "settings.configuration.folderAccess",
+                  "Folder Access",
+                ),
+                icon: "folder-rounded",
+                component: <AdminFolderAccessSection />,
+                disabled: requiresLogin,
+                disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+              },
+            ] satisfies ConfigNavItem[])
+          : []),
         {
           key: "adminEndpoints",
           label: t("settings.configuration.endpoints", "Endpoints"),

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.crypto.CredentialEncryption;
 
 /**
@@ -17,6 +18,7 @@ import stirling.software.proprietary.integration.crypto.CredentialEncryption;
  * never decrypt - only {@link #content} does.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class JpaPolicyAssetStore implements PolicyAssetStore {
 

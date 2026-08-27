@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
@@ -32,6 +33,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /** CRUD for {@link IntegrationConfig}; delegates ownership and masking to shared services. */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)

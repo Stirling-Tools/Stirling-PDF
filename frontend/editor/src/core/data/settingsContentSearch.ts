@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import type { TFunction } from "i18next";
+import { isProcessorEnabled } from "@app/services/processorEnabled";
 
 /**
  * Content-level settings search: matches a query against every translation
@@ -78,6 +79,43 @@ export const getTranslationPrefixesForNavKey = (key: string): string[] => {
   return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
 };
 
+/**
+ * Sub-keys, relative to a section's translation prefix, whose controls only
+ * render when the server runs the Processor. Matching whole subtrees means a
+ * hidden control's copy is still searchable, so drop these when it is off.
+ */
+const PROCESSOR_ONLY_SUBTREES: Record<string, string[]> = {
+  "settings.general": ["loginLanding"],
+  // The group blurb names pipeline processing too; the External Tool Paths
+  // labels still make this section findable without it.
+  "admin.settings.general": ["customPaths.pipeline", "customPaths.description"],
+  // Sibling of the two nav labels the Connections section really uses.
+  "settings.securityAuth": ["telegram"],
+};
+
+/**
+ * Whole prefixes to skip with the Processor off. The Telegram bot round-trips
+ * through the pipeline folders, so its provider card is dropped from
+ * Connections entirely, not just trimmed.
+ */
+const PROCESSOR_ONLY_PREFIXES = new Set(["admin.settings.telegram"]);
+
+/** Returns the subtree with the given dotted paths removed (non-mutating). */
+const omitPaths = (value: unknown, paths: string[]): unknown => {
+  if (!value || typeof value !== "object") return value;
+  const copy: Record<string, unknown> = {
+    ...(value as Record<string, unknown>),
+  };
+  for (const path of paths) {
+    const [head, ...rest] = path.split(".");
+    if (!(head in copy)) continue;
+    copy[head] = rest.length
+      ? omitPaths(copy[head], [rest.join(".")])
+      : undefined;
+  }
+  return copy;
+};
+
 export const flattenTranslationStrings = (value: unknown): string[] => {
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -143,15 +181,22 @@ export function getSettingsSectionContent(key: string, t: TFunction): string[] {
     contentCache.clear();
     contentCacheLanguage = i18n.language;
   }
-  const cached = contentCache.get(key);
+  // Part of the cache key: app-config can land after a first query cached the
+  // Processor-on content, and that entry must not outlive the answer.
+  const processorOn = isProcessorEnabled();
+  const cacheKey = `${key}:${processorOn}`;
+  const cached = contentCache.get(cacheKey);
   if (cached) return cached;
 
-  const content = getTranslationPrefixesForNavKey(key).flatMap((prefix) =>
-    flattenTranslationStrings(
-      t(prefix, { returnObjects: true, defaultValue: {} }),
-    ),
-  );
-  contentCache.set(key, content);
+  const content = getTranslationPrefixesForNavKey(key).flatMap((prefix) => {
+    if (!processorOn && PROCESSOR_ONLY_PREFIXES.has(prefix)) return [];
+    const subtree = t(prefix, { returnObjects: true, defaultValue: {} });
+    const omitted = PROCESSOR_ONLY_SUBTREES[prefix];
+    return flattenTranslationStrings(
+      !processorOn && omitted ? omitPaths(subtree, omitted) : subtree,
+    );
+  });
+  contentCache.set(cacheKey, content);
   return content;
 }
 

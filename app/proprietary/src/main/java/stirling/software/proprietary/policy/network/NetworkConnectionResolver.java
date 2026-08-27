@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
@@ -33,6 +34,7 @@ import tools.jackson.databind.ObjectMapper;
  * referencing source was access-checked when it was saved.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class NetworkConnectionResolver {

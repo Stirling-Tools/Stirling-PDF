@@ -6,9 +6,13 @@ const h = vi.hoisted(() => ({
   prefs: { loginLandingView: "processor" },
   update: vi.fn(),
   get: vi.fn(),
+  processorEnabled: true,
 }));
 
 vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
+vi.mock("@app/hooks/useProcessorEnabled", () => ({
+  useProcessorEnabled: () => h.processorEnabled,
+}));
 vi.mock("@app/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: h.prefs, updatePreference: h.update }),
 }));
@@ -61,6 +65,7 @@ beforeEach(() => {
   vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
   vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   h.prefs = { loginLandingView: "processor" };
+  h.processorEnabled = true;
   h.update.mockReset();
   h.get.mockReset();
 });
@@ -89,6 +94,15 @@ describe("LoginLandingSetting", () => {
     eligibleBackend();
     renderSetting();
     expect(screen.queryByText("After signing in")).not.toBeInTheDocument();
+  });
+
+  it("renders nothing on an editor-only server", () => {
+    // Naming "Processor" here would offer a preference that never applies.
+    h.processorEnabled = false;
+    eligibleBackend();
+    renderSetting();
+    expect(screen.queryByText("After signing in")).not.toBeInTheDocument();
+    expect(h.get).not.toHaveBeenCalled();
   });
 
   it("renders nothing when the portal is not bundled", () => {

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
+
 /**
  * Durable {@link ProcessedLedger}; the runtime bean. A fresh claim is a flushed insert so a
  * concurrent winner surfaces as a constraint violation; every other transition is a conditional
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 public class JpaProcessedLedger implements ProcessedLedger {
 
     private static final int STAMP_CHUNK = 500;

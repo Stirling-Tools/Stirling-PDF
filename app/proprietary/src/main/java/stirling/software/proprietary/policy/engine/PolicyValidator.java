@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  * A null trigger is a manual-only input and skips trigger validation.
  */
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyValidator {
 

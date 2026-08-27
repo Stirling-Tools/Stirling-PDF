@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -50,6 +51,7 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Slf4j
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/integration")
 @RequiredArgsConstructor
 @Tag(name = "Integrations", description = "Third-party integration steps.")

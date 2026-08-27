@@ -88,6 +88,34 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/app", "/app/processor"));
     }
 
+    @Test
+    void testProcessorOff_portalShellIsNotServed() {
+        // Editor-only server: /processor must not be a permitAll static resource, must
+        // not fall back to the SPA shell, and its webhook receiver must not be public -
+        // none of those beans exist. Restored in a finally so the flag can't leak.
+        try {
+            RequestUriUtils.setProcessorEnabled(false);
+            assertFalse(RequestUriUtils.isStaticResource("/processor"));
+            assertFalse(RequestUriUtils.isStaticResource("/processor/users"));
+            assertFalse(RequestUriUtils.isStaticResource("/app", "/app/processor"));
+            assertFalse(RequestUriUtils.isFrontendRoute("", "/processor"));
+            assertFalse(RequestUriUtils.isFrontendRoute("", "/processor/policies"));
+            assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/abc", ""));
+            // Editor routes are untouched.
+            assertTrue(RequestUriUtils.isFrontendRoute("", "/merge"));
+            assertTrue(RequestUriUtils.isStaticResource("/css/style.css"));
+            assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/auth/login", ""));
+        } finally {
+            RequestUriUtils.setProcessorEnabled(true);
+        }
+    }
+
+    @Test
+    void testProcessorOn_webhookReceiverIsPublic() {
+        // Signature-verified at the controller, so it must bypass login when mounted.
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/abc", ""));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test

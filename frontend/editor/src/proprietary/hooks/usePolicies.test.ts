@@ -36,6 +36,13 @@ vi.mock("@app/services/policyApi", () => ({
   getPolicyRun: vi.fn(),
 }));
 
+// Stubbed rather than provider-wrapped: the real hook reads app-config, which
+// this suite never fetches.
+const flags = vi.hoisted(() => ({ processorEnabled: true }));
+vi.mock("@app/hooks/useProcessorEnabled", () => ({
+  useProcessorEnabled: () => flags.processorEnabled,
+}));
+
 import { usePolicies } from "@app/hooks/usePolicies";
 
 // A minimal wizard result (workflow already saved + mapped by the builder).
@@ -68,6 +75,7 @@ describe("usePolicies", () => {
     localStorage.clear();
     api.store.clear();
     api.seq = 0;
+    flags.processorEnabled = true;
   });
 
   it("starts with every category unconfigured (no seed)", async () => {
@@ -152,5 +160,26 @@ describe("usePolicies", () => {
       await result.current.ensurePolicyFolder("ingestion");
     });
     expect(result.current.policies.ingestion.folderId).toBeTruthy();
+  });
+
+  it("blanks the list and skips the reconcile on an editor-only server", async () => {
+    // Enable one first, so the localStorage that outlives the flag flip is the
+    // thing being suppressed - not merely an empty start.
+    const seeded = renderHook(() => usePolicies());
+    await act(async () => {
+      await seeded.result.current.enablePolicy("security", wizardResult);
+    });
+    seeded.unmount();
+
+    flags.processorEnabled = false;
+    const { listPolicies } = await import("@app/services/policyApi");
+    vi.mocked(listPolicies).mockClear();
+
+    const { result } = renderHook(() => usePolicies());
+    await act(async () => {});
+
+    expect(result.current.policies).toEqual({});
+    expect(result.current.canConfigure).toBe(false);
+    expect(listPolicies).not.toHaveBeenCalled();
   });
 });

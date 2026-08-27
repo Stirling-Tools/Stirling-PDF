@@ -25,6 +25,7 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.PostHogService;
@@ -37,8 +38,11 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
+// The pipeline's HTTP entry point. Its other two runners (PipelineDirectoryProcessor,
+// TelegramPipelineBot) are gated too, so an editor-only server runs no pipelines at all.
 @PipelineApi
 @Slf4j
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PipelineController {
 

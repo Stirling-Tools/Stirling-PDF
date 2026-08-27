@@ -80,6 +80,7 @@ public class ConfigInitializer {
 
             migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
+            warnOnStrayProcessorFlag(settingsFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
@@ -99,6 +100,22 @@ public class ConfigInitializer {
         if (Files.notExists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
             log.info("Created custom_settings file: {}", customSettingsPath);
+        }
+    }
+
+    /**
+     * The merge below can only rewrite keys the template already defines, so a hand-added
+     * processor.enabled is erased on this very boot. Nothing can carry it forward - say so loudly
+     * rather than starting the Processor the admin asked to turn off.
+     */
+    private void warnOnStrayProcessorFlag(YamlHelper yaml) {
+        Object stray = yaml.getValueByExactKeyPath("processor", "enabled");
+        if (stray != null) {
+            log.warn(
+                    "Ignoring processor.enabled={} in settings.yml - the template merge removes"
+                            + " keys it does not define. Use PROCESSOR_ENABLED or"
+                            + " custom_settings.yml instead.",
+                    stray);
         }
     }
 

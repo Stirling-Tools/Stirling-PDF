@@ -65,6 +65,7 @@ import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useEx
 import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@app/constants/splitConstants";
 import { ToolId } from "@app/types/toolId";
 import { CONVERT_SUPPORTED_FORMATS } from "@app/constants/convertSupportedFornats";
+import { useProcessorEnabled } from "@app/hooks/useProcessorEnabled";
 
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
@@ -78,6 +79,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
   const proprietaryTools = useProprietaryToolRegistry();
   const prototypeTools = usePrototypeToolRegistry();
+  const processorEnabled = useProcessorEnabled();
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
@@ -1489,6 +1491,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
     };
 
+    // Folder scanning is driven by PipelineDirectoryProcessor, and classify's only
+    // endpoint is gated with the Processor, so neither can work on an editor-only
+    // server. Reflect, not delete: ToolRegistry declares every id, and callers
+    // already optional-chain registry lookups.
+    if (!processorEnabled) {
+      Reflect.deleteProperty(allTools, "devFolderScanning");
+      Reflect.deleteProperty(allTools, "classify");
+    }
+
     const regularTools = {} as RegularToolRegistry;
     const superTools = {} as SuperToolRegistry;
     const linkTools = {} as LinkToolRegistry;
@@ -1510,5 +1521,5 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       superTools,
       linkTools,
     };
-  }, [t, proprietaryTools, prototypeTools]); // Re-compute when translations, proprietary, or prototype tools change
+  }, [t, proprietaryTools, prototypeTools, processorEnabled]); // Re-compute when translations, proprietary, or prototype tools change
 }

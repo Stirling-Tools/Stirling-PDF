@@ -33,6 +33,7 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.service.ToolMetadataService;
@@ -40,8 +41,11 @@ import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
+// Legacy watched-folder automation: unattended file-triggered execution, so an
+// editor-only server must not run its 60s scan (or create the folders).
 @Service
 @Slf4j
+@ConditionalOnProcessor
 public class PipelineDirectoryProcessor {
 
     private static final int MAX_DIRECTORY_DEPTH = 50; // Prevent excessive recursion

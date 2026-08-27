@@ -61,6 +61,8 @@ export interface SuperSearchGates {
   isAdmin: boolean;
   loginEnabled: boolean;
   portalAccessible?: boolean;
+  /** Server runs the Processor at all. False = editor-only deployment. */
+  processorEnabled?: boolean;
   /**
    * Whether no-login mode keeps the read-only admin settings preview
    * (`system.showSettingsWhenNoLogin`, default true). Mirrors the settings

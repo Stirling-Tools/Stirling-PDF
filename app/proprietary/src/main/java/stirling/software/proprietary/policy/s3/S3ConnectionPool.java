@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 
@@ -31,6 +32,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * users rather than the operator.
  */
 @Service
+@ConditionalOnProcessor
 public class S3ConnectionPool {
 
     private final ApplicationProperties applicationProperties;

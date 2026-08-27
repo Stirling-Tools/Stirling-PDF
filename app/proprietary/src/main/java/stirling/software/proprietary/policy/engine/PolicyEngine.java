@@ -21,6 +21,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.FileStorage;
@@ -61,6 +62,7 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PolicyEngine {
 

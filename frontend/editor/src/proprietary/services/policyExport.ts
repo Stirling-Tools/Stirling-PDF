@@ -12,6 +12,7 @@
 
 import { loadPolicies } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { isProcessorEnabled } from "@app/services/processorEnabled";
 import {
   runStoredPolicy,
   getPolicyRun,
@@ -59,6 +60,8 @@ interface PolicyRunResult {
 
 /** Configured, active policies set to enforce on export (read from the cache). */
 function activeExportPolicies(): ExportPolicy[] {
+  // The cache outlives the server flag - an editor-only server enforces nothing.
+  if (!isProcessorEnabled()) return [];
   const labels = new Map(
     loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
   );

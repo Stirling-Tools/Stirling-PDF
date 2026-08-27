@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -40,6 +41,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * file without anyone re-supplying it. Team-scoped exactly like the policies that reference them.
  */
 @RestController
+@ConditionalOnProcessor
 @RequestMapping("/api/v1/policies/assets")
 @Hidden
 @RequiredArgsConstructor

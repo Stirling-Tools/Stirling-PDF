@@ -7,13 +7,21 @@
  * reached the spec at all. These tests pin each link, because any one of them silently removes the
  * step from the builder's picker rather than failing loudly.
  */
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { getExecutableTools } from "@app/hooks/tools/shared/toolAutomation";
 import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 import { TOOL_IO } from "@app/types/toolIO";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
+
+// The registry drops classify on an editor-only server, and the real hook reads app-config,
+// which this suite never provides - so state the flag rather than inheriting its default.
+const flags = vi.hoisted(() => ({ processorEnabled: true }));
+vi.mock("@app/hooks/useProcessorEnabled", () => ({
+  useProcessorEnabled: () => flags.processorEnabled,
+  isProcessorEnabled: () => flags.processorEnabled,
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -26,6 +34,10 @@ vi.mock("react-i18next", () => ({
 const CLASSIFY_ENDPOINT = "/api/v1/ai/tools/classify-and-label";
 
 describe("classify as a pipeline task", () => {
+  afterEach(() => {
+    flags.processorEnabled = true;
+  });
+
   test("the classify endpoint is a generated ToolEndpoint", () => {
     // Fails if the controller goes back to @Hidden, or the generator's allowlist drops the
     // /api/v1/ai/tools/ namespace, or nobody regenerated after either.
@@ -72,5 +84,19 @@ describe("classify as a pipeline task", () => {
     // The step is idempotent unless asked otherwise: a second run on a classified document
     // would be a second engine call, and a second charge, for the same answer.
     expect(config?.defaultParameters).toEqual({ reclassify: false });
+  });
+
+  test("an editor-only server does not offer it at all", () => {
+    // processor.enabled=false gates ClassifyLabelController, so the one endpoint behind this
+    // step stops being mapped. Leaving the step listed would offer a pipeline it cannot run.
+    flags.processorEnabled = false;
+    const { result } = renderHook(() => useTranslatedToolCatalog());
+
+    expect(result.current.allTools.classify).toBeUndefined();
+    expect(
+      getExecutableTools(result.current.regularTools).some(
+        (tool) => tool.toolId === "classify",
+      ),
+    ).toBe(false);
   });
 });

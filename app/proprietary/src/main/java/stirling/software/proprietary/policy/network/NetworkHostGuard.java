@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
@@ -18,6 +19,7 @@ import stirling.software.common.model.ApplicationProperties;
  * save time and before every connect.
  */
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class NetworkHostGuard {
 

@@ -36,10 +36,19 @@ public class ResourceAccessService {
     @Value("${security.portal.defaultAccess:ADMINS_AND_TEAM_LEADS}")
     private DefaultAccessPolicy portalDefaultPolicy;
 
+    // Initialised on: @Value lands after field init, so a directly-constructed instance must not
+    // fall to Java's false and lock everyone out of the portal.
+    @Value("${processor.enabled:true}")
+    private boolean processorEnabled = true;
+
     // ---- public checks ----
 
     /** Whether the user may use the portal / processor. */
     public boolean canAccessPortal(User user) {
+        // Editor-only deployment: nobody reaches the portal, not even an admin.
+        if (!processorEnabled) {
+            return false;
+        }
         return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
     }
 
@@ -50,6 +59,9 @@ public class ResourceAccessService {
      */
     public Set<Long> usersWithPortalAccess(
             Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
+        if (!processorEnabled) {
+            return Set.of();
+        }
         Set<PrincipalRef> grantedPrincipals = new HashSet<>();
         for (ResourceGrant g :
                 grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {

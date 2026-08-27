@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
@@ -36,6 +37,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Service
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class S3ConnectionResolver {

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
@@ -23,7 +24,9 @@ import stirling.software.proprietary.security.service.ApiKeyManagementService;
  * keys. Replaces the former portal-only mock endpoint. Not gated behind an Enterprise license - API
  * keys are a core auth feature available on every self-hosted instance.
  */
+// Serves the portal only, and an editor-only server has no portal to serve.
 @ProprietaryUiDataApi
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class PortalApiKeysController {
 

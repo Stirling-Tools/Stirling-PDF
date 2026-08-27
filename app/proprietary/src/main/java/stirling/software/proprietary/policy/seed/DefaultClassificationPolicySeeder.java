@@ -13,6 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -27,6 +28,7 @@ import stirling.software.proprietary.security.service.TeamService;
  */
 @Slf4j
 @Component
+@ConditionalOnProcessor
 @RequiredArgsConstructor
 public class DefaultClassificationPolicySeeder {
 

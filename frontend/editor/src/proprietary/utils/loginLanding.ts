@@ -1,4 +1,5 @@
 import { isAdminRole } from "@app/auth/roles";
+import { fetchAppConfig } from "@app/api/config";
 import apiClient from "@app/services/apiClient";
 import { preferencesService } from "@app/services/preferencesService";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
@@ -93,7 +94,13 @@ export async function resolveRootTarget(): Promise<string | null> {
   if (shortCircuit) return shortCircuit;
   const destination = await fetchRootDestination();
   if (destination === "signedOut") return null;
-  return destination === "processor" ? PORTAL_BASENAME : EDITOR_BASENAME;
+  if (destination === "editor") return EDITOR_BASENAME;
+  // Checked last so a signed-out visitor still reports signedOut: an editor-only
+  // server doesn't mount the processor route, so landing there would bounce.
+  // Only an explicit false counts - an unreachable config must not quietly take
+  // the portal away from an admin, and PortalRoute re-checks on arrival anyway.
+  const config = await fetchAppConfig().catch(() => null);
+  return config?.processorEnabled === false ? EDITOR_BASENAME : PORTAL_BASENAME;
 }
 
 /**

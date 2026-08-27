@@ -4,11 +4,13 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import stirling.software.common.annotations.ConditionalOnProcessor;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.service.IntegrationConfigValidator;
 
 /** The Purview connection schema, enforced when the config is saved. */
 @Component
+@ConditionalOnProcessor
 public class PurviewIntegrationValidator implements IntegrationConfigValidator {
 
     @Override
