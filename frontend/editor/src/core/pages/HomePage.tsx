@@ -176,9 +176,8 @@ export default function HomePage() {
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
 
-  // Arriving from the processor's Reader entry, which had no editor to toggle.
-  // Ref-guarded because a one-shot flag plus StrictMode's double-invoke would
-  // otherwise look like the request never existed on the second pass.
+  // Arriving from the processor's Reader entry. Ref-guarded: a one-shot flag plus
+  // StrictMode's double-invoke would look like the request never existed.
   const consumedReaderRequest = useRef(false);
   useEffect(() => {
     if (consumedReaderRequest.current) return;
@@ -189,15 +188,11 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides the top bar, and with it the two search controls - along with
-  // the code that makes their shortcuts work. Cmd/Ctrl+K's listener lives inside
-  // the super search itself, so unmounting the bar took the shortcut with it;
-  // Cmd/Ctrl+F does have a listener in the viewer, but the panel it opens is only
-  // rendered inside the bar's popover, so it set state that nothing drew. Both
-  // therefore leave reading first, which brings the bar back, and then act.
+  // Reading hides the top bar, and with it both search controls: Cmd/Ctrl+K's
+  // listener lives inside the super search, and Cmd/Ctrl+F's panel only renders in
+  // the bar's popover. So both leave reading first, then act.
   //
-  // Matched on e.code, like the super search does, so the shortcuts survive
-  // keyboard layouts where these keys don't produce "k" and "f".
+  // On e.code, like the super search, for layouts where these keys aren't "k"/"f".
   const focusSearchAfterRestore = useRef(false);
   useEffect(() => {
     if (!readerMode) return;
@@ -214,8 +209,7 @@ export default function HomePage() {
         focusSearchAfterRestore.current = true;
         return;
       }
-      // The panel's visibility is state, so it can be opened before the bar it
-      // renders in exists - it appears already open as the bar returns.
+      // Visibility is state, so it can open before the bar it renders in exists.
       searchInterfaceActions.open();
     };
     window.addEventListener("keydown", onKeyDown);
@@ -230,8 +224,8 @@ export default function HomePage() {
     );
   }, [readerMode]);
 
-  // The brand mark's "back to a clean slate": close whatever tool is open, leave
-  // My Files and reading mode, and settle on the view the open files call for.
+  // The brand mark's clean slate: no tool, out of My Files and reading, and the
+  // view the open files call for.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
     if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
@@ -284,10 +278,8 @@ export default function HomePage() {
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
   }, [navigationState.workbench]);
-  // Reader minimises the left rail too, for the same distraction-free reason the
-  // tool panel and the viewer's tool row retract. Imperative (not folded into the
-  // `collapsed` prop) so the collapse toggle still works while reading, and it
-  // never writes to storage - a mode is not a stored preference.
+  // Imperative rather than folded into `collapsed`, so the toggle still works
+  // while reading. Never written to storage: a mode is not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {
@@ -346,14 +338,8 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  /**
-   * Why the rail's tool entries can't be used, worked out with the same helpers
-   * the tool picker uses so the two can't describe one condition differently.
-   *
-   * The shared labels are written to sit in front of a tool name ("Coming soon:
-   * Automate"), but the rail appends the reason after the entry's own label, so
-   * the trailing colon comes off.
-   */
+  // The same helpers the tool picker uses, so the two can't word one condition
+  // differently. Colon removed: those labels sit in front of a tool name.
   const quickNavToolReasons = useMemo(() => {
     const reasons: Record<string, string> = {};
     for (const id of ["automate", "sharedSign"] as const) {
@@ -372,8 +358,8 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // Shared by the hoisted brand header's toggle and the sidebar itself, so the
-  // two can't drift. On /files the toggle is a "leave" affordance instead.
+  // Shared with the sidebar's own toggle so the two can't drift. On /files it is a
+  // "leave" affordance instead.
   const handleSidebarToggle = useCallback(() => {
     if (navigationState.workbench === "myFiles") {
       navigate(EDITOR_BASENAME);
@@ -549,8 +535,7 @@ export default function HomePage() {
         onOpenTeams={otherApp ? () => navigate("/settings/teams") : undefined}
         requestNavigation={requestNavigation}
         // Cast at the boundary: ToolId is a per-variant union the shared rail
-        // can't name, and the ids it passes ("read", "automate", "sharedSign")
-        // are present in every build.
+        // can't name, and the ids it passes exist in every build.
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
@@ -758,9 +743,9 @@ export default function HomePage() {
                   ) : undefined
                 }
                 active={navigationState.workbench === "myFiles"}
-                // /files always shows the rail collapsed - force it here so a
-                // deep-link/reload onto /files (no workbench transition) still
-                // collapses, and a manual expand can't stick.
+                // Forced, not derived: a deep link straight to /files has no
+                // workbench transition to collapse on, and a manual expand
+                // must not stick.
                 collapsed={
                   navigationState.workbench === "myFiles" ||
                   fileSidebarCollapsed

@@ -25,22 +25,13 @@ export interface QuickNavRailContainerProps extends Omit<
   "footer"
 > {
   /**
-   * Opens the config modal. This rail is the account control in both apps, so
-   * the sidebar beside it renders no account row of its own (FileSidebar's
-   * accountHoisted, NavFooter's showAccount) and one user is never drawn twice.
+   * The rail is the account control in both apps, so the sidebars render no account
+   * row of their own (FileSidebar's accountHoisted, NavFooter's showAccount).
    */
   onOpenSettings?: () => void;
-  /**
-   * Opens the teams section of the settings menu. Omitted by builds whose
-   * settings has no such section - core and desktop - rather than offering a
-   * shortcut to somewhere that doesn't exist.
-   */
+  /** Omitted by builds whose settings has no teams section (core, desktop). */
   onOpenTeams?: () => void;
-  /**
-   * Opens the notifications panel. The bell draws itself from the notification
-   * store, which needs no provider, but the panel belongs to the mounted app -
-   * see QuickNavRailNotifications.
-   */
+  /** The bell draws itself; the panel belongs to the app - see QuickNavRailNotifications. */
   onToggleNotifications?: () => void;
   /** Identity for the account control; see QuickNavRailAccount. */
   identity?: QuickNavIdentity | null;
@@ -63,19 +54,16 @@ export function QuickNavRailContainer({
   const { t } = useTranslation();
   return (
     <div className="quick-nav-rail-container">
-      {/* The corner both carries the brand and says which app you are in, with
-          the other app directly below it. Not wrapped in a fixed row: the block
-          is taller than one when a second app exists, and centring it in a
-          brand-height row would drop the mark out of line with the sidebar's
-          wordmark beside it. */}
+      {/* Not wrapped in a fixed row: the block is taller than one when a second app
+          exists, and centring it would drop the mark out of line with the
+          sidebar's wordmark beside it. */}
       <QuickNavAppSwitch {...appSwitch} />
       <NavSurface className="quick-nav-rail-surface">
         <QuickNavRailBase
           {...railProps}
           footer={
             // Always rendered: an empty footer collapses to nothing, and gating it
-            // on which controls the mounted app happens to offer meant the bell
-            // could be dropped along with them.
+            // on the app's own controls dropped the bell along with them.
             <div className="quick-nav-rail-footer">
               <QuickNavRailNotifications onToggle={onToggleNotifications} />
               {onOpenTeams && (

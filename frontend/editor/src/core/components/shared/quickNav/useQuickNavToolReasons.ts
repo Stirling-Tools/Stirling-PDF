@@ -5,18 +5,14 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 
-/**
- * Which server endpoints each rail entry needs, mirroring the same tools' own
- * `endpoints` in the tool registry.
- */
+/** Mirrors the same tools' `endpoints` in the tool registry. */
 const ENTRY_ENDPOINTS: Record<string, string[]> = {
   automate: ["automate"],
 };
 
 /**
- * The two causes the tool picker tells apart, plus the one condition here that
- * isn't about an endpoint at all: shared signing is a server feature that can be
- * switched off whole, rather than a route that can be removed.
+ * The two the tool picker tells apart, plus shared signing - a whole feature the
+ * server can switch off rather than a route it can remove.
  */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 type Cause = EndpointCause | "groupSigningOff";
@@ -27,9 +23,8 @@ const CAUSES: Cause[] = [
 ];
 
 /**
- * Remembered per browser, so a reload starts from the last answer rather than from
- * "everything works". Causes rather than finished sentences, so switching language
- * cannot resurrect text in the previous one.
+ * Remembered so a reload starts from the last answer, not from "everything works".
+ * Causes rather than sentences, so a language change can't resurrect stale text.
  */
 const STORAGE_KEY = "stirling.quickNav.toolCauses";
 
@@ -46,8 +41,7 @@ function readRemembered(): Record<string, Cause> | null {
     ) as [string, Cause][];
     return Object.fromEntries(known);
   } catch {
-    // Private mode, or something else left nonsense here. Knowing nothing is what
-    // a first visit sees anyway.
+    // Private mode, or nonsense in storage: same as a first visit.
     return null;
   }
 }
@@ -56,7 +50,7 @@ function remember(causes: Record<string, Cause>): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(causes));
   } catch {
-    // The answer just will not survive the next reload.
+    // Won't survive the next reload.
   }
 }
 
@@ -78,29 +72,16 @@ function causesFor(
 }
 
 /**
- * Why a rail entry can't be used - already translated, keyed by rail entry id,
- * absent when usable. Two signals feed it: the endpoint availability the server
- * reports, and whether shared signing is switched on at all. Null
- * only in a browser that has never had an answer, which is different from an empty
- * map: the first means "no idea", the second "asked, and nothing is wrong".
+ * Why a rail entry can't be used - translated, keyed by entry id, absent when
+ * usable. Null means no answer yet, which is not the same as an empty map ("asked,
+ * nothing wrong").
  *
- * Read here rather than taken from the app around it so that both apps get the
- * same answer. The editor knows its tools are disabled through its own workbench
- * state, which the processor has none of; before this, the same Automate icon was
- * greyed out with an explanation on one side of the app switch and looked
- * perfectly usable on the other.
+ * Read here rather than handed down, so the editor and the processor can't
+ * disagree about the same entry. Only the signals both apps can see; the editor
+ * layers its own on top.
  *
- * The answer is held onto twice over, because the bar must not change what it says
- * while it is merely being re-fetched - only when the answer itself changes. Each
- * app has its own query cache, so switching between them starts with nothing
- * cached; a reload starts with nothing at all. In both cases this reports what it
- * last knew instead of "nothing is wrong", which is what made a dimmed entry flash
- * back to usable and dim again a moment later.
- *
- * Deliberately only the signals both apps can see for themselves. The rest of the
- * picture the editor has - a tool with no implementation yet, one behind a paywall,
- * a desktop build whose server is offline - is published on top of this by the app
- * that can see it.
+ * The last answer is held through a re-fetch - each app has its own query cache
+ * and a reload has none - so the bar changes only when the answer does.
  */
 export function useQuickNavToolReasons(): Record<string, string> | null {
   const { t } = useTranslation();
@@ -108,17 +89,15 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
   const { endpointStatus, endpointDetails, loading } =
     useMultipleEndpointsEnabled(endpoints);
 
-  // Read once, at mount: reading again later would fight the live answer.
+  // Once, at mount: later reads would fight the live answer.
   const [remembered] = useState(readRemembered);
 
-  // Shared signing is a whole feature the server can switch off, so it needs its
-  // own answer; the config it comes from loads separately from the endpoint list.
+  // Its own signal, and its config loads separately from the endpoint list.
   const { loading: configLoading } = useAppConfig();
   const groupSigningEnabled = useGroupSigningEnabled();
 
   const live = useMemo(() => {
-    // Either half missing means the picture is incomplete, and a half answer
-    // would light up whatever it cannot see yet.
+    // A half answer would light up whatever it can't see yet.
     if (loading || configLoading) return null;
     const causes = causesFor(endpointStatus, endpointDetails);
     if (!groupSigningEnabled) causes.sharedSign = "groupSigningOff";
@@ -131,7 +110,7 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
     groupSigningEnabled,
   ]);
 
-  // Keyed on contents, not on the object, which is rebuilt every render.
+  // Keyed on contents: the object is rebuilt every render.
   const liveKey = live ? JSON.stringify(live) : null;
   useEffect(() => {
     if (liveKey) remember(JSON.parse(liveKey) as Record<string, Cause>);
@@ -144,18 +123,16 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
     const reasons: Record<string, string> = {};
     for (const [entry, cause] of Object.entries(causes)) {
       if (cause === "groupSigningOff") {
-        // The tool's own words for this, so the rail and the panel behind it say
-        // the same thing. Trailing stop removed, as the rail appends the reason
-        // to the entry's label rather than writing a sentence.
+        // The tool's own wording. Stop removed: the reason is appended to a label,
+        // not written as a sentence.
         reasons[entry] = t(
           "sharedSign.disabledBody",
           "Collaborative signing isn't enabled on this server.",
         ).replace(/\.\s*$/, "");
         continue;
       }
+      // Colon removed: these labels are written to sit in front of a tool name.
       const { key, fallback } = getDisabledLabel(cause);
-      // The shared labels are written to sit in front of a tool name; the rail
-      // appends them after the entry's own label instead.
       reasons[entry] = t(key, fallback).replace(/:\s*$/, "");
     }
     return reasons;

@@ -10,15 +10,13 @@ export interface QuickNavRailNotificationsProps {
 }
 
 /**
- * The bell in the rail's footer. The count is read here, but the list is not: the rail is
- * rendered above the route split and a row's actions need the workbench contexts below it, so
- * the app that is mounted owns the panel and this only asks for it (see NotificationPanel).
+ * The bell in the rail's footer. The count is read here; the list is not - the app
+ * owns the panel, since a row's actions need the workbench (see NotificationPanel).
  */
 export function QuickNavRailNotifications({
   onToggle,
 }: QuickNavRailNotificationsProps) {
-  // Gated before the count is read, not after: subscribing would start the poll, and a build
-  // with no notifications API has no endpoint to poll.
+  // Gated before the count is read: subscribing starts the poll.
   const available = useNotificationsAvailable();
   if (!available) return null;
   return <MountedRailNotifications onToggle={onToggle} />;
@@ -31,8 +29,8 @@ function MountedRailNotifications({
   const { unreadCount } = useNotifications();
 
   return (
-    // Read by the panel's outside-click handler, which must not treat the control that closes
-    // it as somewhere else on the page. On a wrapper because RailButton takes a fixed prop set.
+    // Read by the panel's outside-click handler. On a wrapper, since RailButton
+    // takes a fixed prop set.
     <span data-notifications-trigger>
       <RailButton
         label={t("quickNav.notifications", "Notifications")}

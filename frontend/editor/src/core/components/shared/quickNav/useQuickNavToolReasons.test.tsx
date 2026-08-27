@@ -2,11 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 
-/**
- * The rail reads this itself rather than being told by the app around it, so that
- * the editor and the processor cannot disagree about whether the same entry works.
- * What is worth pinning is the wording it picks and its refusal to guess early.
- */
+/** What matters here is the wording it picks, and that it won't guess early. */
 
 const h = vi.hoisted(() => ({
   endpointStatus: {} as Record<string, boolean>,
@@ -56,8 +52,7 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("admits it does not know rather than reporting nothing wrong", () => {
-    // Null, not an empty map. "Nothing is wrong" while the answer is merely being
-    // fetched is what flashed a dimmed entry back to usable.
+    // Null, not an empty map: "nothing is wrong" would flash a dimmed entry back.
     h.loading = true;
     h.endpointStatus = { automate: false };
 
@@ -67,9 +62,7 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("reports what it last knew while the answer is being fetched again", () => {
-    // The reason a reload no longer flashes: each app has its own query cache and a
-    // reload has none at all, so without this the entry draws as usable every time
-    // and dims a moment later.
+    // Each app has its own query cache, and a reload has none at all.
     h.endpointStatus = { automate: false };
     h.endpointDetails = { automate: { reason: "CONFIG" } };
     renderHook(() => useQuickNavToolReasons());
@@ -83,7 +76,7 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("forgets a reason once the server stops reporting it", () => {
-    // Held onto only until the answer actually changes, not indefinitely.
+    // Held until the answer changes, not indefinitely.
     h.endpointStatus = { automate: false };
     h.endpointDetails = { automate: { reason: "CONFIG" } };
     renderHook(() => useQuickNavToolReasons());
@@ -114,8 +107,7 @@ describe("useQuickNavToolReasons", () => {
     h.endpointDetails = { automate: { reason: "CONFIG" } };
 
     const { result } = renderHook(() => useQuickNavToolReasons());
-    // The picker's wording for the same condition, with the trailing colon gone
-    // because the rail appends it after the entry's own label.
+    // The picker's wording, colon gone.
     expect(result.current?.automate).toBe("Disabled by server administrator");
   });
 
@@ -130,8 +122,7 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("greys out shared signing when the server has the feature switched off", () => {
-    // Not an endpoint that can be removed but a whole feature that can be turned
-    // off, so it needs its own signal - and it is the tool's own wording.
+    // A whole feature rather than a removable endpoint, so it has its own signal.
     h.groupSigningEnabled = false;
 
     const { result } = renderHook(() => useQuickNavToolReasons());
@@ -141,8 +132,7 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("waits for the config before judging shared signing", () => {
-    // The config loads separately from the endpoint list, and reads as "off"
-    // before it arrives - which would grey the entry out and then light it up.
+    // The config loads separately and reads as "off" before it arrives.
     h.configLoading = true;
     h.groupSigningEnabled = false;
 

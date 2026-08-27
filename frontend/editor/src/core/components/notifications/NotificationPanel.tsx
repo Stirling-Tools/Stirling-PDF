@@ -9,10 +9,8 @@ import "@app/components/notifications/NotificationBell.css";
 export interface NotificationPanelProps {
   onClose: () => void;
   /**
-   * What each row may offer. Passed in rather than read here: the registry reaches into the
-   * workbench, so it has to be built where those contexts are, and it also carries a one-shot
-   * effect that picks up a document handed over from the processor - which has to keep running
-   * whether the panel is open or not.
+   * What each row may offer. Passed in because it reaches into the workbench, and
+   * because its one-shot document handover has to run whether this is open or not.
    */
   registry: ClientActionRegistry;
   /** Position for a panel anchored to its trigger; a placement class supplies it otherwise. */
@@ -21,13 +19,11 @@ export interface NotificationPanelProps {
 }
 
 /**
- * The list of notifications. Mounted only while open - so a build that never opens it never
- * subscribes to the poll - and mounting is what marks them read.
+ * The list of notifications. Mounted only while open, so a closed panel never
+ * subscribes to the poll, and mounting is what marks them read.
  *
- * Separate from any one trigger because the triggers are in different trees: the quick nav rail
- * is rendered above the route split, while the actions a row offers (open this document, take me
- * to the failure) need the workbench contexts that only exist below it. Whoever owns the open
- * state mounts this where those contexts are, and the rail only asks for it to be opened.
+ * Separate from its triggers, which live in a different tree: the rail renders above
+ * the route split, while a row's actions need the workbench contexts below it.
  */
 export function NotificationPanel({
   onClose,
@@ -40,10 +36,10 @@ export function NotificationPanel({
     useNotifications();
   const panel = useRef<HTMLDivElement>(null);
   const headingId = useId();
-  // Where the new ones stop, frozen as the panel opens, since opening marks everything read.
+  // Where the new ones stop, frozen on open, since opening marks them all read.
   const [firstSeenId, setFirstSeenId] = useState<string | null>(null);
 
-  // On mount rather than on close: waiting would leave the badge lit while the user reads.
+  // On mount, not on close: waiting leaves the badge lit while they read.
   const marked = useRef(false);
   useEffect(() => {
     if (marked.current) return;
@@ -53,10 +49,8 @@ export function NotificationPanel({
     markAllSeen();
   }, [notifications, unreadCount, markAllSeen]);
 
-  /**
-   * How many count as new. No boundary id means all of them were; one that has since left the list
-   * leaves nothing to divide on, so it reads as none rather than guessing at a row.
-   */
+  // No boundary means all were new; one that has left the list means none, rather
+  // than guessing at a row.
   const boundaryIndex = firstSeenId
     ? notifications.findIndex((notification) => notification.id === firstSeenId)
     : notifications.length;
@@ -66,8 +60,7 @@ export function NotificationPanel({
     const closeOnOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (panel.current?.contains(target)) return;
-      // A trigger's own click toggles the panel shut by itself; counting it as an outside
-      // click too would close and immediately reopen.
+      // A trigger closes this itself; counting it as outside would reopen it.
       if (target.closest?.("[data-notifications-trigger]")) return;
       onClose();
     };

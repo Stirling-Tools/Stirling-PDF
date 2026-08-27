@@ -6,20 +6,14 @@ import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHo
 import "@app/components/layout/AppFrame.css";
 
 /**
- * Layout route wrapping the editor and the processor, so the quick nav rail is
- * rendered once outside both.
+ * Layout route wrapping the editor and the processor, so the rail renders once
+ * outside both and a route change swaps only what is inside the Outlet. Inside
+ * either app it would be torn down with that app's tree.
  *
- * This is what keeps the bar on screen across an app switch. Rendered inside
- * either app it would be torn down with that app's tree, and no animation can
- * cover an element that ceases to exist. Here the route change swaps only what
- * is inside the Outlet.
+ * Suspense sits here for the same reason: the processor is a lazy chunk, and a
+ * fallback above this would replace the rail while it loads.
  *
- * The Suspense boundary belongs here rather than around the whole router for the
- * same reason: the processor is a lazy chunk, and a fallback hoisted above this
- * would replace the rail along with the app while it loads.
- *
- * Public routes - the mobile scanner, participant signing - sit outside this
- * layout, so they get no rail and no app chrome.
+ * Public routes stay outside this layout and get no chrome.
  */
 export function AppFrame() {
   return (

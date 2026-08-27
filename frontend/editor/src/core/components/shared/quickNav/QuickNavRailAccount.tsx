@@ -6,21 +6,11 @@ import "@app/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
   onOpenSettings: () => void;
-  /**
-   * Null before any app has registered - during an app switch, or on a route
-   * with no app around it. The disc still renders, so the bar keeps its shape.
-   */
+  /** Null between apps; the disc still renders, so the bar keeps its shape. */
   identity: QuickNavIdentity | null;
 }
 
-/**
- * The account control at the bottom of the rail: the avatar itself opens
- * settings, so there is no separate gear beside it.
- *
- * Uses the shared Avatar, which owns the initials-vs-picture fallback, so the
- * rail can't drift from the identity shown in the sidebar footer or on the
- * account settings page.
- */
+/** The avatar opens settings, so there is no separate gear beside it. */
 export function QuickNavRailAccount({
   onOpenSettings,
   identity,

@@ -7,11 +7,7 @@ import {
   useSuppressQuickNavRail,
 } from "@app/contexts/QuickNavHostContext";
 
-/**
- * The rail is drawn above the route split, so what it knows about the app around it
- * comes through here. Three properties hold that together and none of them are
- * visible from the rail's own markup, so they are pinned here.
- */
+/** None of these are visible from the rail's markup, so they are pinned here. */
 
 function Probe({ onRead }: { onRead: (value: unknown) => void }) {
   const host = useQuickNavHost();
@@ -51,10 +47,9 @@ function setup() {
 
 describe("QuickNavHostContext", () => {
   it("keeps what the app published after it unmounts, but drops its handlers", () => {
-    // The bar has to look identical across an app switch, which unmounts one app a
-    // commit before the next registers - blanking the avatar there is the blink the
-    // hoist exists to avoid. Handlers are the exception: calling into a torn-down
-    // tree is not harmless, so they go.
+    // A switch unmounts one app a commit before the next registers; blanking the
+    // avatar there is the blink the hoist exists to avoid. Handlers are the
+    // exception - calling into a torn-down tree is not harmless.
     const { view, read } = setup();
 
     expect(read().appMounted).toBe(true);
@@ -83,9 +78,7 @@ describe("QuickNavHostContext", () => {
   });
 
   it("hides the bar while a route with no app chrome is on screen", () => {
-    // appMounted is sticky and cannot answer "is an app on screen now", so a login
-    // form says so itself. Without this, going Back to the login page after signing
-    // in left a working bar showing the previous user beside the form.
+    // appMounted is sticky, so it can't answer "is an app on screen now".
     const { view, read } = setup();
     expect(read().chromeless).toBe(false);
 

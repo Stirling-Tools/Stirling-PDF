@@ -3,11 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AppNotification } from "@app/services/notifications";
 import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
 
-/**
- * The bell in the rail draws itself but opens nothing: what is worth pinning is that it stays
- * out of a build with no notifications API, and that pressing it reaches the app that owns the
- * panel rather than trying to be the panel.
- */
+/** It draws itself but opens nothing: the app owns the panel. */
 
 const fetchNotifications = vi.fn();
 
@@ -46,7 +42,7 @@ describe("QuickNavRailNotifications", () => {
   });
 
   it("keeps out of a build with no notifications API, and off its timer", async () => {
-    // The slot going missing is the point: there is no endpoint to poll and nothing it could show.
+    // No endpoint to poll and nothing it could show.
     h.notificationsAvailable = false;
 
     const { container } = render(
@@ -79,13 +75,12 @@ describe("QuickNavRailNotifications", () => {
     fireEvent.click(container.querySelector(".quick-nav-rail-item")!);
 
     expect(onToggle).toHaveBeenCalledTimes(1);
-    // No panel of its own: the rail is rendered above the route split, where a row's
-    // actions would have no workbench to act on.
+    // No panel of its own: a row's actions would have no workbench to act on.
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("stays pressable before an app has registered, doing nothing", async () => {
-    // Between apps there is briefly no handler. The slot must not vanish for that moment.
+    // Between apps there is briefly no handler.
     const { container } = render(<QuickNavRailNotifications />);
 
     await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());

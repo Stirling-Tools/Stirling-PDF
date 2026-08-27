@@ -117,8 +117,7 @@ export default function WorkbenchBar({
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
   const isMobile = useIsMobile();
-  // The quick nav rail carries the bell, and hides itself below its own breakpoint;
-  // this is the width where it is gone and something has to hold the bell instead.
+  // The width where the rail, which carries the bell, has hidden itself.
   const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 

@@ -1,38 +1,32 @@
 .quick-nav-rail-container {
-  /* One source for the icon spacing, declared on the column rather than the bar
-     so the app switcher above the bar inherits it too - it sits outside the nav
-     element, where a value declared there would not reach. */
+  /* On the column, not the bar: the switcher block above the bar sits outside the
+     nav element and would not inherit it. */
   --quicknav-item-gap: var(--space-3);
-  /* The bar's own inset. Named because the switcher block above the bar has to
-     subtract it to leave exactly one gap before the first icon. */
+  /* Named because the switcher block subtracts it to leave exactly one gap. */
   --quicknav-surface-pad: 0.375rem;
 
-  /* 36px surface, with half the standard gutter on each side so the bar sits the
-     same distance from the window edge as from the sidebar. The total is still
-     one gutter, so the surface keeps its full width. */
+  /* 36px surface plus half a gutter each side, so the bar sits the same distance
+     from the window as from the sidebar. */
   width: var(--quicknav-rail-w);
   height: 100%;
   flex-shrink: 0;
   box-sizing: border-box;
-  /* The same surface as the sidebar beside it, told apart by a hairline rather
-     than by a gap of canvas - so the whole left edge reads as one panel. The fill
-     is on the column, not the bar, so it covers the gutter either side too. */
+  /* Same surface as the sidebar, parted by a hairline rather than a gap. On the
+     column, not the bar, so the fill covers the gutters too. */
   background-color: var(--c-surface);
   border-inline-end: 1px solid var(--c-border-subtle);
   /* Brand mark above the bar, which takes the rest of the height. */
   display: flex;
   flex-direction: column;
-  /* Logical, not `padding-left`/`right`: this is a flex item that flips to the
-     far edge in RTL, where physical sides would mirror the wrong way. */
+  /* Logical: this flips to the far edge in RTL. */
   padding-block: var(--nav-gutter);
   padding-inline: calc(var(--nav-gutter) / 2);
 }
 
 /* One solid bar, full height. Groups inside it are separated by spacing, not by
    being split into separate boxes. */
-/* The rail reads as part of the canvas rather than a panel on top of it, so it
-   drops the surface treatment it inherits from NavSurface. Child selector to beat
-   .sui-nav-surface, which is a single class and would otherwise win on order. */
+/* Drops the surface treatment inherited from NavSurface. Child selector to beat
+   .sui-nav-surface, which would otherwise win on order. */
 .quick-nav-rail-container > .quick-nav-rail-surface {
   background: transparent;
   border: 0;
@@ -45,17 +39,13 @@
 .quick-nav-rail-surface {
   flex: 1;
   min-height: 0;
-  /* Block padding puts the first icon on the same baseline as the contents of
-     the sidebar's header row beside it. None inline: the bar is exactly one
-     target wide, so inline padding would leave the buttons wider than the box
-     holding them. */
+  /* Block padding lines the first icon up with the sidebar's header row. None
+     inline: the bar is one target wide, so it would squeeze the buttons. */
   padding: var(--quicknav-surface-pad) 0;
 }
 
-/* Portal's own sidebar becomes an off-canvas drawer under this breakpoint
-   (see Sidebar.css / AppShell.css) - the rail would just be extra chrome
-   next to a full-width drawer trigger, so it drops out too. The editor app
-   never mounts this component on mobile at all (see HomePage.tsx). */
+/* The portal's sidebar becomes an off-canvas drawer below this width, where the
+   rail would be extra chrome beside a full-width drawer trigger. */
 @media (max-width: 48rem) {
   .quick-nav-rail-container {
     display: none;

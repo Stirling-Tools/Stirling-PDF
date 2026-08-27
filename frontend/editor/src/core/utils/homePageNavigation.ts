@@ -8,12 +8,9 @@ export interface StartupNavigationAction {
 }
 
 /**
- * The view the editor settles on for a given number of open files: several files
- * means the file editor, one or none means the viewer - which with no files is
- * the landing screen.
- *
- * Shared so opening files and returning home can't disagree about what "default"
- * means (see getStartupNavigationAction below, which follows the same rule).
+ * Several files means the file editor; one or none means the viewer, which with no
+ * files is the landing screen. Shared with getStartupNavigationAction so opening
+ * files and returning home can't disagree.
  */
 export function getDefaultWorkbenchForFileCount(
   fileCount: number,

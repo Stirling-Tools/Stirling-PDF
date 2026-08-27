@@ -64,7 +64,7 @@ export default function Workbench() {
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();
-  // Below the quick nav rail's breakpoint the rail - and the bell it carries - is gone.
+  // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
 
   // Get navigation state - this is the source of truth
@@ -96,20 +96,16 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  // Reading hides the top bar outright, search and all. Retracting the tool row
-  // alone left the search and view switcher in place, since that row sits outside
-  // the retractable part - which is most of the chrome the mode exists to remove.
-  // The rail's Reader entry is the way back, and being outside the workbench it
-  // stays reachable with the bar gone.
+  // Reading hides the bar outright, search and all; retracting the tool row alone
+  // leaves the search and view switcher, which is most of what the mode removes.
+  // The rail's Reader entry is the way back, being outside the workbench.
   const showWorkbenchBar =
     topControlsAvailable && hasWorkbenchContent && !readerMode;
   const showFloatingSearch =
     topControlsAvailable && !hasWorkbenchContent && !readerMode;
 
-  // Reader is a distraction-free mode, so entering it retracts the tool row and
-  // leaving it brings the row back. Driven off the transition rather than
-  // derived, so the reopen tab still works while reading - the mode sets the
-  // starting state, it doesn't lock it.
+  // Off the transition rather than derived, so the reopen tab still works while
+  // reading: the mode sets the starting state, it doesn't lock it.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {
@@ -272,10 +268,8 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* Phone widths only: everywhere else the quick nav rail carries the bell. Here the rail
-          is hidden, so wherever the workbench bar is not shown either - My Files, an empty
-          workbench, a custom view without top controls - the bell gets its own corner, rather
-          than those being the places a user cannot see that something of theirs failed. */}
+      {/* Phone only, and only where the bar is hidden too - My Files, an empty
+          workbench - so a failure is never invisible. */}
       {isPhone && !showWorkbenchBar && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />

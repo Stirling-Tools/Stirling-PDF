@@ -63,7 +63,7 @@ function MobileTopbar() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
   const { pathname } = useLocation();
-  // Below the quick nav rail's breakpoint the rail - and the bell it carries - is gone.
+  // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
@@ -106,8 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="portal-shell__main">
         <MobileTopbar />
         <PortalSearchBar />
-        {/* Phone widths only: above them the quick nav rail carries the bell, and this
-            corner would be a second one. */}
+        {/* Phone only: above that the rail carries it, and this would be a second. */}
         {isPhone && (
           <div className="portal-shell__notifications">
             <NotificationBell />

@@ -16,14 +16,9 @@ import { HAS_PORTAL } from "@app/routes/adminRouteExtensions";
 const SIZE = "1.125rem";
 
 /**
- * The quick nav rail, assembled above the route split.
- *
- * Every destination here is a route, so the entries and their current states
- * come from the URL rather than from either app's context - which is what lets
- * this render once, outside both, and stay mounted while they swap underneath.
- * The few things it can't derive that way (who you are, the signing count,
- * whether you may open the processor, how to open settings) are registered by
- * whichever app is mounted; see QuickNavHostContext.
+ * The rail, assembled above the route split. Entries come from the URL, not from
+ * either app's context, which is what lets this render once outside both and stay
+ * mounted while they swap. The rest is registered - see QuickNavHostContext.
  */
 export function QuickNavRailHost() {
   const { t } = useTranslation();
@@ -31,31 +26,25 @@ export function QuickNavRailHost() {
   const { pathname, search } = useLocation();
   const host = useQuickNavHost();
 
-  // Nothing has mounted under the frame yet - login, an error state, or no
-  // backend to reach - so there is no app for this bar to navigate.
   const appMounted = Boolean(host?.appMounted);
 
   const inPortal = pathname.startsWith(PORTAL_BASENAME);
 
-  // Guarded where the editor offered a guard: leaving it mid-edit should still
-  // prompt. The processor registers none, and then this is a plain navigation.
+  // Guarded where the app offered a guard, so leaving mid-edit still prompts.
   const go = (to: string) => {
     const guard = host?.actions.current?.requestNavigation;
     if (guard) guard(() => navigate(to));
     else navigate(to);
   };
 
-  // A tool is opened through the app that owns it where possible; navigating to
-  // its route only selects it on a fresh mount, which is what the other app gets.
+  // Through the owning app where possible: its route only selects on a fresh mount.
   const openTool = (toolId: string, route: string) => {
     const select = host?.actions.current?.selectTool;
     if (select) select(toolId);
     else go(route);
   };
 
-  // Drawn as usable unless the mounted app says otherwise. RailButton keeps a
-  // disabled entry rendered and focusable, with the reason as its tooltip, so the
-  // slot never moves and the explanation is reachable by keyboard.
+  // Usable unless the app says otherwise.
   const unusable = (id: string) => {
     const reason = host?.toolReasons?.[id];
     return { disabled: Boolean(reason), reason };
@@ -81,9 +70,8 @@ export function QuickNavRailHost() {
         />
       ),
       pressed: Boolean(host?.readerMode),
-      // In the editor this toggles the mode. From the processor the editor isn't
-      // mounted to be toggled, so the intent is left for it to pick up as it
-      // arrives - see pendingReaderMode.
+      // From the processor the editor isn't mounted to toggle, so the intent is
+      // left for it to pick up - see pendingReaderMode.
       onClick: () => {
         const setMode = host?.actions.current?.setReaderMode;
         if (setMode) {
@@ -116,13 +104,11 @@ export function QuickNavRailHost() {
     },
   ];
 
-  // Whether to draw these comes from state; the handler itself is read at click
-  // time, so it is always the mounted app's.
+  // Read at click time, so it's always the mounted app's.
   const call = (name: "openSettings" | "openTeams") => () =>
     host?.actions.current?.[name]?.();
 
-  // A chrome-less route (the login form, an invite, a shared link) hides the bar
-  // even though an app has mounted in this tab - see useSuppressQuickNavRail.
+  // A route that isn't the app hides the bar - see useSuppressQuickNavRail.
   if (!appMounted || host?.chromeless) return null;
 
   return (
@@ -133,8 +119,7 @@ export function QuickNavRailHost() {
         otherApp: HAS_PORTAL
           ? inPortal
             ? {
-                // Back to wherever you left the editor, not to its front door:
-                // the processor is somewhere you step out to and come back from.
+                // Back to where you left the editor, not its front door.
                 onOpen: () =>
                   navigate(takeEditorReturnPath() ?? EDITOR_BASENAME),
               }
@@ -152,9 +137,8 @@ export function QuickNavRailHost() {
                 },
               }
           : undefined,
-        // Clicking the mark of the app you are in returns it to its default
-        // state. Only that app knows what that is, so it does the work; with
-        // none mounted, navigating to its home is the closest equivalent.
+        // The current app's mark returns it to its default state; only it knows
+        // what that is.
         onReturnHome: () => {
           const reset = host?.actions.current?.goToDefaultState;
           if (reset) reset();
@@ -162,9 +146,8 @@ export function QuickNavRailHost() {
         },
       }}
       identity={host?.identity ?? null}
-      // Rendered whenever an app has registered a handler; between apps there is
-      // briefly none, and the control simply doesn't respond for that moment
-      // rather than disappearing and shifting everything above it.
+      // Between apps there is briefly no handler; the control stays put and
+      // simply doesn't respond, rather than shifting everything above it.
       onOpenSettings={host?.hasSettings ? call("openSettings") : undefined}
       onOpenTeams={host?.hasTeams ? call("openTeams") : undefined}
       onToggleNotifications={() =>

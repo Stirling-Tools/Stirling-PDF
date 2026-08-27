@@ -1,6 +1,6 @@
 /* ========== APP FRAME ========== */
-/* The rail's column, then whichever app is mounted. The rail lives here rather
-   than inside an app so that switching apps changes only the column beside it. */
+/* The rail's column, then whichever app is mounted - so a switch changes only the
+   column beside it. */
 .app-frame {
   display: flex;
   height: 100vh;
@@ -9,13 +9,12 @@
   background-color: var(--c-bg);
 }
 
-/* min-width: 0 so the app can shrink rather than forcing the frame wider than
-   the window - its children set their own widths and would otherwise win. */
+/* min-width: 0 so the app shrinks rather than forcing the frame past the window;
+   its children set their own widths and would otherwise win. */
 .app-frame__content {
   flex: 1;
   min-width: 0;
   height: 100%;
 }
 
-/* The rail hides itself under the shell's mobile breakpoint (see
-   QuickNavRailContainer.css), where each app carries its own compact chrome. */
+/* The rail hides itself below the mobile breakpoint - see QuickNavRailContainer.css. */

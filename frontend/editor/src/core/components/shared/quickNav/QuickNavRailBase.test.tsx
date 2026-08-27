@@ -5,8 +5,7 @@ import {
   type QuickNavEntry,
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 
-/** The rail needs no providers: its tooltips are the app's own, and its colours
- *  come from CSS variables on the document root. */
+/** The rail needs no providers. */
 function withProviders(ui: React.ReactNode) {
   return <>{ui}</>;
 }
@@ -41,8 +40,7 @@ function renderRail(groups: QuickNavEntry[][]) {
 
 describe("QuickNavRailBase — app switcher", () => {
   it("renders the switcher for the app you are not in", () => {
-    // The app you ARE in is the brand mark above the bar, so the switcher holds
-    // only the other one.
+    // The app you are in is the brand mark, so the switcher holds only the other.
     const { labels, dividers } = renderRail([[PROCESSOR], WITHIN]);
 
     expect(labels).toEqual(["processor", "files", "reader"]);
@@ -50,8 +48,7 @@ describe("QuickNavRailBase — app switcher", () => {
   });
 
   it("drops an empty switcher, and its divider with it", () => {
-    // Builds with no second app have nothing to switch to. The divider goes too:
-    // there is no longer a group above to divide from.
+    // Nothing to switch to, so the divider has nothing to divide.
     const { labels, dividers } = renderRail([[], WITHIN]);
 
     expect(labels).toEqual(["files", "reader"]);
@@ -59,8 +56,7 @@ describe("QuickNavRailBase — app switcher", () => {
   });
 
   it("tags the switcher group, not whichever group renders first", () => {
-    // The swap animation targets the switcher; tagging by rendered position would
-    // hand it to the group below once the switcher was dropped.
+    // Tagging by rendered position would hand the tag to the group below.
     const { container } = render(
       withProviders(<QuickNavRailBase groups={[[], WITHIN]} />),
     );
@@ -73,9 +69,7 @@ describe("QuickNavRailBase — app switcher", () => {
 
 describe("QuickNavRailBase — entry state", () => {
   it("reports on/off for a toggle and nothing for the rest", () => {
-    // Nothing in this bar is a view you occupy, so only a real toggle has a
-    // state to expose. The app switcher above indicates the current app by which
-    // slot a mark sits in, not by highlighting an entry here.
+    // Nothing here is a view you occupy, so only a real toggle has state.
     const { container } = render(
       withProviders(
         <QuickNavRailBase
@@ -99,9 +93,7 @@ describe("QuickNavRailBase — entry state", () => {
   });
 
   it("keeps a disabled entry in the tab order so its reason stays reachable", () => {
-    // The reason is the whole point of disabling rather than hiding: a merely dim
-    // icon explains nothing, and the tooltip carrying the explanation is only
-    // reachable by keyboard while the control can still be focused.
+    // The tooltip carrying the reason is only reachable while it can be focused.
     const { container } = render(
       withProviders(
         <QuickNavRailBase
@@ -123,8 +115,7 @@ describe("QuickNavRailBase — entry state", () => {
   });
 
   it("keeps an unavailable entry rendered, disabled rather than dropped", () => {
-    // The rail's slots must not appear and vanish as access resolves, so
-    // position stays meaningful.
+    // Slots must not appear and vanish as access resolves.
     const { container } = render(
       withProviders(
         <QuickNavRailBase

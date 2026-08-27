@@ -1,8 +1,6 @@
 /* ========== QUICK NAV RAIL ========== */
-/* Always-icon strip for switching between the product's top-level surfaces,
-   plus a group of quick actions. Icons match the sidebar's own action-row scale
-   (18px glyph in --c-text-subtle). One solid bar; the groups inside it are
-   separated by spacing. */
+/* Always-icon strip. Icons match the sidebar's action-row scale (18px glyph in
+   --c-text-subtle); groups are separated by spacing, not by boxes. */
 
 /* The bar's own stack: groups top-down, account control pushed to the bottom. */
 .quick-nav-rail {
@@ -13,9 +11,8 @@
   width: 100%;
 }
 
-/* A group of related icons within the single bar. Full width because the bar
-   centres its children, which would otherwise leave the group shrink-to-fit and
-   give its buttons no width to fill. */
+/* Full width: the bar centres its children, which would otherwise leave the group
+   shrink-to-fit and its buttons with no width to fill. */
 .quick-nav-rail-group {
   display: flex;
   flex-direction: column;
@@ -25,16 +22,13 @@
   width: 100%;
 }
 
-/* Padded well past the glyph: the icon stays 18px to match the sidebar, but the
-   button is a 36px target - an 18px one is under the 24px minimum and hard to
-   hit. The padding is invisible, it only buys hit area. */
+/* 18px glyph in a 36px target: an 18px hit area is under the 24px minimum. */
 .quick-nav-rail-item {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* The bar is one target wide, so the button takes the full inner width rather
-     than a fixed size that would spill past the surface's border. */
+  /* Full inner width; a fixed size would spill past the surface's border. */
   width: 100%;
   height: 2.25rem;
   padding: 0;
@@ -48,8 +42,7 @@
     color var(--motion-fast);
 }
 
-/* LocalIcon renders an svg or img and the callers size it themselves; clamp it
-   to the sidebar's 18px icon scale regardless. */
+/* LocalIcon's callers size it themselves; clamp to the 18px scale regardless. */
 .quick-nav-rail-item svg,
 .quick-nav-rail-item img {
   width: 1.125rem;
@@ -58,15 +51,14 @@
   fill: currentColor;
 }
 
-/* The bare brand mark is taller than it is wide (71x79), so let its height drive
-   the width instead of being letterboxed into the square icon box above. */
+/* Taller than it is wide (71x79), so height drives the width rather than being
+   letterboxed into the square icon box. */
 .quick-nav-rail-item .sui-brandmark {
   width: auto;
   height: 1.125rem;
 }
 
-/* Branded app icons keep their own fills rather than inheriting currentColor, so
-   they read as product marks and not as another monochrome glyph. */
+/* Branded marks keep their own fills, so greying needs a filter. */
 .quick-nav-rail-item[aria-disabled="true"] .sui-brandmark,
 .quick-nav-rail-item[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
   filter: grayscale(1);
@@ -77,8 +69,8 @@
   color: var(--c-text);
 }
 
-/* Dimmed via opacity, matching .file-sidebar-action-row.disabled - there is no
-   disabled text token. Still focusable so its tooltip can explain why. */
+/* Opacity, matching .file-sidebar-action-row.disabled: there is no disabled text
+   token. Still focusable, so the tooltip can explain why. */
 .quick-nav-rail-item[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
@@ -93,8 +85,7 @@
   outline-offset: -0.125rem;
 }
 
-/* Attention count. Sits on the icon rather than adding a slot, so a changing
-   count never shifts the rail. */
+/* On the icon rather than in a slot, so a changing count never shifts the rail. */
 .quick-nav-rail-badge {
   position: absolute;
   top: 0.125rem;
@@ -103,9 +94,8 @@
   height: 0.875rem;
   padding: 0 0.1875rem;
   border-radius: var(--radius-pill);
-  /* The solid step, not the base: a small disc of flat colour behind 9px
-     numerals needs the darker end of the ramp to stay legible. Pairs with the
-     warning tone below, which does the same. */
+  /* The solid step, not the base: 9px numerals need the darker end to stay
+     legible. */
   background: var(--c-danger-solid);
   color: var(--c-text-on-primary);
   font-size: 0.5625rem;
@@ -116,19 +106,13 @@
   pointer-events: none;
 }
 
-/* Awareness rather than action: the solid step of the amber ramp, which carries
-   white numerals where the lighter one would not. */
+/* Awareness rather than action. Solid step again, for white numerals. */
 .quick-nav-rail-badge[data-tone="warning"] {
   background: var(--c-warning-solid);
 }
 
-/* Divides the core landing zones from the destinations and actions inside them.
-   Full-width of the bar's inner area so it reads as one continuous rule rather
-   than a floating dash.
-
-   No bottom margin: the rule is the first child of the group below it, so that
-   group's own gap already sits underneath. Matching that gap on top is what
-   centres the rule between the two groups, whatever the gap is set to. */
+/* No bottom margin: the rule is the first child of the group below, whose own gap
+   already sits underneath. Matching that gap on top centres it. */
 .quick-nav-rail-divider {
   width: 100%;
   height: 0;
@@ -137,8 +121,7 @@
   border-top: 1px solid var(--c-border);
 }
 
-/* Footer stack: the teams shortcut above the account control, both pinned to the
-   bottom by the account's auto top margin. */
+/* Pinned to the bottom by the auto top margin. */
 .quick-nav-rail-footer {
   margin-top: auto;
   display: flex;
@@ -150,28 +133,22 @@
 }
 
 /* ---- App switcher / brand ----
-   Both marks live here permanently; which slot each occupies is the only thing
-   that changes when you switch. Transitioning transform on live elements is why
-   the rail had to be hoisted out of the apps first - before that, switching
-   destroyed these nodes and no transition could survive it.
-
-   The brand slot is the top of the column at full size; the switch slot is one
-   --nav-header-h below it, at the same scale as the rail's other glyphs. */
+   Both marks live here permanently; only which slot each occupies changes. The
+   brand slot is the top of the column at full size, the switch slot one
+   --nav-header-h below at the rail's glyph scale. */
 .quick-nav-apps {
   position: relative;
   width: 100%;
   /* Brand row, plus the switch slot below it when a second app exists. */
   height: var(--nav-header-h);
   flex-shrink: 0;
-  /* One full gap between this block and the bar's first icon. The bar supplies
-     part of it as its own inset, so only the remainder is added here - otherwise
-     the icon under the divider sits tighter than every other pair. */
+  /* One gap to the first icon. The bar's own inset supplies part of it, so only
+     the remainder is added here. */
   margin-bottom: calc(var(--quicknav-item-gap) - var(--quicknav-surface-pad));
 }
 
 .quick-nav-apps:has(.quick-nav-app-mark[data-slot="switch"]) {
-  /* Brand row, a gap, the switch slot, then the gap the divider sits in - the
-     same gap that separates every other pair of icons in the bar. */
+  /* Brand row, gap, switch slot, then the gap the divider sits in. */
   height: calc(
     var(--nav-header-h) + var(--quicknav-item-gap) + 2.25rem +
       var(--quicknav-item-gap)
@@ -190,17 +167,15 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
-  /* Pinned to the top so a slot's position is its translate, unaffected by how
-     much the scale shrinks it - otherwise the two slots drift as the scale is
-     tuned. */
+  /* Pinned to the top so a slot's position is its translate, unaffected by the
+     scale - otherwise the slots drift as the scale is tuned. */
   transform-origin: center top;
   transition:
     transform var(--motion-spring),
     opacity var(--motion-spring);
 }
 
-/* One gap below the brand row, sized down into the glyph scale the rest of the
-   bar uses (1.125/1.6). */
+/* One gap below the brand row, at the bar's glyph scale (1.125/1.6). */
 .quick-nav-app-mark[data-slot="switch"] {
   transform: translateY(calc(var(--nav-header-h) + var(--quicknav-item-gap)))
     scale(0.703);
@@ -226,12 +201,9 @@
   border-radius: var(--radius-md);
 }
 
-/* Sits at the foot of the block, below whichever mark is in the switch slot,
-   separating two kinds of thing: apps above, places inside them below.
-   Runs the full width of the rail's column rather than stopping at the bar's
-   inner edge, so it reads as a rule across the chrome - meeting the column's own
-   border on one side and the window on the other. The negative inset cancels the
-   column's inline padding, so keep the two in step. */
+/* Apps above, places inside them below. Runs the full width of the column, not the
+   bar: the negative inset cancels the column's inline padding, so keep the two in
+   step. */
 .quick-nav-apps-divider {
   position: absolute;
   inset-inline: calc(var(--nav-gutter) / -2);

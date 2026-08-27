@@ -60,11 +60,9 @@ export interface TooltipProps {
 }
 
 /**
- * Titled header, in its own component so that the default Stirling logo - and
- * the preferences and app-config providers behind it - are only required by the
- * tooltips that actually ask for a header. The plain tooltip has to render
- * outside those providers: the quick nav rail sits above the route split, where
- * none of the app's providers exist.
+ * Its own component so the default logo - and the preferences and app-config
+ * providers behind it - are only required by tooltips that ask for a header. The
+ * plain tooltip has to render outside those providers, as the rail does.
  */
 function TooltipHeader({
   header,
@@ -133,8 +131,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // Only the sidebarTooltip variant needs this, and the plain variant has to
-  // work outside the app's providers - the quick nav rail renders above them.
+  // Only the sidebarTooltip variant needs this; the plain one has to work outside
+  // the app's providers.
   const sidebarContextValue = useOptionalSidebarContext();
   const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 

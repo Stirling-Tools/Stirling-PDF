@@ -24,17 +24,12 @@ const LABEL_KEY: Record<QuickNavApp, [string, string]> = {
 };
 
 /**
- * The brand mark and the app switcher, as one piece.
+ * The brand mark and the app switcher as one piece. Both marks stay mounted in one
+ * positioned block, and the current app is whichever sits in the upper slot;
+ * switching moves them past each other.
  *
- * Both marks are always mounted here, in one positioned block, and the current
- * app is simply the one sitting in the upper slot at brand size. Switching moves
- * them past each other with a CSS transition.
- *
- * They have to share a container for that: an element cannot transition from one
- * parent to another, so drawing the brand and the switcher separately would mean
- * swapping their contents instead of moving them - which is what the earlier
- * arrival keyframes were working around. This only became possible once the rail
- * stopped being torn down on every switch (see AppFrame).
+ * They share a container because an element can't transition between parents -
+ * drawn separately, their contents would swap rather than move.
  */
 export function QuickNavAppSwitch({
   currentApp,
@@ -58,8 +53,7 @@ export function QuickNavAppSwitch({
           className="quick-nav-app-mark"
           data-app={app}
           data-slot={isCurrent ? "brand" : "switch"}
-          // The current app is where you are, not somewhere to go; it still
-          // clicks, as the way back to that app's default view.
+          // Still clickable: the way back to that app's default view.
           aria-current={isCurrent ? "true" : undefined}
           aria-label={label}
           aria-disabled={disabled || undefined}
