@@ -724,7 +724,7 @@ export default function HomePage() {
                 accountHoisted
                 toggleAriaLabel={
                   navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave My Files")
+                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
                     : undefined
                 }
                 toggleIcon={

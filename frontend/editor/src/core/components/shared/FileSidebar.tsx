@@ -975,7 +975,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             {/* Tooltips only fire when collapsed - when expanded the visible
                 text label below already identifies each row, so a tooltip
                 would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "My Files") so the
+                "Open from computer" vs FolderOpen for "File library") so the
                 collapsed rail isn't two identical folder icons either. */}
             <Tooltip
               label={t("fileSidebar.openFromComputer", "Open from computer")}
@@ -994,7 +994,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 onClick={() => {
                   // "Open from computer" goes straight to the native OS file
                   // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "My Files" below.
+                  // is reachable via "File library" below.
                   nativeFileInputRef.current?.click();
                 }}
                 role="button"
@@ -1071,7 +1071,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             <Tooltip
-              label={t("fileSidebar.myFiles", "My Files")}
+              label={t("fileSidebar.myFiles", "File library")}
               position="right"
               withinPortal
               disabled={!collapsed}
@@ -1085,7 +1085,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "My Files")}
+                aria-label={t("fileSidebar.myFiles", "File library")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -1096,7 +1096,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <FolderOpenIcon className="file-sidebar-action-icon" />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "My Files")}
+                    {t("fileSidebar.myFiles", "File library")}
                   </span>
                 )}
               </div>

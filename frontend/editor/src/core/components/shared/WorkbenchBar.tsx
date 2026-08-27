@@ -489,7 +489,7 @@ export default function WorkbenchBar({
       data-wrapped="false"
       data-tour="workbench-bar"
     >
-      {/* Left: optional "Back to My Files" + view switcher */}
+      {/* Left: optional "Back to File library" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (
           <>
@@ -503,7 +503,7 @@ export default function WorkbenchBar({
                   : "filesPage.backToMyFiles",
                 returnRoute.label
                   ? `Back to ${returnRoute.label}`
-                  : "Back to My Files",
+                  : "Back to File library",
                 { folder: returnRoute.label ?? "" },
               )}
               leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
@@ -513,7 +513,7 @@ export default function WorkbenchBar({
                   ? t("filesPage.backToFolder", "Back to {{folder}}", {
                       folder: returnRoute.label,
                     })
-                  : t("filesPage.backToMyFiles", "Back to My Files")}
+                  : t("filesPage.backToMyFiles", "Back to File library")}
               </span>
             </Button>
             <div className="workbench-bar-divider" />

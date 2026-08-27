@@ -110,7 +110,7 @@ export function QuickNavRailHost() {
   const within: QuickNavEntry[] = [
     {
       id: "files",
-      label: t("fileSidebar.myFiles", "My Files"),
+      label: t("fileSidebar.myFiles", "File library"),
       icon: (
         <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
       ),

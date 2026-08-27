@@ -145,7 +145,7 @@ export default function Workbench() {
       }
     }
 
-    // The "My Files" workbench is available regardless of whether files are
+    // The file-library workbench is available regardless of whether files are
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;

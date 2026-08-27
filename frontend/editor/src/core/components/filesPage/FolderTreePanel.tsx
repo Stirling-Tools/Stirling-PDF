@@ -121,7 +121,7 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
       <div className="folder-tree-panel-inner">
         <div className="folder-tree-panel-header">
           <span className="folder-tree-panel-title">
-            {t("filesPage.myFiles", "My Files")}
+            {t("filesPage.myFiles", "File library")}
           </span>
         </div>
 
