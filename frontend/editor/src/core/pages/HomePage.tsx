@@ -15,6 +15,7 @@ import {
   useNavigationState,
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
+import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
@@ -161,8 +162,14 @@ export default function HomePage() {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (navigationState.workbench === "myFiles") {
-      // Leaving the file manager - drop back to a sensible default.
+    } else if (
+      navigationState.workbench === "myFiles" &&
+      !isApplyingRestoredView()
+    ) {
+      // The URL no longer supports the file manager - drop back to a sensible default. Stays a
+      // state check rather than a transition one: HomePage remounts without NavigationContext
+      // (a share link, a login bounce), and the view has to be corrected on arrival too.
+      // Skipped mid-restore, which is reopening a recorded view onto files still loading.
       actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
     }
   }, [
@@ -204,7 +211,9 @@ export default function HomePage() {
       navigationState.workbench,
     );
 
-    if (action) {
+    // A session restore fills an empty workbench too, but it already knows which view the user
+    // left - so it wins over this heuristic rather than being overwritten by it.
+    if (action && !isApplyingRestoredView()) {
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
