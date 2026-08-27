@@ -18,6 +18,7 @@ const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { AppFrame } from "@app/components/layout/AppFrame";
 import { RootGate } from "@app/routes/RootGate";
 
 // Import global styles
@@ -80,15 +81,19 @@ export default function App() {
           }
         />
 
-        {/* Admin-only route-set (the portal): its own top-level shell, mounted
-            before the catch-all. Absent from core/desktop builds (empty stub). */}
-        {getAdminRouteExtensions()}
+        {/* The two apps, under a shared frame so the quick nav rail is rendered
+            once outside both and survives switching between them. The public
+            routes above stay outside it - they get no app chrome. */}
+        <Route element={<AppFrame />}>
+          {/* Admin-only route-set (the portal): its own top-level shell, mounted
+              before the catch-all. Absent from core/desktop builds (empty stub). */}
+          {getAdminRouteExtensions()}
 
-        {/* All other routes need AppProviders for backend integration.
-            RootGate makes "/" route by role BEFORE any of it mounts, so a user
-            bound for the processor never boots the editor on the way. */}
-        <Route
-          path="*"
+          {/* All other routes need AppProviders for backend integration.
+              RootGate makes "/" route by role BEFORE any of it mounts, so a user
+              bound for the processor never boots the editor on the way. */}
+          <Route
+            path="*"
           element={
             <RootGate>
               <AppProviders>
@@ -112,8 +117,9 @@ export default function App() {
                 </AppLayout>
               </AppProviders>
             </RootGate>
-          }
-        />
+            }
+          />
+        </Route>
       </Routes>
     </Suspense>
   );

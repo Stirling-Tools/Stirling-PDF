@@ -13,6 +13,9 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 const includePortal =
   import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
 
+/** Whether this build ships the processor, and so has an app to switch to. */
+export const HAS_PORTAL = includePortal;
+
 const PortalApp = includePortal
   ? lazy(async () => {
       const m = await import("@portal/PortalApp");

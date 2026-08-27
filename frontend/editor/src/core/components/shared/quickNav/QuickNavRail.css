@@ -6,10 +6,6 @@
 
 /* The bar's own stack: groups top-down, account control pushed to the bottom. */
 .quick-nav-rail {
-  /* One source for the icon spacing: the divider subtracts it to stay optically
-     centred between the groups, so the two can't be tuned apart. */
-  --quicknav-item-gap: var(--space-3);
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -79,19 +75,6 @@
 .quick-nav-rail-item:hover {
   background: var(--c-hover);
   color: var(--c-text);
-}
-
-/* A tinted tile, not just a colour swap: the active-vs-rest colour change alone
-   is a hue shift with almost no lightness difference, so it fails as a sole
-   indicator, and a plain hover would otherwise out-rank the current item. Same
-   token pair the app's other active nav controls use (.sui-navitem.is-active,
-   .workbench-bar-view-btn.active, and the portal's collapsed icon rail). */
-.quick-nav-rail-item[data-current] {
-  background: var(--c-primary-subtle);
-  color: var(--c-accent-text);
-}
-.quick-nav-rail-item[data-current]:hover {
-  background: var(--c-primary-subtle);
 }
 
 /* Dimmed via opacity, matching .file-sidebar-action-row.disabled - there is no
@@ -166,50 +149,101 @@
   flex-shrink: 0;
 }
 
-/* ---- App swap ----
-   Switching apps replaces one React tree with another, so this is an arrival
-   animation rather than a transition: each mark starts where its counterpart sat
-   in the app you just left, and lands in its own slot. The brand rises from the
-   switcher slot as the switcher icon falls from the brand slot, which reads as
-   the two trading places.
+/* ---- App switcher / brand ----
+   Both marks live here permanently; which slot each occupies is the only thing
+   that changes when you switch. Transitioning transform on live elements is why
+   the rail had to be hoisted out of the apps first - before that, switching
+   destroyed these nodes and no transition could survive it.
 
-   The travel is one --nav-header-h: the brand row's height is exactly the
-   distance between the mark's centre and the first rail glyph's centre. The scale
-   ends are the two icon sizes (1.6rem brand, 1.125rem glyph), so each mark grows
-   or shrinks into its new role instead of just sliding. */
-@keyframes quicknav-swap-rise {
-  from {
-    transform: translateY(var(--nav-header-h)) scale(0.703);
-  }
-  to {
-    transform: translateY(0) scale(1);
-  }
+   The brand slot is the top of the column at full size; the switch slot is one
+   --nav-header-h below it, at the same scale as the rail's other glyphs. */
+.quick-nav-apps {
+  position: relative;
+  width: 100%;
+  /* Brand row, plus the switch slot below it when a second app exists. */
+  height: var(--nav-header-h);
+  flex-shrink: 0;
+  /* One full gap between this block and the bar's first icon. The bar supplies
+     part of it as its own inset, so only the remainder is added here - otherwise
+     the icon under the divider sits tighter than every other pair. */
+  margin-bottom: calc(var(--quicknav-item-gap) - var(--quicknav-surface-pad));
 }
 
-@keyframes quicknav-swap-fall {
-  from {
-    transform: translateY(calc(var(--nav-header-h) * -1)) scale(1.422);
-  }
-  to {
-    transform: translateY(0) scale(1);
-  }
+.quick-nav-apps:has(.quick-nav-app-mark[data-slot="switch"]) {
+  /* Brand row, a gap, the switch slot, then the gap the divider sits in - the
+     same gap that separates every other pair of icons in the bar. */
+  height: calc(
+    var(--nav-header-h) + var(--quicknav-item-gap) + 2.25rem +
+      var(--quicknav-item-gap)
+  );
 }
 
-.quick-nav-rail-container[data-app-swapped] .quick-nav-rail-brand > * {
-  animation: quicknav-swap-rise var(--motion-spring) both;
+.quick-nav-app-mark {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--nav-header-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  /* Pinned to the top so a slot's position is its translate, unaffected by how
+     much the scale shrinks it - otherwise the two slots drift as the scale is
+     tuned. */
+  transform-origin: center top;
+  transition:
+    transform var(--motion-spring),
+    opacity var(--motion-spring);
 }
 
-.quick-nav-rail-container[data-app-swapped]
-  .quick-nav-rail-group[data-switcher]
-  .quick-nav-rail-item > :first-child {
-  animation: quicknav-swap-fall var(--motion-spring) both;
+/* One gap below the brand row, sized down into the glyph scale the rest of the
+   bar uses (1.125/1.6). */
+.quick-nav-app-mark[data-slot="switch"] {
+  transform: translateY(calc(var(--nav-header-h) + var(--quicknav-item-gap)))
+    scale(0.703);
+}
+
+.quick-nav-app-mark[data-slot="brand"] {
+  transform: translateY(0) scale(1);
+}
+
+.quick-nav-app-mark[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.quick-nav-app-mark[aria-disabled="true"] .sui-brandmark,
+.quick-nav-app-mark[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
+  filter: grayscale(1);
+}
+
+.quick-nav-app-mark:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: -0.125rem;
+  border-radius: var(--radius-md);
+}
+
+/* Sits at the foot of the block, below whichever mark is in the switch slot,
+   separating two kinds of thing: apps above, places inside them below.
+   Runs the full width of the rail's column rather than stopping at the bar's
+   inner edge, so it reads as a rule across the chrome - meeting the column's own
+   border on one side and the window on the other. The negative inset cancels the
+   column's inline padding, so keep the two in step. */
+.quick-nav-apps-divider {
+  position: absolute;
+  inset-inline: calc(var(--nav-gutter) / -2);
+  bottom: 0;
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quick-nav-rail-container[data-app-swapped] .quick-nav-rail-brand > *,
-  .quick-nav-rail-container[data-app-swapped]
-    .quick-nav-rail-group[data-switcher]
-    .quick-nav-rail-item > :first-child {
-    animation: none;
+  .quick-nav-app-mark {
+    transition: none;
   }
 }

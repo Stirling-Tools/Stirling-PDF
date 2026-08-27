@@ -14,6 +14,7 @@ import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   useNavigationState,
   useNavigationActions,
+  useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,13 +25,18 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
-import { QuickNavRail } from "@app/components/shared/QuickNavRail";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
-import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import {
+  getStartupNavigationAction,
+  getDefaultWorkbenchForFileCount,
+} from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
+import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
+import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
   useFilesPage,
@@ -81,6 +87,7 @@ export default function HomePage() {
     handleToolSelect,
     handleBackToTools,
     readerMode,
+    setReaderMode,
     setLeftPanelView,
     toolAvailability,
     customWorkbenchViews,
@@ -94,6 +101,7 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const otherApp = useOtherAppSwitch();
   const location = useLocation();
   // Persisted user preference for the FileSidebar collapsed state. Auto-
   // collapse on /files is layered on top in the transition effect below and
@@ -125,7 +133,75 @@ export default function HomePage() {
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
+  const { requestNavigation } = useNavigationGuard();
+
+  // Arriving from the processor's Reader entry, which had no editor to toggle.
+  // Ref-guarded because a one-shot flag plus StrictMode's double-invoke would
+  // otherwise look like the request never existed on the second pass.
+  const consumedReaderRequest = useRef(false);
+  useEffect(() => {
+    if (consumedReaderRequest.current) return;
+    consumedReaderRequest.current = true;
+    if (consumeReaderModeRequest()) setReaderMode(true);
+  }, [setReaderMode]);
   const { actions } = useNavigationActions();
+
+  const { searchInterfaceActions } = useViewer();
+
+  // Reading hides the top bar, and with it the two search controls - along with
+  // the code that makes their shortcuts work. Cmd/Ctrl+K's listener lives inside
+  // the super search itself, so unmounting the bar took the shortcut with it;
+  // Cmd/Ctrl+F does have a listener in the viewer, but the panel it opens is only
+  // rendered inside the bar's popover, so it set state that nothing drew. Both
+  // therefore leave reading first, which brings the bar back, and then act.
+  //
+  // Matched on e.code, like the super search does, so the shortcuts survive
+  // keyboard layouts where these keys don't produce "k" and "f".
+  const focusSearchAfterRestore = useRef(false);
+  useEffect(() => {
+    if (!readerMode) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo) return;
+      if (e.code !== "KeyK" && e.code !== "KeyF") return;
+      // Same carve-out the search itself makes: a dialog owns the keyboard.
+      if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]')) return;
+      e.preventDefault();
+      setReaderMode(false);
+      if (e.code === "KeyK") {
+        focusSearchAfterRestore.current = true;
+        return;
+      }
+      // The panel's visibility is state, so it can be opened before the bar it
+      // renders in exists - it appears already open as the bar returns.
+      searchInterfaceActions.open();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [readerMode, setReaderMode, searchInterfaceActions]);
+
+  useEffect(() => {
+    if (readerMode || !focusSearchAfterRestore.current) return;
+    focusSearchAfterRestore.current = false;
+    requestAnimationFrame(() =>
+      window.dispatchEvent(new Event("superSearch:focus")),
+    );
+  }, [readerMode]);
+
+  // The brand mark's "back to a clean slate": close whatever tool is open, leave
+  // My Files and reading mode, and settle on the view the open files call for.
+  const goToDefaultState = useCallback(() => {
+    handleBackToTools();
+    if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
+    actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
+  }, [
+    handleBackToTools,
+    location.pathname,
+    navigate,
+    actions,
+    activeFiles.length,
+  ]);
+
 
   // Sync the /files* URL into the workbench state so the file manager view
   // takes over the workbench area when the user lands on it. This is the
@@ -349,6 +425,25 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {/* Hands the hoisted rail what only this app knows. The processor mounts
+          this same component - only these props differ. useOtherAppSwitch is the
+          existing single gate for "is there another app open to this user", so
+          the rail can't disagree with the rest of the UI about access. */}
+      <QuickNavHostBridge
+        portalAccess={Boolean(otherApp)}
+        onOpenSettings={() => setConfigModalOpen(true)}
+        onOpenTeams={otherApp ? () => navigate("/settings/teams") : undefined}
+        requestNavigation={requestNavigation}
+        // Cast at the boundary: ToolId is a per-variant union the shared rail
+        // can't name, and the ids it passes ("read", "automate", "sharedSign")
+        // are present in every build.
+        readerMode={readerMode}
+        onSetReaderMode={setReaderMode}
+        onGoToDefaultState={goToDefaultState}
+        onSelectTool={(id) =>
+          handleToolSelect(id as Parameters<typeof handleToolSelect>[0])
+        }
+      />
       <FilesPageProvider>
         {isMobile ? (
           <div
@@ -535,7 +630,6 @@ export default function HomePage() {
             {/* Left column: the quick nav rail and the sidebar side by side,
                 both reaching the top of the window. */}
             <div className="workspace-frame">
-              <QuickNavRail onOpenSettings={() => setConfigModalOpen(true)} />
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}
                 accountHoisted

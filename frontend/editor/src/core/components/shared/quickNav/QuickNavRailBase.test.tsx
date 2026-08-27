@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
 import {
   QuickNavRailBase,
   type QuickNavEntry,
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 
-/** The rail's tooltips need Mantine's theme context. */
+/** The rail needs no providers: its tooltips are the app's own, and its colours
+ *  come from CSS variables on the document root. */
 function withProviders(ui: React.ReactNode) {
-  return <MantineProvider>{ui}</MantineProvider>;
+  return <>{ui}</>;
 }
 
 function entry(
@@ -19,7 +19,6 @@ function entry(
     id,
     label: id,
     icon: null,
-    kind: "destination",
     onClick: () => {},
     ...overrides,
   };
@@ -72,28 +71,28 @@ describe("QuickNavRailBase — app switcher", () => {
   });
 });
 
-describe("QuickNavRailBase — current state", () => {
-  it("marks the current app and the current page differently", () => {
-    // Both are active at once in My Files. Two aria-current="page" in one nav
-    // would have a screen reader announce two current pages.
+describe("QuickNavRailBase — entry state", () => {
+  it("reports on/off for a toggle and nothing for the rest", () => {
+    // Nothing in this bar is a view you occupy, so only a real toggle has a
+    // state to expose. The app switcher above indicates the current app by which
+    // slot a mark sits in, not by highlighting an entry here.
     const { container } = render(
       withProviders(
         <QuickNavRailBase
-          groups={[
-            [entry("processor", { isActive: true, currentKind: "app" })],
-            [entry("files", { isActive: true }), entry("reader")],
-          ]}
+          groups={[[PROCESSOR], [entry("reader", { pressed: true }), entry("files")]]}
         />,
       ),
     );
 
-    const current = [...container.querySelectorAll("[aria-current]")].map(
-      (el) => [el.getAttribute("aria-label"), el.getAttribute("aria-current")],
+    const state = [...container.querySelectorAll(".quick-nav-rail-item")].map(
+      (b) => [b.getAttribute("aria-label"), b.getAttribute("aria-pressed")],
     );
-    expect(current).toEqual([
-      ["processor", "true"],
-      ["files", "page"],
+    expect(state).toEqual([
+      ["processor", null],
+      ["reader", "true"],
+      ["files", null],
     ]);
+    expect(container.querySelectorAll("[aria-current]")).toHaveLength(0);
   });
 
   it("keeps an unavailable entry rendered, disabled rather than dropped", () => {

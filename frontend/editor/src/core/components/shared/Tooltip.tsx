@@ -13,7 +13,7 @@ import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
 import { TooltipTip } from "@app/types/tips";
 import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useOptionalSidebarContext } from "@app/contexts/SidebarContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import styles from "@app/components/shared/tooltip/Tooltip.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -47,6 +47,31 @@ export interface TooltipProps {
   showCloseButton?: boolean;
 }
 
+/**
+ * Titled header, in its own component so that the default Stirling logo - and
+ * the preferences and app-config providers behind it - are only required by the
+ * tooltips that actually ask for a header. The plain tooltip has to render
+ * outside those providers: the quick nav rail sits above the route split, where
+ * none of the app's providers exist.
+ */
+function TooltipHeader({ header }: { header: NonNullable<TooltipProps["header"]> }) {
+  const { tooltipLogo } = useLogoAssets();
+  return (
+    <div className={styles["tooltip-header"]}>
+      <div className={styles["tooltip-logo"]}>
+        {header.logo || (
+          <img
+            src={tooltipLogo}
+            alt="Stirling PDF"
+            style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
+          />
+        )}
+      </div>
+      <span className={styles["tooltip-title"]}>{header.title}</span>
+    </div>
+  );
+}
+
 export const Tooltip: React.FC<TooltipProps> = ({
   sidebarTooltip = false,
   position,
@@ -73,7 +98,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const { tooltipLogo } = useLogoAssets();
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -93,9 +117,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // The context is only used when sidebarTooltip is true.
-  const sidebarContextValue = useSidebarContext();
-  const sidebarContext = sidebarTooltip ? sidebarContextValue : null;
+  // Only the sidebarTooltip variant needs this, and the plain variant has to
+  // work outside the app's providers - the quick nav rail renders above them.
+  const sidebarContextValue = useOptionalSidebarContext();
+  const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
@@ -425,20 +450,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }
         />
       )}
-      {header && (
-        <div className={styles["tooltip-header"]}>
-          <div className={styles["tooltip-logo"]}>
-            {header.logo || (
-              <img
-                src={tooltipLogo}
-                alt="Stirling PDF"
-                style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
-              />
-            )}
-          </div>
-          <span className={styles["tooltip-title"]}>{header.title}</span>
-        </div>
-      )}
+      {header && <TooltipHeader header={header} />}
       <TooltipContent
         content={content}
         tips={tips}

@@ -17,6 +17,7 @@ import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { AppFrame } from "@app/components/layout/AppFrame";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -94,6 +95,9 @@ export default function App() {
           }
         />
 
+        {/* The two apps, under a shared frame so the quick nav rail is rendered
+            once outside both and survives switching between them. */}
+        <Route element={<AppFrame />}>
         {/* Admin-only route-set (the portal): its own top-level shell, mounted
             before the catch-all. */}
         {getAdminRouteExtensions()}
@@ -129,6 +133,7 @@ export default function App() {
             </RootGate>
           }
         />
+        </Route>
       </Routes>
     </Suspense>
   );

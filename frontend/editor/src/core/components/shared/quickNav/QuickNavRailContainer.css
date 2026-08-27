@@ -1,4 +1,12 @@
 .quick-nav-rail-container {
+  /* One source for the icon spacing, declared on the column rather than the bar
+     so the app switcher above the bar inherits it too - it sits outside the nav
+     element, where a value declared there would not reach. */
+  --quicknav-item-gap: var(--space-3);
+  /* The bar's own inset. Named because the switcher block above the bar has to
+     subtract it to leave exactly one gap before the first icon. */
+  --quicknav-surface-pad: 0.375rem;
+
   /* 36px surface, with half the standard gutter on each side so the bar sits the
      same distance from the window edge as from the sidebar. The total is still
      one gutter, so the surface keeps its full width. */
@@ -6,7 +14,11 @@
   height: 100%;
   flex-shrink: 0;
   box-sizing: border-box;
-  background-color: var(--c-bg);
+  /* The same surface as the sidebar beside it, told apart by a hairline rather
+     than by a gap of canvas - so the whole left edge reads as one panel. The fill
+     is on the column, not the bar, so it covers the gutter either side too. */
+  background-color: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
   /* Brand mark above the bar, which takes the rest of the height. */
   display: flex;
   flex-direction: column;
@@ -27,15 +39,8 @@
   border-radius: 0;
 }
 
-/* Same height as the sidebar's header row beside it, so the mark and the wordmark
-   sit on one line across the two columns. */
-.quick-nav-rail-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--nav-header-h);
-  flex-shrink: 0;
-}
+/* The brand slot inside the switcher block is one header row tall, so the mark
+   and the sidebar's wordmark sit on one line across the two columns. */
 
 .quick-nav-rail-surface {
   flex: 1;
@@ -44,7 +49,7 @@
      the sidebar's header row beside it. None inline: the bar is exactly one
      target wide, so inline padding would leave the buttons wider than the box
      holding them. */
-  padding: 0.375rem 0;
+  padding: var(--quicknav-surface-pad) 0;
 }
 
 /* Portal's own sidebar becomes an off-canvas drawer under this breakpoint

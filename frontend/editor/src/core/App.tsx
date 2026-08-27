@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
+import { AppFrame } from "@app/components/layout/AppFrame";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
@@ -53,7 +54,10 @@ export default function App() {
           }
         />
 
-        {/* All other routes need AppProviders for backend integration */}
+        {/* The app, under a shared frame so the quick nav rail is rendered
+            once outside it. The public routes above stay outside the frame. */}
+        <Route element={<AppFrame />}>
+          {/* All other routes need AppProviders for backend integration */}
         <Route
           path="*"
           element={
@@ -65,6 +69,7 @@ export default function App() {
             </AppProviders>
           }
         />
+        </Route>
       </Routes>
     </Suspense>
   );

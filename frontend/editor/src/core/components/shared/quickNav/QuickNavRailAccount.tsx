@@ -1,11 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { Avatar } from "@app/ui/Avatar";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import "@app/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
   onOpenSettings: () => void;
+  /**
+   * Null before any app has registered - during an app switch, or on a route
+   * with no app around it. The disc still renders, so the bar keeps its shape.
+   */
+  identity: QuickNavIdentity | null;
 }
 
 /**
@@ -18,19 +23,16 @@ export interface QuickNavRailAccountProps {
  */
 export function QuickNavRailAccount({
   onOpenSettings,
+  identity,
 }: QuickNavRailAccountProps) {
   const { t } = useTranslation();
-  const { displayName, profilePictureUrl } = useAccountIdentity();
+  const displayName = identity?.displayName ?? t("auth.displayName.user", "User");
+  const profilePictureUrl = identity?.profilePictureUrl ?? null;
   const label = `${displayName} — ${t("fileSidebar.openSettings", "Open settings")}`;
 
   return (
     <div className="quick-nav-rail-account">
-      <Tooltip
-        label={label}
-        position="right"
-        withinPortal
-        events={{ hover: true, focus: true, touch: true }}
-      >
+      <Tooltip content={label} position="right" arrow>
         {/* Tooltip clones its child to attach the hover/focus handlers and its
             floating reference, so the child has to accept them. Avatar takes a
             fixed prop set and spreads nothing, so handed the Avatar directly the

@@ -5,18 +5,10 @@ import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
-import { useGoToEditor } from "@portal/hooks/useGoToEditor";
-import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
-import { markAppSwap } from "@app/utils/appSwap";
 import { MenuIcon, SearchIcon } from "@portal/components/icons";
 import { Logo } from "@app/ui/Logo";
-import { BrandTile } from "@app/components/shared/BrandTile";
 import "@app/components/layout/WorkspaceFrame.css";
-import {
-  QuickNavRailContainer,
-  type QuickNavEntry,
-} from "@app/components/shared/quickNav/QuickNavRailContainer";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
 
 /**
@@ -66,101 +58,15 @@ function MobileTopbar() {
  * hamburger. The Sidebar reads its state from context, so this shell stays
  * prop-free.
  */
-// PLACEHOLDER, matching the editor's rail: shown only while the real count is
-// zero so the badge design is visible on a quiet account.
-const PLACEHOLDER_SIGNING_COUNT = 2;
-
 export function AppShell({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
   const {
     mobileNavOpen,
     closeMobileNav,
     openSettings,
   } = useUI();
   const { pathname } = useLocation();
-  const goToEditor = useGoToEditor();
   // Same count the editor's rail shows: the hooks behind it read app config and
   // the REST API, both of which this shell already has.
-  const signingCount = useSigningBadgeCount();
-
-  // Deliberately the same bar the editor renders: same groups, same order, same
-  // account control. Everything except Processor hands off to the editor app,
-  // since that is where those destinations and tools live.
-  const apps: QuickNavEntry[] = [
-    {
-      id: "editor",
-      label: t("quickNav.editor", "Editor"),
-      // The Stirling app tile - see the editor's own variant.
-      icon: <BrandTile size="1.125rem" />,
-      kind: "destination",
-      onClick: () => {
-        markAppSwap();
-        goToEditor();
-      },
-    },
-  ];
-
-  // Editor destinations and tools, so they deep-link into the editor at that
-  // route rather than pretending to run anything here.
-  const within: QuickNavEntry[] = [
-    {
-      id: "files",
-      label: t("fileSidebar.myFiles", "My Files"),
-      icon: (
-        <LocalIcon
-          icon="folder-outline-rounded"
-          width="1.125rem"
-          height="1.125rem"
-        />
-      ),
-      kind: "destination",
-      onClick: () => goToEditor("/files"),
-    },
-    {
-      id: "reader",
-      label: t("quickNav.reader", "Reader"),
-      icon: (
-        <LocalIcon
-          icon="menu-book-outline-rounded"
-          width="1.125rem"
-          height="1.125rem"
-        />
-      ),
-      kind: "destination",
-      // The editor reaches the reader by selecting the read tool; /read is that
-      // tool's route, so this lands on the same place rather than the editor's
-      // default view.
-      onClick: () => goToEditor("/read"),
-    },
-    {
-      id: "automate",
-      label: t("quickAccess.automate", "Automate"),
-      icon: (
-        <LocalIcon
-          icon="rebase-outline-rounded"
-          width="1.125rem"
-          height="1.125rem"
-        />
-      ),
-      kind: "action",
-      onClick: () => goToEditor("/automate"),
-    },
-    {
-      id: "sharedSign",
-      label: t("home.sharedSign.title", "Shared Signing"),
-      icon: (
-        <LocalIcon
-          icon="draw-outline-rounded"
-          width="1.125rem"
-          height="1.125rem"
-        />
-      ),
-      kind: "action",
-      badge: signingCount || PLACEHOLDER_SIGNING_COUNT,
-      badgeTone: "warning",
-      onClick: () => goToEditor("/shared-sign"),
-    },
-  ];
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -182,15 +88,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="portal-shell">
       {/* The rail and the sidebar side by side, both reaching the top of the
           window - the same frame the editor uses. */}
+      {/* The same bridge the editor mounts - being here is proof the processor
+          is available, and settings is the one thing that opens differently. */}
+      <QuickNavHostBridge
+        portalAccess
+        onOpenSettings={() => openSettings()}
+        onOpenTeams={() => openSettings("teams")}
+      />
       <div className="workspace-frame">
-        <QuickNavRailContainer
-          groups={[apps, within]}
-          currentApp="processor"
-          onOpenSettings={() => openSettings()}
-          onOpenTeams={() => openSettings("teams")}
-          // Being here means the processor is available, so the gate is open.
-          notifications={{ disabled: false }}
-        />
         <Sidebar />
       </div>
       {mobileNavOpen && (

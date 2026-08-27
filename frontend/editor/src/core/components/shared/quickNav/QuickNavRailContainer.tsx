@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BrandMark } from "@app/components/shared/BrandMark";
-import { BrandTile } from "@app/components/shared/BrandTile";
-import { consumeAppSwap } from "@app/utils/appSwap";
+import {
+  QuickNavAppSwitch,
+  type QuickNavAppSwitchProps,
+} from "@app/components/shared/quickNav/QuickNavAppSwitch";
+import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import {
   QuickNavRailBase,
   RailButton,
@@ -12,12 +13,6 @@ import {
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
-
-// PLACEHOLDER counts, so the badge design can be judged before the features
-// behind them exist. Delete both when they do: notifications has no source at
-// all, and shared signing already has a real one that wins whenever it is
-// non-zero.
-const PLACEHOLDER_NOTIFICATION_COUNT = 3;
 
 export type {
   QuickNavEntry,
@@ -46,12 +41,11 @@ export interface QuickNavRailContainerProps extends Omit<
    * the processor entry, and disabled with `reason` when that signal is off, so
    * the two can't disagree about who sees it.
    */
-  notifications?: { disabled: boolean; reason?: string };
-  /**
-   * Which app this rail belongs to. Its mark becomes the brand above the bar, so
-   * the corner says where you are; the switcher below holds only the other app.
-   */
-  currentApp?: "editor" | "processor";
+  notifications?: { disabled: boolean; reason?: string; badge?: number };
+  /** Identity for the account control; see QuickNavRailAccount. */
+  identity?: QuickNavIdentity | null;
+  /** The brand mark and app switcher, which share a pair of slots. */
+  appSwitch: QuickNavAppSwitchProps;
 }
 
 /**
@@ -62,34 +56,19 @@ export function QuickNavRailContainer({
   onOpenSettings,
   onOpenTeams,
   notifications,
-  currentApp = "editor",
+  identity = null,
+  appSwitch,
   ...railProps
 }: QuickNavRailContainerProps) {
   const { t } = useTranslation();
-  // Read in an effect, not a state initialiser: StrictMode double-invokes both,
-  // but a ref survives that, so the flag is consumed exactly once and a genuine
-  // switch can't be swallowed by the second pass.
-  const [swapped, setSwapped] = useState(false);
-  const checkedSwap = useRef(false);
-  useEffect(() => {
-    if (checkedSwap.current) return;
-    checkedSwap.current = true;
-    if (consumeAppSwap()) setSwapped(true);
-  }, []);
   return (
-    <div className="quick-nav-rail-container" data-app-swapped={swapped || undefined}>
-      {/* The mark of the app you are in, in the leftmost column and above
-          everything else, so the corner both carries the brand and says where you
-          are. Outside the nav landmark: it labels the product, it is not somewhere
-          you can navigate to. The wordmark beside it belongs to the sidebar,
-          which can afford the width. */}
-      <div className="quick-nav-rail-brand">
-        {currentApp === "processor" ? (
-          <BrandMark height="1.6rem" />
-        ) : (
-          <BrandTile size="1.6rem" />
-        )}
-      </div>
+    <div className="quick-nav-rail-container">
+      {/* The corner both carries the brand and says which app you are in, with
+          the other app directly below it. Not wrapped in a fixed row: the block
+          is taller than one when a second app exists, and centring it in a
+          brand-height row would drop the mark out of line with the sidebar's
+          wordmark beside it. */}
+      <QuickNavAppSwitch {...appSwitch} />
       <NavSurface className="quick-nav-rail-surface">
         <QuickNavRailBase
           {...railProps}
@@ -106,8 +85,7 @@ export function QuickNavRailContainer({
                         height="1.125rem"
                       />
                     }
-                    kind="action"
-                    badge={PLACEHOLDER_NOTIFICATION_COUNT}
+                    badge={notifications.badge}
                     disabled={notifications.disabled}
                     reason={notifications.reason}
                     // Nothing to open yet; the slot is here so its position is
@@ -125,12 +103,14 @@ export function QuickNavRailContainer({
                         height="1.125rem"
                       />
                     }
-                    kind="action"
                     onClick={onOpenTeams}
                   />
                 )}
                 {onOpenSettings && (
-                  <QuickNavRailAccount onOpenSettings={onOpenSettings} />
+                  <QuickNavRailAccount
+                    onOpenSettings={onOpenSettings}
+                    identity={identity}
+                  />
                 )}
               </div>
             ) : undefined
