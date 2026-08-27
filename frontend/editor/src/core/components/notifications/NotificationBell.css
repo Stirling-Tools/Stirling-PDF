@@ -52,7 +52,7 @@
    down would fall off the window and one right-aligned to it off the left edge. So
    it stands beside the rail and rises from the bottom. */
 .notification-bell__panel--rail {
-  inset-inline-start: calc(var(--quicknav-rail-w) + var(--nav-gutter));
+  inset-inline-start: calc(var(--nav-rail-w) + var(--nav-gutter));
   inset-block-end: var(--nav-gutter);
 }
 

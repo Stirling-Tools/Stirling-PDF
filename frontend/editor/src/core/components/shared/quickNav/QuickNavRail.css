@@ -19,7 +19,7 @@
   width: 100%;
 }
 
-/* 18px glyph in a 36px target: an 18px hit area is under the 24px minimum. */
+/* The glyph stays at the sidebar's scale; the button fills the rail for hit area. */
 .quick-nav-rail-item {
   position: relative;
   display: inline-flex;
