@@ -15,6 +15,13 @@ export interface QuickNavEntry {
   disabled?: boolean;
   reason?: string;
   badge?: number;
+  /**
+   * Set when the entry opens a panel: presence adds the popup semantics, the value
+   * says whether it is open. The panel it names is rendered in another tree, so
+   * `controls` is the only link between the two.
+   */
+  expanded?: boolean;
+  controls?: string;
   /** "danger" waits on the user; "warning" is awareness only. */
   badgeTone?: "danger" | "warning";
   onClick: () => void;
@@ -35,6 +42,8 @@ export function RailButton({
   reason,
   badge,
   badgeTone = "danger",
+  expanded,
+  controls,
   onClick,
 }: Omit<QuickNavEntry, "id">) {
   return (
@@ -48,6 +57,9 @@ export function RailButton({
         className="quick-nav-rail-item"
         aria-pressed={pressed}
         aria-label={label}
+        aria-haspopup={expanded === undefined ? undefined : "dialog"}
+        aria-expanded={expanded}
+        aria-controls={expanded === undefined ? undefined : controls}
         // aria-disabled, not `disabled`: keeps it focusable, so the tooltip
         // explaining why stays reachable.
         aria-disabled={disabled || undefined}

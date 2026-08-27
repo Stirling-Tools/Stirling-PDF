@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { NotificationPanel } from "@app/components/notifications/NotificationPanel";
+import {
+  NotificationPanel,
+  NOTIFICATIONS_PANEL_ID,
+} from "@app/components/notifications/NotificationPanel";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
@@ -64,6 +67,7 @@ export function QuickNavHostBridge({
       signingBadge,
       portalAccess,
       readerMode,
+      notificationsOpen,
       toolReasons: mergedToolReasons,
     },
     {
@@ -81,6 +85,7 @@ export function QuickNavHostBridge({
   if (!notificationsAvailable || !notificationsOpen) return null;
   return (
     <NotificationPanel
+      id={NOTIFICATIONS_PANEL_ID}
       onClose={closeNotifications}
       registry={notificationActions}
       className="notification-bell__panel--rail"

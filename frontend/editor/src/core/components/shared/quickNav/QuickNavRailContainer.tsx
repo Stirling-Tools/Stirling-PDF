@@ -29,6 +29,7 @@ export interface QuickNavRailContainerProps extends Omit<
   /** Omitted by builds whose settings has no teams section (core, desktop). */
   onOpenTeams?: () => void;
   onToggleNotifications?: () => void;
+  notificationsOpen?: boolean;
   identity?: QuickNavIdentity | null;
   appSwitch: QuickNavAppSwitchProps;
 }
@@ -38,6 +39,7 @@ export function QuickNavRailContainer({
   onOpenSettings,
   onOpenTeams,
   onToggleNotifications,
+  notificationsOpen,
   identity = null,
   appSwitch,
   ...railProps
@@ -54,7 +56,10 @@ export function QuickNavRailContainer({
           footer={
             // Always rendered: gating it on the app's controls dropped the bell too.
             <div className="quick-nav-rail-footer">
-              <QuickNavRailNotifications onToggle={onToggleNotifications} />
+              <QuickNavRailNotifications
+                onToggle={onToggleNotifications}
+                open={notificationsOpen}
+              />
               {onOpenTeams && (
                 <RailButton
                   label={t("settings.workspace.teams", "Teams")}

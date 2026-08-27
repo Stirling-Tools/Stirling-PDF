@@ -6,8 +6,13 @@ import type { ClientActionRegistry } from "@app/components/notifications/notific
 import { NotificationItem } from "@app/components/notifications/NotificationItem";
 import "@app/components/notifications/NotificationBell.css";
 
+/** Named so a trigger in another tree can point at it with aria-controls. */
+export const NOTIFICATIONS_PANEL_ID = "quick-nav-notifications-panel";
+
 export interface NotificationPanelProps {
   onClose: () => void;
+  /** Set when a trigger names this panel; see NOTIFICATIONS_PANEL_ID. */
+  id?: string;
   /** Passed in: its one-shot document handover must run whether this is open or not. */
   registry: ClientActionRegistry;
   style?: React.CSSProperties;
@@ -22,6 +27,7 @@ export interface NotificationPanelProps {
 export function NotificationPanel({
   onClose,
   registry,
+  id,
   style,
   className,
 }: NotificationPanelProps) {
@@ -48,6 +54,17 @@ export function NotificationPanel({
     ? notifications.findIndex((notification) => notification.id === firstSeenId)
     : notifications.length;
   const dividedAt = Math.max(0, boundaryIndex);
+
+  // Opening a dialog has to move focus into it, or a screen reader is told nothing
+  // and a keyboard lands on whatever follows the trigger. Focus goes back on close,
+  // unless the user has since moved it somewhere else themselves.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    panel.current?.focus();
+    return () => {
+      if (panel.current?.contains(document.activeElement)) opener?.focus();
+    };
+  }, []);
 
   useEffect(() => {
     const closeOnOutside = (event: MouseEvent) => {
@@ -76,7 +93,9 @@ export function NotificationPanel({
           ? `notification-bell__panel ${className}`
           : "notification-bell__panel"
       }
+      id={id}
       role="dialog"
+      tabIndex={-1}
       // A dialog with no accessible name is announced as just "dialog".
       aria-labelledby={headingId}
       style={style}

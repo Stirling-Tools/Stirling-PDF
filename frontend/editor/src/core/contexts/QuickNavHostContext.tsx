@@ -24,6 +24,8 @@ export interface QuickNavHostData {
   signingBadge: number;
   portalAccess: boolean;
   readerMode: boolean;
+  /** So the bell can report it: the panel is rendered by the app, not the rail. */
+  notificationsOpen: boolean;
   /** Translated; absent means usable. Unknown is drawn as usable, never dimmed. */
   toolReasons: QuickNavToolReasons;
   /** Flags, not the handlers: drawing has to react, and a ref write renders nothing. */
@@ -61,6 +63,7 @@ const EMPTY_DATA: QuickNavHostData = {
   signingBadge: 0,
   portalAccess: false,
   readerMode: false,
+  notificationsOpen: false,
   hasSettings: false,
   hasTeams: false,
 };
@@ -93,6 +96,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.signingBadge === prev.signingBadge &&
         merged.portalAccess === prev.portalAccess &&
         merged.readerMode === prev.readerMode &&
+        merged.notificationsOpen === prev.notificationsOpen &&
         merged.hasSettings === prev.hasSettings &&
         merged.hasTeams === prev.hasTeams &&
         merged.identity?.displayName === prev.identity?.displayName &&
@@ -141,8 +145,14 @@ export function useRegisterQuickNavHost(
   actions: QuickNavHostActions,
 ): void {
   const host = useQuickNavHost();
-  const { identity, signingBadge, portalAccess, readerMode, toolReasons } =
-    data;
+  const {
+    identity,
+    signingBadge,
+    portalAccess,
+    readerMode,
+    notificationsOpen,
+    toolReasons,
+  } = data;
   const hasSettings = Boolean(actions.openSettings);
   const hasTeams = Boolean(actions.openTeams);
 
@@ -153,6 +163,7 @@ export function useRegisterQuickNavHost(
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
+      notificationsOpen: notificationsOpen ?? false,
       // Omitted when unknown, so setData keeps the last answer through a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
@@ -166,6 +177,7 @@ export function useRegisterQuickNavHost(
     signingBadge,
     portalAccess,
     readerMode,
+    notificationsOpen,
     toolReasons,
     hasSettings,
     hasTeams,

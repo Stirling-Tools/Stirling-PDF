@@ -150,6 +150,7 @@ export function QuickNavRailHost() {
       onToggleNotifications={() =>
         host?.actions.current?.toggleNotifications?.()
       }
+      notificationsOpen={host?.notificationsOpen}
     />
   );
 }
