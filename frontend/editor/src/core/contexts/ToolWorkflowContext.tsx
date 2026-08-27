@@ -218,8 +218,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setReaderMode = useCallback(
     (mode: boolean) => {
       if (mode) {
+        // The viewer, but no tool: reading is a mode the open document is put
+        // into, not a tool being run on it. Selecting one here gave the mode a
+        // tool's URL (/read) and made it look like a destination. The tools list
+        // still has a Read entry, and handleToolSelect sets that explicitly.
         actions.setWorkbench("viewer");
-        actions.setSelectedTool("read");
       }
       dispatch({ type: "SET_READER_MODE", payload: mode });
     },

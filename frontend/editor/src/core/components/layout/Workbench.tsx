@@ -92,8 +92,15 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  const showWorkbenchBar = topControlsAvailable && hasWorkbenchContent;
-  const showFloatingSearch = topControlsAvailable && !hasWorkbenchContent;
+  // Reading hides the top bar outright, search and all. Retracting the tool row
+  // alone left the search and view switcher in place, since that row sits outside
+  // the retractable part - which is most of the chrome the mode exists to remove.
+  // The rail's Reader entry is the way back, and being outside the workbench it
+  // stays reachable with the bar gone.
+  const showWorkbenchBar =
+    topControlsAvailable && hasWorkbenchContent && !readerMode;
+  const showFloatingSearch =
+    topControlsAvailable && !hasWorkbenchContent && !readerMode;
 
   // Reader is a distraction-free mode, so entering it retracts the tool row and
   // leaving it brings the row back. Driven off the transition rather than
