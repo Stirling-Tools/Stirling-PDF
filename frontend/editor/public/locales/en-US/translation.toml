@@ -7832,17 +7832,16 @@ backlog_other = "{{formatted}} files are stored as plaintext and can be encrypte
 encrypted = "Encrypted"
 failedCount = "Failed"
 heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
 noBacklog = "Every stored file is already encrypted."
 progressLabel = "{{processed}} of {{total}} files encrypted"
 requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
-restartNote = "Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
 runAgain = "Run again"
 skipped = "Skipped"
 skippedHelp = "What does skipped mean?"
 skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
 start = "Start"
 startedAt = "Started {{when}}"
-subheading = "Encrypts the plaintext backlog left from before encryption was switched on."
 
 [portal.infrastructure.encryption.migration.confirm]
 cancel = "Cancel"

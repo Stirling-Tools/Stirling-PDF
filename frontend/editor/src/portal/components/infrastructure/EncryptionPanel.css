@@ -167,11 +167,11 @@
   margin-top: 0.75rem;
 }
 
-/* One label carries a hint icon and the others do not. Without a shared line
-   box its value drops below its neighbours'. */
+/* One label carries a hint icon and the others do not. A fixed height rather
+   than a minimum, so the icon cannot push its value off the row. */
 .portal-enc__migration-stats .sui-stat__label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.25rem;
-  min-height: 1.25rem;
+  height: 1.25rem;
 }

@@ -65,7 +65,7 @@ export function EncryptionMigrationCard({
         <div className="portal-enc__head">
           <SectionHeader
             title={t("portal.infrastructure.encryption.migration.heading")}
-            hint={t("portal.infrastructure.encryption.migration.subheading")}
+            hint={t("portal.infrastructure.encryption.migration.hint")}
             hintLabel={t("portal.infrastructure.encryption.hintLabel")}
           />
           <StatusBadge tone={STATE_TONE[state]} size="sm">
@@ -164,14 +164,6 @@ export function EncryptionMigrationCard({
             {t(
               "portal.infrastructure.encryption.migration.requiresEncryptionOn",
             )}
-          </p>
-        ) : null}
-
-        {/* Shown at IDLE too when a backlog remains: that is the state a run lost
-            to a restart leaves behind, so it is where the caveat explains most. */}
-        {state !== "IDLE" || plaintextFiles > 0 ? (
-          <p className="portal-enc__note">
-            {t("portal.infrastructure.encryption.migration.restartNote")}
           </p>
         ) : null}
 
