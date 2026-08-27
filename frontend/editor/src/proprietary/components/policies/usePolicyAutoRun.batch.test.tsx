@@ -345,9 +345,9 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     // Security's versions went to STORAGE, never re-added to the workbench, so the
     // workspace stays empty. Classification needs the file in the workbench to tag,
     // so a closed file is left unclassified rather than re-opened.
-    expect(
-      latestRuns.filter((r) => r.categoryId === "security"),
-    ).toHaveLength(FILE_COUNT);
+    expect(latestRuns.filter((r) => r.categoryId === "security")).toHaveLength(
+      FILE_COUNT,
+    );
     expect(mocks.workspace).toHaveLength(0);
     expect(mocks.consumeSilentCalls).toBe(0);
     expect(mocks.persistCalls).toBeGreaterThan(0);

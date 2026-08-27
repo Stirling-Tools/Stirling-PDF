@@ -267,7 +267,10 @@ describe("useClassificationPolicy delivery", () => {
   it("escalates an unsure local verdict to the AI engine itself", async () => {
     aiEnabled.value = true;
     mocks.workspace = [stub("a")];
-    mocks.classify.mockResolvedValue({ labels: ["invoice"], confidence: "low" });
+    mocks.classify.mockResolvedValue({
+      labels: ["invoice"],
+      confidence: "low",
+    });
 
     renderHook(() => useClassificationPolicy());
 
@@ -309,7 +312,10 @@ describe("useClassificationPolicy delivery", () => {
   it("never escalates when the AI engine is off, however unsure the verdict", async () => {
     aiEnabled.value = false;
     mocks.workspace = [stub("a")];
-    mocks.classify.mockResolvedValue({ labels: ["invoice"], confidence: "none" });
+    mocks.classify.mockResolvedValue({
+      labels: ["invoice"],
+      confidence: "none",
+    });
 
     renderHook(() => useClassificationPolicy());
 
