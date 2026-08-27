@@ -12,7 +12,7 @@
 // Enabled by frontend/oxlint.comments.config.ts. `context.report` needs
 // `node.range`; passing start/end throws.
 
-import { analyse, isTestPath, isGenerated, isExcludedPath, ruleLabel, RULES } from "./comment-rules.mjs";
+import { analyse, isTestPath, isGenerated, isExcludedPath, ruleLabel } from "./comment-rules.mjs";
 
 const comments = {
   create(context) {
@@ -119,8 +119,6 @@ function expand(token, lines) {
     };
   });
 }
-
-export const RULE_IDS = Object.keys(RULES);
 
 export default {
   meta: { name: "comments" },

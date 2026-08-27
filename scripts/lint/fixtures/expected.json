@@ -1,10 +1,10 @@
 {
   "AaaTest.java": [],
   "allow.java": [
-    "12:CMT010:error",
-    "17:CMT010:error",
-    "22:CMT010:error",
-    "28:CMT010:error",
+    "12:CMT008:error",
+    "17:CMT008:error",
+    "22:CMT008:error",
+    "28:CMT008:error",
     "29:CMT001:error"
   ],
   "apostrophes.java": [

@@ -212,7 +212,7 @@ Name the rule on the line above:
 ```
 
 There is no form that disables every rule, and the directive has to earn its
-place. `CMT010` reports one that names something which is not a rule, and one that
+place. `CMT008` reports one that names something which is not a rule, and one that
 silences nothing, so a typo does not read as a suppression and a stale
 suppression does not sit there blinding the line. The whole comment must be the
 directive; prose that mentions the syntax is just prose.

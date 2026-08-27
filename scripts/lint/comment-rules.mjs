@@ -19,13 +19,13 @@ export const SEVERITY = { ERROR: "error", WARN: "warn" };
 export const RULES = {
   CMT001: { name: "restates-code", severity: SEVERITY.ERROR },
   CMT002: { name: "banner", severity: SEVERITY.ERROR },
-  CMT005: { name: "dead-code", severity: SEVERITY.ERROR },
   CMT003: { name: "step-narration", severity: SEVERITY.ERROR },
   CMT004: { name: "diff-narration", severity: SEVERITY.ERROR },
+  CMT005: { name: "dead-code", severity: SEVERITY.ERROR },
   CMT006: { name: "block-too-long", severity: SEVERITY.ERROR },
   CMT007: { name: "doc-restates-signature", severity: SEVERITY.ERROR },
+  CMT008: { name: "bad-allow", severity: SEVERITY.ERROR },
   CMT009: { name: "unowned-todo", severity: SEVERITY.ERROR },
-  CMT010: { name: "bad-allow", severity: SEVERITY.ERROR },
 };
 
 export const MAX_BLOCK_LINES = 12;
@@ -263,7 +263,7 @@ class Allowance {
     for (const entry of this.entries) {
       if (entry.used) continue;
       const detail = entry.known ? `${entry.token} is allowed here but nothing reported it` : `${entry.token} is not a rule`;
-      report("CMT010", entry.directive.line, entry.directive.column, detail, entry.directive.body);
+      report("CMT008", entry.directive.line, entry.directive.column, detail, entry.directive.body);
     }
   }
 }
