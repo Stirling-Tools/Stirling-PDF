@@ -1,31 +1,10 @@
 name: Auto SaaS Dev Deployment
 
-# Dev SaaS server, built from this branch and deployed beside the PR previews
-# and the main demo.
-#
-# Unlike those two, SaaS cannot be seeded from a committed H2 file: the saas
-# profile overrides the H2 datasource with Postgres and fails fast when the
-# credentials are missing, and identities live in Supabase Auth rather than the
-# local user table. A dev Supabase project therefore has to exist first - this
-# workflow deploys against it, it does not create it.
-#
-# Every SaaS-specific credential comes from the `saas-dev` GitHub Environment,
-# so the names here are the app's own env vars rather than SAAS_DEV_-prefixed
-# copies, and pointing this at another project means swapping one environment.
-# See ".github/workflows/README-saas-dev.md" for the full secret list.
-#
-# Ports: frontend 901, backend 902. Both sit below every PR number (previews
-# publish on the bare PR number) and beside the main demo on 900. The AI engine
-# is reachable only over the compose network.
-
 on:
   push:
     branches:
       - main
-      # Temporary, for shaking this out before it lands. Remove before merge -
-      # it deploys to the same host, dir and ports as the main trigger, so
-      # whichever pushes last wins.
-      - seeded-enterprise-deployments
+      - saas-prod
   workflow_dispatch:
 
 permissions:
@@ -39,8 +18,6 @@ env:
 jobs:
   deploy-saas-dev:
     runs-on: ubuntu-latest
-    # Branch policy is enforced by GitHub before the job starts, so editing this
-    # file cannot reach the SaaS credentials from a fork or a side branch.
     environment: saas-dev
     concurrency:
       group: saas-dev-deploy
@@ -55,63 +32,23 @@ jobs:
         with:
           egress-policy: audit
 
-      # The dev Supabase project is the one thing this workflow cannot stand up
-      # for itself. Without it the backend would boot-loop on a missing
-      # datasource, so skip the whole deploy rather than leave a broken server.
-      # Everything derivable from the project ref is derived, not stored.
       - name: Check SaaS configuration
         id: config
         env:
           PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
-          DB_URL: ${{ secrets.SAAS_DB_URL }}
-          DB_PASSWORD: ${{ secrets.SAAS_DB_PASSWORD }}
-          PUBLISHABLE_KEY: ${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
-          EDGE_FUNCTION_SECRET: ${{ secrets.SUPABASE_EDGE_FUNCTION_SECRET }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          missing=""
-          [ -z "$PROJECT_REF" ]          && missing="$missing SAAS_DB_PROJECT_REF"
-          [ -z "$DB_URL" ]               && missing="$missing SAAS_DB_URL"
-          [ -z "$DB_PASSWORD" ]          && missing="$missing SAAS_DB_PASSWORD"
-          [ -z "$PUBLISHABLE_KEY" ]      && missing="$missing SAAS_SUPABASE_PUBLISHABLE_KEY"
-          if [ -n "$missing" ]; then
-            echo "::warning::Skipping SaaS dev deploy - missing secrets in the saas-dev environment:$missing"
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Both the Java side and the browser build derive these from the ref,
-          # so storing them separately would only add a way to disagree.
           echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
           echo "meter_endpoint=https://${PROJECT_REF}.supabase.co/functions/v1/meter-payg-units" >> "$GITHUB_OUTPUT"
-          # Backend-only, and it degrades rather than failing: blank means team
-          # invites error out and the PAYG meter no-ops with a WARN. Not worth
-          # blocking a whole deploy over.
-          [ -z "$EDGE_FUNCTION_SECRET" ] \
-            && echo "::warning::SUPABASE_EDGE_FUNCTION_SECRET not set - team invites and PAYG metering will not work"
-          # AI is optional: without a model key the engine boots but every
-          # request 500s, so deploy the rest and leave the engine out.
-          if [ -n "$ANTHROPIC_API_KEY" ]; then
-            echo "ai=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::ANTHROPIC_API_KEY not set - deploying without the AI engine"
-            echo "ai=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
-        if: steps.config.outputs.ready == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Set up Docker Buildx
-        if: steps.config.outputs.ready == 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      # GHCR with the job token, per #7435: no registry credential is needed and
-      # the Docker Hub token that publishes the release images stays out of here.
       - name: Login to GitHub Container Registry
-        if: steps.config.outputs.ready == 'true'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -119,21 +56,14 @@ jobs:
           password: ${{ github.token }}
 
       - name: Convert repository owner to lowercase
-        if: steps.config.outputs.ready == 'true'
         id: repoowner
         run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
       - name: Get commit hash
-        if: steps.config.outputs.ready == 'true'
         id: commit-hash
         run: echo "app_short=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
 
-      # SaaS ships as two images: a backend-only JAR and a separately-built UI.
-      # Each image also gets a moving -latest tag: the per-commit one is the
-      # record of what is deployed, the moving one is what you pull to test
-      # without first looking up a sha.
       - name: Build and push backend image
-        if: steps.config.outputs.ready == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -149,11 +79,7 @@ jobs:
             STIRLING_FLAVOR=saas
           platforms: linux/amd64
 
-      # The Supabase URL and publishable key are baked in at build time by vite,
-      # so a dev server needs its own frontend image - a prod-built one would
-      # point the browser at the wrong Supabase. Both values are client-safe.
       - name: Build and push frontend image
-        if: steps.config.outputs.ready == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -172,10 +98,7 @@ jobs:
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
           platforms: linux/amd64
 
-      # The engine carries no model credentials in its image - they are supplied
-      # per-deployment, so the same image serves dev and prod.
       - name: Build and push AI engine image
-        if: steps.config.outputs.ready == 'true' && steps.config.outputs.ai == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -189,7 +112,6 @@ jobs:
           platforms: linux/amd64
 
       - name: Set up SSH
-        if: steps.config.outputs.ready == 'true'
         env:
           SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
         run: |
@@ -198,68 +120,38 @@ jobs:
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
-        if: steps.config.outputs.ready == 'true'
         env:
           IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
           IMAGE_TAG: ${{ steps.commit-hash.outputs.app_short }}
-          AI_ENABLED: ${{ steps.config.outputs.ai }}
-          # The VPS pulls from GHCR as this workflow's SSH user, which has no
-          # stored registry credentials of its own. Use the job token rather
-          # than parking a long-lived PAT on the box - it dies with the job.
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ github.token }}
           VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
           VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
-          # Read as shell vars rather than interpolated into the script body, so
-          # no secret ever reaches a rendered command line (#7435).
           SAAS_DB_URL: ${{ secrets.SAAS_DB_URL }}
-          # Fall back explicitly: the property default (${SAAS_DB_USERNAME:postgres})
-          # only applies when the var is unset, and compose would set it empty.
           SAAS_DB_USERNAME: ${{ secrets.SAAS_DB_USERNAME || 'postgres' }}
           SAAS_DB_PASSWORD: ${{ secrets.SAAS_DB_PASSWORD }}
           SAAS_DB_PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
           SUPABASE_EDGE_FUNCTION_SECRET: ${{ secrets.SUPABASE_EDGE_FUNCTION_SECRET }}
           PAYG_METER_ENDPOINT: ${{ steps.config.outputs.meter_endpoint }}
-          # Off unless all three are present, in which case the mock licence
-          # service is replaced by real Keygen calls.
           STIRLING_KEYGEN_ENABLED: ${{ secrets.KEYGEN_ACCOUNT_ID != '' && secrets.KEYGEN_API_TOKEN != '' && secrets.KEYGEN_POLICY_ID != '' }}
           KEYGEN_ACCOUNT_ID: ${{ secrets.KEYGEN_ACCOUNT_ID }}
           KEYGEN_API_TOKEN: ${{ secrets.KEYGEN_API_TOKEN }}
           KEYGEN_POLICY_ID: ${{ secrets.KEYGEN_POLICY_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Only needed once RAG is used; the engine boots without it.
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
         run: |
           set -euo pipefail
 
-          # Absolute URLs the backend hands out (swagger server, generated links).
-          # <port>.ssl.stirlingpdf.cloud resolves to a separate proxy host that
-          # does not currently reach this box, so point at the instance directly
-          # and switch back once that proxy is repaired.
           BASE_URL="http://${VPS_HOST}:${FRONTEND_PORT}"
 
-          # Renders a value as a single-quoted YAML scalar that compose will not
-          # touch: '' is the YAML escape for a quote, $$ is compose's escape for
-          # a literal $ (in both v1 and v2). Without this a Supabase password
-          # containing " breaks the YAML and one containing $ is silently
-          # rewritten to a different password - env_file is no safer, compose
-          # interpolates that too.
           yaml() {
             printf "'%s'" "$(printf '%s' "$1" | sed -e "s/'/''/g" -e 's/\$/$$/g')"
           }
 
-          if [ "$AI_ENABLED" = "true" ]; then
-            # The engine image defaults STIRLING_ENGINE_REQUIRE_AUTH=true, and with no
-            # secret its middleware 503s every non-public route while /health keeps
-            # answering - a deploy that looks healthy and fails every AI call. Both
-            # halves read the same env var, and compose rewrites both together, so a
-            # fresh per-deploy value is enough; Java reads it via System.getenv.
             ENGINE_SECRET="$(openssl rand -hex 32)"
             AI_BACKEND_VARS="
                 SYSTEM_AIENGINE_ENABLED: \"true\"
                 SYSTEM_AIENGINE_URL: \"http://saas-engine:5001\"
-                # The SaaS AI proxy has its own property; both point at the
-                # same container but neither falls back to the other.
                 APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\"
                 STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")"
             AI_SERVICE="
@@ -272,10 +164,6 @@ jobs:
                 VOYAGE_API_KEY: $(yaml "$VOYAGE_API_KEY")
                 STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")
               restart: on-failure:5"
-          else
-            AI_BACKEND_VARS=""
-            AI_SERVICE=""
-          fi
 
           cat > docker-compose.yml << EOF
           version: '3.3'
@@ -290,8 +178,6 @@ jobs:
                 - ${DEPLOY_DIR}/logs:/logs:rw
                 - ${DEPLOY_DIR}/storage:/storage:rw
               environment:
-                # Nothing activates the saas profile implicitly - every SaaS
-                # bean is @Profile("saas"), so this has to be explicit.
                 SPRING_PROFILES_ACTIVE: "saas"
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 SAAS_DB_URL: $(yaml "$SAAS_DB_URL")
@@ -318,12 +204,6 @@ jobs:
               ports:
                 - "${FRONTEND_PORT}:80"
               environment:
-                # Not browser-facing: the frontend image's entrypoint substitutes
-                # this into its own nginx as the /api proxy_pass upstream, so the
-                # browser only ever talks to this container. Keep it on the
-                # compose network - routing it through a public hostname would
-                # send every API call out to the internet and back, and tie the
-                # deploy to a proxy and a public IP it does not need.
                 VITE_API_BASE_URL: "http://saas-backend:8080"
               depends_on:
                 - saas-backend
@@ -338,21 +218,17 @@ jobs:
             set -e
             mkdir -p ${DEPLOY_DIR}/{config,logs,storage}
             mv /tmp/saas-dev-docker-compose.yml ${DEPLOY_DIR}/docker-compose.yml
-            # The compose file carries the credentials, so it is not world-readable.
             chmod 600 ${DEPLOY_DIR}/docker-compose.yml
             cd ${DEPLOY_DIR}
             printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker-compose down --remove-orphans 2>/dev/null || true
             docker-compose pull
             docker-compose up -d
-            # The token expires with the job; do not leave it on disk.
             docker logout ghcr.io >/dev/null 2>&1 || true
-            # Images only - --volumes would take the other deployments' data.
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
       - name: Wait for the backend to answer
-        if: steps.config.outputs.ready == 'true'
         env:
           VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         run: |
