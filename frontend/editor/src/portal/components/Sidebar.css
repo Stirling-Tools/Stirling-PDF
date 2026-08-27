@@ -131,20 +131,17 @@
   flex: 0 1 auto;
   overflow-y: auto;
   /* No inline padding: overflow-y makes this a scroll container, so overflow-x
-     computes to auto and anything bleeding past the padding box is clipped. The
-     inset moves onto the rows, which lets the selected one run edge to edge.
-     Same gutter and inter-box gap as the editor sidebar. */
+     computes to auto and a row bleeding past this box would be clipped. The inset
+     lives on the section instead, which the selected row can bleed past. */
   padding: var(--nav-gutter) 0;
   display: flex;
   flex-direction: column;
   gap: var(--nav-gutter);
 }
 
-/* Carries the inset the nav and section gave up (0.5 + 0.375 + the old 0.25rem
-   margin), so the label sits where it always did. */
 .portal-sidebar .sui-navitem {
-  margin-inline: 0;
-  padding-inline: 1.75rem;
+  margin-inline: 0.25rem;
+  padding-inline: 0.625rem;
 }
 
 /* The selected view, marked the way the quick nav rail marks the current app: a
@@ -154,8 +151,20 @@
 .portal-sidebar .sui-navitem.is-active:hover {
   background: var(--c-text);
   color: var(--c-surface);
-  /* Full-bleed by filling the row, the inset having moved onto the row itself. */
+  /* Out past the section's inset and its own margin (0.875 + 0.25) to meet both
+     edges of the panel, with the same added back in front so the label holds. */
+  width: calc(100% + 2.25rem);
+  margin-inline: -1.125rem;
+  padding-inline-start: 1.75rem;
   border-radius: 0;
+}
+
+/* Collapsed there is no inset to escape - the rail's nav and section are already
+   flush - so the row fills its width as it stands. */
+.portal-sidebar[data-collapsed] .sui-navitem.is-active {
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: 0;
 }
 
 /* Dark grounds sit close to full-strength ink, where that block reads as a hole
@@ -173,7 +182,9 @@ html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
 }
 
 .portal-sidebar__section {
-  padding: 0.5rem 0 0.375rem;
+  /* 0.875rem = its own 0.375 plus the nav's 0.5, so everything inside sits where
+     it did. Not a scroll container, so the selected row can bleed past it. */
+  padding: 0.5rem 0.875rem 0.375rem;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
