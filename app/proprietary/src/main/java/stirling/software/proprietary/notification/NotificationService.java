@@ -20,9 +20,20 @@ public class NotificationService {
 
     private final FileRunEventService fileRunEvents;
 
-    /** Newest first, and only open failures: one already dealt with is not news. */
+    /**
+     * Newest first, and only open failures about a document: one already dealt with is not news,
+     * and a row naming no file has nothing the bell can offer beyond saying so.
+     *
+     * <p>Filtered on the named file rather than the kind's scope, because a RUN-scoped kind still
+     * names one when the editor reported it: a failed tool run belongs here. Applied after the
+     * limit, so a page can come back short while unattributed rows exist - the review surface is
+     * where those are meant to be read, and it lists them unfiltered.
+     */
     public List<NotificationView> list(int limit) {
-        return fileRunEvents.list(null, null, limit).stream().map(this::fromFailure).toList();
+        return fileRunEvents.list(null, null, limit).stream()
+                .filter(event -> event.fileId() != null && !event.fileId().isBlank())
+                .map(this::fromFailure)
+                .toList();
     }
 
     /** Whether the caller sees the whole team's incidents rather than only their own. */

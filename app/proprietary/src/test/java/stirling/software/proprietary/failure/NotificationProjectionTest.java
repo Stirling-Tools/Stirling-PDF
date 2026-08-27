@@ -122,6 +122,32 @@ class NotificationProjectionTest {
         }
 
         @Test
+        void holdsBackAFailureNamingNoDocumentBecauseTheBellCouldOnlySaySo() {
+            // The only row the bell can offer nothing for. The review surface still lists it.
+            given(FailureKind.UNKNOWN, ACTOR, null);
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, ACTOR, "f-1");
+
+            assertThat(controller.list(null).notifications())
+                    .singleElement()
+                    .satisfies(row -> assertThat(row.fileId()).isEqualTo("f-1"));
+        }
+
+        @Test
+        void keepsARunScopedFailureThatStillNamesADocument() {
+            // An editor-reported tool failure is RUN-scoped but names the file it ran on, so
+            // filtering on the kind's scope rather than the row would have dropped it.
+            given(FailureKind.UNKNOWN, ACTOR, "f-2");
+
+            assertThat(controller.list(null).notifications())
+                    .singleElement()
+                    .satisfies(
+                            row -> {
+                                assertThat(row.kindId()).isEqualTo("UNKNOWN");
+                                assertThat(row.fileId()).isEqualTo("f-2");
+                            });
+        }
+
+        @Test
         void namesTheSourceThatFedAnUnattendedRunSoItsFileIdIsNotMistakenForAClientsOwn() {
             // Without the source a client looks up a hash it can never resolve and calls it
             // missing.
