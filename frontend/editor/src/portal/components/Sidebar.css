@@ -88,9 +88,11 @@
 .portal-sidebar[data-collapsed] .portal-sidebar__nav {
   padding-inline: 0;
 }
+/* Stretch, not centre: centring shrinks the group to its content and a row can
+   then never fill the rail. The row centres its own glyph. */
 .portal-sidebar[data-collapsed] .portal-sidebar__section {
   padding-inline: 0;
-  align-items: center;
+  align-items: stretch;
 }
 .portal-sidebar[data-collapsed] .portal-sidebar__section-label {
   display: none;
@@ -130,9 +132,7 @@
   /* Built like the quick nav rail: nothing between this and a row carries an inline
      inset, so a row is full width by construction and its highlight needs no bleed
      - which is what the clip above used to cut short. The inset lives on the rows
-     and the section labels, the only things that need one.
-     Scrollbar kept out of the layout so it cannot eat into a row's trailing edge. */
-  scrollbar-gutter: stable;
+     and the section labels, the only things that need one. */
   padding: var(--nav-gutter) 0;
   display: flex;
   flex-direction: column;
