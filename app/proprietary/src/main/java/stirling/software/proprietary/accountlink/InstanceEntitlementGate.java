@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 /**
- * Decides whether a request may proceed under combined-billing "Mode A" on a self-hosted instance.
+ * Decides whether a request may proceed under combined billing on a self-hosted instance.
  *
  * <p>Rules (in order):
  *

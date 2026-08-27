@@ -11,10 +11,12 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
+import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
 import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
+import ConnectApprove from "@app/routes/ConnectApprove";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
@@ -110,12 +112,17 @@ export default function App() {
               >
                 <AppLayout>
                   <NonAuthBootstraps />
+                  <ResumePendingConnect />
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/auth/reset" element={<ResetPassword />} />
                     <Route path="/oauth/consent" element={<OAuthConsent />} />
+                    {/* Human half of the self-hosted account-link handshake. It
+                        lives on this origin because a customer hostname can
+                        never be in the provider's redirect allow-list. */}
+                    <Route path="/link" element={<ConnectApprove />} />
                     {/* Shared-file links. Team invites are NOT routed here: on
                         SaaS they are accepted in-app via the Supabase team
                         invitation banner, not the Spring password-based

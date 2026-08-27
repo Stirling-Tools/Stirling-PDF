@@ -22,22 +22,45 @@ permissions:
   contents: read
 
 jobs:
-  # TODO: extract a pre-matrix `prepare` job that runs once and produces
-  # shared artifacts for the three matrix entries below to consume:
-  #   1. `task backend:build` — currently runs 3× in parallel with
-  #      identical env (DISABLE_ADDITIONAL_FEATURES=true,
-  #      STIRLING_PDF_DESKTOP_UI=false). Build once, upload the JAR as an
-  #      artifact, matrix entries download.
-  #   2. The base-image `docker build` (gated on docker-base-changed) —
-  #      currently runs 3× in parallel against the same Dockerfile and
-  #      context. Build once, `docker save` to an artifact, matrix entries
-  #      `docker load` before the embedded build.
-  # Saves ~2 full backend builds + 2 base-image builds per PR that touches
-  # docker. May also be reusable from backend-build.yml's jdk-25 +
-  # spring-security=true matrix entry if `task backend:build` and
-  # `task backend:build:ci` produce equivalent JARs (verify before wiring).
+  # A changed base image is shared by all three embedded-image builds. Build
+  # it once and transfer it as an artifact; the matrix jobs use the local
+  # Docker driver so the loaded image is visible to the build.
+  prepare-base-image:
+    if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+    environment:
+      name: ci-unsigned
+      deployment: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build base image locally
+        run: docker build --platform linux/amd64 -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
+
+      - name: Export base image
+        run: docker save stirling-pdf-base:pr-test | gzip -1 > stirling-pdf-base-pr-test.tar.gz
+
+      - name: Upload base image
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docker-base-pr-test
+          path: stirling-pdf-base-pr-test.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+
   test-build-docker-images:
-    environment: ci-unsigned
+    if: always() && (needs.prepare-base-image.result == 'success' || needs.prepare-base-image.result == 'skipped')
+    needs: [prepare-base-image]
+    environment:
+      name: ci-unsigned
+      deployment: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -54,7 +77,7 @@ jobs:
             cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -78,6 +101,16 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
           docker system prune -af || true
           echo "Disk space after cleanup:" && df -h
+
+      - name: Download prepared base image
+        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docker-base-pr-test
+
+      - name: Load prepared base image
+        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+        run: gzip -dc stirling-pdf-base-pr-test.tar.gz | docker load
 
       - name: Restore cache Gradle User Home
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -110,11 +143,6 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-
-      - name: Build base image locally (PR base change only)
-        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
-        run: |
-          docker build -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
 
       - name: Set base image and platform for this build
         id: build-params
@@ -189,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
