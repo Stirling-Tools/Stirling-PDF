@@ -39,24 +39,6 @@
   gap: 0.75rem;
 }
 
-/* Template gallery: a single row of cards that scrolls sideways rather than wrapping. */
-.portal-pipelines__templates-scroll {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.75rem;
-  overflow-x: auto;
-  /* A real horizontal scroller: keep the bounce, but don't chain to the browser's back gesture. */
-  overscroll-behavior-x: contain;
-  /* Room for the scrollbar so it doesn't sit under the last row of card text. */
-  padding-bottom: 0.25rem;
-}
-
-/* Fixed track height so every OptionCard in the row is the same height and their footers line up. */
-.portal-pipelines__templates-scroll > * {
-  flex: 0 0 16rem;
-  height: 12rem;
-}
-
 .portal-pipelines__section-title {
   margin: 0;
   font-size: 1rem;

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
+import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { usePipelines } from "@portal/queries/pipelines";
@@ -311,7 +311,7 @@ export function Pipelines() {
           <h2 className="portal-pipelines__section-title">
             {t("portal.pipelines.templates.title")}
           </h2>
-          <div className="portal-pipelines__templates-scroll">
+          <CardRail itemWidth="16rem" itemHeight="12rem">
             {galleryEntries.map((entry) => (
               <PipelineTemplateCard
                 key={entry.category.id}
@@ -321,7 +321,7 @@ export function Pipelines() {
                 lockedLabel={t("portal.policies.card.requiresAiEngine")}
               />
             ))}
-          </div>
+          </CardRail>
         </section>
       )}
 
