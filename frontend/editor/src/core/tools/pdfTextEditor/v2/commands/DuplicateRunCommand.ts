@@ -2,7 +2,10 @@ import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
-import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import {
+  fallbackFamilyFor,
+  fallbackFontIdFor,
+} from "@app/tools/pdfTextEditor/v2/util/fontCapability";
 import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
@@ -32,7 +35,7 @@ export class DuplicateRunCommand implements Command {
     const src = page.findRun(this.runId);
     if (!src) return;
     const m = doc.module;
-    const fallback = helveticaVariantFor(src.fontId);
+    const fallback = fallbackFamilyFor(src.fontId);
     const newPtr = m.FPDFPageObj_NewTextObj(
       doc.docPtr,
       fallback,
@@ -74,7 +77,7 @@ export class DuplicateRunCommand implements Command {
       },
       matrix: { a: 1, b: 0, c: 0, d: 1, e: newX, f: newY },
       text: src.text,
-      fontId: `base14:${fallback}`,
+      fontId: fallbackFontIdFor(fallback),
       fontSize: src.fontSize,
       fill: { ...src.fill },
       fontSubset: false,

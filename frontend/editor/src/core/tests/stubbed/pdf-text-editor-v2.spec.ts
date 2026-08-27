@@ -271,7 +271,7 @@ test.describe("PDF text editor v2 - save", () => {
     await typeIntoRun(page, firstRunTestId!, "A");
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
@@ -302,7 +302,7 @@ test.describe("PDF text editor v2 - save", () => {
 
     // Trigger the save and capture the bytes.
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -356,7 +356,7 @@ test.describe("PDF text editor v2 - save", () => {
     await expect(firstRun).toContainText("ZZMARKER");
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -393,7 +393,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     page: import("@playwright/test").Page,
   ): Promise<void> {
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -2126,7 +2126,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
 
     // Save and re-open, then collect every run's text from page 0.
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -2806,7 +2806,7 @@ test.describe("PDF text editor v2 - multi-page", () => {
 
     // Save the edited document and capture the bytes.
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -2887,13 +2887,9 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     const before = await readState(runId);
     expect(before.undoDepth).toBeGreaterThan(0);
 
-    // Now click Bold. It should dispatch another edit (undo stack grows).
-    await page.getByTestId("v2-bold").click();
-    // Toolbar bold state flips to active.
-    await expect(page.getByTestId("v2-bold")).toHaveAttribute(
-      "data-variant",
-      /filled/i,
-    );
+    // Now pick the bold variant. It should dispatch another edit (undo stack
+    // grows). The dedicated weight button is gone; the picker is the way in.
+    await selectFontFamily(page, "Helvetica Bold");
 
     // The toolbar's active state flips on local component state, which can beat
     // the command onto the screen - so wait for the history itself to grow.
@@ -2985,11 +2981,11 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       store.selection.selectOne(id);
     }, baseline.id);
 
-    // Click Bold then Bold again (the user's exact sequence). Each
-    // click dispatches a SetFontFamily command.
-    await page.getByTestId("v2-bold").click();
+    // Bold then un-bold (the user's exact sequence). Each pick dispatches a
+    // SetFontFamily command.
+    await selectFontFamily(page, "Helvetica Bold");
     await page.waitForTimeout(300);
-    await page.getByTestId("v2-bold").click();
+    await selectFontFamily(page, "Helvetica");
     await page.waitForTimeout(300);
 
     const after = await page.evaluate((id) => {
@@ -3028,9 +3024,9 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     expect(after.mergedCount).toBe(0);
 
     // Round-trip through save+reopen and check no ghost text.
-    const saveBtn = page.getByTestId("v2-save");
+    const downloadBtn = page.getByTestId("v2-download");
     const downloadPromise = page.waitForEvent("download");
-    await saveBtn.click();
+    await downloadBtn.click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -3127,7 +3123,7 @@ test.describe("PDF text editor v2 - line grouping", () => {
     await expect(target).toContainText(`${original}ZZZ`);
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -3367,7 +3363,7 @@ test.describe("PDF text editor v2 - lazy page loading", () => {
     await expect(firstRun).toContainText("ZZBIG");
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     const stream = await download.createReadStream();
     const chunks: Buffer[] = [];
@@ -4400,8 +4396,9 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
       test.skip(true, "fixture missing tagline");
       return;
     }
-    for (let i = 0; i < 3; i++) {
-      await page.getByTestId("v2-bold").click();
+    for (const family of ["Helvetica Bold", "Helvetica", "Helvetica Bold"]) {
+      await selectTagline(page);
+      await selectFontFamily(page, family);
       await page.waitForTimeout(250);
     }
     const after = await readRun(page, id);
@@ -4423,13 +4420,13 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     if (!before) throw new Error("baseline read failed");
     // Re-select before each toolbar click.
     await selectTagline(page);
-    await page.getByTestId("v2-bold").click();
+    await selectFontFamily(page, "Helvetica Bold");
     await page.waitForTimeout(250);
     await selectTagline(page);
     await page.getByTestId("v2-italic").click();
     await page.waitForTimeout(250);
     await selectTagline(page);
-    await page.getByTestId("v2-bold").click();
+    await selectFontFamily(page, "Helvetica");
     await page.waitForTimeout(250);
     const after = await readRun(page, id);
     if (!after) throw new Error("run vanished after cross-axis toggles");
@@ -4453,7 +4450,7 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     const before = await readRun(page, id);
     if (!before) throw new Error("baseline read failed");
     expect(before.merged).toBeGreaterThan(10);
-    await page.getByTestId("v2-bold").click();
+    await selectFontFamily(page, "Helvetica Bold");
     await page.waitForTimeout(250);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
@@ -4478,7 +4475,7 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
       test.skip(true, "fixture missing tagline");
       return;
     }
-    await page.getByTestId("v2-bold").click();
+    await selectFontFamily(page, "Helvetica Bold");
     await page.waitForTimeout(250);
     // Now insert text into the bolded run.
     await page.evaluate((tid) => {
@@ -4499,7 +4496,7 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     await page.waitForTimeout(300);
     // Save + reopen.
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -4821,7 +4818,7 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
 
   async function saveAndReopenLocal(page: import("@playwright/test").Page) {
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -4972,7 +4969,7 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
     await page.waitForTimeout(300);
     // Round-trip.
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -5151,7 +5148,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
 
   async function saveAndReopenLocal(page: import("@playwright/test").Page) {
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
@@ -5578,7 +5575,7 @@ test.describe("PDF text editor v2 - stress: deletion shrinks bounds (no stuck-wi
     // Round-trip: saved PDF should serialize just "x" (no trailing
     // spaces / no ghost objects).
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];

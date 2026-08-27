@@ -1,6 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelectionActions";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
+import { warmDocumentDeviceFonts } from "@app/tools/pdfTextEditor/v2/util/fontCapability";
+import {
+  loadedLocalFonts,
+  subscribeLocalFonts,
+} from "@app/tools/pdfTextEditor/v2/util/localFonts";
 import {
   ChangeZOrderCommand,
   type ZOrderMode,
@@ -385,9 +396,29 @@ export function useToolbarController(
     [store],
   );
 
+  // Null until the user loads their device fonts, and it must re-render when
+  // they do - the italic control's availability is derived from it.
+  const localFonts = useSyncExternalStore(
+    subscribeLocalFonts,
+    loadedLocalFonts,
+    loadedLocalFonts,
+  );
+
+  const documentFontIds = useMemo(
+    () => [...new Set(state.pages.flatMap((p) => p.runs.map((r) => r.fontId)))],
+    [state.pages],
+  );
+
+  // Match the document's own families against the installed ones, so an edit
+  // that outgrows an embedded subset completes from the real face.
+  useEffect(() => {
+    if (!localFonts) return;
+    void warmDocumentDeviceFonts(documentFontIds);
+  }, [localFonts, documentFontIds]);
+
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection),
-    [state.pages, selection],
+    () => deriveToolbarState(state.pages, selection, localFonts),
+    [state.pages, selection, localFonts],
   );
 
   const selectionAllLocked = useMemo(() => {
@@ -475,7 +506,6 @@ export function useToolbarController(
     onChangeFontFamily: (family: string) => {
       void sel.changeFontFamily(family);
     },
-    onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
     onDelete: sel.deleteSelection,
     onToggleLock,

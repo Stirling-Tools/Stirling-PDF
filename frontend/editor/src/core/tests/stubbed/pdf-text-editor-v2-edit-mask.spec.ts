@@ -68,4 +68,27 @@ test.describe("PDF text editor v2 - editing surface", () => {
     const bg = await run.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(alphaOf(bg)).toBeLessThan(0.5);
   });
+
+  // The single keystroke above stayed under the mask's grace count. A real
+  // sentence does not: the overlay took its glyphs over mid-word and handed
+  // them back when the engine caught up, so the text visibly changed typeface
+  // while being typed and changed back afterwards. Typed tokens are re-priced
+  // onto the PDF's own advances every keystroke, so the caret tracks the page
+  // ink without the overlay ever having to paint over it.
+  test("typing a whole word never swaps in the overlay's own glyphs", async ({
+    page,
+  }) => {
+    const run = await openAndEdit(page, "sample");
+    const swaps: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      await page.keyboard.type("a");
+      await page.waitForTimeout(60);
+      const colour = await run.evaluate((el) => getComputedStyle(el).color);
+      if (colour !== "rgba(0, 0, 0, 0)") swaps.push(`char ${i}: ${colour}`);
+    }
+    expect(
+      swaps.slice(0, 5),
+      "the run rendered in the overlay's fallback face instead of the PDF's",
+    ).toEqual([]);
+  });
 });

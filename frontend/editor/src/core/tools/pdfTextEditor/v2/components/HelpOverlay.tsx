@@ -21,7 +21,10 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
           t("pdfTextEditorV2.help.editing.clickDesc", "Edit text"),
         ],
         [
-          t("pdfTextEditorV2.help.editing.shiftClickKey", "Shift+Click"),
+          t(
+            "pdfTextEditorV2.help.editing.shiftClickKey",
+            "Ctrl+Click / Shift+Click",
+          ),
           t(
             "pdfTextEditorV2.help.editing.shiftClickDesc",
             "Add / remove a run from selection",
@@ -207,8 +210,8 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       heading: t("pdfTextEditorV2.help.formatting.heading", "Text formatting"),
       items: [
         [
-          t("pdfTextEditorV2.help.formatting.boldItalicKey", "Toolbar B / I"),
-          t("pdfTextEditorV2.help.formatting.boldItalicDesc", "Bold / italic"),
+          t("pdfTextEditorV2.help.formatting.italicKey", "Toolbar I"),
+          t("pdfTextEditorV2.help.formatting.italicDesc", "Italic"),
         ],
         [
           t("pdfTextEditorV2.help.formatting.fontSizeKey", "Toolbar font size"),
@@ -272,7 +275,7 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       items: [
         [
           t("pdfTextEditorV2.help.document.saveKey", "Ctrl+S"),
-          t("pdfTextEditorV2.help.document.saveDesc", "Download edited PDF"),
+          t("pdfTextEditorV2.help.document.saveDesc", "Save to your workspace"),
         ],
         [
           t("pdfTextEditorV2.help.document.helpKey", "? / F1"),

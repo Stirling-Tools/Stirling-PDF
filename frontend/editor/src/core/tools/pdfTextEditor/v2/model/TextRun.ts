@@ -97,6 +97,12 @@ export class TextRun {
   coverRectPtr: number;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
   paragraphLineSlots: ParagraphLineSlot[];
+  // Which visual lines start at a break the WRAP put there rather than one the
+  // user typed. run.text spells both as a newline - it has to, or the line
+  // count the painter and the box height read disagrees with the ink on the
+  // page - so the difference lives here. Without it a reflow re-reads its own
+  // soft breaks as forced ones and the paragraph can never re-flow again.
+  paragraphSoftStarts: boolean[];
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
@@ -139,6 +145,7 @@ export class TextRun {
     this.paragraphLeafPtrs = [];
     this.paragraphLeafContainers = [];
     this.paragraphLineSlots = [];
+    this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
     this.locked = init.locked ?? false;
   }

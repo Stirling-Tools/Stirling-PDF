@@ -198,7 +198,21 @@ test.describe("v2 editor - Enter keeps the caret on the new line", () => {
   });
 });
 
-test.describe("v2 editor - the caret stays in the text while typing", () => {
+// The caret used to walk off the text about a pixel per keystroke - 7px, 14px,
+// 21px over thirty characters - and snap back only when typing stopped.
+//
+// The page bitmap was never the problem: PDFium re-rasterises in a few
+// milliseconds and its ink tracks the typing character for character. What
+// lagged was the ENGINE's pen positions. `schedulePositionRefresh` debounced
+// them by 600ms and cleared its own timer on every dispatch, so a continuous
+// burst postponed the refresh indefinitely; with no measured advances for the
+// new text the overlay laid it out on the browser's, which are a percent or so
+// wider, and the caret drifted by the difference.
+//
+// It was also closed once by masking the page and letting the overlay paint its
+// own glyphs instead. That is the wrong trade - it changes the typeface of text
+// the user is reading, mid-word. See pdf-text-editor-v2-edit-mask.spec.ts.
+test.describe("v2 editor - the caret stays on the text while typing", () => {
   test("a long typing burst never separates the caret from the glyphs", async ({
     page,
   }) => {
@@ -217,9 +231,8 @@ test.describe("v2 editor - the caret stays in the text while typing", () => {
     await page.keyboard.press("End");
     await page.waitForTimeout(400);
 
-    // Faster than the engine re-measures, so the overlay is placing the new
-    // glyphs itself for the whole burst. The first couple of keystrokes are
-    // deliberately left to the page's own ink, so sample past them.
+    // Sampled DURING the burst, never after it: the point is that the caret
+    // tracks the page's own glyphs while the user is still typing.
     const gaps: number[] = [];
     for (let i = 0; i < 30; i += 1) {
       await page.keyboard.type("b", { delay: 0 });
@@ -230,9 +243,18 @@ test.describe("v2 editor - the caret stays in the text while typing", () => {
         gaps.push(Math.abs(seen!.gap));
       }
     }
-    // The gap used to grow with every keystroke - 7px, 14px, 21px here.
+    // The gap used to GROW with every keystroke - 7px, 14px, 21px here.
     for (const gap of gaps) {
-      expect(gap, `caret sat ${gap.toFixed(1)}px off the text`).toBeLessThan(3);
+      expect(
+        gap,
+        `caret sat ${gap.toFixed(1)}px off the text (gaps: ${gaps.map((g) => g.toFixed(1)).join(", ")})`,
+      ).toBeLessThan(4);
     }
+
+    // And it must not have been quietly accumulating: after the burst the caret
+    // is no further off than it was during it.
+    await page.waitForTimeout(2500);
+    const after = await caretVersusGlyphs(page, testId);
+    expect(Math.abs(after!.gap)).toBeLessThan(4);
   });
 });

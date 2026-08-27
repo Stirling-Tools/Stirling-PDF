@@ -12,6 +12,8 @@ import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { SpellcheckControl } from "@app/tools/pdfTextEditor/v2/components/SpellcheckControl";
+import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/v2/components/EditorFileSwitcher";
+import type { FileId } from "@app/types/file";
 import type { TFunction } from "i18next";
 import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
 import ImageIcon from "@mui/icons-material/ImageOutlined";
@@ -40,6 +42,10 @@ import {
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
+  /** Workbench file currently open, so the switcher can mark it. */
+  currentFileId: FileId | null;
+  /** Open a different workbench file. */
+  onPickFile: (file: File) => void;
   mode: "select" | "addText";
   canGroup: boolean;
   canUngroup: boolean;
@@ -55,6 +61,8 @@ interface SidebarProps {
 export function EditorSidebar({
   state,
   selection,
+  currentFileId,
+  onPickFile,
   mode,
   canGroup,
   canUngroup,
@@ -68,24 +76,27 @@ export function EditorSidebar({
 }: SidebarProps) {
   return (
     <Box p="md" style={{ flex: 1, overflow: "auto" }}>
-      {state.hasDocument ? (
-        <LoadedSidebar
-          state={state}
-          selection={selection}
-          mode={mode}
-          canGroup={canGroup}
-          canUngroup={canUngroup}
-          onToggleAddText={onToggleAddText}
-          onPickImage={onPickImage}
-          onGroup={onGroup}
-          onUngroup={onUngroup}
-          onSetGroupingMode={onSetGroupingMode}
-          onSetWidthMode={onSetWidthMode}
-          onSetShowRulers={onSetShowRulers}
-        />
-      ) : (
-        <EmptySidebar progress={state.progress} loading={state.loading} />
-      )}
+      <Stack gap="lg">
+        <EditorFileSwitcher currentFileId={currentFileId} onPick={onPickFile} />
+        {state.hasDocument ? (
+          <LoadedSidebar
+            state={state}
+            selection={selection}
+            mode={mode}
+            canGroup={canGroup}
+            canUngroup={canUngroup}
+            onToggleAddText={onToggleAddText}
+            onPickImage={onPickImage}
+            onGroup={onGroup}
+            onUngroup={onUngroup}
+            onSetGroupingMode={onSetGroupingMode}
+            onSetWidthMode={onSetWidthMode}
+            onSetShowRulers={onSetShowRulers}
+          />
+        ) : (
+          <EmptySidebar progress={state.progress} loading={state.loading} />
+        )}
+      </Stack>
     </Box>
   );
 }
@@ -443,7 +454,7 @@ function LoadedSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
-}: Omit<SidebarProps, never>) {
+}: Omit<SidebarProps, "currentFileId" | "onPickFile">) {
   const { t } = useTranslation();
   const selectionLabel = formatSelection(selection, t);
   return (

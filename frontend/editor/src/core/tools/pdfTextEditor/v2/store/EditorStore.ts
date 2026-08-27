@@ -81,6 +81,10 @@ export interface EditorViewState {
 
 const POSITION_REFRESH_MS = 600;
 
+// Longest the engine's pen positions may stay stale while the user keeps
+// typing. Past this the debounce above stops being postponed and runs anyway.
+const POSITION_REFRESH_MAX_STALL_MS = 100;
+
 const INITIAL: EditorViewState = {
   hasDocument: false,
   pageCount: 0,
@@ -112,6 +116,8 @@ export class EditorStore {
   /** True when edits were baked into the stream (e.g. grouping-mode switch). */
   private bakedDirty = false;
   private positionRefreshTimer: number | null = null;
+  /** When the debounced position refresh last actually ran. */
+  private lastPositionRefreshAt = 0;
   /** Monotonic token so a superseded async load can detect it lost the race. */
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
@@ -305,8 +311,21 @@ export class EditorStore {
     if (this.positionRefreshTimer !== null) {
       window.clearTimeout(this.positionRefreshTimer);
     }
+    // Debounced, but never starved. Re-clearing the timer on every keystroke
+    // meant a continuous burst postponed this indefinitely, and until it runs
+    // the overlay has no measured pen positions for the new text - so it lays
+    // it out on the BROWSER's advances and the caret walks off the glyphs the
+    // page is actually showing, about a pixel per character, snapping back
+    // only when the user pauses. A full recapture of every loaded page costs
+    // single-digit milliseconds, so a burst can afford one every so often.
+    const since = Date.now() - this.lastPositionRefreshAt;
+    const delay = Math.min(
+      POSITION_REFRESH_MS,
+      Math.max(0, POSITION_REFRESH_MAX_STALL_MS - since),
+    );
     this.positionRefreshTimer = window.setTimeout(() => {
       this.positionRefreshTimer = null;
+      this.lastPositionRefreshAt = Date.now();
       const doc = this.doc;
       if (!doc) return;
       for (const page of doc.loadedPages()) {
@@ -321,7 +340,7 @@ export class EditorStore {
         }
       }
       this.refreshRunSnapshots();
-    }, POSITION_REFRESH_MS);
+    }, delay);
   }
 
   // Re-read one page's geometry from the engine immediately, keeping run ids.

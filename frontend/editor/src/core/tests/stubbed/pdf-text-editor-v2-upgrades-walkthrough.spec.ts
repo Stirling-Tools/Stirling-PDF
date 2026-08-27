@@ -43,7 +43,9 @@ test("the new toolbar controls are present and usable", async ({
   test.setTimeout(140_000);
   await openEditor(page);
 
-  // Outline controls sit next to the fill colour.
+  // Outline controls live behind the advanced-colour button.
+  await selectFirstRun(page);
+  await page.getByTestId("v2-colour-advanced").click();
   await expect(page.getByTestId("v2-outline-colour")).toBeVisible();
   await expect(page.getByTestId("v2-outline-width")).toBeVisible();
   // The device-font picker replaced the plain family Select.
@@ -68,6 +70,7 @@ test("giving a run an outline changes it, and undo takes it back", async ({
   }, runId);
   expect(before.stroke).toBeNull();
 
+  await page.getByTestId("v2-colour-advanced").click();
   await page.getByTestId("v2-outline-width").fill("2");
   await page.getByTestId("v2-outline-width").press("Enter");
   await page.waitForTimeout(400);
@@ -173,7 +176,7 @@ test("a save still produces a readable PDF after the new passes run", async ({
   await page.waitForTimeout(600);
 
   const download = page.waitForEvent("download", { timeout: 60_000 });
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   // A signed/risky document would gate here; this fixture is not one.
   const file = await download;
   const stream = await file.createReadStream();

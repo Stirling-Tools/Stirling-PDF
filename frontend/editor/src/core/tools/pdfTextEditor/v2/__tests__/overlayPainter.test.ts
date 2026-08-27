@@ -73,9 +73,24 @@ describe("paintLines", () => {
     const el = host();
     paintLines(el, [line("a"), line("b", 7.25)], OPTS);
     const second = el.children[1] as HTMLElement;
+    // A FIXED height, never minHeight. A painted block is one line of the PDF -
+    // one text object at one pen origin - and the page cannot wrap it. Letting
+    // the block grow put a long line on two rows in the overlay and one on the
+    // page, pushing every block below it a full line-height out of register.
     expect(second.style.height).toBe("20px");
+    expect(second.style.minHeight).toBe("");
     expect(second.style.lineHeight).toBe("20px");
     expect(second.style.marginTop).toBe("7.25px");
+  });
+
+  it("never lets a painted line wrap", () => {
+    const el = host();
+    paintLines(el, [line("a long line of text"), line("b")], OPTS);
+    for (const block of el.children) {
+      // "inherit" let the container's pre-wrap reach the blocks; the PDF has
+      // no such thing as a soft break, so neither may these.
+      expect((block as HTMLElement).style.whiteSpace).toBe("pre");
+    }
   });
 
   it("uses inline tokens, never inline-block", () => {

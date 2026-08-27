@@ -28,7 +28,10 @@ import {
   type ParagraphEditPlan,
   type PartialEditPlan,
 } from "@app/tools/pdfTextEditor/v2/commands/partialEdit";
-import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import {
+  fallbackFamilyFor,
+  fallbackFontIdFor,
+} from "@app/tools/pdfTextEditor/v2/util/fontCapability";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type {
   ParagraphLineSlot,
@@ -305,7 +308,7 @@ export class EditTextCommand implements Command {
     this.overlaid = true;
     this.prevObjPtr = run.pdfiumObjPtr;
     if (this.prevFontId === null) this.prevFontId = run.fontId;
-    const fallbackFamily = helveticaVariantFor(this.prevFontId);
+    const fallbackFamily = fallbackFamilyFor(this.prevFontId);
     const m = doc.module;
 
     const bg = sampleBackground(m, page, run.bounds);
@@ -451,7 +454,7 @@ export class EditTextCommand implements Command {
       this.newTextPtr = lineAnchorPtrs[0];
       run.pdfiumObjPtr = lineAnchorPtrs[0];
       if (originalFontPtr === 0) {
-        run.fontId = `base14:${fallbackFamily}`;
+        run.fontId = fallbackFontIdFor(fallbackFamily);
         run.fontSubset = false;
       } else {
         // Borrow path: the new objects use the borrowed font handle.
@@ -483,7 +486,7 @@ export class EditTextCommand implements Command {
         m,
         run,
         perLineEmits,
-        originalFontPtr === 0 ? `base14:${fallbackFamily}` : run.fontId,
+        originalFontPtr === 0 ? fallbackFontIdFor(fallbackFamily) : run.fontId,
       );
     } else {
       // Single-line emit.
@@ -551,9 +554,7 @@ export class EditTextCommand implements Command {
       }
       restoreRunModel(run, this.lineEdit.prev);
       if (this.lineEdit.removed.length > 0) {
-        const fallbackFamily = helveticaVariantFor(
-          this.prevFontId ?? run.fontId,
-        );
+        const fallbackFamily = fallbackFamilyFor(this.prevFontId ?? run.fontId);
         for (const rem of this.lineEdit.removed) {
           const ptrs = emitTextLine({
             doc,
@@ -607,7 +608,7 @@ export class EditTextCommand implements Command {
         page.markNeedsGenerate();
         return;
       }
-      const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
+      const revertFallback = fallbackFamilyFor(this.prevFontId ?? run.fontId);
       // Rebuild every line from the pre-edit slots: kept/modified sub-runs keep
       // their live original object.
       const lines: RebuildLine[] = [];
@@ -688,7 +689,7 @@ export class EditTextCommand implements Command {
         page.markNeedsGenerate();
         return;
       }
-      const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
+      const revertFallback = fallbackFamilyFor(this.prevFontId ?? run.fontId);
       const removed = new Set(this.partialPlan.removePtrs.map((r) => r.ptr));
       this.rebuildAsOverlayModel(
         doc,
@@ -738,7 +739,7 @@ export class EditTextCommand implements Command {
 
     // PDFium has no insert-into-form-xobject API, so the truly-original
     // pointers (if they lived in a form) are gone forever.
-    const revertFallback = helveticaVariantFor(this.prevFontId ?? "");
+    const revertFallback = fallbackFamilyFor(this.prevFontId ?? "");
     const lineAnchorPtrs: number[] = [];
     const allRestoredPtrs: number[] = [];
     for (const line of this.revertLines) {
@@ -767,7 +768,7 @@ export class EditTextCommand implements Command {
     }
 
     run.pdfiumObjPtr = lineAnchorPtrs[0] ?? this.prevObjPtr;
-    run.fontId = `base14:${revertFallback}`;
+    run.fontId = fallbackFontIdFor(revertFallback);
     run.fontSubset = false;
     run.text = this.prevText;
     run.mergedFromPtrs = [];
@@ -800,7 +801,7 @@ export class EditTextCommand implements Command {
         : run.fontSize * 1.2;
     const topBaseline = slots[0]?.baselineY ?? run.matrix.f;
     const leftX = slots[0]?.matrixE ?? run.matrix.e;
-    const fallbackFamily = helveticaVariantFor(this.prevFontId ?? run.fontId);
+    const fallbackFamily = fallbackFamilyFor(this.prevFontId ?? run.fontId);
     // Re-emitted lines keep the run's embedded face. Joining two lines with
     // Delete/Backspace only REMOVES characters, so every glyph the joined line
     // needs already rendered in this font; emitting at base-14 turned the whole
@@ -870,7 +871,16 @@ export class EditTextCommand implements Command {
         newMemberPtrs.push(src.mergedFromPtrs[0] ?? 0);
         newMemberFs.push(y);
       } else if (text.length === 0) {
-        slot = emptySlot(y, leftX, run, fallbackFamily);
+        // Seeded from the line this one was split off, so the blank line keeps
+        // the paragraph's font instead of being stamped base-14 before the
+        // user has typed a character into it.
+        slot = emptySlot(
+          y,
+          leftX,
+          run,
+          fallbackFamily,
+          newSlots[newSlots.length - 1] ?? slots[0],
+        );
         newMemberPtrs.push(0);
         newMemberFs.push(y);
       } else {
@@ -909,7 +919,7 @@ export class EditTextCommand implements Command {
           y,
           lineX,
           run,
-          reuseFontPtr ? run.fontId : `base14:${fallbackFamily}`,
+          reuseFontPtr ? run.fontId : fallbackFontIdFor(fallbackFamily),
           emittedTexts,
         );
       }
@@ -989,7 +999,7 @@ export class EditTextCommand implements Command {
       run.matrix.f,
       ...slots.map((s) => s.baselineY),
     );
-    const fallbackFamily = helveticaVariantFor(this.prevFontId ?? run.fontId);
+    const fallbackFamily = fallbackFamilyFor(this.prevFontId ?? run.fontId);
 
     this.lineEdit = {
       moves: [],
@@ -1046,7 +1056,7 @@ export class EditTextCommand implements Command {
           y,
           leftX,
           run,
-          `base14:${fallbackFamily}`,
+          fallbackFontIdFor(fallbackFamily),
           emittedTexts,
         );
       }
@@ -1405,11 +1415,21 @@ function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {
   };
 }
 
-function emptySlot(
+/**
+ * A blank line, inheriting its font from the line it was split off.
+ *
+ * Without `seed` the slot is stamped base-14 the moment Enter is pressed, and
+ * everything typed into it afterwards re-emits against that - so a new line
+ * came out in Helvetica while the paragraph around it kept the document's own
+ * face. The blank line has no glyphs of its own to judge by, so the only honest
+ * default is the font of the line it came from.
+ */
+export function emptySlot(
   baselineY: number,
   leftX: number,
   run: TextRun,
   fallbackFamily: string,
+  seed?: ParagraphLineSlot,
 ): ParagraphLineSlot {
   return {
     startChar: 0,
@@ -1417,9 +1437,9 @@ function emptySlot(
     baselineY,
     matrixE: leftX,
     containerPtr: 0,
-    fontId: `base14:${fallbackFamily}`,
+    fontId: seed ? seed.fontId : fallbackFontIdFor(fallbackFamily),
     fontSize: run.fontSize,
-    fontSubset: false,
+    fontSubset: seed ? seed.fontSubset : false,
     mergedFromPtrs: [],
     mergedFromTexts: [],
     mergedFromBounds: [],

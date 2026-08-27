@@ -105,7 +105,7 @@ async function saveAndReopen(
   tag: string,
 ) {
   const downloaded = page.waitForEvent("download", { timeout: 30_000 });
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   const confirm = page.getByTestId("v2-save-risk-confirm");
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   const saved = `test-results/double-edit-${tag}.pdf`;

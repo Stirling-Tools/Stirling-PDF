@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Select, Text } from "@mantine/core";
-import type { ComboboxData } from "@mantine/core";
+import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import {
   groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
+  loadedLocalFonts,
+  subscribeLocalFonts,
 } from "@app/tools/pdfTextEditor/v2/util/localFonts";
 
 export interface FontFamilyOption {
@@ -42,59 +44,90 @@ export function FontFamilySelect({
   disabled = false,
 }: FontFamilySelectProps) {
   const { t } = useTranslation();
-  const [deviceFamilies, setDeviceFamilies] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<DeviceFontNotice | null>(null);
   const supported = useMemo(() => isLocalFontAccessSupported(), []);
+  // Read the fonts from the module, not local state: switching files remounts
+  // the toolbar, and the grant the user already gave must survive that.
+  const localFonts = useSyncExternalStore(
+    subscribeLocalFonts,
+    loadedLocalFonts,
+    loadedLocalFonts,
+  );
+
+  const deviceFamilies = useMemo(() => {
+    if (!localFonts) return [];
+    const builtIn = new Set(
+      BUILT_IN_FONT_FAMILIES.map((option) => option.value.toLowerCase()),
+    );
+    return groupByFamily(localFonts)
+      .map((family) => family.family)
+      .filter((family) => !builtIn.has(family.toLowerCase()));
+  }, [localFonts]);
 
   const loadDeviceFonts = useCallback(async () => {
     setLoading(true);
     setNotice(null);
     try {
       const fonts = await listLocalFonts();
-      if (!fonts) {
-        setNotice("unavailable");
-        return;
-      }
-      const builtIn = new Set(
-        BUILT_IN_FONT_FAMILIES.map((option) => option.value.toLowerCase()),
-      );
-      const discovered = groupByFamily(fonts)
-        .map((family) => family.family)
-        .filter((family) => !builtIn.has(family.toLowerCase()));
-      if (discovered.length === 0) setNotice("none");
-      setDeviceFamilies(discovered);
+      // deviceFamilies recomputes off the store, so only the empty outcomes
+      // need reporting here.
+      if (!fonts) setNotice("unavailable");
+      else if (fonts.length === 0) setNotice("none");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const isKnown = useCallback(
+    (family: string) =>
+      BUILT_IN_FONT_FAMILIES.some((option) => option.value === family) ||
+      deviceFamilies.includes(family),
+    [deviceFamilies],
+  );
+
+  // The run's own face when we hold no bytes for it. Shown so the user can see
+  // what the text IS, listed disabled so picking it can't substitute Helvetica.
+  const documentFamily = useMemo(
+    () => (!mixed && value && !isKnown(value) ? value : null),
+    [mixed, value, isKnown],
+  );
+
   const data = useMemo<ComboboxData>(() => {
-    if (deviceFamilies.length === 0) return BUILT_IN_FONT_FAMILIES;
-    return [
-      {
-        group: t("pdfTextEditorV2.fontPicker.builtInGroup", "Built-in fonts"),
-        items: BUILT_IN_FONT_FAMILIES,
-      },
-      {
+    if (deviceFamilies.length === 0 && !documentFamily) {
+      return BUILT_IN_FONT_FAMILIES;
+    }
+    const groups: ComboboxItemGroup[] = [];
+    if (documentFamily) {
+      groups.push({
+        group: t("pdfTextEditorV2.fontPicker.documentGroup", "Document font"),
+        items: [
+          { value: documentFamily, label: documentFamily, disabled: true },
+        ],
+      });
+    }
+    groups.push({
+      group: t("pdfTextEditorV2.fontPicker.builtInGroup", "Built-in fonts"),
+      items: BUILT_IN_FONT_FAMILIES,
+    });
+    if (deviceFamilies.length > 0) {
+      groups.push({
         group: t("pdfTextEditorV2.fontPicker.deviceGroup", "Device fonts"),
         items: deviceFamilies.map((family) => ({
           value: family,
           label: family,
         })),
-      },
-    ];
-  }, [deviceFamilies, t]);
+      });
+    }
+    return groups;
+  }, [deviceFamilies, documentFamily, t]);
 
-  // Mantine shows nothing for a value with no matching option, so unknown
-  // families (embedded/subset) and mixed selections fall back to the placeholder.
+  // Mantine shows nothing for a value with no matching option; the document
+  // font is in `data` precisely so a recognised face still gets named.
   const selected = useMemo(() => {
     if (mixed || !value) return null;
-    const known =
-      BUILT_IN_FONT_FAMILIES.some((option) => option.value === value) ||
-      deviceFamilies.includes(value);
-    return known ? value : null;
-  }, [mixed, value, deviceFamilies]);
+    return isKnown(value) || documentFamily === value ? value : null;
+  }, [mixed, value, isKnown, documentFamily]);
 
   return (
     <Group gap="xs" align="center" wrap="nowrap">

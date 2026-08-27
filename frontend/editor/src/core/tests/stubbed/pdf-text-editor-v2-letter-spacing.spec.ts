@@ -102,7 +102,7 @@ test("editing a letter-spaced heading keeps its tracking through save+reopen", a
 
   // Save + reopen the produced bytes.
   const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   const dl = await downloadPromise;
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];

@@ -83,8 +83,8 @@ test.describe("v2 editor - pre-save data-loss warning", () => {
       timeout: 30_000,
     });
 
-    // First save attempt surfaces the warning instead of downloading.
-    await page.getByTestId("v2-save").click();
+    // The first attempt surfaces the warning instead of downloading.
+    await page.getByTestId("v2-download").click();
     const confirm = page.getByTestId("v2-save-risk-confirm");
     await expect(confirm).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("v2-save-risk-modal")).toContainText(
@@ -108,7 +108,7 @@ test.describe("v2 editor - pre-save data-loss warning", () => {
     });
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
     // The warning's confirm button must never have mounted for a plain PDF.

@@ -4,6 +4,16 @@ import { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 let __singleton: EditorStore | null = null;
 let __disposeTimer: ReturnType<typeof setTimeout> | null = null;
 
+// The store is a module-level singleton, so a hot update to EditorStore.ts
+// swaps the CLASS but leaves this instance - built from the old code - running.
+// Every timing constant and method on it stays as it was, which makes a fix look
+// like it changed nothing. Take the full reload instead.
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    window.location.reload();
+  });
+}
+
 /** Grace period before a fully-unmounted editor frees its PDFium document. */
 const DISPOSE_GRACE_MS = 1500;
 

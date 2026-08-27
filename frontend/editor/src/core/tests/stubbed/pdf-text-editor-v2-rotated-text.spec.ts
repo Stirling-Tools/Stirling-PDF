@@ -73,7 +73,7 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
 
   // Save + reopen, then confirm the run is STILL rotated (not forced upright).
   const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   const dl = await downloadPromise;
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];

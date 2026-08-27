@@ -13,6 +13,7 @@ interface TopBarProps {
   pages: PageSnapshot[];
   openedFileName: string | null;
   onSave: () => void;
+  onDownload: () => void;
   onShowHelp: () => void;
 }
 
@@ -31,6 +32,7 @@ export function EditorTopBar(props: TopBarProps) {
     pages,
     openedFileName,
     onSave,
+    onDownload,
     onShowHelp,
   } = props;
 
@@ -159,14 +161,32 @@ export function EditorTopBar(props: TopBarProps) {
             </Button>
           </Group>
 
+          {/* Save lands the edit back in the workbench like every other tool;
+              downloading is the separate, explicit step it is elsewhere. */}
           <Tooltip
             label={t(
               "pdfTextEditorV2.saveTooltip",
-              "Download edited PDF (Ctrl+S)",
+              "Apply changes to the file in your workspace (Ctrl+S)",
             )}
           >
             <Button size="sm" onClick={onSave} data-testid="v2-save" fullWidth>
               {t("pdfTextEditorV2.save", "Save PDF")}
+            </Button>
+          </Tooltip>
+          <Tooltip
+            label={t(
+              "pdfTextEditorV2.downloadTooltip",
+              "Save and download the edited PDF",
+            )}
+          >
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onDownload}
+              data-testid="v2-download"
+              fullWidth
+            >
+              {t("pdfTextEditorV2.download", "Download")}
             </Button>
           </Tooltip>
         </>

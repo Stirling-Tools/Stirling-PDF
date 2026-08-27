@@ -11,7 +11,10 @@ import {
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
-import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import {
+  fallbackFamilyFor,
+  fallbackFontIdFor,
+} from "@app/tools/pdfTextEditor/v2/util/fontCapability";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
@@ -646,7 +649,7 @@ export function applyPartialEditPlan(
   }
 
   // Step 2: walk ops.
-  const fallbackFamily = helveticaVariantFor(run.fontId);
+  const fallbackFamily = fallbackFamilyFor(run.fontId);
   const newMergedFromPtrs: number[] = [];
   const newMergedFromTexts: string[] = [];
   const newMergedFromBounds: Array<{ x: number; right: number }> = [];
@@ -1058,6 +1061,37 @@ function objFontPtr(
 
 // Pick the member object whose text shares the most characters with the text
 // about to be emitted, and return ITS font handle.
+/**
+ * The best font handle for `targetText` taken from the OTHER lines of the same
+ * paragraph, nearest line first.
+ *
+ * Only lines whose slot carries the same `fontId` are considered, so a bold or
+ * italic sub-run inside the paragraph cannot lend its face to plain body text.
+ * Returns 0 when nothing matches, leaving the caller on its normal fallback.
+ */
+export function siblingFontPtrForText(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  slots: ParagraphLineSlot[],
+  selfIndex: number,
+  fontId: string,
+  targetText: string,
+): number {
+  const order = slots
+    .map((s, i) => ({ s, i }))
+    .filter(({ s, i }) => i !== selfIndex && s.fontId === fontId)
+    .sort((a, b) => Math.abs(a.i - selfIndex) - Math.abs(b.i - selfIndex));
+  for (const { s } of order) {
+    const ptr = bestFontPtrForText(
+      m,
+      s.mergedFromPtrs,
+      s.mergedFromTexts,
+      targetText,
+    );
+    if (ptr) return ptr;
+  }
+  return 0;
+}
+
 export function bestFontPtrForText(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   ptrs: number[],
@@ -1256,12 +1290,18 @@ export function applyParagraphEditPlan(
       // Fresh-emit line: this line couldn't be partially edited.
       const leftX = slot.mergedFromBounds[0]?.x ?? slot.matrixE;
       // Read the font handle BEFORE the objects are removed.
-      const reuseFontPtr = bestFontPtrForText(
-        m,
-        slot.mergedFromPtrs,
-        slot.mergedFromTexts,
-        lineText,
-      );
+      const reuseFontPtr =
+        bestFontPtrForText(
+          m,
+          slot.mergedFromPtrs,
+          slot.mergedFromTexts,
+          lineText,
+        ) ||
+        // A line the user just created with Enter owns no objects yet, so the
+        // search above has nothing to score and returns 0 - which re-emits it
+        // in Helvetica while the paragraph around it keeps the document's own
+        // face. Its SIBLING lines carry exactly the face it should inherit.
+        siblingFontPtrForText(m, newSlots, i, slot.fontId, lineText);
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
         try {
@@ -1270,7 +1310,7 @@ export function applyParagraphEditPlan(
           /* best-effort */
         }
       }
-      const fallbackFamily = helveticaVariantFor(run.fontId);
+      const fallbackFamily = fallbackFamilyFor(run.fontId);
       if (lineText.length > 0) {
         const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
@@ -1296,7 +1336,7 @@ export function applyParagraphEditPlan(
         // Only drop to a base-14 identity when the source font wasn't reused;
         // otherwise keep the slot's font so the NEXT edit reuses it again.
         if (reuseFontPtr === 0) {
-          slot.fontId = `base14:${fallbackFamily}`;
+          slot.fontId = fallbackFontIdFor(fallbackFamily);
           slot.fontSubset = false;
         }
         slot.containerPtr = 0;

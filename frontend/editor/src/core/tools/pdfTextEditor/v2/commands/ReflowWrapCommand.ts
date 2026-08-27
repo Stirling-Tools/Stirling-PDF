@@ -39,6 +39,7 @@ interface RunSnapshot {
   paragraphLeafPtrs: number[];
   paragraphLeafContainers: number[];
   paragraphLineSlots: ParagraphLineSlot[];
+  paragraphSoftStarts: boolean[];
   mergedFromPtrs: number[];
   mergedFromTexts: string[];
   mergedFromBounds: Array<{ x: number; right: number }>;
@@ -89,11 +90,16 @@ export class ReflowWrapCommand implements Command {
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : fontSize * 1.2;
     const startX = Math.min(...leaves.map((l) => l.x));
     const topBaseline = Math.max(...leaves.map((l) => l.baseline));
-    // Clamp the wrap width to the page measured from OUR OWN left edge.
+    // Clamp the wrap width to the page measured from OUR OWN left edge - but
+    // to the edge itself, with no margin held back. The caller's width is the
+    // box the paragraph was already laid out in, so shaving a font-size margin
+    // off it wraps at LESS than the document's own measure and every line
+    // loses its last word: "...carry out various" drops "various" onto a line
+    // of its own, on lines the user never touched.
     const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
     const maxWidth = Math.min(
       this.maxWidthPt,
-      Math.max(fontSize * 4, rawRightEdge - startX - fontSize),
+      Math.max(fontSize * 4, rawRightEdge - startX),
     );
 
     // Reflow is only NEEDED when some line actually overflows the wrap width.
@@ -116,8 +122,23 @@ export class ReflowWrapCommand implements Command {
 
     const words = groupWords(leaves, fontSize * 0.18);
     const spaceWidth = estimateSpaceWidth(words, fontSize);
+    // The gap that FOLLOWED this word in the document, when the next word was
+    // beside it on the same line. Justified text stretches its spaces line by
+    // line, so rebuilding every line on one median width makes the lines that
+    // were set tighter than the median come out wider than they were authored
+    // - and each one then drops its last word onto a line of its own, on lines
+    // the user never edited. Only a pair the reflow is genuinely joining for
+    // the first time needs the estimate.
+    const gapAfter = (index: number): number => {
+      const a = words[index];
+      const b = words[index + 1];
+      if (!a || !b) return spaceWidth;
+      if (Math.abs(a.baseline - b.baseline) > 2) return spaceWidth;
+      const gap = b.x - a.right;
+      return gap > 0 ? gap : spaceWidth;
+    };
     // Manual line breaks the user typed (Enter) live in run.text as "\n".
-    const hardBreaks = hardBreakNonWsCounts(run.text);
+    const hardBreaks = hardBreakNonWsCounts(run.text, run.paragraphSoftStarts);
 
     this.prev = snapshotRun(run);
 
@@ -139,7 +160,8 @@ export class ReflowWrapCommand implements Command {
     let cursorX = startX;
     let lineIdx = lines.length - 1;
     let cumNonWs = 0;
-    for (const w of words) {
+    for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+      const w = words[wordIndex];
       const width = w.right - w.x;
       const wordNonWs = w.glyphs.reduce(
         (n, g) => n + g.text.replace(/\s+/g, "").length,
@@ -183,7 +205,7 @@ export class ReflowWrapCommand implements Command {
         }
       }
       lines[lineIdx].push(w);
-      cursorX = targetX + width + spaceWidth;
+      cursorX = targetX + width + gapAfter(wordIndex);
       cumNonWs += wordNonWs;
     }
     // Hard breaks AFTER the last word (Enter at paragraph end) were never
@@ -319,12 +341,21 @@ function groupWords(leaves: Leaf[], gapThreshold: number): Word[] {
 }
 
 /** The non-whitespace char counts at which `text` has a hard "\n" break. */
-function hardBreakNonWsCounts(text: string): Map<number, number> {
+function hardBreakNonWsCounts(
+  text: string,
+  softStarts?: boolean[],
+): Map<number, number> {
   const out = new Map<number, number>();
   let nonWs = 0;
+  let lineIndex = 0;
   for (const ch of text) {
-    if (ch === "\n") out.set(nonWs, (out.get(nonWs) ?? 0) + 1);
-    else if (!/\s/.test(ch)) nonWs += 1;
+    if (ch === "\n") {
+      lineIndex += 1;
+      // A break this command inserted to make the text fit is not the user's,
+      // so it must stay re-flowable. Reading it back as forced would freeze the
+      // paragraph at whatever width it happened to be wrapped to.
+      if (!softStarts?.[lineIndex]) out.set(nonWs, (out.get(nonWs) ?? 0) + 1);
+    } else if (!/\s/.test(ch)) nonWs += 1;
   }
   return out;
 }
@@ -422,9 +453,16 @@ function rebuildRunFromLines(
   run.paragraphMemberFs = memberFs;
   run.paragraphLeafPtrs = leafPtrs;
   run.paragraphLeafContainers = leafContainers;
-  // run.text joins visual lines with ONE-char separators ("\n" hard, " " soft).
+  run.paragraphSoftStarts = lineIsHardStart.map((hard) => !hard);
+  // ONE "\n" per visual line, wrap-created breaks included. A soft break used
+  // to join with " ", which left run.text holding fewer lines than the page had
+  // ink for: buildExactLines then failed at the seam (the engine trims a
+  // wrapped line's trailing space, so the pen jumps backwards and the span
+  // reads NaN), `exact` came back null, and the box kept its pre-edit line
+  // count while the stale painted blocks were never replaced. Which breaks the
+  // WRAP owns is recorded in paragraphSoftStarts instead.
   const glyphDerived = lineTexts
-    .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
+    .map((t, i) => (i === 0 ? t : "\n" + t))
     .join("");
   // PDFium collapses runs of intra-line spaces in the glyph stream.
   const stripWs = (s: string): string => s.replace(/\s+/g, "");
@@ -443,9 +481,7 @@ function rebuildRunFromLines(
       slots[i].endChar = cursor + preLine.length;
       cursor += preLine.length + (i < slots.length - 1 ? 1 : 0);
     }
-    run.text = preLines
-      .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
-      .join("");
+    run.text = preLines.map((t, i) => (i === 0 ? t : "\n" + t)).join("");
   } else {
     run.text = glyphDerived;
   }
@@ -538,6 +574,7 @@ function snapshotRun(run: TextRun): RunSnapshot {
     paragraphLeafPtrs: [...run.paragraphLeafPtrs],
     paragraphLeafContainers: [...run.paragraphLeafContainers],
     paragraphLineSlots: run.paragraphLineSlots.map(cloneSlot),
+    paragraphSoftStarts: [...run.paragraphSoftStarts],
     mergedFromPtrs: [...run.mergedFromPtrs],
     mergedFromTexts: [...run.mergedFromTexts],
     mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -557,6 +594,7 @@ function restoreRun(run: TextRun, prev: RunSnapshot): void {
   run.paragraphLeafPtrs = [...prev.paragraphLeafPtrs];
   run.paragraphLeafContainers = [...prev.paragraphLeafContainers];
   run.paragraphLineSlots = prev.paragraphLineSlots.map(cloneSlot);
+  run.paragraphSoftStarts = [...prev.paragraphSoftStarts];
   run.mergedFromPtrs = [...prev.mergedFromPtrs];
   run.mergedFromTexts = [...prev.mergedFromTexts];
   run.mergedFromBounds = prev.mergedFromBounds.map((b) => ({ ...b }));

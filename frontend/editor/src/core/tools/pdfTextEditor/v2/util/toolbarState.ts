@@ -2,6 +2,8 @@ import {
   isBoldFamily,
   isItalicFamily,
 } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
+import { canToggleItalic } from "@app/tools/pdfTextEditor/v2/util/fontCapability";
+import type { LocalFont } from "@app/tools/pdfTextEditor/v2/util/localFonts";
 import type {
   PageSnapshot,
   RGBA,
@@ -15,6 +17,7 @@ export const EMPTY_TOOLBAR: ToolbarState = {
   fill: null,
   bold: false,
   italic: false,
+  canItalic: false,
   stroke: null,
   strokeWidth: null,
   mixed: {
@@ -32,6 +35,7 @@ export const EMPTY_TOOLBAR: ToolbarState = {
 export function deriveToolbarState(
   pages: PageSnapshot[],
   selection: SelectionState,
+  localFonts: LocalFont[] | null = null,
 ): ToolbarState {
   if (selection.runIds.length === 0) return EMPTY_TOOLBAR;
   const selected = pages
@@ -68,6 +72,10 @@ export function deriveToolbarState(
     fill: sameFill ? first.fill : null,
     bold: firstBold,
     italic: firstItalic,
+    canItalic: canToggleItalic(
+      selected.map((r) => r.fontId),
+      localFonts,
+    ),
     stroke: sameStroke ? firstStroke : null,
     strokeWidth: sameStrokeWidth ? firstStrokeWidth : null,
     mixed: {

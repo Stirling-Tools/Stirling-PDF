@@ -3,6 +3,7 @@ import {
   Group,
   Menu,
   NumberInput,
+  Popover,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -10,8 +11,8 @@ import { Button } from "@app/ui/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import TuneIcon from "@mui/icons-material/TuneOutlined";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpenOutlined";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
@@ -41,6 +42,7 @@ import {
   toCssHex,
 } from "@app/tools/pdfTextEditor/v2/model/Color";
 import type { ToolbarState } from "@app/tools/pdfTextEditor/v2/types";
+import { familyOf } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 import { FontFamilySelect } from "@app/tools/pdfTextEditor/v2/components/FontFamilySelect";
 
 export type ChangeCaseMode = "upper" | "lower" | "title" | "sentence";
@@ -69,7 +71,6 @@ interface ToolbarProps {
   /** Null colour clears the outline; width 0 does the same. */
   onChangeOutline: (hex: string | null, width: number) => void;
   onChangeFontFamily: (family: string) => void;
-  onToggleBold: () => void;
   onToggleItalic: () => void;
   onDelete: () => void;
   onToggleLock: () => void;
@@ -116,7 +117,6 @@ export function Toolbar({
   onChangeFill,
   onChangeOutline,
   onChangeFontFamily,
-  onToggleBold,
   onToggleItalic,
   onDelete,
   onToggleLock,
@@ -145,10 +145,9 @@ export function Toolbar({
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
   const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
   const outlineWidth = state.strokeWidth ?? 0;
-  // v2 tags base-14 ids with a "base14:" prefix; the picker matches family.
-  const fontFamily = state.fontFamily
-    ? state.fontFamily.replace(/^(base14|device):/, "")
-    : null;
+  // Every id form ends in the family, "pdf:<ptr>:<family>" included - the picker
+  // needs that name, not the id, to be able to name an embedded face at all.
+  const fontFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
   return (
     <Group
       gap="xs"
@@ -221,63 +220,89 @@ export function Toolbar({
         aria-label={t("pdfTextEditorV2.toolbar.fontColour", "Font colour")}
         data-testid="v2-colour"
       />
-      <ColorInput
-        size="xs"
-        w={132}
-        value={outlineHex}
-        onChange={(next) => {
-          if (!next || !parseCssColor(next)) return;
-          // Picking a colour with no width yet is meant as "outline it",
-          // so give it a visible default rather than a silent no-op.
-          onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
-        }}
-        disabled={disabled || !hasRunSelection}
-        aria-label={t(
-          "pdfTextEditorV2.toolbar.outlineColour",
-          "Outline colour",
-        )}
-        data-testid="v2-outline-colour"
-      />
-      <NumberInput
-        size="xs"
-        w={76}
-        min={0}
-        max={12}
-        step={0.25}
-        decimalScale={2}
-        value={outlineWidth}
-        onChange={(value) => {
-          const next = typeof value === "number" ? value : Number(value);
-          if (!Number.isFinite(next) || next < 0) return;
-          // With a mixed colour there is no single hex to apply, so only the
-          // "remove the outline" direction is unambiguous.
-          if (next > 0 && state.mixed.stroke) return;
-          onChangeOutline(next > 0 ? outlineHex : null, next);
-        }}
-        disabled={disabled || !hasRunSelection || state.strokeWidth === null}
-        aria-label={t(
-          "pdfTextEditorV2.toolbar.outlineWidth",
-          "Outline width (0 = none)",
-        )}
-        data-testid="v2-outline-width"
-      />
-      <Tooltip label={t("pdfTextEditorV2.toolbar.bold", "Bold")}>
-        <Button
-          variant={state.bold ? "primary" : "tertiary"}
-          size="sm"
-          onClick={onToggleBold}
-          disabled={disabled || !hasRunSelection}
-          aria-label={t("pdfTextEditorV2.toolbar.bold", "Bold")}
-          data-testid="v2-bold"
-          leftSection={<FormatBoldIcon fontSize="small" />}
-        />
-      </Tooltip>
-      <Tooltip label={t("pdfTextEditorV2.toolbar.italic", "Italic")}>
+      <Popover position="bottom-start" withinPortal shadow="md">
+        <Popover.Target>
+          <Tooltip
+            label={t(
+              "pdfTextEditorV2.toolbar.advancedColourTooltip",
+              "Advanced colour (glyph outline)",
+            )}
+          >
+            <Button
+              variant={outlineWidth > 0 ? "primary" : "tertiary"}
+              size="sm"
+              disabled={disabled || !hasRunSelection}
+              aria-label={t(
+                "pdfTextEditorV2.toolbar.advancedColour",
+                "Advanced colour",
+              )}
+              data-testid="v2-colour-advanced"
+              leftSection={<TuneIcon fontSize="small" />}
+            />
+          </Tooltip>
+        </Popover.Target>
+        <Popover.Dropdown>
+          <Group gap="xs" align="center" wrap="nowrap">
+            <ColorInput
+              size="xs"
+              w={132}
+              value={outlineHex}
+              onChange={(next) => {
+                if (!next || !parseCssColor(next)) return;
+                // Picking a colour with no width yet is meant as "outline it",
+                // so give it a visible default rather than a silent no-op.
+                onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
+              }}
+              disabled={disabled || !hasRunSelection}
+              aria-label={t(
+                "pdfTextEditorV2.toolbar.outlineColour",
+                "Outline colour",
+              )}
+              data-testid="v2-outline-colour"
+            />
+            <NumberInput
+              size="xs"
+              w={76}
+              min={0}
+              max={12}
+              step={0.25}
+              decimalScale={2}
+              value={outlineWidth}
+              onChange={(value) => {
+                const next = typeof value === "number" ? value : Number(value);
+                if (!Number.isFinite(next) || next < 0) return;
+                // With a mixed colour there is no single hex to apply, so only
+                // the "remove the outline" direction is unambiguous.
+                if (next > 0 && state.mixed.stroke) return;
+                onChangeOutline(next > 0 ? outlineHex : null, next);
+              }}
+              disabled={
+                disabled || !hasRunSelection || state.strokeWidth === null
+              }
+              aria-label={t(
+                "pdfTextEditorV2.toolbar.outlineWidth",
+                "Outline width (0 = none)",
+              )}
+              data-testid="v2-outline-width"
+            />
+          </Group>
+        </Popover.Dropdown>
+      </Popover>
+      <Tooltip
+        label={
+          hasRunSelection && !state.canItalic
+            ? t(
+                "pdfTextEditorV2.toolbar.italicUnavailable",
+                "This font has no italic version. Load your device fonts or pick another font family.",
+              )
+            : t("pdfTextEditorV2.toolbar.italic", "Italic")
+        }
+      >
         <Button
           variant={state.italic ? "primary" : "tertiary"}
           size="sm"
           onClick={onToggleItalic}
-          disabled={disabled || !hasRunSelection}
+          disabled={disabled || !hasRunSelection || !state.canItalic}
           aria-label={t("pdfTextEditorV2.toolbar.italic", "Italic")}
           data-testid="v2-italic"
           leftSection={<FormatItalicIcon fontSize="small" />}

@@ -53,6 +53,8 @@ interface FaceEntry {
 }
 
 let faceEntries: FaceEntry[] = [];
+let resolved: LocalFont[] | null = null;
+const listeners = new Set<() => void>();
 
 async function queryOnce(): Promise<LocalFont[] | null> {
   const query = localFontQuery();
@@ -66,7 +68,9 @@ async function queryOnce(): Promise<LocalFont[] | null> {
       if (font) entries.push({ font, source: face });
     }
     faceEntries = entries;
-    return entries.map((entry) => entry.font);
+    resolved = entries.map((entry) => entry.font);
+    for (const listener of [...listeners]) listener();
+    return resolved;
   } catch {
     // SecurityError, NotAllowedError, a dismissed prompt and anything
     // unexpected all mean the same thing to callers: no device fonts.
@@ -82,10 +86,29 @@ export async function listLocalFonts(): Promise<LocalFont[] | null> {
   return pending;
 }
 
+/**
+ * The faces {@link listLocalFonts} has already resolved, or null.
+ *
+ * Never prompts and never awaits, so render-time callers (a toolbar deciding
+ * whether italic is even possible) can read the list without granting
+ * themselves permission the user has not given. Reference-stable, so it is a
+ * valid `useSyncExternalStore` snapshot.
+ */
+export function loadedLocalFonts(): LocalFont[] | null {
+  return resolved;
+}
+
+/** Fires once the device fonts resolve, so derived UI state can recompute. */
+export function subscribeLocalFonts(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 /** Drops the memoised result. Exists for tests. */
 export function resetLocalFontsCache(): void {
   pending = null;
   faceEntries = [];
+  resolved = null;
   bytesByFamily.clear();
   bytesPending.clear();
 }
@@ -126,7 +149,7 @@ function normaliseName(name: string): string {
     .replace(/[\s_-]+/g, " ");
 }
 
-interface RequestedFace {
+export interface RequestedFace {
   family: string;
   bold: boolean;
   italic: boolean;
@@ -134,7 +157,7 @@ interface RequestedFace {
 
 // Split a picker value into family plus style axes, so "Segoe UI Bold" finds
 // "Segoe UI". A bare name yields the upright regular cut.
-function splitRequested(requested: string): RequestedFace {
+export function splitRequested(requested: string): RequestedFace {
   const spaced = requested.trim().replace(/[_-]+/g, " ");
   const bold = /\bbold\b/i.test(spaced);
   const italic = /\b(italic|oblique)\b/i.test(spaced);
@@ -151,6 +174,25 @@ function faceStyleText(font: LocalFont): string {
   if (font.style) return font.style.toLowerCase();
   const dash = font.postscriptName.indexOf("-");
   return dash >= 0 ? font.postscriptName.slice(dash + 1).toLowerCase() : "";
+}
+
+/**
+ * The style axes an installed face actually carries.
+ *
+ * Callers use it to tell "this family really has an italic cut" from
+ * "pickLocalFontFace returned the upright cut because there was nothing else".
+ */
+export function faceStyleFlags(font: LocalFont): {
+  bold: boolean;
+  italic: boolean;
+} {
+  const style = faceStyleText(font);
+  return {
+    bold: /bold|black|heavy|semib|demi/.test(style),
+    // A family NAMED "Foo Italic" carries the axis even if its style says
+    // "Regular", which is how several shipped fonts describe themselves.
+    italic: /italic|oblique/.test(`${style} ${font.family.toLowerCase()}`),
+  };
 }
 
 function scoreFace(

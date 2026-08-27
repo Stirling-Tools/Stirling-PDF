@@ -50,6 +50,13 @@ const SETTLE_MS = 400;
 
 const STALL_MS = 250;
 
+// Idle time before a wrap-mode run re-wraps. This has to be longer than the gap
+// between keystrokes: a reflow physically moves the glyph objects, so one that
+// lands mid-burst drags the text - and the caret - out from under the user.
+// Measured at 180ms it fired 10 times across 70 typed characters and produced
+// 13 backward caret jumps. It only needs to beat the user clicking away.
+const LIVE_WRAP_MS = 700;
+
 // Un-measured keystrokes a run absorbs before the overlay takes over the
 // glyphs. One or two are re-rendered fast enough to leave the page's own ink
 // alone; a burst is not.
@@ -63,6 +70,14 @@ function cssFontFamilyFor(fontId: string): string {
   // The document's own face, when PDFium gave us bytes a FontFace accepts.
   // An unresolved name costs nothing: the browser moves on to the next entry.
   const own = ownFaceFor(fontId);
+  // An edit that outgrew a subset now re-emits in the user's INSTALLED face
+  // (`device:Calibri`), so the page really is Calibri. Naming it first keeps
+  // the overlay measuring and drawing what the page renders; without it
+  // nearestStandardFont collapses it to Helvetica and every advance the
+  // overlay predicts is a different font's.
+  if (fontId.startsWith("device:")) {
+    return `"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  }
   const standard = nearestStandardFont(family);
   if (standard.startsWith("Times")) {
     return `${own}"Liberation Serif", "Times New Roman", Times, serif`;
@@ -353,7 +368,6 @@ export function TextRunOverlay({
   );
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
-  const wasParagraphRef = useRef<boolean>((run.paragraphLineCount ?? 1) > 1);
 
   const fontFamily = cssFontFamilyFor(run.fontId);
   const fontWeight = cssWeightFor(run.fontId);
@@ -407,7 +421,6 @@ export function TextRunOverlay({
   // text changes, and a token typed into needs them most right then.
   const heldAdvanceEmRef = useRef<Map<string, number> | null>(null);
   if (advanceEm) heldAdvanceEmRef.current = advanceEm;
-  const paintOpts = { font, fontSizePx, advanceEm: heldAdvanceEmRef.current };
 
   useEffect(() => {
     const bump = () => {
@@ -458,6 +471,12 @@ export function TextRunOverlay({
   // glyphs on the browser's advances rather than the PDF's.
   const layoutIsGuessed = touched && !freshExact;
 
+  const paintOpts = {
+    font,
+    fontSizePx,
+    advanceEm: heldAdvanceEmRef.current,
+  };
+
   useEffect(() => {
     if (!layoutIsGuessed) {
       guessedEditsRef.current = 0;
@@ -466,20 +485,29 @@ export function TextRunOverlay({
       return;
     }
     guessedEditsRef.current += 1;
-    // A keystroke or two the engine is about to re-measure must not flash the
-    // mask - real PDF ink beats a CSS approximation whenever it is current.
+    // The mask replaces the page's own ink with a CSS approximation of it, so
+    // arming it mid-word visibly changes the typeface of text the user is
+    // typing into - and changes it back when the engine catches up. That is a
+    // worse artefact than the caret leading the page render, which is all it
+    // buys: the raster is simply slower than a fast burst, and it self-corrects
+    // the moment typing pauses. So it stays reserved for a run that has fallen
+    // BEHIND ITS OWN PAGE RENDER - not for one whose page is merely mid-flight.
+    if (
+      pageRevision !== undefined &&
+      pageRevision > editedAtRevisionRef.current
+    ) {
+      setStalled(false);
+      return;
+    }
     if (guessedEditsRef.current < GUESSED_EDITS_BEFORE_MASK) return;
-    // Past that, hand the run its own glyphs. Keeping them transparent leaves
-    // the caret - the only thing the user can see move - placed by a layout
-    // that disagrees with the page bitmap, so it walks off the text a fraction
-    // of a pixel per keystroke. The deadline is anchored where the mask first
-    // came due, so typing on does not keep pushing it out of reach.
+    // The deadline is anchored where the mask first came due, so typing on does
+    // not keep pushing it out of reach.
     const now = Date.now();
     if (maskDueSinceRef.current === 0) maskDueSinceRef.current = now;
     const wait = Math.max(0, STALL_MS - (now - maskDueSinceRef.current));
     const timer = window.setTimeout(() => setStalled(true), wait);
     return () => window.clearTimeout(timer);
-  }, [layoutIsGuessed, editTick]);
+  }, [layoutIsGuessed, pageRevision, editTick]);
 
   useEffect(() => {
     const el = ref.current;
@@ -492,6 +520,9 @@ export function TextRunOverlay({
     const el = ref.current;
     if (!el) return;
     const active = document.activeElement === el;
+    // Focus may sit on a descendant mid-edit; either way the run owns the caret
+    // and is entitled to re-seat it. A blurred run is not.
+    const ownsFocus = el.contains(document.activeElement);
     if (active && composingRef.current) return;
     const domText = readOverlayText(el);
     // Mid-edit, the only layout allowed to repaint is one the engine has
@@ -520,7 +551,11 @@ export function TextRunOverlay({
       paintPlainText(el, run.text);
     }
     paintedSignatureRef.current = wantSignature;
-    if (caret !== null) restoreCaretOffset(el, caret);
+    // Only while the run still holds focus. A selection outlives the blur that
+    // ended the edit, so re-seating it into a blurred run takes focus BACK -
+    // and the user's next click elsewhere then fires this run's blur handler,
+    // dispatching a spurious wrap that also wipes the redo stack.
+    if (caret !== null && ownsFocus) restoreCaretOffset(el, caret);
   }, [run.text, freshExact, font, fontSizePx, touched, faceEpoch]);
 
   const anchor = transform.apply(run.matrix.e, run.matrix.f);
@@ -557,35 +592,82 @@ export function TextRunOverlay({
   const measuredWidth = measureMaxLineWidth(run.text, font);
   // Width behaviour is user-controlled: - "grow": box widens to the right to
   // fit the content.
-  const isParagraph = (run.paragraphLineCount ?? 1) > 1;
   const wrapMode = widthMode === "wrap";
   const wrapLockWidth = Math.max(
     originalBoundsWidthRef.current * scale,
     fontSizePx * 4,
   );
-  // A multi-line paragraph always WRAPS - it is body text, not a single-line
-  // label. "grow" only applies to genuine single-line runs.
-  const wantWrap = wrapMode || isParagraph;
-  // Never let the box extend past the page's right edge.
+  // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
+  // Grow made the two modes indistinguishable for body text and contradicted
+  // the control's own hint ("Boxes widen to the right as you type (no
+  // wrapping)").
+  const wantWrap = wrapMode;
   const left = exact ? exact.leftPx : flowLeft;
-  const maxOnPageWidth = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
+  // Wrap keeps the box on the page - that is the whole point of the mode, and
+  // its overflow goes onto new lines instead. Grow has nowhere to put the
+  // overflow, so capping it there just hides what the user is typing: it grew
+  // to the page edge and then clipped everything beyond, measured at 2944px of
+  // invisible text on a single-line run.
+  const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
+  const maxOnPageWidth = wantWrap ? pageCap : Number.POSITIVE_INFINITY;
   const naturalWidth = wantWrap
     ? wrapLockWidth
     : Math.max(pdfWidth, measuredWidth + fontSizePx);
   const flowWidth = Math.min(naturalWidth, maxOnPageWidth);
-  const whiteSpace: "pre" | "pre-wrap" =
-    exact || !(wantWrap || flowWidth < naturalWidth - 0.5) ? "pre" : "pre-wrap";
 
   const top = exact ? exact.topPx : flowTop;
-  const caretSlack = focused ? fontSizePx * 0.5 : 0;
+  // Width must not depend on anything that can flip between renders, or the box
+  // visibly pumps between two sizes while the user types. Two things could:
+  // room for the caret appeared only WHILE focused, and the measured fallback
+  // dropped out the moment `freshExact` arrived. The engine now re-measures
+  // every 100ms, so both flipped about ten times a second. Always keep the
+  // slack, always take the wider of the two - the result is a pure function of
+  // the layout, the text and the font, and a few pixels of margin costs
+  // nothing next to a box that will not sit still.
   const exactWidth = exact
-    ? Math.max(
-        exact.widthPx + caretSlack,
-        freshExact ? 0 : measuredWidth + fontSizePx,
-      )
+    ? Math.max(exact.widthPx + fontSizePx * 0.5, measuredWidth + fontSizePx)
     : 0;
-  const width = exact ? Math.min(exactWidth, maxOnPageWidth) : flowWidth;
+  // Capped at the page edge: an editing box hanging off the page reads as
+  // broken, and the glyphs under it would be off-page anyway.
+  //
+  // A line longer than that is therefore clipped while it is being typed, and
+  // the reflow on blur brings it back onto the page. The alternative - letting
+  // the box wrap the line - is what put the overlay a full line out of register
+  // with the bitmap: the PDF draws each line as ONE text object at one pen
+  // origin and cannot wrap, so an overlay that wraps stops describing the page
+  // underneath it.
+  // Wrap KEEPS its width - that is the mode. It used to widen to the page edge
+  // exactly like Grow, which made the two indistinguishable and then clipped
+  // everything past the edge anyway.
+  const width = wantWrap
+    ? Math.min(wrapLockWidth, pageCap)
+    : exact
+      ? exactWidth
+      : flowWidth;
   const height = exact ? exact.heightPx : flowHeight;
+  // An exact layout is never wrapped - its lines are the PDF's own. Only the
+  // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
+  const whiteSpace: "pre" | "pre-wrap" =
+    !exact && wantWrap ? "pre-wrap" : "pre";
+
+  // Wrap AS THE USER TYPES, not only on blur. Deferring it meant the overflow
+  // sat invisible past the box edge until they clicked away - over a thousand
+  // pixels of it - and the caret only dropped onto the new line at that point.
+  // The reflow shares EditTextCommand's coalesce key and ignores the time
+  // window, so running it mid-burst does not fragment undo.
+  const wrapTarget = Math.min(wrapLockWidth, pageCap);
+  useEffect(() => {
+    if (!wantWrap || !onWrap || !focused) return;
+    const el = ref.current;
+    if (!el || composingRef.current) return;
+    const widest = measureMaxLineWidth(readOverlayText(el), font);
+    if (widest <= wrapTarget + 1) return;
+    const timer = window.setTimeout(
+      () => onWrap(wrapTarget / scale),
+      LIVE_WRAP_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [wantWrap, onWrap, focused, editTick, wrapTarget, font, scale]);
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
@@ -656,7 +738,12 @@ export function TextRunOverlay({
             const v = transform.invertVector(ddx, ddy);
             const dx = v.x;
             const dy = v.y;
-            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+            // Below the drag threshold this was a Ctrl+click, not a move, so
+            // treat it as the multi-select gesture it looks like.
+            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+              onSelect(true);
+              return;
+            }
             onMove(dx, dy);
           };
           window.addEventListener("pointermove", onPointerMove);
@@ -719,9 +806,24 @@ export function TextRunOverlay({
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
-        // Runs that were paragraphs on mount always re-flow when edited.
-        if (!wasParagraphRef.current && widest <= width + 1) return;
-        onWrap(width / scale);
+        // Reflow to the box the user locked, NOT to `width` - with an exact
+        // layout that is however wide the text grew, so nothing ever overflows.
+        //
+        // Never below the locked width, though. `maxOnPageWidth` keeps a GROWN
+        // box on the page and holds back 4px to do it, so for a run that
+        // already spans most of the page it comes out a point or two under the
+        // width the document itself laid the text out at. Reflowing there costs
+        // every line its last word - "...carry out various" wraps "various"
+        // onto a line of its own, on lines the user never touched. The locked
+        // width is by definition one the text fitted in.
+        const target = wrapLockWidth;
+        // Only when something actually overflows. Reflowing a paragraph
+        // unconditionally re-breaks lines the user never touched: the reflow
+        // rebuilds every line, so a two-character edit that still fits could
+        // still move words between lines the moment the box lost focus. The
+        // base branch never reflowed here at all.
+        if (widest <= target + 1) return;
+        onWrap(target / scale);
       }}
       onCompositionStart={() => {
         composingRef.current = true;

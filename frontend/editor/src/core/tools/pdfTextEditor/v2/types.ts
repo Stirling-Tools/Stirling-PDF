@@ -123,6 +123,12 @@ export interface ToolbarState {
   fill: RGBA | null;
   bold: boolean;
   italic: boolean;
+  /**
+   * Whether an italic cut is actually reachable for every selected run - a
+   * base-14 flip, or an installed face of the run's own family. False disables
+   * the control instead of silently substituting Helvetica for the real font.
+   */
+  canItalic: boolean;
   /** Glyph outline colour across the selection; null when unset or mixed. */
   stroke: RGBA | null;
   /** Glyph outline width in points; null when mixed. 0 means no outline. */

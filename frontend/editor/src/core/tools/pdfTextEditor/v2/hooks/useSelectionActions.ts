@@ -11,27 +11,24 @@ import { SetFontSizeCommand } from "@app/tools/pdfTextEditor/v2/commands/SetFont
 import { parseCssColor } from "@app/tools/pdfTextEditor/v2/model/Color";
 import { ensureDeviceFontReady } from "@app/tools/pdfTextEditor/v2/util/deviceFontEmbed";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
-import {
-  familyOf,
-  flipBold,
-  flipItalic,
-  helveticaWith,
-  isBoldFamily,
-  isItalicFamily,
-} from "@app/tools/pdfTextEditor/v2/util/fontFamily";
+import { isItalicFamily } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
+import { italicCapability } from "@app/tools/pdfTextEditor/v2/util/fontCapability";
+import { loadedLocalFonts } from "@app/tools/pdfTextEditor/v2/util/localFonts";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
+import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
+
+/** The fields the selection actions read off a run they are about to change. */
+interface SelectedRun {
+  id: string;
+  pageIndex: number;
+  fontId: string;
+  fill: { r: number; g: number; b: number; a: number };
+}
 
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
-    (
-      visit: (run: {
-        id: string;
-        pageIndex: number;
-        fontId: string;
-        fill: { r: number; g: number; b: number; a: number };
-      }) => void,
-    ) => {
+    (visit: (run: SelectedRun) => void) => {
       const sel = store.selection.value;
       const doc = store.document;
       if (!doc || sel.runIds.length === 0) return;
@@ -47,27 +44,43 @@ export function useSelectionActions(store: EditorStore) {
     [store],
   );
 
+  // One command per run, dispatched as ONE undo step - same reason
+  // `deleteSelection` groups its deletes. Select-all now reaches the whole
+  // document, so a per-run dispatch left the user hundreds of undos behind and
+  // the first Ctrl+Z looked like the restyle had only covered part of the file.
+  const dispatchPerRun = useCallback(
+    (build: (run: SelectedRun) => Command | null) => {
+      const cmds: Command[] = [];
+      forEachSelectedRun((run) => {
+        const cmd = build(run);
+        if (cmd) cmds.push(cmd);
+      });
+      if (cmds.length === 1) store.dispatch(cmds[0]);
+      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+    },
+    [store, forEachSelectedRun],
+  );
+
   const changeFontSize = useCallback(
     (size: number) => {
-      forEachSelectedRun((run) =>
-        store.dispatch(
+      dispatchPerRun(
+        (run) =>
           new SetFontSizeCommand({
             pageIndex: run.pageIndex,
             runId: run.id,
             nextSize: size,
           }),
-        ),
       );
     },
-    [store, forEachSelectedRun],
+    [dispatchPerRun],
   );
 
   const changeFill = useCallback(
     (hex: string) => {
       const fill = parseCssColor(hex);
       if (!fill) return;
-      forEachSelectedRun((run) =>
-        store.dispatch(
+      dispatchPerRun(
+        (run) =>
           new SetColourCommand({
             pageIndex: run.pageIndex,
             runId: run.id,
@@ -75,27 +88,25 @@ export function useSelectionActions(store: EditorStore) {
             // recolouring semi-transparent text doesn't force it opaque.
             nextFill: { ...fill, a: run.fill.a },
           }),
-        ),
       );
     },
-    [store, forEachSelectedRun],
+    [dispatchPerRun],
   );
 
   const changeOutline = useCallback(
     (hex: string | null, width: number) => {
       const stroke = hex ? parseCssColor(hex) : null;
-      forEachSelectedRun((run) =>
-        store.dispatch(
+      dispatchPerRun(
+        (run) =>
           new SetTextOutlineCommand({
             pageIndex: run.pageIndex,
             runId: run.id,
             stroke: stroke ? { ...stroke, a: 255 } : null,
             width,
           }),
-        ),
       );
     },
-    [store, forEachSelectedRun],
+    [dispatchPerRun],
   );
 
   const changeFontFamily = useCallback(
@@ -103,55 +114,56 @@ export function useSelectionActions(store: EditorStore) {
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
       await ensureDeviceFontReady(family);
-      forEachSelectedRun((run) =>
-        store.dispatch(
+      dispatchPerRun(
+        (run) =>
           new SetFontFamilyCommand({
             pageIndex: run.pageIndex,
             runId: run.id,
             nextFamily: family,
           }),
-        ),
       );
     },
-    [store, forEachSelectedRun],
+    [dispatchPerRun],
   );
 
-  const toggleBold = useCallback(() => {
+  const toggleItalic = useCallback(async () => {
+    const fonts = loadedLocalFonts();
+    const targets: Array<{
+      pageIndex: number;
+      runId: string;
+      family: string;
+      device: boolean;
+    }> = [];
     forEachSelectedRun((run) => {
-      // For base-14 source fonts, flip the variant in place (Helvetica →
-      // Helvetica-Bold).
-      const isOn = isBoldFamily(run.fontId);
-      // Preserve the OTHER style axis in the wholesale fallback: bolding an
-      // italic embedded font must land on Helvetica-BoldOblique.
-      const next =
-        flipBold(familyOf(run.fontId), !isOn) ??
-        helveticaWith(!isOn, isItalicFamily(run.fontId));
-      store.dispatch(
-        new SetFontFamilyCommand({
-          pageIndex: run.pageIndex,
-          runId: run.id,
-          nextFamily: next,
-        }),
+      const cap = italicCapability(
+        run.fontId,
+        !isItalicFamily(run.fontId),
+        fonts,
       );
+      // No real italic cut for this face. Leave it alone: swapping the
+      // document's own font for Helvetica-Oblique is not making it italic.
+      if (!cap.family) return;
+      targets.push({
+        pageIndex: run.pageIndex,
+        runId: run.id,
+        family: cap.family,
+        device: cap.source === "device",
+      });
     });
-  }, [store, forEachSelectedRun]);
-
-  const toggleItalic = useCallback(() => {
-    forEachSelectedRun((run) => {
-      // Same fallback as toggleBold: for unknown / embedded families,
-      // swap wholesale to Helvetica-Oblique so the button isn't dead.
-      const isOn = isItalicFamily(run.fontId);
-      const next =
-        flipItalic(familyOf(run.fontId), !isOn) ??
-        helveticaWith(isBoldFamily(run.fontId), !isOn);
-      store.dispatch(
+    // Embedding is async and Command.apply is not, so warm the bytes first.
+    for (const target of targets) {
+      if (target.device) await ensureDeviceFontReady(target.family);
+    }
+    const cmds = targets.map(
+      (target) =>
         new SetFontFamilyCommand({
-          pageIndex: run.pageIndex,
-          runId: run.id,
-          nextFamily: next,
+          pageIndex: target.pageIndex,
+          runId: target.runId,
+          nextFamily: target.family,
         }),
-      );
-    });
+    );
+    if (cmds.length === 1) store.dispatch(cmds[0]);
+    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
   }, [store, forEachSelectedRun]);
 
   const deleteSelection = useCallback(() => {
@@ -255,7 +267,6 @@ export function useSelectionActions(store: EditorStore) {
     changeFill,
     changeOutline,
     changeFontFamily,
-    toggleBold,
     toggleItalic,
     deleteSelection,
     replaceSelectedImage,

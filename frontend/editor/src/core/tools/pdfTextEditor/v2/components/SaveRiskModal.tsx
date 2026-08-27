@@ -33,7 +33,7 @@ export function SaveRiskModal({
         <Text size="sm">
           {t(
             "pdfTextEditorV2.saveRisk.intro",
-            "Downloading the edited copy changes the file. That means:",
+            "Saving the edited copy changes the file. That means:",
           )}
         </Text>
         <List size="sm" spacing="xs">
@@ -44,7 +44,7 @@ export function SaveRiskModal({
         <Text size="sm" c="dimmed">
           {t(
             "pdfTextEditorV2.saveRisk.note",
-            "Your edits are kept. The changes listed above are unavoidable when downloading the edited copy.",
+            "Your edits are kept. The changes listed above are unavoidable when saving the edited copy.",
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
@@ -62,7 +62,7 @@ export function SaveRiskModal({
             onClick={onConfirm}
             data-testid="v2-save-risk-confirm"
           >
-            {t("pdfTextEditorV2.saveRisk.downloadAnyway", "Download anyway")}
+            {t("pdfTextEditorV2.saveRisk.saveAnyway", "Save anyway")}
           </Button>
         </Group>
       </Stack>

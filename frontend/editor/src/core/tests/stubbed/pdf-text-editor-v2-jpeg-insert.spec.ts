@@ -35,7 +35,7 @@ test("inserting a JPEG embeds it as DCTDecode, not re-encoded RGBA", async ({
 
   // Save and scan the bytes for the JPEG (DCTDecode) filter.
   const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   const dl = await downloadPromise;
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   useNavigationActions,
   useNavigationState,
@@ -14,15 +14,15 @@ interface PinOptions {
   component: CustomWorkbenchViewRegistration["component"];
 }
 
-// Register the custom workbench view and keep it pinned while the editor tool
-// is selected.
+// Register the custom workbench view and open it when the editor tool is
+// selected. Returns a `pin` that brings the canvas back on demand.
 export function useWorkbenchPin({
   workbenchId,
   workbenchViewId,
   label,
   icon,
   component,
-}: PinOptions): void {
+}: PinOptions): () => void {
   const {
     registerCustomWorkbenchView,
     unregisterCustomWorkbenchView,
@@ -68,9 +68,25 @@ export function useWorkbenchPin({
 
   const actionsRef = useRef(navigationActions);
   actionsRef.current = navigationActions;
+
+  const pin = useCallback(() => {
+    actionsRef.current.setWorkbench(workbenchId);
+  }, [workbenchId]);
+
+  // Open the canvas once, when the tool is picked. Re-pinning on every
+  // workbench change would bounce the user straight back here the moment they
+  // switch to Active Files to choose a different file.
+  const pinnedRef = useRef(false);
   useEffect(() => {
-    if (navigationState.selectedTool !== "pdfTextEditor") return;
+    if (navigationState.selectedTool !== "pdfTextEditor") {
+      pinnedRef.current = false;
+      return;
+    }
+    if (pinnedRef.current) return;
+    pinnedRef.current = true;
     if (navigationState.workbench === workbenchId) return;
     actionsRef.current.setWorkbench(workbenchId);
   }, [navigationState.selectedTool, navigationState.workbench, workbenchId]);
+
+  return pin;
 }

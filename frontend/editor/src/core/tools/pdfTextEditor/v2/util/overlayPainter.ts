@@ -39,6 +39,12 @@ export function paintLines(
   lines.forEach((line, index) => {
     const block = document.createElement("div");
     block.setAttribute(LINE_ATTR, String(index));
+    // A painted block IS a line of the PDF: one text object, one pen origin,
+    // and the page cannot wrap it. So the block must not wrap or grow either.
+    // Letting it inherit `pre-wrap` from the container put a long line on two
+    // rows here and one row on the page, pushing every block below it a full
+    // line-height down - the box then overhung its own text by a row and the
+    // rendered text appeared to stay on the previous line.
     block.style.height = `${line.heightPx}px`;
     block.style.lineHeight = `${line.heightPx}px`;
     block.style.marginTop = `${line.marginTopPx}px`;

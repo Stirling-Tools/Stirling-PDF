@@ -8,7 +8,10 @@ import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
-import { useDocumentLoader } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
+import {
+  useDocumentLoader,
+  ensureAllPagesRead,
+} from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
 import { useAutoLoadFile } from "@app/tools/pdfTextEditor/v2/hooks/useAutoLoadFile";
 import { useWorkbenchPin } from "@app/tools/pdfTextEditor/v2/hooks/useWorkbenchPin";
 import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/v2/hooks/useUnsavedChangesGuard";
@@ -56,24 +59,44 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
   // Set only when the document came from the workbench; a drag-dropped
-  // file has no fileId and can only be downloaded.
+  // file has no fileId and can only be downloaded. Mirrored into state so the
+  // sidebar's file switcher can mark which workbench file is open.
   const sourceFileIdRef = useRef<FileId | null>(null);
-  const { consumeFiles, selectors } = useFileContext();
+  const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
+  const setSourceFile = useCallback((id: FileId | null) => {
+    sourceFileIdRef.current = id;
+    setSourceFileId(id);
+  }, []);
+  const { addFiles, consumeFiles, selectors } = useFileContext();
+  // Saving replaces the workbench file, so for a moment the selection points at
+  // a file the editor has not adopted yet. Auto-load must sit that out.
+  const [applying, setApplying] = useState(false);
 
   useEditorTestGlobal(store);
   useUnsavedChangesGuard(state.dirty);
-  useWorkbenchPin({
+  const pinWorkbench = useWorkbenchPin({
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
     label: t("pdfTextEditorV2.workbenchLabel", "Editor"),
     icon: <DescriptionIcon fontSize="small" />,
     component: PageStage,
   });
-  const handleFileChosen = useCallback((name: string, fileId?: FileId) => {
-    setOpenedFileName(name);
-    sourceFileIdRef.current = fileId ?? null;
-  }, []);
-  useAutoLoadFile(load, handleFileChosen);
+  // Uploading flips the workbench to Active Files, so landing a document has to
+  // pin the canvas back. useAutoLoadFile only fires for a genuine file change.
+  const handleFileChosen = useCallback(
+    (name: string, fileId?: FileId) => {
+      setOpenedFileName(name);
+      setSourceFile(fileId ?? null);
+      pinWorkbench();
+    },
+    [pinWorkbench, setSourceFile],
+  );
+  const { openFile: openWorkbenchFile, adopt: adoptFile } = useAutoLoadFile(
+    load,
+    handleFileChosen,
+    sourceFileId,
+    applying,
+  );
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
 
@@ -92,70 +115,103 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   // docPtr the user already acknowledged risks for, so we don't re-nag.
   const ackedRiskRef = useRef<{ doc: object; sig: string } | null>(null);
 
-  const doSave = useCallback(async () => {
-    if (!store.document || savingRef.current) return;
-    savingRef.current = true;
-    store.setError(null);
-    try {
-      // Yield once so React can paint the disabled/saving state before the
-      // synchronous PDFium serialize blocks the main thread.
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      // The position that is about to be written out. Anything the user edits
-      // while the export runs is NOT in these bytes, so it must stay dirty.
-      const exported = store.savedPosition();
-      const { blob, filename } = await exportToBlob(
-        store.document,
-        openedFileName,
-      );
-      // Await the write: downloadBlob() is fire-and-forget, so a cancelled
-      // or failed save used to be reported to the user as a success.
-      const result = await downloadFile({ data: blob, filename });
-      if (result.cancelled) return;
-      // Also replace the workbench file, so the edit is visible to the rest of
-      // the app (tool chaining, versioning). Without this the editor is an
-      // island: running another tool afterwards would use the pre-edit file.
-      const sourceFileId = sourceFileIdRef.current;
-      if (sourceFileId) {
-        const parentStub = selectors.getStirlingFileStub(sourceFileId);
-        if (parentStub) {
-          const edited = new File([blob], filename, {
-            type: "application/pdf",
-          });
+  // Land the edit in the workbench the way every other tool does: replace the
+  // file it came from, or add it if the document was opened from disk. Without
+  // this the editor is an island and the next tool runs on the pre-edit bytes.
+  const applyToWorkbench = useCallback(
+    async (blob: Blob, filename: string) => {
+      const edited = new File([blob], filename, { type: "application/pdf" });
+      const sourceId = sourceFileIdRef.current;
+      const parentStub = sourceId
+        ? selectors.getStirlingFileStub(sourceId)
+        : null;
+      setApplying(true);
+      try {
+        if (sourceId && parentStub) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
             [edited],
             parentStub,
             "pdfTextEditor",
           );
-          await consumeFiles([sourceFileId], stirlingFiles, stubs);
-          sourceFileIdRef.current = stubs[0]?.id ?? null;
+          await consumeFiles([sourceId], stirlingFiles, stubs);
+          // Claim the replacement before releasing the hold, otherwise the
+          // editor sees an unfamiliar selection and re-opens the file it just
+          // wrote, throwing away undo history.
+          if (stirlingFiles[0]) adoptFile(stirlingFiles[0]);
+          setSourceFile(stubs[0]?.id ?? null);
+          return;
+        }
+        const added = await addFiles([edited], {
+          selectFiles: true,
+          derivedFromTool: true,
+        });
+        if (added[0]) adoptFile(added[0]);
+        setSourceFile(added[0]?.fileId ?? null);
+      } finally {
+        setApplying(false);
+      }
+    },
+    [addFiles, adoptFile, consumeFiles, selectors, setSourceFile],
+  );
+
+  const doSave = useCallback(
+    async (download: boolean) => {
+      if (!store.document || savingRef.current) return;
+      savingRef.current = true;
+      store.setError(null);
+      try {
+        // Yield once so React can paint the disabled/saving state before the
+        // synchronous PDFium serialize blocks the main thread.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        // The position that is about to be written out. Anything the user edits
+        // while the export runs is NOT in these bytes, so it must stay dirty.
+        const exported = store.savedPosition();
+        const { blob, filename } = await exportToBlob(
+          store.document,
+          openedFileName,
+        );
+        // Apply first and unconditionally. Gating the write-back on the browser
+        // download dialog meant cancelling it silently discarded the save.
+        await applyToWorkbench(blob, filename);
+        store.markSaved(exported);
+        if (download) await downloadFile({ data: blob, filename });
+      } catch (err) {
+        // Surface the failure instead of silently dropping it - the user
+        // must not believe a broken save succeeded.
+        store.setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        savingRef.current = false;
+      }
+    },
+    [store, openedFileName, applyToWorkbench],
+  );
+
+  // Which action the risk modal is currently gating.
+  const pendingDownloadRef = useRef(false);
+
+  const runSave = useCallback(
+    async (download: boolean) => {
+      const doc = store.document;
+      if (!doc || savingRef.current) return;
+      // Re-evaluate on EVERY save: the ack only covers the exact risk set
+      // the user saw. A new risk appearing later must warn again.
+      const risks = detectSaveRisks(doc);
+      if (hasSaveRisks(risks)) {
+        const sig = JSON.stringify(risks);
+        const acked = ackedRiskRef.current;
+        if (!acked || acked.doc !== doc || acked.sig !== sig) {
+          pendingDownloadRef.current = download;
+          setSaveRisks(risks);
+          return;
         }
       }
-      store.markSaved(exported);
-    } catch (err) {
-      // Surface the failure instead of silently dropping it - the user
-      // must not believe a broken save succeeded.
-      store.setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      savingRef.current = false;
-    }
-  }, [store, openedFileName, consumeFiles, selectors]);
+      await doSave(download);
+    },
+    [store, doSave],
+  );
 
-  const handleSave = useCallback(async () => {
-    const doc = store.document;
-    if (!doc || savingRef.current) return;
-    // Re-evaluate on EVERY save: the ack only covers the exact risk set
-    // the user saw. A new risk appearing later must warn again.
-    const risks = detectSaveRisks(doc);
-    if (hasSaveRisks(risks)) {
-      const sig = JSON.stringify(risks);
-      const acked = ackedRiskRef.current;
-      if (!acked || acked.doc !== doc || acked.sig !== sig) {
-        setSaveRisks(risks);
-        return;
-      }
-    }
-    await doSave();
-  }, [store, doSave]);
+  const handleSave = useCallback(() => void runSave(false), [runSave]);
+  const handleDownload = useCallback(() => void runSave(true), [runSave]);
 
   const handleConfirmSaveRisk = useCallback(() => {
     const doc = store.document;
@@ -166,7 +222,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       };
     }
     setSaveRisks(null);
-    void doSave();
+    void doSave(pendingDownloadRef.current);
   }, [store, doSave]);
 
   const handleInsertImage = useCallback(
@@ -388,6 +444,9 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     onDelete: sel.deleteSelection,
     onDuplicate: sel.duplicateFirstSelected,
     onSelectAll: useCallback(() => {
+      // Pages past the eager window hold no runs until they scroll into view,
+      // so reading the model as-is would select only part of the document.
+      ensureAllPagesRead(store);
       const ids = store
         .getState()
         .pages.flatMap((p) => p.runs.map((r) => r.id));
@@ -431,11 +490,13 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   const onPickPdf = useCallback(
     (file: File) => {
       setOpenedFileName(file.name);
-      // Dropped/picked from disk: not a workbench file, so no write-back.
-      sourceFileIdRef.current = null;
+      // Dropped/picked from disk: no workbench file to replace yet, but claim
+      // it so a later workbench arrival cannot auto-open over these edits.
+      adoptFile(file);
+      setSourceFile(null);
       void load(file);
     },
-    [load],
+    [adoptFile, load, setSourceFile],
   );
 
   const handleSubmitPassword = useCallback(
@@ -466,6 +527,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         pages={state.pages}
         openedFileName={openedFileName}
         onSave={handleSave}
+        onDownload={handleDownload}
         onShowHelp={() => setHelpOpen(true)}
       />
       {state.error && (
@@ -496,6 +558,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       <EditorSidebar
         state={state}
         selection={selection}
+        currentFileId={sourceFileId}
+        onPickFile={openWorkbenchFile}
         mode={state.mode}
         canGroup={canGroup}
         canUngroup={canUngroup}

@@ -3,8 +3,9 @@ import type { Download, Page } from "@playwright/test";
 
 /** Save helpers for the v2 PDF text editor specs. */
 
-// Click save and resolve with the resulting download. `expectRisk` states up
-// front whether this edit drops unrepresentable characters.
+// Click download and resolve with the resulting file. Plain save only applies
+// the edit to the workbench; `expectRisk` states up front whether this edit
+// drops unrepresentable characters.
 export async function saveAndDownload(
   page: Page,
   expectRisk: boolean,
@@ -13,7 +14,7 @@ export async function saveAndDownload(
 
   if (!expectRisk) {
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("v2-save").click();
+    await page.getByTestId("v2-download").click();
     const download = await downloadPromise;
     // The download landing already proves nothing gated the save; assert the
     // modal never mounted so a new risk regression fails loudly right here.
@@ -21,7 +22,7 @@ export async function saveAndDownload(
     return download;
   }
 
-  await page.getByTestId("v2-save").click();
+  await page.getByTestId("v2-download").click();
   // Wait for the modal itself before arming the download listener.
   await expect(confirm).toBeVisible({ timeout: 10_000 });
   const downloadPromise = page.waitForEvent("download");
