@@ -11797,6 +11797,10 @@ title = "Watermark Text"
 image = "Image"
 text = "Text"
 
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
 [workbenchBar]
 activeFiles = "Active Files"
 annotations = "Annotations"
