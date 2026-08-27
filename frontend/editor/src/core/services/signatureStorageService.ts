@@ -1,5 +1,7 @@
+import axios from "axios";
 import apiClient from "@app/services/apiClient";
 import type { SavedSignature } from "@app/types/signature";
+import { readResponseHeader } from "@app/services/shareBundleUtils";
 
 export type StorageType = "backend" | "localStorage";
 
@@ -53,14 +55,17 @@ class SignatureStorageService {
         supportsBackend: true,
         storageType: "backend",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       // Check if it's an HTTP error with status code
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+      if (status === 401 || status === 403) {
         // Backend exists but needs auth - gracefully fall back to localStorage
         console.log(
           "[SignatureStorage] Backend signature API requires authentication, using localStorage",
         );
-      } else if (error?.response?.status === 404) {
+      } else if (status === 404) {
         // Endpoint doesn't exist (not running proprietary mode)
         console.log(
           "[SignatureStorage] Backend signature API not available (not in proprietary mode), using localStorage",
@@ -166,7 +171,9 @@ class SignatureStorageService {
 
             // Convert to data URL (base64) for both display and use
             const blob = new Blob([imageResponse.data], {
-              type: imageResponse.headers["content-type"] || "image/png",
+              type:
+                readResponseHeader(imageResponse.headers, "content-type") ||
+                "image/png",
             });
 
             const dataUrl = await new Promise<string>((resolve, reject) => {

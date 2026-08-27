@@ -91,23 +91,31 @@ public class ControllerAuditAspect {
         MethodSignature sig = (MethodSignature) joinPoint.getSignature();
         Method method = sig.getMethod();
 
-        // Fast path: check if auditing is enabled before doing any work
-        // This avoids all data collection if auditing is disabled
-        if (!auditService.shouldAudit(method, auditConfig)) {
+        // Resolve the event type up front so the enterprise gate can be type-aware: document
+        // processing events (the Documents tab's data source) are audited without an Enterprise
+        // license, while the rest of the audit log stays Enterprise-only. resolveEventType is cheap
+        // (annotation / class / path checks), so it's safe on the pre-record fast path.
+        Audited auditedAnnotation = method.getAnnotation(Audited.class);
+        String path = getRequestPath(method, httpMethod);
+        AuditEventType eventType =
+                auditService.resolveEventType(
+                        method,
+                        joinPoint.getTarget().getClass(),
+                        path,
+                        httpMethod,
+                        auditedAnnotation);
+
+        // Fast path: skip all data collection when this event won't be recorded.
+        if (!auditService.shouldAudit(eventType, method, auditConfig)) {
             return joinPoint.proceed();
         }
 
-        // Check if method is explicitly annotated with @Audited
-        Audited auditedAnnotation = method.getAnnotation(Audited.class);
         AuditLevel level = auditConfig.getAuditLevel();
-
         // If @Audited annotation is present, respect its level setting
         if (auditedAnnotation != null) {
             // Use the level from annotation if it's stricter than global level
             level = auditedAnnotation.level();
         }
-
-        String path = getRequestPath(method, httpMethod);
 
         // Skip static GET resources
         if ("GET".equals(httpMethod)) {
@@ -130,6 +138,7 @@ public class ControllerAuditAspect {
 
         String previousPrincipal = MDC.get("auditPrincipal");
         String previousOrigin = MDC.get("auditOrigin");
+        String previousSource = MDC.get("auditSource");
         String previousIp = MDC.get("auditIp");
 
         // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
@@ -159,6 +168,14 @@ public class ControllerAuditAspect {
             // @Audited methods are audited by AuditAspect.
             if (auditedAnnotation != null) {
                 return joinPoint.proceed();
+            }
+
+            // Stamp the free-UI source only for non-@Audited controller traffic — an actual
+            // tool / UI action. @Audited events (login, settings) return above without a source,
+            // so they never count as an "active editor" or a free UI run. The finally block
+            // restores auditSource, so a pooled thread can't leak a stale "WEB" into them.
+            if (previousSource == null) {
+                MDC.put("auditSource", auditService.captureCurrentSource());
             }
 
             long start = System.currentTimeMillis();
@@ -196,14 +213,9 @@ public class ControllerAuditAspect {
                 // Call auditService but with isHttpRequest=true to skip additional timing
                 auditService.addTimingData(data, start, resp, level, true);
 
-                // Resolve the event type using the unified method
-                AuditEventType eventType =
-                        auditService.resolveEventType(
-                                method,
-                                joinPoint.getTarget().getClass(),
-                                path,
-                                httpMethod,
-                                auditedAnnotation);
+                // Merge controller-set policy context + the internal-automation marker (set after
+                // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
+                auditService.addAutomationContext(data, req);
 
                 // Add result only if operation result capture is explicitly enabled
                 // Skip result for UI_DATA events to avoid storing large response bodies
@@ -247,6 +259,7 @@ public class ControllerAuditAspect {
         } finally {
             restoreMdcValue("auditPrincipal", previousPrincipal);
             restoreMdcValue("auditOrigin", previousOrigin);
+            restoreMdcValue("auditSource", previousSource);
             restoreMdcValue("auditIp", previousIp);
         }
     }

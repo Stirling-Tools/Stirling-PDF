@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { Button, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -10,9 +11,27 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { saveOperationResults } from "@app/services/operationResultsSaveService";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
-import { FileId } from "@app/types/fileContext";
+import { useFileActions, useFileSelectors } from "@app/contexts/FileContext";
 import i18n from "@app/i18n";
+
+/**
+ * Nearest scrolling ancestor - in the right rail that is the tool panel's
+ * ScrollArea viewport, whose overflow is `scroll`, not `auto`.
+ */
+function findScrollParent(element: HTMLElement): HTMLElement | null {
+  let node = element.parentElement;
+  while (node) {
+    const { overflowY } = getComputedStyle(node);
+    if (
+      /(auto|scroll|overlay)/.test(overflowY) &&
+      node.scrollHeight > node.clientHeight
+    ) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -39,7 +58,7 @@ function ReviewStepContent<TParams = unknown>({
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
 
   const handleUndo = async () => {
     try {
@@ -64,11 +83,11 @@ function ReviewStepContent<TParams = unknown>({
         downloadFilename: operation.downloadFilename || "download",
         downloadLocalPath: operation.downloadLocalPath,
         outputFileIds: operation.outputFileIds,
-        getFile: (fileId) => selectors.getFile(fileId as FileId),
-        getStub: (fileId) => selectors.getStirlingFileStub(fileId as FileId),
+        getFile: (fileId) => selectors.getFile(fileId),
+        getStub: (fileId) => selectors.getStirlingFileStub(fileId),
         markSaved: (fileId, savedPath) => {
-          const stub = selectors.getStirlingFileStub(fileId as FileId);
-          fileActions.updateStirlingFileStub(fileId as FileId, {
+          const stub = selectors.getStirlingFileStub(fileId);
+          fileActions.updateStirlingFileStub(fileId, {
             localFilePath: stub?.localFilePath ?? savedPath,
             isDirty: false,
           });
@@ -81,26 +100,37 @@ function ReviewStepContent<TParams = unknown>({
     }
   };
 
-  // Auto-scroll to bottom when content appears
+  // Reveal the results when they appear, or the download button lands below the
+  // fold behind a tall settings step and reads as missing.
   useEffect(() => {
-    if (
-      stepRef.current &&
-      (previewFiles.length > 0 ||
-        operation.downloadUrl ||
-        operation.errorMessage)
-    ) {
-      const scrollableContainer = stepRef.current.closest(
-        '[style*="overflow: auto"]',
-      ) as HTMLElement;
-      if (scrollableContainer) {
-        setTimeout(() => {
-          scrollableContainer.scrollTo({
-            top: scrollableContainer.scrollHeight,
-            behavior: "smooth",
-          });
-        }, 100); // Small delay to ensure content is rendered
+    const hasContent =
+      previewFiles.length > 0 ||
+      operation.downloadUrl ||
+      operation.errorMessage;
+    if (!stepRef.current || !hasContent) return;
+
+    // Small delay so the step has been laid out before it is measured.
+    const timer = setTimeout(() => {
+      const step = stepRef.current;
+      const scroller = step && findScrollParent(step);
+      if (!step || !scroller) return;
+
+      const stepRect = step.getBoundingClientRect();
+      const viewRect = scroller.getBoundingClientRect();
+      // Move the least that brings the step into view, and only ever the panel
+      // itself - scrollIntoView() drags every ancestor and unpins the header.
+      const delta = Math.min(
+        stepRect.top - viewRect.top,
+        stepRect.bottom - viewRect.bottom,
+      );
+      if (delta > 1) {
+        scroller.scrollTo({
+          top: scroller.scrollTop + delta,
+          behavior: "smooth",
+        });
       }
-    }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [previewFiles.length, operation.downloadUrl, operation.errorMessage]);
 
   return (
@@ -128,8 +158,8 @@ function ReviewStepContent<TParams = unknown>({
         >
           <Button
             leftSection={<UndoIcon />}
-            variant="outline"
-            color="var(--mantine-color-gray-6)"
+            variant="secondary"
+            accent="neutral"
             onClick={handleUndo}
             fullWidth
           >
@@ -141,9 +171,8 @@ function ReviewStepContent<TParams = unknown>({
         <Button
           data-testid="download-result-button"
           leftSection={<DownloadIcon />}
-          color="blue"
           fullWidth
-          mb="md"
+          style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
         >
           {terminology.download}

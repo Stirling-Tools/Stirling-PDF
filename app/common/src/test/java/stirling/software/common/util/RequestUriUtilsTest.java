@@ -73,6 +73,21 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
     }
 
+    @Test
+    void testIsStaticResource_mobileSignPath() {
+        // The phone-side signature drawing page, reached from the Sign tool QR code.
+        assertTrue(RequestUriUtils.isStaticResource("/mobile-sign"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/mobile-sign"));
+    }
+
+    @Test
+    void testIsStaticResource_portalShell() {
+        // The admin portal SPA shell (/processor) is served pre-auth so it's directly navigable.
+        assertTrue(RequestUriUtils.isStaticResource("/processor"));
+        assertTrue(RequestUriUtils.isStaticResource("/processor/users"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/processor"));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test
@@ -169,6 +184,13 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_webhookReceiver() {
+        // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
@@ -184,12 +206,24 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkTokenTrailingSlash() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f/", ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkWithContextPath() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/share/abc123", "/app"));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkWithInvalidTokenLength() {
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62fa", ""));
     }
 
     @Test
@@ -213,5 +247,87 @@ class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/storage/share-links/abc123/metadata", ""));
+    }
+
+    // --- invite-accept SPA bootstrap ---
+
+    private static final String INVITE_TOKEN = "06a20e7e-2e35-4e26-be7d-2dce14f28f12";
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkToken() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN, ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkTokenTrailingSlash() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkWithContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/invite/" + INVITE_TOKEN, "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteRootNotPublic() {
+        // Avoid matching bare "/invite" or "/invite/" - must have a token segment
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteNestedPathNotPublic() {
+        // Guard against future additions like /invite/<token>/foo becoming accidentally public
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/foo", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_invitePrefixDoesNotOvermatch() {
+        // "/inviteX" must not match the invite pattern
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/inviteX", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteNonUuidTokenNotPublic() {
+        // Only exactly-shaped 36-char lowercase UUID tokens are treated as invite links
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteUppercaseUuidNotPublic() {
+        // Tokens are generated lowercase by UUID.randomUUID().toString()
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06A20E7E-2E35-4E26-BE7D-2DCE14F28F12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongLengthNotPublic() {
+        // 35-char and 37-char UUID-like tokens are not valid UUIDs
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f122", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongGroupingNotPublic() {
+        // Groups of 8-4-4-4-4 must not be shifted around (e.g. 4-4-4-4-8)
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a2-0e7e-2e35-4e26-be7d2dce14f28f12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteTokenInvalidCharsNotPublic() {
+        // Hex-only; anything outside [0-9a-f] or the UUID hyphens is rejected
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc$123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc..123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc%2F123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1g", ""));
     }
 }

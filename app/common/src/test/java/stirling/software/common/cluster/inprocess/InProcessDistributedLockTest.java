@@ -24,7 +24,9 @@ class InProcessDistributedLockTest {
     }
 
     @Test
-    void reentryFromSameThreadFails() {
+    void reentryFromSameThreadFails_parityWithValkey() {
+        // The Valkey impl refuses reentry (SET NX semantics); the in-process impl must match,
+        // otherwise code working in single-instance silently breaks in cluster mode.
         DistributedLock lock = new InProcessDistributedLock();
         DistributedLock.LockHandle h1 = lock.tryAcquire("k", Duration.ofSeconds(30)).orElseThrow();
         Optional<DistributedLock.LockHandle> reentry = lock.tryAcquire("k", Duration.ofSeconds(30));

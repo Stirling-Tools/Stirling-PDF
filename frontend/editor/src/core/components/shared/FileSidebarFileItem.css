@@ -17,12 +17,13 @@
   background: transparent;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
+  background: var(--c-border);
   border-radius: 2px;
 }
 
 /* ---- File item ---- */
 .file-sidebar-file-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -30,18 +31,41 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.12s ease;
+  /* Skip layout/paint for offscreen rows — with hundreds of files the browser
+     only renders the viewport's worth. The intrinsic-size hint keeps scrollbar
+     geometry stable for unrendered rows. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 46px;
+}
+
+.file-sidebar-file-actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.file-sidebar-file-item:hover .file-sidebar-file-actions,
+.file-sidebar-file-item:focus-within .file-sidebar-file-actions,
+.file-sidebar-file-item.viewed .file-sidebar-file-actions,
+.file-sidebar-file-item.selected .file-sidebar-file-actions {
+  pointer-events: auto;
 }
 
 .file-sidebar-file-item:hover:not(.selected) {
-  background-color: rgba(59, 130, 246, 0.06);
+  background-color: color-mix(in srgb, var(--c-primary) 6%, transparent);
 }
 
 .file-sidebar-file-item.selected {
-  background-color: rgba(59, 130, 246, 0.12);
+  background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 
 .file-sidebar-file-item.active:not(.selected) {
-  background-color: rgba(59, 130, 246, 0.06);
+  background-color: color-mix(in srgb, var(--c-primary) 6%, transparent);
 }
 
 /* Icon wrapper */
@@ -65,7 +89,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  border: 1.5px solid var(--border-hover, #52525b);
+  border: 1.5px solid var(--c-border-strong);
 }
 
 .file-sidebar-file-item:hover .file-sidebar-file-checkbox-hover {
@@ -86,7 +110,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  background-color: #3b82f6;
+  background-color: var(--c-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,35 +118,148 @@
 }
 
 .file-sidebar-check-svg {
-  color: white;
+  color: var(--c-text-on-primary);
   flex-shrink: 0;
+}
+
+/* Processing state: a spinner in the running policy's colour (set inline via
+   `color`) with that policy's badge glyph held still in the centre. Fills the
+   20px icon slot, replacing the file icon while a policy runs on the file. */
+.file-sidebar-file-spinner {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-sidebar-file-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  animation: file-sidebar-spin 0.7s linear infinite;
+}
+
+.file-sidebar-file-spinner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+@keyframes file-sidebar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-file-spinner-ring {
+    animation-duration: 2s;
+  }
 }
 
 /* File info */
 .file-sidebar-file-info {
   flex: 1;
   min-width: 0;
+  /* Always reserve space for action buttons so file name truncation dots (...)
+     never bleed under action buttons or overlap their outline/focus box. */
+  padding-right: 3.75rem;
 }
 
 .file-sidebar-file-name {
   display: block;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {
-  color: #3b82f6;
+  color: var(--c-accent-text);
+}
+
+.file-sidebar-file-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  min-width: 0;
 }
 
 .file-sidebar-file-meta {
-  display: block;
   font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Cloud badge (file saved to the server) ---- */
+.file-sidebar-cloud-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--c-accent-text);
+}
+
+/* ---- Folder membership tags ---- */
+.file-sidebar-folder-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  min-width: 0;
+}
+
+.file-sidebar-folder-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 7.5rem;
+  padding: 1px 6px 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.1s ease;
+}
+
+.file-sidebar-folder-tag:hover {
+  filter: brightness(1.1);
+}
+
+.file-sidebar-folder-tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.file-sidebar-folder-tag-label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-sidebar-folder-tag-more {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--c-text-subtle);
+  cursor: default;
+  flex-shrink: 0;
 }
 
 /* ---- Eye button (open in viewer) ---- */
@@ -137,7 +274,7 @@
   background: transparent;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 0;
   opacity: 0;
   transition:
@@ -157,48 +294,45 @@
   bottom: 0;
   z-index: 2;
   /* solid base + green tint overlay so content behind doesn't bleed through */
-  background-color: var(--bg-toolbar);
+  background-color: var(--c-bg-raised);
   background-image: linear-gradient(
-    rgba(34, 197, 94, 0.1),
-    rgba(34, 197, 94, 0.1)
+    color-mix(in srgb, var(--c-success) 10%, transparent),
+    color-mix(in srgb, var(--c-success) 10%, transparent)
   );
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-name {
-  color: #22c55e;
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-check {
-  background-color: #22c55e;
+  background-color: var(--c-success);
 }
 
 /* viewed takes precedence over selected */
 .file-sidebar-file-item.viewed.selected {
-  background-color: var(--bg-toolbar);
+  background-color: var(--c-bg-raised);
   background-image: linear-gradient(
-    rgba(34, 197, 94, 0.1),
-    rgba(34, 197, 94, 0.1)
+    color-mix(in srgb, var(--c-success) 10%, transparent),
+    color-mix(in srgb, var(--c-success) 10%, transparent)
   );
 }
 
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
-  color: #22c55e;
+  color: var(--color-green-dark);
 }
 
 .file-sidebar-eye-btn:hover {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 /* Eye open: shown by default */
 .file-sidebar-eye-open {
   display: block !important;
 }
-.file-sidebar-eye-closed {
-  display: none !important;
-}
-
+.file-sidebar-eye-closed,
 /* On hover over a viewed item: swap to eye-closed */
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-open {
   display: none !important;
@@ -207,11 +341,65 @@
   display: block !important;
 }
 
+/* ---- Kebab button (per-file actions menu) ---- */
+.file-sidebar-kebab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--c-text-subtle);
+  padding: 0;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Reveal on row hover/focus/selected, and keep it shown while its menu is open. */
+.file-sidebar-file-item:hover .file-sidebar-kebab-btn,
+.file-sidebar-file-item:focus-within .file-sidebar-kebab-btn,
+.file-sidebar-file-item.selected .file-sidebar-kebab-btn,
+.file-sidebar-kebab-btn[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.file-sidebar-kebab-btn:hover {
+  color: var(--c-text);
+}
+
+/* Menu header: the full file name the row had to truncate, plus its size. */
+.file-sidebar-kebab-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 6px;
+}
+
+.file-sidebar-kebab-header-name {
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.file-sidebar-kebab-header-meta {
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  text-transform: none;
+}
+
 /* ---- Date group headers ---- */
 .file-sidebar-date-group-header {
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 0 10px 2px 10px;
   margin-top: 8px;
   user-select: none;
@@ -238,13 +426,13 @@
 
 .file-sidebar-empty-text {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin: 0 0 2px 0;
 }
 
 .file-sidebar-empty-hint {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   opacity: 0.7;
   margin: 0;
 }
@@ -254,8 +442,8 @@
   position: fixed;
   z-index: 9999;
   transform: translateY(-50%);
-  background: var(--bg-surface, #fff);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   padding: 4px;
@@ -280,4 +468,14 @@
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+}
+
+/* The stored bytes are gone - the row says so instead of pretending to open. */
+.file-sidebar-datalost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--c-danger);
+  font-size: 0.7rem;
+  white-space: nowrap;
 }

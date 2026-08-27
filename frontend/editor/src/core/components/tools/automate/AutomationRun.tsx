@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Text,
-  Stack,
-  Group,
-  Card,
-  Progress,
-  Loader,
-} from "@mantine/core";
+import { Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
@@ -16,11 +9,12 @@ import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
 import { EXECUTION_STATUS } from "@app/constants/automation";
 import { useResourceCleanup } from "@app/utils/resourceManager";
+import type { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
 
 interface AutomationRunProps {
   automation: AutomationConfig;
   onComplete: () => void;
-  automateOperation?: any; // TODO: Type this properly when available
+  automateOperation?: ReturnType<typeof useAutomateOperation>;
 }
 
 export default function AutomationRun({
@@ -41,13 +35,13 @@ export default function AutomationRun({
   // Use the operation hook's loading state
   const isExecuting = automateOperation?.isLoading || false;
   const hasResults =
-    automateOperation?.files.length > 0 ||
+    (automateOperation?.files.length ?? 0) > 0 ||
     automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
   useEffect(() => {
     if (automation?.operations) {
-      const steps = automation.operations.map((op: any, index: number) => {
+      const steps = automation.operations.map((op, index) => {
         const tool = toolRegistry[op.operation as keyof typeof toolRegistry];
         return {
           id: `${op.operation}-${index}`,
@@ -132,7 +126,7 @@ export default function AutomationRun({
       // Mark all as completed and reset current step
       setCurrentStepIndex(-1);
       console.log(`✅ Automation completed successfully`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Automation execution failed:", error);
       setCurrentStepIndex(-1);
     }
@@ -160,7 +154,7 @@ export default function AutomationRun({
             style={{
               width: 16,
               height: 16,
-              border: "2px solid #ccc",
+              border: "2px solid var(--c-border)",
               borderRadius: "50%",
             }}
           />
@@ -223,7 +217,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="red" mt="xs">
+                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
                     {step.error}
                   </Text>
                 )}
@@ -248,7 +242,7 @@ export default function AutomationRun({
           </Button>
 
           {hasResults && (
-            <Button variant="light" onClick={onComplete}>
+            <Button variant="secondary" onClick={onComplete}>
               {t("automate.sequence.finish", "Finish")}
             </Button>
           )}

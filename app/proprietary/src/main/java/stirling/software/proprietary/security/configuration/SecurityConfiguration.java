@@ -57,6 +57,7 @@ import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestRe
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -93,6 +94,7 @@ public class SecurityConfiguration {
             licenseSettingsService;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final stirling.software.proprietary.service.AiUserDataService aiUserDataService;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -115,7 +117,8 @@ public class SecurityConfiguration {
                     OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver,
             @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            stirling.software.proprietary.service.AiUserDataService aiUserDataService) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -135,6 +138,7 @@ public class SecurityConfiguration {
         this.clientRegistrationRepository = clientRegistrationRepository;
         this.licenseSettingsService = licenseSettingsService;
         this.passwordEncoder = passwordEncoder;
+        this.aiUserDataService = aiUserDataService;
     }
 
     /**
@@ -199,7 +203,8 @@ public class SecurityConfiguration {
                         "Origin",
                         "X-API-KEY",
                         "X-CSRF-TOKEN",
-                        "X-XSRF-TOKEN"));
+                        "X-XSRF-TOKEN",
+                        "X-Browser-Id"));
 
         cfg.setExposedHeaders(
                 List.of(
@@ -208,7 +213,9 @@ public class SecurityConfiguration {
                         "X-Page-Number",
                         "X-Page-Size",
                         "Content-Disposition",
-                        "Content-Type"));
+                        "Content-Type",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total"));
 
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
@@ -322,7 +329,10 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig, jwtService))
+                                                    securityProperties,
+                                                    appConfig,
+                                                    jwtService,
+                                                    aiUserDataService))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
@@ -477,12 +487,14 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         return new JwtAuthenticationFilter(
                 jwtService,
                 userService,
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
-                securityProperties);
+                securityProperties,
+                apiKeyAuthenticationService);
     }
 }

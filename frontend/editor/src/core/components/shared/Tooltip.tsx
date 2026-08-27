@@ -6,6 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
@@ -15,6 +17,18 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import styles from "@app/components/shared/tooltip/Tooltip.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+
+// The wrapped child's own event handlers, which Tooltip forwards to after
+// running its own trigger logic. Kept partial since any given child may set none.
+interface ForwardedHandlers {
+  onPointerEnter?: React.PointerEventHandler;
+  onPointerLeave?: React.PointerEventHandler;
+  onMouseDown?: React.MouseEventHandler;
+  onMouseUp?: React.MouseEventHandler;
+  onClick?: React.MouseEventHandler;
+  onFocus?: React.FocusEventHandler;
+  onBlur?: React.FocusEventHandler;
+}
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
@@ -68,6 +82,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   manualCloseOnly = false,
   showCloseButton = false,
 }) => {
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const { tooltipLogo } = useLogoAssets();
@@ -215,7 +230,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handlePointerEnter = useCallback(
     (e: React.PointerEvent) => {
       if (!isPinned && !disabled) openWithDelay();
-      (children.props as any)?.onPointerEnter?.(e);
+      (children.props as ForwardedHandlers).onPointerEnter?.(e);
     },
     [isPinned, openWithDelay, children.props, disabled],
   );
@@ -230,19 +245,19 @@ export const Tooltip: React.FC<TooltipProps> = ({
         tooltipRef.current &&
         tooltipRef.current.contains(related)
       ) {
-        (children.props as any)?.onPointerLeave?.(e);
+        (children.props as ForwardedHandlers).onPointerLeave?.(e);
         return;
       }
 
       // Ignore transient leave between mousedown and click
       if (clickPendingRef.current) {
-        (children.props as any)?.onPointerLeave?.(e);
+        (children.props as ForwardedHandlers).onPointerLeave?.(e);
         return;
       }
 
       clearTimers();
       if (allowAutoClose && !isPinned) setOpen(false);
-      (children.props as any)?.onPointerLeave?.(e);
+      (children.props as ForwardedHandlers).onPointerLeave?.(e);
     },
     [clearTimers, isPinned, setOpen, children.props, allowAutoClose],
   );
@@ -250,7 +265,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       clickPendingRef.current = true;
-      (children.props as any)?.onMouseDown?.(e);
+      (children.props as ForwardedHandlers).onMouseDown?.(e);
     },
     [children.props],
   );
@@ -259,7 +274,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     (e: React.MouseEvent) => {
       // allow microtask turn so click can see this false
       queueMicrotask(() => (clickPendingRef.current = false));
-      (children.props as any)?.onMouseUp?.(e);
+      (children.props as ForwardedHandlers).onMouseUp?.(e);
     },
     [children.props],
   );
@@ -276,7 +291,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         return;
       }
       clickPendingRef.current = false;
-      (children.props as any)?.onClick?.(e);
+      (children.props as ForwardedHandlers).onClick?.(e);
     },
     [clearTimers, pinOnClick, open, setOpen, children.props],
   );
@@ -285,7 +300,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleFocus = useCallback(
     (e: React.FocusEvent) => {
       if (!isPinned && !disabled && openOnFocus) openWithDelay();
-      (children.props as any)?.onFocus?.(e);
+      (children.props as ForwardedHandlers).onFocus?.(e);
     },
     [isPinned, openWithDelay, children.props, disabled, openOnFocus],
   );
@@ -298,12 +313,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
         tooltipRef.current &&
         tooltipRef.current.contains(related)
       ) {
-        (children.props as any)?.onBlur?.(e);
+        (children.props as ForwardedHandlers).onBlur?.(e);
         return;
       }
       clearTimers();
       if (allowAutoClose && !isPinned) setOpen(false);
-      (children.props as any)?.onBlur?.(e);
+      (children.props as ForwardedHandlers).onBlur?.(e);
     },
     [isPinned, setOpen, children.props, allowAutoClose, clearTimers],
   );
@@ -336,24 +351,30 @@ export const Tooltip: React.FC<TooltipProps> = ({
   );
 
   // Enhance child with handlers and ref
-  const childWithHandlers = React.cloneElement(children as any, {
-    ref: (node: HTMLElement | null) => {
-      triggerRef.current = node || null;
-      const originalRef = (children as any).ref;
-      if (typeof originalRef === "function") originalRef(node);
-      else if (originalRef && typeof originalRef === "object")
-        (originalRef as any).current = node;
+  const childWithHandlers = React.cloneElement(
+    children as React.ReactElement<Record<string, unknown>>,
+    {
+      ref: (node: HTMLElement | null) => {
+        triggerRef.current = node || null;
+        const originalRef = (
+          children as React.ReactElement & { ref?: React.Ref<HTMLElement> }
+        ).ref;
+        if (typeof originalRef === "function") originalRef(node);
+        else if (originalRef && typeof originalRef === "object")
+          (originalRef as React.MutableRefObject<HTMLElement | null>).current =
+            node;
+      },
+      "aria-describedby": open ? tooltipIdRef.current : undefined,
+      onPointerEnter: handlePointerEnter,
+      onPointerLeave: handlePointerLeave,
+      onMouseDown: handleMouseDown,
+      onMouseUp: handleMouseUp,
+      onClick: handleClick,
+      onFocus: handleFocus,
+      onBlur: handleBlur,
+      onKeyDown: handleKeyDown,
     },
-    "aria-describedby": open ? tooltipIdRef.current : undefined,
-    onPointerEnter: handlePointerEnter,
-    onPointerLeave: handlePointerLeave,
-    onMouseDown: handleMouseDown,
-    onMouseUp: handleMouseUp,
-    onClick: handleClick,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-    onKeyDown: handleKeyDown,
-  });
+  );
 
   const shouldShowTooltip = open;
   const shouldShowCloseButton = showCloseButton || isPinned;
@@ -380,7 +401,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? "visible" : "hidden",
         opacity: positionReady ? 1 : 0,
-        color: "var(--text-primary)",
+        color: "var(--c-text)",
         ...containerStyle,
       }}
       className={`${styles["tooltip-container"]} ${isPinned ? styles.pinned : ""}`}
@@ -394,18 +415,19 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
     >
       {shouldShowCloseButton && (
-        <button
+        <ActionIcon
+          variant="tertiary"
           className={styles["tooltip-pin-button"]}
           onClick={(e) => {
             e.stopPropagation();
             setIsPinned(false);
             setOpen(false);
           }}
-          title="Close tooltip"
-          aria-label="Close tooltip"
+          title={t("tooltip.close", "Close tooltip")}
+          aria-label={t("tooltip.close", "Close tooltip")}
         >
           <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-        </button>
+        </ActionIcon>
       )}
       {arrow && !sidebarTooltip && (
         <div

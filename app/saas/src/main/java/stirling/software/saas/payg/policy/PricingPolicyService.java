@@ -79,19 +79,28 @@ public class PricingPolicyService {
      * {@code is_default = TRUE}. Throws {@link IllegalStateException} if no default exists — the
      * seed migration is expected to put one there.
      *
+     * <p>A {@code null} {@code teamId} (admin-created user, deleted team, pre-team-migration
+     * account) is valid and returns the default policy directly. Throwing here would silently
+     * exclude the team-less cohort from PAYG via the filter's fail-open path, biasing the
+     * shadow-vs-legacy reconciliation.
+     *
      * <p>{@link Transactional}({@code readOnly = true}) so the eager-loaded {@code stepLimits} and
      * {@code stripePriceIds} collections initialize inside the same session.
      */
     @Transactional(readOnly = true)
     public PricingPolicy getEffectivePolicy(Long teamId) {
-        Objects.requireNonNull(teamId, "teamId");
+        if (teamId == null) {
+            return loadDefaultPolicy();
+        }
         return byTeamCache.get(teamId, this::loadEffectivePolicy);
     }
 
     /** Bypasses the cache. Useful for admin endpoints that want a fresh read after a mutation. */
     @Transactional(readOnly = true)
     public PricingPolicy getEffectivePolicyUncached(Long teamId) {
-        Objects.requireNonNull(teamId, "teamId");
+        if (teamId == null) {
+            return loadDefaultPolicy();
+        }
         return loadEffectivePolicy(teamId);
     }
 
@@ -243,6 +252,10 @@ public class PricingPolicyService {
                     teamId,
                     id);
         }
+        return loadDefaultPolicy();
+    }
+
+    private PricingPolicy loadDefaultPolicy() {
         return policyRepository
                 .findFirstByIsDefaultTrue()
                 .orElseThrow(

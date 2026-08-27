@@ -21,6 +21,9 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
+import { reportToolFailure } from "@app/services/failureReporting";
+import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
   createChildStub,
@@ -29,6 +32,7 @@ import {
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
+import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -38,6 +42,9 @@ import {
 } from "@app/hooks/tools/shared/toolOperationHelpers";
 import {
   ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
@@ -48,7 +55,12 @@ import {
   ResponseHandler,
 } from "@app/hooks/tools/shared/toolOperationTypes";
 
-export { ToolType };
+export {
+  ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
+};
 export type {
   ToolOperationConfig,
   ToolOperationHook,
@@ -67,10 +79,10 @@ export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
  * Shared hook for tool operations providing consistent error handling, progress tracking,
  * and FileContext integration. Eliminates boilerplate while maintaining flexibility.
  *
- * Supports three tool patterns:
- * 1. Single-file tools: Set multiFileEndpoint: false, processes files individually
- * 2. Multi-file tools: Set multiFileEndpoint: true, single API call with all files
- * 3. Complex tools: Provide customProcessor for full control over processing logic
+ * Supports three tool patterns, selected by the config's toolType:
+ * 1. Single-file tools (ToolType.singleFile): processes files individually
+ * 2. Multi-file tools (ToolType.multiFile): single API call with all files
+ * 3. Complex tools (ToolType.custom): customProcessor takes full control
  *
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
@@ -154,18 +166,13 @@ export const useToolOperation = <TParams>(
           fileActions.openEncryptedUnlockPrompt(ef.fileId);
         }
         actions.setError(
-          encryptedFiles.length === 1
-            ? t(
-                "encryptedFileBlocked",
-                "File is password-protected. Unlock it first.",
-              )
-            : t(
-                "encryptedFilesBlocked",
-                "{{count}} files are password-protected. Unlock them first.",
-                {
-                  count: encryptedFiles.length,
-                },
-              ),
+          t(
+            "encryptedFilesBlocked",
+            "{{count}} files are password-protected. Unlock them first.",
+            {
+              count: encryptedFiles.length,
+            },
+          ),
         );
         return;
       }
@@ -213,17 +220,14 @@ export const useToolOperation = <TParams>(
       // Listen for global error file id events from HTTP interceptor during this run
       let externalErrorFileIds: string[] = [];
       const errorListener = (e: Event) => {
-        const detail = (e as CustomEvent)?.detail as any;
+        const detail = (e as CustomEvent<{ fileIds?: unknown }>)?.detail;
         if (detail?.fileIds) {
           externalErrorFileIds = Array.isArray(detail.fileIds)
             ? detail.fileIds
             : [];
         }
       };
-      window.addEventListener(
-        FILE_EVENTS.markError,
-        errorListener as EventListener,
-      );
+      window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
         let processedFiles: File[];
@@ -269,34 +273,46 @@ export const useToolOperation = <TParams>(
               typeof config.endpoint === "function"
                 ? config.endpoint(params)
                 : config.endpoint;
+            if (!endpoint) {
+              throw new Error(
+                "This operation has no backend endpoint and cannot be executed directly.",
+              );
+            }
 
             const response = await apiClient.post(endpoint, formData, {
               responseType: "blob",
             });
 
-            // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
+            const responseBlob: Blob = response.data;
+            const contentTypeHeader = response.headers?.["content-type"];
+
             if (config.responseHandler) {
-              // Use custom responseHandler for multi-file (handles ZIP extraction)
               processedFiles = await config.responseHandler(
-                response.data,
+                responseBlob,
                 filesForAPI,
               );
             } else if (
-              response.data.type === "application/pdf" ||
-              (response.headers &&
-                response.headers["content-type"] === "application/pdf")
+              await zipFileService.isZipResponse(
+                responseBlob,
+                typeof contentTypeHeader === "string"
+                  ? contentTypeHeader
+                  : undefined,
+              )
             ) {
-              // Single PDF response (e.g. split with merge option) - add prefix to first original filename
-              const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
-              const singleFile = new File([response.data], filename, {
-                type: "application/pdf",
-              });
-              processedFiles = [singleFile];
+              processedFiles = await extractZipFiles(responseBlob);
             } else {
-              // Default: assume ZIP response for multi-file endpoints
-              // Note: extractZipFiles will check preferences.autoUnzip setting
-              processedFiles = await extractZipFiles(response.data);
+              const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
+              processedFiles = [
+                new File([responseBlob], filename, { type: "application/pdf" }),
+              ];
             }
+
+            if (processedFiles.length === 0) {
+              throw new Error(
+                "The server processed the request but returned no files.",
+              );
+            }
+
             // Assume all inputs succeeded together unless server provided an error earlier
             successSourceIds = validFiles.map((f) => f.fileId);
             break;
@@ -381,6 +397,11 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          trackEditorOperation(
+            config.operationType,
+            successSourceIds.length || validFiles.length,
+          );
+
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently
@@ -566,7 +587,7 @@ export const useToolOperation = <TParams>(
             };
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
@@ -581,15 +602,21 @@ export const useToolOperation = <TParams>(
           void _e;
         }
 
+        // Report it so a leader sees the failure too, then carry on with the user's
+        // own error handling. Fire-and-forget: the reporter swallows its own errors.
+        // Chained, not fired alongside: the re-read must happen after the row exists.
+        void reportToolFailure({
+          operation: config.operationType,
+          error,
+          fileIds: validFiles.map((file) => file.fileId),
+        }).then(refreshNotificationsNow);
+
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
-        window.removeEventListener(
-          FILE_EVENTS.markError,
-          errorListener as EventListener,
-        );
+        window.removeEventListener(FILE_EVENTS.markError, errorListener);
         actions.setLoading(false);
         actions.setProgress(null);
       }
@@ -669,21 +696,22 @@ export const useToolOperation = <TParams>(
 
       // Show success message
       actions.setStatus(t("undoSuccess", "Operation undone successfully"));
-    } catch (error: any) {
+    } catch (error) {
       let errorMessage = extractErrorMessage(error);
 
       // Provide more specific error messages based on error type
-      if (error.message?.includes("Mismatch between input files")) {
+      const err = error as { message?: string; name?: string };
+      if (err.message?.includes("Mismatch between input files")) {
         errorMessage = t(
           "undoDataMismatch",
           "Cannot undo: operation data is corrupted",
         );
-      } else if (error.message?.includes("IndexedDB")) {
+      } else if (err.message?.includes("IndexedDB")) {
         errorMessage = t(
           "undoStorageError",
           "Undo completed but some files could not be saved to storage",
         );
-      } else if (error.name === "QuotaExceededError") {
+      } else if (err.name === "QuotaExceededError") {
         errorMessage = t(
           "undoQuotaError",
           "Cannot undo: insufficient storage space",

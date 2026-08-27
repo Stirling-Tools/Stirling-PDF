@@ -10,11 +10,13 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
@@ -23,8 +25,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -44,9 +48,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.service.CreditService;
+import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -63,9 +69,10 @@ public class SupabaseSecurityConfig {
     private final UserService userService;
     private final TeamService teamService;
     private final SupabaseUserService supabaseUserService;
-    private final CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final Environment environment;
 
     @Value("${app.supabase.issuer:}")
     private String issuer;
@@ -79,7 +86,10 @@ public class SupabaseSecurityConfig {
     private long clockSkewSeconds;
 
     @Bean
-    SecurityFilterChain saasSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder)
+    SecurityFilterChain saasSecurityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider)
             throws Exception {
         // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
         // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
@@ -96,6 +106,17 @@ public class SupabaseSecurityConfig {
                                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
                                         .permitAll()
                                         .requestMatchers("/actuator/health", "/api/v1/config/**")
+                                        .permitAll()
+                                        // Account-link connect handshake: an instance calls these
+                                        // before it holds any credential, so there is nothing to
+                                        // authenticate with yet. Neither grants anything on its
+                                        // own — /request records an intent a human must approve,
+                                        // and /claim requires a secret only the instance that
+                                        // created the request has ever held.
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/v1/account-link/connect/request",
+                                                "/api/v1/account-link/connect/claim")
                                         .permitAll()
                                         .requestMatchers(
                                                 req ->
@@ -118,9 +139,9 @@ public class SupabaseSecurityConfig {
                                 teamService,
                                 userService,
                                 supabaseUserService,
-                                creditService,
                                 saasTeamService,
-                                jwtDecoder),
+                                jwtDecoder,
+                                apiKeyAuthenticationService),
                         BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(
                         ex ->
@@ -135,6 +156,16 @@ public class SupabaseSecurityConfig {
                                                         .jwtAuthenticationConverter(
                                                                 SupabaseSecurityConfig
                                                                         ::toAuthentication)));
+
+        // Device-credential auth for linked self-hosted instances (combined billing).
+        // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
+        // is absent here, so the instance surface cannot authenticate at all until release.
+        DeviceCredentialAuthenticationFilter deviceFilter =
+                deviceCredentialFilterProvider.getIfAvailable();
+        if (deviceFilter != null) {
+            http.addFilterBefore(deviceFilter, BearerTokenAuthenticationFilter.class);
+        }
+
         return http.build();
     }
 
@@ -250,6 +281,28 @@ public class SupabaseSecurityConfig {
         }
     }
 
+    /**
+     * Loopback on any port, as Spring origin patterns. Only added outside production; see {@link
+     * #corsConfigurationSource()}.
+     */
+    private static final List<String> LOOPBACK_ANY_PORT =
+            List.of("http://localhost:[*]", "http://127.0.0.1:[*]");
+
+    /**
+     * Profiles that mean "a developer's machine or a preview environment", never the production
+     * deployment. Production runs the bare {@code saas} profile.
+     */
+    private static final List<String> NON_PRODUCTION_PROFILES = List.of("dev", "staging", "local");
+
+    private boolean isNonProduction() {
+        for (String profile : environment.getActiveProfiles()) {
+            if (NON_PRODUCTION_PROFILES.contains(profile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
@@ -257,7 +310,7 @@ public class SupabaseSecurityConfig {
                 applicationProperties.getSystem() != null
                         && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                         && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
-        List<String> origins =
+        List<String> configuredOrigins =
                 operatorOverride
                         ? applicationProperties.getSystem().getCorsAllowedOrigins()
                         : List.of(
@@ -267,7 +320,35 @@ public class SupabaseSecurityConfig {
                                 "https://stirling.com",
                                 "https://app.stirling.com",
                                 "https://api.stirling.com");
-        if (origins.stream().anyMatch(o -> o.contains("*"))) {
+        // Always allow the desktop (Tauri) app's webview origins so the bundled
+        // desktop client can reach the cloud backend regardless of the operator's
+        // configured web origins. A browser can never present a tauri:// (or
+        // tauri.localhost) origin, so these are desktop-app identities — safe to
+        // allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
+        List<String> origins = new ArrayList<>(configuredOrigins);
+        for (String desktopOrigin :
+                List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")) {
+            if (!origins.contains(desktopOrigin)) {
+                origins.add(desktopOrigin);
+            }
+        }
+        // Outside production, allow loopback on ANY port. Several dev servers run side by side
+        // (editor, saas web app, one per flavour under test) and their ports move, so pinning a
+        // list means every new local environment shows up as an opaque CORS failure. Unlike a
+        // wildcard subdomain, a wildcard port on loopback cannot be taken over: nothing but this
+        // machine can answer on it, so there is no lapsed-DNS or abandoned-vhost risk. Absent in
+        // production, where the profile check below is false.
+        if (!operatorOverride && isNonProduction()) {
+            origins.addAll(LOOPBACK_ANY_PORT);
+            log.info(
+                    "Non-production profile active: allowing loopback CORS origins on any port {}",
+                    LOOPBACK_ANY_PORT);
+        }
+        // Loopback port wildcards are exempt: the warning below is about hostname takeover, which
+        // does not apply to an origin only this machine can serve.
+        if (origins.stream()
+                .filter(o -> !LOOPBACK_ANY_PORT.contains(o))
+                .anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."
                             + " Wildcard subdomains can be taken over by an attacker (lapsed DNS,"
@@ -284,8 +365,13 @@ public class SupabaseSecurityConfig {
                         "X-Requested-With",
                         "Accept",
                         "Origin",
-                        "X-API-KEY"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate", "X-Credits-Remaining"));
+                        "X-API-KEY",
+                        "X-Browser-Id"));
+        cfg.setExposedHeaders(
+                List.of(
+                        "WWW-Authenticate",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -333,6 +419,16 @@ public class SupabaseSecurityConfig {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
         }
-        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId);
+        // BearerTokenAuthenticationFilter overwrites the context SupabaseAuthenticationFilter
+        // built; carry its resolved User across so instanceof-User authorization keeps working.
+        User user = null;
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing instanceof EnhancedJwtAuthenticationToken enhanced
+                && supabaseId != null
+                && supabaseId.equals(enhanced.getSupabaseId())
+                && enhanced.getPrincipal() instanceof User existingUser) {
+            user = existingUser;
+        }
+        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId, user);
     }
 }

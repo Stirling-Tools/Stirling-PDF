@@ -12,6 +12,37 @@ import { expect, type Page, type Locator } from "@playwright/test";
 const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
 
 /**
+ * Suppress the native OS file picker for the whole page, on every browser.
+ *
+ * Several upload entry points (the FileSidebar "Open from computer" button,
+ * the Mantine `<FileInput>`, AddFileCard, etc.) open a file dialog by clicking
+ * a hidden `<input type="file">`. On firefox/webkit Playwright only intercepts
+ * that dialog while the page has a `filechooser` listener - it toggles
+ * `Page.setInterceptFileChooserDialog` off the event subscription. With no
+ * listener the real OS picker leaks onto the host and hangs the nightly run.
+ *
+ * Registering a (no-op) `filechooser` listener flips that interception on for
+ * every browser, so the dialog is suppressed at the browser level however it
+ * was triggered - a programmatic `.click()`, a `<label>` activation, or
+ * Playwright's own click. We deliberately don't set files in the handler: specs
+ * still drive uploads explicitly via `setInputFiles()`, which sets files
+ * through the protocol regardless of the pending intercepted chooser. This lets
+ * a spec click the real entry-point button while the picker stays mocked
+ * cross-browser - unlike a global `HTMLInputElement.prototype.click` override,
+ * which misses `<label>`-triggered pickers and never enables Playwright's own
+ * interception.
+ *
+ * Installed once per page by the shared test fixtures (stub + live), so no spec
+ * has to opt in.
+ */
+export function suppressNativeFilePicker(page: Page): void {
+  page.on("filechooser", () => {
+    // Interception alone suppresses the native dialog; specs provide the files
+    // themselves via setInputFiles() on the hidden input.
+  });
+}
+
+/**
  * Wait for a Mantine Modal overlay to appear or disappear. Most file pickers,
  * settings dialogs, encrypted-PDF unlock prompts and so on render through
  * this overlay; specs use it as a synchronisation point.
@@ -38,29 +69,73 @@ export async function waitForModalClose(
 
 /**
  * Upload one or more files through the FileSidebar's "Open from computer"
- * action. The button is always rendered (collapsed or expanded sidebar) and
- * triggers the hidden `data-testid="file-input"` native picker directly -
- * there is no modal to wait for under the post-refactor design.
- *
- * `setInputFiles` doesn't await the input's async onChange (which writes to
- * IndexedDB via `addFiles`), so without a sync point a caller that follows
- * with `page.goto()` can race the IDB flush. Wait for the workbench to
- * pick up the upload (the FileSidebar renders the added file in its scroll
- * list once `addFiles` resolves and IDB has been written).
+ * action. The native picker is mocked globally by `suppressNativeFilePicker`,
+ * so the click is safe on every browser; files are set on the hidden input via
+ * `setInputFiles`. Returns only once the files are durably in IndexedDB, so
+ * callers may navigate or reload without racing the write.
  */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+  const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
-  // Sync point: wait until at least one file lands in the sidebar's file
-  // list. The list only renders once `addFiles` has resolved (which awaits
-  // the IDB write). Use first() so multi-file uploads pass too.
+  // The sidebar renders from in-memory state, before the IDB write commits.
+  // first() so multi-file uploads pass too.
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
     timeout: 10_000,
   });
+  // A navigation before the write commits aborts the transaction and drops the
+  // file, so wait for it to land rather than assume the sidebar means it did.
+  await waitForStoredFiles(page, names);
+}
+
+/**
+ * Resolve once every uploaded name is in the files store. Read-only: aborts
+ * rather than create or upgrade the DB, so it can't race the app's own
+ * versioned open and leave it without object stores. Reads only a DB the app
+ * already made; until then each poll returns false and retries.
+ */
+async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
+  await page.waitForFunction(
+    (expected) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("stirling-pdf-files");
+        open.onupgradeneeded = () => {
+          open.transaction?.abort();
+          resolve(false);
+        };
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains("files")) {
+            db.close();
+            resolve(false);
+            return;
+          }
+          const request = db
+            .transaction("files", "readonly")
+            .objectStore("files")
+            .getAll();
+          request.onsuccess = () => {
+            const stored = new Set(
+              (request.result as Array<{ name?: string }>).map((r) => r.name),
+            );
+            db.close();
+            resolve(expected.every((name) => stored.has(name)));
+          };
+          request.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+        open.onerror = () => resolve(false);
+        open.onblocked = () => resolve(false);
+      }),
+    names,
+    { timeout: 10_000, polling: 100 },
+  );
 }
 
 /**
@@ -73,8 +148,15 @@ export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
   const goToEditor = page.getByRole("button", {
     name: /go to file editor/i,
   });
+  // The affordance only exists while the workbench is transiently in viewer
+  // mode after an upload. The app can auto-leave viewer mode and detach the
+  // button between our visibility check and the click - the transition timing
+  // differs on firefox/webkit, where the detached button hangs a plain
+  // `click()` for the full actionability timeout. Treat a vanished button as
+  // "already in editor mode": swallow the click failure and let the caller's
+  // run-button assertion catch any genuine regression.
   if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    await goToEditor.click();
+    await goToEditor.click({ timeout: 5_000 }).catch(() => {});
   }
 }
 
@@ -112,11 +194,20 @@ export async function openSettings(page: Page): Promise<Locator> {
  * dialog is fully dismissed before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
-  await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
+  const modal = page.locator(".mantine-Modal-content").first();
+  // A click on the X can be swallowed by a re-render, leaving the modal open;
+  // retry until it's gone. A genuinely broken close still fails - every retry
+  // misses and the modal stays past the cap.
+  await expect(async () => {
+    if (await modal.isVisible().catch(() => false)) {
+      await page
+        .locator('[aria-label="Close"]')
+        .first()
+        .click({ timeout: 2_000 })
+        .catch(() => {});
+    }
+    await expect(modal).not.toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 12_000 });
 }
 
 /**

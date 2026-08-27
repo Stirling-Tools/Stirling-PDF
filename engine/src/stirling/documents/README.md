@@ -54,10 +54,10 @@ everything = RagCapability(runtime.documents)
 Non-secret defaults live in the committed `engine/.env`:
 
 ```
-STIRLING_RAG_BACKEND=sqlite              # or "pgvector"
+STIRLING_DOCUMENTS_BACKEND=sqlite              # or "pgvector"
 STIRLING_RAG_EMBEDDING_MODEL=voyageai:voyage-4
-STIRLING_RAG_STORE_PATH=data/rag.db      # used when backend=sqlite
-STIRLING_RAG_PGVECTOR_DSN=               # used when backend=pgvector
+STIRLING_DOCUMENTS_SQLITE_PATH=data/rag.db      # used when backend=sqlite
+STIRLING_DOCUMENTS_PGVECTOR_DSN=               # used when backend=pgvector
 STIRLING_RAG_CHUNK_SIZE=512
 STIRLING_RAG_CHUNK_OVERLAP=64
 STIRLING_RAG_TOP_K=5
@@ -70,13 +70,26 @@ Provider credentials (and any local overrides) go in the uncommitted
 VOYAGE_API_KEY=your-key
 ```
 
+### Embedding providers
+
+`STIRLING_RAG_EMBEDDING_MODEL` is a `provider:model` string. Any OpenAI-compatible
+`/v1/embeddings` endpoint (vLLM, Ollama, TEI, llama.cpp) works by pointing a base URL
+at it. Note `OPENAI_BASE_URL` is global and also redirects chat completions; push
+`provider`/`api_key`/`base_url` through admin AI settings to move embeddings only.
+Ollama reads `OLLAMA_BASE_URL`, and omitting it fails the first embed call, not startup.
+
+```
+STIRLING_RAG_EMBEDDING_MODEL=ollama:nomic-embed-text
+OLLAMA_BASE_URL=http://ollama:11434/v1
+```
+
 ## Backends
 
 **`sqlite`** - Embedded sqlite-vec. Single `.db` file, zero ops. Ideal for dev
 and self-hosted deployments.
 
 **`pgvector`** - External PostgreSQL with the `vector` extension. Point
-`STIRLING_RAG_PGVECTOR_DSN` at your Postgres instance.
+`STIRLING_DOCUMENTS_PGVECTOR_DSN` at your Postgres instance.
 
 Both backends implement the same `DocumentStore` interface, so agents and the
 service work identically regardless of which you pick.

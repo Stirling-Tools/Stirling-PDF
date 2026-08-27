@@ -86,6 +86,8 @@ class TaskManagerJobStoreDelegationTest {
 
                     @Override
                     public boolean shouldRunLocalCleanup() {
+                        // Distributed backplanes own job TTL eviction themselves; this mock
+                        // mirrors the real ValkeyClusterBackplane override of the default true.
                         return false;
                     }
                 };

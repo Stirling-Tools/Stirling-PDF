@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
 
 from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
+from stirling.agents.output_mode import output_retries, structured_output
 from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,
@@ -27,8 +27,9 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.documents import RagCapability
+from stirling.models import PrincipalId
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, require_current_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +162,10 @@ class PdfQuestionAgent:
         )
 
     async def _find_missing_files(self, files: list[AiFile]) -> list[AiFile]:
+        principals = [PrincipalId(require_current_user_id())]
         missing: list[AiFile] = []
         for file in files:
-            if not await self.runtime.documents.has_collection(file.id):
+            if not await self.runtime.documents.has_collection(file.id, principals=principals):
                 missing.append(file)
         return missing
 
@@ -175,8 +177,10 @@ class PdfQuestionAgent:
         upstream classifier keeps that judgement in the same call that writes
         the answer, and lets the agent mix tools when the question warrants it.
         """
+        principals = [PrincipalId(require_current_user_id())]
         rag = RagCapability(
             documents=self.runtime.documents,
+            principals=principals,
             collections=[file.id for file in request.files],
             top_k=self.runtime.settings.rag_default_top_k,
             max_searches=self.runtime.settings.rag_max_searches,
@@ -184,15 +188,23 @@ class PdfQuestionAgent:
         whole_doc = WholeDocReaderCapability(
             runtime=self.runtime,
             files=request.files,
+            principals=principals,
             reasoner=self._chunked_reasoner,
         )
         contradiction = ContradictionCapability(
             detector=self._contradiction_detector,
             files=request.files,
+            principals=principals,
         )
+        # Ollama/custom block tool-calling under native json-schema output, so deliver the
+        # structured result via a tool call or the model answers ungrounded. See agents.output_mode.
+        provider = self.runtime.settings.chat_provider
         agent = Agent(
             model=self.runtime.smart_model,
-            output_type=NativeOutput([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse]),
+            output_type=structured_output(
+                [PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse], chat_provider=provider
+            ),
+            retries=output_retries(provider),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
             # pydantic-ai accepts a list of (string-or-callable) instruction sources;
             # it resolves each at run time and concatenates them for the model.

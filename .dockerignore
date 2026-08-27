@@ -26,8 +26,8 @@ version_builds/
 node_modules/
 **/node_modules/
 frontend/node_modules/
-frontend/dist/
-frontend/playwright-report/
+frontend/editor/dist/
+frontend/editor/playwright-report/
 .npm/
 .yarn/
 
@@ -95,6 +95,14 @@ configs/
 .ruff_cache/
 __pycache__/
 **/__pycache__/
+
+# Python virtualenvs. Large, platform-specific, and their symlinks break the build.
+.venv/
+**/.venv/
+venv/
+**/venv/
+*.egg-info/
+**/*.egg-info/
 
 # Local env
 .env

@@ -1,6 +1,10 @@
 import { type TFunction } from "i18next";
 import React from "react";
-import { ToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  type ErasedToolParams,
+  type ToolAutomationSettingsProps,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { BaseToolProps } from "@app/types/tool";
 import { WorkbenchType } from "@app/types/workbench";
 import {
@@ -25,6 +29,7 @@ import { ProprietaryToolId } from "@app/types/proprietaryToolId";
 import { PrototypeToolId } from "@app/types/prototypeToolId";
 
 export enum SubcategoryId {
+  AI = "ai",
   SIGNING = "signing",
   DOCUMENT_SECURITY = "documentSecurity",
   VERIFICATION = "verification",
@@ -58,12 +63,17 @@ export type ToolRegistryEntry = {
   kind?: ToolKind;
   // Workbench type for navigation
   workbench?: WorkbenchType;
-  // Operation configuration for automation
-  operationConfig?: ToolOperationConfig<any>;
-  // Settings component for automation configuration
-  automationSettings: React.ComponentType<any> | null;
+  // Operation configuration for automation. TParams is erased at the registry
+  // boundary; tools are authored type-safely via defineToolAutomation.
+  operationConfig?: ToolOperationConfig<ErasedToolParams>;
+  // Settings component for automation configuration.
+  automationSettings: React.ComponentType<
+    ToolAutomationSettingsProps<ErasedToolParams>
+  > | null;
   // Whether this tool supports automation (defaults to true)
   supportsAutomate?: boolean;
+  // Keep out of the editor's tool list: a step only a pipeline runs, with no UI to open.
+  hiddenFromToolList?: boolean;
   // Synonyms for search (optional)
   synonyms?: string[];
   // Version status indicator (e.g., "alpha", "beta")
@@ -83,6 +93,8 @@ export type ProprietaryToolRegistry = Record<
 export type PrototypeToolRegistry = Record<PrototypeToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
+  // First: AI steps are the ones a user is least likely to know exist.
+  SubcategoryId.AI,
   SubcategoryId.SIGNING,
   SubcategoryId.DOCUMENT_SECURITY,
   SubcategoryId.VERIFICATION,
@@ -97,6 +109,7 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
 ];
 
 export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
+  [SubcategoryId.AI]: "var(--category-color-automation)", // Pink
   [SubcategoryId.SIGNING]: "var(--category-color-signing)", // Green
   [SubcategoryId.DOCUMENT_SECURITY]: "var(--category-color-security)", // Orange
   [SubcategoryId.VERIFICATION]: "var(--category-color-verification)", // Orange
@@ -141,8 +154,6 @@ export const getSubcategoryIcon = (
   }
 };
 
-export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string =>
-  t(`toolPicker.categories.${id}`, id);
 export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string =>
   t(`toolPicker.subcategories.${id}`, id);
 export const getSubcategoryColor = (subcategory: SubcategoryId): string =>
@@ -210,6 +221,17 @@ export const isValidToolId = (
 ): boolean => {
   return toolId in registry;
 };
+
+/**
+ * A "coming soon" placeholder: listed in the catalogue but not openable — no
+ * UI component and no external link. "read" and "multiTool" are exempt as
+ * workbench-only tools that render without a component.
+ */
+export const isComingSoonTool = (
+  toolId: string,
+  tool: ToolRegistryEntry,
+): boolean =>
+  !tool.component && !tool.link && toolId !== "read" && toolId !== "multiTool";
 
 /**
  * Check if a tool supports automation (defaults to true)

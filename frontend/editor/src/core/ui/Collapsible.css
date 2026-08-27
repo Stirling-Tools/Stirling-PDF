@@ -1,0 +1,53 @@
+.sui-collapsible {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* A bare chevron-led toggle: no box, sized to its label, left-aligned. */
+.sui-collapsible__head {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.sui-collapsible__head:hover {
+  color: var(--c-text);
+}
+
+/* Points right when closed, rotates down when open. */
+.sui-collapsible__chevron {
+  color: var(--c-text-subtle);
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.sui-collapsible__chevron[data-open="true"] {
+  transform: rotate(0deg);
+}
+
+/* Grid-rows disclosure: 0fr → 1fr, no magic max-height. */
+.sui-collapsible__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sui-collapsible__body[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+/* Gap between the toggle and the revealed content, no side indent. */
+.sui-collapsible__body-inner {
+  overflow: hidden;
+  padding-top: 0.875rem;
+}

@@ -1,0 +1,101 @@
+package stirling.software.proprietary.accountlink;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class AccountLinkServiceTest {
+
+    private AccountLinkClient client;
+    private DeviceCredentialStore store;
+    private EntitlementCache cache;
+    private AccountLinkService service;
+
+    @BeforeEach
+    void setUp() {
+        client = mock(AccountLinkClient.class);
+        store = mock(DeviceCredentialStore.class);
+        cache = mock(EntitlementCache.class);
+        service = new AccountLinkService(client, store, cache);
+    }
+
+    // The two link() tests here are gone with the JWT relay. Storing a credential and invalidating
+    // the entitlement cache is now ConnectService's job and is covered by ConnectServiceTest; what
+    // remains in this service is status and unlink.
+
+    @Test
+    void status_linkedFromTheStoredCredential() {
+        DeviceCredential stored = new DeviceCredential();
+        stored.setDeviceId("dev-1");
+        stored.setTeamId(7L);
+        stored.setLinkedAt(LocalDateTime.now());
+        when(store.get()).thenReturn(Optional.of(stored));
+
+        AccountLinkService.LinkStatus status = service.status();
+
+        assertTrue(status.linked());
+        assertEquals("dev-1", status.deviceId());
+        assertEquals(7L, status.teamId());
+    }
+
+    @Test
+    void status_unlinkedWhenNoCredential() {
+        when(store.get()).thenReturn(Optional.empty());
+        AccountLinkService.LinkStatus status = service.status();
+        assertFalse(status.linked());
+    }
+
+    @Test
+    void unlink_callsSaasRevokeBeforeClearingLocally() {
+        DeviceCredential cred = new DeviceCredential();
+        cred.setDeviceId("dev-1");
+        cred.setDeviceSecret("sec-1");
+        cred.setTeamId(7L);
+        cred.setLinkedAt(LocalDateTime.now());
+        when(store.get()).thenReturn(Optional.of(cred));
+        when(client.revokeSelf("dev-1", "sec-1")).thenReturn(true);
+
+        service.unlink();
+
+        verify(client).revokeSelf("dev-1", "sec-1");
+        verify(store).clear();
+        verify(cache).invalidate();
+    }
+
+    @Test
+    void unlink_clearsLocallyEvenWhenSaasRevokeFails() {
+        DeviceCredential cred = new DeviceCredential();
+        cred.setDeviceId("dev-1");
+        cred.setDeviceSecret("sec-1");
+        cred.setLinkedAt(LocalDateTime.now());
+        when(store.get()).thenReturn(Optional.of(cred));
+        // SaaS unreachable / returns non-2xx.
+        when(client.revokeSelf("dev-1", "sec-1")).thenReturn(false);
+
+        service.unlink();
+
+        // Local clear MUST still happen — admin's intent wins; orphan row is a follow-up.
+        verify(store).clear();
+        verify(cache).invalidate();
+    }
+
+    @Test
+    void unlink_whenAlreadyUnlinked_skipsSaasRevoke() {
+        when(store.get()).thenReturn(Optional.empty());
+
+        service.unlink();
+
+        org.mockito.Mockito.verifyNoInteractions(client);
+        verify(store).clear();
+        verify(cache).invalidate();
+    }
+}

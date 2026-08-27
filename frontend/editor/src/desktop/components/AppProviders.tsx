@@ -1,9 +1,12 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
+import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
+import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
@@ -22,9 +25,8 @@ import { endpointAvailabilityService } from "@app/services/endpointAvailabilityS
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
-import { SaasBillingProvider } from "@app/contexts/SaasBillingContext";
-import { SaaSCheckoutProvider } from "@app/contexts/SaaSCheckoutContext";
-import { CreditModalBootstrap } from "@app/components/shared/modals/CreditModalBootstrap";
+import UpdateModal from "@core/components/shared/UpdateModal";
+import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -48,6 +50,7 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
+  const updatePopup = useDesktopUpdatePopup();
   const [connectionMode, setConnectionMode] = useState<
     "saas" | "selfhosted" | "local" | null
   >(null);
@@ -59,6 +62,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
+
+  // Files dropped outside a dropzone must never navigate the webview to the
+  // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
+  // Dropzone-level handlers run before these window-level listeners, so
+  // in-app drag & drop is unaffected.
+  useEffect(() => {
+    const preventNavigation = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", preventNavigation);
+    window.addEventListener("drop", preventNavigation);
+    return () => {
+      window.removeEventListener("dragover", preventNavigation);
+      window.removeEventListener("drop", preventNavigation);
+    };
+  }, []);
 
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
@@ -264,6 +281,38 @@ export function AppProviders({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [authChecked]);
 
+  // Desktop auto-update popup (shown on startup if update available)
+  const { state: popupState, actions: popupActions } = updatePopup;
+  const updatePopupModal = popupState.updateSummary && (
+    <UpdateModal
+      opened={popupState.showModal}
+      onClose={popupActions.dismissModal}
+      onRemindLater={popupActions.remindLater}
+      currentVersion={popupState.currentVersion}
+      updateSummary={popupState.updateSummary}
+      machineInfo={{
+        machineType: navigator.platform?.toLowerCase().includes("mac")
+          ? "Client-mac"
+          : navigator.platform?.toLowerCase().includes("linux")
+            ? "Client-unix"
+            : "Client-win",
+        activeSecurity: false,
+        licenseType: "NORMAL",
+      }}
+      desktopInstall={
+        popupState.tauriInstallReady
+          ? {
+              state: popupState.state,
+              progress: popupState.progress,
+              errorMessage: popupState.errorMessage,
+              canInstall: popupState.canInstall,
+              actions: popupActions,
+            }
+          : undefined
+      }
+    />
+  );
+
   if (!authChecked) {
     return (
       <ProprietaryAppProviders
@@ -277,7 +326,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
+        {/* Also here: the auth check below switches mode pre-authChecked. */}
+        <DesktopQueryCacheReset />
         <div style={{ minHeight: "100vh" }} />
+        {updatePopupModal}
       </ProprietaryAppProviders>
     );
   }
@@ -301,20 +353,26 @@ export function AppProviders({ children }: { children: ReactNode }) {
             window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
         }}
       >
+        <DesktopQueryCacheReset />
         <SaaSTeamProvider key={appKey}>
-          <SaasBillingProvider>
-            <SaaSCheckoutProvider>
-              <DesktopConfigSync />
-              <DesktopBannerInitializer />
-              <SaveShortcutListener />
-              <CreditModalBootstrap />
-              {children}
-              {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
-              <DesktopOnboardingModal />
-              {/* Global sign-in modal, opened via stirling:open-sign-in event */}
-              <SignInModal />
-            </SaaSCheckoutProvider>
-          </SaasBillingProvider>
+          <DesktopConfigSync />
+          <DesktopBannerInitializer />
+          <SaveShortcutListener />
+          {children}
+          {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
+          <DesktopOnboardingModal />
+          {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
+              shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
+          <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+          {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
+              spend-cap). Resolves to the cloud implementation via @app; listens
+              for both the imperative open events (direct-call 402s) and the
+              usageLimitBridge event (server-side policy/AI run 402s). */}
+          <UsageLimitModalHost />
+          {/* Global sign-in modal, opened via stirling:open-sign-in event */}
+          <SignInModal />
+          {/* Desktop auto-update popup */}
+          {updatePopupModal}
         </SaaSTeamProvider>
       </ToolActionsContext.Provider>
     </ProprietaryAppProviders>

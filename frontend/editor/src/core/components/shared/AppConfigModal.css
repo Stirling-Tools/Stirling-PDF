@@ -1,4 +1,28 @@
 /* AppConfigModal styles */
+
+/* Deep-link highlight: pulses the control the super search jumped to
+   (navigated via /settings/{section}?focus={anchor}). */
+@keyframes settings-focus-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--mantine-color-blue-5);
+    background: color-mix(
+      in srgb,
+      var(--mantine-color-blue-5) 16%,
+      transparent
+    );
+  }
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+    background: transparent;
+  }
+}
+
+.settings-focus-target {
+  animation: settings-focus-pulse 1.8s ease-out;
+  border-radius: 8px;
+  scroll-margin: 1rem;
+}
+
 .modal-container {
   display: flex;
   gap: 0;
@@ -15,40 +39,76 @@
   flex-direction: column;
 }
 
-/* Mobile: compact icon-only navigation */
+/* Mobile: two-level settings navigation */
 @media (max-width: 1024px) {
   .modal-container {
-    height: 100vh !important;
+    flex-direction: column;
+    height: 100dvh !important;
     max-height: none !important;
   }
 
   .modal-nav {
-    width: 5rem; /* 80px - wider for larger icons */
-    height: 100vh !important;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    height: auto !important;
     max-height: none !important;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 0;
   }
 
   .modal-nav-scroll {
-    padding: 1rem 0.5rem;
+    padding: 0.75rem 0.75rem 2rem;
   }
 
   .modal-nav-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-nav-section > .mantine-Text-root {
+    padding: 0 0.5rem;
   }
 
   .modal-nav-item.mobile {
-    padding: 1rem;
-    justify-content: center;
-    border-radius: 0.75rem;
-    margin-bottom: 0.75rem;
+    padding: 0.75rem 0.625rem;
+    min-height: 3rem;
+    border-radius: 0.625rem;
+    margin-bottom: 0.125rem;
+    gap: 0.75rem;
+  }
+
+  .modal-nav-item .modal-nav-item-badge {
+    display: inline-flex;
+  }
+
+  .modal-nav-chevron {
+    flex-shrink: 0;
+    color: var(--c-text-subtle);
   }
 
   .modal-content {
-    height: 100vh !important;
+    height: auto !important;
+    flex: 1;
+    min-height: 0;
     max-height: none !important;
     border-radius: 0;
+  }
+
+  .modal-body {
+    padding: 1rem;
+    padding-top: 0.75rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .modal-body [id^="setting-"] {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.625rem;
+  }
+
+  .modal-body [id^="setting-"]:has(.mantine-Switch-root) {
+    flex-direction: row;
+    align-items: center !important;
   }
 }
 
@@ -63,7 +123,8 @@
 }
 
 .modal-nav-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-nav-scroll::-webkit-scrollbar {
@@ -81,11 +142,11 @@
 }
 
 .modal-nav-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-nav-section {
@@ -106,6 +167,15 @@
   margin-bottom: 0.25rem; /* 4px */
 }
 
+.modal-nav-item-badge {
+  display: none;
+}
+.modal-nav-item:hover .modal-nav-item-badge,
+.modal-nav-item:focus-within .modal-nav-item-badge,
+.modal-nav-item.active .modal-nav-item-badge {
+  display: inline-flex;
+}
+
 .modal-content {
   flex: 1;
   display: flex;
@@ -122,7 +192,8 @@
 }
 
 .modal-content-scroll:hover {
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
+    transparent;
 }
 
 .modal-content-scroll::-webkit-scrollbar {
@@ -140,11 +211,11 @@
 }
 
 .modal-content-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-content-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(128, 128, 128, 0.7);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-header {
@@ -160,16 +231,6 @@
 .modal-body {
   padding: 2rem;
   padding-top: 1rem;
-}
-
-.settings-search-select {
-  min-width: 10rem;
-}
-
-.settings-search-option {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
 }
 
 .confirm-modal-content {
@@ -203,8 +264,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--modal-content-bg);
-  border-top: 1px solid var(--modal-header-border);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 1rem 2rem;
   margin: 0 -2rem;
   margin-bottom: -1rem;
@@ -216,6 +277,7 @@
 @media (max-width: 1024px) {
   .settings-sticky-footer {
     padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
     margin: 0 -1rem;
     margin-bottom: -1rem;
   }

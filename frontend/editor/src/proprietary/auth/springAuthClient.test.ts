@@ -5,14 +5,14 @@ import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   setPostLoginRedirectPath,
   springAuth,
-} from "@app/auth/springAuthClient";
+} from "@app/auth/spring/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
-import {
-  AxiosError,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from "axios";
+// Side-effect: configures the shared Spring engine with the (mocked) apiClient
+// + oauthNavigation seam, so springAuth routes through the mocks below.
+import "@app/auth/configureSpringAuth";
+import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -55,7 +55,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.get).mockResolvedValueOnce({
         status: 200,
         data: { user: mockUser },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.getSession();
 
@@ -89,9 +89,18 @@ describe("SpringAuthClient", () => {
       );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
 
       const result = await springAuth.getSession();
 
+      // A 401 from /me triggers an explicit refresh attempt before treating
+      // the session as invalid; lock that recovery contract in so future
+      // refactors can't quietly skip it.
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/auth/refresh",
+        null,
+        expect.any(Object),
+      );
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
       expect(result.data.session).toBeNull();
       // 401 is handled gracefully, so error should be null
@@ -117,9 +126,18 @@ describe("SpringAuthClient", () => {
       );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
 
       const result = await springAuth.getSession();
 
+      // A 403 from /me triggers an explicit refresh attempt before treating
+      // the session as invalid; lock that recovery contract in so future
+      // refactors can't quietly skip it.
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/auth/refresh",
+        null,
+        expect.any(Object),
+      );
       expect(localStorage.getItem("stirling_jwt")).toBeNull();
       expect(result.data.session).toBeNull();
       // 403 is handled gracefully, so error should be null
@@ -129,6 +147,9 @@ describe("SpringAuthClient", () => {
 
   describe("signInWithPassword", () => {
     it("should successfully sign in with email and password", async () => {
+      // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
+      // about defaults - incidental to what this test verifies.
+      allowConsole.warn(/Cannot decode token for adaptive intervals/);
       const credentials = {
         email: "test@example.com",
         password: "password123",
@@ -151,7 +172,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       // Spy on window.dispatchEvent
       const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
@@ -176,6 +197,7 @@ describe("SpringAuthClient", () => {
     });
 
     it("should return error on failed login", async () => {
+      expectConsole.error(/\[SpringAuth\] signInWithPassword error/);
       const credentials = {
         email: "wrong@example.com",
         password: "wrongpassword",
@@ -201,66 +223,6 @@ describe("SpringAuthClient", () => {
     });
   });
 
-  describe("signUp", () => {
-    it("should successfully register new user", async () => {
-      const credentials = {
-        email: "newuser@example.com",
-        password: "newpassword123",
-      };
-
-      const mockUser = {
-        id: "456",
-        email: credentials.email,
-        username: credentials.email,
-        role: "USER",
-      };
-
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        status: 200,
-        data: { user: mockUser },
-      } as unknown as AxiosResponse);
-
-      const result = await springAuth.signUp(credentials);
-
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/api/v1/user/register",
-        {
-          username: credentials.email,
-          password: credentials.password,
-        },
-        { withCredentials: true },
-      );
-      expect(result.user).toEqual(mockUser);
-      expect(result.session).toBeNull(); // No auto-login on signup
-      expect(result.error).toBeNull();
-    });
-
-    it("should return error on failed registration", async () => {
-      const credentials = {
-        email: "existing@example.com",
-        password: "password123",
-      };
-
-      const errorMessage = "User already exists";
-      const mockError = Object.assign(new Error(errorMessage), {
-        isAxiosError: true,
-        response: {
-          status: 409,
-          data: { message: errorMessage },
-        },
-      });
-
-      vi.mocked(apiClient.post).mockRejectedValueOnce(mockError);
-
-      const result = await springAuth.signUp(credentials);
-
-      expect(result.user).toBeNull();
-      expect(result.session).toBeNull();
-      expect(result.error).toBeTruthy();
-      expect(result.error?.message).toBe(errorMessage);
-    });
-  });
-
   describe("signOut", () => {
     it("should successfully sign out and clear JWT", async () => {
       const mockToken = "jwt-to-clear";
@@ -269,7 +231,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {},
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.signOut();
 
@@ -283,6 +245,7 @@ describe("SpringAuthClient", () => {
     });
 
     it("should clear JWT even if logout request fails", async () => {
+      expectConsole.error(/\[SpringAuth\] signOut error/);
       const mockToken = "jwt-to-clear";
       localStorage.setItem("stirling_jwt", mockToken);
 
@@ -301,6 +264,9 @@ describe("SpringAuthClient", () => {
 
   describe("refreshSession", () => {
     it("should refresh JWT token successfully", async () => {
+      // The fake token isn't a real JWT, so calculateAdaptiveIntervals warns
+      // about defaults - incidental to what this test verifies.
+      allowConsole.warn(/Cannot decode token for adaptive intervals/);
       const newToken = "refreshed-jwt-token";
       const mockUser = {
         id: "123",
@@ -318,7 +284,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.refreshSession();
 
@@ -405,7 +371,7 @@ describe("SpringAuthClient", () => {
         expect(isSafePostLoginRedirect("")).toBe(false);
         expect(isSafePostLoginRedirect(null)).toBe(false);
         expect(isSafePostLoginRedirect(undefined)).toBe(false);
-        expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+        expect(isSafePostLoginRedirect(42)).toBe(false);
       });
 
       it("rejects protocol-relative and absolute URLs (open-redirect guard)", () => {

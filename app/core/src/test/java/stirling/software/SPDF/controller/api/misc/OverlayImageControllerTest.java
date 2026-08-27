@@ -32,6 +32,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -52,6 +53,7 @@ class OverlayImageControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private SvgSanitizer svgSanitizer;
 
     @InjectMocks private OverlayImageController controller;
 
@@ -203,6 +205,52 @@ class OverlayImageControllerTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
         mockDoc.close();
+    }
+
+    @Test
+    void overlayImage_svgInput_sanitizedBeforeOverlay() throws Exception {
+        byte[] maliciousSvg =
+                ("<svg xmlns=\"http://www.w3.org/2000/svg\""
+                                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                                + " width=\"10\" height=\"10\">"
+                                + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\""
+                                + " xlink:href=\"file:///etc/passwd\"/>"
+                                + "</svg>")
+                        .getBytes();
+        byte[] sanitized =
+                ("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
+                                + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
+                                + "</svg>")
+                        .getBytes();
+        when(svgSanitizer.sanitize(maliciousSvg)).thenReturn(sanitized);
+
+        MockMultipartFile svgFile =
+                new MockMultipartFile("imageFile", "overlay.svg", "image/svg+xml", maliciousSvg);
+        OverlayImageRequest request = new OverlayImageRequest();
+        request.setFileInput(pdfFile);
+        request.setImageFile(svgFile);
+        request.setX(0);
+        request.setY(0);
+        request.setEveryPage(false);
+
+        PDDocument mockDoc = new PDDocument();
+        mockDoc.addPage(new PDPage(PDRectangle.A4));
+        when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
+
+        try (MockedStatic<WebResponseUtils> mockedWebResponse =
+                mockStatic(WebResponseUtils.class)) {
+            mockedWebResponse
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
+                    .thenReturn(streamingOk("result".getBytes()));
+
+            controller.overlayImage(request);
+        }
+        mockDoc.close();
+
+        verify(svgSanitizer).sanitize(maliciousSvg);
     }
 
     @Test

@@ -6,6 +6,8 @@ import {
   ZoomState,
 } from "@app/contexts/viewer/viewerBridges";
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
+import { ZoomLevel, Point } from "@embedpdf/plugin-zoom";
+import { FormattedSelection } from "@embedpdf/plugin-selection";
 
 export interface ScrollActions {
   scrollToPage: (page: number, behavior?: "smooth" | "instant") => void;
@@ -19,7 +21,7 @@ export interface ZoomActions {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: any, center?: any) => void;
+  requestZoom: (level: ZoomLevel, center?: Point) => void;
   setZoomLevel: (factor: number) => void;
 }
 
@@ -31,8 +33,9 @@ export interface PanActions {
 
 export interface SelectionActions {
   copyToClipboard: () => void;
-  getSelectedText: () => string;
-  getFormattedSelection: () => any;
+  getFormattedSelection: () => FormattedSelection[] | null;
+  selectAll: (totalPages: number) => Promise<boolean>;
+  selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
 
 export interface SpreadActions {
@@ -49,7 +52,7 @@ export interface RotationActions {
 }
 
 export interface SearchActions {
-  search: (query: string) => Promise<any> | undefined;
+  search: (query: string) => Promise<unknown> | undefined;
   next: () => void;
   previous: () => void;
   clear: () => void;
@@ -212,7 +215,7 @@ export function createViewerActions({
         api.toggleMarqueeZoom();
       }
     },
-    requestZoom: (level: any, center?: any) => {
+    requestZoom: (level: ZoomLevel, center?: Point) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
         api.requestZoom(level, center);
@@ -255,19 +258,26 @@ export function createViewerActions({
         api.copyToClipboard();
       }
     },
-    getSelectedText: () => {
-      const api = registry.current.selection?.api;
-      if (api?.getSelectedText) {
-        return api.getSelectedText() ?? "";
-      }
-      return "";
-    },
     getFormattedSelection: () => {
       const api = registry.current.selection?.api;
       if (api?.getFormattedSelection) {
         return api.getFormattedSelection();
       }
       return null;
+    },
+    selectAll: async (totalPages: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectAll) {
+        return api.selectAll(totalPages);
+      }
+      return false;
+    },
+    selectWordAt: (pageIndex: number, x: number, y: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectWordAt) {
+        return api.selectWordAt(pageIndex, x, y);
+      }
+      return false;
     },
   };
 

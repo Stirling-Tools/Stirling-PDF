@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import { installFailOnConsole } from "@app/tests/failOnConsole";
+
+// The shims `src/index.tsx` installs - see core/setupTests.ts.
+import "@app/utils/engineShims";
+
+installFailOnConsole();
 
 // Mock localStorage for tests
 const localStorageMock = (() => {
@@ -124,7 +130,7 @@ Object.defineProperty(globalThis, "crypto", {
         }
         return array;
       }),
-  } as unknown as Crypto,
+  },
   writable: true,
   configurable: true,
 });

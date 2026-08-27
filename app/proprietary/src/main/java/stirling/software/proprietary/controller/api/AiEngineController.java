@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,15 +27,18 @@ import jakarta.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiWorkflowService;
 
 import tools.jackson.core.JacksonException;
@@ -58,14 +61,14 @@ public class AiEngineController {
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
+    private final AiFeatureGate aiFeatureGate;
+    private final UserServiceInterface userService;
 
     /**
-     * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
-     * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
-     * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     * SSE emitter timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
+     * from under the executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
      */
-    @Value("${stirling.ai.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
+    private final long streamTimeoutMs;
 
     public AiEngineController(
             AiEngineClient aiEngineClient,
@@ -74,7 +77,10 @@ public class AiEngineController {
             @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
-            AiEngineEndpointResolver endpointResolver) {
+            AiEngineEndpointResolver endpointResolver,
+            AiFeatureGate aiFeatureGate,
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
@@ -82,6 +88,14 @@ public class AiEngineController {
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
+        this.aiFeatureGate = aiFeatureGate;
+        this.userService = userService;
+        this.streamTimeoutMs =
+                applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
+    }
+
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
     }
 
     @GetMapping("/health")
@@ -89,7 +103,7 @@ public class AiEngineController {
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
     public ResponseEntity<String> health() throws IOException {
-        String response = aiEngineClient.get("/health");
+        String response = aiEngineClient.get("/health", currentUserId());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
@@ -102,6 +116,7 @@ public class AiEngineController {
                             + " system and downloadable via GET /api/v1/general/files/{fileId}.")
     public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
             throws IOException {
+        aiFeatureGate.requireConversationalWorkflow();
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
         return result;
@@ -114,6 +129,7 @@ public class AiEngineController {
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
     public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
+        aiFeatureGate.requireConversationalWorkflow();
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
 
         emitter.onTimeout(
@@ -237,13 +253,15 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
+        // Same gate as /orchestrate: edit agent is a model call on the same conversational surface.
+        aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
         }
         String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
-        String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody);
+        String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody, currentUserId());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 

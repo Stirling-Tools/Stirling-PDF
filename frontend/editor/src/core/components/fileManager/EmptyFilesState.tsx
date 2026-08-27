@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Button, Group, Text, Stack } from "@mantine/core";
+import { Group, Text, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
@@ -77,10 +78,11 @@ const EmptyFilesState: React.FC = () => {
           onMouseLeave={() => setIsUploadHover(false)}
         >
           <Button
-            aria-label="Upload"
+            variant="tertiary"
+            aria-label={t("emptyFilesState.upload", "Upload")}
             style={{
-              backgroundColor: "var(--bg-file-manager)",
-              color: "var(--landing-button-color)",
+              backgroundColor: "var(--c-bg)",
+              color: "var(--c-accent-fg)",
               border: "1px solid var(--landing-button-border)",
               borderRadius: isUploadHover ? "2rem" : "1rem",
               height: "38px",
@@ -101,7 +103,7 @@ const EmptyFilesState: React.FC = () => {
               icon={icons.uploadIconName}
               width="1.25rem"
               height="1.25rem"
-              style={{ color: "var(--accent-interactive)" }}
+              style={{ color: "var(--c-accent-text)" }}
             />
             {isUploadHover && (
               <span style={{ marginLeft: ".5rem" }}>
@@ -113,7 +115,7 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Instruction Text */}
         <span
-          className="text-[var(--accent-interactive)]"
+          className="text-[var(--c-primary)]"
           style={{ fontSize: ".8rem", textAlign: "center" }}
         >
           {terminology.dropFilesHere}

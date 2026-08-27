@@ -1,5 +1,5 @@
 import {
-  ToolType,
+  defineCustomTool,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { useCallback } from "react";
@@ -24,7 +24,7 @@ export function useAutomateOperation() {
 
       // Execute the automation sequence and return the final results
       const finalResults = await executeAutomationSequence(
-        params.automationConfig!,
+        params.automationConfig,
         files,
         toolRegistry,
         (stepIndex: number, operationName: string) => {
@@ -55,10 +55,11 @@ export function useAutomateOperation() {
     [toolRegistry],
   );
 
-  return useToolOperation<AutomateParameters>({
-    toolType: ToolType.custom,
-    operationType: "automate",
-    customProcessor,
-    consumesAllInputs: true,
-  });
+  return useToolOperation<AutomateParameters>(
+    defineCustomTool({
+      operationType: "automate",
+      customProcessor,
+      consumesAllInputs: true,
+    }),
+  );
 }

@@ -8,6 +8,7 @@ import {
   type PrototypeToolRegistry,
 } from "@app/data/toolsTaxonomy";
 import { pdfCommentAgentOperationConfig } from "@app/hooks/tools/pdfCommentAgent/pdfCommentAgentOperationConfig";
+import { asRegistryConfig } from "@app/hooks/tools/shared/toolOperationTypes";
 import PdfCommentAgent from "@app/tools/PdfCommentAgent";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 
@@ -25,7 +26,13 @@ export function usePrototypeToolRegistry(): PrototypeToolRegistry {
     () =>
       ({
         pdfCommentAgent: {
-          icon: <LocalIcon icon="add-comment" width="1.5rem" height="1.5rem" />,
+          icon: (
+            <LocalIcon
+              icon="add-comment-outline-rounded"
+              width="1.5rem"
+              height="1.5rem"
+            />
+          ),
           name: t("home.pdfCommentAgent.title", "Add AI comments"),
           component: PdfCommentAgent,
           description: t(
@@ -36,7 +43,7 @@ export function usePrototypeToolRegistry(): PrototypeToolRegistry {
           subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
           maxFiles: 1,
           endpoints: ["pdf-comment-agent"],
-          operationConfig: pdfCommentAgentOperationConfig,
+          operationConfig: asRegistryConfig(pdfCommentAgentOperationConfig),
           automationSettings: null,
           synonyms: getSynonyms(t, "pdfCommentAgent"),
           versionStatus: "beta",

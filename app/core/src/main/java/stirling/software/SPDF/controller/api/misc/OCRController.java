@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -40,6 +41,11 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -87,13 +93,20 @@ public class OCRController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/ocr-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @ToolIO(
+            produces = ToolFormat.PDF,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "sidecar", matches = "true"),
+                            produces = ToolFormat.ZIP,
+                            arity = ToolArity.SISO))
     @Operation(
             summary = "Process a PDF file with OCR",
             description =
-                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can"
-                            + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
-                            + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
-                            + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition)."
+                            + " Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType,"
+                            + " ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available,"
+                            + " falls back to Tesseract.")
     public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
@@ -427,7 +440,10 @@ public class OCRController {
                             // Save original page without OCR as fallback
                             try (PDDocument pageDoc = new PDDocument()) {
                                 pageDoc.addPage(page);
-                                pageDoc.save(pageOutputPath);
+                                // NO_COMPRESSION: page is copied from another document;
+                                // PDFBox 3.0.7 compressed writer (PDFBOX-6203) drops shared
+                                // resources, corrupting fonts. Revert once on 3.0.8.
+                                pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
                             }
                         }
 
@@ -437,7 +453,10 @@ public class OCRController {
                         // Save original page without OCR
                         try (PDDocument pageDoc = new PDDocument()) {
                             pageDoc.addPage(page);
-                            pageDoc.save(pageOutputPath);
+                            // NO_COMPRESSION: page is copied from another document; PDFBox 3.0.7
+                            // compressed writer (PDFBOX-6203) drops shared resources, corrupting
+                            // fonts on retained text pages. Revert once on 3.0.8.
+                            pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
                             merger.addSource(pageOutputPath);
                         }
                     }

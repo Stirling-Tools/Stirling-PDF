@@ -118,7 +118,7 @@ public class AuditRestController {
 
         // Convert to response format expected by frontend
         List<AuditEventDto> eventDtos =
-                events.getContent().stream().map(this::convertToDto).collect(Collectors.toList());
+                events.getContent().stream().map(this::convertToDto).toList();
 
         AuditEventsResponse response =
                 AuditEventsResponse.builder()
@@ -143,19 +143,12 @@ public class AuditRestController {
             @RequestParam(value = "period", defaultValue = "week") String period) {
 
         // Calculate days based on period
-        int days;
-        switch (period.toLowerCase()) {
-            case "day":
-                days = 1;
-                break;
-            case "month":
-                days = 30;
-                break;
-            case "week":
-            default:
-                days = 7;
-                break;
-        }
+        int days =
+                switch (period.toLowerCase()) {
+                    case "day" -> 1;
+                    case "month" -> 30;
+                    default -> 7;
+                };
 
         // Get events from the specified period
         Instant startDate = Instant.now().minus(java.time.Duration.ofDays(days));
@@ -191,19 +184,13 @@ public class AuditRestController {
         ChartData eventsByTypeChart =
                 ChartData.builder()
                         .labels(new ArrayList<>(eventsByType.keySet()))
-                        .values(
-                                eventsByType.values().stream()
-                                        .map(Long::intValue)
-                                        .collect(Collectors.toList()))
+                        .values(eventsByType.values().stream().map(Long::intValue).toList())
                         .build();
 
         ChartData eventsByUserChart =
                 ChartData.builder()
                         .labels(new ArrayList<>(eventsByUser.keySet()))
-                        .values(
-                                eventsByUser.values().stream()
-                                        .map(Long::intValue)
-                                        .collect(Collectors.toList()))
+                        .values(eventsByUser.values().stream().map(Long::intValue).toList())
                         .build();
 
         // Sort events by day for time series
@@ -211,10 +198,7 @@ public class AuditRestController {
         ChartData eventsOverTimeChart =
                 ChartData.builder()
                         .labels(new ArrayList<>(sortedEventsByDay.keySet()))
-                        .values(
-                                sortedEventsByDay.values().stream()
-                                        .map(Long::intValue)
-                                        .collect(Collectors.toList()))
+                        .values(sortedEventsByDay.values().stream().map(Long::intValue).toList())
                         .build();
 
         AuditChartsData chartsData =
@@ -239,16 +223,14 @@ public class AuditRestController {
 
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes =
-                Arrays.stream(AuditEventType.values())
-                        .map(AuditEventType::name)
-                        .collect(Collectors.toList());
+                Arrays.stream(AuditEventType.values()).map(AuditEventType::name).toList();
 
         // Combine both sources, remove duplicates, and sort
         Set<String> combinedTypes = new HashSet<>();
         combinedTypes.addAll(dbTypes);
         combinedTypes.addAll(enumTypes);
 
-        List<String> result = combinedTypes.stream().sorted().collect(Collectors.toList());
+        List<String> result = combinedTypes.stream().sorted().toList();
 
         return ResponseEntity.ok(result);
     }
@@ -263,11 +245,7 @@ public class AuditRestController {
         // Use the countByPrincipal query to get unique principals
         List<Object[]> principalCounts = auditRepository.countByPrincipal();
 
-        List<String> users =
-                principalCounts.stream()
-                        .map(arr -> (String) arr[0])
-                        .sorted()
-                        .collect(Collectors.toList());
+        List<String> users = principalCounts.stream().map(arr -> (String) arr[0]).sorted().toList();
 
         return ResponseEntity.ok(users);
     }
@@ -284,19 +262,12 @@ public class AuditRestController {
             @RequestParam(value = "period", defaultValue = "week") String period) {
 
         // Calculate days based on period
-        int days;
-        switch (period.toLowerCase()) {
-            case "day":
-                days = 1;
-                break;
-            case "month":
-                days = 30;
-                break;
-            case "week":
-            default:
-                days = 7;
-                break;
-        }
+        int days =
+                switch (period.toLowerCase()) {
+                    case "day" -> 1;
+                    case "month" -> 30;
+                    default -> 7;
+                };
 
         // Get events from the specified period and previous period
         Instant now = Instant.now();
@@ -769,7 +740,7 @@ public class AuditRestController {
                 List<Map<String, Object>> files =
                         (List<Map<String, Object>>) eventData.get("files");
                 if (files != null && !files.isEmpty()) {
-                    Map<String, Object> firstFile = files.get(0);
+                    Map<String, Object> firstFile = files.getFirst();
                     data.put("documentname", String.valueOf(firstFile.getOrDefault("name", "")));
                     data.put("author", String.valueOf(firstFile.getOrDefault("pdfAuthor", "")));
                     data.put("filehash", String.valueOf(firstFile.getOrDefault("fileHash", "")));

@@ -25,6 +25,7 @@ use commands::{
     get_user_info,
     is_first_launch,
     login,
+    proxy_local_pdf_request,
     reset_setup_completion,
     save_auth_token,
     save_refresh_token,
@@ -32,9 +33,16 @@ use commands::{
     set_connection_mode,
     set_as_default_pdf_handler,
     get_desktop_os,
+    get_update_mode,
     print_pdf_file_native,
+    set_update_mode,
     start_backend,
     start_oauth_login,
+    can_install_updates,
+    check_for_update,
+    download_and_install_update,
+    get_app_version,
+    restart_app,
     target_window_label,
     MAIN_WINDOW_LABEL,
 };
@@ -63,9 +71,43 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
     .collect()
 }
 
+// URLs the webview is allowed to show: the bundled app and dev server only.
+// Anything else (file://, https://...) must never replace the app UI.
+fn is_app_url(url: &tauri::Url) -> bool {
+  match url.scheme() {
+    "tauri" | "about" | "blob" | "data" => true,
+    "http" | "https" => matches!(
+      url.host_str(),
+      Some("tauri.localhost") | Some("localhost") | Some("127.0.0.1")
+    ),
+    _ => false,
+  }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
+  // Wayland stacks (blank window, app dying on tool switch). Opt out unless overridden.
+  #[cfg(target_os = "linux")]
+  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+  }
+
   tauri::Builder::default()
+    .plugin(
+      // Dropping a file outside a dropzone makes WebKit navigate the webview to
+      // that file, killing the app UI and its close handler (window becomes
+      // unclosable). Block every off-app navigation at the Rust layer.
+      tauri::plugin::Builder::<tauri::Wry, ()>::new("navigation-guard")
+        .on_navigation(|_webview, url| {
+          let allowed = is_app_url(url);
+          if !allowed {
+            add_log(format!("🚫 Blocked webview navigation to: {}", url));
+          }
+          allowed
+        })
+        .build()
+    )
     .plugin(
       tauri_plugin_log::Builder::new()
         .level(log::LevelFilter::Info)
@@ -79,6 +121,7 @@ pub fn run() {
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_window_state::Builder::default().build())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -169,6 +212,7 @@ pub fn run() {
       is_first_launch,
       reset_setup_completion,
       login,
+      proxy_local_pdf_request,
       save_auth_token,
       get_auth_token,
       clear_auth_token,
@@ -181,6 +225,13 @@ pub fn run() {
       start_oauth_login,
       get_desktop_os,
       print_pdf_file_native,
+      can_install_updates,
+      check_for_update,
+      download_and_install_update,
+      get_app_version,
+      get_update_mode,
+      set_update_mode,
+      restart_app,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
@@ -192,10 +243,20 @@ pub fn run() {
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
         }
-        RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
+        RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
           // Don't cleanup here - let JavaScript handler prevent close if needed
           // Backend cleanup happens in ExitRequested when window actually closes
+          //
+          // Failsafe: if the webview somehow left the app (JS close handler gone,
+          // window would stay open forever), destroy the window directly.
+          if let Some(window) = app_handle.get_webview_window(&label) {
+            let off_app = window.url().map(|u| !is_app_url(&u)).unwrap_or(false);
+            if off_app {
+              add_log(format!("🚨 Webview '{}' is off-app, destroying window directly", label));
+              let _ = window.destroy();
+            }
+          }
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), label, .. } => {
           use tauri::DragDropEvent;
@@ -249,4 +310,40 @@ pub fn run() {
         }
       }
     });
+}
+
+#[cfg(test)]
+mod tests {
+  use super::is_app_url;
+
+  fn allows(raw: &str) -> bool {
+    is_app_url(&tauri::Url::parse(raw).expect("valid url"))
+  }
+
+  #[test]
+  fn allows_bundled_app_and_dev_server() {
+    assert!(allows("tauri://localhost/index.html"));
+    assert!(allows("http://tauri.localhost/"));
+    assert!(allows("http://localhost:5173/"));
+    assert!(allows("http://127.0.0.1:8080/api"));
+    assert!(allows("about:blank"));
+    assert!(allows("blob:http://localhost:5173/abc"));
+    assert!(allows("data:text/html,hi"));
+  }
+
+  #[test]
+  fn blocks_dropped_files() {
+    // The #6872 lockup: webview navigating to a dropped PDF.
+    assert!(!allows("file:///C:/Users/me/report.pdf"));
+    assert!(!allows("file:///home/me/report.pdf"));
+  }
+
+  #[test]
+  fn blocks_remote_origins() {
+    assert!(!allows("https://example.com/"));
+    assert!(!allows("http://evil.test/"));
+    // Look-alike hosts must not slip past the allowlist.
+    assert!(!allows("https://localhost.evil.test/"));
+    assert!(!allows("https://nottauri.localhost.evil.test/"));
+  }
 }

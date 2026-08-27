@@ -99,6 +99,33 @@ class PricingPolicyServiceTest {
     }
 
     @Test
+    void nullTeamId_returnsDefaultPolicyDirectly_noCacheLookup() {
+        PricingPolicy result = service.getEffectivePolicy(null);
+
+        assertThat(result).isEqualTo(defaultPolicy);
+        verify(extensionsRepo, never()).findById(any());
+        // Team-less users go straight to the default — no cache pollution either.
+        assertThat(service.cacheSize()).isZero();
+    }
+
+    @Test
+    void nullTeamIdUncached_returnsDefaultPolicyDirectly() {
+        PricingPolicy result = service.getEffectivePolicyUncached(null);
+
+        assertThat(result).isEqualTo(defaultPolicy);
+        verify(extensionsRepo, never()).findById(any());
+    }
+
+    @Test
+    void nullTeamId_noDefaultExists_throws() {
+        when(policyRepo.findFirstByIsDefaultTrue()).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getEffectivePolicy(null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No default pricing_policy row");
+    }
+
+    @Test
     void secondCallHitsCache_noRepoLookup() {
         when(extensionsRepo.findById(42L)).thenReturn(Optional.empty());
 

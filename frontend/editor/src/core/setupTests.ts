@@ -1,5 +1,12 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import { installFailOnConsole } from "@app/tests/failOnConsole";
+
+// jsdom is missing the same APIs WebKit is, so tests must agree with the
+// browser. Same module `src/index.tsx` installs.
+import "@app/utils/engineShims";
+
+installFailOnConsole();
 
 // Mock localStorage for tests
 class LocalStorageMock implements Storage {
@@ -99,19 +106,19 @@ Object.defineProperty(globalThis, "crypto", {
     subtle: {
       digest: vi
         .fn()
-        .mockImplementation(async (_algorithm: string, _data: any) => {
+        .mockImplementation(async (_algorithm: string, _data: BufferSource) => {
           // Always return the mock hash buffer regardless of input
           return mockHashBuffer.slice();
         }),
     },
-    getRandomValues: vi.fn().mockImplementation((array: any) => {
+    getRandomValues: vi.fn().mockImplementation((array: Uint8Array) => {
       // Mock getRandomValues if needed
       for (let i = 0; i < array.length; i++) {
         array[i] = Math.floor(Math.random() * 256);
       }
       return array;
     }),
-  } as unknown as Crypto,
+  },
   writable: true,
   configurable: true,
 });

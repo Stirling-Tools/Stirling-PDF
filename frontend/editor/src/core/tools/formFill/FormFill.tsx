@@ -1,13 +1,5 @@
 /**
- * FormFill: The tool component that renders in the left ToolPanel
- * when the "Fill Form" tool is selected.
- *
- * Redesigned with:
- * - Mode tabs for future extensibility (Fill / Make / Batch / Modify)
- * - Clean visual hierarchy with proper spacing
- * - Shared FieldInput component (eliminates duplication)
- * - CSS module for theme-consistent styling
- * - Status bar at bottom for contextual info
+ * Form Editor tool panel: fill values, create new fields, or modify existing ones.
  */
 import React, {
   useEffect,
@@ -17,7 +9,6 @@ import React, {
   useMemo,
 } from "react";
 import {
-  Button,
   Text,
   Alert,
   Switch,
@@ -25,15 +16,22 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  ActionIcon,
 } from "@mantine/core";
+import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import {
   useFormFill,
   useAllFormValues,
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
+import { useFieldShortcuts } from "@app/tools/formFill/useFieldShortcuts";
+import { serverMessage } from "@app/tools/formFill/useFormCommit";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
@@ -48,7 +46,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import PostAddIcon from "@mui/icons-material/PostAdd";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
 import BuildCircleIcon from "@mui/icons-material/BuildCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -56,72 +53,35 @@ import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
 } from "@app/tools/formFill/formApi";
+import type { FormMode } from "@app/tools/formFill/types";
+import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
+import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
+import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = "fill" | "make" | "batch" | "modify";
-
 interface ModeTabDef {
   id: FormMode;
   label: string;
   icon: React.ReactNode;
-  ready: boolean;
 }
-
-const _MODE_TABS: ModeTabDef[] = [
-  {
-    id: "fill",
-    label: "Fill",
-    icon: <EditNoteIcon className={styles.modeTabIcon} />,
-    ready: true,
-  },
-  {
-    id: "make",
-    label: "Create",
-    icon: <PostAddIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-  {
-    id: "batch",
-    label: "Batch",
-    icon: <FileCopyIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-  {
-    id: "modify",
-    label: "Modify",
-    icon: <BuildCircleIcon className={styles.modeTabIcon} />,
-    ready: false,
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Coming-soon placeholder for unimplemented tabs
-// ---------------------------------------------------------------------------
-
-// ComingSoonPlaceholder — re-enable when mode tabs are exposed
-// function ComingSoonPlaceholder({ mode }: { mode: ModeTabDef }) {
-//   return (
-//     <div className={styles.comingSoon}>
-//       <DescriptionIcon className={styles.comingSoonIcon} />
-//       <div className={styles.comingSoonTitle}>{mode.label} Forms</div>
-//       <div className={styles.comingSoonDesc}>
-//         This feature is coming soon. Stay tuned!
-//       </div>
-//     </div>
-//   );
-// }
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
 // ---------------------------------------------------------------------------
 
 const FormFill = (_props: BaseToolProps) => {
-  const { selectedTool } = useNavigation();
-  const { selectors, state: fileState } = useFileState();
+  const { t } = useTranslation();
+  const {
+    selectedTool,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    setHasUnsavedChanges,
+  } = useNavigation();
+  const { state: fileState } = useFileState();
 
   const {
     state: formState,
@@ -130,18 +90,43 @@ const FormFill = (_props: BaseToolProps) => {
     setValue,
     setActiveField,
     validateForm,
+    mode,
+    setMode,
+    hasUncommittedChanges,
+    forFileId,
+    commitNewFields,
+    commitModifications,
+    setCreationType,
+    setSelectedField,
+    setPreviewing,
   } = useFormFill();
+
+  const MODE_TABS: ModeTabDef[] = useMemo(
+    () => [
+      {
+        id: "fill",
+        label: t("formFill.mode.fill", "Fill"),
+        icon: <EditNoteIcon className={styles.modeTabIcon} />,
+      },
+      {
+        id: "create",
+        label: t("formFill.mode.create", "Create"),
+        icon: <PostAddIcon className={styles.modeTabIcon} />,
+      },
+      {
+        id: "modify",
+        label: t("formFill.mode.modify", "Modify"),
+        icon: <BuildCircleIcon className={styles.modeTabIcon} />,
+      },
+    ],
+    [t],
+  );
 
   const allValues = useAllFormValues();
   const { validationErrors } = formState;
 
   const { scrollActions } = useViewer();
 
-  // Mode system is temporarily restricted to 'fill' only.
-  // Other modes (make, batch, modify) are defined above but not yet exposed in the UI.
-  // When ready, uncomment the SegmentedControl and mode state below.
-  // const [mode, setMode] = useState<FormMode>('fill');
-  const mode: FormMode = "fill";
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -172,10 +157,51 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [allValues]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
+  useFieldShortcuts();
+
+  // A document with nothing to fill lands on Create: Fill would show an empty panel and leave
+  // the user hunting for the tab that does what they came for. Decided once per document, and
+  // only after the field list has settled - fields arrive a beat after the fetch reports done,
+  // so deciding immediately sends a form that does have fields to the wrong tab.
+  const autoModeFileRef = useRef<string | null>(null);
+  const fieldCountRef = useRef(0);
+  fieldCountRef.current = formState.fields.length;
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  useEffect(() => {
+    if (formState.loading || !forFileId) return undefined;
+    if (autoModeFileRef.current === forFileId) return undefined;
+    const settle = window.setTimeout(() => {
+      autoModeFileRef.current = forFileId;
+      if (fieldCountRef.current === 0 && modeRef.current === "fill") {
+        setMode("create");
+      }
+    }, 300);
+    return () => window.clearTimeout(settle);
+  }, [formState.loading, formState.fields.length, forFileId, setMode]);
+
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
 
-  const activeFiles = selectors.getFiles();
+  // Fields drawn or edited but never applied are lost on navigation, so the app's existing
+  // leave-warning needs to hear about them the way other tools report theirs.
+  const hasUncommittedRef = useRef(false);
+  hasUncommittedRef.current = hasUncommittedChanges;
+  useEffect(() => {
+    registerUnsavedChangesChecker(
+      () => hasUncommittedRef.current || isDirtyRef.current,
+    );
+    return () => unregisterUnsavedChangesChecker();
+  }, [registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+
+  // requestNavigation gates on this flag rather than on the checker above.
+  useEffect(() => {
+    setHasUnsavedChanges(hasUncommittedChanges || formState.isDirty);
+  }, [hasUncommittedChanges, formState.isDirty, setHasUnsavedChanges]);
+
+  // Subscribing read: getFiles() during render doesn't re-run when the workbench
+  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
+  const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
@@ -201,7 +227,7 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] CSV extraction failed:", err);
-      setSaveError("Failed to extract CSV");
+      setSaveError(t("formFill.extractCsvError", "Failed to extract CSV"));
     } finally {
       setExtracting(false);
     }
@@ -220,13 +246,22 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] XLSX extraction failed:", err);
-      setSaveError("Failed to extract XLSX");
+      setSaveError(t("formFill.extractXlsxError", "Failed to extract XLSX"));
     } finally {
       setExtracting(false);
     }
   }, [currentFile, allValues]);
 
   const isActive = selectedTool === "formFill";
+
+  // Arming lives in an app-level provider, so leaving the tool would otherwise keep the page
+  // in crosshair mode and stage fields for whatever the user opened next.
+  useEffect(() => {
+    if (isActive) return;
+    setCreationType(null);
+    setSelectedField(null);
+    setPreviewing(false);
+  }, [isActive, setCreationType, setSelectedField, setPreviewing]);
 
   useEffect(() => {
     if (formState.activeFieldName && activeFieldRef.current) {
@@ -243,7 +278,9 @@ const FormFill = (_props: BaseToolProps) => {
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
     if (!validateForm()) {
-      setSaveError("Please fill in all required fields");
+      setSaveError(
+        t("formFill.requiredFieldsError", "Please fill in all required fields"),
+      );
       return;
     }
 
@@ -257,21 +294,20 @@ const FormFill = (_props: BaseToolProps) => {
       // Track the flatten value at save so toggling it later re-enables Save
       setLastSavedFlatten(flatten);
 
-      // Dispatch to the viewer's handleFormApply via custom event.
-      // This ensures the viewer tracks the new file ID, preserves
-      // scroll position and rotation — instead of our own consumeFiles
-      // call which would lose the viewer's file tracking context.
-      const event = new CustomEvent("formfill:apply", {
-        detail: { blob: filledBlob },
-      });
-      window.dispatchEvent(event);
-    } catch (err: any) {
+      // Route through the viewer's handleFormApply: a direct consumeFiles call
+      // loses the viewer's file tracking, and with it scroll position and rotation.
+      dispatchFormApply(filledBlob);
+    } catch (err) {
+      const status = isAxiosError(err) ? err.response?.status : undefined;
       const message =
-        err?.response?.status === 413
+        status === 413
           ? "File too large. Try reducing the PDF size first."
-          : err?.response?.status === 400
-            ? "Invalid form data. Please check all fields."
-            : err?.message || "Failed to save filled form";
+          : (await serverMessage(err)) ||
+            (status === 400
+              ? "Invalid form data. Please check all fields."
+              : undefined) ||
+            (err instanceof Error ? err.message : undefined) ||
+            "Failed to save filled form";
       setSaveError(message);
       console.error("[FormFill] Save failed:", err);
     } finally {
@@ -279,6 +315,64 @@ const FormFill = (_props: BaseToolProps) => {
       setSaving(false);
     }
   }, [currentFile, submitForm, flatten, validateForm]);
+
+  const applyCurrentMode = useCallback(async () => {
+    if (!currentFile) return;
+    if (mode === "create") {
+      dispatchFormApply(await commitNewFields(currentFile));
+      return;
+    }
+    if (mode === "modify") {
+      dispatchFormApply(await commitModifications(currentFile));
+      return;
+    }
+    await handleSave();
+  }, [mode, currentFile, commitNewFields, commitModifications, handleSave]);
+
+  // Switching tabs throws away that tab's working state, so it asks first. Owned here rather
+  // than through the app-wide warning handlers, which hold a single registration app-wide.
+  const [pendingMode, setPendingMode] = useState<FormMode | null>(null);
+  const [switching, setSwitching] = useState(false);
+
+  const requestMode = useCallback(
+    (next: FormMode) => {
+      if (next === mode) return;
+      if (hasUncommittedChanges) {
+        setPendingMode(next);
+        return;
+      }
+      setMode(next);
+    },
+    [mode, hasUncommittedChanges, setMode],
+  );
+
+  const discardAndSwitch = useCallback(() => {
+    const next = pendingMode;
+    setPendingMode(null);
+    if (next) setMode(next);
+  }, [pendingMode, setMode]);
+
+  const applyAndSwitch = useCallback(async () => {
+    const next = pendingMode;
+    setSwitching(true);
+    try {
+      await applyCurrentMode();
+      setPendingMode(null);
+      if (next) setMode(next);
+    } catch (err) {
+      // Swallowing this left the dialog open with no explanation when the backend refused a
+      // name, so the reason it gives has to reach the user.
+      setSaveError(
+        (await serverMessage(err)) ||
+          (err instanceof Error ? err.message : null) ||
+          t("formFill.applyFailed", "Could not apply the changes"),
+      );
+      setPendingMode(null);
+      console.error("[FormFill] Could not apply before switching tabs:", err);
+    } finally {
+      setSwitching(false);
+    }
+  }, [pendingMode, applyCurrentMode, setMode, t]);
 
   // Keyboard shortcut: Ctrl+S to save
   const flattenChangedRef = useRef(flattenChanged);
@@ -382,35 +476,44 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
-      {/* ---- Mode selection (commented out until additional modes are implemented) ----
+      <UnsavedChangesDialog
+        opened={pendingMode !== null}
+        saving={switching}
+        onKeepWorking={() => setPendingMode(null)}
+        onDiscard={discardAndSwitch}
+        onSave={applyAndSwitch}
+      />
+
+      {/* ---- Mode selection ---- */}
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
-          onChange={(val) => setMode(val as FormMode)}
-          data={MODE_TABS.map((tab) => ({
+          onChange={(val) => requestMode(val as FormMode)}
+          options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
-              <div className={styles.segmentedLabel}>
+              // title carries the full label for locales where it has to ellipsise.
+              <div className={styles.segmentedLabel} title={tab.label}>
                 {tab.icon}
-                <span>{tab.label}</span>
+                <span className={styles.segmentedInnerLabel}>{tab.label}</span>
               </div>
             ),
           }))}
           fullWidth
-          radius="xs"
           size="xs"
-          classNames={{
-            root: styles.segmentedRoot,
-            indicator: styles.segmentedIndicator,
-            control: styles.segmentedControl,
-            label: styles.segmentedInnerLabel,
-          }}
+          ariaLabel={t("formFill.mode.label", "Form editor mode")}
         />
       </div>
-      ---- */}
 
-      {/* ---- Coming-soon for non-ready tabs (hidden while mode tabs are disabled) ---- */}
-      {/* !currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} /> */}
+      {/* ---- Create mode ---- */}
+      {mode === "create" && (
+        <FormFieldCreatePanel currentFile={currentFile as File | Blob | null} />
+      )}
+
+      {/* ---- Modify mode ---- */}
+      {mode === "modify" && (
+        <FormFieldModifyPanel currentFile={currentFile as File | Blob | null} />
+      )}
 
       {/* ---- Fill Form content ---- */}
       {mode === "fill" && (
@@ -429,7 +532,7 @@ const FormFill = (_props: BaseToolProps) => {
                 >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
-                    Analysing form fields...
+                    {t("formFill.analyzingFields", "Analysing form fields...")}
                   </Text>
                 </div>
                 <Skeleton height={48} radius="sm" />
@@ -457,10 +560,12 @@ const FormFill = (_props: BaseToolProps) => {
                 <div>
                   <div className={styles.progressRow}>
                     <span className={styles.progressLabel}>
-                      {filledCount} / {fillableCount} filled
+                      {filledCount} / {fillableCount}{" "}
+                      {t("formFill.filled", "filled")}
                       {requiredCount > 0 && (
                         <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
-                          ({filledRequiredCount}/{requiredCount} req.)
+                          ({filledRequiredCount}/{requiredCount}{" "}
+                          {t("formFill.requiredAbbreviation", "req")}.)
                         </span>
                       )}
                     </span>
@@ -488,7 +593,10 @@ const FormFill = (_props: BaseToolProps) => {
 
                 {/* Flatten toggle */}
                 <Switch
-                  label="Flatten after filling"
+                  label={t(
+                    "formFill.flattenAfterFilling",
+                    "Flatten after filling",
+                  )}
                   checked={flatten}
                   onChange={(e) => setFlatten(e.currentTarget.checked)}
                   size="xs"
@@ -502,20 +610,27 @@ const FormFill = (_props: BaseToolProps) => {
                   <div className={styles.primaryActions}>
                     <Button
                       leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                      size="xs"
+                      size="sm"
                       onClick={handleSave}
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
                     >
-                      Save
+                      {t("formFill.save", "Save")}
                     </Button>
 
-                    <Tooltip label="Re-scan fields" withArrow position="bottom">
+                    <Tooltip
+                      label={t("formFill.rescanFields", "Re-scan fields")}
+                      withArrow
+                      position="bottom"
+                    >
                       <ActionIcon
-                        variant="light"
+                        variant="secondary"
                         size="md"
                         onClick={handleRefresh}
-                        aria-label="Re-scan form fields"
+                        aria-label={t(
+                          "formFill.rescanFormFields",
+                          "Re-scan form fields",
+                        )}
                       >
                         <RefreshIcon sx={{ fontSize: 16 }} />
                       </ActionIcon>
@@ -524,34 +639,31 @@ const FormFill = (_props: BaseToolProps) => {
 
                   <div className={styles.secondaryActions}>
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractJson}
-                      size="xs"
+                      size="sm"
                     >
                       JSON
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractCsv}
-                      size="xs"
+                      size="sm"
                     >
                       CSV
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractXlsx}
-                      size="xs"
+                      size="sm"
                     >
                       XLSX
                     </Button>
@@ -574,7 +686,10 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.emptyState}>
                   <DescriptionIcon className={styles.emptyStateIcon} />
                   <span className={styles.emptyStateText}>
-                    No fillable form fields found in this PDF.
+                    {t(
+                      "formFill.noFields",
+                      "No fillable form fields found in this PDF.",
+                    )}
                   </span>
                 </div>
               )}
@@ -591,7 +706,7 @@ const FormFill = (_props: BaseToolProps) => {
                       style={i === 0 ? { marginTop: 0 } : undefined}
                     >
                       <Text className={styles.pageDividerLabel}>
-                        Page {pageIdx + 1}
+                        {t("page", "Page")} {pageIdx + 1}
                       </Text>
                     </div>
 
@@ -629,7 +744,9 @@ const FormFill = (_props: BaseToolProps) => {
                               {field.label || field.name}
                             </span>
                             {field.required && (
-                              <span className={styles.fieldRequired}>req</span>
+                              <span className={styles.fieldRequired}>
+                                {t("formFill.requiredAbbreviation", "req")}
+                              </span>
                             )}
                           </div>
 
@@ -671,10 +788,10 @@ const FormFill = (_props: BaseToolProps) => {
                   <span className={styles.unsavedDot} />
                 )}
                 {formState.isDirty || flattenChanged
-                  ? "Unsaved changes"
-                  : "All saved"}
+                  ? t("formFill.unsavedChanges", "Unsaved changes")
+                  : t("formFill.allSaved", "All saved")}
               </span>
-              <span>Ctrl+S to save</span>
+              <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
             </div>
           )}
         </>
