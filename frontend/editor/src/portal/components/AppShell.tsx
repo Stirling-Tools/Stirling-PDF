@@ -86,11 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="portal-shell">
       {/* The same frame the editor uses. */}
       {/* Being here is proof the processor is available. */}
-      <QuickNavHostBridge
-        portalAccess
-        onOpenSettings={() => openSettings()}
-        onOpenTeams={() => openSettings("teams")}
-      />
+      <QuickNavHostBridge portalAccess onOpenSettings={() => openSettings()} />
       <div className="workspace-frame">
         <Sidebar />
       </div>

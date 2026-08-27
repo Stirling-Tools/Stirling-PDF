@@ -28,14 +28,12 @@ export interface QuickNavHostData {
   notificationsOpen: boolean;
   /** Translated; absent means usable. Unknown is drawn as usable, never dimmed. */
   toolReasons: QuickNavToolReasons;
-  /** Flags, not the handlers: drawing has to react, and a ref write renders nothing. */
+  /** A flag, not the handler: drawing has to react, and a ref write renders nothing. */
   hasSettings: boolean;
-  hasTeams: boolean;
 }
 
 export interface QuickNavHostActions {
   openSettings?: () => void;
-  openTeams?: () => void;
   /** The editor reads its tool from the URL only on mount, so navigating selects nothing. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
@@ -65,7 +63,6 @@ const EMPTY_DATA: QuickNavHostData = {
   readerMode: false,
   notificationsOpen: false,
   hasSettings: false,
-  hasTeams: false,
 };
 
 function sameReasons(
@@ -98,7 +95,6 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.readerMode === prev.readerMode &&
         merged.notificationsOpen === prev.notificationsOpen &&
         merged.hasSettings === prev.hasSettings &&
-        merged.hasTeams === prev.hasTeams &&
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
@@ -154,7 +150,6 @@ export function useRegisterQuickNavHost(
     toolReasons,
   } = data;
   const hasSettings = Boolean(actions.openSettings);
-  const hasTeams = Boolean(actions.openTeams);
 
   useEffect(() => {
     host?.setData({
@@ -167,7 +162,6 @@ export function useRegisterQuickNavHost(
       // Omitted when unknown, so setData keeps the last answer through a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
-      hasTeams,
     });
     // By field: identity is rebuilt every render.
   }, [
@@ -180,7 +174,6 @@ export function useRegisterQuickNavHost(
     notificationsOpen,
     toolReasons,
     hasSettings,
-    hasTeams,
   ]);
 
   const setActions = host?.setActions;

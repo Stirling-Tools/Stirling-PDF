@@ -14,7 +14,6 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
   onRead({
     appMounted: host?.appMounted,
     chromeless: host?.chromeless,
-    hasTeams: host?.hasTeams,
     identity: host?.identity,
     openSettings: Boolean(host?.actions.current?.openSettings),
   });
@@ -24,7 +23,7 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
 function App() {
   useRegisterQuickNavHost(
     { identity: { displayName: "Ada", profilePictureUrl: null } },
-    { openSettings: () => {}, openTeams: () => {} },
+    { openSettings: () => {} },
   );
   return null;
 }
@@ -73,7 +72,6 @@ describe("QuickNavHostContext", () => {
       </QuickNavHostProvider>,
     );
     expect(after.appMounted).toBe(true);
-    expect(after.hasTeams).toBe(true);
     expect(after.openSettings).toBe(false);
   });
 

@@ -527,7 +527,6 @@ export default function HomePage() {
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
         onOpenSettings={() => setConfigModalOpen(true)}
-        onOpenTeams={otherApp ? () => navigate("/settings/teams") : undefined}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}

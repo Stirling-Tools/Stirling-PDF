@@ -19,8 +19,6 @@ export interface QuickNavHostBridgeProps {
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
   onOpenSettings: () => void;
-  /** Omitted where settings has no teams section, as in core. */
-  onOpenTeams?: () => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
@@ -38,7 +36,6 @@ export function QuickNavHostBridge({
   readerMode = false,
   onSetReaderMode,
   onOpenSettings,
-  onOpenTeams,
   requestNavigation,
   onSelectTool,
   onGoToDefaultState,
@@ -72,7 +69,6 @@ export function QuickNavHostBridge({
     },
     {
       openSettings: onOpenSettings,
-      openTeams: onOpenTeams,
       requestNavigation,
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,

@@ -161,8 +161,7 @@ export function QuickNavRailHost() {
   ];
 
   // Read at click time, so it's always the mounted app's.
-  const call = (name: "openSettings" | "openTeams") => () =>
-    host?.actions.current?.[name]?.();
+  const openSettings = () => host?.actions.current?.openSettings?.();
 
   // A route that isn't the app hides the bar - see useSuppressQuickNavRail.
   if (!appMounted || host?.chromeless) return null;
@@ -173,8 +172,12 @@ export function QuickNavRailHost() {
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       // Between apps there is briefly no handler; the control stays put.
-      onOpenSettings={host?.hasSettings ? call("openSettings") : undefined}
-      onOpenTeams={host?.hasTeams ? call("openTeams") : undefined}
+      onOpenSettings={host?.hasSettings ? openSettings : undefined}
+      onInvite={
+        HAS_PORTAL && host?.portalAccess
+          ? () => go(`${PORTAL_BASENAME}/users`)
+          : undefined
+      }
       onToggleNotifications={() =>
         host?.actions.current?.toggleNotifications?.()
       }

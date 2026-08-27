@@ -23,8 +23,8 @@ export interface QuickNavRailContainerProps extends Omit<
 > {
   /** The sidebars render no account row of their own (accountHoisted, showAccount). */
   onOpenSettings?: () => void;
-  /** Omitted by builds whose settings has no teams section (core, desktop). */
-  onOpenTeams?: () => void;
+  /** Omitted in builds with no processor to invite anyone into. */
+  onInvite?: () => void;
   onToggleNotifications?: () => void;
   notificationsOpen?: boolean;
   identity?: QuickNavIdentity | null;
@@ -34,7 +34,7 @@ export interface QuickNavRailContainerProps extends Omit<
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
   onOpenSettings,
-  onOpenTeams,
+  onInvite,
   onToggleNotifications,
   notificationsOpen,
   identity = null,
@@ -55,17 +55,17 @@ export function QuickNavRailContainer({
                 onToggle={onToggleNotifications}
                 open={notificationsOpen}
               />
-              {onOpenTeams && (
+              {onInvite && (
                 <RailButton
-                  label={t("settings.workspace.teams", "Teams")}
+                  label={t("quickNav.invite", "Invite")}
                   icon={
                     <LocalIcon
-                      icon="groups-outline-rounded"
+                      icon="person-add-outline-rounded"
                       width="1.125rem"
                       height="1.125rem"
                     />
                   }
-                  onClick={onOpenTeams}
+                  onClick={onInvite}
                 />
               )}
               {onOpenSettings && (
