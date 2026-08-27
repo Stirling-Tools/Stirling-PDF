@@ -120,11 +120,10 @@
   flex-shrink: 0;
 }
 
-/* ---- App switcher / brand ----
-   Brand slot: top of the column, full size. Switch slot: one --nav-header-h below,
-   at the rail's glyph scale. */
-.quick-nav-apps {
-  position: relative;
+/* ---- Brand ----
+   Pinned at the top, one header row tall so it lines up with the sidebar's
+   wordmark beside it. Which app you are in is shown on the entries below. */
+.quick-nav-brand {
   width: 100%;
   height: var(--nav-header-h);
   flex-shrink: 0;
@@ -132,73 +131,41 @@
   margin-bottom: calc(var(--quicknav-item-gap) - var(--quicknav-surface-pad));
 }
 
-.quick-nav-apps:has(.quick-nav-app-mark[data-slot="switch"]) {
-  /* Brand row, gap, switch slot, then the divider's gap. */
-  height: calc(
-    var(--nav-header-h) + var(--quicknav-item-gap) + 2.25rem +
-      var(--quicknav-item-gap)
-  );
-}
-
-.quick-nav-app-mark {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: var(--nav-header-h);
+.quick-nav-brand-button {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
   border: none;
   background: transparent;
   padding: 0;
   cursor: pointer;
-  /* Top-pinned so a slot's position is its translate, not affected by the scale. */
-  transform-origin: center top;
-  transition:
-    transform var(--motion-spring),
-    opacity var(--motion-spring);
 }
 
-.quick-nav-app-mark[data-slot="switch"] {
-  transform: translateY(calc(var(--nav-header-h) + var(--quicknav-item-gap)))
-    scale(0.703);
-}
-
-.quick-nav-app-mark[data-slot="brand"] {
-  transform: translateY(0) scale(1);
-}
-
-.quick-nav-app-mark[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.quick-nav-app-mark[aria-disabled="true"] .sui-brandmark,
-.quick-nav-app-mark[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
-  filter: grayscale(1);
-}
-
-.quick-nav-app-mark:focus-visible {
+.quick-nav-brand-button:focus-visible {
   outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;
   border-radius: var(--radius-md);
 }
 
-/* Apps above, places inside them below. Runs the full width of the column, not the
-   bar: the negative inset cancels the column's inline padding, so keep the two in
-   step. */
-.quick-nav-apps-divider {
+/* The app you are in. A bar on the rail's leading edge rather than a tint or a
+   darker glyph: hover already owns both of those, so a tinted "current" would be
+   indistinguishable from the item under the pointer. */
+.quick-nav-rail-item[aria-current="true"]::before {
+  content: "";
   position: absolute;
-  inset-inline: calc(var(--nav-gutter) / -2);
-  bottom: 0;
-  height: 0;
-  margin: 0;
-  border: 0;
-  border-top: 1px solid var(--c-border-subtle);
+  inset-inline-start: calc(var(--nav-gutter) / -2);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-pill);
+  background: var(--c-text);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .quick-nav-app-mark {
-    transition: none;
-  }
+/* Full strength, so the pair reads as "here" and "there" at a glance. The bar
+   carries the meaning; this only reinforces it. */
+.quick-nav-rail-item[aria-current="true"] {
+  color: var(--c-text);
 }

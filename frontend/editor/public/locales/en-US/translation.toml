@@ -9366,6 +9366,7 @@ files = "Files"
 
 [quickNav]
 editor = "Editor"
+home = "Stirling"
 landmark = "Quick navigation"
 noProcessorAccess = "Ask an admin for processor access"
 notifications = "Notifications"

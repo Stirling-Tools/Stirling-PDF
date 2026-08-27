@@ -31,6 +31,13 @@ export function QuickNavRailHost() {
 
   const inPortal = pathname.startsWith(PORTAL_BASENAME);
 
+  // Only the app knows its own default state.
+  const returnHome = () => {
+    const reset = host?.actions.current?.goToDefaultState;
+    if (reset) reset();
+    else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
+  };
+
   // Guarded where the app offered a guard, so leaving mid-edit still prompts.
   const go = (to: string) => {
     const guard = host?.actions.current?.requestNavigation;
@@ -49,6 +56,48 @@ export function QuickNavRailHost() {
     const reason = host?.toolReasons?.[id];
     return { disabled: Boolean(reason), reason };
   };
+
+  // Chip and pen, in the rail's own icon style: the app you are in carries an edge
+  // bar rather than being inferred from a brand mark that swapped places.
+  const apps: QuickNavEntry[] = [
+    {
+      id: "processor",
+      label: t("quickNav.processor", "Processor"),
+      icon: (
+        <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
+      ),
+      current: inPortal,
+      disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+      reason:
+        HAS_PORTAL && !inPortal && !host?.portalAccess
+          ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
+          : undefined,
+      onClick: () => {
+        if (inPortal) {
+          returnHome();
+          return;
+        }
+        saveEditorReturnPath(pathname + search);
+        go(PORTAL_BASENAME);
+      },
+    },
+    {
+      id: "editor",
+      label: t("quickNav.editor", "Editor"),
+      icon: (
+        <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
+      ),
+      current: !inPortal,
+      onClick: () => {
+        if (!inPortal) {
+          returnHome();
+          return;
+        }
+        // Back to where you left the editor, not its front door.
+        navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
+      },
+    },
+  ];
 
   const within: QuickNavEntry[] = [
     {
@@ -112,37 +161,8 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[within]}
-      appSwitch={{
-        currentApp: inPortal ? "processor" : "editor",
-        otherApp: HAS_PORTAL
-          ? inPortal
-            ? {
-                // Back to where you left the editor, not its front door.
-                onOpen: () =>
-                  navigate(takeEditorReturnPath() ?? EDITOR_BASENAME),
-              }
-            : {
-                disabled: !host?.portalAccess,
-                reason: !host?.portalAccess
-                  ? t(
-                      "quickNav.noProcessorAccess",
-                      "Ask an admin for processor access",
-                    )
-                  : undefined,
-                onOpen: () => {
-                  saveEditorReturnPath(pathname + search);
-                  go(PORTAL_BASENAME);
-                },
-              }
-          : undefined,
-        // Only the app knows its own default state.
-        onReturnHome: () => {
-          const reset = host?.actions.current?.goToDefaultState;
-          if (reset) reset();
-          else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
-        },
-      }}
+      groups={HAS_PORTAL ? [apps, within] : [within]}
+      onReturnHome={returnHome}
       identity={host?.identity ?? null}
       // Between apps there is briefly no handler; the control stays put.
       onOpenSettings={host?.hasSettings ? call("openSettings") : undefined}

@@ -9,6 +9,9 @@ export interface QuickNavEntry {
   id: string;
   label: string;
   icon: ReactNode;
+  /** For the app you are in. Marked with an edge bar, not a tint: the rail's
+   *  hover already owns tone and background. */
+  current?: boolean;
   /** Only for a real toggle: nothing here is a view you occupy. */
   pressed?: boolean;
   /** Inert, with `reason` as the tooltip. Slots must not vanish as permissions resolve. */
@@ -42,6 +45,7 @@ export function RailButton({
   reason,
   badge,
   badgeTone = "danger",
+  current,
   expanded,
   controls,
   onClick,
@@ -56,6 +60,7 @@ export function RailButton({
         type="button"
         className="quick-nav-rail-item"
         aria-pressed={pressed}
+        aria-current={current ? "true" : undefined}
         aria-label={label}
         aria-haspopup={expanded === undefined ? undefined : "dialog"}
         aria-expanded={expanded}

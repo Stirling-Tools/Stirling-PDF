@@ -1,10 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import {
-  QuickNavAppSwitch,
-  type QuickNavAppSwitchProps,
-} from "@app/components/shared/quickNav/QuickNavAppSwitch";
+import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
 import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import {
   QuickNavRailBase,
@@ -31,7 +28,7 @@ export interface QuickNavRailContainerProps extends Omit<
   onToggleNotifications?: () => void;
   notificationsOpen?: boolean;
   identity?: QuickNavIdentity | null;
-  appSwitch: QuickNavAppSwitchProps;
+  onReturnHome: () => void;
 }
 
 /** The fixed-width column the rail sits in. */
@@ -41,15 +38,13 @@ export function QuickNavRailContainer({
   onToggleNotifications,
   notificationsOpen,
   identity = null,
-  appSwitch,
+  onReturnHome,
   ...railProps
 }: QuickNavRailContainerProps) {
   const { t } = useTranslation();
   return (
     <div className="quick-nav-rail-container">
-      {/* No fixed row: with two apps the block is taller than one, and centring
-          it drops the mark out of line with the sidebar's wordmark. */}
-      <QuickNavAppSwitch {...appSwitch} />
+      <QuickNavBrand onReturnHome={onReturnHome} />
       <NavSurface className="quick-nav-rail-surface">
         <QuickNavRailBase
           {...railProps}
