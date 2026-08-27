@@ -16,7 +16,7 @@ const ENDPOINT_ENTRIES = Object.keys(
   ENTRY_ENDPOINTS,
 ) as (keyof typeof ENTRY_ENDPOINTS)[];
 
-/** Shared signing is a whole feature, not a removable endpoint, hence its own cause. */
+/** Shared signing is a feature toggle rather than an endpoint, so it has its own cause. */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 type Cause = EndpointCause | "groupSigningOff";
 type Causes = Partial<Record<ToolId, Cause>>;
@@ -74,9 +74,8 @@ function causesFor(
 }
 
 /**
- * Why a rail entry can't be used. Null means no answer yet, unlike an empty map
- * ("asked, nothing wrong"); the last answer is held through a re-fetch. Read here,
- * not handed down, so the two apps can't disagree.
+ * Why a rail entry can't be used. Null means no answer yet; an empty map means nothing
+ * is wrong. The last answer is held through a re-fetch.
  */
 export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { t } = useTranslation();
@@ -91,7 +90,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const groupSigningEnabled = useGroupSigningEnabled();
 
   const live = useMemo(() => {
-    // A half answer would light up whatever it can't see yet.
+    // A half answer would dim entries it can't see yet.
     if (loading || configLoading) return null;
     const causes = causesFor(endpointStatus, endpointDetails);
     if (!groupSigningEnabled) causes.sharedSign = "groupSigningOff";
@@ -126,7 +125,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
         continue;
       }
       if (!cause) continue;
-      // Colon removed: these labels sit in front of a tool name.
+      // These labels normally sit in front of a tool name, hence the trailing colon.
       const { key, fallback } = getDisabledLabel(cause);
       reasons[entry] = t(key, fallback).replace(/:\s*$/, "");
     }

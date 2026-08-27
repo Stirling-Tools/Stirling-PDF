@@ -97,10 +97,7 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
-  /**
-   * The quick nav rail owns the account control, so the footer drops its account
-   * row and keeps the rest (credits, plan, app switch).
-   */
+  /** The quick nav rail owns the account control, so the footer drops its own row. */
   accountHoisted?: boolean;
   /** Accessible name override for the collapse toggle. */
   toggleAriaLabel?: string;
@@ -1361,8 +1358,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — the shared footer. Switching apps and opening settings both
-            belong to the quick nav rail, so what is left here is the wallet. */}
+        {/* Box 3 — the shared footer: credits, plan, and the account row unless hoisted. */}
         <NavFooter
           className="file-sidebar-footer-box"
           displayName={displayName}

@@ -10,10 +10,7 @@ export interface SidebarHeaderProps {
   className?: string;
 }
 
-/**
- * The wordmark plus the collapse toggle. The mark itself is at the top of the rail
- * beside it, so the brand reads across the two columns as one lockup.
- */
+/** The wordmark and the collapse toggle; the brand mark sits in the rail beside it. */
 export function SidebarHeader({
   collapsed,
   onToggleCollapse,

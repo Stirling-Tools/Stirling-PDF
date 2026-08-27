@@ -117,7 +117,7 @@ export default function WorkbenchBar({
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
   const isMobile = useIsMobile();
-  // The width where the rail, which carries the bell, has hidden itself.
+  // Below this width the rail, and the bell it carries, is hidden.
   const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 

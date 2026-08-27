@@ -1,11 +1,8 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  /* One solid panel in the surface colour, not a canvas holding floating cards:
-     the sections inside it flatten (see below) so the sidebar reads as a single
-     piece of chrome. A rule on the workbench side only - the same one the quick
-     nav rail and the top bar draw - so the chrome frames the document rather than
-     boxing each panel. */
+  /* One solid panel, with a rule on the workbench side only, so the chrome frames the
+     document rather than boxing each panel. */
   background-color: var(--c-surface);
   border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
@@ -43,9 +40,9 @@
   gap: 0.5rem;
 }
 
-/* The sections are NavSurfaces so they can stand alone elsewhere; inside the
-   sidebar they're part of one panel, so the card treatment comes off. Two classes
-   deep to beat .sui-nav-surface rather than depend on stylesheet order. */
+/* The sections are NavSurfaces for use on their own elsewhere; inside the sidebar
+   they are one panel, so the card treatment comes off. Two classes deep to beat
+   .sui-nav-surface rather than depend on stylesheet order. */
 .file-sidebar .sui-nav-surface {
   background: transparent;
   border: 0;
@@ -66,8 +63,7 @@
   flex-shrink: 0;
 }
 
-/* Collapsed the row holds only the toggle, so centre it in the rail rather than
-   pushing it to a trailing edge that is no longer there. */
+/* Collapsed the row holds only the toggle, so centre it. */
 .file-sidebar[data-collapsed="true"] .file-sidebar-header {
   justify-content: center;
   padding: 0;

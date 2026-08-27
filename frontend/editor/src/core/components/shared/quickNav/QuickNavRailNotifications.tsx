@@ -30,8 +30,8 @@ function MountedRailNotifications({
   const { unreadCount } = useNotifications();
 
   return (
-    // Read by the panel's outside-click handler. On a wrapper: RailButton takes a
-    // fixed prop set.
+    // Read by the panel's outside-click handler; on a wrapper, as RailButton's
+    // prop set is fixed.
     <span data-notifications-trigger>
       <RailButton
         label={t("quickNav.notifications", "Notifications")}

@@ -2,9 +2,8 @@
   width: var(--sidebar-w);
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
-  /* Matches the editor's sidebar: one solid panel in the surface colour, with the
-     sections inside it flattened rather than drawn as cards, and the same rule on
-     the content side. */
+  /* Matches the editor's sidebar: one solid panel, sections flattened rather than
+     drawn as cards, and a rule on the content side. */
   background: var(--c-surface);
   border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
@@ -34,8 +33,8 @@
 .portal-sidebar__close {
   display: none;
   flex-shrink: 0;
-  /* Pushed to the trailing edge: it is the only control in this row on mobile,
-     since collapsing is hidden at that width. */
+  /* Trailing edge: on mobile this is the row's only control, collapsing being
+     hidden at that width. */
   margin-left: auto;
 }
 
@@ -83,13 +82,12 @@
 .portal-sidebar[data-collapsed] {
   width: var(--sidebar-collapsed-w);
 }
-/* No inline padding here either, for the same reason as above: the selected row
-   runs the full width of the rail. */
+/* Flush, like the nav: the selected row runs the full width of the rail. */
 .portal-sidebar[data-collapsed] .portal-sidebar__nav {
   padding-inline: 0;
 }
-/* Stretch, not centre: centring shrinks the group to its content and a row can
-   then never fill the rail. The row centres its own glyph. */
+/* Stretch, not centre: a centred group shrinks to its content, so a row could never
+   fill the rail. */
 .portal-sidebar[data-collapsed] .portal-sidebar__section {
   padding-inline: 0;
   align-items: stretch;
@@ -109,8 +107,7 @@
   margin-inline: 0;
   padding-inline: 0;
   width: 100%;
-  /* A square target like the rail's, so it takes the rail's radius - NavItem's own
-     is tuned for a full-width row, where it reads as a pill. */
+  /* A square target, so it takes the rail's radius rather than NavItem's pill. */
   border-radius: var(--radius-md);
 }
 .portal-sidebar[data-collapsed] .portal-sidebar__footer {
@@ -129,10 +126,9 @@
   flex: 0 1 auto;
   overflow-y: auto;
   overflow-x: clip;
-  /* Built like the quick nav rail: nothing between this and a row carries an inline
-     inset, so a row is full width by construction and its highlight needs no bleed
-     - which is what the clip above used to cut short. The inset lives on the rows
-     and the section labels, the only things that need one. */
+  /* Nothing between this and a row carries an inline inset, so a row is full width by
+     construction and its highlight needs no bleed past the clip above. The inset
+     lives on the rows and the section labels instead. */
   padding: var(--nav-gutter) 0;
   display: flex;
   flex-direction: column;
@@ -144,29 +140,13 @@
   padding-inline: 1.75rem;
 }
 
-/* The selected view, marked the way the quick nav rail marks the current app: a
-   solid block with the label and icon knocked out, rather than an accent tint and
-   an accent edge bar. Keeps one language for "where you are" across the chrome. */
+/* The selected view, marked as the quick nav rail marks the app you are in: a solid
+   block with the label and icon knocked out. One language for "where you are". */
 .portal-sidebar .sui-navitem.is-active,
 .portal-sidebar .sui-navitem.is-active:hover {
-  background: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 60%, var(--c-surface));
   color: var(--c-surface);
   border-radius: 0;
-}
-
-/* Collapsed the rail is already flush, so the row fills it as it stands. */
-/* Dark grounds sit close to full-strength ink, where that block reads as a hole
-   rather than a selection, so it steps back to the muted tone - as the rail does. */
-[data-theme="dark"] .portal-sidebar .sui-navitem.is-active,
-[data-theme="dark"] .portal-sidebar .sui-navitem.is-active:hover,
-html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active,
-html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
-[data-mantine-color-scheme="dark"] .portal-sidebar .sui-navitem.is-active,
-[data-mantine-color-scheme="dark"]
-  .portal-sidebar
-  .sui-navitem.is-active:hover {
-  background: var(--c-text-subtle);
-  color: var(--c-surface);
 }
 
 .portal-sidebar__section {
@@ -186,7 +166,7 @@ html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
 
 .portal-sidebar__section-label {
   margin: 0;
-  /* Its own 0.5, plus what the nav and section gave up. */
+  /* Its own 0.5rem, plus the inset the nav and section no longer add. */
   padding: 0 1.375rem;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -207,10 +187,9 @@ html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
   overflow-x: hidden;
 }
 
-/* Inside the workspace frame the sidebar fills the frame rather than the whole
-   viewport: a 100vh sticky column would overhang it. The frame collapses to a
-   block under the mobile breakpoint, where the drawer's own fixed positioning
-   takes over again. */
+/* Inside the workspace frame the sidebar fills the frame, not the viewport: a 100vh
+   sticky column would overhang it. Below the mobile breakpoint the frame stops laying
+   out and the drawer's own fixed positioning takes over. */
 .workspace-frame .portal-sidebar {
   height: 100%;
   position: static;

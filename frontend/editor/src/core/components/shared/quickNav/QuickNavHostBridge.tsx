@@ -22,14 +22,13 @@ export interface QuickNavHostBridgeProps {
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
-  /** Layered over what this works out itself, for what only the app can see. */
+  /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
 }
 
 /**
- * Publishes to the rail what it can't work out for itself, and owns the notifications
- * panel, whose rows need the workbench contexts that only exist down here. Both apps
- * mount this same one, so the account control can't differ across the switch.
+ * Registers with the rail what only the app can see, and owns the notifications panel,
+ * whose rows need the workbench contexts that exist only down here.
  */
 export function QuickNavHostBridge({
   portalAccess = false,
@@ -44,8 +43,8 @@ export function QuickNavHostBridge({
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const signingBadge = useSigningBadgeCount();
   const notificationsAvailable = useNotificationsAvailable();
-  // Unconditionally: the registry carries the one-shot pickup of a document handed
-  // over from the processor, which would sit unclaimed if built only on open.
+  // Built even with the panel closed: the registry carries a one-shot pickup of a
+  // document handed over from the processor, which would otherwise sit unclaimed.
   const notificationActions = useNotificationActions();
   const endpointReasons = useQuickNavToolReasons();
   const mergedToolReasons = useMemo(() => {

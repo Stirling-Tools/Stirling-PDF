@@ -11,18 +11,16 @@ export const NOTIFICATIONS_PANEL_ID = "quick-nav-notifications-panel";
 
 export interface NotificationPanelProps {
   onClose: () => void;
-  /** Set when a trigger names this panel; see NOTIFICATIONS_PANEL_ID. */
   id?: string;
-  /** Passed in: its one-shot document handover must run whether this is open or not. */
+  /** Passed in: its document handover has to run whether the panel is open or not. */
   registry: ClientActionRegistry;
   style?: React.CSSProperties;
   className?: string;
 }
 
 /**
- * Mounted only while open, so a closed panel never subscribes to the poll, and
- * mounting is what marks them read. Separate from its triggers, which live above the
- * route split while a row's actions need the workbench below it.
+ * Mounted only while open: mounting marks everything read, and a closed panel never
+ * subscribes to the poll. Rendered by the app, since its rows act on the workbench.
  */
 export function NotificationPanel({
   onClose,
@@ -44,7 +42,7 @@ export function NotificationPanel({
   useEffect(() => {
     if (marked.current) return;
     marked.current = true;
-    // Before marking, or there is nothing left to read.
+    // Before marking, or there is nothing left to divide on.
     setFirstSeenId(notifications[unreadCount]?.id ?? null);
     markAllSeen();
   }, [notifications, unreadCount, markAllSeen]);
@@ -55,9 +53,7 @@ export function NotificationPanel({
     : notifications.length;
   const dividedAt = Math.max(0, boundaryIndex);
 
-  // Opening a dialog has to move focus into it, or a screen reader is told nothing
-  // and a keyboard lands on whatever follows the trigger. Focus goes back on close,
-  // unless the user has since moved it somewhere else themselves.
+  // Focus goes back to the opener only if it is still inside the panel on close.
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     panel.current?.focus();
@@ -96,7 +92,6 @@ export function NotificationPanel({
       id={id}
       role="dialog"
       tabIndex={-1}
-      // A dialog with no accessible name is announced as just "dialog".
       aria-labelledby={headingId}
       style={style}
     >
@@ -119,7 +114,7 @@ export function NotificationPanel({
                   />
                 </li>
               )}
-              {/* Only with something on both sides of it. */}
+              {/* Only with unread rows above it. */}
               {index === dividedAt && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText

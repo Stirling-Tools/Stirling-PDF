@@ -9,20 +9,15 @@ export interface QuickNavEntry {
   id: string;
   label: string;
   icon: ReactNode;
-  /** For the app you are in. Marked with an edge bar, not a tint: the rail's
-   *  hover already owns tone and background. */
+  /** The app you are in, drawn with an edge bar. */
   current?: boolean;
-  /** Only for a real toggle: nothing here is a view you occupy. */
+  /** Only for entries that toggle something; use `current` for the app you are in. */
   pressed?: boolean;
-  /** Inert, with `reason` as the tooltip. Slots must not vanish as permissions resolve. */
+  /** Inert, with `reason` as its tooltip. Entries are dimmed, never dropped. */
   disabled?: boolean;
   reason?: string;
   badge?: number;
-  /**
-   * Set when the entry opens a panel: presence adds the popup semantics, the value
-   * says whether it is open. The panel it names is rendered in another tree, so
-   * `controls` is the only link between the two.
-   */
+  /** Popup semantics for an entry whose panel is rendered in another tree. */
   expanded?: boolean;
   controls?: string;
   /** "danger" waits on the user; "warning" is awareness only. */
@@ -36,7 +31,7 @@ export interface QuickNavRailBaseProps {
   footer?: ReactNode;
 }
 
-/** Exported so the footer's entries are this control, not a lookalike. */
+/** Exported so footer entries reuse it rather than a lookalike. */
 export function RailButton({
   label,
   icon,
@@ -65,8 +60,7 @@ export function RailButton({
         aria-haspopup={expanded === undefined ? undefined : "dialog"}
         aria-expanded={expanded}
         aria-controls={expanded === undefined ? undefined : controls}
-        // aria-disabled, not `disabled`: keeps it focusable, so the tooltip
-        // explaining why stays reachable.
+        // aria-disabled, not `disabled`: stays focusable, so its tooltip is reachable.
         aria-disabled={disabled || undefined}
         onClick={disabled ? undefined : onClick}
       >
@@ -85,7 +79,6 @@ export function RailButton({
   );
 }
 
-/** Unavailable entries are disabled with a reason, never dropped. */
 export function QuickNavRailBase({ groups, footer }: QuickNavRailBaseProps) {
   const { t } = useTranslation();
   const populated = groups.filter((entries) => entries.length > 0);

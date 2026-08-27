@@ -117,8 +117,7 @@ describe("QuickNavRailBase — entry state", () => {
     const processor = container.querySelector('[aria-label="processor"]');
     expect(processor).not.toBeNull();
     expect(processor?.getAttribute("aria-disabled")).toBe("true");
-    // aria-disabled, not the disabled attribute: it must stay focusable so its
-    // tooltip can explain why.
+    // aria-disabled, not the disabled attribute: it stays focusable for its tooltip.
     expect(processor?.hasAttribute("disabled")).toBe(false);
   });
 });

@@ -30,10 +30,9 @@
 
   --radius-nav: 0.625rem;
   --nav-gutter: 0.5rem;
-  /* Every minimised rail - the quick nav bar, a collapsed sidebar, the collapsed
-     tool panel - is this wide, so they line up as one column of icons. */
+  /* Every minimised rail is this wide, so they line up as one column of icons. */
   --nav-rail-w: 3rem;
-  /* The left column, read by both apps so they can't drift apart. */
+  /* Header row, so the rail's brand and a sidebar's wordmark line up. */
   --nav-header-h: 3rem;
   --sidebar-w: 16.25rem;
   --sidebar-collapsed-w: var(--nav-rail-w);

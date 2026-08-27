@@ -21,7 +21,7 @@ export interface QuickNavRailContainerProps extends Omit<
   QuickNavRailBaseProps,
   "footer"
 > {
-  /** The sidebars render no account row of their own (accountHoisted, showAccount). */
+  /** The rail owns the account control, so the sidebars drop their own row. */
   onOpenSettings?: () => void;
   /** Omitted in builds with no processor to invite anyone into. */
   onInvite?: () => void;
@@ -49,7 +49,7 @@ export function QuickNavRailContainer({
         <QuickNavRailBase
           {...railProps}
           footer={
-            // Always rendered: gating it on the app's controls dropped the bell too.
+            // Always rendered: the bell lives here too, so gating the footer hides it.
             <div className="quick-nav-rail-footer">
               <QuickNavRailNotifications
                 onToggle={onToggleNotifications}

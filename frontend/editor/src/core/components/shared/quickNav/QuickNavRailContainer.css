@@ -3,7 +3,6 @@
   --quicknav-item-gap: var(--space-3);
   --quicknav-surface-pad: 0.375rem;
 
-  /* The shared rail width: the button fills it bar half a gutter each side. */
   width: var(--nav-rail-w);
   height: 100%;
   flex-shrink: 0;
@@ -13,7 +12,6 @@
   border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
   flex-direction: column;
-  /* Logical: this flips to the far edge in RTL. */
   padding-block: var(--nav-gutter);
   padding-inline: calc(var(--nav-gutter) / 2);
 }

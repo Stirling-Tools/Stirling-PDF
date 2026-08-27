@@ -93,9 +93,7 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* Header row: the "Stirling" wordmark, the collapse toggle beside it, and
-          the drawer's close button on mobile. The mark itself is at the top of the
-          quick nav rail, in the column to the left. */}
+      {/* Header row: wordmark, collapse toggle, and the drawer's close button on mobile. */}
       <div className="portal-sidebar__header">
         {!collapsed && <Logo variant="textOnly" textHeight="1.3rem" />}
 

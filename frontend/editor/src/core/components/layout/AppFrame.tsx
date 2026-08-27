@@ -7,8 +7,7 @@ import "@app/components/layout/AppFrame.css";
 
 /**
  * Wraps both apps so the rail renders once outside them and a route change swaps only
- * the Outlet. Suspense sits here for the same reason: a fallback above it would
- * replace the rail while the processor's chunk loads.
+ * the Outlet. Suspense sits here too: a fallback above it would replace the rail.
  */
 export function AppFrame() {
   return (

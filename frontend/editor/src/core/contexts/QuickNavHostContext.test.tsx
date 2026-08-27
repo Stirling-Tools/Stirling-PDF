@@ -7,8 +7,6 @@ import {
   useSuppressQuickNavRail,
 } from "@app/contexts/QuickNavHostContext";
 
-/** None of these are visible from the rail's markup, so they are pinned here. */
-
 function Probe({ onRead }: { onRead: (value: unknown) => void }) {
   const host = useQuickNavHost();
   onRead({
@@ -46,9 +44,8 @@ function setup() {
 
 describe("QuickNavHostContext", () => {
   it("keeps what the app published after it unmounts, but drops its handlers", () => {
-    // A switch unmounts one app a commit before the next registers; blanking the
-    // avatar there is the blink the hoist exists to avoid. Handlers are the
-    // exception - calling into a torn-down tree is not harmless.
+    // A switch unmounts one app before the next registers, so data has to survive it.
+    // Handlers must not: calling into a torn-down tree is not harmless.
     const { view, read } = setup();
 
     expect(read().appMounted).toBe(true);

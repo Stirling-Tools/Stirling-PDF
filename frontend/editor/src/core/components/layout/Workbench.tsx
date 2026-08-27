@@ -96,16 +96,15 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  // Reading hides the bar outright, search and all; retracting the tool row alone
-  // leaves the search and view switcher, which is most of what the mode removes.
-  // The rail's Reader entry is the way back, being outside the workbench.
+  // Reading hides the bar outright; the rail's Reader entry, being outside the
+  // workbench, is the way back.
   const showWorkbenchBar =
     topControlsAvailable && hasWorkbenchContent && !readerMode;
   const showFloatingSearch =
     topControlsAvailable && !hasWorkbenchContent && !readerMode;
 
-  // Off the transition rather than derived, so the reopen tab still works while
-  // reading: the mode sets the starting state, it doesn't lock it.
+  // On the transition rather than derived, so reading sets the toolbar's starting
+  // state without locking the reopen tab.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {
@@ -268,7 +267,7 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* Phone only, and only where the bar is hidden too. */}
+      {/* Phone only: above that the rail carries the bell, and here no bar does. */}
       {isPhone && !showWorkbenchBar && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />

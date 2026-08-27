@@ -17,9 +17,8 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 const SIZE = "1.125rem";
 
 /**
- * Assembled above the route split: entries come from the URL rather than either app's
- * context, which is what lets this stay mounted while they swap. The rest is
- * registered - see QuickNavHostContext.
+ * Entries come from the URL rather than either app's context, so the rail survives an
+ * app switch. Everything else is registered - see QuickNavHostContext.
  */
 export function QuickNavRailHost() {
   const { t } = useTranslation();
@@ -38,14 +37,14 @@ export function QuickNavRailHost() {
     else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
   };
 
-  // Guarded where the app offered a guard, so leaving mid-edit still prompts.
+  // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
   const go = (to: string) => {
     const guard = host?.actions.current?.requestNavigation;
     if (guard) guard(() => navigate(to));
     else navigate(to);
   };
 
-  // Through the owning app where possible: its route only selects on a fresh mount.
+  // Through the app where possible: its route only selects a tool on a fresh mount.
   const openTool = (toolId: ToolId, route: string) => {
     const select = host?.actions.current?.selectTool;
     if (select) select(toolId);
@@ -57,16 +56,12 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // Chip and pen, in the rail's own icon style: the app you are in carries an edge
-  // bar rather than being inferred from a brand mark that swapped places.
   const apps: QuickNavEntry[] = [
     {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
-      // Filled for the app you are in, outline for the one you are not. Written as
-      // two literals rather than one name chosen at runtime: the offline icon
-      // bundle is built by scanning for `icon="..."`, so a computed name is
-      // invisible to it and ships blank.
+      // Two literals rather than a name chosen at runtime: the offline icon bundle is
+      // built by scanning for `icon="..."`, so a computed name ships blank.
       icon: inPortal ? (
         <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
       ) : (
@@ -171,9 +166,9 @@ export function QuickNavRailHost() {
       groups={HAS_PORTAL ? [apps, within] : [within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
-      // Between apps there is briefly no handler; the control stays put.
       onOpenSettings={host?.hasSettings ? openSettings : undefined}
       onInvite={
+        // Spelt out: VIEW_PATHS lives in the portal, which core cannot import.
         HAS_PORTAL && host?.portalAccess
           ? () => go(`${PORTAL_BASENAME}/users`)
           : undefined

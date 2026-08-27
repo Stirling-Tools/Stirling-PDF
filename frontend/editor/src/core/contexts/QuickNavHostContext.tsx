@@ -18,23 +18,23 @@ export interface QuickNavIdentity {
 }
 
 export interface QuickNavHostData {
-  /** Sticky: a switch unmounts one app a commit before the next registers. */
+  /** Sticky: one app unmounts before the next one registers. */
   appMounted: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
   portalAccess: boolean;
   readerMode: boolean;
-  /** So the bell can report it: the panel is rendered by the app, not the rail. */
+  /** The app owns the panel; the rail's bell only reports its state. */
   notificationsOpen: boolean;
-  /** Translated; absent means usable. Unknown is drawn as usable, never dimmed. */
+  /** Translated; absent means usable. */
   toolReasons: QuickNavToolReasons;
-  /** A flag, not the handler: drawing has to react, and a ref write renders nothing. */
+  /** Mirrors `openSettings`, which lives in a ref and so cannot trigger a render. */
   hasSettings: boolean;
 }
 
 export interface QuickNavHostActions {
   openSettings?: () => void;
-  /** The editor reads its tool from the URL only on mount, so navigating selects nothing. */
+  /** The editor reads its tool from the URL only on mount. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
   toggleNotifications?: () => void;
@@ -43,10 +43,10 @@ export interface QuickNavHostActions {
 }
 
 interface QuickNavHostValue extends QuickNavHostData {
-  /** Separate from the data above, which persists across a switch on purpose. */
+  /** Reset on unmount, unlike the data above. */
   chromeless: boolean;
   setChromeless: (chromeless: boolean) => void;
-  /** A ref, so a click reaches the app actually mounted. */
+  /** A ref, so a click reaches the app currently mounted. */
   actions: React.RefObject<QuickNavHostActions>;
   setData: (data: Partial<QuickNavHostData>) => void;
   setActions: (actions: QuickNavHostActions) => void;
@@ -98,7 +98,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
-        // By value: rebuilt each render, so references would loop.
+        // Compared by value: the object is rebuilt every render.
         sameReasons(merged.toolReasons, prev.toolReasons);
       return unchanged ? prev : merged;
     });
@@ -159,7 +159,7 @@ export function useRegisterQuickNavHost(
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
       notificationsOpen: notificationsOpen ?? false,
-      // Omitted when unknown, so setData keeps the last answer through a re-fetch.
+      // Omitted when unknown, so the last answer survives a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
     });
@@ -178,13 +178,12 @@ export function useRegisterQuickNavHost(
 
   const setActions = host?.setActions;
 
-  // No deps, so a click reaches the current closure. No cleanup: one touching state
-  // would fight the effect above it forever.
+  // No deps: a click has to reach the current closure.
   useEffect(() => {
     setActions?.(actions);
   });
 
-  // Handlers only: clearing the draw flags blinks the controls mid-switch.
+  // Handlers only: clearing the data too would blink the controls mid-switch.
   useEffect(
     () => () => {
       setActions?.({});
@@ -195,8 +194,7 @@ export function useRegisterQuickNavHost(
 
 /**
  * `appMounted` is sticky, so a screen that isn't the app has to say so itself.
- * Takes a condition for the screens that are one branch of a route rather than a
- * route of their own.
+ * `active` is for screens that are a branch of a route rather than a route of their own.
  */
 export function useSuppressQuickNavRail(active = true): void {
   const host = useQuickNavHost();

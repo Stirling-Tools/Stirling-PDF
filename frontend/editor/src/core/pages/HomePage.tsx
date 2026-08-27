@@ -177,8 +177,8 @@ export default function HomePage() {
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
 
-  // Arriving from the processor's Reader entry. Ref-guarded: a one-shot flag plus
-  // StrictMode's double-invoke would look like the request never existed.
+  // Arriving from the processor's Reader entry. Ref-guarded because the request is
+  // one-shot and StrictMode invokes effects twice.
   const consumedReaderRequest = useRef(false);
   useEffect(() => {
     if (consumedReaderRequest.current) return;
@@ -189,8 +189,8 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides the bar and with it both search controls, so these leave reading
-  // first, then act. On e.code, for layouts where the keys aren't "k"/"f".
+  // Reading hides the bar and with it both search controls, so leave reading first,
+  // then act. Keyed on e.code for layouts where the keys aren't "k"/"f".
   const focusSearchAfterRestore = useRef(false);
   useEffect(() => {
     if (!readerMode) return;
@@ -222,8 +222,8 @@ export default function HomePage() {
     );
   }, [readerMode]);
 
-  // The brand mark's clean slate: no tool, out of My Files and reading, and the
-  // view the open files call for.
+  // Clean slate: no tool, out of the file library and reading, and whichever view
+  // the open files call for.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
     if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
@@ -276,8 +276,8 @@ export default function HomePage() {
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
   }, [navigationState.workbench]);
-  // Imperative rather than folded into `collapsed`, so the toggle still works
-  // while reading. Never written to storage: a mode is not a preference.
+  // Imperative rather than folded into `collapsed`, so the toggle still works while
+  // reading. Never persisted: a mode is not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {
@@ -336,8 +336,8 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  // The same helpers the tool picker uses, so the two can't word one condition
-  // differently. Colon removed: those labels sit in front of a tool name.
+  // The tool picker's own helpers, so the wording can't drift. Its labels carry a
+  // trailing colon for sitting in front of a tool name.
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
     for (const id of ["automate", "sharedSign"] as const) {
@@ -356,8 +356,7 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // Shared with the sidebar's own toggle so the two can't drift. On /files it is a
-  // "leave" affordance instead.
+  // Shared with the sidebar's own toggle. On /files it leaves rather than collapses.
   const handleSidebarToggle = useCallback(() => {
     if (navigationState.workbench === "myFiles") {
       navigate(EDITOR_BASENAME);
@@ -523,7 +522,6 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
-      {/* The processor mounts this same component; only these props differ. */}
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
         onOpenSettings={() => setConfigModalOpen(true)}
@@ -716,7 +714,6 @@ export default function HomePage() {
             className="flex-nowrap flex"
             bg="var(--c-bg)"
           >
-            {/* Rail and sidebar side by side, both to the top of the window. */}
             <div className="workspace-frame">
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}
@@ -732,9 +729,8 @@ export default function HomePage() {
                   ) : undefined
                 }
                 active={navigationState.workbench === "myFiles"}
-                // Forced, not derived: a deep link straight to /files has no
-                // workbench transition to collapse on, and a manual expand
-                // must not stick.
+                // Forced, not derived: a deep link to /files has no workbench
+                // transition to collapse on, and a manual expand must not stick.
                 collapsed={
                   navigationState.workbench === "myFiles" ||
                   fileSidebarCollapsed

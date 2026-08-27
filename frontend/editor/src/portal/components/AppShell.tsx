@@ -84,8 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      {/* The same frame the editor uses. */}
-      {/* Being here is proof the processor is available. */}
+      {/* portalAccess: being here is proof the processor is available. */}
       <QuickNavHostBridge portalAccess onOpenSettings={() => openSettings()} />
       <div className="workspace-frame">
         <Sidebar />

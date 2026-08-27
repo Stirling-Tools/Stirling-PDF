@@ -1,4 +1,4 @@
-/* Settings + avatar, pinned to the bottom of the bar. */
+/* The account control, pinned to the bottom of the bar. */
 
 .quick-nav-rail-account {
   display: flex;
@@ -6,10 +6,9 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
-  /* Further than the gap between the shortcuts: a filled disc reads heavier than
-     a line glyph. */
+  /* Further than the shortcut gap: a filled disc reads heavier than a line glyph. */
   margin-top: var(--space-2);
-  /* Matches the top, where centring the brand mark adds half a row's slack. */
+  /* Matches the slack centring the brand mark leaves at the top. */
   padding-bottom: 0.3125rem;
 }
 
@@ -17,8 +16,8 @@
   display: inline-flex;
 }
 
-/* Appearance belongs to the shared Avatar; only the button reset is ours, Avatar
-   rendering a real <button> when it takes a click. */
+/* Appearance comes from the shared Avatar, which renders a real <button> when it
+   takes a click; only the reset is ours. */
 .quick-nav-rail-avatar {
   border: none;
   padding: 0;

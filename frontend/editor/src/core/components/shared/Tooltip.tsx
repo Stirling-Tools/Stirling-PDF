@@ -60,9 +60,9 @@ export interface TooltipProps {
 }
 
 /**
- * Its own component so the default logo - and the preferences and app-config
- * providers behind it - are only required by tooltips that ask for a header. The
- * plain tooltip has to render outside those providers, as the rail does.
+ * Its own component so the default logo - and the providers behind it - are needed
+ * only by tooltips with a header. The plain tooltip renders outside them, as the
+ * rail does.
  */
 function TooltipHeader({
   header,
@@ -131,8 +131,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // Only the sidebarTooltip variant needs this; the plain one has to work outside
-  // the app's providers.
+  // Only sidebarTooltip uses it, and the plain tooltip must work without the provider.
   const sidebarContextValue = useOptionalSidebarContext();
   const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 

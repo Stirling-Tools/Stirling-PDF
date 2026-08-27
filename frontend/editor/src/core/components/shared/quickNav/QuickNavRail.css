@@ -1,5 +1,4 @@
 /* ========== QUICK NAV RAIL ========== */
-/* Always-icon strip; icons match the sidebar's action-row scale. */
 
 .quick-nav-rail {
   display: flex;
@@ -9,7 +8,6 @@
   width: 100%;
 }
 
-/* Full width: the bar centres its children, leaving the group shrink-to-fit. */
 .quick-nav-rail-group {
   display: flex;
   flex-direction: column;
@@ -62,14 +60,14 @@
   color: var(--c-text);
 }
 
-/* Opacity, as .file-sidebar-action-row.disabled: no disabled text token exists. */
+/* Opacity rather than a colour: there is no disabled-text token. */
 .quick-nav-rail-item[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }
 .quick-nav-rail-item[aria-disabled="true"]:hover {
   background: transparent;
-  color: var(--c-text-subtle);
+  color: var(--c-primary);
 }
 
 .quick-nav-rail-item:focus-visible {
@@ -100,8 +98,7 @@
   background: var(--c-warning-solid);
 }
 
-/* No bottom margin: the group below already supplies one, so matching it on top
-   centres the rule. */
+/* Top margin only: the group below supplies the other half, centring the rule. */
 .quick-nav-rail-divider {
   width: 100%;
   height: 0;
@@ -121,8 +118,7 @@
 }
 
 /* ---- Brand ----
-   Pinned at the top, one header row tall so it lines up with the sidebar's
-   wordmark beside it. Which app you are in is shown on the entries below. */
+   One header row tall, so it lines up with the sidebar's wordmark beside it. */
 .quick-nav-brand {
   width: 100%;
   height: var(--nav-header-h);
@@ -149,27 +145,16 @@
   border-radius: var(--radius-md);
 }
 
-/* The app you are in: the filled icon (see QuickNavRailHost) in a solid block with
-   the glyph knocked out. Not a tint - hover owns tone and background, so a tinted
-   current entry would read as the one under the pointer.
-
-   Applies to whichever of the two is current, so the chip and the pen are marked
-   the same way. */
+/* An entry that is "on": a solid block with the glyph knocked out rather than a tint,
+   which hover already uses. Being in an app (aria-current) and having a toggle engaged
+   (aria-pressed) are different states, drawn alike deliberately. */
 .quick-nav-rail-item[aria-current="true"],
-.quick-nav-rail-item[aria-current="true"]:hover {
-  background: var(--c-text);
-  color: var(--c-surface);
-}
-
-/* Dark grounds are already close to full-strength ink, where that block reads as a
-   hole rather than a selection - so it steps back to the muted tone. */
-[data-theme="dark"] .quick-nav-rail-item[aria-current="true"],
-[data-theme="dark"] .quick-nav-rail-item[aria-current="true"]:hover,
-html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"],
-html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"]:hover,
-[data-mantine-color-scheme="dark"] .quick-nav-rail-item[aria-current="true"],
-[data-mantine-color-scheme="dark"]
-  .quick-nav-rail-item[aria-current="true"]:hover {
-  background: var(--c-text-subtle);
+.quick-nav-rail-item[aria-current="true"]:hover,
+.quick-nav-rail-item[aria-pressed="true"],
+.quick-nav-rail-item[aria-pressed="true"]:hover {
+  /* Mixed toward the ground rather than full ink: beside line glyphs a solid ink
+     tile reads heavier than the state deserves. Both tokens flip with the theme,
+     so one rule covers light and dark. */
+  background: color-mix(in srgb, var(--c-text) 60%, var(--c-surface));
   color: var(--c-surface);
 }

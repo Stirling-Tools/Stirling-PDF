@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 
-/** What matters here is the wording it picks, and that it won't guess early. */
-
 const h = vi.hoisted(() => ({
   endpointStatus: {} as Record<string, boolean>,
   endpointDetails: {} as Record<string, { reason?: string }>,
@@ -52,7 +50,6 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("admits it does not know rather than reporting nothing wrong", () => {
-    // Null, not an empty map: "nothing is wrong" would flash a dimmed entry back.
     h.loading = true;
     h.endpointStatus = { automate: false };
 
@@ -76,7 +73,6 @@ describe("useQuickNavToolReasons", () => {
   });
 
   it("forgets a reason once the server stops reporting it", () => {
-    // Held until the answer changes, not indefinitely.
     h.endpointStatus = { automate: false };
     h.endpointDetails = { automate: { reason: "CONFIG" } };
     renderHook(() => useQuickNavToolReasons());
@@ -87,7 +83,7 @@ describe("useQuickNavToolReasons", () => {
       {},
     );
 
-    // And the change is what survives the next reload.
+    // The cleared state, not the old reason, is what a reload reads back.
     h.loading = true;
     expect(renderHook(() => useQuickNavToolReasons()).result.current).toEqual(
       {},
@@ -107,7 +103,7 @@ describe("useQuickNavToolReasons", () => {
     h.endpointDetails = { automate: { reason: "CONFIG" } };
 
     const { result } = renderHook(() => useQuickNavToolReasons());
-    // The picker's wording, colon gone.
+    // The tool picker's label with its trailing colon stripped.
     expect(result.current?.automate).toBe("Disabled by server administrator");
   });
 

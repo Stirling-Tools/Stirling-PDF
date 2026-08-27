@@ -12,8 +12,7 @@ interface AppSwitchMenuItemsProps {
 }
 
 /**
- * The editor / processor items for an app-switch menu. The mark is the shared
- * <BrandMark>, which recolours itself from the theme tokens.
+ * The editor / processor items for an app-switch menu.
  */
 export function AppSwitchMenuItems({
   current,

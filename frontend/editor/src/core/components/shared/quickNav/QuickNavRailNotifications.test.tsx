@@ -3,8 +3,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AppNotification } from "@app/services/notifications";
 import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
 
-/** It draws itself but opens nothing: the app owns the panel. */
-
 const fetchNotifications = vi.fn();
 
 vi.mock("@app/services/notifications", () => ({

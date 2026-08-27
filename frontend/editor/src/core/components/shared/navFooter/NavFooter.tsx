@@ -160,16 +160,14 @@ export function NavFooter({
           <button
             type="button"
             className="nav-footer__row nav-footer__account"
-            // Called with no args: handlers that take optional params (the
-            // processor's openSettings(section?)) must not receive the event.
+            // Called with no args: a handler with an optional param must not get the event.
             onClick={onOpenSettings ? () => onOpenSettings() : undefined}
             disabled={!onOpenSettings}
             data-testid={onOpenSettings ? "config-button" : undefined}
             data-tour={onOpenSettings ? "config-button" : undefined}
             aria-label={accountLabel}
           >
-            {/* Decorative: the button's own label already names the account, so
-                an alt/label here would just repeat it to a screen reader. */}
+            {/* Decorative: the button's own label already names the account. */}
             <span aria-hidden>
               <Avatar
                 size="sm"

@@ -82,9 +82,8 @@ export default function App() {
           }
         />
 
-        {/* The two apps, under a shared frame so the quick nav rail is rendered
-            once outside both and survives switching between them. The public
-            routes above stay outside it - they get no app chrome. */}
+        {/* The two apps, under a shared frame so the quick nav rail is rendered once
+            outside both. The public routes above stay outside it, with no app chrome. */}
         <Route element={<AppFrame />}>
           {/* Admin-only route-set (the portal): its own top-level shell, mounted
               before the catch-all. Absent from core/desktop builds (empty stub). */}
