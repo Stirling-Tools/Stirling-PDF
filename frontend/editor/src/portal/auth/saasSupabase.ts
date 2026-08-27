@@ -39,7 +39,7 @@ let configured = false;
 export function ensureSaasSupabase() {
   if (!isSaasSupabaseConfigured) return null;
   if (!configured) {
-    configureSupabase({ url: url as string, key: key as string });
+    configureSupabase({ url: url, key: key });
     configured = true;
   }
   return getSupabaseClient();
