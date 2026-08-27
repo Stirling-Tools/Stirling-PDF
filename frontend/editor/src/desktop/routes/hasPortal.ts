@@ -1,5 +1,2 @@
-/**
- * Desktop inherits proprietary's app but must never ship the portal, so this
- * answers no regardless of the build environment.
- */
+/** Desktop inherits proprietary's app but never ships the portal. */
 export const HAS_PORTAL = false;

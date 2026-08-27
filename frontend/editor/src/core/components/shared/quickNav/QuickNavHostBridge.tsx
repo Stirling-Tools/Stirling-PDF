@@ -12,35 +12,23 @@ import {
 import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
-  /** The processor passes true; being in it is the proof. */
   portalAccess?: boolean;
-  /** Whether this app is in reading mode, and how to change it. */
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
-  /** Opens the settings menu, and a named section of it. */
   onOpenSettings: () => void;
-  /** Omitted where the settings menu has no teams section, as in core. */
+  /** Omitted where settings has no teams section, as in core. */
   onOpenTeams?: () => void;
-  /** The editor's unsaved-changes guard; the processor has none to offer. */
   requestNavigation?: (go: () => void) => void;
-  /** Returns this app to its default state; the brand mark calls it. */
   onGoToDefaultState?: () => void;
-  /** Selects one of this app's tools; omitted by an app with none. */
   onSelectTool?: (toolId: ToolId) => void;
-  /**
-   * Extra reasons, translated, keyed by entry id - layered over what this works out
-   * itself, for conditions only the app can see. Optional.
-   */
+  /** Layered over what this works out itself, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
 }
 
 /**
- * Publishes to the rail what it can't work out for itself, and owns the
- * notifications panel - the one surface the rail asks for but can't draw, since a
- * row's actions need the workbench contexts that only exist down here.
- *
- * Both apps mount this same component, so the account control and badge can't
- * differ across the switch. Only what genuinely differs is passed in.
+ * Publishes to the rail what it can't work out for itself, and owns the notifications
+ * panel, whose rows need the workbench contexts that only exist down here. Both apps
+ * mount this same one, so the account control can't differ across the switch.
  */
 export function QuickNavHostBridge({
   portalAccess = false,
@@ -56,14 +44,12 @@ export function QuickNavHostBridge({
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const signingBadge = useSigningBadgeCount();
   const notificationsAvailable = useNotificationsAvailable();
-  // Unconditionally: the registry also carries the one-shot pickup of a document
-  // handed over from the processor, which would sit unclaimed if built only on open.
+  // Unconditionally: the registry carries the one-shot pickup of a document handed
+  // over from the processor, which would sit unclaimed if built only on open.
   const notificationActions = useNotificationActions();
-  // Read here so the two apps can't disagree about the same entry.
   const endpointReasons = useQuickNavToolReasons();
   const mergedToolReasons = useMemo(() => {
-    // An empty map from the app is silence, not an answer: it publishes one while
-    // its own availability loads, which would undo the stickiness.
+    // An empty map from the app is silence, not an answer.
     const extra =
       toolReasons && Object.keys(toolReasons).length > 0 ? toolReasons : null;
     if (!endpointReasons && !extra) return undefined;

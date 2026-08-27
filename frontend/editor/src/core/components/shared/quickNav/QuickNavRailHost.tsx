@@ -17,9 +17,9 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 const SIZE = "1.125rem";
 
 /**
- * The rail, assembled above the route split. Entries come from the URL, not from
- * either app's context, which is what lets this render once outside both and stay
- * mounted while they swap. The rest is registered - see QuickNavHostContext.
+ * Assembled above the route split: entries come from the URL rather than either app's
+ * context, which is what lets this stay mounted while they swap. The rest is
+ * registered - see QuickNavHostContext.
  */
 export function QuickNavRailHost() {
   const { t } = useTranslation();
@@ -45,7 +45,6 @@ export function QuickNavRailHost() {
     else go(route);
   };
 
-  // Usable unless the app says otherwise.
   const unusable = (id: ToolId) => {
     const reason = host?.toolReasons?.[id];
     return { disabled: Boolean(reason), reason };
@@ -71,8 +70,7 @@ export function QuickNavRailHost() {
         />
       ),
       pressed: Boolean(host?.readerMode),
-      // From the processor the editor isn't mounted to toggle, so the intent is
-      // left for it to pick up - see pendingReaderMode.
+      // From the processor there is no editor to toggle - see pendingReaderMode.
       onClick: () => {
         const setMode = host?.actions.current?.setReaderMode;
         if (setMode) {
@@ -138,8 +136,7 @@ export function QuickNavRailHost() {
                 },
               }
           : undefined,
-        // The current app's mark returns it to its default state; only it knows
-        // what that is.
+        // Only the app knows its own default state.
         onReturnHome: () => {
           const reset = host?.actions.current?.goToDefaultState;
           if (reset) reset();
@@ -147,8 +144,7 @@ export function QuickNavRailHost() {
         },
       }}
       identity={host?.identity ?? null}
-      // Between apps there is briefly no handler; the control stays put and
-      // simply doesn't respond, rather than shifting everything above it.
+      // Between apps there is briefly no handler; the control stays put.
       onOpenSettings={host?.hasSettings ? call("openSettings") : undefined}
       onOpenTeams={host?.hasTeams ? call("openTeams") : undefined}
       onToggleNotifications={() =>

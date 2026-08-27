@@ -526,10 +526,7 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
-      {/* Hands the hoisted rail what only this app knows. The processor mounts
-          this same component - only these props differ. useOtherAppSwitch is the
-          existing single gate for "is there another app open to this user", so
-          the rail can't disagree with the rest of the UI about access. */}
+      {/* The processor mounts this same component; only these props differ. */}
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
         onOpenSettings={() => setConfigModalOpen(true)}
@@ -723,8 +720,7 @@ export default function HomePage() {
             className="flex-nowrap flex"
             bg="var(--c-bg)"
           >
-            {/* Left column: the quick nav rail and the sidebar side by side,
-                both reaching the top of the window. */}
+            {/* Rail and sidebar side by side, both to the top of the window. */}
             <div className="workspace-frame">
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}

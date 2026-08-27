@@ -6,15 +6,13 @@ import { BrandTile } from "@app/components/shared/BrandTile";
 export type QuickNavApp = "editor" | "processor";
 
 export interface QuickNavAppSwitchProps {
-  /** The app you are in. Its mark occupies the brand slot. */
   currentApp: QuickNavApp;
-  /** Omitted in builds with only one app; then nothing is drawn below the brand. */
+  /** Omitted in builds with only one app. */
   otherApp?: {
     disabled?: boolean;
     reason?: string;
     onOpen: () => void;
   };
-  /** Returns the current app to its default view. */
   onReturnHome: () => void;
 }
 
@@ -24,12 +22,9 @@ const LABEL_KEY: Record<QuickNavApp, [string, string]> = {
 };
 
 /**
- * The brand mark and the app switcher as one piece. Both marks stay mounted in one
- * positioned block, and the current app is whichever sits in the upper slot;
- * switching moves them past each other.
- *
- * They share a container because an element can't transition between parents -
- * drawn separately, their contents would swap rather than move.
+ * Both marks stay mounted in one positioned block and swap slots, because an element
+ * can't transition between parents - drawn separately their contents would swap
+ * rather than move.
  */
 export function QuickNavAppSwitch({
   currentApp,
@@ -81,9 +76,7 @@ export function QuickNavAppSwitch({
     <div className="quick-nav-apps" data-current={currentApp}>
       {mark("editor")}
       {hasBoth ? mark("processor") : null}
-      {/* Divides the apps from the destinations inside them. Belongs to this
-          block rather than the groups below, because the switcher is no longer
-          one of them - it sits up here with the brand. */}
+      {/* Apps above, the places inside them below. */}
       {hasBoth && <hr className="quick-nav-apps-divider" />}
     </div>
   );

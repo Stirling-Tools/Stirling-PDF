@@ -268,8 +268,7 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* Phone only, and only where the bar is hidden too - My Files, an empty
-          workbench - so a failure is never invisible. */}
+      {/* Phone only, and only where the bar is hidden too. */}
       {isPhone && !showWorkbenchBar && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />

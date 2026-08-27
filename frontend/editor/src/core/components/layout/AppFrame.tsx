@@ -6,14 +6,9 @@ import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHo
 import "@app/components/layout/AppFrame.css";
 
 /**
- * Layout route wrapping the editor and the processor, so the rail renders once
- * outside both and a route change swaps only what is inside the Outlet. Inside
- * either app it would be torn down with that app's tree.
- *
- * Suspense sits here for the same reason: the processor is a lazy chunk, and a
- * fallback above this would replace the rail while it loads.
- *
- * Public routes stay outside this layout and get no chrome.
+ * Wraps both apps so the rail renders once outside them and a route change swaps only
+ * the Outlet. Suspense sits here for the same reason: a fallback above it would
+ * replace the rail while the processor's chunk loads.
  */
 export function AppFrame() {
   return (

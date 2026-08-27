@@ -1,19 +1,15 @@
 let pending = false;
 
 /**
- * Asks the editor to open in reading mode, for a switch that starts outside it. The
- * editor owns the mode and isn't mounted yet, and the mode isn't in the URL, so
- * there is nothing to carry the intent.
- *
- * A module variable, not sessionStorage: an app switch is a route change in the
- * same page so this survives it, while a reload clears it. Persisted, every later
- * reload of the tab would open in reading mode.
+ * Carries "open in reading mode" across an app switch, the editor not being mounted
+ * yet and the mode not being in the URL. A module variable, not sessionStorage: it
+ * survives the route change but not a reload, which is the point.
  */
 export function requestReaderMode(): void {
   pending = true;
 }
 
-/** True once per request, then forgotten. */
+/** True once per request. */
 export function consumeReaderModeRequest(): boolean {
   if (!pending) return false;
   pending = false;

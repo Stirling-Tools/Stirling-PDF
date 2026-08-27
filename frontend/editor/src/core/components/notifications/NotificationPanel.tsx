@@ -8,22 +8,16 @@ import "@app/components/notifications/NotificationBell.css";
 
 export interface NotificationPanelProps {
   onClose: () => void;
-  /**
-   * What each row may offer. Passed in because it reaches into the workbench, and
-   * because its one-shot document handover has to run whether this is open or not.
-   */
+  /** Passed in: its one-shot document handover must run whether this is open or not. */
   registry: ClientActionRegistry;
-  /** Position for a panel anchored to its trigger; a placement class supplies it otherwise. */
   style?: React.CSSProperties;
   className?: string;
 }
 
 /**
- * The list of notifications. Mounted only while open, so a closed panel never
- * subscribes to the poll, and mounting is what marks them read.
- *
- * Separate from its triggers, which live in a different tree: the rail renders above
- * the route split, while a row's actions need the workbench contexts below it.
+ * Mounted only while open, so a closed panel never subscribes to the poll, and
+ * mounting is what marks them read. Separate from its triggers, which live above the
+ * route split while a row's actions need the workbench below it.
  */
 export function NotificationPanel({
   onClose,
@@ -36,7 +30,7 @@ export function NotificationPanel({
     useNotifications();
   const panel = useRef<HTMLDivElement>(null);
   const headingId = useId();
-  // Where the new ones stop, frozen on open, since opening marks them all read.
+  // Frozen on open, since opening marks them all read.
   const [firstSeenId, setFirstSeenId] = useState<string | null>(null);
 
   // On mount, not on close: waiting leaves the badge lit while they read.
@@ -49,8 +43,7 @@ export function NotificationPanel({
     markAllSeen();
   }, [notifications, unreadCount, markAllSeen]);
 
-  // No boundary means all were new; one that has left the list means none, rather
-  // than guessing at a row.
+  // No boundary means all were new; one that has left the list means none.
   const boundaryIndex = firstSeenId
     ? notifications.findIndex((notification) => notification.id === firstSeenId)
     : notifications.length;
@@ -84,7 +77,7 @@ export function NotificationPanel({
           : "notification-bell__panel"
       }
       role="dialog"
-      // Named by its own heading: a dialog with no accessible name is announced as just "dialog".
+      // A dialog with no accessible name is announced as just "dialog".
       aria-labelledby={headingId}
       style={style}
     >
@@ -107,8 +100,7 @@ export function NotificationPanel({
                   />
                 </li>
               )}
-              {/* Only with something on both sides: a lone "Earlier" over everything says
-                  nothing the empty badge has not. */}
+              {/* Only with something on both sides of it. */}
               {index === dividedAt && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText

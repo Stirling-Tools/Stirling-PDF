@@ -24,15 +24,8 @@ export function QuickNavRailAccount({
   return (
     <div className="quick-nav-rail-account">
       <Tooltip content={label} position="right" arrow>
-        {/* Tooltip clones its child to attach the hover/focus handlers and its
-            floating reference, so the child has to accept them. Avatar takes a
-            fixed prop set and spreads nothing, so handed the Avatar directly the
-            tooltip silently never opened - this span is what Tooltip binds to. */}
-        {/* Carries the config-button hooks because this rail, not the sidebar
-            footer, is the account control wherever it renders: the admin
-            onboarding tour anchors a step to data-tour, and the end-to-end suites
-            click data-testid. On the wrapper rather than the Avatar, which takes
-            a fixed prop set - a click lands on the button filling it. */}
+        {/* A span, not the Avatar: Tooltip binds by cloning its child, and Avatar
+            spreads nothing. The tour and e2e hooks ride on it for the same reason. */}
         <span
           className="quick-nav-rail-avatar-target"
           data-testid="config-button"

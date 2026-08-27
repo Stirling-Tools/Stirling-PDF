@@ -195,10 +195,8 @@ export function useViewerWorkbenchBarButtons(
           >
             <Popover.Target>
               <div style={{ display: "inline-flex" }}>
-                {/* Tooltip wraps the button, not the Popover: it attaches its
-                    handlers and ref by cloning its child, and Popover is a
-                    component that passes neither on - so wrapped outside, the
-                    tooltip never opened. */}
+                {/* Inside the Popover, not around it: Tooltip binds by cloning
+                    its child, and Popover passes neither ref nor handlers on. */}
                 <Tooltip
                   content={searchLabel}
                   position={tooltipPosition}

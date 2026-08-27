@@ -7,16 +7,9 @@ import { NotificationPanel } from "@app/components/notifications/NotificationPan
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import "@app/components/notifications/NotificationBell.css";
 
-/**
- * The bell as its own control, for the narrow layouts where the quick nav rail - which carries
- * the bell everywhere else - is not on screen.
- *
- * Renders whatever the server sends without knowing which subsystem produced it or what its
- * actions mean, so a new source or failure kind needs no change here.
- */
+/** For the narrow layouts where the rail, which carries the bell, is off screen. */
 export function NotificationBell() {
-  // A build with no notifications API gets no bell at all, rather than one that polls a
-  // nonexistent endpoint forever to show nothing.
+  // No API means no bell at all, rather than one polling an endpoint that isn't there.
   const available = useNotificationsAvailable();
   if (!available) return null;
   return <MountedNotificationBell />;
@@ -59,8 +52,7 @@ function MountedNotificationBell() {
         size="md"
         shape="circle"
         className="notification-bell__trigger"
-        // Read by the panel's outside-click handler, which must not treat the control that
-        // closes it as somewhere else on the page.
+        // Read by the panel's outside-click handler.
         data-notifications-trigger
         aria-label={t("notifications.open", "Notifications")}
         aria-expanded={open}

@@ -84,10 +84,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      {/* The rail and the sidebar side by side, both reaching the top of the
-          window - the same frame the editor uses. */}
-      {/* The same bridge the editor mounts - being here is proof the processor
-          is available, and settings is the one thing that opens differently. */}
+      {/* The same frame the editor uses. */}
+      {/* Being here is proof the processor is available. */}
       <QuickNavHostBridge
         portalAccess
         onOpenSettings={() => openSettings()}

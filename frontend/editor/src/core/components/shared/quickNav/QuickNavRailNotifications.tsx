@@ -5,14 +5,10 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 
 export interface QuickNavRailNotificationsProps {
-  /** Opens the panel, which the mounted app renders; absent until one has. */
   onToggle?: () => void;
 }
 
-/**
- * The bell in the rail's footer. The count is read here; the list is not - the app
- * owns the panel, since a row's actions need the workbench (see NotificationPanel).
- */
+/** The count is read here; the app owns the panel - see NotificationPanel. */
 export function QuickNavRailNotifications({
   onToggle,
 }: QuickNavRailNotificationsProps) {
@@ -29,8 +25,8 @@ function MountedRailNotifications({
   const { unreadCount } = useNotifications();
 
   return (
-    // Read by the panel's outside-click handler. On a wrapper, since RailButton
-    // takes a fixed prop set.
+    // Read by the panel's outside-click handler. On a wrapper: RailButton takes a
+    // fixed prop set.
     <span data-notifications-trigger>
       <RailButton
         label={t("quickNav.notifications", "Notifications")}

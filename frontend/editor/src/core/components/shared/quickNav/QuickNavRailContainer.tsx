@@ -24,25 +24,16 @@ export interface QuickNavRailContainerProps extends Omit<
   QuickNavRailBaseProps,
   "footer"
 > {
-  /**
-   * The rail is the account control in both apps, so the sidebars render no account
-   * row of their own (FileSidebar's accountHoisted, NavFooter's showAccount).
-   */
+  /** The sidebars render no account row of their own (accountHoisted, showAccount). */
   onOpenSettings?: () => void;
   /** Omitted by builds whose settings has no teams section (core, desktop). */
   onOpenTeams?: () => void;
-  /** The bell draws itself; the panel belongs to the app - see QuickNavRailNotifications. */
   onToggleNotifications?: () => void;
-  /** Identity for the account control; see QuickNavRailAccount. */
   identity?: QuickNavIdentity | null;
-  /** The brand mark and app switcher, which share a pair of slots. */
   appSwitch: QuickNavAppSwitchProps;
 }
 
-/**
- * The fixed-width column the rail sits in: one full-height bar, with the groups
- * inside it separated by a divider.
- */
+/** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
   onOpenSettings,
   onOpenTeams,
@@ -54,16 +45,14 @@ export function QuickNavRailContainer({
   const { t } = useTranslation();
   return (
     <div className="quick-nav-rail-container">
-      {/* Not wrapped in a fixed row: the block is taller than one when a second app
-          exists, and centring it would drop the mark out of line with the
-          sidebar's wordmark beside it. */}
+      {/* No fixed row: with two apps the block is taller than one, and centring
+          it drops the mark out of line with the sidebar's wordmark. */}
       <QuickNavAppSwitch {...appSwitch} />
       <NavSurface className="quick-nav-rail-surface">
         <QuickNavRailBase
           {...railProps}
           footer={
-            // Always rendered: an empty footer collapses to nothing, and gating it
-            // on the app's own controls dropped the bell along with them.
+            // Always rendered: gating it on the app's controls dropped the bell too.
             <div className="quick-nav-rail-footer">
               <QuickNavRailNotifications onToggle={onToggleNotifications} />
               {onOpenTeams && (

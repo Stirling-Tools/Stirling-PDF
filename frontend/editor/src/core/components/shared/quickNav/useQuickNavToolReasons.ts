@@ -7,7 +7,6 @@ import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 
-/** Mirrors the same tools' `endpoints` in the tool registry. */
 const ENTRY_ENDPOINTS = {
   automate: ["automate"],
 } satisfies Partial<Record<ToolId, string[]>>;
@@ -17,10 +16,7 @@ const ENDPOINT_ENTRIES = Object.keys(
   ENTRY_ENDPOINTS,
 ) as (keyof typeof ENTRY_ENDPOINTS)[];
 
-/**
- * The two the tool picker tells apart, plus shared signing - a whole feature the
- * server can switch off rather than a route it can remove.
- */
+/** Shared signing is a whole feature, not a removable endpoint, hence its own cause. */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 type Cause = EndpointCause | "groupSigningOff";
 type Causes = Partial<Record<ToolId, Cause>>;
@@ -30,10 +26,7 @@ const CAUSES: Cause[] = [
   "groupSigningOff",
 ];
 
-/**
- * Remembered so a reload starts from the last answer, not from "everything works".
- * Causes rather than sentences, so a language change can't resurrect stale text.
- */
+/** Causes, not sentences, so a language change can't resurrect stale text. */
 const STORAGE_KEY = "stirling.quickNav.toolCauses";
 
 function readRemembered(): Causes | null {
@@ -49,7 +42,6 @@ function readRemembered(): Causes | null {
     ) as [ToolId, Cause][];
     return Object.fromEntries(known);
   } catch {
-    // Private mode, or nonsense in storage: same as a first visit.
     return null;
   }
 }
@@ -82,16 +74,11 @@ function causesFor(
 }
 
 /**
- * Why a rail entry can't be used - translated, keyed by entry id, absent when
- * usable. Null means no answer yet, which is not the same as an empty map ("asked,
- * nothing wrong").
+ * Why a rail entry can't be used. Null means no answer yet, which is not the same
+ * as an empty map ("asked, nothing wrong") - the last answer is held through a
+ * re-fetch so the bar changes only when the answer does.
  *
- * Read here rather than handed down, so the editor and the processor can't
- * disagree about the same entry. Only the signals both apps can see; the editor
- * layers its own on top.
- *
- * The last answer is held through a re-fetch - each app has its own query cache
- * and a reload has none - so the bar changes only when the answer does.
+ * Read here, not handed down, so the two apps can't disagree about the same entry.
  */
 export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { t } = useTranslation();
@@ -99,10 +86,9 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { endpointStatus, endpointDetails, loading } =
     useMultipleEndpointsEnabled(endpoints);
 
-  // Once, at mount: later reads would fight the live answer.
+  // Once: later reads would fight the live answer.
   const [remembered] = useState(readRemembered);
 
-  // Its own signal, and its config loads separately from the endpoint list.
   const { loading: configLoading } = useAppConfig();
   const groupSigningEnabled = useGroupSigningEnabled();
 
@@ -134,8 +120,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
     for (const entry of Object.keys(causes) as ToolId[]) {
       const cause = causes[entry];
       if (cause === "groupSigningOff") {
-        // The tool's own wording. Stop removed: the reason is appended to a label,
-        // not written as a sentence.
+        // The tool's own wording, minus the full stop.
         reasons[entry] = t(
           "sharedSign.disabledBody",
           "Collaborative signing isn't enabled on this server.",
@@ -143,7 +128,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
         continue;
       }
       if (!cause) continue;
-      // Colon removed: these labels are written to sit in front of a tool name.
+      // Colon removed: these labels sit in front of a tool name.
       const { key, fallback } = getDisabledLabel(cause);
       reasons[entry] = t(key, fallback).replace(/:\s*$/, "");
     }

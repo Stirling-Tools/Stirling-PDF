@@ -10,7 +10,6 @@ import {
   type ReactNode,
 } from "react";
 
-/** Keyed by tool id: only entries that open a tool can be unavailable. */
 export type QuickNavToolReasons = Partial<Record<ToolId, string>>;
 
 export interface QuickNavIdentity {
@@ -18,27 +17,16 @@ export interface QuickNavIdentity {
   profilePictureUrl: string | null;
 }
 
-/** What the rail can't derive from the URL, published by the mounted app. */
 export interface QuickNavHostData {
-  /**
-   * Whether an app has ever mounted under the frame. Sticky: a switch unmounts one
-   * app a commit before the next registers, and clearing it there blinks the bar out.
-   */
+  /** Sticky: a switch unmounts one app a commit before the next registers. */
   appMounted: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
   portalAccess: boolean;
   readerMode: boolean;
-  /**
-   * Why a tool entry can't be used, keyed by entry id, already translated; absent
-   * means it can. Unknown is drawn as usable - dimming a working control is worse
-   * than briefly offering one that isn't.
-   */
+  /** Translated; absent means usable. Unknown is drawn as usable, never dimmed. */
   toolReasons: QuickNavToolReasons;
-  /**
-   * Whether the app offers these. Flags rather than the handlers, because drawing
-   * has to react to them and a ref write renders nothing.
-   */
+  /** Flags, not the handlers: drawing has to react, and a ref write renders nothing. */
   hasSettings: boolean;
   hasTeams: boolean;
 }
@@ -46,33 +34,19 @@ export interface QuickNavHostData {
 export interface QuickNavHostActions {
   openSettings?: () => void;
   openTeams?: () => void;
-  /**
-   * The editor reads its tool from the URL only on mount and popstate, so a
-   * client-side navigation would set the address and select nothing. Absent in an
-   * app with no tools; the rail then navigates, which lands as a fresh mount.
-   */
+  /** The editor reads its tool from the URL only on mount, so navigating selects nothing. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
-  /** The panel is rendered by the app, since a row's actions reach the workbench. */
   toggleNotifications?: () => void;
-  /** No tool open, and the view the number of open files calls for. */
   goToDefaultState?: () => void;
-  /** The editor's unsaved-changes guard; the processor has none. */
   requestNavigation?: (go: () => void) => void;
 }
 
 interface QuickNavHostValue extends QuickNavHostData {
-  /**
-   * Whether the route on screen carries no app chrome. Not part of the data above,
-   * which persists across a switch on purpose - this has to lift the moment such a
-   * route leaves.
-   */
+  /** Separate from the data above, which persists across a switch on purpose. */
   chromeless: boolean;
   setChromeless: (chromeless: boolean) => void;
-  /**
-   * A ref, not state: swapping handlers changes nothing on screen, and reading them
-   * at call time means a click reaches the app actually mounted.
-   */
+  /** A ref, so a click reaches the app actually mounted. */
   actions: React.RefObject<QuickNavHostActions>;
   setData: (data: Partial<QuickNavHostData>) => void;
   setActions: (actions: QuickNavHostActions) => void;
@@ -103,13 +77,8 @@ function sameReasons(
 const QuickNavHostContext = createContext<QuickNavHostValue | null>(null);
 
 /**
- * Holds what the quick nav rail needs from the app around it. The rail renders
- * above the route split, so it sits outside both apps' providers and can't read
- * their contexts; each app registers what only it knows.
- *
- * Data survives an app unmounting - blanking the avatar mid-switch would undo the
- * continuity the hoist is for. Actions don't: calling into a torn-down tree isn't
- * harmless.
+ * The rail renders above the route split, outside both apps' providers, so each app
+ * registers what only it knows. Data survives an unmount; handlers do not.
  */
 export function QuickNavHostProvider({ children }: { children: ReactNode }) {
   const [data, setDataState] = useState<QuickNavHostData>(EMPTY_DATA);
@@ -129,8 +98,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
-        // By value: callers rebuild this map each render, and comparing references
-        // would publish → render → rebuild → publish forever.
+        // By value: rebuilt each render, so references would loop.
         sameReasons(merged.toolReasons, prev.toolReasons);
       return unchanged ? prev : merged;
     });
@@ -163,12 +131,11 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Null outside the provider. */
 export function useQuickNavHost(): QuickNavHostValue | null {
   return useContext(QuickNavHostContext);
 }
 
-/** Publishes an app's state to the rail. No-ops outside the provider. */
+/** No-ops outside the provider. */
 export function useRegisterQuickNavHost(
   data: Partial<QuickNavHostData>,
   actions: QuickNavHostActions,
@@ -186,14 +153,12 @@ export function useRegisterQuickNavHost(
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
-      // Omitted when the app has no answer, so setData keeps the last one: a
-      // switch empties the query cache, and the bar must not change what it says
-      // while it is merely being re-fetched.
+      // Omitted when unknown, so setData keeps the last answer through a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
       hasTeams,
     });
-    // Identity by field, not by reference: it is rebuilt every render.
+    // By field: identity is rebuilt every render.
   }, [
     host,
     identity?.displayName,
@@ -208,14 +173,13 @@ export function useRegisterQuickNavHost(
 
   const setActions = host?.setActions;
 
-  // No deps, so a click reaches the current closure. A ref write only, and no
-  // cleanup: one that touched state would fight the effect above it forever.
+  // No deps, so a click reaches the current closure. No cleanup: one touching state
+  // would fight the effect above it forever.
   useEffect(() => {
     setActions?.(actions);
   });
 
-  // Handlers only. The draw flags are left for the incoming app to correct;
-  // clearing them here made the teams and account controls blink mid-switch.
+  // Handlers only: clearing the draw flags blinks the controls mid-switch.
   useEffect(
     () => () => {
       setActions?.({});
@@ -224,11 +188,7 @@ export function useRegisterQuickNavHost(
   );
 }
 
-/**
- * Hides the rail while a route that isn't the app is on screen. `appMounted` is
- * sticky, so it can't also answer "is an app on screen now" - these routes say so
- * themselves.
- */
+/** `appMounted` is sticky, so a route that isn't the app has to say so itself. */
 export function useSuppressQuickNavRail(): void {
   const host = useQuickNavHost();
   const setChromeless = host?.setChromeless;
