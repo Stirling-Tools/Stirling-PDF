@@ -74,11 +74,9 @@ function causesFor(
 }
 
 /**
- * Why a rail entry can't be used. Null means no answer yet, which is not the same
- * as an empty map ("asked, nothing wrong") - the last answer is held through a
- * re-fetch so the bar changes only when the answer does.
- *
- * Read here, not handed down, so the two apps can't disagree about the same entry.
+ * Why a rail entry can't be used. Null means no answer yet, unlike an empty map
+ * ("asked, nothing wrong"); the last answer is held through a re-fetch. Read here,
+ * not handed down, so the two apps can't disagree.
  */
 export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { t } = useTranslation();

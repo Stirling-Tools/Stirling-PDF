@@ -33,12 +33,7 @@ export interface NavFooterProps {
   otherApp?: NavFooterAppLink | null;
   /** Extra rows above the account row (the self-hosted link-account CTA). */
   accountExtras?: ReactNode;
-  /**
-   * Set false where another surface owns the account control - the editor's
-   * quick nav rail does - so the two don't both draw an avatar for the same
-   * user. The other rows are unaffected; with nothing left to show, the footer
-   * renders nothing at all rather than an empty surface.
-   */
+  /** False where the rail owns the account control, so only one avatar is drawn. */
   showAccount?: boolean;
   /** Icon-rail state: labels collapse to tooltips. */
   collapsed?: boolean;

@@ -189,11 +189,8 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides the top bar, and with it both search controls: Cmd/Ctrl+K's
-  // listener lives inside the super search, and Cmd/Ctrl+F's panel only renders in
-  // the bar's popover. So both leave reading first, then act.
-  //
-  // On e.code, like the super search, for layouts where these keys aren't "k"/"f".
+  // Reading hides the bar and with it both search controls, so these leave reading
+  // first, then act. On e.code, for layouts where the keys aren't "k"/"f".
   const focusSearchAfterRestore = useRef(false);
   useEffect(() => {
     if (!readerMode) return;

@@ -15,12 +15,7 @@ type Story = StoryObj<typeof BrandSwitcher>;
 
 export const Playground: Story = {};
 
-/**
- * Both states together: the mark must sit at the same inline offset whether or
- * not the wordmark is present. Collapsed makes Button treat the trigger as
- * icon-only, which zeroes its padding - the switcher's compensating negative
- * margin has to go with it or the mark drifts left.
- */
+/** Both states: the mark must hold its inline offset with or without the wordmark. */
 export const ExpandedAndCollapsed: Story = {
   render: (args) => (
     <div style={{ display: "grid", gap: "0.5rem", width: "16rem" }}>
