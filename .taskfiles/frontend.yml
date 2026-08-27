@@ -121,17 +121,17 @@ tasks:
         sh: |
           case "${SAAS_ENV:-dev}" in
             staging) ref="${SAAS_STAGING_PROJECT_REF:?set it in app/.env.saas.local}" ;;
-            *)       ref="${SAAS_DEV_PROJECT_REF:?set it in app/.env.saas.local, or run task staging:saas}" ;;
+            *)       ref="${SAAS_DEV_PROJECT_REF:?set it in app/.env.saas.local, or pass SAAS_ENV=staging}" ;;
           esac
           echo "https://${ref}.supabase.co"
       VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY:
         sh: |
           case "${SAAS_ENV:-dev}" in
             staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
-            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:?set it in app/.env.saas.local}" ;;
+            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:?set it in app/.env.saas.local, or pass SAAS_ENV=staging}" ;;
           esac
     cmds:
-      - 'echo ">> frontend Supabase target: $VITE_SUPABASE_URL"'
+      - 'echo ">> frontend {{.SAAS_ENV}}: Supabase $VITE_SUPABASE_URL, backend $BACKEND_URL"'
       - npx vite editor --mode saas --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
@@ -172,6 +172,16 @@ tasks:
           BACKEND_URL: '{{.BACKEND_URL}}'
           OPEN: '{{.OPEN}}'
           SAAS_ENV: '{{.SAAS_ENV}}'
+
+  staging:saas:
+    desc: "Start frontend dev server against the shared v3 staging project"
+    cmds:
+      - task: dev:saas
+        vars:
+          SAAS_ENV: staging
+          PORT: '{{.PORT}}'
+          BACKEND_URL: '{{.BACKEND_URL}}'
+          OPEN: '{{.OPEN}}'
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
@@ -375,13 +385,13 @@ tasks:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx oxfmt --write .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx oxfmt --check .
 
   fix:
     desc: "Auto-fix lint and format"
@@ -554,6 +564,7 @@ tasks:
     deps: [install, ":backend:swagger"]
     cmds:
       - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
+      - task: format
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
@@ -563,9 +574,9 @@ tasks:
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
-    deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
+      - task: tool-models
+      - git diff --exit-code -- editor/src/core/types/toolApiTypes.ts editor/src/core/types/toolIO.ts
 
   licenses:generate:
     desc: "Generate frontend license report"
