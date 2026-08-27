@@ -10,7 +10,6 @@ import {
   Banner,
   Button,
   Card,
-  Checkbox,
   FormField,
   Input,
   Modal,
@@ -19,6 +18,7 @@ import {
   ToggleSwitch,
 } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import {
   humanizeEndpoint,
   type CatalogueEntry,
@@ -788,11 +788,9 @@ function PolicySetupWizardBody({
           </div>
 
           <div className="portal-policies__wizard-enforce">
-            <Checkbox
-              checked={required}
-              onChange={(e) => setRequired(e.target.checked)}
-              label={t("portal.policies.wizard.enforcement.requiredLabel")}
-              description={t("portal.policies.wizard.enforcement.requiredDesc")}
+            <EnforceAsPolicyControl
+              required={required}
+              onRequiredChange={setRequired}
             />
           </div>
         </div>

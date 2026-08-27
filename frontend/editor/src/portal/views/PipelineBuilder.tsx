@@ -65,7 +65,7 @@ import {
   uploadPipelineAsset,
   type PolicyAsset,
 } from "@portal/api/pipelineAssets";
-import { clearProcessedHistory, parseSimplePolicy } from "@portal/api/policies";
+import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
 import { PolicyMetadataDevEditor } from "@portal/components/pipelines/PolicyMetadataDevEditor";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
@@ -709,10 +709,6 @@ export function PipelineBuilder() {
     : [];
   const editorEnforced = enforcedSources.includes("editor");
   const enforcedRunOn = outputOptions.runOn === "export" ? "export" : "upload";
-  const originCategoryId =
-    typeof outputOptions.categoryId === "string"
-      ? outputOptions.categoryId
-      : "";
 
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
@@ -721,29 +717,6 @@ export function PipelineBuilder() {
     input.triggerType !== "schedule" || Number(input.scheduleCount) > 0;
   const inputValid = sourceChosen && scheduleValid;
   const outputValid = outputIds.length === 1;
-
-  // The working pipeline as a wire record, for the representability check. Steps serialize
-  // synchronously here (no asset upload) - parseSimplePolicy only reads their operation + params.
-  const currentSimplePolicy: Policy = {
-    id: policyState.data?.id ?? seedDraft?.id,
-    name: name.trim(),
-    enabled,
-    required,
-    icon,
-    inputs:
-      editorEnforced || !sourceChosen
-        ? []
-        : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
-    steps: steps.map((step) => serializeToolStep(step, allTools)),
-    output: { type: outputType, options: outputOptions },
-    outputIds: editorEnforced ? [] : outputIds,
-  };
-  // "Back to simple" is offered only while the pipeline can still be shown by the wizard - governed
-  // by representability, not by whether the builder was opened. It disappears the moment an edit
-  // takes the chain out of its template's shape, and reappears if that edit is undone.
-  const simpleEntry = originCategoryId
-    ? parseSimplePolicy(currentSimplePolicy)
-    : null;
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
@@ -780,16 +753,6 @@ export function PipelineBuilder() {
 
   function close() {
     navigate(listPath);
-  }
-
-  /**
-   * Hand the pipeline back to the simple wizard, carrying the current (unsaved) state. Only reachable
-   * while {@link simpleEntry} is non-null, i.e. the chain still fits its template - so nothing is
-   * lost. The list route reopens the wizard from this record.
-   */
-  function backToSimple() {
-    if (!simpleEntry) return;
-    navigate(listPath, { state: { reopenSimple: currentSimplePolicy } });
   }
 
   // Leave the builder, but prompt first if there are unsaved edits (see the unsaved-changes modal).
@@ -1383,7 +1346,6 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
-          onBackToSimple={simpleEntry ? backToSimple : undefined}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1406,7 +1368,6 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
-          onBackToSimple={simpleEntry ? backToSimple : undefined}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}

@@ -13,6 +13,7 @@ export * from "@app/ui/NodeCard";
 export * from "@app/ui/OptionCard";
 export * from "@app/ui/CardRail";
 export * from "@app/ui/IconPicker";
+export * from "@app/ui/InfoTooltip";
 export * from "@app/ui/NavItem";
 export * from "@app/ui/NavSurface";
 export * from "@app/ui/Surface";

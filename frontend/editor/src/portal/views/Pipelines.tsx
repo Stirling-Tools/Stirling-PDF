@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
@@ -44,7 +44,6 @@ import "@portal/views/Pipelines.css";
 export function Pipelines() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -129,17 +128,6 @@ export function Pipelines() {
     },
     [navigate, listPath],
   );
-
-  // Reopen the simple wizard when the builder hands a pipeline back (still template-shaped). Cleared
-  // from history state after so a back/reload doesn't reopen it.
-  useEffect(() => {
-    const reopen = (location.state as { reopenSimple?: Policy } | null)
-      ?.reopenSimple;
-    if (!reopen) return;
-    const entry = parseSimplePolicy(reopen);
-    if (entry) setWizard(entry);
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.state, location.pathname, navigate]);
 
   // ?setup=<categoryId> deep link (onboarding): open the wizard for that suggested policy, then
   // strip the param so back/reload doesn't re-open it.

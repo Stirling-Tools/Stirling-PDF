@@ -11,7 +11,7 @@ import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
-import { PipelinePolicyControls } from "@portal/components/pipelines/PipelinePolicyControls";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
@@ -20,10 +20,9 @@ export interface PipelineEditHeaderProps {
   /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
   icon: string;
   onIconChange: (key: string) => void;
-  /** Org-mandated policy toggle + return-to-simple, shown in the actions row. */
+  /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
-  onBackToSimple?: () => void;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -62,7 +61,6 @@ export function PipelineEditHeader({
   onIconChange,
   required,
   onRequiredChange,
-  onBackToSimple,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -166,10 +164,9 @@ export function PipelineEditHeader({
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
-        <PipelinePolicyControls
+        <EnforceAsPolicyControl
           required={required}
           onRequiredChange={onRequiredChange}
-          onBackToSimple={onBackToSimple}
         />
 
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
