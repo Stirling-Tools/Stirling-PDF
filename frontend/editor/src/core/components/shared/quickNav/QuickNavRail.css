@@ -144,16 +144,30 @@
   border-radius: var(--radius-md);
 }
 
-/* An entry that is "on": a solid block with the glyph knocked out rather than a tint,
-   which hover already uses. Being in an app (aria-current) and having a toggle engaged
-   (aria-pressed) are different states, drawn alike deliberately. */
+/* The "on" state: a solid block with the glyph knocked out, hover owning the tints. */
 .quick-nav-rail-item[aria-current="true"],
 .quick-nav-rail-item[aria-current="true"]:hover,
 .quick-nav-rail-item[aria-pressed="true"],
 .quick-nav-rail-item[aria-pressed="true"]:hover {
-  /* Mixed toward the ground rather than full ink: beside line glyphs a solid ink
-     tile reads heavier than the state deserves. Both tokens flip with the theme,
-     so one rule covers light and dark. */
-  background: color-mix(in srgb, var(--c-text) 60%, var(--c-surface));
+  background: var(--c-text);
+  color: var(--c-surface);
+}
+
+/* On a dark ground full ink is white, so mix the block back toward the surface. */
+[data-theme="dark"] .quick-nav-rail-item[aria-current="true"],
+[data-theme="dark"] .quick-nav-rail-item[aria-current="true"]:hover,
+[data-theme="dark"] .quick-nav-rail-item[aria-pressed="true"],
+[data-theme="dark"] .quick-nav-rail-item[aria-pressed="true"]:hover,
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"],
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-current="true"]:hover,
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-pressed="true"],
+html[data-app-theme="midnight"] .quick-nav-rail-item[aria-pressed="true"]:hover,
+[data-mantine-color-scheme="dark"] .quick-nav-rail-item[aria-current="true"],
+[data-mantine-color-scheme="dark"]
+  .quick-nav-rail-item[aria-current="true"]:hover,
+[data-mantine-color-scheme="dark"] .quick-nav-rail-item[aria-pressed="true"],
+[data-mantine-color-scheme="dark"]
+  .quick-nav-rail-item[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
   color: var(--c-surface);
 }

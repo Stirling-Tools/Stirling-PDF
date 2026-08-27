@@ -135,13 +135,25 @@
   padding-inline: 1.75rem;
 }
 
-/* The selected view, marked as the quick nav rail marks the app you are in: a solid
-   block with the label and icon knocked out. One language for "where you are". */
+/* The selected view, marked as the rail marks the current app: a knocked-out solid block. */
 .portal-sidebar .sui-navitem.is-active,
 .portal-sidebar .sui-navitem.is-active:hover {
-  background: color-mix(in srgb, var(--c-text) 60%, var(--c-surface));
+  background: var(--c-text);
   color: var(--c-surface);
   border-radius: 0;
+}
+
+/* On a dark ground full ink is white, so mix the block back toward the surface. */
+[data-theme="dark"] .portal-sidebar .sui-navitem.is-active,
+[data-theme="dark"] .portal-sidebar .sui-navitem.is-active:hover,
+html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active,
+html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
+[data-mantine-color-scheme="dark"] .portal-sidebar .sui-navitem.is-active,
+[data-mantine-color-scheme="dark"]
+  .portal-sidebar
+  .sui-navitem.is-active:hover {
+  background: color-mix(in srgb, var(--c-text) 80%, var(--c-surface));
+  color: var(--c-surface);
 }
 
 .portal-sidebar__section {
