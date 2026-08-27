@@ -146,7 +146,7 @@ function executePdfJs(
     change: "",
     rc: true,
     willCommit: false,
-    target: null as null,
+    target: null,
   };
 
   try {
@@ -175,6 +175,8 @@ interface WidgetInputProps {
   onFocus: (fieldName: string) => void;
   onChange: (fieldName: string, value: string) => void;
   onButtonClick: (field: FormField, action?: ButtonAction | null) => void;
+  /** True while the structural editor owns the page, so widgets show but do not respond. */
+  editing: boolean;
 }
 
 /**
@@ -192,6 +194,7 @@ function WidgetInputInner({
   onFocus,
   onChange,
   onButtonClick,
+  editing,
 }: WidgetInputProps) {
   // Per-field value subscription — only this widget re-renders when its value changes
   const value = useFieldValue(field.name);
@@ -231,7 +234,7 @@ function WidgetInputInner({
         ? `0 0 0 2px ${error ? "rgba(244, 67, 54, 0.25)" : "rgba(33, 150, 243, 0.25)"}`
         : "none",
     cursor: field.readOnly ? "default" : "text",
-    pointerEvents: "auto",
+    pointerEvents: editing ? "none" : "auto",
     display: "flex",
     alignItems: field.multiline ? "stretch" : "center",
   };
@@ -365,8 +368,10 @@ function WidgetInputInner({
             style={{
               width: "85%",
               height: "85%",
-              maxWidth: height * 0.9, // Prevent it from getting too wide in rectangular boxes
-              maxHeight: width * 0.9,
+              // Keep the tick square in a rectangular box; these were transposed, so a wide
+              // short box clamped the wrong axis and let the mark spill out.
+              maxWidth: width * 0.9,
+              maxHeight: height * 0.9,
               fontSize: `${Math.max(10, height * 0.75)}px`,
               lineHeight: 1,
               color: isChecked ? "#2196F3" : "transparent",
@@ -457,6 +462,8 @@ function WidgetInputInner({
       if (widgetIndex < 0) return null;
       const widgetIndexStr = String(widgetIndex);
       const isSelected = value === widgetIndexStr;
+      const optionLabel =
+        field.options?.[widgetIndex] ?? widget.exportValue ?? "";
       return (
         <div
           {...commonProps}
@@ -491,14 +498,35 @@ function WidgetInputInner({
               height: Math.min(width, height) * 0.8,
               borderRadius: "50%",
               border: `1.5px solid ${isSelected ? "#2196F3" : isActive ? "#2196F3" : "#999"}`,
+              // The border must sit inside the width, or the dot outgrows its widget.
+              boxSizing: "border-box",
               background: isSelected ? "#2196F3" : "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               boxShadow: isSelected ? "inset 0 0 0 2px white" : "none",
               transition: "background 0.15s, border-color 0.15s",
+              flex: "0 0 auto",
             }}
           />
+          {optionLabel && (
+            // A PDF radio widget carries no caption of its own, so without this the options are
+            // indistinguishable circles. Drawn outside the rect so the hit area stays the widget.
+            <span
+              style={{
+                position: "absolute",
+                left: "100%",
+                marginLeft: 4,
+                whiteSpace: "nowrap",
+                fontSize: Math.max(9, Math.min(12, height * 0.9)),
+                lineHeight: `${height}px`,
+                color: "#333",
+                pointerEvents: "none",
+              }}
+            >
+              {optionLabel}
+            </span>
+          )}
         </div>
       );
     }
@@ -605,8 +633,17 @@ export function FormFieldOverlay({
   pageHeight,
   fileId,
 }: FormFieldOverlayProps) {
-  const { setValue, setActiveField, fieldsByPage, state, forFileId } =
-    useFormFill();
+  const {
+    setValue,
+    setActiveField,
+    effectiveFieldsByPage,
+    state,
+    forFileId,
+    mode,
+  } = useFormFill();
+  // While the editor owns the page the outlines and handles do the interacting; these widgets
+  // are here to show what the field looks like, not to be typed into.
+  const editing = mode !== "fill";
   const { activeFieldName, validationErrors } = state;
   const { printActions, scrollActions, exportActions } = useViewer();
 
@@ -647,8 +684,8 @@ export function FormFieldOverlay({
   }, [documentState, pageIndex, pageWidth, pageHeight]);
 
   const pageFields = useMemo(
-    () => fieldsByPage.get(pageIndex) || [],
-    [fieldsByPage, pageIndex],
+    () => effectiveFieldsByPage.get(pageIndex) || [],
+    [effectiveFieldsByPage, pageIndex],
   );
 
   const handleFocus = useCallback(
@@ -779,6 +816,7 @@ export function FormFieldOverlay({
                 onFocus={handleFocus}
                 onChange={handleChange}
                 onButtonClick={handleButtonClick}
+                editing={editing}
               />
             );
           }),

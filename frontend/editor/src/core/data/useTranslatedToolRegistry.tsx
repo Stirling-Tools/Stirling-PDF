@@ -20,6 +20,7 @@ import {
 import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
+import { classifyOperationConfig } from "@app/hooks/tools/classify/useClassifyOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
@@ -50,6 +51,8 @@ import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/u
 import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
+import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
@@ -452,11 +455,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             height="1.5rem"
           />
         ),
-        name: t("home.formFill.title", "Fill Form"),
+        name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t(
           "home.formFill.desc",
-          "Fill PDF form fields interactively with a visual editor",
+          "Fill, create, edit, and delete PDF form fields with a visual editor",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
@@ -464,7 +467,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["form-fill"],
         automationSettings: null,
         supportsAutomate: false,
-        synonyms: ["form", "fill", "fillable", "input", "field", "acroform"],
+        synonyms: [
+          "form",
+          "fill",
+          "fillable",
+          "input",
+          "field",
+          "acroform",
+          "edit",
+          "create",
+          "editor",
+          "modify",
+          "builder",
+        ],
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
@@ -526,6 +541,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: -1,
         endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
+        // Reports on signatures rather than transforming the PDF, and its hook is
+        // not on the operationConfig seam, so it cannot run as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
@@ -695,7 +713,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["rearrange-pages"],
         operationConfig: asRegistryConfig(reorganizePagesOperationConfig),
         synonyms: getSynonyms(t, "reorganizePages"),
-        automationSettings: null,
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/reorganizePages/ReorganizePagesSettings"),
+        ),
       },
       scalePages: {
         icon: (
@@ -755,6 +776,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
         endpoints: ["multi-page-layout"],
+        operationConfig: asRegistryConfig(pageLayoutOperationConfig),
         automationSettings: lazySettings(
           () => import("@app/components/tools/pageLayout/PageLayoutSettings"),
         ),
@@ -967,7 +989,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
         endpoints: ["remove-image-pdf"],
-        operationConfig: undefined,
+        operationConfig: asRegistryConfig(removeImageOperationConfig),
         synonyms: getSynonyms(t, "removeImage"),
         automationSettings: null,
       },
@@ -1196,6 +1218,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         endpoints: ["scanner-effect"],
         synonyms: getSynonyms(t, "scannerEffect"),
+        // No frontend implementation yet (component is null), so it has no
+        // operationConfig to execute as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
@@ -1325,6 +1350,30 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         synonyms: getSynonyms(t, "compare"),
         supportsAutomate: false,
+      },
+      classify: {
+        icon: (
+          <LocalIcon
+            icon="label-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.classify.title", "Classify"),
+        // No interactive UI: this is a pipeline step, registered so a pipeline can name it.
+        component: null,
+        description: t(
+          "home.classify.desc",
+          "Identify what kind of document this is and tag it.",
+        ),
+        categoryId: ToolCategoryId.ADVANCED_TOOLS,
+        subcategoryId: SubcategoryId.AI,
+        maxFiles: -1,
+        endpoints: ["classify-and-label"],
+        operationConfig: asRegistryConfig(classifyOperationConfig),
+        automationSettings: null,
+        // Pipeline-only: there is no interactive classify tool to open in the editor.
+        hiddenFromToolList: true,
       },
       compress: {
         icon: (

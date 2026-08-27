@@ -46,8 +46,8 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Docker
 - Git
 - Java JDK 25
-- Node.js 18+ and npm (required for frontend development)
-- Gradle 7.0 or later (Included within the repo)
+- Node.js 22+ and npm (required for frontend development)
+- Gradle 9.0 or later (Included within the repo)
 - [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
@@ -158,7 +158,7 @@ Stirling-PDF/
 │   │   │   └── locales/       # Internationalization files (JSON)
 │   │   └── vite.config.ts     # Vite configuration
 │   ├── package.json       # Shared workspace dependencies
-│   └── eslint.config.mjs  # Shared lint config
+│   └── oxlint.config.ts   # Shared lint config
 ├── customFiles/           # Custom static files and templates (generated at runtime used to replace existing files)
 ├── docs/                  # Documentation files
 ├── exampleYmlFiles/       # Example YAML configuration files

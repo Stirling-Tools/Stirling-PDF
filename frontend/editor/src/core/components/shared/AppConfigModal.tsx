@@ -7,6 +7,9 @@ import React, {
 } from "react";
 import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
+import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsMobileNavHeader";
+import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -29,7 +32,6 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
@@ -45,6 +47,8 @@ interface AppConfigModalProps {
   /** Section to land on when opening. Only honoured when urlSync is off (URL
    *  deep links win otherwise). */
   initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
   /** Registry section keys to drop, for hosts a section can't run in. */
@@ -66,6 +70,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   onClose,
   urlSync = true,
   initialSection,
+  initialFocus,
   extraSections,
   hiddenSectionKeys,
 }) => {
@@ -79,6 +84,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       "general",
   );
   const isMobile = useIsMobile();
+  const [mobilePane, setMobilePane] = useState<"nav" | "content">("nav");
   const navigate = useNavigate();
   const location = useLocation();
   const { config } = useAppConfig();
@@ -119,6 +125,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     }
   }, [opened]);
 
+  useEffect(() => {
+    if (!opened) return;
+    const target = urlSync
+      ? getSectionFromPath(window.location.pathname)
+      : initialSection;
+    setMobilePane(target ? "content" : "nav");
+  }, [opened, urlSync, initialSection]);
+
   // Switch tab without forcing every `useLocation()` subscriber (HomePage and
   // its FileSidebar/Workbench/RightSidebar/FileManager tree) to re-render.
   //
@@ -148,6 +162,35 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     },
     [navigate, urlSync],
   );
+
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, initialFocus, location.search, urlSync]);
 
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.
@@ -184,34 +227,36 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  /** Resolves false when a dirty-state confirm kept the modal open. */
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
-
-    // Only unwind history if settings was opened via the URL; opened via state
-    // there's no /settings entry to pop and navigate(-1) would jump to /files.
-    if (urlSync && location.pathname.startsWith("/settings")) {
-      // "default" key = first entry (deep link/refresh); nothing to pop to.
-      if (location.key === "default") {
-        navigate("/", { replace: true });
-      } else {
-        navigate(-1);
-      }
-    }
+    if (!canProceed) return false;
     onClose();
-  }, [
-    confirmIfDirty,
-    location.key,
-    location.pathname,
-    navigate,
-    onClose,
-    urlSync,
-  ]);
+    return true;
+  }, [confirmIfDirty, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
     void handleClose();
   }, [handleClose]);
+
+  // Cmd/Ctrl+K: hand over to the global super search. The bar's own shortcut
+  // is inert while a dialog traps focus, so the modal closes itself (through
+  // the same dirty-check as any other close) and asks the bar to take focus.
+  // Settings results deep-link straight back into this modal.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+      if (!combo || e.code !== "KeyK") return;
+      e.preventDefault();
+      void handleClose().then((closed) => {
+        if (closed) window.dispatchEvent(new Event("superSearch:focus"));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opened, handleClose]);
 
   // Left navigation structure and icons
   const registrySections = useConfigNavSections(
@@ -254,9 +299,16 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       const canProceed = await confirmIfDirty();
       if (!canProceed) return;
       switchSection(key);
+      setMobilePane("content");
     },
     [confirmIfDirty, switchSection],
   );
+
+  const handleMobileBack = useCallback(async () => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+    setMobilePane("nav");
+  }, [confirmIfDirty]);
 
   return (
     <Modal
@@ -280,22 +332,28 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
           className={`modal-nav ${isMobile ? "mobile" : ""}`}
           style={{
             background: colors.navBg,
-            borderRight: `1px solid ${colors.headerBorder}`,
+            ...(isMobile
+              ? { display: mobilePane === "nav" ? undefined : "none" }
+              : { borderRight: `1px solid ${colors.headerBorder}` }),
           }}
         >
+          <SettingsMobileNavHeader
+            show={isMobile}
+            onClose={handleClose}
+            background={colors.navBg}
+            borderColor={colors.headerBorder}
+          />
           <div className="modal-nav-scroll">
             {configNavSections.map((section) => (
               <div key={section.title} className="modal-nav-section">
-                {!isMobile && (
-                  <Text
-                    size="xs"
-                    fw={600}
-                    c={colors.sectionTitle}
-                    style={{ textTransform: "uppercase", letterSpacing: 0.4 }}
-                  >
-                    {section.title}
-                  </Text>
-                )}
+                <Text
+                  size="xs"
+                  fw={600}
+                  c={colors.sectionTitle}
+                  style={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+                >
+                  {section.title}
+                </Text>
                 <div className="modal-nav-section-items">
                   {section.items.map((item) => {
                     const isActive = active === item.key;
@@ -303,7 +361,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                     const color = isActive
                       ? colors.navItemActive
                       : colors.navItem;
-                    const iconSize = isMobile ? 28 : 18;
+                    const iconSize = 18;
                     const showPlanWarning =
                       item.key === "adminPlan" &&
                       licenseAlert.active &&
@@ -331,47 +389,46 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                           icon={item.icon}
                           width={iconSize}
                           height={iconSize}
-                          style={{ color }}
+                          style={{ color, flexShrink: 0 }}
                         />
-                        {!isMobile && (
-                          <Group
-                            gap={4}
-                            align="center"
-                            wrap="nowrap"
-                            style={{ minWidth: 0, flex: 1 }}
+                        <Group
+                          gap={4}
+                          align="center"
+                          wrap="nowrap"
+                          style={{ minWidth: 0, flex: 1 }}
+                        >
+                          <Text
+                            size="sm"
+                            fw={500}
+                            truncate
+                            style={{ color, minWidth: 0, flex: 1 }}
+                            title={item.label}
                           >
-                            <Text
-                              size="sm"
-                              fw={500}
-                              truncate
-                              style={{ color, minWidth: 0, flex: 1 }}
-                              title={item.label}
+                            {item.label}
+                          </Text>
+                          {item.badge && (
+                            <Badge
+                              size="xs"
+                              variant="light"
+                              color={item.badgeColor ?? "orange"}
+                              className="modal-nav-item-badge"
+                              style={{ flexShrink: 0 }}
                             >
-                              {item.label}
-                            </Text>
-                            {item.badge && (
-                              <Badge
-                                size="xs"
-                                variant="light"
-                                color={item.badgeColor ?? "orange"}
-                                className="modal-nav-item-badge"
-                                style={{ flexShrink: 0 }}
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                            {showPlanWarning && (
-                              <LocalIcon
-                                icon="warning-rounded"
-                                width={14}
-                                height={14}
-                                style={{
-                                  color: "var(--mantine-color-orange-7)",
-                                }}
-                              />
-                            )}
-                          </Group>
-                        )}
+                              {item.badge}
+                            </Badge>
+                          )}
+                          {showPlanWarning && (
+                            <LocalIcon
+                              icon="warning-rounded"
+                              width={14}
+                              height={14}
+                              style={{
+                                color: "var(--mantine-color-orange-7)",
+                              }}
+                            />
+                          )}
+                        </Group>
+                        <SettingsNavChevron show={isMobile} />
                       </div>
                     );
 
@@ -398,7 +455,15 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
         </div>
 
         {/* Right content */}
-        <div className="modal-content" data-tour="settings-content-area">
+        <div
+          className="modal-content"
+          data-tour="settings-content-area"
+          style={
+            isMobile && mobilePane !== "content"
+              ? { display: "none" }
+              : undefined
+          }
+        >
           <div className="modal-content-scroll">
             {/* Sticky header with section title and small close button */}
             <div
@@ -408,15 +473,16 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 borderBottom: `1px solid ${colors.headerBorder}`,
               }}
             >
-              <Text fw={700} size="lg">
-                {activeLabel}
-              </Text>
-              <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
+              <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+                <SettingsMobileBackButton
+                  show={isMobile}
+                  onClick={() => void handleMobileBack()}
                 />
+                <Text fw={700} size="lg" truncate>
+                  {activeLabel}
+                </Text>
+              </Group>
+              <Group gap="xs" wrap="nowrap">
                 <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"

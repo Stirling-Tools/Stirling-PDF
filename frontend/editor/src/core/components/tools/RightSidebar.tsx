@@ -4,7 +4,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
@@ -17,7 +16,6 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -43,7 +41,6 @@ export default function RightSidebar() {
   const {
     leftPanelView,
     isPanelVisible,
-    searchQuery,
     filteredTools,
     toolRegistry,
     setSearchQuery,
@@ -77,7 +74,6 @@ export default function RightSidebar() {
   };
 
   const [allToolsView, setAllToolsView] = useState(false);
-  const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
 
   const handleShowAllTools = () => {
     withViewTransition(() => setAllToolsView(true));
@@ -95,7 +91,6 @@ export default function RightSidebar() {
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  const showHeaderSearch = showCloseButton || headerSearchOpen;
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -109,23 +104,9 @@ export default function RightSidebar() {
     withViewTransition(() => handleToolSelect(id));
   };
 
-  // Typing in the header search while inside a tool exits the tool and lifts the
-  // panel into the all-tools view so the user immediately sees search results.
-  const handleHeaderSearchChange = (value: string) => {
-    if (inToolView) {
-      withViewTransition(() => {
-        handleBackToTools();
-        setAllToolsView(true);
-        setSearchQuery(value);
-      });
-      return;
-    }
-    setSearchQuery(value);
-  };
-
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
-      ? (toolRegistry[selectedToolKey as ToolId] ?? null)
+      ? (toolRegistry[selectedToolKey] ?? null)
       : null;
 
   const expandedWidth = "18.5rem";
@@ -148,7 +129,7 @@ export default function RightSidebar() {
     const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     collapsedQuickSection.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((entry) =>
-        items.push({ id: entry.id as ToolId, tool: entry.tool }),
+        items.push({ id: entry.id, tool: entry.tool }),
       ),
     );
     return items;
@@ -235,6 +216,7 @@ export default function RightSidebar() {
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
           <>
@@ -255,43 +237,15 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : (
+            ) : showCloseButton || !isMobile ? (
+              /* Without a back button this header is just the collapse control,
+                 which has no meaning on mobile - the slider switches panes. Drop
+                 it there so the tool list starts under the tabs. */
               <div className="tool-panel__compact-header">
-                {showHeaderSearch ? (
-                  <div className="tool-panel__compact-header-search">
-                    <ToolSearch
-                      value={searchQuery}
-                      onChange={handleHeaderSearchChange}
-                      toolRegistry={toolRegistry}
-                      mode="filter"
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <span className="tool-panel__compact-title">
-                    {t("toolPanel.pdfTools", "PDF Tools")}
-                  </span>
-                )}
+                <span className="tool-panel__compact-title">
+                  {t("toolPanel.pdfTools", "PDF Tools")}
+                </span>
                 <div className="tool-panel__compact-header-actions">
-                  {!showCloseButton && (
-                    <ActionIcon
-                      variant="tertiary"
-                      size="md"
-                      shape="circle"
-                      onClick={() => {
-                        if (headerSearchOpen) handleHeaderSearchChange("");
-                        setHeaderSearchOpen((open) => !open);
-                      }}
-                      aria-label={t("toolPanel.searchTools", "Search tools")}
-                      className="tool-panel__expand-btn"
-                    >
-                      {headerSearchOpen ? (
-                        <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                      ) : (
-                        <SearchIcon sx={{ fontSize: "1.1rem" }} />
-                      )}
-                    </ActionIcon>
-                  )}
                   {showCloseButton ? (
                     <ActionIcon
                       variant="tertiary"
@@ -321,13 +275,16 @@ export default function RightSidebar() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
 
             <ToolPanel
               allToolsView={allToolsView}
               onShowAllTools={handleShowAllTools}
               onToolSelect={handleToolSelectWithTransition}
               compact={false}
+              /* Mobile keeps the workbench bar - and with it the super search -
+                 on the other slide, so the list needs its own filter. */
+              showSearch={isMobile}
             />
           </>
         </div>
