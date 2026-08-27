@@ -94,6 +94,7 @@ export interface PolicyState {
 export interface PolicySetupResult {
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   outputMode: "new_file" | "new_version";
@@ -598,9 +599,7 @@ export function buildWireFromSetup(
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
-      // A fresh wizard save: the editor is on when the user picked it as a source,
-      // the same rule the editor's own buildBackendPolicy applies.
-      runsOnEditor: result.sources.includes("editor"),
+      runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,

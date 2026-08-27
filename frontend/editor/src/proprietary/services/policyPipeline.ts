@@ -12,9 +12,6 @@
  */
 
 import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
-
-/** The editor's id in a policy's scope list; picking it makes the policy editor-run. */
-export const EDITOR_SOURCE_ID = "editor";
 import type { AutomationConfig } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
@@ -228,6 +225,7 @@ export interface PolicyToStore {
    */
   pipelineSteps: BackendPipelineStep[];
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -302,7 +300,7 @@ export function buildBackendPolicy(input: PolicyToStore): BackendPolicy {
       },
     },
     editor: {
-      allowed: input.sources.includes(EDITOR_SOURCE_ID),
+      allowed: input.runsOnEditor,
       runOn: input.folder.runOn,
     },
   };

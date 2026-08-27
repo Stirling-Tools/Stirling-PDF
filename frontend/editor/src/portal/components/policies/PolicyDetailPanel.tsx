@@ -118,10 +118,10 @@ export function PolicyDetailPanel({
   const canDelete = state.isDefault !== true;
   // Processed history only exists for watched sources; editor uploads are never ledgered.
   const canClearHistory =
-    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
+    onClearHistory !== undefined && state.sources.length > 0;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
-  const hasEditorSource = state.sources.includes("editor");
+  const hasEditorSource = state.runsOnEditor === true;
   const trigger =
     state.runOn === "export"
       ? t("portal.policies.detail.onEveryExport")

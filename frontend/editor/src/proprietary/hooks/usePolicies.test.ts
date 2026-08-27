@@ -48,7 +48,8 @@ const wizardResult = {
     updatedAt: "",
   },
   fieldValues: {},
-  sources: ["editor"],
+  sources: [],
+  runsOnEditor: true,
   scopeTypes: [],
   reviewerEmail: "reviewer@x.com",
   folder: {

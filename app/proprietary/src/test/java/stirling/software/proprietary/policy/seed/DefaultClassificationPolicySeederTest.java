@@ -21,7 +21,6 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamCreatedEvent;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
@@ -75,7 +74,7 @@ class DefaultClassificationPolicySeederTest {
     }
 
     @Test
-    void listsTheEditorAsASourceSoResavingInTheWizardCannotSwitchClassificationOff() {
+    void marksEditorParticipationOnEditorConfigAndSeedsNoSources() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of());
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
@@ -83,11 +82,10 @@ class DefaultClassificationPolicySeederTest {
         ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
         verify(policyStore).save(saved.capture());
         Policy policy = saved.getValue();
-        // The portal wizard hydrates its source picker from these options and re-derives editor
-        // participation from the user's selection. An editor-run policy that does not list the
-        // editor here comes back from the wizard switched off.
+        // Editor participation is on EditorConfig, not the sources list; the seed carries no
+        // sources.
         assertThat(policy.editor().allowed()).isTrue();
-        assertThat(policy.output().options().get("sources")).isEqualTo(List.of(EditorSource.ID));
+        assertThat(policy.output().options().get("sources")).isEqualTo(List.of());
     }
 
     @Test

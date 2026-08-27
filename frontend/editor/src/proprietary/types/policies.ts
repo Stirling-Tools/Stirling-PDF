@@ -192,6 +192,7 @@ export interface PolicyWizardResult {
   automation: AutomationConfig;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   /** Output + retry settings for the backing folder. */
@@ -228,6 +229,7 @@ export interface PolicyConfigResult {
   unresolvedOps: string[];
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   folder: PolicyFolderSettings;
