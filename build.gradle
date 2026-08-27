@@ -306,7 +306,7 @@ subprojects {
         systemProperty 'apple.awt.UIElement', 'true'
 
         testLogging {
-            events "started", "failed"
+            events "skipped", "failed"
             showExceptions = true
             showCauses = true
             showStackTraces = true
