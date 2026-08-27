@@ -73,17 +73,14 @@ function causesFor(
   return causes;
 }
 
-/**
- * Why a rail entry can't be used. Null means no answer yet; an empty map means nothing
- * is wrong. The last answer is held through a re-fetch.
- */
+/** Why a rail entry can't be used. Null means no answer yet, an empty map nothing wrong. */
 export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { t } = useTranslation();
   const endpoints = useMemo(() => Object.values(ENTRY_ENDPOINTS).flat(), []);
   const { endpointStatus, endpointDetails, loading } =
     useMultipleEndpointsEnabled(endpoints);
 
-  // Once: later reads would fight the live answer.
+  // Read once: later reads would fight the live answer.
   const [remembered] = useState(readRemembered);
 
   const { loading: configLoading } = useAppConfig();

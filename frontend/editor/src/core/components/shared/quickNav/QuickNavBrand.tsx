@@ -7,7 +7,6 @@ export interface QuickNavBrandProps {
   onReturnHome: () => void;
 }
 
-/** Pinned at the top of the rail. */
 export function QuickNavBrand({ onReturnHome }: QuickNavBrandProps) {
   const { t } = useTranslation();
   const label = t("quickNav.home", "Stirling");

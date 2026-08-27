@@ -4,10 +4,7 @@ interface BrandTileProps {
   className?: string;
 }
 
-/**
- * The brand mark knocked out of a rounded square, as against the bare
- * {@link BrandMark}. Decorative: every call site carries the accessible name.
- */
+/** The mark in a rounded square. Decorative: call sites carry the accessible name. */
 export function BrandTile({ size, className }: BrandTileProps) {
   return (
     <svg

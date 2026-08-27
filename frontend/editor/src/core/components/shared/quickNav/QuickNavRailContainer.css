@@ -1,5 +1,5 @@
 .quick-nav-rail-container {
-  /* On the column: the switcher block sits outside the nav and wouldn't inherit it. */
+  /* On the column, so the parts outside the nav inherit them too. */
   --quicknav-item-gap: var(--space-3);
   --quicknav-surface-pad: 0.375rem;
 

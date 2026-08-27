@@ -54,8 +54,7 @@ export default function App() {
           }
         />
 
-        {/* The app, under a shared frame so the quick nav rail is rendered
-            once outside it. The public routes above stay outside the frame. */}
+        {/* The app, under a shared frame so the rail renders once outside it. */}
         <Route element={<AppFrame />}>
           {/* All other routes need AppProviders for backend integration */}
           <Route

@@ -60,8 +60,7 @@ function fixture(filename: string): string {
 }
 
 async function openSamplePdfInViewer(page: import("@playwright/test").Page) {
-  // Not /read: reading mode collapses the workbench bar these sidebars are
-  // toggled from. A single opened file lands on the viewer anyway.
+  // Not /read: reading collapses the workbench bar these sidebars are toggled from.
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
   await page

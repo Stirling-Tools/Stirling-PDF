@@ -59,11 +59,7 @@ export interface TooltipProps {
   showCloseButton?: boolean;
 }
 
-/**
- * Its own component so the default logo - and the providers behind it - are needed
- * only by tooltips with a header. The plain tooltip renders outside them, as the
- * rail does.
- */
+/** Split out so only tooltips with a header need the logo and the providers behind it. */
 function TooltipHeader({
   header,
 }: {
@@ -131,7 +127,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // Only sidebarTooltip uses it, and the plain tooltip must work without the provider.
+  // Optional: the plain tooltip renders outside the provider.
   const sidebarContextValue = useOptionalSidebarContext();
   const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 

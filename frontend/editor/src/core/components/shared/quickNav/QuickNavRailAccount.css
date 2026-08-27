@@ -16,8 +16,7 @@
   display: inline-flex;
 }
 
-/* Appearance comes from the shared Avatar, which renders a real <button> when it
-   takes a click; only the reset is ours. */
+/* Appearance comes from the shared Avatar; only the button reset is ours. */
 .quick-nav-rail-avatar {
   border: none;
   padding: 0;

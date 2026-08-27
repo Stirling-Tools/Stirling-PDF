@@ -9,10 +9,7 @@ export interface SidebarToggleButtonProps {
   icon?: React.ReactNode;
 }
 
-/**
- * Opens and closes the sidebar. On /files the caller swaps in a back arrow: the
- * sidebar is forced collapsed there, so leaving is all this can do.
- */
+/** Opens and closes the sidebar; on /files the caller swaps in a back arrow. */
 export function SidebarToggleButton({
   collapsed,
   onToggle,

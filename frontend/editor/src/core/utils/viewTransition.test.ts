@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { withViewTransition } from "@app/utils/viewTransition";
 
-// The DOM lib types startViewTransition as required and fully-shaped; the stub
-// only needs the one field the helper reads, so go through unknown.
+// The stub carries only the field the helper reads, hence the cast through unknown.
 type MutableDoc = { startViewTransition?: unknown };
 const doc = document as unknown as MutableDoc;
 

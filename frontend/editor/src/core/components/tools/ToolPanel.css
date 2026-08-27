@@ -21,8 +21,7 @@
 
 /* Flush, with a rule on the workbench side mirroring the file sidebar's. */
 .tool-panel--floating {
-  /* Tracks the frame, which is dvh and clips; vh would cut the bottom off on
-     mobile. */
+  /* Tracks the frame, which is dvh; vh would cut the bottom off on mobile. */
   height: 100%;
   background: var(--c-surface);
   border-inline-start: 1px solid var(--c-border-subtle);

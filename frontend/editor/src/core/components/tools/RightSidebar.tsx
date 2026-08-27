@@ -181,8 +181,7 @@ export default function RightSidebar() {
                 content={tool.name}
                 position="left"
                 arrow
-                // No delay: collapsed to icons the tooltip is the only label. Rows
-                // that show their own name keep their delay.
+                // No delay: collapsed to icons, the tooltip is the only label.
                 delay={0}
               >
                 <ActionIcon

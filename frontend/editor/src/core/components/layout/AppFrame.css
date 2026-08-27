@@ -8,8 +8,7 @@
   background-color: var(--c-bg);
 }
 
-/* min-width: 0 so the app shrinks rather than forcing the frame past the window: its
-   children set their own widths and would otherwise win. */
+/* min-width: 0 so the app shrinks instead of forcing the frame past the window. */
 .app-frame__content {
   flex: 1;
   min-width: 0;

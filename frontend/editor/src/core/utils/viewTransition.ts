@@ -4,10 +4,7 @@ type ViewTransitionDoc = Document & {
   startViewTransition?: (cb: () => void) => { finished: Promise<void> };
 };
 
-/**
- * Runs a state update inside a View Transition, falling back to a plain update
- * where the API is unavailable or motion is reduced.
- */
+/** Runs a state update in a View Transition, plainly where that is unavailable. */
 export function withViewTransition(update: () => void): Promise<void> {
   if (typeof document === "undefined") {
     update();

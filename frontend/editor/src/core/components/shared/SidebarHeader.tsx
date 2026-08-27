@@ -2,7 +2,6 @@ import { Logo } from "@app/ui/Logo";
 import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton";
 
 export interface SidebarHeaderProps {
-  /** Collapsed drops the wordmark. */
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   toggleAriaLabel?: string;

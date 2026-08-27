@@ -76,10 +76,7 @@ function sameReasons(
 
 const QuickNavHostContext = createContext<QuickNavHostValue | null>(null);
 
-/**
- * The rail renders above the route split, outside both apps' providers, so each app
- * registers what only it knows. Data survives an unmount; handlers do not.
- */
+/** Outside both apps' providers, so each app registers what only it knows. */
 export function QuickNavHostProvider({ children }: { children: ReactNode }) {
   const [data, setDataState] = useState<QuickNavHostData>(EMPTY_DATA);
   const [chromeless, setChromelessState] = useState(false);
@@ -192,10 +189,7 @@ export function useRegisterQuickNavHost(
   );
 }
 
-/**
- * `appMounted` is sticky, so a screen that isn't the app has to say so itself.
- * `active` is for screens that are a branch of a route rather than a route of their own.
- */
+/** `appMounted` is sticky, so a screen that isn't the app has to say so itself. */
 export function useSuppressQuickNavRail(active = true): void {
   const host = useQuickNavHost();
   const setChromeless = host?.setChromeless;

@@ -62,10 +62,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   );
 }
 
-/**
- * For components that must still render outside a SidebarProvider - the shared
- * Tooltip, used by the rail above the route split.
- */
+/** For components that render outside a SidebarProvider, such as the rail's tooltips. */
 export function useOptionalSidebarContext(): SidebarContextValue | undefined {
   return useContext(SidebarContext);
 }

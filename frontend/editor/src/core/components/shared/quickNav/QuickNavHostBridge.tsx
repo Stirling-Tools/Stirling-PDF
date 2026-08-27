@@ -26,10 +26,7 @@ export interface QuickNavHostBridgeProps {
   toolReasons?: QuickNavToolReasons;
 }
 
-/**
- * Registers with the rail what only the app can see, and owns the notifications panel,
- * whose rows need the workbench contexts that exist only down here.
- */
+/** Registers with the rail what only the app can see, and owns the notifications panel. */
 export function QuickNavHostBridge({
   portalAccess = false,
   readerMode = false,
@@ -43,8 +40,7 @@ export function QuickNavHostBridge({
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const signingBadge = useSigningBadgeCount();
   const notificationsAvailable = useNotificationsAvailable();
-  // Built even with the panel closed: the registry carries a one-shot pickup of a
-  // document handed over from the processor, which would otherwise sit unclaimed.
+  // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
   const notificationActions = useNotificationActions();
   const endpointReasons = useQuickNavToolReasons();
   const mergedToolReasons = useMemo(() => {

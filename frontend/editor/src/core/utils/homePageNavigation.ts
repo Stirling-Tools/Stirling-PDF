@@ -7,10 +7,7 @@ export interface StartupNavigationAction {
   activeFileIndex?: number;
 }
 
-/**
- * Several files means the file editor; one or none the viewer. Shared with
- * getStartupNavigationAction so opening files and going home can't disagree.
- */
+/** Several files means the file editor; one or none the viewer. */
 export function getDefaultWorkbenchForFileCount(
   fileCount: number,
 ): WorkbenchType {

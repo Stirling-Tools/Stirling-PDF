@@ -82,16 +82,13 @@ export default function App() {
           }
         />
 
-        {/* The two apps, under a shared frame so the quick nav rail is rendered once
-            outside both. The public routes above stay outside it, with no app chrome. */}
+        {/* Both apps, under a shared frame so the rail renders once outside them. */}
         <Route element={<AppFrame />}>
-          {/* Admin-only route-set (the portal): its own top-level shell, mounted
-              before the catch-all. Absent from core/desktop builds (empty stub). */}
+          {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
 
-          {/* All other routes need AppProviders for backend integration.
-              RootGate makes "/" route by role BEFORE any of it mounts, so a user
-              bound for the processor never boots the editor on the way. */}
+          {/* All other routes need AppProviders for backend integration. RootGate
+              routes "/" by role before any of it mounts. */}
           <Route
             path="*"
             element={
@@ -99,12 +96,10 @@ export default function App() {
                 <AppProviders>
                   <AppLayout>
                     <Routes>
-                      {/* Not the app: no navigation bar over any of these, even
-                        after an app has been mounted in this tab. */}
+                      {/* Not the app: no rail over any of these, ever. */}
                       <Route element={<NoAppChrome />}>
                         <Route path="/login" element={<Login />} />
-                        {/* Self-hosted has no signup - accounts are created by an
-                          admin. Old links land on login instead. */}
+                        {/* Self-hosted has no signup: old links land on login. */}
                         <Route
                           path="/signup"
                           element={<Navigate to="/login" replace />}

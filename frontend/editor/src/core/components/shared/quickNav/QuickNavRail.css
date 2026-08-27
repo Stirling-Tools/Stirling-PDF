@@ -117,8 +117,7 @@
   flex-shrink: 0;
 }
 
-/* ---- Brand ----
-   One header row tall, so it lines up with the sidebar's wordmark beside it. */
+/* ---- Brand: one header row tall, so it lines up with the sidebar's wordmark ---- */
 .quick-nav-brand {
   width: 100%;
   height: var(--nav-header-h);

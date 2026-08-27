@@ -93,7 +93,6 @@ export function Sidebar() {
       // Off-canvas on mobile: remove from the tab order and accessibility tree.
       inert={isMobile && !mobileNavOpen}
     >
-      {/* Header row: wordmark, collapse toggle, and the drawer's close button on mobile. */}
       <div className="portal-sidebar__header">
         {!collapsed && <Logo variant="textOnly" textHeight="1.3rem" />}
 

@@ -195,8 +195,7 @@ export function useViewerWorkbenchBarButtons(
           >
             <Popover.Target>
               <div style={{ display: "inline-flex" }}>
-                {/* Inside the Popover, not around it: Tooltip binds by cloning
-                    its child, and Popover passes neither ref nor handlers on. */}
+                {/* Inside the Popover: Tooltip binds by cloning, and Popover passes no ref on. */}
                 <Tooltip
                   content={searchLabel}
                   position={tooltipPosition}

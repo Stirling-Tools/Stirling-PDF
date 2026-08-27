@@ -44,8 +44,7 @@ function setup() {
 
 describe("QuickNavHostContext", () => {
   it("keeps what the app published after it unmounts, but drops its handlers", () => {
-    // A switch unmounts one app before the next registers, so data has to survive it.
-    // Handlers must not: calling into a torn-down tree is not harmless.
+    // Data survives the gap between one app unmounting and the next registering.
     const { view, read } = setup();
 
     expect(read().appMounted).toBe(true);

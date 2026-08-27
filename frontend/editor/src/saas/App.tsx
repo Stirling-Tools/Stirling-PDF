@@ -98,16 +98,13 @@ export default function App() {
           }
         />
 
-        {/* The two apps, under a shared frame so the quick nav rail is rendered
-            once outside both and survives switching between them. */}
+        {/* Both apps, under a shared frame so the rail renders once outside them. */}
         <Route element={<AppFrame />}>
-          {/* Admin-only route-set (the portal): its own top-level shell, mounted
-            before the catch-all. */}
+          {/* The portal: its own top-level shell, before the catch-all. */}
           {getAdminRouteExtensions()}
 
-          {/* Everything else needs the auth/backend providers. RootGate makes "/"
-            route by role BEFORE any of it mounts, so a user bound for the
-            processor never boots the editor on the way. */}
+          {/* Everything else needs the auth/backend providers. RootGate routes "/"
+            by role before any of it mounts. */}
           <Route
             path="*"
             element={
@@ -121,8 +118,7 @@ export default function App() {
                     <NonAuthBootstraps />
                     <ResumePendingConnect />
                     <Routes>
-                      {/* Not the app: no navigation bar over any of these, even
-                        after an app has been mounted in this tab. */}
+                      {/* Not the app: no rail over any of these, ever. */}
                       <Route element={<NoAppChrome />}>
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />

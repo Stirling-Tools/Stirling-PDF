@@ -5,10 +5,7 @@ import { QuickNavHostProvider } from "@app/contexts/QuickNavHostContext";
 import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
 import "@app/components/layout/AppFrame.css";
 
-/**
- * Wraps both apps so the rail renders once outside them and a route change swaps only
- * the Outlet. Suspense sits here too: a fallback above it would replace the rail.
- */
+/** The rail renders once outside both apps; Suspense sits inside it, not above. */
 export function AppFrame() {
   return (
     <QuickNavHostProvider>

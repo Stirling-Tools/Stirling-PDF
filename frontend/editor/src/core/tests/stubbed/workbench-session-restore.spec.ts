@@ -74,9 +74,7 @@ test.describe("Workbench survives the editor/processor switch", () => {
       page.getByRole("radio", { name: /Active Files/i }),
     ).toBeChecked();
 
-    // Out through the quick nav rail's processor mark, the only chrome offering the
-    // switch. Absent in builds without the processor, which have nothing to
-    // round-trip to - read off the running app rather than the flag, as above.
+    // Out through the rail's processor mark, the only chrome that offers the switch.
     const processorMark = page.getByRole("button", { name: /^Processor$/i });
     test.skip(
       !(await processorMark.isVisible({ timeout: 5_000 }).catch(() => false)),

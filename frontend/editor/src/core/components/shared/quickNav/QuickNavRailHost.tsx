@@ -16,10 +16,7 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 
 const SIZE = "1.125rem";
 
-/**
- * Entries come from the URL rather than either app's context, so the rail survives an
- * app switch. Everything else is registered - see QuickNavHostContext.
- */
+/** Entries come from the URL, not either app's context, so the rail survives a switch. */
 export function QuickNavRailHost() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -60,8 +57,7 @@ export function QuickNavRailHost() {
     {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
-      // Two literals rather than a name chosen at runtime: the offline icon bundle is
-      // built by scanning for `icon="..."`, so a computed name ships blank.
+      // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
       icon: inPortal ? (
         <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
       ) : (

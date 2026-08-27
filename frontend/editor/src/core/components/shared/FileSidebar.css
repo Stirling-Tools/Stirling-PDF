@@ -1,8 +1,7 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  /* One solid panel, with a rule on the workbench side only, so the chrome frames the
-     document rather than boxing each panel. */
+  /* One solid panel, with a rule only on the workbench side, so it frames the document. */
   background-color: var(--c-surface);
   border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
@@ -40,9 +39,7 @@
   gap: 0.5rem;
 }
 
-/* The sections are NavSurfaces for use on their own elsewhere; inside the sidebar
-   they are one panel, so the card treatment comes off. Two classes deep to beat
-   .sui-nav-surface rather than depend on stylesheet order. */
+/* Flattened here; two classes deep to beat .sui-nav-surface without relying on order. */
 .file-sidebar .sui-nav-surface {
   background: transparent;
   border: 0;

@@ -28,9 +28,7 @@ export default function Landing() {
 
   const loading = authLoading || configLoading || backendProbe.loading;
 
-  // The backend-down screen below is not the app, so the rail would otherwise offer to
-  // move around an app that cannot be reached. Not applied while merely loading, which
-  // resolves in a moment and would blink the rail out mid-session.
+  // The backend-down screen is not the app. Loading is: it resolves in a moment.
   useSuppressQuickNavRail(!session && backendProbe.status !== "up");
 
   // Debug: Track Landing component lifecycle

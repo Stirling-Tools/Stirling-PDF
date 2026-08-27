@@ -11,9 +11,7 @@ interface AppSwitchMenuItemsProps {
   onSwitch: (app: AppSwitchTarget) => void;
 }
 
-/**
- * The editor / processor items for an app-switch menu.
- */
+/** The editor / processor items for an app-switch menu. */
 export function AppSwitchMenuItems({
   current,
   onSwitch,

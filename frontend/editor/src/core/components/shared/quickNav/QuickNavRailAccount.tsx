@@ -24,8 +24,7 @@ export function QuickNavRailAccount({
   return (
     <div className="quick-nav-rail-account">
       <Tooltip content={label} position="right" arrow>
-        {/* A span, not the Avatar: Tooltip binds by cloning its child, and Avatar
-            spreads nothing. The tour and e2e hooks ride on it for the same reason. */}
+        {/* A span, not the Avatar: Tooltip binds by cloning its child. */}
         <span
           className="quick-nav-rail-avatar-target"
           data-testid="config-button"

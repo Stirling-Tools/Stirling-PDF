@@ -48,8 +48,7 @@
   box-shadow: 0 10px 30px rgb(0 0 0 / 25%);
 }
 
-/* The rail's bell sits at the foot of a full-height column, so its panel stands beside
-   the rail and rises from the bottom rather than dropping off the window. */
+/* The rail's bell is at the foot of a full-height column, so its panel rises beside it. */
 .notification-bell__panel--rail {
   inset-inline-start: calc(var(--nav-rail-w) + var(--nav-gutter));
   inset-block-end: var(--nav-gutter);

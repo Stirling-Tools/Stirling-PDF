@@ -96,15 +96,13 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  // Reading hides the bar outright; the rail's Reader entry, being outside the
-  // workbench, is the way back.
+  // Reading hides the bar; the rail's Reader entry is the way back.
   const showWorkbenchBar =
     topControlsAvailable && hasWorkbenchContent && !readerMode;
   const showFloatingSearch =
     topControlsAvailable && !hasWorkbenchContent && !readerMode;
 
-  // On the transition rather than derived, so reading sets the toolbar's starting
-  // state without locking the reopen tab.
+  // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {

@@ -18,10 +18,7 @@ export interface NotificationPanelProps {
   className?: string;
 }
 
-/**
- * Mounted only while open: mounting marks everything read, and a closed panel never
- * subscribes to the poll. Rendered by the app, since its rows act on the workbench.
- */
+/** Mounted only while open, since mounting is what marks everything read. */
 export function NotificationPanel({
   onClose,
   registry,

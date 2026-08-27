@@ -177,8 +177,7 @@ export default function HomePage() {
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
 
-  // Arriving from the processor's Reader entry. Ref-guarded because the request is
-  // one-shot and StrictMode invokes effects twice.
+  // From the processor's Reader entry. Ref-guarded: one-shot, and StrictMode double-invokes.
   const consumedReaderRequest = useRef(false);
   useEffect(() => {
     if (consumedReaderRequest.current) return;
@@ -189,8 +188,7 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides the bar and with it both search controls, so leave reading first,
-  // then act. Keyed on e.code for layouts where the keys aren't "k"/"f".
+  // Reading hides both search controls, so leave it first. e.code, for non-QWERTY layouts.
   const focusSearchAfterRestore = useRef(false);
   useEffect(() => {
     if (!readerMode) return;
@@ -222,8 +220,7 @@ export default function HomePage() {
     );
   }, [readerMode]);
 
-  // Clean slate: no tool, out of the file library and reading, and whichever view
-  // the open files call for.
+  // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
     if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
@@ -276,8 +273,7 @@ export default function HomePage() {
     prevWorkbenchRef.current = curr;
     // fileSidebarCollapsed read as snapshot on transition only.
   }, [navigationState.workbench]);
-  // Imperative rather than folded into `collapsed`, so the toggle still works while
-  // reading. Never persisted: a mode is not a preference.
+  // Imperative, so the toggle still works while reading. Never persisted: not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
     if (readerMode !== prevReaderModeRef.current) {
@@ -336,8 +332,7 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  // The tool picker's own helpers, so the wording can't drift. Its labels carry a
-  // trailing colon for sitting in front of a tool name.
+  // The tool picker's own helpers, so the wording can't drift.
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
     for (const id of ["automate", "sharedSign"] as const) {
@@ -729,8 +724,7 @@ export default function HomePage() {
                   ) : undefined
                 }
                 active={navigationState.workbench === "myFiles"}
-                // Forced, not derived: a deep link to /files has no workbench
-                // transition to collapse on, and a manual expand must not stick.
+                // Forced: a deep link to /files has no transition to collapse on.
                 collapsed={
                   navigationState.workbench === "myFiles" ||
                   fileSidebarCollapsed
