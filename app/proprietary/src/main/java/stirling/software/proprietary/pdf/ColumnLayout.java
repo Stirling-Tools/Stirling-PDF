@@ -9,12 +9,8 @@ import java.util.stream.Collectors;
 import stirling.software.jpdfium.text.TextLine;
 
 /**
- * Multi-column page layout: finding the gutters that separate columns of prose, splitting a page's
- * lines at them, and emitting the columns in reading order.
- *
- * <p>A gutter is a run of near-empty x that few lines cross. That projection alone cannot tell
- * prose from any other empty lane, such as the gaps between a bar chart's labels, so a candidate
- * split is only accepted once every column it carves out reads as running text.
+ * Multi-column page layout: finding the gutters between columns of prose, splitting a page's lines
+ * at them, and emitting the columns in reading order.
  */
 final class ColumnLayout {
 
@@ -33,8 +29,8 @@ final class ColumnLayout {
     private static final int MAX_COLUMNS = 4;
 
     /**
-     * Finds the page's column gutters, or empty for a single column. The scan runs over the 5th to
-     * 95th percentile of line edges, so one degenerate bounding box cannot drag it off the page.
+     * Finds the page's column gutters, or empty for a single column. Scans the 5th to 95th
+     * percentile of line edges so one degenerate box cannot drag it off the page.
      */
     static List<Float> detectGutters(List<Line> lines) {
         if (lines.size() < 8) {
@@ -110,8 +106,8 @@ final class ColumnLayout {
     }
 
     /**
-     * Rejects page geometry too wide to be real: past 2^24 a float cannot represent x + 1, so a
-     * constant-step scan stops advancing. The 2000pt bound matches {@code findColumnRanges}.
+     * Rejects geometry too wide to be real: past 2^24 a float cannot represent x + 1, so a
+     * constant-step scan stops advancing.
      */
     private static boolean plausibleSpan(float lo, float hi) {
         return Float.isFinite(lo) && Float.isFinite(hi) && (hi - lo) <= 2000f;
@@ -159,8 +155,8 @@ final class ColumnLayout {
     private static final int BODY_LINES = 4;
 
     /**
-     * True when every carved-out column reads as running text. The projection alone cannot tell
-     * prose from any other empty lane, such as the gaps between a bar chart's labels.
+     * True when every carved-out column reads as running text; projection alone cannot tell prose
+     * from any other empty lane, such as a bar chart's label gaps.
      */
     private static boolean columnsLookLikeText(List<Line> lines, List<Float> gutters) {
         // Judge only lines inside a column: a spanning line is assigned to one by its centre, and
@@ -193,8 +189,8 @@ final class ColumnLayout {
     }
 
     /**
-     * Splits lines into columns at the given gutters. A line crossing a gutter goes to the column
-     * its centre falls in, never duplicated; band ordering then places it correctly.
+     * Splits lines into columns at the given gutters. A line crossing one goes to the column its
+     * centre falls in; band ordering then places it correctly.
      */
     static List<List<Line>> splitIntoColumns(List<Line> lines, List<Float> gutters) {
         if (gutters.isEmpty()) {
@@ -221,8 +217,8 @@ final class ColumnLayout {
     }
 
     /**
-     * True when the finished lines still respect the gutters the unmerged lines showed. Merging
-     * widens lines, and band-ordering on a gutter half of them straddle interleaves the columns.
+     * True when the finished lines still respect the gutters the unmerged lines showed; merging
+     * widens lines, and band-ordering a straddled gutter interleaves the columns.
      */
     static boolean gutterRespected(List<Line> lines, List<Float> gutters) {
         List<Line> real = lines.stream().filter(l -> !l.synthetic).toList();
@@ -275,7 +271,7 @@ final class ColumnLayout {
 
     /**
      * True when a spanning line is short enough to be one line of a full-width banner heading,
-     * which {@link #orderByBand} keeps in a single group rather than one paragraph per line.
+     * which {@link #orderByBand} keeps in a single group.
      */
     private static boolean headingLength(Line l) {
         return MarkdownText.wordCount(l.text) <= HEADING_LENGTH_WORDS;
@@ -294,8 +290,8 @@ final class ColumnLayout {
     }
 
     /**
-     * Orders a multi-column region as a one-level XY cut: gutter-spanning lines cut it into
-     * horizontal bands, and each band's columns are emitted in turn.
+     * Orders a multi-column region as a one-level XY cut: spanning lines cut it into bands, and
+     * each band's columns are emitted in turn.
      */
     static List<List<Line>> orderByBand(List<Line> lines, List<Float> gutters) {
         List<Line> ordered = new ArrayList<>(lines);

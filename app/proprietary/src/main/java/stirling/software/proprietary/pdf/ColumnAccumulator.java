@@ -8,7 +8,7 @@ import stirling.software.jpdfium.text.TextWord;
 
 /**
  * Incremental {@link ColumnRanges#find(List)} for a stitched table: appending a page costs O(page),
- * and the result is bit-for-bit what that would give for the same lines.
+ * bit-for-bit identical to re-projecting the lot.
  */
 final class ColumnAccumulator {
 

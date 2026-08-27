@@ -8,23 +8,16 @@ import java.util.stream.Collectors;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Resolves a detected table block into a cell grid, and renders it.
- *
- * <p>Columns come from vertical-whitespace projection across all of the block's lines rather than a
- * gap threshold on pooled word x's, which is fragile when numbers are right-aligned or sparse cells
- * sit in their own band. Where the page drew its own column rules those are used instead, being
- * exact where projection only guesses.
- *
- * <p>The false-positive guards live here too, so Markdown rendering and any other consumer see
- * exactly the same cells and the same verdict on whether the block is a table at all.
+ * Resolves a detected table block into a cell grid and renders it. The false-positive guards live
+ * here, so every consumer sees the same cells and the same verdict.
  */
 final class TableGrid {
 
     private TableGrid() {}
 
     /**
-     * Renders a table block. {@code ruledColumns} are exact column bands read from vertical ruling
-     * lines; when null the columns are derived by whitespace projection instead.
+     * Renders a table block; {@code ruledColumns} are exact bands from vertical rules, or null to
+     * project the columns from whitespace instead.
      */
     static String render(
             List<List<Line>> rowGroups, List<float[]> ruledColumns, RowSource rowSource) {
@@ -37,11 +30,8 @@ final class TableGrid {
      */
     static List<String[]> cells(
             List<List<Line>> rowGroups, List<float[]> ruledColumns, RowSource rowSource) {
-        // Detect columns by vertical-whitespace projection across all lines, rather than a 1-D gap
-        // threshold on pooled word x's. Pooled-gap detection is fragile when numbers are
-        // right-aligned (a 10-digit value starts well left of a 7-digit one) or when sparse cells
-        // sit in their own x-band. Projection asks "which x-bands are occupied across many rows",
-        // which is stable under those conditions.
+        // Columns come from cross-row whitespace projection, not a 1-D gap threshold on pooled word
+        // x's, which is fragile with right-aligned numbers or sparse cells in their own band.
         List<Line> flat = rowGroups.stream().flatMap(List::stream).collect(Collectors.toList());
         // Inside a region the rules already declare a table, a narrower gutter still separates
         // columns: the wide floor only exists to stop word spacing splitting an unruled block.
@@ -154,11 +144,8 @@ final class TableGrid {
             rows.add(row);
         }
 
-        // Guard against false positives while tolerating uneven rows (sparse cells, merged/spanning
-        // headers). The columns already come from cross-row whitespace alignment, so a stable grid
-        // exists. Additionally require: at least one "anchor" row that nearly fills the grid (so
-        // the
-        // column count is real, not an artefact), and that most rows are genuinely multi-column.
+        // Guard against false positives while tolerating uneven rows: require an anchor row that
+        // nearly fills the grid, and that most rows are genuinely multi-column.
         if (ruledColumns != null) {
             // A rule that is not a column separator (a cell outline, a shading edge) leaves an
             // empty column; drop those rather than emitting them across every row.

@@ -7,8 +7,8 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Builds table blocks from a page's ruling lines, which carry the grid explicitly: whitespace
- * projection cannot see single-word or wrapped cells, as they leave no wide gap.
+ * Builds table blocks from a page's ruling lines: whitespace projection cannot see single-word or
+ * wrapped cells, as they leave no wide gap.
  */
 @Slf4j
 final class RuledTables {
@@ -31,8 +31,8 @@ final class RuledTables {
     private static final float ROW_RULE_SPAN = 0.8f;
 
     /**
-     * Interior row rules needed before drawn bands beat text baselines. One is enough: bands keep a
-     * multi-line cell whole, where baselines split every wrapped cell into its own row.
+     * Interior row rules needed before drawn bands beat text baselines; bands keep a multi-line
+     * cell whole where baselines split it.
      */
     private static final int MIN_INTERIOR_RULES = 1;
 
@@ -102,8 +102,8 @@ final class RuledTables {
     }
 
     /**
-     * Blocks for a page ruled only across its rows (booktabs style). No column geometry exists to
-     * recover, so these only serve to find a table the word-grid could not anchor on.
+     * Blocks for a page ruled only across its rows (booktabs): no column geometry to recover, so
+     * these only find a table the word grid missed.
      */
     private static List<TableBlock> rowsOnly(
             List<RuleGrid.Level> levels, List<Line> lines, int page) {
@@ -325,8 +325,8 @@ final class RuledTables {
     private static final float COLUMN_RUN = 0.5f;
 
     /**
-     * True when a rule narrower than the table is still a row boundary: it ends on the grid's own
-     * verticals and the columns it misses carry a spanning cell's text beside it.
+     * True when a rule narrower than the table is still a row boundary: it ends on the grid's
+     * verticals and a spanning cell's text sits beside it.
      */
     private static boolean spanningNeighbour(
             RuleGrid.Level rule,
@@ -367,8 +367,8 @@ final class RuledTables {
     }
 
     /**
-     * True when every horizontal rule runs nearly the region's full width, so the rules really are
-     * one table's row boundaries; legend swatches and per-cell outlines do not.
+     * True when every horizontal rule runs nearly the region's full width; legend swatches and
+     * per-cell outlines do not.
      */
     private static boolean fullWidthRules(List<RuleGrid.Level> hL, float left, float right) {
         float width = right - left;

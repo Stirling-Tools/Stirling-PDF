@@ -7,11 +7,8 @@ import stirling.software.jpdfium.text.TextChar;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Word-level geometry and spacing decisions.
- *
- * <p>PDFium splits words on its own bounding boxes, so whether two adjacent words were separated by
- * a real space has to be re-derived from the glyphs rather than trusted. Edges are measured from
- * the glyphs for the same reason: a word box can carry its trailing space.
+ * Word-level geometry and spacing. PDFium splits words on its own bounding boxes, so both real
+ * spaces and edges are re-derived from the glyphs.
  */
 final class WordGeometry {
 
@@ -21,10 +18,8 @@ final class WordGeometry {
     static final float NO_SPACE_GAP = 0.30f;
 
     /**
-     * Punctuation that binds to the words on both sides of it. Closing a cell's words up is only
-     * ever considered around one of these: two ordinary words set tight against each other are far
-     * more likely to be a narrow real space than a mid-word split, and dropping it would corrupt
-     * the text where a stray space merely looks untidy.
+     * Punctuation that binds to the words on both sides. Closing words up is only considered around
+     * one of these, because dropping a real space corrupts the text.
      */
     private static final String BINDING_MARKS = "'’ʼ´`-‐‑";
 
@@ -34,9 +29,8 @@ final class WordGeometry {
     }
 
     /**
-     * A contraction or possessive whose apostrophe the extractor padded on both sides, e.g. {@code
-     * firm ' s} or {@code Don ’ t}. Limited to the English suffixes because a lone apostrophe with
-     * real space around it is an opening quote, which must keep its spacing.
+     * A contraction whose apostrophe the extractor padded on both sides. English suffixes only: a
+     * spaced lone apostrophe is an opening quote.
      */
     private static final Pattern SPLIT_CONTRACTION =
             Pattern.compile("(\\p{L})\\s*([’'ʼ´`])\\s*(s|t|d|m|re|ve|ll)\\b");
@@ -47,10 +41,8 @@ final class WordGeometry {
     }
 
     /**
-     * True when two words of one cell are far enough apart to be separated by a space. The
-     * extractor splits on its own bounding boxes, so a punctuation mark set tight against its
-     * neighbour ({@code firm}, {@code '}, {@code s}) arrives as three words; joining those with a
-     * space unconditionally writes {@code firm ' s} into the cell.
+     * True when two words of a cell are far enough apart to be separated by a space; punctuation
+     * set tight against its neighbour arrives as its own word.
      */
     static boolean separated(TextWord previous, TextWord current) {
         if (previous == null) {

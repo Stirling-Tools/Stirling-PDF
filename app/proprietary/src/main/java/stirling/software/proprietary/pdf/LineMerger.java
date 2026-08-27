@@ -8,12 +8,8 @@ import stirling.software.jpdfium.text.TextChar;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Rejoins extractor fragments that are really one visual line.
- *
- * <p>PDFium splits a line on its bounding box, so a run with no ascender ({@code rou}) lands apart
- * from the rest ({@code ghly ...}). Fragments are grouped into rows first and then joined left to
- * right, because a fragment's continuation is its right-hand neighbour on the same row, not
- * whichever line the extractor happened to emit next.
+ * Rejoins extractor fragments that are really one visual line. Fragments are grouped into rows
+ * first, then joined left to right.
  */
 final class LineMerger {
 
@@ -23,8 +19,8 @@ final class LineMerger {
     private static final float MAX_MERGE_GAP = 1.60f;
 
     /**
-     * Rejoins extractor fragments that are really one visual line: PDFium splits on bounding box,
-     * so a run with no ascender ({@code rou}) lands apart from the rest ({@code ghly ...}).
+     * Rejoins fragments of one visual line: PDFium splits on bounding box, so a run with no
+     * ascender ({@code rou}) lands apart from the rest.
      */
     static List<Line> mergeLineFragments(List<Line> lines, List<Float> gutters) {
         if (lines.size() < 2) {

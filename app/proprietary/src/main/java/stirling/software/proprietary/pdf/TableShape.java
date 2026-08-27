@@ -6,12 +6,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * False-positive guards: whether a block the detectors found is really a table, and whether it is
- * wide enough to outrank the page's own column layout.
- *
- * <p>Running text aligns across rows exactly as cells do, so geometry alone cannot separate the
- * two. These tests read the resolved cells instead - how long they are, whether any column keys the
- * rows, and whether neighbouring cells continue each other's sentences.
+ * False-positive guards: whether a block is really a table, and whether it is wide enough to
+ * outrank the page's own column layout.
  */
 final class TableShape {
 
@@ -32,8 +28,8 @@ final class TableShape {
     private static final Pattern DOT_LEADER = Pattern.compile("(\\.\\s*){4,}|…");
 
     /**
-     * True when a block is running text the word grid mistook for a table: a contents list, with or
-     * without dot leaders, or two columns of prose whose "cells" are whole sentences.
+     * True when a block is running text the word grid mistook for a table: a contents list, or two
+     * columns of prose whose cells are whole sentences.
      */
     static boolean isProseNotTable(List<String[]> rows, int cols) {
         if (rows.isEmpty()) {
@@ -81,15 +77,8 @@ final class TableShape {
     private static final Pattern CELL_ENDS_CLAUSE = Pattern.compile("[.!?:;,]$");
 
     /**
-     * True when a wider block is a multi-column page layout the word grid read across rather than a
-     * table. Two things have to hold at once, because either alone has honest counter-examples.
-     *
-     * <p>No column keys the rows. Every real wide table keeps one column of short values to
-     * identify its rows by - a name, a code, a yes/no - however long its other columns run.
-     *
-     * <p>And the cells continue each other. Text set in columns puts one sentence across several
-     * cells, so a cell ends mid-clause and its neighbour opens in lower case; a table's cells are
-     * independent values and do not run on.
+     * True when a wide block is multi-column prose read across, not a table: no column keys the
+     * rows, and the cells continue each other's sentences.
      */
     static boolean everyColumnIsProse(List<String[]> rows, int cols) {
         if (cols < 3) {
@@ -137,8 +126,8 @@ final class TableShape {
     }
 
     /**
-     * True when no text outside the block sits in the block's vertical band. Such a block cannot be
-     * one column's worth of a two-column layout, because there is nothing in the other column.
+     * True when no text outside the block sits in its vertical band, so it cannot be one column of
+     * a two-column layout.
      */
     static boolean ownsItsBand(TableBlock block, List<Line> lines) {
         Set<Line> own = new HashSet<>();
@@ -164,8 +153,8 @@ final class TableShape {
     private static final float GRID_CELL = 25f;
 
     /**
-     * True when an unruled full-width block is really a table, not the page's own column gutter
-     * read as a cell boundary: a data table's cells are short values, the gutter's are sentences.
+     * True when an unruled full-width block is really a table: a data table's cells are short
+     * values, a page gutter's are sentences.
      */
     static boolean looksLikeGrid(TableBlock block) {
         List<String[]> cells = block.cells();

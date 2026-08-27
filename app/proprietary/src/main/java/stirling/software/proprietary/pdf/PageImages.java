@@ -12,8 +12,8 @@ import stirling.software.jpdfium.doc.PdfImageExtractor;
 import stirling.software.jpdfium.model.Rect;
 
 /**
- * Emits a placeholder for each image on a page, annotated with whatever metadata JPDFium exposes.
- * Image bytes are deliberately not carried into the Markdown.
+ * Emits a placeholder per image on a page; image bytes are deliberately not carried into the
+ * Markdown.
  */
 final class PageImages {
 
@@ -30,9 +30,8 @@ final class PageImages {
     }
 
     /**
-     * Builds an image placeholder annotated with whatever metadata JPDFium exposes: pixel
-     * dimensions, on-page placement (points), effective DPI, encoded format, colour space and bit
-     * depth. Missing fields are simply omitted so the line stays valid for any image.
+     * Image placeholder annotated with whatever JPDFium exposes: pixels, placement, DPI, format,
+     * colour space, depth. Missing fields are omitted.
      */
     private static String describe(ExtractedImage img) {
         List<String> parts = new ArrayList<>();

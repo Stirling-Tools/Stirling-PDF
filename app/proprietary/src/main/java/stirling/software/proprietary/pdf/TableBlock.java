@@ -3,8 +3,7 @@ package stirling.software.proprietary.pdf;
 import java.util.List;
 
 /**
- * A detected table. Each row is a list of source lines: usually one, but more when a cell wraps
- * onto extra lines (those continuation lines are absorbed into the row they belong to).
+ * A detected table. Each row is a list of source lines: usually one, but more when a cell wraps.
  */
 record TableBlock(
         List<List<Line>> rows,

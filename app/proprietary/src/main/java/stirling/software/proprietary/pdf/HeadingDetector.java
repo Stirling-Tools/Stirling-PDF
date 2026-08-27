@@ -31,14 +31,14 @@ final class HeadingDetector {
     };
 
     /**
-     * URW/Nimbus bold is "-Medi", TeX bold extended is CMBX/CMSSBX. "Medium" is excluded: it is
-     * lighter than bold, and matching it makes whole CJK body paragraphs bold.
+     * URW/Nimbus bold is "-Medi", TeX bold extended is CMBX/CMSSBX. "Medium" is excluded: matching
+     * it makes whole CJK paragraphs bold.
      */
     private static final Pattern OTHER_BOLD = Pattern.compile("medi(?!um)|cm(ss)?bx");
 
     /**
-     * A float label followed by its number. Set like a heading but names an illustration, not a
-     * section; "Table of contents" is safe because a number has to follow.
+     * A float label followed by its number: set like a heading but naming an illustration, not a
+     * section.
      */
     private static final Pattern CAPTION =
             Pattern.compile(
@@ -50,8 +50,8 @@ final class HeadingDetector {
     private static final Pattern CLAUSE = Pattern.compile("^\\d{1,2}(\\.\\d{1,2})*\\.?\\s+\\p{Lu}");
 
     /**
-     * Two sentences in a row: a bold run-in lead-in, not a heading. The three lower-case letters
-     * before the stop keep it off section numbers and abbreviations ({@code 4. Entropy}).
+     * Two sentences in a row: a bold run-in lead-in, not a heading. The lower-case letters before
+     * the stop keep it off section numbers.
      */
     private static final Pattern RUNS_ON = Pattern.compile("\\p{Ll}{3}[.!?][\\s\\u00a0]+\\p{Lu}");
 
@@ -62,15 +62,15 @@ final class HeadingDetector {
     private static final float H2_RATIO = 1.3f;
 
     /**
-     * A section number ending in a period. Stricter than {@link #CLAUSE}: this rule has no
-     * typography behind it, so only the period tells a clause from a header's page number.
+     * A section number ending in a period. Stricter than {@link #CLAUSE}: only the period tells a
+     * clause from a header's page number.
      */
     private static final Pattern NUMBERED_CLAUSE =
             Pattern.compile("^\\d{1,2}(\\.\\d{1,2})*\\.\\s+\\p{Lu}");
 
     /**
-     * True when every cased letter is a capital. Digits, punctuation and uncased scripts do not
-     * count either way, so {@code BIO 181} qualifies.
+     * True when every cased letter is a capital; digits and uncased scripts do not count, so {@code
+     * BIO 181} qualifies.
      */
     private static boolean isAllCaps(String text) {
         int upper = 0;
@@ -88,7 +88,7 @@ final class HeadingDetector {
 
     /**
      * Markdown heading prefix from size, brevity, isolation and weight, never text matching. Bold
-     * is vetoed on the body face itself: a bold-named body font would promote every line.
+     * is vetoed on the body face itself.
      */
     static String headingPrefix(
             TextLine line,
@@ -107,11 +107,8 @@ final class HeadingDetector {
     }
 
     /**
-     * Geometry-only overload, so a line merged from several extractor fragments is judged on the
-     * merged text, height and words rather than on the first fragment.
-     *
-     * @param bodyFont the document's dominant (body) font, so boldness only counts when it differs
-     * @param isolated true when the line starts its own block, i.e. a blank gap precedes it
+     * Geometry-only overload, judging a merged line on its merged text, height and words. Boldness
+     * counts only when the face differs from {@code bodyFont}.
      */
     static String headingPrefix(
             String lineText,
@@ -190,14 +187,14 @@ final class HeadingDetector {
     }
 
     /**
-     * Quantile of a line's glyph heights taken as its size: high enough to sit on the cap band
-     * rather than the x-height, low enough that one rogue glyph box cannot set the line's size.
+     * Quantile of a line's glyph heights taken as its size: high enough for the cap band, low
+     * enough that one rogue glyph box cannot set it.
      */
     private static final float GLYPH_HEIGHT_QUANTILE = 0.8f;
 
     /**
-     * A line's type size from its glyphs, for PDFs that encode visual size in the text matrix. The
-     * line box runs ascender to descender, so a stray {@code g} can clear the heading ratio.
+     * A line's type size from its glyphs, for PDFs encoding visual size in the text matrix; the
+     * line box runs ascender to descender.
      */
     private static float glyphHeight(List<TextWord> words) {
         int capacity = 0;
@@ -265,10 +262,7 @@ final class HeadingDetector {
         return dominant;
     }
 
-    /**
-     * A heading is made of words: at least two letters, and letters at least half the glyphs.
-     * Counting rather than requiring a run keeps letter-spaced display type eligible.
-     */
+    /** A heading is made of words: at least two letters, and letters at least half the glyphs. */
     private static boolean hasWord(String text) {
         int letters = 0;
         int glyphs = 0;
@@ -286,9 +280,8 @@ final class HeadingDetector {
     }
 
     /**
-     * True when a line should be emphasised as bold (rendered {@code **like this**}) rather than
-     * promoted to a heading: it is bold, short, and not a full sentence. Used for bold labels that
-     * are not large enough to be headings.
+     * True when a line should be emphasised as bold rather than promoted: bold, short, and not a
+     * full sentence.
      */
     static boolean isBoldLabel(String lineText, List<TextWord> words) {
         String text = lineText.strip();
@@ -359,8 +352,8 @@ final class HeadingDetector {
     }
 
     /**
-     * Body baseline for the height path: the median per-line {@link #glyphHeight}, weighted by
-     * glyph count so a chart's many tiny axis labels cannot drag the baseline below the prose.
+     * Body baseline for the height path: median per-line {@link #glyphHeight} weighted by glyph
+     * count, so tiny axis labels cannot drag it down.
      */
     static float medianLineHeight(List<PageText> allPages) {
         List<float[]> weighted = new ArrayList<>();
@@ -423,8 +416,8 @@ final class HeadingDetector {
     }
 
     /**
-     * Returns the font size that appears most often (by character count) in the given line. Ties
-     * are broken in favour of the larger size.
+     * The font size appearing most often by character count in the line; ties go to the larger
+     * size.
      */
     private static float dominantFontSize(List<TextWord> words) {
         Map<Float, Integer> counts = new HashMap<>();

@@ -9,12 +9,8 @@ import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * A mutable assembled line: text plus geometry used for ordering and heading detection.
- *
- * <p>Two notions of horizontal extent are exposed. {@link #left()}/{@link #right()} come from the
- * word boxes and are what layout decisions use; {@link #glyphLeft()}/{@link #glyphRight()} come
- * from the glyphs and are what fragment merging uses, because a word box can carry its trailing
- * space and so report an edge a whole space past the last real mark.
+ * A mutable assembled line: text plus geometry. {@link #left()}/{@link #right()} come from the word
+ * boxes, {@link #glyphLeft()}/{@link #glyphRight()} from the glyphs.
  */
 final class Line {
 
@@ -57,10 +53,7 @@ final class Line {
         return all;
     }
 
-    /**
-     * Text to feed the heading/bold classifiers. An unmerged line keeps using the extractor's own
-     * string so behaviour is unchanged when fragment merging is off.
-     */
+    /** Text for the heading/bold classifiers; an unmerged line keeps the extractor's own string. */
     String detectText() {
         return merged.isEmpty() ? source.text() : text;
     }
@@ -124,10 +117,7 @@ final class Line {
         return edge == -Float.MAX_VALUE ? x + width : edge;
     }
 
-    /**
-     * Records a fragment folded into this line so its word list still covers the whole extent;
-     * without it the line reports a right edge at the seam and merging sees a false gap.
-     */
+    /** Records a fragment folded into this line so its word list still covers the whole extent. */
     void absorb(TextLine fragment) {
         merged.add(fragment);
     }

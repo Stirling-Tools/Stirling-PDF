@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Joins what a page break split: a sentence that runs from one page's last paragraph into the next
- * page's first, and a table whose rows continue on the following page.
+ * Joins what a page break split: a sentence running into the next page, and a table whose rows
+ * continue on it.
  */
 final class PageStitcher {
 
@@ -32,9 +32,8 @@ final class PageStitcher {
     }
 
     /**
-     * Joins tables split across a page break. Two consecutive {@link TableBlock}s (no text between
-     * them — i.e. one ended a page and the next began the following page) are merged when their
-     * column layouts match; a repeated header row on the continuation is dropped.
+     * Joins tables split across a page break: two consecutive blocks with no text between them
+     * merge when their column layouts match, dropping a repeated header.
      */
     static List<Object> stitchTables(List<Object> elements) {
         List<Object> out = new ArrayList<>();
@@ -98,9 +97,8 @@ final class PageStitcher {
     }
 
     /**
-     * Header text of a table at the very bottom of a page, or null if the page does not end in one.
-     * Trailing image placeholders are skipped; any other text after a table means it did not run to
-     * the page bottom and so is not a continuation candidate.
+     * Header text of a table at the very bottom of a page, or null. Trailing image placeholders are
+     * skipped; any other text means it is not a continuation.
      */
     static String trailingTableHeader(List<Object> pageItems) {
         for (int i = pageItems.size() - 1; i >= 0; i--) {

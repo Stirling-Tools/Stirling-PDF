@@ -8,8 +8,7 @@ import stirling.software.jpdfium.text.TextLine;
 
 /**
  * Rebuilds assembled {@link Line}s from the extractor's {@link TextLine}s, folding in the narrow
- * standalone glyph fragments PDFium emits for apostrophes, quotes, asterisks, superscript footnote
- * markers and bullets.
+ * glyph fragments PDFium emits for apostrophes, markers and bullets.
  */
 final class GlyphStitcher {
 
@@ -19,17 +18,8 @@ final class GlyphStitcher {
     private static final float GLYPH_WIDTH = 7.5f;
 
     /**
-     * Merges narrow glyph fragments (width &lt; {@link #GLYPH_WIDTH}) into the line they belong to.
-     *
-     * <ul>
-     *   <li>A glyph between a left fragment that ends near it and a right fragment that starts near
-     *       it (both on the same baseline) is inserted inline: {@code aren} + {@code '} + {@code t}
-     *       → {@code aren't}.
-     *   <li>A glyph immediately right of a line's end is appended (e.g. superscript footnote marker
-     *       after a number).
-     *   <li>A glyph immediately left of a line's start is prepended (e.g. footnote marker before
-     *       its text).
-     * </ul>
+     * Merges narrow glyph fragments into the line they belong to: inline between two same-baseline
+     * fragments, or appended/prepended at a line's edge.
      */
     static List<Line> stitchGlyphs(List<TextLine> raw) {
         List<TextLine> hosts = new ArrayList<>();
@@ -63,8 +53,8 @@ final class GlyphStitcher {
     }
 
     /**
-     * Removes U+00AD SOFT HYPHEN: a break-opportunity marker, not a character, which PDFium hands
-     * back verbatim so words come out as {@code ar<AD>e}.
+     * Removes U+00AD SOFT HYPHEN, a break-opportunity marker PDFium hands back verbatim as {@code
+     * ar<AD>e}.
      */
     private static String stripSoftHyphens(String text) {
         if (text.indexOf('­') < 0) {
@@ -78,8 +68,8 @@ final class GlyphStitcher {
     }
 
     /**
-     * Attaches a bullet glyph to the body line it introduces: the closest line that begins to the
-     * right of the bullet at roughly the same height or just below it.
+     * Attaches a bullet glyph to the line it introduces: the closest line beginning to its right,
+     * at roughly the same height or just below.
      */
     private static void attachBullet(TextLine g, String gt, List<Line> lines) {
         Line best = null;
@@ -107,9 +97,8 @@ final class GlyphStitcher {
     }
 
     /**
-     * Stitches a narrow inline glyph (apostrophe, quote, asterisk, superscript marker) into the
-     * line it belongs to: inline between two same-baseline fragments, appended to the line that
-     * ends at it, or prepended to the line that starts at it.
+     * Stitches a narrow inline glyph into its line: between two same-baseline fragments, appended
+     * to the line ending at it, or prepended to the one starting at it.
      */
     private static void attachInlineGlyph(TextLine g, String gt, List<Line> lines) {
         Line left = null;

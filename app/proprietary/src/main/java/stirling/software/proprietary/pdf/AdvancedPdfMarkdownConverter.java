@@ -20,18 +20,8 @@ import stirling.software.jpdfium.text.PdfTextExtractor;
 import stirling.software.jpdfium.text.TextLine;
 
 /**
- * Converts a PDF to Markdown using a TextLine-driven body pipeline.
- *
- * <p>Body text is rebuilt from {@link PdfTextExtractor} {@link TextLine}s. TextLines group words
- * faithfully and keep paragraph order, so the only pre-processing needed is stitching narrow
- * standalone glyph fragments (apostrophes, quotes, asterisks, superscript footnote markers,
- * bullets) back into the line they belong to. Column layout and tables are derived from line/word
- * geometry directly.
- *
- * <p>This class is the orchestration only; each stage lives in its own class. {@link GlyphStitcher}
- * and {@link LineMerger} rebuild the lines, {@link ColumnLayout} decides the page's column
- * structure, {@link TableFinder} and {@link TableGrid} find and resolve its tables, {@link
- * ParagraphAssembler} renders the prose, and {@link PageStitcher} joins what a page break split.
+ * Converts a PDF to Markdown from PDFium {@link TextLine}s. Orchestration only: each stage of the
+ * pipeline lives in its own class in this package.
  */
 @Slf4j
 @Service
@@ -54,13 +44,11 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         String bodyFont = HeadingDetector.bodyFont(allPageText);
 
         int pageCount = doc.pageCount();
-        // Elements are either rendered text (String) or a structured TableBlock. Tables stay
-        // structured until after the page loop so a table split across a page break can be stitched
-        // back together before rendering.
+        // Tables stay structured until after the page loop so one split across a page break can
+        // be stitched back together before rendering.
         List<Object> output = new ArrayList<>();
-        // Header text of a table that ended the previous page, used to spot a continuation whose
-        // header repeats at the top of the current page. Null when the previous page did not end in
-        // a table.
+        // Header of a table that ended the previous page, for spotting a continuation; null if
+        // none.
         String prevPageTrailingTableHeader = null;
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
@@ -94,8 +82,8 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
     }
 
     /**
-     * One page's lines plus the layout verdict, which must be taken before text repair: merging
-     * reduces the line count the two-column guard's threshold scales with.
+     * One page's lines plus its layout verdict, which must be taken before text repair: merging
+     * reduces the line count the two-column guard scales with.
      */
     private record PageLines(List<Line> lines, List<Float> gutters) {
         boolean twoColumnLayout() {
@@ -103,10 +91,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
         }
     }
 
-    /**
-     * Assembled lines for one page, sorted top-to-bottom (PDF y=0 is the page bottom), or empty
-     * when the page carries no text.
-     */
+    /** Assembled lines for one page, sorted top-to-bottom (PDF y=0 is the page bottom). */
     private static PageLines pageLines(PdfDocument doc, List<PageText> allPageText, int pageIndex) {
         List<TextLine> rawLines =
                 pageIndex < allPageText.size() ? allPageText.get(pageIndex).lines() : List.of();
@@ -119,10 +104,8 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
     }
 
     /**
-     * Builds one page's elements: rendered paragraph strings interleaved with structured {@link
-     * TableBlock}s, in reading order.
-     *
-     * @param continuationHeader header text of a table that ended the previous page, or null
+     * One page's elements: paragraph strings interleaved with {@link TableBlock}s in reading order.
+     * {@code continuationHeader} is the previous page's trailing table header, or null.
      */
     private List<Object> buildPageItems(
             PdfDocument doc,
@@ -134,13 +117,8 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
             String continuationHeader)
             throws IOException {
         List<Line> lines = page.lines();
-        // Multi-column guard: only genuine two-column prose should be split. A table's column
-        // gutters must NOT be mistaken for a page-layout gutter, so this looks at whether row
-        // lines span the gutter (table) or stay within one side (two-column prose).
-        // A table that ran to the bottom of the previous page and repeats its header at the top
-        // of this page is a continuation, not a new two-column layout. Detecting the repeated
-        // header keeps this page out of the two-column path so the continuation is rebuilt as a
-        // table and stitched back onto the previous block.
+        // Only genuine two-column prose is split: a table's column gutters must not read as a page
+        // gutter, and a table continuing from the previous page is not a new two-column layout.
         boolean tableContinuation =
                 continuationHeader != null
                         && lines.stream()
@@ -234,10 +212,8 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
                 }
             }
         } else {
-            // Interleave tables with surrounding text by vertical position. Each block sits in its
-            // own slot; non-table lines fall into the slot for their y (text above a block,
-            // between blocks, or below the last). This keeps multiple tables on one page separate
-            // and in reading order.
+            // Interleave tables with text by vertical position: each block gets a slot,
+            // and non-table lines fall into the slot for their y, keeping tables separate.
             for (int s = 0; s <= blocks.size(); s++) {
                 List<String> paras = new ArrayList<>();
                 ParagraphAssembler.assembleParagraphs(
@@ -255,7 +231,7 @@ public class AdvancedPdfMarkdownConverter implements PdfMarkdownExtractor {
 
     /**
      * Splits a page's non-table lines into the bands between its table blocks, band {@code s}
-     * holding the lines above block {@code s}. Blocks must already be in top-to-bottom order.
+     * holding the lines above block {@code s}. Blocks must be in top-to-bottom order.
      */
     private static List<List<Line>> segmentsAround(
             List<Line> lines, List<TableBlock> blocks, Set<Line> tableLines) {

@@ -9,12 +9,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * A page's ruling lines reduced to a grid: rules merged into levels, and the levels grouped into
- * the connected components that each describe one table.
- *
- * <p>Both steps are bounded. A crafted page can flood the content stream with rules, and the naive
- * readings of either step - a crossing test per rule pair, an id array per component - are
- * quadratic in that flood.
+ * A page's ruling lines reduced to a grid: rules merged into levels, levels grouped into the
+ * components that each describe one table. Both steps are bounded.
  */
 @Slf4j
 final class RuleGrid {
@@ -43,8 +39,8 @@ final class RuleGrid {
     record Component(List<Level> h, List<Level> v) {}
 
     /**
-     * Merges rules at the same position into levels, but only while they stay contiguous, so two
-     * tables that happen to rule at the same x are not bridged into one region.
+     * Merges rules at the same position into levels, but only while contiguous, so two tables
+     * ruling at the same x are not bridged into one region.
      */
     static List<Level> cluster(List<PageRules.Rule> rules) {
         List<PageRules.Rule> sorted = new ArrayList<>(rules);
@@ -79,9 +75,8 @@ final class RuleGrid {
     }
 
     /**
-     * Connected components of crossing rules. Membership is read once from a single union-find
-     * array, as materialising an id array per component costs O(components x levels) memory a
-     * crafted ruling grid can drive to out-of-memory.
+     * Connected components of crossing rules, read from one union-find array: an id array per
+     * component is O(components x levels) a rule flood can exhaust.
      */
     static List<Component> partition(List<Level> hLevels, List<Level> vLevels) {
         int n = hLevels.size() + vLevels.size();
@@ -150,7 +145,7 @@ final class RuleGrid {
 
     /**
      * Visible for testing: partitioning depends only on rule geometry, so tests can drive it from
-     * synthetic rules to exercise the guards against a pathological ruling grid.
+     * synthetic rules.
      */
     static int componentCount(List<PageRules.Rule> horizontal, List<PageRules.Rule> vertical) {
         return partition(cluster(horizontal), cluster(vertical)).size();

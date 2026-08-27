@@ -8,14 +8,8 @@ import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Finds a table's column x-ranges by vertical-whitespace projection: each row contributes coverage
- * for the x-bands its words occupy, a column is a contiguous band covered by enough rows, and the
- * gaps between such bands are the gutters.
- *
- * <p>Bands separated by only a narrow gutter are merged afterwards. A real column separator is
- * several characters wide, where the gaps inside a multi-word cell are about one; without the
- * merge, a cell like {@code January 20th, 2026} whose words align across every row would come out
- * as three spurious columns.
+ * Finds a table's column x-ranges by vertical-whitespace projection: a column is a contiguous
+ * x-band occupied by enough rows, and the gaps between bands are the gutters.
  */
 final class ColumnRanges {
 
@@ -37,18 +31,14 @@ final class ColumnRanges {
         return find(rows, GUTTER_CHARS, GUTTER_FLOOR);
     }
 
-    /**
-     * Finds column x-ranges by vertical-whitespace projection. Each row contributes coverage for
-     * the x-bands its words occupy; a column is a contiguous band covered by a sufficient fraction
-     * of rows, and the gaps between such bands are the gutters.
-     */
+    /** As {@link #find(List)}, with the gutter thresholds given explicitly. */
     static List<float[]> find(List<Line> rows, float gutterChars, float gutterFloor) {
         return find(rows, gutterChars, gutterFloor, 0);
     }
 
     /**
-     * As above, but {@code minSupport} overrides how many rows must occupy an x-band for it to be a
-     * column. Zero keeps the default, which scales with the row count.
+     * As above, but {@code minSupport} overrides how many rows must occupy an x-band; zero keeps
+     * the row-count-scaled default.
      */
     static List<float[]> find(
             List<Line> rows, float gutterChars, float gutterFloor, int minSupport) {
@@ -102,10 +92,8 @@ final class ColumnRanges {
             columns.add(new float[] {(float) (lo + start), (float) (lo + span)});
         }
 
-        // Merge bands separated by only a narrow gutter. A real column separator is several
-        // characters wide; the gaps *inside* a multi-word cell (ordinary word spacing) are about
-        // one character. Without this, a cell like "January 20th, 2026" — whose words align
-        // vertically across every row — would be split into three spurious columns.
+        // Merge bands closer than a real column separator: the gaps inside a multi-word cell are
+        // about one character, and would otherwise split "January 20th, 2026" into three columns.
         float charWidth = WordGeometry.averageCharWidth(rows);
         float minGutter = Math.max(gutterFloor, charWidth * gutterChars);
         List<float[]> merged = new ArrayList<>();
@@ -120,9 +108,8 @@ final class ColumnRanges {
     }
 
     /**
-     * Visible for testing: column detection depends only on word geometry, so tests can drive it
-     * from synthetic {@link TextLine}s to exercise degenerate-coordinate handling (the crash path
-     * an extreme text matrix can produce) without needing a binary PDF fixture.
+     * Visible for testing: column detection depends only on word geometry, so tests can exercise
+     * degenerate coordinates without a binary fixture.
      */
     static List<float[]> fromTextLines(List<TextLine> rows) {
         return find(rows.stream().map(Line::new).collect(Collectors.toList()));

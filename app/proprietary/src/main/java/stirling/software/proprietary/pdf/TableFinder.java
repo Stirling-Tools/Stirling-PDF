@@ -10,26 +10,22 @@ import java.util.stream.Collectors;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Finds the table blocks on one page and reconciles the two detectors.
- *
- * <p>Ruling lines give exact geometry and see tables the word grid cannot, because a single-word or
- * wrapped cell leaves no wide gap to anchor on. The word grid covers what the rules do not, i.e.
- * borderless and whitespace-aligned tables. Where both see the same table, rows are taken from the
- * text and columns from the rules.
+ * Finds one page's table blocks and reconciles the two detectors: where both see a table, rows come
+ * from the text and columns from the rules.
  */
 final class TableFinder {
 
     private TableFinder() {}
 
     /**
-     * Fraction of the word-grid's rows a ruled grid must also find before its rows are trusted;
-     * below it the table is only partly ruled and its rules would merge several rows into one band.
+     * Fraction of the word grid's rows a ruled grid must also find before its rows are trusted;
+     * below it the rules would merge several rows into one band.
      */
     private static final float COMPLETE_LATTICE = 0.5f;
 
     /**
-     * Detects table blocks on a page: ruled blocks first (exact geometry, and they see tables the
-     * word-grid cannot), then word-grid blocks over whatever lines the rules did not claim.
+     * Detects a page's table blocks: ruled blocks first, then word-grid blocks over whatever lines
+     * the rules did not claim.
      */
     static List<TableBlock> find(List<Line> lines, PageRules rules, int page) {
         List<TableBlock> ruled = RuledTables.find(lines, rules, page);
@@ -113,10 +109,8 @@ final class TableFinder {
     }
 
     /**
-     * Detects table blocks on a page. Anchor rows (lines with table-like column gaps) are grouped
-     * into vertically-contiguous runs separated by large vertical gaps, so multiple separate tables
-     * on one page stay separate. Non-anchor lines that fall within a run's vertical span are
-     * treated as wrapped-cell continuations and absorbed into the nearest anchor row above them.
+     * Detects table blocks from word geometry: anchor rows grouped into contiguous runs, with
+     * non-anchor lines inside a run absorbed as wrapped cells.
      */
     private static List<TableBlock> fromWordGrid(List<Line> lines, int page) {
         List<Line> cands =
@@ -217,8 +211,8 @@ final class TableFinder {
     private static final float HEADER_GAP = 1.6f;
 
     /**
-     * Runs of words in a line separated by more than a cell gutter: a header row has one per cell,
-     * a caption written across the table is a single run, which is what tells the two apart.
+     * Runs of words separated by more than a cell gutter: a header row has one per cell, a caption
+     * written across the table is a single run.
      */
     static int wordGroups(List<Line> row) {
         List<TextWord> words = new ArrayList<>();
@@ -271,12 +265,8 @@ final class TableFinder {
     }
 
     /**
-     * A line looks like a table row if it has at least two words separated by a gap far wider than
-     * normal inter-word spacing. The threshold is derived from the line's own character width
-     * rather than a document font size, because some PDFs report a unit (matrix-scaled) font size
-     * that makes absolute thresholds meaningless. (Two-word rows are allowed so two-column tables
-     * are detected; spurious matches are filtered later by block contiguity and column
-     * consistency.)
+     * True when a line has two words separated by a gap far wider than word spacing. The threshold
+     * comes from the line's own character width, not a document font size.
      */
     private static boolean isTableCandidate(List<TextWord> words) {
         if (words.size() < 2) {

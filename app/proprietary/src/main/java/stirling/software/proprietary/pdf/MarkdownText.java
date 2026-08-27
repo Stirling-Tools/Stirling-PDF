@@ -9,8 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Markdown text utilities shared across the converter: escaping extracted text so literal
- * characters are not reinterpreted as structure, repairing extractor artefacts, and rebasing the
+ * Markdown text utilities: escaping extracted text, repairing extractor artefacts, and rebasing the
  * finished document's heading levels.
  */
 final class MarkdownText {
@@ -23,13 +22,8 @@ final class MarkdownText {
     private static final Pattern ATX_HEADING = Pattern.compile("(?m)^(#{1,6}) (?=\\S)");
 
     /**
-     * Rebases the document's headings so its strongest one is level 1 and no level is skipped.
-     *
-     * <p>Detection judges each line against body text, so a document whose headings are set at body
-     * size and told apart only by weight scores every one of them level 3. That is the right
-     * relative answer and the wrong absolute one: those lines are the document's top-level
-     * headings. Levels are only meaningful against the other headings in the same document, so the
-     * ranking is fixed here, where the whole document is in hand, rather than per line.
+     * Rebases headings so the strongest is level 1 and no level is skipped: levels only mean
+     * anything against the other headings in the same document.
      */
     static String normaliseHeadingLevels(String markdown) {
         Set<Integer> levels = new TreeSet<>();
@@ -61,13 +55,8 @@ final class MarkdownText {
     }
 
     /**
-     * Escapes Markdown control characters in body text extracted from the PDF so that literal
-     * characters (e.g. a line that reads {@code # Heading} or {@code [label](url)}, or an embedded
-     * {@code <tag>}) are emitted as text rather than being reinterpreted as structure or raw HTML.
-     * Applied to all body text — headings, paragraphs, bold labels, bullets — before emission.
-     *
-     * <p>The generated Markdown should still be treated as untrusted content by any downstream
-     * renderer: this hardens fidelity and is defence-in-depth, not a substitute for safe rendering.
+     * Escapes Markdown control characters so extracted text is emitted literally. Output is still
+     * untrusted: this is defence-in-depth, not safe rendering.
      */
     static String escapeMarkdown(String text) {
         if (text.isEmpty()) {
@@ -91,10 +80,8 @@ final class MarkdownText {
     }
 
     /**
-     * Escapes block-level markers that are only significant at the start of a line: ATX headings
-     * ({@code #}), unordered list / thematic break markers ({@code -}, {@code +}), and ordered list
-     * markers ({@code 1.} / {@code 1)}). {@code original} carries the unescaped leading characters,
-     * none of which are altered by inline escaping, so positions line up with {@code escaped}.
+     * Escapes markers significant only at line start: {@code #}, {@code -}, {@code +} and
+     * ordered-list numbers. {@code original} is unescaped, so positions line up.
      */
     private static String escapeLeadingBlockMarker(String escaped, String original) {
         char c0 = original.charAt(0);

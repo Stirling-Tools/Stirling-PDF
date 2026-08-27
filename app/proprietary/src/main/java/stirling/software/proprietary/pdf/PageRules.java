@@ -13,8 +13,8 @@ import stirling.software.jpdfium.doc.PdfPageObjects;
 import stirling.software.jpdfium.model.Rect;
 
 /**
- * Ruling lines of one page, from its {@link PageObject} paths. Path boxes share the text lines'
- * user space, so a long thin box is a rule and a box large in both axes contributes its edges.
+ * Ruling lines of one page, from its {@link PageObject} paths: a long thin box is a rule, and a box
+ * large in both axes contributes its edges.
  */
 final class PageRules {
 
@@ -28,8 +28,8 @@ final class PageRules {
     private static final float MAX_BOX = 1500f;
 
     /**
-     * Object count past which the page is skipped: enumeration costs time per object, and a page
-     * drawing this many is a chart or an operator flood, never a readable grid.
+     * Object count past which the page is skipped: a page drawing this many is a chart or an
+     * operator flood, never a readable grid.
      */
     private static final int MAX_PAGE_OBJECTS = 20_000;
 

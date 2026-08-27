@@ -14,21 +14,16 @@ import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Recovers AcroForm values that exist only in a field's {@code /V} and never made it into the
- * content stream, as pseudo text lines placed at their widget rectangles.
- *
- * <p>Placing them geometrically rather than appending them means they land in reading order. They
- * are marked {@link Line#synthetic} so the table and heading paths can keep them out: they carry no
- * glyphs of their own, so they must never seed a column layout or be promoted on the height of
- * their widget box.
+ * Recovers AcroForm values that live only in a field's {@code /V}, as pseudo lines at their widget
+ * rectangles so they land in reading order.
  */
 final class FormValues {
 
     private FormValues() {}
 
     /**
-     * Builds pseudo text lines for AcroForm values that exist only in {@code /V}, placed at their
-     * widget rectangles so they land in reading order; values already in the content are skipped.
+     * Pseudo text lines for {@code /V}-only AcroForm values, placed at their widget rectangles;
+     * values already in the content stream are skipped.
      */
     static List<Line> lines(PdfDocument doc, int pageIndex, List<Line> existing) {
         List<FormField> fields;
@@ -91,8 +86,8 @@ final class FormValues {
     }
 
     /**
-     * Wraps a field value as a one-word-per-token {@link TextLine} placed at the widget rectangle,
-     * so downstream ordering, column detection and table assembly treat it like any other text.
+     * Wraps a field value as a one-word-per-token {@link TextLine} at the widget rectangle, so
+     * downstream stages treat it like any other text.
      */
     private static Line syntheticLine(String value, Rect r) {
         String[] tokens = value.split("\\s+");

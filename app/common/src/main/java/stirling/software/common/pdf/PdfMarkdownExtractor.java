@@ -5,9 +5,8 @@ import java.io.IOException;
 import stirling.software.jpdfium.PdfDocument;
 
 /**
- * Seam for PDF to Markdown conversion. {@link BasicPdfMarkdownExtractor} is the built-in
- * implementation; the proprietary module supplies a layout-aware one that takes precedence when it
- * is on the classpath.
+ * Seam for PDF to Markdown conversion. The proprietary module supplies a layout-aware
+ * implementation that takes precedence on the classpath.
  */
 public interface PdfMarkdownExtractor {
 

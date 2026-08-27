@@ -7,12 +7,8 @@ import java.util.List;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Groups the lines inside a ruled region into rows, and reads the region's column bands off its
- * vertical rules.
- *
- * <p>Which grouping applies depends on what the page drew. Rules between the rows keep a wrapped
- * cell whole, where baselines would split every continuation line into its own row; with no such
- * rules the baselines are all there is.
+ * Groups the lines inside a ruled region into rows, and reads its column bands off the vertical
+ * rules.
  */
 final class RuledRows {
 
@@ -22,8 +18,8 @@ final class RuledRows {
     private static final float COLUMN_COVERAGE = 0.5f;
 
     /**
-     * Splits a band whose every baseline is a complete row back into those rows: a wrapped cell
-     * leaves the other columns empty on its continuation lines, a run of rows does not.
+     * Splits a band whose every baseline is a complete row back into those rows; a wrapped cell
+     * leaves the other columns empty, a run of rows does not.
      */
     static List<List<Line>> splitCompleteBands(List<List<Line>> bands, List<float[]> cols) {
         if (cols == null || cols.size() < 2) {
@@ -66,8 +62,8 @@ final class RuledRows {
     }
 
     /**
-     * Column bands from the vertical rules that span the region. Null when no interior rule
-     * survives, since the word-grid detector guesses from whitespace better.
+     * Column bands from the vertical rules spanning the region; null when no interior rule
+     * survives, as whitespace projection guesses better.
      */
     static List<float[]> columns(
             List<RuleGrid.Level> vLevels, float left, float right, float top, float bottom) {
@@ -131,10 +127,7 @@ final class RuledRows {
         return rows;
     }
 
-    /**
-     * Rows by baseline proximity, for a table ruled between its columns but not its rows. The
-     * columns still come from the rules, which is the part whitespace projection gets wrong.
-     */
+    /** Rows by baseline proximity, for a table ruled between its columns but not its rows. */
     static List<List<Line>> baselineRows(List<Line> inside) {
         List<Line> sorted = new ArrayList<>(inside);
         sorted.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());

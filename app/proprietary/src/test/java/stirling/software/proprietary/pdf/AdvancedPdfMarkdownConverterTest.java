@@ -27,14 +27,8 @@ import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Accuracy and robustness tests for {@link AdvancedPdfMarkdownConverter}, comparing conversion
- * output against hand-authored golden Markdown for a set of owned/synthetic fixtures.
- *
- * <p>The {@link #gatedFixtures()} set is enforced in CI: those fixtures currently convert within
- * the accuracy threshold and guard against regressions. Fixtures still being iterated on live in
- * {@link #wipFixtures()} under a {@link Disabled} test so the goldens stay in the tree without
- * breaking the build. Enable the WIP test locally to see per-fixture scores while working on the
- * converter.
+ * Accuracy and robustness tests comparing output against hand-authored golden Markdown. {@link
+ * #gatedFixtures()} gates CI; {@link #wipFixtures()} is disabled.
  */
 class AdvancedPdfMarkdownConverterTest {
 
@@ -73,12 +67,8 @@ class AdvancedPdfMarkdownConverterTest {
     }
 
     /**
-     * Degenerate/extreme geometry must not crash the converter. A crafted or malformed PDF can
-     * position text anywhere via a text matrix, so a row's words can span from near the origin to a
-     * coordinate beyond {@link Integer#MAX_VALUE}. The old column-detection code sized an {@code
-     * int[]} straight from {@code (int) Math.ceil(maxX) - lo}, which either allocated a multi-GB
-     * array (OutOfMemoryError) or overflowed to a negative length (NegativeArraySizeException) —
-     * taking down the request thread. Detection must instead bail out and return no columns.
+     * Degenerate geometry must not crash the converter: a text matrix can place a word past {@link
+     * Integer#MAX_VALUE}, which used to size an {@code int[]} from the span.
      */
     @Test
     void columnDetectionSurvivesDegenerateGeometry() {
@@ -118,10 +108,8 @@ class AdvancedPdfMarkdownConverterTest {
     }
 
     /**
-     * Text set in three columns aligns across rows exactly as a table's cells do, so the word grid
-     * reads the whole page as one table and loses every heading in it. What tells them apart is
-     * that a table keys its rows on a column of short values, and that its cells do not continue
-     * each other's sentences.
+     * Three-column prose aligns across rows exactly as cells do. What tells them apart is a keying
+     * column of short values and cells that do not run on.
      */
     @Test
     void multiColumnProseIsNotATable() {
@@ -185,17 +173,14 @@ class AdvancedPdfMarkdownConverterTest {
     }
 
     /**
-     * A crafted PDF can draw thousands of disjoint rules. Ruled-table detection used to build one
-     * full-length int[] per connected component, so N non-crossing rules cost O(N^2) retained
-     * memory and tens of thousands of rules exhausted the heap. Partitioning must stay linear and
-     * bounded.
+     * A crafted PDF can draw thousands of disjoint rules; partitioning used to cost O(N^2) retained
+     * memory, so it must stay linear and bounded.
      */
     @Test
     @Timeout(20)
     void ruledTablePartitionSurvivesPathologicalGrid() {
         // 4000 rules that never cross, so every one is its own component: the shape that made the
-        // old code allocate 4000 arrays of 4001 ints. Stays under the crossing-test budget so it is
-        // the component cap being exercised, not the operator-flood bail-out.
+        // old code allocate 4000 arrays of 4001 ints, kept under the crossing-test budget.
         List<PageRules.Rule> horizontal = new ArrayList<>();
         List<PageRules.Rule> vertical = new ArrayList<>();
         for (int i = 0; i < 2_000; i++) {
@@ -247,9 +232,8 @@ class AdvancedPdfMarkdownConverterTest {
             expected = new String(in.readAllBytes(), StandardCharsets.UTF_8);
         }
 
-        // Image placeholders are not scored: their body text is a TODO ("ideally, add the info
-        // available about the image...") rather than real content, so comparing it would penalise
-        // output for matching a placeholder we intend to replace. Drop those lines from both sides.
+        // Image placeholders are not scored: their body text is a TODO rather than real content, so
+        // comparing it would penalise output for matching a placeholder we intend to replace.
         expected = stripImagePlaceholders(expected);
         actual = stripImagePlaceholders(actual);
 
@@ -269,9 +253,8 @@ class AdvancedPdfMarkdownConverterTest {
     private static final String IMAGE_PLACEHOLDER_MARKER = "Image intentionally redacted";
 
     /**
-     * Removes non-content lines from the comparison: image placeholders (TODO text we intend to
-     * replace) and GFM table separator rows (the {@code |---|---|} divider, whose exact dash count
-     * is cosmetic — any run of three or more dashes is valid Markdown).
+     * Removes non-content lines: image placeholders, and GFM separator rows whose exact dash count
+     * is cosmetic.
      */
     private static String stripImagePlaceholders(String md) {
         StringBuilder sb = new StringBuilder();
@@ -299,8 +282,8 @@ class AdvancedPdfMarkdownConverterTest {
     }
 
     /**
-     * Character-level similarity: proportion of expected characters that appear in the LCS. O(n*m)
-     * but golden files are small enough that this is fine.
+     * Character-level similarity: the fraction of expected characters in the LCS. O(n*m), fine for
+     * small goldens.
      */
     private static double similarity(String expected, String actual) {
         if (expected.isEmpty() && actual.isEmpty()) return 1.0;

@@ -5,12 +5,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Turns a column's lines into rendered Markdown blocks: headings (including wrapped ones), bullets,
- * bold labels and paragraphs.
- *
- * <p>Contents lists are recognised first and then left alone. A contents entry carries the
- * typography of the section it points at without being that section, so promoting one on size or
- * weight emits a spurious heading for every line of the list.
+ * Turns a column's lines into Markdown blocks: headings (including wrapped ones), bullets, bold
+ * labels and paragraphs. Contents lists are recognised and left alone.
  */
 final class ParagraphAssembler {
 
@@ -151,8 +147,8 @@ final class ParagraphAssembler {
     private static final Pattern SENTENCE_BREAK = Pattern.compile("[.!?]\\s+\\p{Lu}");
 
     /**
-     * True when {@code next} continues a wrapped heading rather than starting a new one: each
-     * visual line arrives separately, so an unjoined heading emits as several spurious ones.
+     * True when {@code next} continues a wrapped heading: each visual line arrives separately, so
+     * an unjoined heading emits as several spurious ones.
      */
     private static boolean wrapsHeading(
             Line head,
@@ -210,8 +206,8 @@ final class ParagraphAssembler {
     private static final int MIN_CONTENTS_RUN = 3;
 
     /**
-     * Marks the lines of a contents list: a run of titles joined to page numbers by leader dots,
-     * which carry the typography of the sections they point at without being those sections.
+     * Marks the lines of a contents list: titles joined to page numbers by leader dots, carrying
+     * the typography of the sections they point at.
      */
     private static boolean[] contentsRun(List<Line> lines) {
         boolean[] entry = new boolean[lines.size()];
