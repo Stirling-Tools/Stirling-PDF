@@ -19,6 +19,11 @@ import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
+import { MantineProvider } from "@mantine/core";
+import {
+  mantineTheme as editorMantineTheme,
+  editorCssVariablesResolver,
+} from "@core/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -66,9 +71,9 @@ for (const [path, raw] of Object.entries(localeModules)) {
 }
 
 if (!i18next.isInitialized) {
-  // initImmediate: false → initialise synchronously from the inline resources
-  // (there's no async backend here), so i18next is ready before the first story
-  // renders. Without it the first render can beat init and stick on raw keys.
+  // initAsync: false → initialise synchronously from the inline resources.
+  // There is no asynchronous backend here, so i18next is ready before stories
+  // render.
   void i18next.use(initReactI18next).init({
     lng: "en-US",
     fallbackLng: "en-US",
@@ -76,7 +81,7 @@ if (!i18next.isInitialized) {
     resources,
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-    initImmediate: false,
+    initAsync: false,
   });
 } else {
   // Something initialised i18next first (e.g. the app's async TOML backend):
@@ -199,6 +204,37 @@ const withLocale: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * Applies the Mantine theme the story's component actually runs under in the
+ * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
+ * everything else in its own ThemeProvider. Getting this wrong is not just
+ * cosmetic — the two themes carry different neutral ramps, so rendering an
+ * editor component under the Processor's theme drops it onto Mantine's stock
+ * greys and reports contrast failures the app doesn't have.
+ */
+function StoryTheme({
+  isPortalStory,
+  colorScheme,
+  children,
+}: {
+  isPortalStory: boolean;
+  colorScheme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  if (isPortalStory) {
+    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
+  }
+  return (
+    <MantineProvider
+      theme={editorMantineTheme}
+      cssVariablesResolver={editorCssVariablesResolver}
+      forceColorScheme={colorScheme}
+    >
+      {children}
+    </MantineProvider>
+  );
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -214,16 +250,21 @@ const withProviders: Decorator = (Story, context) => {
   // the portal's base.css keys its reset/typography on. Give portal stories
   // the same wrapper (and only them — the scoping exists precisely so portal
   // styles never apply to editor components).
-  const isPortalStory = (context.parameters.fileName ?? "").includes(
-    "/portal/",
-  );
+  // `fileName` is only injected by the dev/build pipeline — under the Vitest
+  // runner it is absent, so path alone would silently drop every portal story
+  // onto the editor theme (where portal-only palette entries like `amber`
+  // resolve to nothing and render unstyled). The title prefix is the fallback
+  // that survives both environments.
+  const isPortalStory =
+    (context.parameters.fileName ?? "").includes("/portal/") ||
+    context.title.startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SchemeSetup scheme={colorScheme} />
           <ThemeBridge theme={colorScheme}>
-            <SuiProvider colorScheme={colorScheme}>
+            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
@@ -241,7 +282,7 @@ const withProviders: Decorator = (Story, context) => {
                   </UIProvider>
                 </TierKey>
               </LinkProvider>
-            </SuiProvider>
+            </StoryTheme>
           </ThemeBridge>
         </ThemeProvider>
       </QueryClientProvider>
@@ -274,6 +315,14 @@ const preview: Preview = {
       // any violation. Context is left at the addon default (the document root)
       // so it resolves under both the Storybook UI and the Vitest browser mount.
       test: "error",
+      context: {
+        // Nodes carrying this attribute render a facsimile of the user's own
+        // document — their stamp text, their watermark, in the colour and
+        // opacity they chose. WCAG contrast governs the interface, not the
+        // content authored through it, and the controls that set those values
+        // are checked normally.
+        exclude: ["[data-user-content-preview]"],
+      },
     },
   },
   globalTypes: {

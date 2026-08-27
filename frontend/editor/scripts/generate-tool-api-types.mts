@@ -10,15 +10,9 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
-import * as prettier from "prettier";
 
-// The API namespaces whose endpoints a pipeline can reference. `/api/v1/ai/tools/`
-// is absent from the spec, so it cannot appear here. Extend this list when other
-// namespaces become tools.
-//
-// `/api/v1/filter/` and `/api/v1/integration/` are included even though neither is a
-// user-facing tool: a stored pipeline can contain one, and ToolEndpoint keys the I/O
-// table, so leaving them out would stop a chain being checked past such a step.
+// Endpoints a pipeline can reference. filter/integration are not user-facing tools but a stored
+// pipeline can contain one; the AI namespace is admitted one endpoint at a time, not wholesale.
 const ALLOWED_PATH_PREFIXES = [
   "/api/v1/general/",
   "/api/v1/misc/",
@@ -26,12 +20,14 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/convert/",
   "/api/v1/filter/",
   "/api/v1/integration/",
+  "/api/v1/ai/tools/classify-and-label",
 ];
 
-// File plumbing, not user parameters: `fileInput` is the uploaded document and
-// `fileId` a server-side handle. Stripped from every generated request model.
-// Named file fields (stampImage, attachments, ...) are real parameters and kept.
-const BASE_FILE_FIELDS = new Set(["fileInput", "fileId"]);
+// File plumbing, not user parameters: `fileInput` and `file` are the uploaded primary document
+// (endpoints use one name or the other - `file` is never a second, supporting upload) and `fileId`
+// a server-side handle. Stripped from every generated request model. Named supporting-file fields
+// (stampImage, attachments, ...) are real parameters and kept.
+const BASE_FILE_FIELDS = new Set(["fileInput", "file", "fileId"]);
 
 // The shared "upload a file or provide a file ID" wrapper schema and its two
 // branches. An endpoint whose body is exactly this has no parameters, so it must
@@ -71,6 +67,19 @@ interface DiscoveredTool {
 
 function isObject(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** A single file upload: `type: string, format: binary` (a Java MultipartFile param). */
+function isBinaryField(schema: unknown): schema is Json {
+  return (
+    isObject(schema) && schema.type === "string" && schema.format === "binary"
+  );
+}
+
+/** A multi file upload: an array of binary items (some specs also flag the array itself binary). */
+function isBinaryArrayField(schema: unknown): schema is Json {
+  if (!isObject(schema) || schema.type !== "array") return false;
+  return schema.format === "binary" || isBinaryField(schema.items);
 }
 
 /**
@@ -213,11 +222,7 @@ function collectToolIO(
   return { table, dropped };
 }
 
-async function renderToolIO(
-  spec: Json,
-  table: Record<string, unknown>,
-  outputPath: string,
-): Promise<string> {
+function renderToolIO(spec: Json, table: Record<string, unknown>): string {
   if (Object.keys(table).length === 0) {
     throw new Error(
       `No ${IO_EXTENSION} declarations in the spec. The backend publishes these from @ToolIO; regenerate with 'task backend:swagger'.`,
@@ -298,33 +303,12 @@ export function toolIOFor(
 }
 `;
 
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  return prettier.format(body, { ...prettierConfig, parser: "typescript" });
+  return body;
 }
 
-/** In check mode, fail when the committed file is out of date. */
-function writeOrCheck(
-  outputPath: string,
-  formatted: string,
-  check: boolean,
-  task: string,
-): void {
-  if (check) {
-    let current = "";
-    try {
-      current = readFileSync(outputPath, "utf-8");
-    } catch {
-      // Missing file counts as out of date.
-    }
-    if (current !== formatted) {
-      throw new Error(
-        `${outputPath} is out of date. Run '${task}' and commit the result.`,
-      );
-    }
-    return;
-  }
+function writeOutput(outputPath: string, contents: string): void {
   mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, formatted, "utf-8");
+  writeFileSync(outputPath, contents, "utf-8");
 }
 
 async function main(): Promise<void> {
@@ -333,12 +317,11 @@ async function main(): Promise<void> {
       spec: { type: "string" },
       output: { type: "string" },
       "io-output": { type: "string" },
-      check: { type: "boolean", default: false },
     },
   });
   if (!values.spec || !values.output || !values["io-output"]) {
     throw new Error(
-      "Usage: generate-tool-api-types.mts --spec <SwaggerDoc.json> --output <file.ts> --io-output <file.ts> [--check]",
+      "Usage: generate-tool-api-types.mts --spec <SwaggerDoc.json> --output <file.ts> --io-output <file.ts>",
     );
   }
   const specPath = resolve(values.spec);
@@ -358,6 +341,9 @@ async function main(): Promise<void> {
   const usedClassNames = new Set<string>();
   const pendingComponents = new Set<string>();
   const skipped: string[] = [];
+  // Named file fields (as File uploads) per model, so a caller can tell a file param from a scalar
+  // string param - which `format: binary` -> `string` would otherwise erase.
+  const fileFieldsByClass: Record<string, string[]> = {};
 
   for (const path of Object.keys(paths).sort()) {
     if (
@@ -408,7 +394,32 @@ async function main(): Promise<void> {
       const query = queryParameters(pathItem);
       // Body wins over query on a name collision.
       const properties: Json = { ...query.props, ...bodyProps };
+      // `file` is stripped as a primary-document alias (see BASE_FILE_FIELDS). That only holds while
+      // no endpoint uses `file` as a *supporting* upload beside a primary `fileInput`; if one ever
+      // does, blanket-stripping would silently drop it. Fail generation so the assumption is fixed
+      // here rather than shipping a lost file.
+      if ("file" in properties && "fileInput" in properties) {
+        throw new Error(
+          `${path} has both 'fileInput' and 'file' uploads. 'file' is stripped as a primary-document` +
+            " alias, which would drop it as a supporting file. Rename the supporting param or revise" +
+            " BASE_FILE_FIELDS handling in this generator.",
+        );
+      }
       for (const field of BASE_FILE_FIELDS) delete properties[field];
+      // Type each named file upload as File/File[] (not the `string` a binary format yields) via
+      // json-schema-to-typescript's `tsType` override, and record it. Base file fields are already
+      // stripped, so what remains is the real supporting-file params.
+      const fileFields: string[] = [];
+      for (const [name, prop] of Object.entries(properties)) {
+        if (isBinaryField(prop)) {
+          prop.tsType = "File";
+          fileFields.push(name);
+        } else if (isBinaryArrayField(prop)) {
+          prop.tsType = "File[]";
+          fileFields.push(name);
+        }
+      }
+      fileFieldsByClass[className] = fileFields;
       modelSchema.properties = properties;
       const required = new Set(computeRequired(modelSchema, properties));
       for (const name of query.required) {
@@ -436,14 +447,9 @@ async function main(): Promise<void> {
       `Dropped ${dropped.length} @ToolIO declaration(s) on paths that are not tool endpoints. Add the namespace to ALLOWED_PATH_PREFIXES if a pipeline can contain these steps:\n  ${dropped.join("\n  ")}`,
     );
   }
-  writeOrCheck(
-    ioOutputPath,
-    await renderToolIO(spec, ioDeclarations, ioOutputPath),
-    values.check ?? false,
-    "task frontend:tool-models",
-  );
+  writeOutput(ioOutputPath, renderToolIO(spec, ioDeclarations));
   console.log(
-    `${values.check ? "Up to date" : "Generated"}: ${Object.keys(ioDeclarations).length} tool I/O declarations.`,
+    `Generated ${Object.keys(ioDeclarations).length} tool I/O declarations.`,
   );
 
   // Transitively inline every referenced component into `definitions`, rewriting its refs too.
@@ -464,8 +470,8 @@ async function main(): Promise<void> {
   await compileAndWrite(
     tools,
     definitions,
+    fileFieldsByClass,
     outputPath,
-    values.check ?? false,
     skipped,
   );
 }
@@ -473,8 +479,8 @@ async function main(): Promise<void> {
 async function compileAndWrite(
   tools: DiscoveredTool[],
   definitions: Record<string, Json>,
+  fileFieldsByClass: Record<string, string[]>,
   outputPath: string,
-  check: boolean,
   skipped: string[],
 ): Promise<void> {
   // json-schema-to-typescript only emits a named, exported interface per schema
@@ -525,6 +531,15 @@ async function compileAndWrite(
   const endpointList = tools
     .map((t) => `  ${JSON.stringify(t.path)},`)
     .join("\n");
+  // Endpoints that take supporting files, mapped to those file params' names. Only endpoints with at
+  // least one are listed, so membership answers "does this tool take extra files".
+  const fileFieldEntries = tools
+    .filter((t) => (fileFieldsByClass[t.className] ?? []).length > 0)
+    .map(
+      (t) =>
+        `  ${JSON.stringify(t.path)}: ${JSON.stringify(fileFieldsByClass[t.className])},`,
+    )
+    .join("\n");
 
   const footer = [
     "/** Endpoint path for a generated tool operation (the operation identity across languages). */",
@@ -536,22 +551,17 @@ async function compileAndWrite(
     "/** Every generated tool endpoint, for iteration. */",
     `export const TOOL_ENDPOINTS = [\n${endpointList}\n] as const satisfies readonly ToolEndpoint[];`,
     "",
+    "/** The supporting-file parameters each endpoint accepts beyond its primary fileInput, by name. */",
+    `export const TOOL_FILE_FIELDS = {\n${fileFieldEntries}\n} as const satisfies Partial<\n  Record<ToolEndpoint, readonly string[]>\n>;`,
+    "",
     "/** Union of every generated tool request model. */",
     `export type ToolApiRequest = ToolApiParams[ToolEndpoint];`,
   ].join("\n");
 
   const body = `${FILE_HEADER}\n\n${models}\n\n${footer}\n`;
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  const formatted = await prettier.format(body, {
-    ...prettierConfig,
-    parser: "typescript",
-  });
-
-  writeOrCheck(outputPath, formatted, check, "task frontend:tool-models");
-  console.log(
-    `${check ? "Up to date" : "Generated"}: ${tools.length} tool endpoints.`,
-  );
-  if (!check && skipped.length > 0) {
+  writeOutput(outputPath, body);
+  console.log(`Generated ${tools.length} tool endpoints.`);
+  if (skipped.length > 0) {
     console.log(
       `Skipped ${skipped.length} POST endpoint(s) with no request body: ${skipped.join(", ")}`,
     );

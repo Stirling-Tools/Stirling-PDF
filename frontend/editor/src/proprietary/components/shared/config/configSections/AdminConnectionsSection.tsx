@@ -512,11 +512,11 @@ export default function AdminConnectionsSection() {
     updatedSettings: Record<string, unknown>,
   ) => {
     if (provider.id === "smtp") {
-      setSettings({ ...settings, mail: updatedSettings as MailSettings });
+      setSettings({ ...settings, mail: updatedSettings });
     } else if (provider.id === "telegram") {
       setSettings({
         ...settings,
-        telegram: updatedSettings as TelegramSettingsData,
+        telegram: updatedSettings,
       });
     } else if (provider.id === "googledrive") {
       const gd = updatedSettings as GoogleDriveSettings;
@@ -528,7 +528,7 @@ export default function AdminConnectionsSection() {
         googleDriveAppId: gd.appId,
       });
     } else if (provider.id === "saml2") {
-      setSettings({ ...settings, saml2: updatedSettings as Saml2Settings });
+      setSettings({ ...settings, saml2: updatedSettings });
     } else if (provider.id === "oauth2-generic") {
       const generic = updatedSettings as OAuth2GenericSettings;
       setSettings({ ...settings, oauth2: { ...settings.oauth2, ...generic } });
@@ -652,7 +652,7 @@ export default function AdminConnectionsSection() {
               href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
               target="_blank"
               size="xs"
-              c="blue"
+              c="var(--c-accent-text)"
             >
               {t(
                 "admin.settings.connections.documentation",
@@ -681,7 +681,7 @@ export default function AdminConnectionsSection() {
                     "Allow users to upload files from mobile devices by scanning a QR code",
                   )}
                 </Text>
-                <Text size="xs" c="orange" mt={8} fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
                     "admin.settings.connections.mobileScanner.note",
                     "Note: Requires Frontend URL to be configured. ",
@@ -692,7 +692,7 @@ export default function AdminConnectionsSection() {
                       e.preventDefault();
                       navigate("/settings/adminGeneral#frontendUrl");
                     }}
-                    c="orange"
+                    c="var(--color-amber-dark)"
                     td="underline"
                   >
                     {t(

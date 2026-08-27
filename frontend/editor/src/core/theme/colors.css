@@ -1,5 +1,5 @@
 /* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
-/* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-input-bg, --c-hover, --c-active, --c-overlay. */
+/* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-modal-surface (modal panels), --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
 :root,
@@ -11,6 +11,7 @@ html[data-app-theme="light"] {
   --c-surface-raised: var(--p-white);
   --c-surface-sunken: var(--p-gray-100);
   --c-input-bg: var(--p-white);
+  --c-modal-surface: var(--p-white);
   --c-hover: var(--p-gray-50);
   --c-active: var(--p-gray-100);
   --c-overlay: rgba(0, 0, 0, 0.5);
@@ -22,7 +23,7 @@ html[data-app-theme="light"] {
 
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-snow);
-  --c-btn-secondary: var(--c-btn-inverse);
+  --c-btn-secondary: var(--c-surface-raised);
   --c-btn-secondary-border: var(--c-border);
 
   --c-border: var(--p-c-f0f0f0);
@@ -32,10 +33,28 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  /* Accent used as TEXT (links, toggles): a deeper hue that clears 4.5:1 on
+     light surfaces, where --c-primary itself does not. */
+  --c-accent-text: var(--p-blue-700);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
+  /* Solid fills that carry a white label. Deeper than the --c-<tone> values
+     above, which are picked for surfaces, borders and icons where the 3:1
+     non-text floor applies. Scheme-independent: a filled badge reads white on
+     either ground. */
+  --c-success-solid: var(--p-green-700);
+  --c-danger-solid: var(--p-red-600);
+  --c-warning-solid: var(--p-amber-700);
+  --c-neutral-solid: var(--p-gray-600);
+  --c-accent-solid: var(--p-blue-600);
+  /* Ink for surfaces that are white in both schemes — a rendered page, a
+     signature sheet. Scheme-independent for the same reason the fills above
+     are: the ground does not change, so the ink must not either. */
+  --c-text-on-light: var(--p-ink);
+  --c-accent-on-light: var(--p-blue-700);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
@@ -52,6 +71,11 @@ html[data-app-theme="light"] {
   --c-success-subtle: color-mix(
     in srgb,
     var(--c-success) 10%,
+    var(--c-surface)
+  );
+  --c-warning-subtle: color-mix(
+    in srgb,
+    var(--c-warning) 10%,
     var(--c-surface)
   );
 
@@ -121,15 +145,18 @@ html[data-app-theme="midnight"] {
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-650);
   --c-surface-sunken: var(--p-zinc-850);
-  --c-input-bg: var(--p-zinc-650);
+  --c-input-bg: var(--c-surface);
+  --c-modal-surface: var(--c-surface);
   --c-hover: var(--p-gray-800);
   --c-active: var(--p-gray-800);
   --c-overlay: rgba(0, 0, 0, 0.6);
 
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
+  --c-accent-text: var(--p-blue-400);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
@@ -145,6 +172,7 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
@@ -166,6 +194,10 @@ html[data-app-theme="custom"] {
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
   --c-text-on-primary: var(--p-white);
   --c-accent-fg: var(--c-primary);
+  /* Accent used as TEXT: --c-primary and its 80% hover both land under
+     4.5:1 on the accent-tinted surfaces they appear on (chips, links,
+     outline buttons), so accent copy takes a deeper step of the hue. */
+  --c-accent-text: var(--p-blue-700);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-paper));
@@ -194,7 +226,11 @@ html[data-app-theme="custom"] {
   --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
   --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--p-white));
   --color-primary-500: var(--c-primary);
-  --color-primary-600: color-mix(in srgb, var(--c-primary) 88%, var(--p-black));
+  /* Shade 600 is the ramp's text-capable step — Mantine maps it to shade 6,
+     which drives link colour and the tuple's default text. At 88% it lands
+     at 4.2:1 on the page, so it mixes further down. Filled surfaces read
+     from --mantine-primary-color-filled (= --c-primary) and are unaffected. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 75%, var(--p-black));
   --color-primary-700: color-mix(in srgb, var(--c-primary) 74%, var(--p-black));
   --color-primary-800: color-mix(in srgb, var(--c-primary) 60%, var(--p-black));
   --color-primary-900: color-mix(in srgb, var(--c-primary) 46%, var(--p-black));
@@ -211,7 +247,9 @@ html[data-app-theme="custom"] {
     var(--c-primary) 18%,
     transparent
   );
-  --mantine-primary-color-light-color: var(--c-primary);
+  /* Text of the light/subtle variants — the fill value only reaches ~3:1 on
+     its own tint, so accent copy takes the deeper step. */
+  --mantine-primary-color-light-color: var(--c-accent-text);
 
   /* Brand-tint family — re-derived from --c-primary so legacy accents harmonise to the chosen hue. */
 
@@ -280,10 +318,29 @@ html[data-app-theme="custom"] {
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
+  --c-accent-text: var(--p-blue-400);
+  /* Shade 600 is the ramp's text-capable step (Mantine's shade 6 — link colour
+     and the tuple's default text). The light theme reaches it by mixing toward
+     black; on a dark ground it has to travel the other way to stay readable. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 85%, var(--p-white));
+  /* The accent's tint rungs, which back every light-variant surface. The light
+     theme builds them by mixing toward white; left unmixed for dark they stay a
+     pale blue and put dark-theme ink on a near-white ground. */
+  --color-primary-50: color-mix(in srgb, var(--c-primary) 12%, var(--c-bg));
+  --color-primary-100: color-mix(in srgb, var(--c-primary) 20%, var(--c-bg));
+  --color-primary-200: color-mix(in srgb, var(--c-primary) 35%, var(--c-bg));
+  --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--c-bg));
+  --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--c-bg));
+  /* The inks that sit on those tints. Mixing toward black is what makes them
+     readable on a pale ground; on the dark tints above they have to travel
+     toward white for the same reason. */
+  --color-primary-700: color-mix(in srgb, var(--c-primary) 70%, var(--p-white));
+  --color-primary-800: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
+  --color-primary-900: color-mix(in srgb, var(--c-primary) 40%, var(--p-white));
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);
@@ -305,7 +362,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
     var(--c-primary) 8%,
     var(--p-zinc-900)
   );
-  --c-input-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-zinc-900));
+  --c-input-bg: var(--c-surface);
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-28282d));
@@ -318,6 +375,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
@@ -368,7 +426,7 @@ html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="
   --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-775);
   --c-surface-sunken: var(--p-zinc-900);
-  --c-input-bg: var(--p-zinc-900);
+  --c-input-bg: var(--c-surface);
   --c-hover: var(--p-zinc-750);
   --c-active: var(--p-zinc-700);
   --c-border: var(--p-c-28282d);

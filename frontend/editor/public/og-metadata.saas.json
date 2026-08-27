@@ -17,7 +17,7 @@
       "description": "Adds signature to PDF by drawing, text or image"
     },
     "sharedSign": {
-      "image": "/og_images/home.png",
+      "image": "/og_images/shared-sign.png",
       "title": "Shared Signing - Stirling PDF",
       "description": "Request signatures from others and track signing sessions"
     },
@@ -196,6 +196,11 @@
       "title": "Compress - Stirling PDF",
       "description": "Compress PDFs to reduce their file size."
     },
+    "classify": {
+      "image": "/og_images/home.png",
+      "title": "Classify - Stirling PDF",
+      "description": "Identify what kind of document this is and tag it."
+    },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract Pages - Stirling PDF",
@@ -268,8 +273,8 @@
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Fill Form - Stirling PDF",
-      "description": "Fill PDF form fields interactively with a visual editor"
+      "title": "Form Editor - Stirling PDF",
+      "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
@@ -305,6 +310,12 @@
       "image": "/og_images/dev-airgapped.png",
       "title": "Air-gapped Setup - Stirling PDF",
       "description": "Link to air-gapped setup guide"
+    },
+    "/editor": {
+      "image": "/og_images/saas/app-editor.png",
+      "title": "Stirling - The world's most secure PDF editor",
+      "ogTitle": "The world's most secure PDF editor",
+      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
     },
     "/login": {
       "image": "/og_images/home.png",
@@ -541,12 +552,6 @@
       "title": "Stirling Processor - Govern every PDF your organization touches",
       "ogTitle": "Govern every PDF your organization touches",
       "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF."
-    },
-    "/editor": {
-      "image": "/og_images/saas/app-editor.png",
-      "title": "Stirling - The world's most secure PDF editor",
-      "ogTitle": "The world's most secure PDF editor",
-      "description": "Edit, sign, redact, and convert PDFs in your browser. Free forever, open source, and self-hostable."
     }
   },
   "byPath": {
@@ -588,6 +593,7 @@
     "/remove-cert-sign": "removeCertSign",
     "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
+    "/classify": "classify",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",
@@ -663,6 +669,7 @@
     "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
+    "/editor": "/editor",
     "/login": "/login",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
@@ -709,7 +716,6 @@
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
     "/signup": "/signup",
-    "/processor": "/processor",
-    "/editor": "/editor"
+    "/processor": "/processor"
   }
 }

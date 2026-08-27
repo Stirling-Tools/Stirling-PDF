@@ -23,7 +23,7 @@ export function GettingStartedSection({
         <li className="portal-docs__step">
           <span className="portal-docs__step-mark">1</span>
           <div className="portal-docs__step-body">
-            <h3>{t("portal.docs.quickstart.step1.title")}</h3>
+            <h2>{t("portal.docs.quickstart.step1.title")}</h2>
             <p>{t("portal.docs.quickstart.step1.body")}</p>
             <CodeBlock
               lang="bash"
@@ -34,7 +34,7 @@ export function GettingStartedSection({
         <li className="portal-docs__step">
           <span className="portal-docs__step-mark">2</span>
           <div className="portal-docs__step-body">
-            <h3>{t("portal.docs.quickstart.step2.title")}</h3>
+            <h2>{t("portal.docs.quickstart.step2.title")}</h2>
             <p>{t("portal.docs.quickstart.step2.body")}</p>
             <LangSnippet
               samples={samples}
@@ -45,7 +45,7 @@ export function GettingStartedSection({
         <li className="portal-docs__step">
           <span className="portal-docs__step-mark">3</span>
           <div className="portal-docs__step-body">
-            <h3>{t("portal.docs.quickstart.step3.title")}</h3>
+            <h2>{t("portal.docs.quickstart.step3.title")}</h2>
             <p>{t("portal.docs.quickstart.step3.body")}</p>
             <CodeBlock
               lang="json"

@@ -363,11 +363,11 @@ export default function AdminGeneralSection() {
   // Show the server setting when loaded (for admin config), otherwise show user's preference
   // Note: User's preference in localStorage is separate and takes precedence in the app via useLogoVariant hook
   const logoStyleValue = loginEnabled
-    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "classic")
-    : (preferences.logoVariant ?? "classic");
+    ? (settings.ui?.logoStyle ?? preferences.logoVariant ?? "modern")
+    : (preferences.logoVariant ?? "modern");
 
   const handleLogoStyleChange = (value: string) => {
-    const nextValue = value === "modern" ? "modern" : "classic";
+    const nextValue = value === "classic" ? "classic" : "modern";
 
     // Only update local settings state - don't update the actual preference until save
     // When login is disabled, update preference immediately since there's no server to save to
