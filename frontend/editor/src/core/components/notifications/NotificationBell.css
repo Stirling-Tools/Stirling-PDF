@@ -10,7 +10,7 @@
   position: relative;
   padding: var(--sp-2, 0.5rem);
   border: none;
-  border-radius: var(--radius-md, 0.375rem);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--c-text-muted);
   cursor: pointer;

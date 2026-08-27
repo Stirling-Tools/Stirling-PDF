@@ -50,7 +50,6 @@ function MountedNotificationBell() {
       <Button
         variant="quiet"
         size="md"
-        shape="circle"
         className="notification-bell__trigger"
         // Read by the panel's outside-click handler.
         data-notifications-trigger

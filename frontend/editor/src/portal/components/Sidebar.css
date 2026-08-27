@@ -109,6 +109,9 @@
   margin-inline: 0;
   padding-inline: 0;
   width: 100%;
+  /* A square target like the rail's, so it takes the rail's radius - NavItem's own
+     is tuned for a full-width row, where it reads as a pill. */
+  border-radius: var(--radius-md);
 }
 .portal-sidebar[data-collapsed] .portal-sidebar__footer {
   margin-inline: 0.375rem;
@@ -144,6 +147,22 @@
 .portal-sidebar .sui-navitem.is-active:hover {
   background: var(--c-text);
   color: var(--c-surface);
+  /* Full-bleed: cancels the item's own 0.25rem margin and the nav's 0.5rem padding
+     so the stripe meets both edges of the panel, with the same amount added back as
+     leading padding to hold the icon and label still. */
+  width: calc(100% + 1.5rem);
+  margin-inline: -0.75rem;
+  border-radius: 0;
+  padding-inline-start: calc(0.625rem + 0.75rem);
+}
+
+/* Collapsed too, against the rail's own 0.375rem padding rather than the expanded
+   nav's. The item centres its glyph, so widening both sides leaves it in place. */
+.portal-sidebar[data-collapsed] .sui-navitem.is-active {
+  width: calc(100% + 0.75rem);
+  margin-inline: -0.375rem;
+  border-radius: 0;
+  padding-inline: 0;
 }
 
 /* Dark grounds sit close to full-strength ink, where that block reads as a hole
