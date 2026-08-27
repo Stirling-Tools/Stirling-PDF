@@ -46,7 +46,7 @@ function mapUser(user: SbUser): AuthUser {
       "",
     role: readRole(user),
     is_anonymous: user.is_anonymous,
-    app_metadata: user.app_metadata as Record<string, unknown>,
+    app_metadata: user.app_metadata,
   };
 }
 

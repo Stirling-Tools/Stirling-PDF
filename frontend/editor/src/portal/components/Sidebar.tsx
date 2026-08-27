@@ -14,6 +14,7 @@ import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { takeEditorReturnPath } from "@app/services/workbenchSession";
 import { CloseIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -57,7 +58,7 @@ export function Sidebar() {
   // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
   // needs a full page load.
   const goToEditor = () => {
-    if (EDITOR_IS_SAME_APP) navigate(EDITOR_BASENAME);
+    if (EDITOR_IS_SAME_APP) navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
     else window.location.href = EDITOR_URL;
   };
 

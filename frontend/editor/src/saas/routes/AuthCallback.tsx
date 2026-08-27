@@ -4,6 +4,7 @@ import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
+import { readPendingConnect } from "@app/routes/pendingConnect";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { Spinner } from "@app/ui/Spinner";
@@ -133,10 +134,20 @@ export default function AuthCallback() {
         // URL can't bounce the user off-origin after sign-in.
         // No explicit destination: land team leads on the processor and everyone
         // else on the editor.
+        // Explicit `next` first, so a sign-in started for another reason is not
+        // hijacked by a remembered connect request.
+        const explicitNext = url.searchParams.get("next");
+        const pendingConnect = readPendingConnect();
         const destination =
-          next.startsWith("/") && !next.startsWith("//")
-            ? next
-            : await resolveLandingPath();
+          explicitNext &&
+          explicitNext.startsWith("/") &&
+          !explicitNext.startsWith("//")
+            ? explicitNext
+            : pendingConnect
+              ? `/link?request=${encodeURIComponent(pendingConnect)}`
+              : next.startsWith("/") && !next.startsWith("//")
+                ? next
+                : await resolveLandingPath();
         console.log("[Auth Callback Debug] Redirecting to:", destination);
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);
