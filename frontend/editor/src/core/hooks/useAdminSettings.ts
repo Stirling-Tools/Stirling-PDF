@@ -1,16 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchAdminSection,
-  putAdminSection,
-  putAdminSettings,
-} from "@app/api/adminSettings";
+import { fetchAdminSection, putAdminSection, putAdminSettings } from "@app/api/adminSettings";
 import { qk } from "@app/query/keys";
-import {
-  mergePendingSettings,
-  isFieldPending,
-  hasPendingChanges,
-} from "@app/utils/settingsPendingHelper";
+import { mergePendingSettings, isFieldPending, hasPendingChanges } from "@app/utils/settingsPendingHelper";
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
@@ -36,7 +28,6 @@ interface UseAdminSettingsReturn<T> {
   loading: boolean;
   saving: boolean;
   setSettings: (settings: T) => void;
-  fetchSettings: () => Promise<void>;
   saveSettings: () => Promise<void>;
   isFieldPending: (fieldPath: string) => boolean;
   hasPendingChanges: () => boolean;
@@ -46,15 +37,8 @@ interface UseAdminSettingsReturn<T> {
  * One config section: the server value, an editable draft over it, and a save
  * that sends only what changed. Sections sharing a sectionName share the fetch.
  */
-export function useAdminSettings<T = any>(
-  options: UseAdminSettingsOptions<T>,
-): UseAdminSettingsReturn<T> {
-  const {
-    sectionName,
-    enabled = true,
-    fetchTransformer,
-    saveTransformer,
-  } = options;
+export function useAdminSettings<T = any>(options: UseAdminSettingsOptions<T>): UseAdminSettingsReturn<T> {
+  const { sectionName, enabled = true, fetchTransformer, saveTransformer } = options;
 
   const queryClient = useQueryClient();
   const queryKey = qk.adminSection(sectionName);
@@ -69,23 +53,16 @@ export function useAdminSettings<T = any>(
     data: rawSettings,
     isPending,
     isFetching,
-    refetch,
   } = useQuery({
     queryKey,
-    queryFn: () =>
-      fetchTransformerRef.current
-        ? fetchTransformerRef.current()
-        : fetchAdminSection<T>(sectionName),
+    queryFn: () => (fetchTransformerRef.current ? fetchTransformerRef.current() : fetchAdminSection<T>(sectionName)),
     enabled,
     // Inherits the client's 30s window. Not CONFIG_STALE_TIME: these are
     // editable, and a save invalidates. Override it for live server state.
   });
 
   // Pending changes folded in: what the form shows, and the delta baseline.
-  const baseline = useMemo(
-    () => (rawSettings ? (mergePendingSettings(rawSettings) as T) : ({} as T)),
-    [rawSettings],
-  );
+  const baseline = useMemo(() => (rawSettings ? (mergePendingSettings(rawSettings) as T) : ({} as T)), [rawSettings]);
 
   // Adjusted during render, not in an effect: React re-runs the component
   // before committing, so reseeding costs no extra render.
@@ -108,8 +85,7 @@ export function useAdminSettings<T = any>(
       }
 
       const { sectionData, deltaSettings } = transform(draft);
-      const { sectionData: originalSectionData, deltaSettings: originalDelta } =
-        transform(baseline);
+      const { sectionData: originalSectionData, deltaSettings: originalDelta } = transform(baseline);
 
       const sectionDelta = computeDelta(originalSectionData, sectionData);
       if (Object.keys(sectionDelta).length > 0) {
@@ -131,10 +107,6 @@ export function useAdminSettings<T = any>(
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
-  const fetchSettings = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
-
   const saveSettings = useCallback(async () => {
     await save.mutateAsync();
   }, [save]);
@@ -146,10 +118,8 @@ export function useAdminSettings<T = any>(
     loading: isPending || isFetching,
     saving: save.isPending,
     setSettings: setDraft,
-    fetchSettings,
     saveSettings,
-    isFieldPending: (fieldPath: string) =>
-      isFieldPending(rawSettings as any, fieldPath),
+    isFieldPending: (fieldPath: string) => isFieldPending(rawSettings as any, fieldPath),
     hasPendingChanges: () => hasPendingChanges(rawSettings as any),
   };
 }
@@ -188,7 +158,5 @@ function computeDelta(original: any, current: any): any {
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
 function isPlainObject(value: any): boolean {
-  return (
-    value !== null && typeof value === "object" && value.constructor === Object
-  );
+  return value !== null && typeof value === "object" && value.constructor === Object;
 }
