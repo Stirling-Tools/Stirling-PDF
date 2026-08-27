@@ -23,7 +23,11 @@
    with a rule on the workbench side - the mirror of the file sidebar's, so both
    edges of the workbench are drawn the same way. */
 .tool-panel--floating {
-  height: 100vh;
+  /* Tracks the frame around it, which is sized in dvh and clips what overflows.
+     A viewport height would be taller than that frame wherever mobile browser
+     chrome is showing, and the bottom of the panel would be cut off with no way
+     to scroll to it. */
+  height: 100%;
   background: var(--c-surface);
   border-inline-start: 1px solid var(--c-border-subtle);
 }
