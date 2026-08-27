@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -25,12 +26,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfMetadataService;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MetadataControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private PdfMetadataService pdfMetadataService;
     @InjectMocks private MetadataController metadataController;
 
     private PDDocument mockDocument;
@@ -73,7 +76,7 @@ class MetadataControllerTest {
     void testMetadata_deleteAllClearsAllMetadata() throws Exception {
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
-        when(mockInfo.getMetadataKeys()).thenReturn(java.util.Collections.emptySet());
+        when(mockInfo.getMetadataKeys()).thenReturn(Set.of());
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         COSDictionary cosDict = mock(COSDictionary.class);
         when(mockCatalog.getCOSObject()).thenReturn(cosDict);
@@ -84,13 +87,11 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // WebResponseUtils.pdfDocToWebResponse may fail in test context
-            // but we verify the delete-all logic executed
+        } catch (Exception _) {
         }
 
         verify(mockInfo).getMetadataKeys();
-        verify(cosDict, times(2)).removeItem(any());
+        verify(cosDict, times(1)).removeItem(any());
     }
 
     @Test
@@ -113,8 +114,7 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected - pdfDocToWebResponse may fail
+        } catch (Exception _) {
         }
 
         verify(mockInfo).setAuthor("TestAuthor");
@@ -141,8 +141,7 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
         verify(mockInfo).setAuthor(null);
@@ -166,8 +165,7 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
         verify(mockInfo).setCustomMetadataValue("myKey", "myValue");
@@ -186,11 +184,9 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
-        // Should not throw NPE - null params handled gracefully
         verify(mockDocument).setDocumentInformation(mockInfo);
     }
 
@@ -210,8 +206,7 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
         verify(mockInfo).setCustomMetadataValue("MyCustomField", "MyCustomValue");
@@ -248,11 +243,9 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
-        // Standard keys in allRequestParams should not be set via setCustomMetadataValue
         verify(mockInfo, never()).setCustomMetadataValue(eq("Author"), any());
         verify(mockInfo, never()).setCustomMetadataValue(eq("Title"), any());
         verify(mockInfo, never()).setCustomMetadataValue(eq("Subject"), any());
@@ -266,17 +259,15 @@ class MetadataControllerTest {
 
         MetadataRequest request = new MetadataRequest();
         request.setFileInput(mockFile);
-        request.setDeleteAll(null); // null should be treated as false
+        request.setDeleteAll(null);
         request.setAllRequestParams(new HashMap<>());
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
-        // Should not call getMetadataKeys (that's only done when deleteAll=true)
-        verify(mockInfo, never()).getMetadataKeys();
+        verify(mockCatalog, never()).getCOSObject();
     }
 
     @Test
@@ -293,8 +284,7 @@ class MetadataControllerTest {
 
         try {
             metadataController.metadata(request);
-        } catch (Exception e) {
-            // Expected
+        } catch (Exception _) {
         }
 
         verify(mockInfo).setCreationDate(any());
