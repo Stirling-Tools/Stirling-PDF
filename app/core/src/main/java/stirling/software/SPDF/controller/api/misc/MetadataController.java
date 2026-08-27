@@ -111,7 +111,16 @@ public class MetadataController {
 
         Map<String, String> rawParams = new LinkedHashMap<>();
         if (request.getAllRequestParams() != null) {
-            rawParams.putAll(request.getAllRequestParams());
+            for (Entry<String, String> entry : request.getAllRequestParams().entrySet()) {
+                String paramName = entry.getKey();
+                String paramValue = entry.getValue();
+                Matcher bracketMatcher = BRACKET_PARAM_PATTERN.matcher(paramName);
+                if (bracketMatcher.matches()) {
+                    rawParams.put(bracketMatcher.group(1), paramValue);
+                } else if (!STANDARD_KEYS.contains(paramName.toLowerCase(Locale.ROOT))) {
+                    rawParams.put(paramName, paramValue);
+                }
+            }
         }
         if (servletRequest != null) {
             Map<String, String[]> parameterMap = servletRequest.getParameterMap();
