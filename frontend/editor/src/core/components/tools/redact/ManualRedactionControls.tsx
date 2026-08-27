@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Stack, Text, Divider, ColorInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
@@ -45,20 +45,21 @@ export default function ManualRedactionControls({
   // Check if user is navigating away (modal shown) — don't fight the save/leave process
   const { showNavigationWarning } = useNavigationGuard();
 
-  // Track the previous file index to detect file switches
-  const prevFileIndexRef = useRef<number>(activeFileIndex);
-
-  // Guard: pause auto-reactivation during save/export to avoid interfering with EmbedPDF
-  const isSavingRef = useRef(false);
+  const isLeavingRef = useRef(false);
+  const prevFileIndexRef = useRef(activeFileIndex);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Keep redaction tool active at all times while this component is mounted.
   // If anything deactivates it (annotation tools, text selection, file switch, etc.)
   // this re-enables it automatically — no manual "Activate" button needed.
+  // Activation is deferred so we never synchronously re-enter the effect in the
+  // same commit (which previously triggered React's "too many re-renders" error #185).
   useEffect(() => {
     if (
       disabled ||
       !isBridgeReady ||
-      isSavingRef.current ||
+      isLeavingRef.current ||
+      isSaving ||
       showNavigationWarning
     )
       return;
@@ -77,7 +78,7 @@ export default function ManualRedactionControls({
       }
       // Small delay to avoid racing with EmbedPDF's own state updates
       const timer = setTimeout(() => {
-        if (!isSavingRef.current) {
+        if (!isLeavingRef.current && !isSaving && !showNavigationWarning) {
           activateManualRedact();
         }
       }, 50);
@@ -88,10 +89,11 @@ export default function ManualRedactionControls({
     isAnnotationMode,
     disabled,
     isBridgeReady,
+    isSaving,
     showNavigationWarning,
+    activateManualRedact,
     setAnnotationMode,
     signatureApiRef,
-    activateManualRedact,
   ]);
 
   // Reset redaction tool when switching between files
@@ -110,13 +112,11 @@ export default function ManualRedactionControls({
   // Handle saving changes - this will apply pending redactions and save to file
   const handleSaveChanges = useCallback(async () => {
     if (applyChanges) {
-      isSavingRef.current = true;
+      setIsSaving(true);
       try {
         await applyChanges();
-      } catch {
-        // The viewer-level save handler reports the failure to the user.
       } finally {
-        isSavingRef.current = false;
+        setIsSaving(false);
       }
     }
   }, [applyChanges]);
@@ -155,8 +155,8 @@ export default function ManualRedactionControls({
         <Button
           fullWidth
           size="md"
-          style={{ marginTop: "0.75rem" }}
           disabled={!hasUnsavedChanges}
+          loading={isSaving}
           onClick={handleSaveChanges}
         >
           {t("annotation.saveChanges", "Save Changes")}
