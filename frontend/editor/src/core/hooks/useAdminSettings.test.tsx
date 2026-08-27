@@ -49,7 +49,6 @@ describe("useAdminSettings", () => {
   });
 
   it("shares one fetch between sections reading the same block", async () => {
-    // Four AI tabs all declare sectionName "aiEngine".
     const { result } = renderHook(
       () => ({
         a: useAdminSettings({ sectionName: "aiEngine" }),
@@ -64,8 +63,6 @@ describe("useAdminSettings", () => {
   });
 
   it("serves a reopened tab from cache within the stale window", async () => {
-    // Four AI tabs render one at a time, so this — not concurrent mounting —
-    // is where the request saving actually comes from.
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
     });
@@ -107,8 +104,7 @@ describe("useAdminSettings", () => {
     );
 
     expect(mockFetch).not.toHaveBeenCalled();
-    // The old hook left loading true until something fetched; sections gate
-    // their render on it, so flipping to false would show an empty form.
+    // Sections gate their render on this; false would show an empty form.
     expect(result.current.loading).toBe(true);
   });
 
@@ -197,7 +193,7 @@ describe("useAdminSettings", () => {
     );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    // The draft shows what the user will get, not the active value.
+    // The draft shows the queued value, not the active one.
     expect(result.current.settings.appName).toBe("Queued");
     expect(result.current.isFieldPending("appName")).toBe(true);
   });
@@ -219,7 +215,7 @@ describe("useAdminSettings", () => {
       await result.current.fetchSettings();
     });
 
-    // Matches the old hook: a fetch is authoritative over the draft.
+    // A fetch is authoritative over the draft.
     await waitFor(() =>
       expect(result.current.settings.appName).toBe("From server"),
     );

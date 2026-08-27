@@ -14,7 +14,6 @@ import {
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
-  /** Skips the fetch entirely — sections pass their login/permission gate here. */
   enabled?: boolean;
   /**
    * Optional transformer to combine data from multiple endpoints.
@@ -44,17 +43,8 @@ interface UseAdminSettingsReturn<T> {
 }
 
 /**
- * Admin settings for one config section: the server value, an editable draft on
- * top of it, and a save that sends only what changed.
- *
- * Sections sharing a sectionName share the fetch — four separate AI tabs all
- * read `aiEngine`.
- *
- * @example
- * const { settings, setSettings, saveSettings, isFieldPending } = useAdminSettings({
- *   sectionName: 'legal',
- *   enabled: loginEnabled,
- * });
+ * One config section: the server value, an editable draft over it, and a save
+ * that sends only what changed. Sections sharing a sectionName share the fetch.
  */
 export function useAdminSettings<T = any>(
   options: UseAdminSettingsOptions<T>,
@@ -69,8 +59,7 @@ export function useAdminSettings<T = any>(
   const queryClient = useQueryClient();
   const queryKey = qk.adminSection(sectionName);
 
-  // Transformers are inline closures, so they change identity every render;
-  // the query must not treat that as a new fetcher.
+  // Inline closures at the call sites, so their identity changes every render.
   const fetchTransformerRef = useRef(fetchTransformer);
   fetchTransformerRef.current = fetchTransformer;
   const saveTransformerRef = useRef(saveTransformer);
@@ -88,23 +77,18 @@ export function useAdminSettings<T = any>(
         ? fetchTransformerRef.current()
         : fetchAdminSection<T>(sectionName),
     enabled,
-    // Inherits the client's 30s staleTime, so reopening a tab within that
-    // window is free — the four AI tabs all read one block. Not
-    // CONFIG_STALE_TIME: these are editable, and a save invalidates anyway.
-    // A section showing live server state rather than config should override
-    // this locally.
+    // Inherits the client's 30s window. Not CONFIG_STALE_TIME: these are
+    // editable, and a save invalidates. Override it for live server state.
   });
 
-  // What the user saw, pending changes folded in — also the delta baseline.
+  // Pending changes folded in: what the form shows, and the delta baseline.
   const baseline = useMemo(
     () => (rawSettings ? (mergePendingSettings(rawSettings) as T) : ({} as T)),
     [rawSettings],
   );
 
-  // Every fetch reseeds the draft, including the refetch after a save — the
-  // response carries the _pending block the form renders from. Adjusted during
-  // render rather than in an effect: React re-runs this component before
-  // committing, so the reseed costs no extra render.
+  // Adjusted during render, not in an effect: React re-runs the component
+  // before committing, so reseeding costs no extra render.
   const [draft, setDraft] = useState<T>(baseline);
   const seededFrom = useRef(rawSettings);
   if (rawSettings !== undefined && seededFrom.current !== rawSettings) {
@@ -142,8 +126,8 @@ export function useAdminSettings<T = any>(
         if (Object.keys(changed).length > 0) await putAdminSettings(changed);
       }
     },
-    // Refetch rather than trust the local draft: the response carries a fresh
-    // _pending block the UI badges off.
+    // Refetch rather than trust the draft: the response carries the _pending
+    // block the badges render from.
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
@@ -158,7 +142,7 @@ export function useAdminSettings<T = any>(
   return {
     settings: draft,
     rawSettings: rawSettings ?? null,
-    // Also true while disabled, matching the old hook: nothing has loaded yet.
+    // True while disabled too: nothing has loaded.
     loading: isPending || isFetching,
     saving: save.isPending,
     setSettings: setDraft,
