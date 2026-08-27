@@ -233,7 +233,11 @@ export function useRegisterQuickNavHost(
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
-      toolReasons: toolReasons ?? EMPTY_REASONS,
+      // Left out entirely when the app has no answer, so setData keeps whatever
+      // was last known. An app switch tears down one query cache and starts the
+      // next one empty, and the bar must not change what it says over that gap -
+      // only when the answer itself changes.
+      ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
       hasTeams,
     });

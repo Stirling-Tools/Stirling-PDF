@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { NotificationPanel } from "@app/components/notifications/NotificationPanel";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
+import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { useRegisterQuickNavHost } from "@app/contexts/QuickNavHostContext";
@@ -26,9 +27,10 @@ export interface QuickNavHostBridgeProps {
   /** Selects one of this app's tools; omitted by an app with none. */
   onSelectTool?: (toolId: string) => void;
   /**
-   * Why each tool-opening rail entry cannot be used, keyed by entry id and already
-   * translated; absent means it can. An app with no tools of its own passes none,
-   * and the entries are drawn as usable - see QuickNavHostData.toolReasons.
+   * Extra reasons a tool-opening rail entry cannot be used, keyed by entry id and
+   * already translated. Layered over what this component works out for itself, for
+   * the conditions only the app around it can see - a paywall, a desktop build
+   * whose server is offline. Passing none is normal.
    */
   toolReasons?: Record<string, string>;
 }
@@ -69,6 +71,18 @@ export function QuickNavHostBridge({
   // of a document handed over from the processor. Building it only while the panel was open
   // would leave that handover sitting in storage, unclaimed.
   const notificationActions = useNotificationActions();
+  // Worked out here, from the endpoints the server reports, so the editor and the
+  // processor cannot disagree about whether the same entry is usable.
+  const endpointReasons = useQuickNavToolReasons();
+  const mergedToolReasons = useMemo(() => {
+    // An empty map from the app is treated as silence rather than as an answer:
+    // it publishes one while its own availability is still loading, and taking
+    // that as "nothing is wrong" would undo the very stickiness below.
+    const extra =
+      toolReasons && Object.keys(toolReasons).length > 0 ? toolReasons : null;
+    if (!endpointReasons && !extra) return undefined;
+    return { ...endpointReasons, ...extra };
+  }, [endpointReasons, toolReasons]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
 
@@ -78,7 +92,7 @@ export function QuickNavHostBridge({
       signingBadge,
       portalAccess,
       readerMode,
-      toolReasons,
+      toolReasons: mergedToolReasons,
     },
     {
       openSettings: onOpenSettings,
