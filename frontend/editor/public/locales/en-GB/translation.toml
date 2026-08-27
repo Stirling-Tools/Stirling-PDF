@@ -9297,14 +9297,6 @@ automate = "Automate"
 config = "Config"
 files = "Files"
 
-[quickNav]
-editor = "Editor"
-landmark = "Quick navigation"
-noProcessorAccess = "Ask an admin for processor access"
-notifications = "Notifications"
-processor = "Processor"
-reader = "Reader"
-
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 

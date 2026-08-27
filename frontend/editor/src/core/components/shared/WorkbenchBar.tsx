@@ -57,7 +57,7 @@ import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/Workb
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
 import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
@@ -117,6 +117,9 @@ export default function WorkbenchBar({
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
   const isMobile = useIsMobile();
+  // The quick nav rail carries the bell, and hides itself below its own breakpoint;
+  // this is the width where it is gone and something has to hold the bell instead.
+  const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
   const selectors = useFileSelectors();
@@ -603,9 +606,13 @@ export default function WorkbenchBar({
             enforcingProgress={enforcingProgress}
           />
         )}
-        {/* Last in the globals, so it is the rightmost control. */}
-        <div className="workbench-bar-divider workbench-bar-globals-sep" />
-        <NotificationBell />
+        {isPhone && (
+          <>
+            {/* Last in the globals, so it is the rightmost control. */}
+            <div className="workbench-bar-divider workbench-bar-globals-sep" />
+            <NotificationBell />
+          </>
+        )}
       </div>
     </div>
   );

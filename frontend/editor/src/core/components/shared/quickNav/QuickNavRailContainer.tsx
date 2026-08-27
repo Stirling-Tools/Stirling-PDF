@@ -12,6 +12,7 @@ import {
   type QuickNavRailBaseProps,
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
+import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
 
 export type {
@@ -36,12 +37,11 @@ export interface QuickNavRailContainerProps extends Omit<
    */
   onOpenTeams?: () => void;
   /**
-   * Placeholder notifications bell - there is no notifications surface behind it
-   * yet, so it holds the slot without doing anything. Gated on the same signal as
-   * the processor entry, and disabled with `reason` when that signal is off, so
-   * the two can't disagree about who sees it.
+   * Opens the notifications panel. The bell draws itself from the notification
+   * store, which needs no provider, but the panel belongs to the mounted app -
+   * see QuickNavRailNotifications.
    */
-  notifications?: { disabled: boolean; reason?: string; badge?: number };
+  onToggleNotifications?: () => void;
   /** Identity for the account control; see QuickNavRailAccount. */
   identity?: QuickNavIdentity | null;
   /** The brand mark and app switcher, which share a pair of slots. */
@@ -55,7 +55,7 @@ export interface QuickNavRailContainerProps extends Omit<
 export function QuickNavRailContainer({
   onOpenSettings,
   onOpenTeams,
-  notifications,
+  onToggleNotifications,
   identity = null,
   appSwitch,
   ...railProps
@@ -73,47 +73,31 @@ export function QuickNavRailContainer({
         <QuickNavRailBase
           {...railProps}
           footer={
-            notifications || onOpenTeams || onOpenSettings ? (
-              <div className="quick-nav-rail-footer">
-                {notifications && (
-                  <RailButton
-                    label={t("quickNav.notifications", "Notifications")}
-                    icon={
-                      <LocalIcon
-                        icon="notifications-outline-rounded"
-                        width="1.125rem"
-                        height="1.125rem"
-                      />
-                    }
-                    badge={notifications.badge}
-                    disabled={notifications.disabled}
-                    reason={notifications.reason}
-                    // Nothing to open yet; the slot is here so its position is
-                    // settled before the surface behind it exists.
-                    onClick={() => {}}
-                  />
-                )}
-                {onOpenTeams && (
-                  <RailButton
-                    label={t("settings.workspace.teams", "Teams")}
-                    icon={
-                      <LocalIcon
-                        icon="groups-outline-rounded"
-                        width="1.125rem"
-                        height="1.125rem"
-                      />
-                    }
-                    onClick={onOpenTeams}
-                  />
-                )}
-                {onOpenSettings && (
-                  <QuickNavRailAccount
-                    onOpenSettings={onOpenSettings}
-                    identity={identity}
-                  />
-                )}
-              </div>
-            ) : undefined
+            // Always rendered: an empty footer collapses to nothing, and gating it
+            // on which controls the mounted app happens to offer meant the bell
+            // could be dropped along with them.
+            <div className="quick-nav-rail-footer">
+              <QuickNavRailNotifications onToggle={onToggleNotifications} />
+              {onOpenTeams && (
+                <RailButton
+                  label={t("settings.workspace.teams", "Teams")}
+                  icon={
+                    <LocalIcon
+                      icon="groups-outline-rounded"
+                      width="1.125rem"
+                      height="1.125rem"
+                    />
+                  }
+                  onClick={onOpenTeams}
+                />
+              )}
+              {onOpenSettings && (
+                <QuickNavRailAccount
+                  onOpenSettings={onOpenSettings}
+                  identity={identity}
+                />
+              )}
+            </div>
           }
         />
       </NavSurface>

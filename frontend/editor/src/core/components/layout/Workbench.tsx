@@ -15,6 +15,7 @@ import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -63,6 +64,8 @@ export default function Workbench() {
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();
+  // Below the quick nav rail's breakpoint the rail - and the bell it carries - is gone.
+  const isPhone = useIsPhone();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -269,10 +272,11 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* The bell normally rides in the workbench bar. Wherever that bar is not shown - My Files,
-          an empty workbench, a custom view without top controls - it gets its own corner, rather
+      {/* Phone widths only: everywhere else the quick nav rail carries the bell. Here the rail
+          is hidden, so wherever the workbench bar is not shown either - My Files, an empty
+          workbench, a custom view without top controls - the bell gets its own corner, rather
           than those being the places a user cannot see that something of theirs failed. */}
-      {!showWorkbenchBar && (
+      {isPhone && !showWorkbenchBar && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
           <NotificationBell />
         </div>

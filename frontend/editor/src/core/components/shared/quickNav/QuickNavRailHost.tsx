@@ -53,6 +53,14 @@ export function QuickNavRailHost() {
     else go(route);
   };
 
+  // Drawn as usable unless the mounted app says otherwise. RailButton keeps a
+  // disabled entry rendered and focusable, with the reason as its tooltip, so the
+  // slot never moves and the explanation is reachable by keyboard.
+  const unusable = (id: string) => {
+    const reason = host?.toolReasons?.[id];
+    return { disabled: Boolean(reason), reason };
+  };
+
   const within: QuickNavEntry[] = [
     {
       id: "files",
@@ -66,7 +74,11 @@ export function QuickNavRailHost() {
       id: "reader",
       label: t("quickNav.reader", "Reader"),
       icon: (
-        <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />
+        <LocalIcon
+          icon="menu-book-outline-rounded"
+          width={SIZE}
+          height={SIZE}
+        />
       ),
       pressed: Boolean(host?.readerMode),
       // In the editor this toggles the mode. From the processor the editor isn't
@@ -88,14 +100,18 @@ export function QuickNavRailHost() {
       icon: (
         <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />
       ),
+      ...unusable("automate"),
       onClick: () => openTool("automate", "/automate"),
     },
     {
       id: "sharedSign",
       label: t("home.sharedSign.title", "Shared Signing"),
-      icon: <LocalIcon icon="draw-outline-rounded" width={SIZE} height={SIZE} />,
+      icon: (
+        <LocalIcon icon="draw-outline-rounded" width={SIZE} height={SIZE} />
+      ),
       badge: host?.signingBadge,
       badgeTone: "warning",
+      ...unusable("sharedSign"),
       onClick: () => openTool("sharedSign", "/shared-sign"),
     },
   ];
@@ -105,7 +121,9 @@ export function QuickNavRailHost() {
   const call = (name: "openSettings" | "openTeams") => () =>
     host?.actions.current?.[name]?.();
 
-  if (!appMounted) return null;
+  // A chrome-less route (the login form, an invite, a shared link) hides the bar
+  // even though an app has mounted in this tab - see useSuppressQuickNavRail.
+  if (!appMounted || host?.chromeless) return null;
 
   return (
     <QuickNavRailContainer
@@ -149,18 +167,8 @@ export function QuickNavRailHost() {
       // rather than disappearing and shifting everything above it.
       onOpenSettings={host?.hasSettings ? call("openSettings") : undefined}
       onOpenTeams={host?.hasTeams ? call("openTeams") : undefined}
-      notifications={
-        HAS_PORTAL
-          ? {
-              disabled: !host?.portalAccess,
-              reason: !host?.portalAccess
-                ? t(
-                    "quickNav.noProcessorAccess",
-                    "Ask an admin for processor access",
-                  )
-                : undefined,
-            }
-          : undefined
+      onToggleNotifications={() =>
+        host?.actions.current?.toggleNotifications?.()
       }
     />
   );

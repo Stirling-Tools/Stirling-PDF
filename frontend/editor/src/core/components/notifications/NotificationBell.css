@@ -48,6 +48,16 @@
   box-shadow: 0 10px 30px rgb(0 0 0 / 25%);
 }
 
+/* Opened from the rail, whose bell sits at the foot of a full-height column: a panel
+   dropping down from it would fall off the bottom of the window, and one right-aligned
+   to it off the left edge. So it stands beside the rail and rises from the bottom
+   instead. Fixed, so it is placed against the window rather than against whichever app
+   is mounted around it. */
+.notification-bell__panel--rail {
+  inset-inline-start: calc(var(--quicknav-rail-w) + var(--nav-gutter));
+  inset-block-end: var(--nav-gutter);
+}
+
 .notification-bell__heading {
   margin: 0 0 var(--sp-2, 0.5rem);
   font-size: 0.875rem;

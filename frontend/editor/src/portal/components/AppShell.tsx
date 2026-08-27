@@ -11,6 +11,7 @@ import "@app/components/layout/WorkspaceFrame.css";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -60,14 +61,10 @@ function MobileTopbar() {
  * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const {
-    mobileNavOpen,
-    closeMobileNav,
-    openSettings,
-  } = useUI();
+  const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
   const { pathname } = useLocation();
-  // Same count the editor's rail shows: the hooks behind it read app config and
-  // the REST API, both of which this shell already has.
+  // Below the quick nav rail's breakpoint the rail - and the bell it carries - is gone.
+  const isPhone = useIsPhone();
 
   // Navigating (tap on a nav row, back button, deep link) always dismisses the
   // drawer. Depends on pathname only: the close fn's identity changes with any
@@ -109,9 +106,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="portal-shell__main">
         <MobileTopbar />
         <PortalSearchBar />
-        <div className="portal-shell__notifications">
-          <NotificationBell />
-        </div>
+        {/* Phone widths only: above them the quick nav rail carries the bell, and this
+            corner would be a second one. */}
+        {isPhone && (
+          <div className="portal-shell__notifications">
+            <NotificationBell />
+          </div>
+        )}
         <main className="portal-shell__view">{children}</main>
       </div>
     </div>
