@@ -12,7 +12,7 @@ import {
 } from "@app/services/workbenchSession";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/adminRouteExtensions";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 
 const SIZE = "1.125rem";
 

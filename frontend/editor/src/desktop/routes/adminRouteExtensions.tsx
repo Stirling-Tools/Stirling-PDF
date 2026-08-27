@@ -8,6 +8,3 @@ import type { ReactElement } from "react";
 export function getAdminRouteExtensions(): ReactElement[] {
   return [];
 }
-
-/** No portal in this build, so the rail has no second app to offer. */
-export const HAS_PORTAL = false;

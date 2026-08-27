@@ -2,14 +2,9 @@ import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 
-const includePortal =
-  import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
-
-/** Whether this build ships the processor, and so has an app to switch to. */
-export const HAS_PORTAL = includePortal;
-
-const PortalApp = includePortal
+const PortalApp = HAS_PORTAL
   ? lazy(async () => {
       const m = await import("@portal/PortalApp");
       return { default: m.PortalApp };
@@ -19,7 +14,7 @@ const PortalApp = includePortal
 /**
  * Return leg of the account-link handshake, which Stirling redirects to with the admin's session in the URL fragment.
  */
-const ConnectCallback = includePortal
+const ConnectCallback = HAS_PORTAL
   ? lazy(async () => {
       const m = await import("@portal/views/ConnectCallback");
       return { default: m.default };
