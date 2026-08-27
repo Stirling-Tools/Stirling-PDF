@@ -5,19 +5,13 @@ import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 export interface SidebarToggleButtonProps {
   collapsed?: boolean;
   onToggle: () => void;
-  /** Accessible name override (e.g. "Leave My Files" on /files). */
   ariaLabel?: string;
-  /** Icon override (e.g. a back arrow on /files). */
   icon?: React.ReactNode;
 }
 
 /**
- * Opens and closes the sidebar beside it. Lives at the top of the quick nav
- * rail, above the navigation groups, so it stays in one place whether the
- * sidebar is open or collapsed.
- *
- * On /files the caller swaps in a back arrow: the sidebar is forced collapsed
- * there, so leaving the view is the only thing this can usefully do.
+ * Opens and closes the sidebar. On /files the caller swaps in a back arrow: the
+ * sidebar is forced collapsed there, so leaving is all this can do.
  */
 export function SidebarToggleButton({
   collapsed,

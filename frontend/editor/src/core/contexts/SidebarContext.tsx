@@ -63,11 +63,8 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
 }
 
 /**
- * The sidebar context if there is one, else undefined.
- *
- * For components that only need it in some modes and must still render outside
- * a SidebarProvider - the shared Tooltip, which is used by the quick nav rail
- * above the route split, where none of the app's providers exist.
+ * For components that must still render outside a SidebarProvider - the shared
+ * Tooltip, used by the rail above the route split.
  */
 export function useOptionalSidebarContext(): SidebarContextValue | undefined {
   return useContext(SidebarContext);

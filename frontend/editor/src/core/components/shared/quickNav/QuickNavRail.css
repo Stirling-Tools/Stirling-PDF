@@ -1,8 +1,6 @@
 /* ========== QUICK NAV RAIL ========== */
-/* Always-icon strip. Icons match the sidebar's action-row scale (18px glyph in
-   --c-text-subtle); groups are separated by spacing, not by boxes. */
+/* Always-icon strip; icons match the sidebar's action-row scale. */
 
-/* The bar's own stack: groups top-down, account control pushed to the bottom. */
 .quick-nav-rail {
   display: flex;
   flex-direction: column;
@@ -11,8 +9,7 @@
   width: 100%;
 }
 
-/* Full width: the bar centres its children, which would otherwise leave the group
-   shrink-to-fit and its buttons with no width to fill. */
+/* Full width: the bar centres its children, leaving the group shrink-to-fit. */
 .quick-nav-rail-group {
   display: flex;
   flex-direction: column;
@@ -28,7 +25,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Full inner width; a fixed size would spill past the surface's border. */
   width: 100%;
   height: 2.25rem;
   padding: 0;
@@ -42,7 +38,6 @@
     color var(--motion-fast);
 }
 
-/* LocalIcon's callers size it themselves; clamp to the 18px scale regardless. */
 .quick-nav-rail-item svg,
 .quick-nav-rail-item img {
   width: 1.125rem;
@@ -51,14 +46,12 @@
   fill: currentColor;
 }
 
-/* Taller than it is wide (71x79), so height drives the width rather than being
-   letterboxed into the square icon box. */
+/* Taller than wide (71x79), so height drives the width. */
 .quick-nav-rail-item .sui-brandmark {
   width: auto;
   height: 1.125rem;
 }
 
-/* Branded marks keep their own fills, so greying needs a filter. */
 .quick-nav-rail-item[aria-disabled="true"] .sui-brandmark,
 .quick-nav-rail-item[aria-disabled="true"] svg[viewBox="0 0 256 256"] {
   filter: grayscale(1);
@@ -69,8 +62,7 @@
   color: var(--c-text);
 }
 
-/* Opacity, matching .file-sidebar-action-row.disabled: there is no disabled text
-   token. Still focusable, so the tooltip can explain why. */
+/* Opacity, as .file-sidebar-action-row.disabled: no disabled text token exists. */
 .quick-nav-rail-item[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
@@ -85,7 +77,6 @@
   outline-offset: -0.125rem;
 }
 
-/* On the icon rather than in a slot, so a changing count never shifts the rail. */
 .quick-nav-rail-badge {
   position: absolute;
   top: 0.125rem;
@@ -94,8 +85,7 @@
   height: 0.875rem;
   padding: 0 0.1875rem;
   border-radius: var(--radius-pill);
-  /* The solid step, not the base: 9px numerals need the darker end to stay
-     legible. */
+  /* The solid step: 9px numerals need the darker end of the ramp. */
   background: var(--c-danger-solid);
   color: var(--c-text-on-primary);
   font-size: 0.5625rem;
@@ -106,13 +96,12 @@
   pointer-events: none;
 }
 
-/* Awareness rather than action. Solid step again, for white numerals. */
 .quick-nav-rail-badge[data-tone="warning"] {
   background: var(--c-warning-solid);
 }
 
-/* No bottom margin: the rule is the first child of the group below, whose own gap
-   already sits underneath. Matching that gap on top centres it. */
+/* No bottom margin: the group below already supplies one, so matching it on top
+   centres the rule. */
 .quick-nav-rail-divider {
   width: 100%;
   height: 0;
@@ -121,7 +110,6 @@
   border-top: 1px solid var(--c-border);
 }
 
-/* Pinned to the bottom by the auto top margin. */
 .quick-nav-rail-footer {
   margin-top: auto;
   display: flex;
@@ -133,22 +121,19 @@
 }
 
 /* ---- App switcher / brand ----
-   Both marks live here permanently; only which slot each occupies changes. The
-   brand slot is the top of the column at full size, the switch slot one
-   --nav-header-h below at the rail's glyph scale. */
+   Brand slot: top of the column, full size. Switch slot: one --nav-header-h below,
+   at the rail's glyph scale. */
 .quick-nav-apps {
   position: relative;
   width: 100%;
-  /* Brand row, plus the switch slot below it when a second app exists. */
   height: var(--nav-header-h);
   flex-shrink: 0;
-  /* One gap to the first icon. The bar's own inset supplies part of it, so only
-     the remainder is added here. */
+  /* The bar's inset supplies part of the gap; only the remainder is added here. */
   margin-bottom: calc(var(--quicknav-item-gap) - var(--quicknav-surface-pad));
 }
 
 .quick-nav-apps:has(.quick-nav-app-mark[data-slot="switch"]) {
-  /* Brand row, gap, switch slot, then the gap the divider sits in. */
+  /* Brand row, gap, switch slot, then the divider's gap. */
   height: calc(
     var(--nav-header-h) + var(--quicknav-item-gap) + 2.25rem +
       var(--quicknav-item-gap)
@@ -167,15 +152,13 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
-  /* Pinned to the top so a slot's position is its translate, unaffected by the
-     scale - otherwise the slots drift as the scale is tuned. */
+  /* Top-pinned so a slot's position is its translate, not affected by the scale. */
   transform-origin: center top;
   transition:
     transform var(--motion-spring),
     opacity var(--motion-spring);
 }
 
-/* One gap below the brand row, at the bar's glyph scale (1.125/1.6). */
 .quick-nav-app-mark[data-slot="switch"] {
   transform: translateY(calc(var(--nav-header-h) + var(--quicknav-item-gap)))
     scale(0.703);

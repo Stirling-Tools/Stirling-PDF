@@ -6,26 +6,19 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
-  /* Sits further from the shortcuts above than they sit from each other: this is
-     identity, not navigation, and a filled disc reads closer to a line glyph than
-     the measured gap suggests. */
+  /* Further than the gap between the shortcuts: a filled disc reads heavier than
+     a line glyph. */
   margin-top: var(--space-2);
-  /* The brand row at the top centres the mark in a --nav-header-h block, so the
-     gap above it is the gutter plus half that row's slack. Without matching it
-     here the bottom of the bar sits visibly tighter than the top. */
+  /* Matches the top, where centring the brand mark adds half a row's slack. */
   padding-bottom: 0.3125rem;
 }
 
-/* Wrapper the tooltip binds its handlers to; the disc itself is the Avatar. */
 .quick-nav-rail-avatar-target {
   display: inline-flex;
 }
 
-/* Appearance - disc, tone, size, initials-vs-photo - belongs to the shared
-   Avatar, so that the rail can't show a different identity treatment from the
-   sidebar footer or the account page. Only the button reset is ours: Avatar
-   renders a real <button> when it takes a click, and there is no global reset to
-   strip the user-agent border and padding. */
+/* Appearance belongs to the shared Avatar; only the button reset is ours, Avatar
+   rendering a real <button> when it takes a click. */
 .quick-nav-rail-avatar {
   border: none;
   padding: 0;

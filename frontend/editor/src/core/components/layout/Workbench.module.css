@@ -12,9 +12,7 @@
 .workbenchBarReopenTab {
   position: absolute;
   top: 100%;
-  /* Right-align with the retract handle inside the bar: 8px bar padding plus the
-     handle's own 6px inset. The bar is flush to the workbench edge, so there is
-     no margin or side border to account for. */
+  /* Aligns with the retract handle: 8px bar padding plus its own 6px inset. */
   right: 14px;
   display: flex;
   align-items: center;

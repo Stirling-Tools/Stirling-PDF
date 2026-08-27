@@ -12,9 +12,8 @@
 .sui-brand-switcher__trigger.sui-btn {
   --button-padding-x: 0.375rem;
   margin-inline: -0.375rem;
-  /* Hug the content and start-align it. A Button centres its inner content and
-     will take any width offered, so when the wordmark drops out on collapse the
-     mark would otherwise re-centre in the narrower row and appear to move. */
+  /* Hug and start-align: a Button centres its content, so the mark would re-centre
+     and appear to move when the wordmark drops out. */
   flex: 0 0 auto;
   justify-content: flex-start;
 }
@@ -22,15 +21,9 @@
   justify-content: flex-start;
 }
 
-/* Collapsed there is no wordmark, so Button treats the trigger as icon-only and
-   strips the horizontal padding (inline, hence padding-inline here rather than
-   the --button-padding-x it zeroes) as well as squaring the button off. That
-   padding is what positions the mark, so without it the lockup jumps 6px left of
-   where the expanded one sits. Re-assert the expanded geometry - the same 0.75rem
-   padding and -0.375rem compensating margin - so the mark holds its position
-   whether or not the wordmark is beside it.
-   Three classes deep to beat Button.css's own .sui-btn--icon rule regardless of
-   which stylesheet the bundler emits first. */
+/* Collapsed, Button treats the trigger as icon-only and strips the padding that
+   positions the mark, dropping it 6px left. Re-assert the expanded geometry.
+   Three classes deep to beat Button.css's .sui-btn--icon whatever the emit order. */
 .sui-brand-switcher .sui-brand-switcher__trigger.sui-btn--icon {
   padding-inline: 0.75rem;
   margin-inline: -0.375rem;

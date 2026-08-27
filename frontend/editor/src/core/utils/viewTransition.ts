@@ -5,20 +5,15 @@ type ViewTransitionDoc = Document & {
 };
 
 /**
- * Run a state update inside a View Transition so the browser cross-fades
- * (and morphs any elements sharing a {@code view-transition-name}) between
- * the before/after DOMs.
- *
- * Falls back to a plain synchronous update when the API is unavailable
- * (Firefox <130, JSDOM, motion-reduced preference).
+ * Runs a state update inside a View Transition, falling back to a plain update
+ * where the API is unavailable or motion is reduced.
  */
 export function withViewTransition(update: () => void): Promise<void> {
   if (typeof document === "undefined") {
     update();
     return Promise.resolve();
   }
-  // Documented behaviour, and the reason callers don't each check: someone who
-  // asked for less motion gets the state change without the animation.
+  // Callers don't each check: reduced motion still gets the state change.
   const reduced =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&

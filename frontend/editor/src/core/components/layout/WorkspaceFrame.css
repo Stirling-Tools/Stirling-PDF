@@ -1,7 +1,5 @@
 /* ========== WORKSPACE FRAME ========== */
-/* The app's left region: the quick nav rail and the sidebar side by side, both
-   running the full height of the window. Shared by the editor and the processor
-   so the two can't drift apart on the most visible geometry in the product. */
+/* Rail and sidebar side by side, full height. Shared by both apps. */
 .workspace-frame {
   display: flex;
   height: 100%;
@@ -9,9 +7,7 @@
   background-color: var(--c-bg);
 }
 
-/* Under the shell's mobile breakpoint the sidebar becomes an off-canvas drawer
-   and the rail is hidden, so the frame stops laying anything out. The drawer
-   positions itself (fixed). */
+/* On mobile the sidebar is a fixed drawer, so the frame stops laying out. */
 @media (max-width: 48rem) {
   .workspace-frame {
     display: block;

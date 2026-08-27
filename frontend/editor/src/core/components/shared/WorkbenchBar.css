@@ -14,10 +14,8 @@
   column-gap: 8px;
   min-height: 38px;
   padding: 0 8px;
-  /* A solid top bar spanning the workbench, not a card floating in it: no margin,
-     no radius, and a single rule along the bottom to part it from the content.
-     Same surface and rule as the sidebars either side, so the chrome reads as one
-     frame around the document rather than a set of separate panels. */
+  /* Flush, not a floating card: same surface and hairline as the sidebars, so the
+     chrome reads as one frame. */
   background-color: var(--c-surface);
   border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
@@ -150,10 +148,8 @@
 /* ---- Tool buttons (own full-width row, always below the top row) ---- */
 .workbench-bar-center {
   order: 4;
-  /* Wider than the bar's content box by its two 8px paddings, which the negative
-     inline margin cancels: the rule along the top of this row is the only thing
-     parting it from the row above, so it has to reach both edges of the bar.
-     Shifting the row across without widening it left the rule 16px short. */
+  /* Wider by the bar's two 8px paddings, which the negative margin cancels, so the
+     rule along the top reaches both edges. */
   flex: 0 0 calc(100% + 16px);
   min-width: 0;
   max-width: calc(100% + 16px);

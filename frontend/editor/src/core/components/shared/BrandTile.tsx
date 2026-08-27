@@ -1,20 +1,13 @@
 interface BrandTileProps {
-  /**
-   * Height and width (CSS length). Omit to let a caller's CSS size it - the
-   * portal's editor hero fills its container that way.
-   */
+  /** CSS length. Omit to let the caller's CSS size it. */
   size?: string;
   className?: string;
 }
 
 /**
- * The Stirling app tile: the brand mark knocked out of a rounded, brand-coloured
- * square. Distinct from {@link BrandMark}, which is the bare two-tone mark - this
- * is the "an app you can open" lockup, used beside the editor's name and as the
- * editor's entry in the quick nav rail.
- *
- * Decorative: every call site sits inside something that already carries the
- * accessible name (a heading, a labelled button).
+ * The brand mark knocked out of a rounded square - the "app you can open" lockup,
+ * as against the bare {@link BrandMark}. Decorative: every call site already
+ * carries the accessible name.
  */
 export function BrandTile({ size, className }: BrandTileProps) {
   return (

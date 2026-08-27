@@ -31,11 +31,9 @@
   --radius-nav: 0.625rem;
   --nav-gutter: 0.5rem;
   --nav-rail-w: 3.5rem;
-  /* Quick nav rail: narrower than --nav-rail-w because it is a pure icon strip
-     with no labels (36px surface + one --nav-gutter on the window edge). */
+  /* Icon strip, no labels: 36px surface + one --nav-gutter. */
   --quicknav-rail-w: 2.75rem;
-  /* The left column's shared geometry. Both apps (editor and processor) read
-     these so their sidebars and brand rows cannot drift apart. */
+  /* The left column, read by both apps so they can't drift apart. */
   --nav-header-h: 3rem;
   --sidebar-w: 16.25rem;
   --sidebar-collapsed-w: var(--nav-rail-w);
