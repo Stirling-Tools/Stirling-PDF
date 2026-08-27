@@ -4,7 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import { qk } from "@app/query/keys";
-import { fetchAdminSection, putAdminSection, putAdminSettings } from "@app/api/adminSettings";
+import {
+  fetchAdminSection,
+  putAdminSection,
+  putAdminSettings,
+} from "@app/api/adminSettings";
 
 vi.mock("@app/api/adminSettings", () => ({
   fetchAdminSection: vi.fn(),
@@ -20,7 +24,9 @@ function makeWrapper() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
 }
 
 describe("useAdminSettings", () => {
@@ -32,7 +38,10 @@ describe("useAdminSettings", () => {
   });
 
   it("loads the section and seeds the editable draft", async () => {
-    const { result } = renderHook(() => useAdminSettings({ sectionName: "general" }), { wrapper: makeWrapper() });
+    const { result } = renderHook(
+      () => useAdminSettings({ sectionName: "general" }),
+      { wrapper: makeWrapper() },
+    );
 
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -63,7 +72,10 @@ describe("useAdminSettings", () => {
     );
 
     for (let i = 0; i < 4; i++) {
-      const tab = renderHook(() => useAdminSettings({ sectionName: "aiEngine" }), { wrapper: shared });
+      const tab = renderHook(
+        () => useAdminSettings({ sectionName: "aiEngine" }),
+        { wrapper: shared },
+      );
       await waitFor(() => expect(tab.result.current.loading).toBe(false));
       tab.unmount();
     }
@@ -87,9 +99,12 @@ describe("useAdminSettings", () => {
   });
 
   it("does not fetch while disabled, and reports itself unloaded", async () => {
-    const { result } = renderHook(() => useAdminSettings({ sectionName: "general", enabled: false }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useAdminSettings({ sectionName: "general", enabled: false }),
+      {
+        wrapper: makeWrapper(),
+      },
+    );
 
     expect(mockFetch).not.toHaveBeenCalled();
     // Sections gate their render on this; false would show an empty form.
@@ -98,7 +113,8 @@ describe("useAdminSettings", () => {
 
   it("fetches when the gate opens", async () => {
     const { result, rerender } = renderHook(
-      ({ on }: { on: boolean }) => useAdminSettings({ sectionName: "general", enabled: on }),
+      ({ on }: { on: boolean }) =>
+        useAdminSettings({ sectionName: "general", enabled: on }),
       { wrapper: makeWrapper(), initialProps: { on: false } },
     );
 
@@ -132,7 +148,10 @@ describe("useAdminSettings", () => {
   });
 
   it("skips the request when nothing changed", async () => {
-    const { result } = renderHook(() => useAdminSettings({ sectionName: "general" }), { wrapper: makeWrapper() });
+    const { result } = renderHook(
+      () => useAdminSettings({ sectionName: "general" }),
+      { wrapper: makeWrapper() },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
@@ -144,9 +163,12 @@ describe("useAdminSettings", () => {
 
   it("refetches after a save so the _pending block is current", async () => {
     mockFetch.mockResolvedValue({ appName: "Stirling" });
-    const { result } = renderHook(() => useAdminSettings<{ appName: string }>({ sectionName: "general" }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useAdminSettings<{ appName: string }>({ sectionName: "general" }),
+      {
+        wrapper: makeWrapper(),
+      },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
@@ -170,9 +192,12 @@ describe("useAdminSettings", () => {
       appName: "Stirling",
       _pending: { appName: "Queued" },
     });
-    const { result } = renderHook(() => useAdminSettings<{ appName: string }>({ sectionName: "general" }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useAdminSettings<{ appName: string }>({ sectionName: "general" }),
+      {
+        wrapper: makeWrapper(),
+      },
+    );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     // The draft shows the queued value, not the active one.
@@ -184,11 +209,14 @@ describe("useAdminSettings", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
-    const { result } = renderHook(() => useAdminSettings<{ appName: string }>({ sectionName: "general" }), {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <QueryClientProvider client={client}>{children}</QueryClientProvider>
-      ),
-    });
+    const { result } = renderHook(
+      () => useAdminSettings<{ appName: string }>({ sectionName: "general" }),
+      {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        ),
+      },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -202,13 +230,18 @@ describe("useAdminSettings", () => {
     });
 
     // A fetch is authoritative over the draft.
-    await waitFor(() => expect(result.current.settings.appName).toBe("From server"));
+    await waitFor(() =>
+      expect(result.current.settings.appName).toBe("From server"),
+    );
   });
 
   it("does not clobber an in-progress edit on re-render", async () => {
-    const { result, rerender } = renderHook(() => useAdminSettings<{ appName: string }>({ sectionName: "general" }), {
-      wrapper: makeWrapper(),
-    });
+    const { result, rerender } = renderHook(
+      () => useAdminSettings<{ appName: string }>({ sectionName: "general" }),
+      {
+        wrapper: makeWrapper(),
+      },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -247,9 +280,12 @@ describe("useAdminSettings", () => {
   });
 
   it("reports saving while the save is in flight", async () => {
-    const { result } = renderHook(() => useAdminSettings<{ appName: string }>({ sectionName: "general" }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useAdminSettings<{ appName: string }>({ sectionName: "general" }),
+      {
+        wrapper: makeWrapper(),
+      },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     let release: () => void = () => {};
