@@ -7,8 +7,16 @@
   height: 100%;
 }
 
+/* Icon and title share a row. */
+.sui-option-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
 .sui-option-card__icon {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 2.25rem;

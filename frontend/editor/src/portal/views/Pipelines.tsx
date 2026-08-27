@@ -299,7 +299,7 @@ export function Pipelines() {
           <h2 className="portal-pipelines__section-title">
             {t("portal.pipelines.templates.title")}
           </h2>
-          <CardRail itemWidth="16rem" itemHeight="12rem">
+          <CardRail itemWidth="16rem" itemHeight="10.75rem">
             {galleryEntries.map((entry) => (
               <PipelineTemplateCard
                 key={entry.category.id}

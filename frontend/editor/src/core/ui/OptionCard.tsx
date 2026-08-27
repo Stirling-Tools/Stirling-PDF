@@ -70,10 +70,12 @@ export function OptionCard({
       onKeyDown={interactive ? onKeyDown : undefined}
       aria-disabled={disabled || undefined}
     >
-      <span className="sui-option-card__icon" aria-hidden>
-        {icon}
-      </span>
-      <h3 className="sui-option-card__title">{title}</h3>
+      <div className="sui-option-card__head">
+        <span className="sui-option-card__icon" aria-hidden>
+          {icon}
+        </span>
+        <h3 className="sui-option-card__title">{title}</h3>
+      </div>
       {description && <p className="sui-option-card__desc">{description}</p>}
       {(disabled ? note : cta) && (
         <span className="sui-option-card__foot">{disabled ? note : cta}</span>
