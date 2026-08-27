@@ -519,8 +519,8 @@ public class SaasTeamService {
      * membership and its wallet) rather than deleting it, so a plain team is never orphaned. The
      * only real hazard is a team the user is the <em>last</em> leader of that still carries live
      * billing: an active paid/PAYG subscription, or a non-revoked linked self-hosted instance
-     * ("Mode A"). Those block the join until the plan is cancelled / leadership transferred /
-     * instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
+     * (combined billing). Those block the join until the plan is cancelled / leadership transferred
+     * / instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
      *
      * <p>The home team and the team being joined are excluded: neither is left by the join (home is
      * parked, the joined team is kept), so their live billing cannot be stranded.

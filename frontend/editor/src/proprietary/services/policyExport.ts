@@ -222,7 +222,7 @@ export async function enforceExportPolicies(
             fileId,
             fileName: file.name,
             fileSize: file.size,
-            target: versionRun!.target,
+            target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
             error: null,

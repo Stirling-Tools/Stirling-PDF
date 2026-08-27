@@ -153,7 +153,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
       if (onShared) {
         await onShared();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to generate share link:", error);
       setErrorMessage(
         t(
