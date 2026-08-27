@@ -46,7 +46,7 @@ export function QuickNavRailHost() {
   };
 
   // Usable unless the app says otherwise.
-  const unusable = (id: string) => {
+  const unusable = (id: ToolId) => {
     const reason = host?.toolReasons?.[id];
     return { disabled: Boolean(reason), reason };
   };

@@ -5,7 +5,10 @@ import { useNotificationActions } from "@app/components/notifications/notificati
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
-import { useRegisterQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import {
+  useRegisterQuickNavHost,
+  type QuickNavToolReasons,
+} from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
@@ -28,7 +31,7 @@ export interface QuickNavHostBridgeProps {
    * Extra reasons, translated, keyed by entry id - layered over what this works out
    * itself, for conditions only the app can see. Optional.
    */
-  toolReasons?: Record<string, string>;
+  toolReasons?: QuickNavToolReasons;
 }
 
 /**

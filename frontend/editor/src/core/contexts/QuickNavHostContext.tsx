@@ -10,6 +10,9 @@ import {
   type ReactNode,
 } from "react";
 
+/** Keyed by tool id: only entries that open a tool can be unavailable. */
+export type QuickNavToolReasons = Partial<Record<ToolId, string>>;
+
 export interface QuickNavIdentity {
   displayName: string;
   profilePictureUrl: string | null;
@@ -31,7 +34,7 @@ export interface QuickNavHostData {
    * means it can. Unknown is drawn as usable - dimming a working control is worse
    * than briefly offering one that isn't.
    */
-  toolReasons: Record<string, string>;
+  toolReasons: QuickNavToolReasons;
   /**
    * Whether the app offers these. Flags rather than the handlers, because drawing
    * has to react to them and a ref write renders nothing.
@@ -75,7 +78,7 @@ interface QuickNavHostValue extends QuickNavHostData {
   setActions: (actions: QuickNavHostActions) => void;
 }
 
-const EMPTY_REASONS: Record<string, string> = {};
+const EMPTY_REASONS: QuickNavToolReasons = {};
 
 const EMPTY_DATA: QuickNavHostData = {
   appMounted: false,
@@ -89,12 +92,12 @@ const EMPTY_DATA: QuickNavHostData = {
 };
 
 function sameReasons(
-  next: Record<string, string>,
-  prev: Record<string, string>,
+  next: QuickNavToolReasons,
+  prev: QuickNavToolReasons,
 ): boolean {
   const nextKeys = Object.keys(next);
   if (nextKeys.length !== Object.keys(prev).length) return false;
-  return nextKeys.every((key) => next[key] === prev[key]);
+  return nextKeys.every((key) => next[key as ToolId] === prev[key as ToolId]);
 }
 
 const QuickNavHostContext = createContext<QuickNavHostValue | null>(null);

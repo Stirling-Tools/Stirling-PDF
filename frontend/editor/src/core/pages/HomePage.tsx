@@ -44,6 +44,7 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { stripBasePath } from "@app/constants/app";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
+import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
@@ -341,7 +342,7 @@ export default function HomePage() {
   // The same helpers the tool picker uses, so the two can't word one condition
   // differently. Colon removed: those labels sit in front of a tool name.
   const quickNavToolReasons = useMemo(() => {
-    const reasons: Record<string, string> = {};
+    const reasons: QuickNavToolReasons = {};
     for (const id of ["automate", "sharedSign"] as const) {
       const tool = toolRegistry[id];
       if (!tool) continue;

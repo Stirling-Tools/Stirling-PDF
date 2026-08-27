@@ -4,11 +4,18 @@ import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
+import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import type { ToolId } from "@app/types/toolId";
 
 /** Mirrors the same tools' `endpoints` in the tool registry. */
-const ENTRY_ENDPOINTS: Record<string, string[]> = {
+const ENTRY_ENDPOINTS = {
   automate: ["automate"],
-};
+} satisfies Partial<Record<ToolId, string[]>>;
+
+// Object.keys widens to string, which a tool-id-keyed record can't be indexed by.
+const ENDPOINT_ENTRIES = Object.keys(
+  ENTRY_ENDPOINTS,
+) as (keyof typeof ENTRY_ENDPOINTS)[];
 
 /**
  * The two the tool picker tells apart, plus shared signing - a whole feature the
@@ -16,6 +23,7 @@ const ENTRY_ENDPOINTS: Record<string, string[]> = {
  */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 type Cause = EndpointCause | "groupSigningOff";
+type Causes = Partial<Record<ToolId, Cause>>;
 const CAUSES: Cause[] = [
   "missingDependency",
   "disabledByAdmin",
@@ -28,7 +36,7 @@ const CAUSES: Cause[] = [
  */
 const STORAGE_KEY = "stirling.quickNav.toolCauses";
 
-function readRemembered(): Record<string, Cause> | null {
+function readRemembered(): Causes | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -38,7 +46,7 @@ function readRemembered(): Record<string, Cause> | null {
     }
     const known = Object.entries(parsed as Record<string, unknown>).filter(
       ([, cause]) => CAUSES.includes(cause as Cause),
-    ) as [string, Cause][];
+    ) as [ToolId, Cause][];
     return Object.fromEntries(known);
   } catch {
     // Private mode, or nonsense in storage: same as a first visit.
@@ -46,7 +54,7 @@ function readRemembered(): Record<string, Cause> | null {
   }
 }
 
-function remember(causes: Record<string, Cause>): void {
+function remember(causes: Causes): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(causes));
   } catch {
@@ -57,10 +65,12 @@ function remember(causes: Record<string, Cause>): void {
 function causesFor(
   endpointStatus: Record<string, boolean>,
   endpointDetails: Record<string, { reason?: string | null }>,
-): Record<string, Cause> {
-  const causes: Record<string, Cause> = {};
-  for (const [entry, needed] of Object.entries(ENTRY_ENDPOINTS)) {
-    const off = needed.filter((name) => endpointStatus[name] === false);
+): Causes {
+  const causes: Causes = {};
+  for (const entry of ENDPOINT_ENTRIES) {
+    const off = ENTRY_ENDPOINTS[entry].filter(
+      (name) => endpointStatus[name] === false,
+    );
     if (off.length === 0) continue;
     causes[entry] = off.some(
       (name) => endpointDetails[name]?.reason === "DEPENDENCY",
@@ -83,7 +93,7 @@ function causesFor(
  * The last answer is held through a re-fetch - each app has its own query cache
  * and a reload has none - so the bar changes only when the answer does.
  */
-export function useQuickNavToolReasons(): Record<string, string> | null {
+export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   const { t } = useTranslation();
   const endpoints = useMemo(() => Object.values(ENTRY_ENDPOINTS).flat(), []);
   const { endpointStatus, endpointDetails, loading } =
@@ -113,15 +123,16 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
   // Keyed on contents: the object is rebuilt every render.
   const liveKey = live ? JSON.stringify(live) : null;
   useEffect(() => {
-    if (liveKey) remember(JSON.parse(liveKey) as Record<string, Cause>);
+    if (liveKey) remember(JSON.parse(liveKey) as Causes);
   }, [liveKey]);
 
   const causes = live ?? remembered;
 
   return useMemo(() => {
     if (!causes) return null;
-    const reasons: Record<string, string> = {};
-    for (const [entry, cause] of Object.entries(causes)) {
+    const reasons: QuickNavToolReasons = {};
+    for (const entry of Object.keys(causes) as ToolId[]) {
+      const cause = causes[entry];
       if (cause === "groupSigningOff") {
         // The tool's own wording. Stop removed: the reason is appended to a label,
         // not written as a sentence.
@@ -131,6 +142,7 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
         ).replace(/\.\s*$/, "");
         continue;
       }
+      if (!cause) continue;
       // Colon removed: these labels are written to sit in front of a tool name.
       const { key, fallback } = getDisabledLabel(cause);
       reasons[entry] = t(key, fallback).replace(/:\s*$/, "");
