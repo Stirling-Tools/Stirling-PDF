@@ -249,12 +249,19 @@ jobs:
           }
 
           if [ "$AI_ENABLED" = "true" ]; then
+            # The engine image defaults STIRLING_ENGINE_REQUIRE_AUTH=true, and with no
+            # secret its middleware 503s every non-public route while /health keeps
+            # answering - a deploy that looks healthy and fails every AI call. Both
+            # halves read the same env var, and compose rewrites both together, so a
+            # fresh per-deploy value is enough; Java reads it via System.getenv.
+            ENGINE_SECRET="$(openssl rand -hex 32)"
             AI_BACKEND_VARS="
                 SYSTEM_AIENGINE_ENABLED: \"true\"
                 SYSTEM_AIENGINE_URL: \"http://saas-engine:5001\"
                 # The SaaS AI proxy has its own property; both point at the
                 # same container but neither falls back to the other.
-                APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\""
+                APP_AI_SERVICEBASEURL: \"http://saas-engine:5001\"
+                STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")"
             AI_SERVICE="
 
             saas-engine:
@@ -263,6 +270,7 @@ jobs:
               environment:
                 ANTHROPIC_API_KEY: $(yaml "$ANTHROPIC_API_KEY")
                 VOYAGE_API_KEY: $(yaml "$VOYAGE_API_KEY")
+                STIRLING_ENGINE_SHARED_SECRET: $(yaml "$ENGINE_SECRET")
               restart: on-failure:5"
           else
             AI_BACKEND_VARS=""
