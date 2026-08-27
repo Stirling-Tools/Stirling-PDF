@@ -200,12 +200,17 @@ export function useRegisterQuickNavHost(
   );
 }
 
-/** `appMounted` is sticky, so a route that isn't the app has to say so itself. */
-export function useSuppressQuickNavRail(): void {
+/**
+ * `appMounted` is sticky, so a screen that isn't the app has to say so itself.
+ * Takes a condition for the screens that are one branch of a route rather than a
+ * route of their own.
+ */
+export function useSuppressQuickNavRail(active = true): void {
   const host = useQuickNavHost();
   const setChromeless = host?.setChromeless;
   useEffect(() => {
+    if (!active) return;
     setChromeless?.(true);
     return () => setChromeless?.(false);
-  }, [setChromeless]);
+  }, [active, setChromeless]);
 }
