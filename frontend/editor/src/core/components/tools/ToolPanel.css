@@ -19,13 +19,13 @@
   user-select: none;
 }
 
-/* Full-height panel flush to the window edge, not a rounded card inset from it.
-   No border on the workbench side: it reads as separate the same way the file
-   sidebar opposite does, by being a surface against the canvas. A rule on one
-   side only made the two edges of the workbench disagree. */
+/* Full-height panel flush to the window edge, not a rounded card inset from it,
+   with a rule on the workbench side - the mirror of the file sidebar's, so both
+   edges of the workbench are drawn the same way. */
 .tool-panel--floating {
   height: 100vh;
   background: var(--c-surface);
+  border-inline-start: 1px solid var(--c-border-subtle);
 }
 
 .tool-panel__collapsed-strip {

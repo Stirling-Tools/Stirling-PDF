@@ -14,13 +14,12 @@
   column-gap: 8px;
   min-height: 38px;
   padding: 0 8px;
-  /* No left margin: the file sidebar's own 0.5rem padding already provides the
-     gutter on that side, so adding one here would double it and leave the bar
-     further from the sidebar than it is from the tool panel. */
-  margin: var(--nav-gutter) var(--nav-gutter) 0 0;
+  /* A solid top bar spanning the workbench, not a card floating in it: no margin,
+     no radius, and a single rule along the bottom to part it from the content.
+     Same surface and rule as the sidebars either side, so the chrome reads as one
+     frame around the document rather than a set of separate panels. */
   background-color: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-nav);
+  border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
   z-index: 50;
 }
@@ -151,7 +150,10 @@
 /* ---- Tool buttons (own full-width row, always below the top row) ---- */
 .workbench-bar-center {
   order: 4;
-  flex: 0 0 100%;
+  /* Basis grows by the bar's two 8px paddings, which the negative inline margin
+     below cancels: shifting the row left without widening it left the rule short
+     of the right edge by exactly those 16px. */
+  flex: 0 0 calc(100% + 16px);
   position: relative;
   display: flex;
   align-items: center;
@@ -159,8 +161,12 @@
   flex-wrap: wrap;
   gap: 2px;
   /* Symmetric side padding leaves room for the retract handle pinned right
-     without knocking the centred tool icons off-centre. */
-  padding: 4px 36px;
+     without knocking the centred tool icons off-centre. The negative inline
+     margin cancels the bar's own 8px padding so the rule above this row reaches
+     both edges of the bar; the padding absorbs the same 8px, leaving the tool
+     icons exactly where they were. */
+  margin-inline: -8px;
+  padding: 4px 44px;
   border-top: 1px solid var(--c-border-subtle);
 }
 

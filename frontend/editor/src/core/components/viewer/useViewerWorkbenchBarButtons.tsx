@@ -185,23 +185,27 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 10,
         render: ({ disabled }) => (
-          <Tooltip
-            content={searchLabel}
+          <Popover
             position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
+            withArrow
+            shadow="md"
+            offset={8}
+            opened={isSearchInterfaceVisible}
+            onClose={viewer.searchInterfaceActions.close}
           >
-            <Popover
-              position={tooltipPosition}
-              withArrow
-              shadow="md"
-              offset={8}
-              opened={isSearchInterfaceVisible}
-              onClose={viewer.searchInterfaceActions.close}
-            >
-              <Popover.Target>
-                <div style={{ display: "inline-flex" }}>
+            <Popover.Target>
+              <div style={{ display: "inline-flex" }}>
+                {/* Tooltip wraps the button, not the Popover: it attaches its
+                    handlers and ref by cloning its child, and Popover is a
+                    component that passes neither on - so wrapped outside, the
+                    tooltip never opened. */}
+                <Tooltip
+                  content={searchLabel}
+                  position={tooltipPosition}
+                  offset={12}
+                  arrow
+                  portalTarget={document.body}
+                >
                   <ActionIcon
                     variant="tertiary"
                     className="workbench-bar-action-icon"
@@ -215,18 +219,18 @@ export function useViewerWorkbenchBarButtons(
                       height="1.25rem"
                     />
                   </ActionIcon>
-                </div>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <div style={{ minWidth: "20rem" }}>
-                  <SearchInterface
-                    visible={isSearchInterfaceVisible}
-                    onClose={viewer.searchInterfaceActions.close}
-                  />
-                </div>
-              </Popover.Dropdown>
-            </Popover>
-          </Tooltip>
+                </Tooltip>
+              </div>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <div style={{ minWidth: "20rem" }}>
+                <SearchInterface
+                  visible={isSearchInterfaceVisible}
+                  onClose={viewer.searchInterfaceActions.close}
+                />
+              </div>
+            </Popover.Dropdown>
+          </Popover>
         ),
       },
       {

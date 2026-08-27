@@ -3,8 +3,11 @@
 .file-sidebar {
   /* One solid panel in the surface colour, not a canvas holding floating cards:
      the sections inside it flatten (see below) so the sidebar reads as a single
-     piece of chrome. */
+     piece of chrome. A rule on the workbench side only - the same one the quick
+     nav rail and the top bar draw - so the chrome frames the document rather than
+     boxing each panel. */
   background-color: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
   flex-direction: column;
   height: 100%;

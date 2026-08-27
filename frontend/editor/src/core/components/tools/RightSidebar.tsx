@@ -181,7 +181,11 @@ export default function RightSidebar() {
                 content={tool.name}
                 position="left"
                 arrow
-                delay={300}
+                // No delay, matching the quick nav rail: collapsed to icons, the
+                // tooltip IS the label rather than a second look at one already
+                // on screen, so waiting for it just slows down reading the rail.
+                // Rows that show their name (the tool picker) keep their delay.
+                delay={0}
               >
                 <ActionIcon
                   aria-label={tool.name}

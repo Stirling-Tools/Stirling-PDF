@@ -3,8 +3,10 @@
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
   /* Matches the editor's sidebar: one solid panel in the surface colour, with the
-     sections inside it flattened rather than drawn as cards. */
+     sections inside it flattened rather than drawn as cards, and the same rule on
+     the content side. */
   background: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
