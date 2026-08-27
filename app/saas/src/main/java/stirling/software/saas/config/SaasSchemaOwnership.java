@@ -91,6 +91,7 @@ public final class SaasSchemaOwnership {
                     "file_share_accesses",
                     "file_shares",
                     "folders",
+                    "gmail_oauth_connections",
                     "integration_configs",
                     "invite_tokens",
                     "jwt_signing_keys",

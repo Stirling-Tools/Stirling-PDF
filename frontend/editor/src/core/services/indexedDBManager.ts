@@ -516,6 +516,38 @@ export const DATABASE_CONFIGS = {
       },
     ],
   } as DatabaseConfig,
+
+  EMAIL: {
+    name: "stirling-email-cache",
+    version: 1,
+    stores: [
+      {
+        name: "accounts",
+        keyPath: "id",
+        indexes: [
+          { name: "email", keyPath: "email", unique: false },
+          { name: "provider", keyPath: "provider", unique: false },
+        ],
+      },
+      {
+        name: "messages",
+        keyPath: "id",
+        indexes: [
+          { name: "accountId", keyPath: "accountId", unique: false },
+          { name: "date", keyPath: "date", unique: false },
+        ],
+      },
+      {
+        name: "attachments",
+        keyPath: "id",
+        indexes: [
+          { name: "accountId", keyPath: "accountId", unique: false },
+          { name: "messageId", keyPath: "messageId", unique: false },
+          { name: "expiresAt", keyPath: "expiresAt", unique: false },
+        ],
+      },
+    ],
+  } as DatabaseConfig,
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

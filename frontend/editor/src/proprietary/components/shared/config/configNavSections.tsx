@@ -17,6 +17,7 @@ import AdminPlanSection from "@app/components/shared/config/configSections/Admin
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
 import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
+import AdminMailboxSection from "@app/components/shared/config/configSections/AdminMailboxSection";
 import AdminAiGeneralSection from "@app/components/shared/config/configSections/AdminAiGeneralSection";
 import AdminAiModelsSection from "@app/components/shared/config/configSections/AdminAiModelsSection";
 import AdminAiDocumentsSection from "@app/components/shared/config/configSections/AdminAiDocumentsSection";
@@ -120,6 +121,14 @@ export const useConfigNavSections = (
           label: t("settings.configuration.features", "Features"),
           icon: "extension-rounded",
           component: <AdminFeaturesSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminMailbox",
+          label: t("settings.configuration.mailbox", "Mailbox"),
+          icon: "mail-rounded",
+          component: <AdminMailboxSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },

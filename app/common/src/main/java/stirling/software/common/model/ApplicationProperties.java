@@ -66,6 +66,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Mailbox mailbox = new Mailbox();
     private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
@@ -1414,6 +1415,26 @@ public class ApplicationProperties {
         private String sslTrust;
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
+    }
+
+    /**
+     * OAuth configuration for external mailbox providers.
+     *
+     * @since 2.15.x
+     */
+    @Data
+    public static class Mailbox {
+        private Gmail gmail = new Gmail();
+
+        @Data
+        public static class Gmail {
+            private String clientId = "";
+            @ToString.Exclude private String clientSecret = "";
+            private String redirectUri = "";
+
+            /** Google account emails allowed to connect to Gmail; empty means all accounts. */
+            private List<String> allowedEmails = new ArrayList<>();
+        }
     }
 
     /**

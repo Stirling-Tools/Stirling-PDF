@@ -6,7 +6,9 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
+import EmailInboxPage from "@app/pages/EmailInboxPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
@@ -52,6 +54,19 @@ export default function App() {
             </PublicRouteProviders>
           }
         />
+
+        {EMAIL_MAILBOX_ENABLED && (
+          <Route
+            path="/mail"
+            element={
+              <AppProviders>
+                <AppLayout>
+                  <EmailInboxPage />
+                </AppLayout>
+              </AppProviders>
+            }
+          />
+        )}
 
         {/* All other routes need AppProviders for backend integration */}
         <Route
