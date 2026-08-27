@@ -56,6 +56,8 @@
   ],
   "trailing.java": [
     "13:CMT009:error",
-    "14:CMT004:error"
+    "14:CMT004:error",
+    "19:CMT009:error",
+    "20:CMT004:error"
   ]
 }

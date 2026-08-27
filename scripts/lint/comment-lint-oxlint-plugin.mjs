@@ -94,12 +94,16 @@ function expand(token, lines) {
   // dropped, so CMT004 and CMT009 still see it: a TODO is a TODO wherever it
   // sits. The rules that compare a comment against the code below it stay out,
   // because a trailing comment usually decodes the line it sits on.
-  const trailing = before.length > 0 && !before.startsWith("{");
+  //
+  // A block comment counts as trailing only when it also closes on that line.
+  // One that runs on has its bulk on lines of its own, so it is judged as the
+  // block it is.
+  const sameLine = token.loc.start.line === token.loc.end.line;
+  const trailing = before.length > 0 && !before.startsWith("{") && (token.type === "Line" || sameLine);
 
   if (token.type === "Line") {
     return [{ line: start, column, body: token.value, range: token.range, trailing }];
   }
-  if (trailing) return [];
 
   // token.value is the text between the delimiters, so it begins two chars in.
   let offset = token.range[0] + 2;
@@ -111,6 +115,7 @@ function expand(token, lines) {
       column: index === 0 ? column : 1,
       body: raw.replace(/^\s*\*+/, "").trim(),
       range,
+      trailing,
     };
   });
 }

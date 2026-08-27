@@ -13,4 +13,10 @@ class Trailing {
         boolean supportsSign = false; // TODO make Sign work
         cleanup(); // this used to run before the flush
     }
+
+    void blockFormToo() {
+        int mode = 2; /* MB */
+        boolean ready = false; /* TODO wire this up */
+        reset(); /* this used to run before the flush */
+    }
 }

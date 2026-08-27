@@ -388,12 +388,20 @@ function readRuns(lines, language) {
     }
 
     // Code first, then a comment. blankStrings has already neutralised any `//`
-    // inside a string literal, so this index is a real comment marker.
-    const trailingAt = text.indexOf("//");
-    if (trailingAt > 0) {
-      const body = raw.slice(trailingAt + 2).trim();
+    // inside a string literal, so this index is a real comment marker. A block
+    // comment counts here only when it also closes on this line, matching the
+    // oxlint engine: one that runs on has its bulk on lines of its own.
+    const trailingLine = text.indexOf("//");
+    const trailingBlock = text.indexOf("/*");
+    const at =
+      trailingLine > 0 ? trailingLine : trailingBlock > 0 && text.includes("*/", trailingBlock) ? trailingBlock : -1;
+    if (at > 0) {
+      const body = raw
+        .slice(at + 2)
+        .replace(/\*\/.*$/, "")
+        .trim();
       if (body.length > 0) {
-        push(i, trailingAt + 1, body, "line", true);
+        push(i, at + 1, body, "line", true);
         continue;
       }
     }
