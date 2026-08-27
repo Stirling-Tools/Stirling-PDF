@@ -40,7 +40,7 @@ ext {
     jinjavaVersion = "2.8.4"
     jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
-    archunitVersion = "1.4.2"
+    archunitVersion = "1.5.0"
     batikVersion = "1.19"
     jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
