@@ -100,6 +100,7 @@ import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPer
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
+import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
 import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
@@ -437,9 +438,12 @@ export function LocalEmbedPDF({
     ];
   }, [pdfUrl, enableAnnotations, exportFileName]);
 
+  const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
+
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
+    fontFallback: fontFallbackConfig,
   });
 
   // Early return if no file or URL provided
