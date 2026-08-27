@@ -110,15 +110,6 @@
   padding-inline: 0;
   width: 100%;
 }
-/* Neutralise the active-item edge-bar geometry (negative margins + overhang)
-   that assumes the full-width rail. */
-.portal-sidebar[data-collapsed] .sui-navitem.is-active {
-  width: 100%;
-  margin-inline: 0;
-  border-left: none;
-  border-radius: 0.5rem;
-  padding-left: 0;
-}
 .portal-sidebar[data-collapsed] .portal-sidebar__footer {
   margin-inline: 0.375rem;
 }
@@ -146,12 +137,27 @@
   padding-inline: 0.625rem;
 }
 
-.portal-sidebar .sui-navitem.is-active {
-  width: calc(100% + 0.75rem);
-  margin-inline: -0.375rem;
-  border-radius: 0;
-  border-left: 3px solid var(--c-primary);
-  padding-left: calc(1.25rem - 3px);
+/* The selected view, marked the way the quick nav rail marks the current app: a
+   solid block with the label and icon knocked out, rather than an accent tint and
+   an accent edge bar. Keeps one language for "where you are" across the chrome. */
+.portal-sidebar .sui-navitem.is-active,
+.portal-sidebar .sui-navitem.is-active:hover {
+  background: var(--c-text);
+  color: var(--c-surface);
+}
+
+/* Dark grounds sit close to full-strength ink, where that block reads as a hole
+   rather than a selection, so it steps back to the muted tone - as the rail does. */
+[data-theme="dark"] .portal-sidebar .sui-navitem.is-active,
+[data-theme="dark"] .portal-sidebar .sui-navitem.is-active:hover,
+html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active,
+html[data-app-theme="midnight"] .portal-sidebar .sui-navitem.is-active:hover,
+[data-mantine-color-scheme="dark"] .portal-sidebar .sui-navitem.is-active,
+[data-mantine-color-scheme="dark"]
+  .portal-sidebar
+  .sui-navitem.is-active:hover {
+  background: var(--c-text-subtle);
+  color: var(--c-surface);
 }
 
 .portal-sidebar__section {
