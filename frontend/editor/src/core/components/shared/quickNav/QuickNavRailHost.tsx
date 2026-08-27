@@ -5,6 +5,10 @@ import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavR
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
 import { requestReaderMode } from "@app/utils/pendingReaderMode";
+import {
+  saveEditorReturnPath,
+  takeEditorReturnPath,
+} from "@app/services/workbenchSession";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { HAS_PORTAL } from "@app/routes/adminRouteExtensions";
@@ -24,7 +28,7 @@ const SIZE = "1.125rem";
 export function QuickNavRailHost() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const host = useQuickNavHost();
 
   // Nothing has mounted under the frame yet - login, an error state, or no
@@ -110,7 +114,12 @@ export function QuickNavRailHost() {
         currentApp: inPortal ? "processor" : "editor",
         otherApp: HAS_PORTAL
           ? inPortal
-            ? { onOpen: () => navigate(EDITOR_BASENAME) }
+            ? {
+                // Back to wherever you left the editor, not to its front door:
+                // the processor is somewhere you step out to and come back from.
+                onOpen: () =>
+                  navigate(takeEditorReturnPath() ?? EDITOR_BASENAME),
+              }
             : {
                 disabled: !host?.portalAccess,
                 reason: !host?.portalAccess
@@ -119,7 +128,10 @@ export function QuickNavRailHost() {
                       "Ask an admin for processor access",
                     )
                   : undefined,
-                onOpen: () => go(PORTAL_BASENAME),
+                onOpen: () => {
+                  saveEditorReturnPath(pathname + search);
+                  go(PORTAL_BASENAME);
+                },
               }
           : undefined,
         // Clicking the mark of the app you are in returns it to its default

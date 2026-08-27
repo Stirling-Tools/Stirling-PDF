@@ -135,39 +135,48 @@
 }
 
 /* Two-row: the tool row scrolls sideways instead of wrapping. */
-.workbench-bar[data-wrapped="true"] .workbench-bar-center {
-  border-top: 1px solid var(--c-border-subtle);
+.workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll {
   justify-content: flex-start;
+  flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
-.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
+.workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll > * {
   flex-shrink: 0;
 }
 
 /* ---- Tool buttons (own full-width row, always below the top row) ---- */
 .workbench-bar-center {
   order: 4;
-  /* Basis grows by the bar's two 8px paddings, which the negative inline margin
-     below cancels: shifting the row left without widening it left the rule short
-     of the right edge by exactly those 16px. */
+  /* Wider than the bar's content box by its two 8px paddings, which the negative
+     inline margin cancels: the rule along the top of this row is the only thing
+     parting it from the row above, so it has to reach both edges of the bar.
+     Shifting the row across without widening it left the rule 16px short. */
   flex: 0 0 calc(100% + 16px);
+  min-width: 0;
+  max-width: calc(100% + 16px);
+  margin-inline: -8px;
   position: relative;
+  display: flex;
+  align-items: center;
+  /* Symmetric side padding leaves room for the retract handle pinned right
+     without knocking the centred tool icons off-centre. The extra 8px either
+     side absorbs the negative margin, so the icons sit where the padding alone
+     would have put them. */
+  padding: 4px 44px;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.workbench-bar-center-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 2px;
-  /* Symmetric side padding leaves room for the retract handle pinned right
-     without knocking the centred tool icons off-centre. The negative inline
-     margin cancels the bar's own 8px padding so the rule above this row reaches
-     both edges of the bar; the padding absorbs the same 8px, leaving the tool
-     icons exactly where they were. */
-  margin-inline: -8px;
-  padding: 4px 44px;
-  border-top: 1px solid var(--c-border-subtle);
 }
 
 /* Retract / reopen handle for the viewer tool row. */
@@ -302,4 +311,83 @@
   min-width: 2.5rem;
   text-align: right;
   white-space: nowrap;
+}
+
+/* ---- Mobile layout (matches useIsMobile's 1024px) ---- */
+@media (max-width: 64rem) {
+  .workbench-bar {
+    margin: var(--nav-gutter) var(--nav-gutter) 0;
+  }
+
+  .workbench-bar-action-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .workbench-bar-views,
+  .workbench-bar-globals {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .workbench-bar-center {
+    flex-basis: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding: 2px 4px 2px 8px;
+  }
+
+  .workbench-bar-center-scroll {
+    gap: 4px;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-search {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 0;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-globals {
+    order: 3;
+  }
+
+  .workbench-bar[data-wrapped="true"] .workbench-bar-center-scroll {
+    scrollbar-width: none;
+    /* Wider than one 40px icon plus its gap: a 2rem fade always landed
+       mid-glyph, which read as a clipping bug rather than "scroll me". */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 3.5rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 3.5rem),
+      transparent
+    );
+  }
+
+  .workbench-bar[data-wrapped="true"]
+    .workbench-bar-center--expanded
+    .workbench-bar-center-scroll {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .workbench-bar[data-wrapped="true"]
+    .workbench-bar-center--expanded
+    .workbench-bar-divider {
+    display: none;
+  }
+
+  .workbench-bar-toolbar-handle-expand {
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
 }
