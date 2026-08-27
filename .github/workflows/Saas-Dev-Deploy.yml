@@ -3,7 +3,6 @@ name: Auto SaaS Dev Deployment
 on:
   push:
     branches:
-      - main
       - saas-prod
   workflow_dispatch:
 
