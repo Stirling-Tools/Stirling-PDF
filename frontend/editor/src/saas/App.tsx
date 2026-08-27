@@ -18,6 +18,7 @@ import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { AppFrame } from "@app/components/layout/AppFrame";
+import { NoAppChrome } from "@app/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -98,41 +99,56 @@ export default function App() {
         {/* The two apps, under a shared frame so the quick nav rail is rendered
             once outside both and survives switching between them. */}
         <Route element={<AppFrame />}>
-        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+          {/* Admin-only route-set (the portal): its own top-level shell, mounted
             before the catch-all. */}
-        {getAdminRouteExtensions()}
+          {getAdminRouteExtensions()}
 
-        {/* Everything else needs the auth/backend providers. RootGate makes "/"
+          {/* Everything else needs the auth/backend providers. RootGate makes "/"
             route by role BEFORE any of it mounts, so a user bound for the
             processor never boots the editor on the way. */}
-        <Route
-          path="*"
-          element={
-            <RootGate>
-              <AppProviders
-                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-              >
-                <AppLayout>
-                  <NonAuthBootstraps />
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/auth/reset" element={<ResetPassword />} />
-                    <Route path="/oauth/consent" element={<OAuthConsent />} />
-                    {/* Shared-file links. Team invites are NOT routed here: on
-                        SaaS they are accepted in-app via the Supabase team
-                        invitation banner, not the Spring password-based
-                        /invite/:token page used by the self-hosted build. */}
-                    <Route path="/share/:token" element={<ShareLinkPage />} />
-                    <Route path="/*" element={<Landing />} />
-                  </Routes>
-                  <OnboardingTour />
-                </AppLayout>
-              </AppProviders>
-            </RootGate>
-          }
-        />
+          <Route
+            path="*"
+            element={
+              <RootGate>
+                <AppProviders
+                  appConfigProviderProps={{
+                    onConfigLoaded: handleConfigLoaded,
+                  }}
+                >
+                  <AppLayout>
+                    <NonAuthBootstraps />
+                    <Routes>
+                      {/* Not the app: no navigation bar over any of these, even
+                        after an app has been mounted in this tab. */}
+                      <Route element={<NoAppChrome />}>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route
+                          path="/auth/callback"
+                          element={<AuthCallback />}
+                        />
+                        <Route path="/auth/reset" element={<ResetPassword />} />
+                        <Route
+                          path="/oauth/consent"
+                          element={<OAuthConsent />}
+                        />
+                        {/* Shared-file links. Team invites are NOT routed here:
+                          on SaaS they are accepted in-app via the Supabase team
+                          invitation banner, not the Spring password-based
+                          /invite/:token page used by the self-hosted build. */}
+                        <Route
+                          path="/share/:token"
+                          element={<ShareLinkPage />}
+                        />
+                      </Route>
+                      <Route path="/*" element={<Landing />} />
+                    </Routes>
+                    <OnboardingTour />
+                  </AppLayout>
+                </AppProviders>
+              </RootGate>
+            }
+          />
         </Route>
       </Routes>
     </Suspense>
