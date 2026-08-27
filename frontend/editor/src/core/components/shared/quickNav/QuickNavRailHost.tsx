@@ -63,7 +63,13 @@ export function QuickNavRailHost() {
     {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
-      icon: (
+      // Filled for the app you are in, outline for the one you are not. Written as
+      // two literals rather than one name chosen at runtime: the offline icon
+      // bundle is built by scanning for `icon="..."`, so a computed name is
+      // invisible to it and ships blank.
+      icon: inPortal ? (
+        <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
+      ) : (
         <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
       ),
       current: inPortal,
@@ -84,8 +90,10 @@ export function QuickNavRailHost() {
     {
       id: "editor",
       label: t("quickNav.editor", "Editor"),
-      icon: (
+      icon: inPortal ? (
         <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
+      ) : (
+        <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
       ),
       current: !inPortal,
       onClick: () => {
