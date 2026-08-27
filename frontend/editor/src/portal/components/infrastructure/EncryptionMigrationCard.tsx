@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Banner,
   Button,
   Card,
@@ -9,9 +8,8 @@ import {
   StatTile,
   Modal,
   StatusBadge,
-  Tooltip,
 } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { InfoHint } from "@portal/components/InfoHint";
 import type { StatusTone } from "@app/ui";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import type {
@@ -67,7 +65,8 @@ export function EncryptionMigrationCard({
         <div className="portal-enc__head">
           <SectionHeader
             title={t("portal.infrastructure.encryption.migration.heading")}
-            sub={t("portal.infrastructure.encryption.migration.subheading")}
+            hint={t("portal.infrastructure.encryption.migration.subheading")}
+            hintLabel={t("portal.infrastructure.encryption.hintLabel")}
           />
           <StatusBadge tone={STATE_TONE[state]} size="sm">
             {t(`portal.infrastructure.encryption.migration.state.${state}`)}
@@ -122,24 +121,17 @@ export function EncryptionMigrationCard({
               />
               <StatTile
                 label={
-                  <span className="portal-enc__stat-label">
+                  <>
                     {t("portal.infrastructure.encryption.migration.skipped")}
-                    <Tooltip
+                    <InfoHint
                       content={t(
                         "portal.infrastructure.encryption.migration.skippedNote",
                       )}
-                    >
-                      <ActionIcon
-                        variant="quiet"
-                        size="sm"
-                        aria-label={t(
-                          "portal.infrastructure.encryption.migration.skippedHelp",
-                        )}
-                      >
-                        <LocalIcon icon="info-rounded" width="0.875rem" />
-                      </ActionIcon>
-                    </Tooltip>
-                  </span>
+                      label={t(
+                        "portal.infrastructure.encryption.migration.skippedHelp",
+                      )}
+                    />
+                  </>
                 }
                 value={skipped.toLocaleString()}
               />

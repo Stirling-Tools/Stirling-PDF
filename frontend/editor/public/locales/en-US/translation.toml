@@ -7763,6 +7763,7 @@ titleCreated = "Key created"
 
 [portal.infrastructure.encryption]
 heading = "Encryption at rest"
+hintLabel = "More about this section"
 subheading = "Stored files are encrypted before they reach disk, the database or object storage."
 unknown = "Unknown"
 

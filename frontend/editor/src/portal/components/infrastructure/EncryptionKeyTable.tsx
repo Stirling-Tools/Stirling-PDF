@@ -130,7 +130,8 @@ export function EncryptionKeyTable({
       <Card padding="loose">
         <SectionHeader
           title={t("portal.infrastructure.encryption.keys.heading")}
-          sub={t("portal.infrastructure.encryption.keys.subheading")}
+          hint={t("portal.infrastructure.encryption.keys.subheading")}
+          hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
         {/* Column headers over an empty body are chrome around nothing. */}
         {keys.length === 0 ? (

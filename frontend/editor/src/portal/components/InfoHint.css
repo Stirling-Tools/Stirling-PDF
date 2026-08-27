@@ -1,0 +1,18 @@
+/* ActionIcon is sized to match a control's height, which is far taller than the
+   label or heading this sits beside — enough to push a stat's value off the row
+   its siblings sit on. Shrink it to the text it annotates. */
+.portal-hint .mantine-ActionIcon-root {
+  --ai-size: 1.1rem;
+  min-width: 1.1rem;
+  min-height: 1.1rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-hint .mantine-ActionIcon-root:hover {
+  color: var(--c-text);
+}
+
+/* Keep the trigger on the text baseline rather than the line box's centre. */
+.portal-hint {
+  vertical-align: middle;
+}

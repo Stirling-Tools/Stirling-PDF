@@ -36,7 +36,8 @@ export function EncryptionRotationCard({
       <Card padding="loose">
         <SectionHeader
           title={t("portal.infrastructure.encryption.rotation.heading")}
-          sub={t("portal.infrastructure.encryption.rotation.subheading")}
+          hint={t("portal.infrastructure.encryption.rotation.subheading")}
+          hintLabel={t("portal.infrastructure.encryption.hintLabel")}
         />
 
         <div className="portal-enc__kv">

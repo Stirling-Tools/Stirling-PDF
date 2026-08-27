@@ -22,6 +22,12 @@
   text-align: left;
   white-space: normal;
   pointer-events: none;
+  /* The trigger often sits inside styled text (an uppercased stat label, a
+     heading), and the bubble is a child of it. Reset what would otherwise be
+     inherited so the explanation always reads as prose. */
+  text-transform: none;
+  letter-spacing: normal;
+  font-style: normal;
 }
 
 .sui-tip__bubble--top {

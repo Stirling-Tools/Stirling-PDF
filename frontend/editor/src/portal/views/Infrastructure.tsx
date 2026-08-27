@@ -20,7 +20,8 @@ export function Infrastructure() {
   const { setActiveView } = useView();
   const [searchParams, setSearchParams] = useSearchParams();
   // Audit is Enterprise-only; disabled (greyed, inert) on non-enterprise instances.
-  const auditEnabled = useEnterpriseEnabled().enabled;
+  const enterprise = useEnterpriseEnabled();
+  const auditEnabled = enterprise.enabled;
 
   const canOpenTab = useCallback(
     (key: string) =>
@@ -99,7 +100,14 @@ export function Infrastructure() {
       <div className="portal-infra__panel">
         {tab === "api-keys" && <ApiKeysTab />}
         {tab === "audit" && <AuditTab />}
-        {tab === "storage" && <EncryptionPanel />}
+        {tab === "storage" && (
+          // Treat "still resolving" as available: flashing "your licence records
+          // no audit trail" at an Enterprise operator is worse than the notice
+          // arriving a beat late.
+          <EncryptionPanel
+            auditAvailable={enterprise.loading || enterprise.enabled}
+          />
+        )}
       </div>
     </div>
   );

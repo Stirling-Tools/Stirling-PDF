@@ -117,9 +117,10 @@ export const Active: Story = {
   globals: { tier: "enterprise" },
 };
 
-/** 03. Pro licence: encryption runs, audit does not. */
+/** 03. Non-Enterprise licence: encryption runs, audit does not. */
 export const ProLicenceAuditNotice: Story = {
-  globals: { tier: "pro" },
+  globals: { tier: "enterprise" },
+  args: { auditAvailable: false },
 };
 
 /** 04. The revoke dialog, which is where the surprising behaviour is explained. */
