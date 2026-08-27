@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  cucumber:
+    taskfile: .taskfiles/cucumber.yml
+    dir: testing/cucumber
   pre-commit:
     taskfile: .taskfiles/pre-commit.yml
     dir: .
@@ -96,22 +99,122 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
+  # Set SAAS_DEV_PROJECT_REF in app/.env.saas.local to pick the PR.
   dev:saas:
-    desc: "Start SaaS backend + frontend concurrently on free ports"
+    desc: "Start SaaS backend + frontend + engine against the current PR's preview branch"
     cmds:
       - task: dev:_all
-        vars: { FRONTEND: saas, BACKEND: saas }
+        vars: { FRONTEND: saas, BACKEND: saas, SAAS_ENV: dev }
+
+  staging:saas:
+    desc: "Start SaaS backend + frontend + engine against the shared v3 staging project"
+    cmds:
+      - task: dev:_all
+        vars:
+          FRONTEND: saas
+          BACKEND: saas
+          BACKEND_TASK: backend:staging:saas
+          SAAS_ENV: staging
 
   dev:all:
     desc: "Start backend + frontend + engine concurrently on free ports"
     cmds:
       - task: dev:_all
 
+  # No engine: linking never calls it.
+  linked:staging:
+    desc: "SaaS on the shared v3 project + a self-hosted instance linked to it"
+    cmds:
+      - task: linked:_all
+        vars: { SAAS_ENV: staging }
+
+  linked:dev:
+    desc: "SaaS on the current PR's preview branch + a self-hosted instance linked to it"
+    cmds:
+      - task: linked:_all
+        vars: { SAAS_ENV: dev }
+
+  linked:_all:
+    internal: true
+    vars:
+      SAAS_ENV: '{{.SAAS_ENV | default "staging"}}'
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8081 5174 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8081 5174 8080 5173{{end}}'
+      SAAS_BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      SAAS_FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      APP_BACKEND_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+      APP_FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 3}}'
+    deps:
+      # APP_BASE_URL is the SaaS *frontend*: the approval page is served by vite, not
+      # by the API. BASE_PATH moves this backend's configs/pipeline aside so it does not
+      # race the self-hosted one, which keeps ./configs and its existing database.
+      - task: 'backend:{{.SAAS_ENV}}:saas'
+        vars:
+          PORT: '{{.SAAS_BACKEND_PORT}}'
+          APP_BASE_URL: 'http://localhost:{{.SAAS_FRONTEND_PORT}}'
+          BASE_PATH: 'tmp/linked-saas'
+      - task: frontend:dev:saas
+        vars:
+          PORT: '{{.SAAS_FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.SAAS_BACKEND_PORT}}'
+          SAAS_ENV: '{{.SAAS_ENV}}'
+      - task: backend:dev:linked
+        vars:
+          PORT: '{{.APP_BACKEND_PORT}}'
+          SAAS_BASE_URL: 'http://localhost:{{.SAAS_BACKEND_PORT}}'
+      - task: frontend:dev:proprietary
+        vars:
+          PORT: '{{.APP_FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.APP_BACKEND_PORT}}'
+          OPEN: "true"
+      - task: linked:_ready
+        vars:
+          SAAS_BACKEND_PORT: '{{.SAAS_BACKEND_PORT}}'
+          SAAS_FRONTEND_PORT: '{{.SAAS_FRONTEND_PORT}}'
+          APP_BACKEND_PORT: '{{.APP_BACKEND_PORT}}'
+          APP_FRONTEND_PORT: '{{.APP_FRONTEND_PORT}}'
+
+  # Waits for all four to answer, then prints where they landed.
+  linked:_ready:
+    internal: true
+    cmds:
+      - cmd: |
+          n=0
+          ok=0
+          while [ "$n" -lt 150 ]; do
+            ok=1
+            for u in "http://localhost:{{.SAAS_BACKEND_PORT}}" \
+                     "http://localhost:{{.SAAS_FRONTEND_PORT}}" \
+                     "http://localhost:{{.APP_BACKEND_PORT}}" \
+                     "http://localhost:{{.APP_FRONTEND_PORT}}"; do
+              # Not -o /dev/null: Windows curl.exe treats it as a real path and exits 23.
+              curl -s -m 2 "$u" >/dev/null 2>&1 || ok=0
+            done
+            if [ "$ok" = 1 ]; then break; fi
+            n=$((n + 1))
+            # `sleep` is a binary, not a builtin, and Windows has none.
+            {{if eq OS "windows"}}powershell -NoProfile -Command "Start-Sleep -Seconds 2"{{else}}sleep 2{{end}}
+          done
+          echo ""
+          if [ "$ok" = 1 ]; then
+            echo ">> all four answering"
+          else
+            echo ">> still waiting on one or more after 5 minutes; addresses below anyway"
+          fi
+          echo ">>   self-hosted UI  http://localhost:{{.APP_FRONTEND_PORT}}/processor"
+          echo ">>   self-hosted api http://localhost:{{.APP_BACKEND_PORT}}"
+          echo ">>   saas UI         http://localhost:{{.SAAS_FRONTEND_PORT}}"
+          echo ">>   saas api        http://localhost:{{.SAAS_BACKEND_PORT}}"
+          echo ""
+
   dev:_all:
     internal: true
     vars:
       FRONTEND: '{{.FRONTEND | default "proprietary"}}'
       BACKEND: '{{.BACKEND | default "proprietary"}}'
+      BACKEND_TASK: '{{.BACKEND_TASK | default (printf "backend:dev:%s" .BACKEND)}}'
+      # Only meaningful to the saas frontend; every other flavor ignores it.
+      SAAS_ENV: '{{.SAAS_ENV | default ""}}'
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
@@ -121,7 +224,7 @@ tasks:
       - task: engine:dev
         vars:
           PORT: '{{.ENGINE_PORT}}'
-      - task: 'backend:dev:{{.BACKEND}}'
+      - task: '{{.BACKEND_TASK}}'
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
@@ -131,6 +234,7 @@ tasks:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   # ============================================================
   # Build

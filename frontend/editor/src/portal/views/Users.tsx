@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@app/ui";
@@ -71,12 +71,14 @@ export function Users() {
   }, [searchParams, setSearchParams]);
 
   // Scroll to and flash the row for ?member=<id> (deep link from the super
-  // search), once the roster has rendered; then strip the param.
+  // search), once the roster has rendered; then strip the param. Scoped to the
+  // roster so a pending-invitation row sharing the id can't match first.
+  const rosterRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const memberId = searchParams.get("member");
     if (memberId === null || usersState.loading) return;
-    const row = document.querySelector(
-      `[data-member-id="${CSS.escape(memberId)}"]`,
+    const row = rosterRef.current?.querySelector(
+      `[data-row-key="${CSS.escape(memberId)}"]`,
     );
     if (row) {
       row.scrollIntoView({ block: "center" });
@@ -280,11 +282,15 @@ export function Users() {
         </div>
         <div className="portal-users__head-actions">
           {caps.createTeam && (
-            <Button variant="secondary" onClick={() => setNewTeamOpen(true)}>
+            <Button
+              fat
+              variant="secondary"
+              onClick={() => setNewTeamOpen(true)}
+            >
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          <Button onClick={() => openInvite(null)}>
+          <Button fat onClick={() => openInvite(null)}>
             {t("users.invite.action", "Invite people")}
           </Button>
         </div>
@@ -339,28 +345,30 @@ export function Users() {
       )}
 
       {!loading && members.length > 0 && (
-        <UsersDirectory
-          members={members}
-          teams={teams}
-          capabilities={caps}
-          onChangeRole={changeRole}
-          onGrantProcessor={grantProcessor}
-          onRevokeProcessor={revokeProcessor}
-          processorTeamIds={processorTeamIds}
-          onGrantTeamProcessor={grantTeamProcessor}
-          onRevokeTeamProcessor={revokeTeamProcessor}
-          onAddToTeam={(team) => openInvite(team.id)}
-          onResetPassword={setResetPwMember}
-          onMoveToTeam={setMoveMember}
-          onToggleEnabled={toggleEnabled}
-          onUnlock={unlock}
-          onDisableMfa={disableMfa}
-          onRemove={removeUser}
-          onRenameTeam={(team) =>
-            setRenameTarget({ id: team.id, name: team.name })
-          }
-          onDeleteTeam={deleteTeamAction}
-        />
+        <div ref={rosterRef}>
+          <UsersDirectory
+            members={members}
+            teams={teams}
+            capabilities={caps}
+            onChangeRole={changeRole}
+            onGrantProcessor={grantProcessor}
+            onRevokeProcessor={revokeProcessor}
+            processorTeamIds={processorTeamIds}
+            onGrantTeamProcessor={grantTeamProcessor}
+            onRevokeTeamProcessor={revokeTeamProcessor}
+            onAddToTeam={(team) => openInvite(team.id)}
+            onResetPassword={setResetPwMember}
+            onMoveToTeam={setMoveMember}
+            onToggleEnabled={toggleEnabled}
+            onUnlock={unlock}
+            onDisableMfa={disableMfa}
+            onRemove={removeUser}
+            onRenameTeam={(team) =>
+              setRenameTarget({ id: team.id, name: team.name })
+            }
+            onDeleteTeam={deleteTeamAction}
+          />
+        </div>
       )}
 
       <InviteMemberModal
