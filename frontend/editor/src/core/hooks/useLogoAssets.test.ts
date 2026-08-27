@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
-import { LOGO_FOLDER_BY_VARIANT } from "@app/constants/logo";
+import {
+  LOGO_FOLDER_BY_VARIANT,
+  WORDMARK_FILES_BY_VARIANT,
+} from "@app/constants/logo";
 import type { LogoVariant } from "@app/services/preferencesService";
 
 /**
@@ -16,16 +19,15 @@ describe("useLogoAssets - Logo Asset Files", () => {
   // referencing them by their public-URL path. Validate them at source.
   const brandDir = path.resolve(__dirname, "../assets/brand");
 
-  // All asset files that useLogoAssets references
+  // Asset files useLogoAssets references for every variant.
   const requiredAssets = [
     "logo-tooltip.svg",
     "Firstpage.png",
     "favicon.ico",
     "logo192.png",
     "logo512.png",
-    "StirlingPDFLogoWhiteText.svg",
-    "StirlingPDFLogoBlackText.svg",
-    "StirlingPDFLogoGreyText.svg",
+    "StirlingPDFLogoNoTextDark.svg",
+    "StirlingPDFLogoNoTextLight.svg",
   ];
 
   const logoVariants: LogoVariant[] = ["modern", "classic"];
@@ -44,6 +46,36 @@ describe("useLogoAssets - Logo Asset Files", () => {
         fs.existsSync(assetPath),
         `Missing asset: ${folder}/${assetName}`,
       ).toBe(true);
+    });
+
+    test.each(Object.entries(WORDMARK_FILES_BY_VARIANT[variant]))(
+      "should have the %s wordmark (%s)",
+      (_tone, assetName) => {
+        const assetPath = path.join(folderPath, assetName);
+        expect(
+          fs.existsSync(assetPath),
+          `Missing asset: ${folder}/${assetName}`,
+        ).toBe(true);
+      },
+    );
+  });
+
+  // Regression guard: modern once shipped byte-identical copies of the classic
+  // wordmarks, so every <Wordmark> rendered the old artwork on the default variant.
+  describe("modern artwork must not be a copy of classic", () => {
+    const modernDir = path.join(brandDir, LOGO_FOLDER_BY_VARIANT.modern);
+    const classicDir = path.join(brandDir, LOGO_FOLDER_BY_VARIANT.classic);
+    const modernOnly = Object.values(WORDMARK_FILES_BY_VARIANT.modern);
+
+    test.each([...new Set(modernOnly)])("%s differs from classic", (name) => {
+      const classicTwin = path.join(classicDir, name);
+      if (!fs.existsSync(classicTwin)) return;
+      expect(
+        fs
+          .readFileSync(path.join(modernDir, name))
+          .equals(fs.readFileSync(classicTwin)),
+        `modern-logo/${name} is byte-identical to classic-logo/${name}`,
+      ).toBe(false);
     });
   });
 

@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { BASE_PATH } from "@app/constants/app";
-import { getLogoFolder } from "@app/constants/logo";
+import {
+  getLogoFolder,
+  ensureLogoVariant,
+  WORDMARK_FILES_BY_VARIANT,
+} from "@app/constants/logo";
 import { useLogoVariant } from "@app/hooks/useLogoVariant";
 
 export function useLogoAssets() {
@@ -9,6 +13,8 @@ export function useLogoAssets() {
   return useMemo(() => {
     const folder = getLogoFolder(logoVariant);
     const folderPath = `${BASE_PATH}/${folder}`;
+    const wordmarkFiles =
+      WORDMARK_FILES_BY_VARIANT[ensureLogoVariant(logoVariant)];
 
     return {
       logoVariant,
@@ -16,9 +22,9 @@ export function useLogoAssets() {
       folderPath,
       getAssetPath: (name: string) => `${folderPath}/${name}`,
       wordmark: {
-        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
-        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
-        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
+        black: `${folderPath}/${wordmarkFiles.black}`,
+        grey: `${folderPath}/${wordmarkFiles.grey}`,
+        white: `${folderPath}/${wordmarkFiles.white}`,
       },
       tooltipLogo: `${folderPath}/logo-tooltip.svg`,
       firstPage: `${folderPath}/Firstpage.png`,
