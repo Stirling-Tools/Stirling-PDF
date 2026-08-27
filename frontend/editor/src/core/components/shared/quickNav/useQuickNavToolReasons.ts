@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 
 /**
@@ -11,8 +13,18 @@ const ENTRY_ENDPOINTS: Record<string, string[]> = {
   automate: ["automate"],
 };
 
-/** The two causes the tool picker tells apart, and this follows. */
-type Cause = "missingDependency" | "disabledByAdmin";
+/**
+ * The two causes the tool picker tells apart, plus the one condition here that
+ * isn't about an endpoint at all: shared signing is a server feature that can be
+ * switched off whole, rather than a route that can be removed.
+ */
+type EndpointCause = "missingDependency" | "disabledByAdmin";
+type Cause = EndpointCause | "groupSigningOff";
+const CAUSES: Cause[] = [
+  "missingDependency",
+  "disabledByAdmin",
+  "groupSigningOff",
+];
 
 /**
  * Remembered per browser, so a reload starts from the last answer rather than from
@@ -30,8 +42,7 @@ function readRemembered(): Record<string, Cause> | null {
       return null;
     }
     const known = Object.entries(parsed as Record<string, unknown>).filter(
-      ([, cause]) =>
-        cause === "missingDependency" || cause === "disabledByAdmin",
+      ([, cause]) => CAUSES.includes(cause as Cause),
     ) as [string, Cause][];
     return Object.fromEntries(known);
   } catch {
@@ -67,8 +78,9 @@ function causesFor(
 }
 
 /**
- * Why a rail entry can't be used, from the endpoint availability the server
- * reports - already translated, keyed by rail entry id, absent when usable. Null
+ * Why a rail entry can't be used - already translated, keyed by rail entry id,
+ * absent when usable. Two signals feed it: the endpoint availability the server
+ * reports, and whether shared signing is switched on at all. Null
  * only in a browser that has never had an answer, which is different from an empty
  * map: the first means "no idea", the second "asked, and nothing is wrong".
  *
@@ -85,10 +97,10 @@ function causesFor(
  * last knew instead of "nothing is wrong", which is what made a dimmed entry flash
  * back to usable and dim again a moment later.
  *
- * Deliberately only the endpoint signal. The richer picture the editor has - a tool
- * with no implementation yet, one behind a paywall, a desktop build whose server is
- * offline - is published on top of this by the app that can see it, and none of it
- * applies to the entries here.
+ * Deliberately only the signals both apps can see for themselves. The rest of the
+ * picture the editor has - a tool with no implementation yet, one behind a paywall,
+ * a desktop build whose server is offline - is published on top of this by the app
+ * that can see it.
  */
 export function useQuickNavToolReasons(): Record<string, string> | null {
   const { t } = useTranslation();
@@ -99,10 +111,25 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
   // Read once, at mount: reading again later would fight the live answer.
   const [remembered] = useState(readRemembered);
 
-  const live = useMemo(
-    () => (loading ? null : causesFor(endpointStatus, endpointDetails)),
-    [loading, endpointStatus, endpointDetails],
-  );
+  // Shared signing is a whole feature the server can switch off, so it needs its
+  // own answer; the config it comes from loads separately from the endpoint list.
+  const { loading: configLoading } = useAppConfig();
+  const groupSigningEnabled = useGroupSigningEnabled();
+
+  const live = useMemo(() => {
+    // Either half missing means the picture is incomplete, and a half answer
+    // would light up whatever it cannot see yet.
+    if (loading || configLoading) return null;
+    const causes = causesFor(endpointStatus, endpointDetails);
+    if (!groupSigningEnabled) causes.sharedSign = "groupSigningOff";
+    return causes;
+  }, [
+    loading,
+    configLoading,
+    endpointStatus,
+    endpointDetails,
+    groupSigningEnabled,
+  ]);
 
   // Keyed on contents, not on the object, which is rebuilt every render.
   const liveKey = live ? JSON.stringify(live) : null;
@@ -116,6 +143,16 @@ export function useQuickNavToolReasons(): Record<string, string> | null {
     if (!causes) return null;
     const reasons: Record<string, string> = {};
     for (const [entry, cause] of Object.entries(causes)) {
+      if (cause === "groupSigningOff") {
+        // The tool's own words for this, so the rail and the panel behind it say
+        // the same thing. Trailing stop removed, as the rail appends the reason
+        // to the entry's label rather than writing a sentence.
+        reasons[entry] = t(
+          "sharedSign.disabledBody",
+          "Collaborative signing isn't enabled on this server.",
+        ).replace(/\.\s*$/, "");
+        continue;
+      }
       const { key, fallback } = getDisabledLabel(cause);
       // The shared labels are written to sit in front of a tool name; the rail
       // appends them after the entry's own label instead.

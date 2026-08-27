@@ -12,6 +12,8 @@ const h = vi.hoisted(() => ({
   endpointStatus: {} as Record<string, boolean>,
   endpointDetails: {} as Record<string, { reason?: string }>,
   loading: false,
+  configLoading: false,
+  groupSigningEnabled: true,
 }));
 
 vi.mock("@app/hooks/useEndpointConfig", () => ({
@@ -22,6 +24,19 @@ vi.mock("@app/hooks/useEndpointConfig", () => ({
     error: null,
     refetch: async () => {},
   }),
+}));
+
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({
+    config: null,
+    loading: h.configLoading,
+    error: null,
+    refetch: async () => {},
+  }),
+}));
+
+vi.mock("@app/hooks/useGroupSigningEnabled", () => ({
+  useGroupSigningEnabled: () => h.groupSigningEnabled,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -36,6 +51,8 @@ describe("useQuickNavToolReasons", () => {
     h.endpointStatus = {};
     h.endpointDetails = {};
     h.loading = false;
+    h.configLoading = false;
+    h.groupSigningEnabled = true;
   });
 
   it("admits it does not know rather than reporting nothing wrong", () => {
@@ -110,5 +127,27 @@ describe("useQuickNavToolReasons", () => {
     expect(result.current?.automate).toBe(
       "Unavailable - required tool missing on server",
     );
+  });
+
+  it("greys out shared signing when the server has the feature switched off", () => {
+    // Not an endpoint that can be removed but a whole feature that can be turned
+    // off, so it needs its own signal - and it is the tool's own wording.
+    h.groupSigningEnabled = false;
+
+    const { result } = renderHook(() => useQuickNavToolReasons());
+    expect(result.current?.sharedSign).toBe(
+      "Collaborative signing isn't enabled on this server",
+    );
+  });
+
+  it("waits for the config before judging shared signing", () => {
+    // The config loads separately from the endpoint list, and reads as "off"
+    // before it arrives - which would grey the entry out and then light it up.
+    h.configLoading = true;
+    h.groupSigningEnabled = false;
+
+    expect(
+      renderHook(() => useQuickNavToolReasons()).result.current,
+    ).toBeNull();
   });
 });
