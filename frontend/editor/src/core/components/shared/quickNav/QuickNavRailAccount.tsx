@@ -26,7 +26,8 @@ export function QuickNavRailAccount({
   identity,
 }: QuickNavRailAccountProps) {
   const { t } = useTranslation();
-  const displayName = identity?.displayName ?? t("auth.displayName.user", "User");
+  const displayName =
+    identity?.displayName ?? t("auth.displayName.user", "User");
   const profilePictureUrl = identity?.profilePictureUrl ?? null;
   const label = `${displayName} — ${t("fileSidebar.openSettings", "Open settings")}`;
 

@@ -48,7 +48,6 @@ export function Sidebar() {
   // off-canvas drawer, so the icon-rail state never applies there.
   const collapsed = sidebarCollapsed && !isMobile;
 
-
   // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
   // a takeover modal (matching the marketing prototype).
 

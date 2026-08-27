@@ -58,17 +58,17 @@ export default function App() {
             once outside it. The public routes above stay outside the frame. */}
         <Route element={<AppFrame />}>
           {/* All other routes need AppProviders for backend integration */}
-        <Route
-          path="*"
-          element={
-            <AppProviders>
-              <AppLayout>
-                <HomePage />
-                <Onboarding />
-              </AppLayout>
-            </AppProviders>
-          }
-        />
+          <Route
+            path="*"
+            element={
+              <AppProviders>
+                <AppLayout>
+                  <HomePage />
+                  <Onboarding />
+                </AppLayout>
+              </AppProviders>
+            }
+          />
         </Route>
       </Routes>
     </Suspense>

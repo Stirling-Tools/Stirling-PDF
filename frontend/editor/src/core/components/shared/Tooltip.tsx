@@ -66,7 +66,11 @@ export interface TooltipProps {
  * outside those providers: the quick nav rail sits above the route split, where
  * none of the app's providers exist.
  */
-function TooltipHeader({ header }: { header: NonNullable<TooltipProps["header"]> }) {
+function TooltipHeader({
+  header,
+}: {
+  header: NonNullable<TooltipProps["header"]>;
+}) {
   const { tooltipLogo } = useLogoAssets();
   return (
     <div className={styles["tooltip-header"]}>
