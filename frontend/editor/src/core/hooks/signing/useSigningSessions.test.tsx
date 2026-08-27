@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { baseQueryOptions } from "@app/query/queryClient";
 import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import { fetchSigningSessions } from "@app/api/signing";
@@ -24,7 +27,8 @@ function setVisibility(state: "visible" | "hidden") {
     configurable: true,
     get: () => state,
   });
-  document.dispatchEvent(new Event("visibilitychange"));
+  // Bubbles, as the real event does: query-core listens for it on window.
+  document.dispatchEvent(new Event("visibilitychange", { bubbles: true }));
 }
 
 describe("useSigningSessions", () => {
@@ -38,7 +42,7 @@ describe("useSigningSessions", () => {
     setVisibility("visible");
   });
 
-  it("shares one request across every consumer", async () => {
+  it("dedupes concurrent observers of the same key", async () => {
     const { result } = renderHook(
       () => ({
         badge: useSigningSessions({
@@ -55,8 +59,6 @@ describe("useSigningSessions", () => {
     );
 
     await waitFor(() => expect(result.current.badge.loading).toBe(false));
-    // Three consumers used to hold three copies of this state and fetch it
-    // three times over.
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
@@ -257,6 +259,43 @@ describe("useSigningSessions", () => {
       await vi.advanceTimersByTimeAsync(15000);
     });
     expect(mockFetch.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("refetches on becoming visible rather than waiting out the interval", async () => {
+    vi.useFakeTimers();
+    // The app client turns focus refetching off globally; TestQueryProvider
+    // does not, and would pass this on the library default alone.
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { ...baseQueryOptions, retry: false, gcTime: Infinity },
+      },
+    });
+    const { result } = renderHook(
+      () => useSigningSessions({ enabled: true, autoRefreshInterval: 15000 }),
+      {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        ),
+      },
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current.loading).toBe(false);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    setVisibility("hidden");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000);
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    setVisibility("visible");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it("stops polling once unmounted", async () => {

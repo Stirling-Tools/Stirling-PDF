@@ -23,10 +23,8 @@ export interface UseSigningSessionsResult {
 }
 
 /**
- * Signing sessions, shared across every consumer by query key — the badge, the
- * launcher and the sidebar controller each used to fetch their own copy.
- * Background polls never raise the spinner or a toast; only a first load or an
- * explicit refetch does.
+ * Signing sessions. Background polls never raise the spinner or a toast; only a
+ * first load or an explicit refetch does.
  */
 export const useSigningSessions = (
   options: UseSigningSessionsOptions = {},
@@ -41,6 +39,9 @@ export const useSigningSessions = (
     staleTime: 0,
     refetchInterval: autoRefreshInterval > 0 ? autoRefreshInterval : false,
     refetchIntervalInBackground: false,
+    // The interval pauses while unfocused, so returning has to catch up: the
+    // client-wide default of false would hold stale data until the next tick.
+    refetchOnWindowFocus: autoRefreshInterval > 0,
   });
 
   const notifyFailure = useCallback(() => {
