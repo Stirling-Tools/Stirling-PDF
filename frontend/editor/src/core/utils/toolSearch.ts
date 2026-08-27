@@ -15,7 +15,11 @@ export function filterToolRegistryByQuery(
   toolRegistry: Partial<ToolRegistry>,
   query: string,
 ): RankedToolItem[] {
-  const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
+  // The single funnel into the editor's tool list, so hiding here hides it everywhere the user
+  // browses - while getExecutableTools still offers it to a pipeline.
+  const entries = (
+    Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]
+  ).filter(([, tool]) => !tool?.hiddenFromToolList);
   if (!query.trim()) {
     return entries.map(([id, tool]) => ({
       item: [id, tool] as [ToolId, ToolRegistryEntry],

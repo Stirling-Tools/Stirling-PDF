@@ -209,6 +209,54 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     ]);
   });
 
+  it("carries classificationConfidence forward with the labels", () => {
+    // The confidence is part of the verdict: without it the escalation decision
+    // (shouldDispatchToAi) dies at the version boundary and a chained
+    // classification never runs.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [stub("a-v2")],
+      },
+    });
+    expect(next.files.byId["a-v2" as FileId].classificationConfidence).toBe(
+      "low",
+    );
+  });
+
+  it("an output with its own verdict keeps it — no confidence bleed from the input", () => {
+    // A fresh classify result carries its own labels; stamping the input's
+    // heuristic confidence onto them would mislabel an AI verdict as unsure.
+    const start = stateWith([
+      stub("a", {
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "low",
+      }),
+    ]);
+    const next = fileContextReducer(start, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["a" as FileId],
+        outputStirlingFileStubs: [
+          stub("b", { classificationLabels: ["Contract"] }),
+        ],
+      },
+    });
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
+      "Contract",
+    ]);
+    expect(
+      next.files.byId["b" as FileId].classificationConfidence,
+    ).toBeUndefined();
+  });
+
   it("non-silent CONSUME_FILES still moves the output to the front (unchanged)", () => {
     const start = stateWith([stub("a"), stub("b")]);
     const next = fileContextReducer(start, {
