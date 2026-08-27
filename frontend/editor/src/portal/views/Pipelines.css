@@ -51,8 +51,10 @@
   padding-bottom: 0.25rem;
 }
 
+/* Fixed track height so every OptionCard in the row is the same height and their footers line up. */
 .portal-pipelines__templates-scroll > * {
   flex: 0 0 16rem;
+  height: 12rem;
 }
 
 .portal-pipelines__section-title {

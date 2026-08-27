@@ -1,0 +1,75 @@
+.sui-option-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  /* Fill whatever height the parent row establishes, so footers align across a row of cards. */
+  height: 100%;
+}
+
+.sui-option-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.sui-option-card__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 640;
+  color: var(--c-text);
+}
+
+.sui-option-card__desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+  /* Clamp long descriptions with a trailing ellipsis. No flex-grow: stretching the box defeats
+     -webkit-line-clamp and hard-clips mid-word instead. */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--sui-option-card-lines, 3);
+}
+
+/* Pin whatever ends the card (the CTA or a note) to the foot, so footers line up across cards
+   without flex-growing the clamped blurb above. */
+.sui-option-card > :last-child {
+  margin-top: auto;
+}
+
+.sui-option-card__foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 620;
+  /* Accent text tuned to clear the contrast floor on the card surface (light + dark), unlike raw
+     --c-primary which is too light for small text. */
+  color: var(--c-accent-text);
+}
+
+/* Disabled cards recede onto the sunken surface and drop to ink: the icon chip flattens to a muted
+   glyph and every label goes muted, so the card reads clearly greyed against the usable ones. */
+.sui-option-card--disabled {
+  background: var(--c-surface-sunken);
+  cursor: default;
+}
+
+.sui-option-card--disabled .sui-option-card__icon {
+  background: transparent;
+  color: var(--c-text-muted);
+}
+
+.sui-option-card--disabled .sui-option-card__title,
+.sui-option-card--disabled .sui-option-card__desc,
+.sui-option-card--disabled .sui-option-card__foot {
+  color: var(--c-text-muted);
+  font-weight: 600;
+}

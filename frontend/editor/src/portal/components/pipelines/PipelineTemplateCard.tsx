@@ -1,10 +1,9 @@
 import { useTranslation } from "react-i18next";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { Card } from "@app/ui";
+import { OptionCard } from "@app/ui";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import "@portal/components/pipelines/PipelineTemplateCard.css";
 
 interface PipelineTemplateCardProps {
   entry: CatalogueEntry;
@@ -18,9 +17,8 @@ interface PipelineTemplateCardProps {
 
 /**
  * A template in the Pipelines gallery: a ready-made starting point that opens the simple, guided
- * setup. Vertical card (icon, title, blurb, a "Set up" affordance) so the gallery reads as a set of
- * choices, distinct from the pipelines table below.
- *
+ * setup. A thin adapter over the {@link OptionCard} primitive - it maps the catalogue category to
+ * the card's icon/title/blurb and picks the CTA vs the disabled note (coming soon / AI-locked).
  */
 export function PipelineTemplateCard({
   entry,
@@ -31,49 +29,29 @@ export function PipelineTemplateCard({
   const { t } = useTranslation();
   const { category } = entry;
   const comingSoon = category.comingSoon === true;
-  const openable = !comingSoon && !locked;
+  const disabled = comingSoon || locked;
 
   return (
-    <Card
-      className={
-        "portal-pipelines__template-card" +
-        (openable ? "" : " portal-pipelines__template-card--locked")
-      }
-      interactive={openable}
-      onClick={openable ? () => onOpen(entry) : undefined}
-      role={openable ? "button" : undefined}
-      tabIndex={openable ? 0 : undefined}
-      onKeyDown={
-        openable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onOpen(entry);
-              }
-            }
-          : undefined
-      }
-    >
-      <span className="portal-pipelines__template-icon" aria-hidden>
-        {policyCategoryIcon(category.id)}
-      </span>
-
-      <h3 className="portal-pipelines__template-title">{t(category.label)}</h3>
-      <p className="portal-pipelines__template-blurb">{t(category.desc)}</p>
-
-      {openable ? (
-        <span className="portal-pipelines__template-cta">
+    <OptionCard
+      icon={policyCategoryIcon(category.id)}
+      title={t(category.label)}
+      description={t(category.desc)}
+      disabled={disabled}
+      onSelect={() => onOpen(entry)}
+      cta={
+        <>
           {t("portal.pipelines.templates.setUp")}
           <ArrowForwardRoundedIcon style={{ fontSize: "1rem" }} />
-        </span>
-      ) : (
-        <span className="portal-pipelines__template-note">
+        </>
+      }
+      note={
+        <>
           <LockOutlinedIcon style={{ fontSize: "0.95rem" }} />
           {comingSoon
             ? t("portal.policies.card.comingSoon")
             : (lockedLabel ?? t("portal.policies.card.requiresAiEngine"))}
-        </span>
-      )}
-    </Card>
+        </>
+      }
+    />
   );
 }
