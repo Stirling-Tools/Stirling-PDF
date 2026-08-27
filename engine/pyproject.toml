@@ -20,7 +20,7 @@ engine = [
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
     "pydantic-ai-slim[anthropic,openai]>=1.107.2,<2.0.0",
     "pydantic-settings>=2.15.0",
-    "python-dotenv>=1.2.2",
+    "python-dotenv>=1.2.3",
     "sqlite-vec>=0.1.9",
     "uvicorn>=0.52.3",
 ]
