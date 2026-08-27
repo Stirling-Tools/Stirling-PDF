@@ -72,14 +72,29 @@ public class PaygTeamExtensions implements Serializable {
     private String paygSubscriptionId;
 
     /**
-     * Remaining one-time free documents for this team (the lifetime grant). Seeded from the
-     * effective pricing policy's {@code free_tier_units} when this row is created (V14 trigger,
-     * updated in V19); decremented by the charge pipeline when a billable charge is written and
-     * restored on a first-step refund. Never replenishes; survives subscribing. This counter — not
-     * the wallet ledger — is the source of truth for the grant, so old ledger rows can be pruned.
+     * Free documents left in the team's <b>current billing period</b>. Seeded from the effective
+     * pricing policy's {@code free_tier_units} when this row is created (V14 trigger, updated in
+     * V19); decremented by the charge pipeline when a billable charge is written and restored on a
+     * first-step refund; rolled back up to the full grant on the first charge of a new period (see
+     * {@link #freeUnitsPeriodStart}). This counter — not the wallet ledger — is the source of truth
+     * for the grant, so old ledger rows can be pruned.
      */
     @Column(name = "free_units_remaining", nullable = false)
     private Long freeUnitsRemaining = 0L;
+
+    /**
+     * The billing period {@link #freeUnitsRemaining} was last reset for — always a {@code
+     * TeamBillingContext.periodStart}, so the recurring grant and the spending cap share one window
+     * rather than drifting apart on their own calendars.
+     *
+     * <p>{@code null}, or any value older than the current period start, means the counter is stale
+     * and reads as a full grant; the next charge writes the reset and stamps this column. Java is
+     * the only writer: the period rule lives in {@code TeamBillingService} (Stripe subscription
+     * period when subscribed, calendar month otherwise) and is deliberately not duplicated in SQL,
+     * where the Stripe-anchored window isn't knowable.
+     */
+    @Column(name = "free_units_period_start")
+    private LocalDateTime freeUnitsPeriodStart;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

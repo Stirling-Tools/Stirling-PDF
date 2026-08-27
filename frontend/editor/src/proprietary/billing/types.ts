@@ -40,13 +40,13 @@ export interface Wallet {
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Free grant used (free teams) or documents processed this period (subscribed). */
+  /** Free grant used this period (free teams) or documents processed this period (subscribed). */
   billableUsed: number;
   /** Document ceiling for the window; null when subscribed-uncapped. */
   billableLimit: number | null;
-  /** One-time free grant size — a lifetime pool that survives subscribing. */
+  /** Free grant size per billing period. Resets each period; unused units don't carry over. */
   freeAllowance: number;
-  /** Free grant still available; 0 = exhausted. */
+  /** Free grant left in this period; 0 = exhausted until the period turns. */
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */
   pricePerDocMinor: number | null;

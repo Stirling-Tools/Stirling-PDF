@@ -30,17 +30,24 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>Two independent meters (design 2026-06-11 — the free allowance is a one-time lifetime grant):
+ * <p>Two meters, both keyed to the same period (the grant became recurring in 2026-08; before that
+ * it was a one-time lifetime pool):
  *
  * <ul>
- *   <li><b>Free grant</b> — one-time, per team. Size from {@code pricing_policy.free_tier_units};
- *       live balance from the {@code payg_team_extensions.free_units_remaining} counter (maintained
- *       by the charge pipeline). Never resets, survives subscribing. Gates un-subscribed teams and
- *       drives the free-vs-paid split.
- *   <li><b>Monthly window + cap</b> — the Stripe subscription period (calendar month otherwise) and
+ *   <li><b>Free grant</b> — per team, <b>per period</b>. Size from {@code
+ *       pricing_policy.free_tier_units}; live balance from the {@code
+ *       payg_team_extensions.free_units_remaining} counter (maintained by the charge pipeline),
+ *       read through {@link #remainingForPeriod} so a counter still stamped with a past period
+ *       reads as a fresh grant. Gates un-subscribed teams and drives the free-vs-paid split.
+ *   <li><b>Period window + cap</b> — the Stripe subscription period (calendar month otherwise) and
  *       the optional money cap. Govern the subscribed invoice + spending cap only. The per-document
  *       rate is the synced {@code stripe.prices.unit_amount} (PAYG prices are plain per-unit).
  * </ul>
+ *
+ * <p>That window is the system's only period definition: the grant resets on it, the cap is
+ * enforced over it, and linked self-hosted instances bucket their local usage by the {@code
+ * periodStart} they read from it. "500 free per month" means this window — which for an
+ * un-subscribed team, the only kind the grant gates, is the calendar month.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -133,12 +140,6 @@ public class TeamBillingService {
         // bug this guards against.
         boolean subscribed = subscriptionId != null;
 
-        long freeGrant = resolveGrant(teamId);
-        long freeRemaining =
-                extOpt.map(PaygTeamExtensions::getFreeUnitsRemaining)
-                        .map(Long::longValue)
-                        .orElse(0L);
-
         Optional<SubscriptionBilling> billing =
                 subscriptionId != null
                         ? subscriptionDao.findBilling(subscriptionId)
@@ -147,6 +148,21 @@ public class TeamBillingService {
         LocalDateTime[] window =
                 billing.map(b -> new LocalDateTime[] {b.periodStart(), b.periodEnd()})
                         .orElseGet(TeamBillingService::calendarMonthWindow);
+
+        long freeGrant = resolveGrant(teamId);
+        // Project the stored counter onto the current period instead of reading it raw. A team
+        // whose stamp predates this period is owed a reset that the charge pipeline applies lazily
+        // on its next charge; reading raw would show — and gate on — last period's exhausted
+        // balance until the team happened to run something.
+        long freeRemaining =
+                extOpt.map(
+                                ext ->
+                                        remainingForPeriod(
+                                                ext.getFreeUnitsPeriodStart(),
+                                                ext.getFreeUnitsRemaining(),
+                                                freeGrant,
+                                                window[0]))
+                        .orElse(0L);
 
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
@@ -184,7 +200,10 @@ public class TeamBillingService {
                 monthlyCapDocUnits);
     }
 
-    /** The policy grant size — the "N" denominator for display; the counter is the live balance. */
+    /**
+     * The per-period grant size — the "N" denominator for display, and the value the counter resets
+     * to at each period boundary; the counter is the live balance within the period.
+     */
     private long resolveGrant(Long teamId) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
@@ -198,8 +217,8 @@ public class TeamBillingService {
 
     /**
      * The subscribed monthly paid-document ceiling; {@code null} = uncapped or not subscribed. The
-     * one-time free grant is NOT added here — it's a separate lifetime pool consumed at charge
-     * time. The cap purely limits how many paid documents the team will fund per billing period.
+     * free grant is NOT added here — it's a separate per-period pool consumed at charge time, ahead
+     * of the meter. The cap purely limits how many paid documents the team will fund per period.
      *
      * <ul>
      *   <li>not subscribed → null (the free grant, not a money cap, is what bounds them);
@@ -250,7 +269,7 @@ public class TeamBillingService {
     /**
      * Documents a hypothetical monthly money cap would buy: {@code floor(capMinor / rate)}. Used by
      * the cap editor's live preview and the {@code PATCH /cap} derived write. The free grant is NOT
-     * added — it's a separate one-time pool. Empty when the rate is unknown.
+     * added — it's a separate per-period pool. Empty when the rate is unknown.
      */
     public Optional<Long> docCapForMoney(TeamBillingContext ctx, long capMinor) {
         if (ctx.perDocMinor() == null || ctx.perDocMinor().signum() <= 0) {
@@ -277,6 +296,42 @@ public class TeamBillingService {
                         BUNDLE_LOOKUP_KEY, currency != null ? currency : DISPLAY_CURRENCY)
                 .map(StripeSubscriptionDao.PriceRate::perDocMinor)
                 .orElse(null);
+    }
+
+    /**
+     * The team's free balance for the period starting at {@code currentPeriodStart}, given the
+     * counter as last written. This is the one rule for "has this period's grant been drawn yet",
+     * shared by the read paths here and by the authoritative decrement in {@code JobChargeService},
+     * so what the customer sees is what the guard enforces and neither side can drift onto its own
+     * reset schedule.
+     *
+     * <p>A stamp older than the current period start — or absent, as on every row written before
+     * the grant became recurring — means the reset is owed but not yet applied, so the answer is a
+     * full grant; the charge pipeline persists it when it next draws. A stamp at or after the
+     * period start means the counter is already this period's and is returned as-is. That includes
+     * a stamp in the future, which shouldn't happen but must never read as "here's another grant".
+     *
+     * @param stampedPeriodStart {@code payg_team_extensions.free_units_period_start}; may be null
+     * @param storedRemaining {@code payg_team_extensions.free_units_remaining}; may be null
+     * @param grant the policy's per-period grant size
+     * @param currentPeriodStart the period start being resolved against
+     */
+    public static long remainingForPeriod(
+            LocalDateTime stampedPeriodStart,
+            Long storedRemaining,
+            long grant,
+            LocalDateTime currentPeriodStart) {
+        if (isStale(stampedPeriodStart, currentPeriodStart)) {
+            return Math.max(0L, grant);
+        }
+        return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
+    }
+
+    /** True when {@code stampedPeriodStart} belongs to an earlier period than the current one. */
+    public static boolean isStale(
+            LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
+        return currentPeriodStart != null
+                && (stampedPeriodStart == null || stampedPeriodStart.isBefore(currentPeriodStart));
     }
 
     /**

@@ -26,8 +26,8 @@ import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 
 /**
- * Unit tests for {@link EntitlementService}. Two branches (design 2026-06-11 — the free allowance
- * is a one-time lifetime grant):
+ * Unit tests for {@link EntitlementService}. Two branches (the free allowance is a per-period
+ * grant, projected onto the current period by {@code TeamBillingService} before it gets here):
  *
  * <ul>
  *   <li><b>Unsubscribed</b> — gated by the grant. Cap = grant size, spend = {@code grant −

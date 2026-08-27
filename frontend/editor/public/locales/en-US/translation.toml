@@ -6096,7 +6096,7 @@ freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
 barAria = "Free PDFs remaining"
-capSuffix = "of {{limit}} free PDFs left"
+capSuffix = "of {{limit}} free PDFs left this month"
 metaCategories = "Automation · AI · API requests"
 
 [payg.free.member]
@@ -6162,7 +6162,7 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+body = "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
 cancel = "Not now"
 cta = "Sign up free"
 subtext = "Creating an account is free and takes a few seconds. No credit card required."
@@ -6636,7 +6636,7 @@ name = "Free"
 [plan.freeLimit]
 cta = "View Processor Plan"
 dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+message = "That's your whole free allowance for automation, AI and the API this month. Seriously impressive! It resets next month, or keep the momentum going now for just pennies a day."
 title = "Woah, {{total}} PDFs Processed!"
 
 [plan.highlights]
@@ -7200,16 +7200,16 @@ title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
 barAria = "Free PDFs remaining"
-capSuffix_one = "of {{allowance}} free PDF left"
-capSuffix_other = "of {{allowance}} free PDFs left"
+capSuffix_one = "of {{allowance}} free PDF left this month"
+capSuffix_other = "of {{allowance}} free PDFs left this month"
 eyebrow = "Processor trial"
 statusLabel_one = "{{used}} used"
 statusLabel_other = "{{used}} used"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "Process {{allowance}} PDFs free"
-title_other = "Process {{allowance}} PDFs free"
-titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
-titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
+title_one = "Process {{allowance}} PDFs free every month"
+title_other = "Process {{allowance}} PDFs free every month"
+titleWithRate_one = "Process {{allowance}} PDFs free every month, then {{rate}}/PDF"
+titleWithRate_other = "Process {{allowance}} PDFs free every month, then {{rate}}/PDF"
 
 [portal.components.billingUnit]
 approval = "approval"

@@ -58,12 +58,18 @@ class TeamBillingServiceTest {
         when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
     }
 
+    /**
+     * Sidecar row stamped with the current period, so {@code freeRemaining} is read as the live
+     * balance rather than projected up to a fresh grant. The period reset itself is covered in
+     * {@link TeamBillingServiceMoreTest}.
+     */
     private PaygTeamExtensions ext(String subscriptionId, String customerId, long freeRemaining) {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(TEAM_ID);
         ext.setPaygSubscriptionId(subscriptionId);
         ext.setStripeCustomerId(customerId);
         ext.setFreeUnitsRemaining(freeRemaining);
+        ext.setFreeUnitsPeriodStart(TeamBillingService.calendarMonthWindow()[0]);
         return ext;
     }
 

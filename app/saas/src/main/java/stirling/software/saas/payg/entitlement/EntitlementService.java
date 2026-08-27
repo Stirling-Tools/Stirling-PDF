@@ -134,8 +134,8 @@ public class EntitlementService {
 
         if (billing.subscribed()) {
             // Subscribed: gate on the monthly spending cap. Spend = this period's net billable
-            // documents (DEBIT minus REFUND so a refunded job doesn't read as spent). The one-time
-            // free grant doesn't gate a paying team — it only reduced what they were metered.
+            // documents (DEBIT minus REFUND so a refunded job doesn't read as spent). The free
+            // grant doesn't gate a paying team — it only reduced what they were metered.
             long signedNet = ledgerRepository.sumPeriodNetBillable(teamId, periodStart, periodEnd);
             long periodSpend = signedNet < 0 ? -signedNet : 0L;
             Long cap = billing.monthlyCapDocUnits();
@@ -157,9 +157,12 @@ public class EntitlementService {
             snapshotSpend = periodSpend;
             snapshotCap = cap;
         } else {
-            // Unsubscribed: gate on the one-time lifetime free grant, then on a prepaid pool. While
-            // the free grant has balance, evaluate the warn/degrade band on used-of-grant. Once the
-            // free grant is spent, a live prepaid pool keeps the team fully entitled — paid-for
+            // Unsubscribed: gate on this period's free grant, then on a prepaid pool. While the
+            // grant has balance, evaluate the warn/degrade band on used-of-grant. The balance
+            // arrives already projected onto the current period by TeamBillingService, so the first
+            // request after a period boundary sees the fresh grant without waiting for a charge to
+            // persist the reset. Once the grant is spent, a live prepaid pool keeps the team fully
+            // entitled — paid-for
             // capacity is usable on its own merit, independent of any metered subscription (the
             // pool
             // is drawn in JobChargeService; only the metered remainder stays gated on the sub).

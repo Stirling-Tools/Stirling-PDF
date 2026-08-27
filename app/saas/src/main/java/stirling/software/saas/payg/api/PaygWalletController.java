@@ -175,9 +175,8 @@ public class PaygWalletController {
                         : null;
 
         // Per-state by construction (see EntitlementService.computeSnapshot): free team → spend is
-        // lifetime free used, cap is the grant size; subscribed → spend is this month's net
-        // billable
-        // docs, cap is the monthly paid-doc ceiling (null = uncapped).
+        // this period's free used, cap is the period grant size; subscribed → spend is this
+        // period's net billable docs, cap is the monthly paid-doc ceiling (null = uncapped).
         int spend = clampToInt(snap.periodSpendUnits());
         Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 

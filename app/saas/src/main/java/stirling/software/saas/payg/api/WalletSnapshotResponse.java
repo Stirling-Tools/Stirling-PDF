@@ -9,11 +9,15 @@ import java.util.List;
  * breakdowns, recent activity) used by the PAYG Plan page.
  *
  * <p>Every number is real: the billing window is the Stripe subscription's current period (via Sync
- * Engine) for subscribed teams, the one-time free grant size comes from {@code
+ * Engine) for subscribed teams, the per-period free grant size comes from {@code
  * pricing_policy.free_tier_units} (live balance from {@code
  * payg_team_extensions.free_units_remaining}), and the per-document rate comes from the
  * subscription's Stripe Price. Fields that can't be resolved are {@code null} and the FE renders
  * "unknown" — never a substituted default.
+ *
+ * <p>The free grant and the spending cap are measured over the same window, so {@code
+ * billingPeriodStart}/{@code billingPeriodEnd} date both: an un-subscribed team's "free per month"
+ * is the calendar month shown here, and a subscribed team's is its Stripe period.
  *
  * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
  *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
@@ -26,15 +30,16 @@ import java.util.List;
  *     subscription period when subscribed, the calendar month otherwise.
  * @param billingPeriodEnd exclusive ISO date (yyyy-MM-dd) for the current cycle.
  * @param billableUsed alias of {@code spendUnitsThisPeriod} kept for clarity in the FE. For a free
- *     team this is the lifetime free documents used so far ({@code freeAllowance − freeRemaining});
- *     for a subscribed team it's this month's net billable documents.
- * @param billableLimit the team's document ceiling for the matching window: the one-time free grant
- *     ({@code freeAllowance}) for free teams; {@code floor(cap / perDocRate)} paid docs/month for
- *     capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
- * @param freeAllowance the team's one-time free document grant size (the "N" in "X of N free").
- *     Never resets; survives subscribing. Applies to billable categories only.
- * @param freeRemaining one-time free documents still available to the team ({@code
- *     payg_team_extensions.free_units_remaining}). 0 = grant exhausted.
+ *     team this is the free documents used so far this period ({@code freeAllowance −
+ *     freeRemaining}); for a subscribed team it's this period's net billable documents.
+ * @param billableLimit the team's document ceiling for the matching window: this period's free
+ *     grant ({@code freeAllowance}) for free teams; {@code floor(cap / perDocRate)} paid docs/month
+ *     for capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
+ * @param freeAllowance the team's free document grant size per period (the "N" in "X of N free").
+ *     Resets at each period boundary; unused units don't carry over. Applies to billable categories
+ *     only.
+ * @param freeRemaining free documents still available to the team this period ({@code
+ *     payg_team_extensions.free_units_remaining}). 0 = this period's grant is exhausted.
  * @param pricePerDocMinor paid per-document rate in minor units of {@code currency} (may be
  *     fractional — Stripe supports sub-cent rates); {@code null} when the rate can't be resolved.
  * @param currency lower-case ISO 4217 currency of the subscription's Stripe Price; {@code null}

@@ -15,9 +15,10 @@ interface Props {
 }
 
 /**
- * The free Processor-trial meter — "X of N free PDFs left" against the one-time
+ * The free Processor-trial meter — "X of N free PDFs left" against this period's
  * grant, with what has been used alongside as the status badge. The bar shows what
- * is left, so it drains towards empty as the grant is spent.
+ * is left, so it drains towards empty as the grant is spent and refills when the
+ * billing period turns.
  * Uses the shared {@link MeterBar} (same `paygf-meter` structure as the
  * cloud plan page). The subscribed spend-vs-cap meter is a separate surface
  * ({@code SpendLimitCard}); this card is only the free face.
@@ -41,7 +42,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
     rate != null
       ? t(
           "portal.billing.walletMeter.titleWithRate",
-          "Process {{allowance}} PDFs free, then {{rate}}/PDF",
+          "Process {{allowance}} PDFs free every month, then {{rate}}/PDF",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -50,7 +51,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
         )
       : t(
           "portal.billing.walletMeter.title",
-          "Process {{allowance}} PDFs free",
+          "Process {{allowance}} PDFs free every month",
           {
             count: wallet.freeAllowance,
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -85,7 +86,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
           figure={remaining.toLocaleString()}
           capSuffix={t(
             "portal.billing.walletMeter.capSuffix",
-            "of {{allowance}} free PDFs left",
+            "of {{allowance}} free PDFs left this month",
             {
               count: wallet.freeAllowance,
               allowance: wallet.freeAllowance.toLocaleString(),
